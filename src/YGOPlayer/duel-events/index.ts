@@ -8,7 +8,11 @@ export interface DuelEventHandlerProps {
 }
 
 const events: any = {
-    [YGODuelEvents.LogType.NormalSummon]: normalSummonEventHandler
+    [YGODuelEvents.LogType.NormalSummon]: normalSummonEventHandler,
+    [YGODuelEvents.LogType.SpecialSummon]: normalSummonEventHandler,
+    [YGODuelEvents.LogType.SetMonster]: normalSummonEventHandler,
+    [YGODuelEvents.LogType.SetST]: normalSummonEventHandler,
+    [YGODuelEvents.LogType.SendToGY]: normalSummonEventHandler,
 }
 
 export function getDuelEventHandler(event: YGODuelEvents.DuelLog): any {

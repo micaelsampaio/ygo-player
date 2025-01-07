@@ -7,6 +7,7 @@ import { GameCard } from './GameCard';
 import { Card, FieldZone } from '../../YGOCore/types/types';
 import { YGOMath } from '../core/YGOMath';
 import { ActionCardZoneMenu } from '../actions/ActionCardZoneMenu';
+import { YGOGameUtils } from '../../YGOCore';
 
 export class CardZone extends YGOEntity implements YGOUiElement {
 
@@ -100,7 +101,7 @@ export class CardZone extends YGOEntity implements YGOUiElement {
 
     getCardPositionAndRotation(card: Card) {
         if (this.isMonsterZone) {
-            if (card.position === 'facedown') {
+            if (YGOGameUtils.isFaceDown(card)) {
                 const rotation = this.rotation.clone();
                 rotation.y += YGOMath.degToRad(180);
                 rotation.z += YGOMath.degToRad(-90);
@@ -126,7 +127,7 @@ export class CardZone extends YGOEntity implements YGOUiElement {
                 }
             }
         } else {
-            if (card.position === 'facedown') {
+            if (YGOGameUtils.isFaceDown(card)) {
                 const rotation = this.rotation.clone();
                 rotation.y += YGOMath.degToRad(180);
                 return {
@@ -154,7 +155,7 @@ export class CardZone extends YGOEntity implements YGOUiElement {
             const gameCard = new GameCard({
                 duel: this.duel,
                 card
-            })
+            });
             this.setCard(gameCard);
         } else if (card && this.card && this.card.cardReference !== card) {
             this.card.setCard(card);

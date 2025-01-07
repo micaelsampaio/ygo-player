@@ -191,7 +191,11 @@ export function handleDuelEvent(duel: YGODuel, event: YGODuelEvents.DuelLog) {
     const taskManager = duel.tasks;
     const handler = getDuelEventHandler(event);
 
-    if (!handler) return () => duel.updateField();
+    if (!handler) {
+        if (taskManager.isProcessing()) taskManager.complete();
+        duel.updateField();
+        return;
+    }
 
     const onCompleted = () => duel.updateField();
 

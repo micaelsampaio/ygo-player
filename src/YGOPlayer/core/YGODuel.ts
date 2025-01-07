@@ -225,17 +225,18 @@ export class YGODuel {
         this.ygo.duelLog.events.on("new-log", (event) => {
             console.log("--- NEW LOG ---");
             console.log(event);
-
             handleDuelEvent(this, event);
         })
+
         this.ygo.duelLog.events.on("update-logs", (data) => {
-            this.events.publish("logs-updated", data);
-            this.updateField();
+            // TODO THIS
+            //this.events.publish("logs-updated", data);
+            //this.updateField();
         });
     }
 
     public updateField() {
-
+        console.log("PROCESS: UPDATE FIELD::")
         const cardInitialProps = { duel: this };
 
         for (let playerIndex = 0; playerIndex < this.fields.length; ++playerIndex) {
@@ -268,37 +269,45 @@ export class YGODuel {
                 }
             }
 
-            const cardWidth = 3; // Width of each card
-            const cardSpacing = 2.2; // Space between cards
-            const totalCards = duelField.hand.length; // Total number of cards in hand
-
-            const handWidth = (totalCards - 1) * cardSpacing + cardWidth;
-            const handY = 5;
-            const handZ = 6.8 * (playerIndex === 0 ? 1 : -1);
-
-            for (let i = 0; i < totalCards; ++i) {
-                if (!gameField.hand.cards[i]) {
-                    gameField.hand.cards.push(new GameCardHand(cardInitialProps));
-                }
-
-                gameField.hand.cards[i].handIndex = i;
-                gameField.hand.cards[i].setCard(duelField.hand[i]);
-                const xOffset = -handWidth / 2 + cardWidth / 2; // Start position to center
-                gameField.hand.cards[i].gameObject.position.x = xOffset + i * cardSpacing;
-                gameField.hand.cards[i].gameObject.position.y = handY;
-                gameField.hand.cards[i].gameObject.position.z = handZ;
-                gameField.hand.cards[i].gameObject.rotation.copy(YGOMath.degToRadEuler(270, 0, 0));
-                const currentGameObject = gameField.hand.cards[i].gameObject;
-                if (currentGameObject) currentGameObject.name = "CARD " + i;
-            }
-
-            for (let i = gameField.hand.cards.length - 1; i >= duelField.hand.length; --i) {
-                this.destroy(gameField.hand.cards[i]);
-                gameField.hand.cards.splice(i, 1);
-            }
+            this.updateHand(playerIndex);
         }
 
         this.events.publish("render-ui");
+    }
+
+    public updateHand(playerIndex: number) {
+        const cardInitialProps = { duel: this };
+        const gameField = this.fields[playerIndex];
+        const duelField = this.ygo.state.fields[playerIndex];
+
+        const cardWidth = 3; // Width of each card
+        const cardSpacing = 2.2; // Space between cards
+        const totalCards = duelField.hand.length; // Total number of cards in hand
+
+        const handWidth = (totalCards - 1) * cardSpacing + cardWidth;
+        const handY = 5;
+        const handZ = 6.8 * (playerIndex === 0 ? 1 : -1);
+
+        for (let i = 0; i < totalCards; ++i) {
+            if (!gameField.hand.cards[i]) {
+                gameField.hand.cards.push(new GameCardHand(cardInitialProps));
+            }
+
+            gameField.hand.cards[i].handIndex = i;
+            gameField.hand.cards[i].setCard(duelField.hand[i]);
+            const xOffset = -handWidth / 2 + cardWidth / 2; // Start position to center
+            gameField.hand.cards[i].gameObject.position.x = xOffset + i * cardSpacing;
+            gameField.hand.cards[i].gameObject.position.y = handY;
+            gameField.hand.cards[i].gameObject.position.z = handZ;
+            gameField.hand.cards[i].gameObject.rotation.copy(YGOMath.degToRadEuler(270, 0, 0));
+            const currentGameObject = gameField.hand.cards[i].gameObject;
+            if (currentGameObject) currentGameObject.name = "CARD " + i;
+        }
+
+        for (let i = gameField.hand.cards.length - 1; i >= duelField.hand.length; --i) {
+            this.destroy(gameField.hand.cards[i]);
+            gameField.hand.cards.splice(i, 1);
+        }
     }
 
     public update() {

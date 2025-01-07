@@ -22,7 +22,11 @@ export class YGOTaskController extends YGOComponent {
     }
 
     process(event: any) {
-        this.events.enqueue(event);
+        if (this.events.isEmpty()) {
+            this.currentEvent = event;
+        } else {
+            this.events.enqueue(event);
+        }
     }
 
     processNow(event: any) {
@@ -39,16 +43,16 @@ export class YGOTaskController extends YGOComponent {
 
     update(): void {
         if (this.currentEvent) {
-            this.currentEvent.next();
-            if (this.currentEvent.done) {
+            const result = this.currentEvent.next();
+            if (result.done) {
                 this.currentEvent = this.events.dequeue();
             }
         }
 
         if (this.immediateEvents.length > 0) {
             for (let i = this.immediateEvents.length; i >= 0; --i) {
-                this.immediateEvents[i].next();
-                if (this.immediateEvents[i].done) {
+                const result = this.immediateEvents[i].next();
+                if (result.done) {
                     this.immediateEvents.splice(i, 1);
                 }
             }

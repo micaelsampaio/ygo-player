@@ -5,6 +5,9 @@ export declare class YGOGameUtils {
     static isPendulumCard(card: Card): boolean;
     static isFaceUp(card: Card): boolean;
     static isFaceDown(card: Card): boolean;
+    static isSpellTrap(card: Card): boolean;
+    static isSpell(card: Card): boolean;
+    static isTrap(card: Card): boolean;
     static hasLinkMonstersInField(field: PlayerField): boolean;
     static hasXyzMonstersInField(field: PlayerField): boolean;
     static getPlayerIndexFromZone(zone: string): (0 | 1);
