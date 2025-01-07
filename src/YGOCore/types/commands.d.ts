@@ -1,7 +1,8 @@
 import { YGOCore } from "../game/YGOCore";
 import { CardPosition, FieldZone } from "./types";
-export type CommandType = "NULL" | "Normal Summon" | "Tribute Summon" | "Tribute Set" | "Special Summon" | "Banish" | "Banish FD" | "Shuffle Deck" | "Draw From Deck" | "Mill From Deck" | "Link Summon" | "XYZ Summon" | "XYZ Attach Material" | "XYZ Detach Material" | "Set Monster" | "Set ST" | "To ST" | "Send To GY" | "Destroy" | "Activate" | "Change Battle Position" | "Move Card" | "To Top Deck" | "To Bottom Deck" | "To Hand" | "Reveal" | "Target";
+export type CommandType = "NULL" | "Normal Summon" | "Tribute Summon" | "Tribute Set" | "Special Summon" | "Banish" | "Banish FD" | "Shuffle Deck" | "Draw From Deck" | "Mill From Deck" | "Fusion Summon" | "Synchro Summon" | "Link Summon" | "XYZ Summon" | "XYZ Attach Material" | "XYZ Detach Material" | "Set Monster" | "Set ST" | "To ST" | "Send To GY" | "Destroy" | "Activate" | "Change Battle Position" | "Move Card" | "To Top Deck" | "To Bottom Deck" | "To Hand" | "Reveal" | "Target" | "Field Spell";
 export interface Command {
+    type: CommandType;
     parent: Command | null;
     commandId: number;
     init(ygo: YGOCore): void;
@@ -29,6 +30,28 @@ export interface LinkSummonCommandData {
     id: number;
     originZone: FieldZone;
     zone: FieldZone;
+    materials: Array<{
+        id: number;
+        zone: FieldZone;
+    }>;
+}
+export interface FusionSummonCommandData {
+    player: number;
+    id: number;
+    originZone: FieldZone;
+    zone: FieldZone;
+    position?: CardPosition;
+    materials: Array<{
+        id: number;
+        zone: FieldZone;
+    }>;
+}
+export interface SynchroSummonCommandData {
+    player: number;
+    id: number;
+    originZone: FieldZone;
+    zone: FieldZone;
+    position?: CardPosition;
     materials: Array<{
         id: number;
         zone: FieldZone;
@@ -113,7 +136,7 @@ export interface SendCardToGYCommandData {
     id: number;
     originZone: FieldZone;
     zone?: FieldZone;
-    reason?: "Link Summon" | "XYZ Material" | undefined;
+    reason?: "Fusion Summon" | "Synchro Summon" | "Link Summon" | "XYZ Material" | undefined;
 }
 export interface DestroyCardCommandData {
     player: number;
@@ -171,4 +194,18 @@ export interface TragetCommandData {
     player: number;
     id: number;
     zone: FieldZone;
+}
+export interface FieldSpellCommandData {
+    player: number;
+    id: number;
+    originZone: FieldZone;
+    zone: "F" | "F2";
+    position?: "faceup" | "facedown";
+    reveal?: boolean;
+}
+export interface RevealCommandData {
+    player: number;
+    id: number;
+    zone: FieldZone;
+    position?: CardPosition;
 }

@@ -1,12 +1,12 @@
 import * as THREE from 'three';
 import { YGOPlayerCore } from './YGOPlayerCore';
 import { GameFieldLocation, YGOUiElement } from '../types';
-import { YGOCommands, YGOCore } from '../../YGOCore';
+import { YGOCommands, YGOCore, YGODuelEvents } from '../../YGOCore';
 import { YGOEntity } from './YGOEntity';
 import { GameController } from '../game/GameController';
 import { EventBus } from '../scripts/event-bus';
 import { YGOMouseEvents } from './components/YGOMouseEvents';
-import { createFields } from '../scripts/ygo-utils';
+import { createFields, handleDuelEvent } from '../scripts/ygo-utils';
 import { PlayerField } from '../game/PlayerField';
 import { YGOMath } from './YGOMath';
 import { GameCardHand } from '../game/GameCardHand';
@@ -14,7 +14,7 @@ import { ActionCardSelection } from '../actions/ActionSelectCard';
 import { YGOActionManager as ActionManager } from './components/YGOAction';
 import { ActionCardHandMenu } from '../actions/ActionCardHandMenu';
 import { ActionCardZoneMenu } from '../actions/ActionCardZoneMenu';
-import { YGOTaskManager } from './components/YGOTaskManager';
+import { YGOTaskController } from './components/YGOTaskController';
 import YUBEL from '../../decks/YUBEL.json';
 import CHIMERA from '../../decks/CHIMERA.json';
 
@@ -29,7 +29,8 @@ export class YGODuel {
     public actionManager: ActionManager;
     public gameController: GameController;
     public mouseEvents: YGOMouseEvents;
-    public tasks: YGOTaskManager;
+    public tasks: YGOTaskController;
+    public deltaTime: number = 0;
     private currentPlayerIndex = 0;
 
     constructor({ canvas }: any) {
@@ -40,7 +41,7 @@ export class YGODuel {
         this.fields = [];
         this.gameController = new GameController(this);
         this.actionManager = new ActionManager();
-        this.tasks = new YGOTaskManager();
+        this.tasks = new YGOTaskController(this);
         this.mouseEvents = new YGOMouseEvents(this);
         this.events = new EventBus();
 
@@ -125,7 +126,7 @@ export class YGODuel {
     public startDuel() {
         const deck1 = JSON.parse(JSON.stringify(YUBEL));
         const deck2 = JSON.parse(JSON.stringify(CHIMERA));
-        
+
         this.ygo = new YGOCore({
             players: [{
                 name: 'Player 1',
@@ -221,9 +222,11 @@ export class YGODuel {
 
         //     this.events.publish("logs-updated", this.ygo.duelLog.entries);
         // });
-        this.ygo.duelLog.events.on("new-log", (log) => {
+        this.ygo.duelLog.events.on("new-log", (event) => {
             console.log("--- NEW LOG ---");
-            console.log(log);
+            console.log(event);
+
+            handleDuelEvent(this, event);
         })
         this.ygo.duelLog.events.on("update-logs", (data) => {
             this.events.publish("logs-updated", data);
@@ -300,6 +303,7 @@ export class YGODuel {
 
     public update() {
         this.core.render();
+        this.deltaTime = this.core.deltaTime;
 
         for (const entity of this.entities) {
             entity.update(0);

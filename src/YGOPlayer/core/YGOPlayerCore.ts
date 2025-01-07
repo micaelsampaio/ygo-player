@@ -10,9 +10,13 @@ export class YGOPlayerCore {
     public fontLoader: FontLoader;
     public gltfLoader: GLTFLoader;
     public renderer: THREE.WebGLRenderer;
+    public deltaTime: number;
+    private previousFrame: number;
 
     constructor({ canvas }: { canvas: HTMLCanvasElement }) {
         this.scene = new THREE.Scene();
+        this.deltaTime = 0;
+        this.previousFrame = performance.now();
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         this.textureLoader = new THREE.TextureLoader();
         this.gltfLoader = new GLTFLoader();
@@ -22,6 +26,10 @@ export class YGOPlayerCore {
     }
 
     public render() {
+        const now = performance.now();
+        this.deltaTime = now - this.previousFrame;
+        this.previousFrame = now;
+
         this.renderer.render(this.scene, this.camera);
     }
 

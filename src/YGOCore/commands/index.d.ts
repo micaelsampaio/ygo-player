@@ -1,7 +1,9 @@
+import { Command } from "../types/commands";
 import { ActivateCardCommand } from "./ActivateCardCommand";
 import { BanishCommand } from "./BanishCommand";
 import { DestroyCardCommand } from "./DestroyCard";
 import { DrawFromDeckCommand } from "./DrawFromDeckCommand";
+import { FieldSpellCommand } from "./FieldSpellCommand";
 import { LinkSummonCommand } from "./LinkSummonCommand";
 import { MillFromDeckCommand } from "./MillFromDeckCommand";
 import { NormalSummonCommand } from "./NormalSummonCommand";
@@ -41,6 +43,7 @@ export declare const Commands: {
     RevealCommand: typeof RevealCommand;
     ToExtraDeckCommand: typeof ToExtraDeckCommand;
     ToHandCommand: typeof ToHandCommand;
+    FieldSpellCommand: typeof FieldSpellCommand;
 };
 export declare const COMMANDS_BY_NAME: any;
-export { NormalSummonCommand, SetMonsterCommand, SetCardCommand, SendCardToGYCommand, BanishCommand, DrawFromDeckCommand, MillFromDeckCommand, ActivateCardCommand, SpecialSummonCommand, TributeSummonCommand, TributeSetCommand, LinkSummonCommand, XYZSummonCommand, XYZAttachMaterialCommand, XYZDetachMaterialCommand, ToDeckCommand, ShuffleDeckCommand, DestroyCardCommand, RevealCommand, ToExtraDeckCommand, ToHandCommand };
+export declare function GetCommandByClassName<T = Command>(commandClassName: string): T | null;

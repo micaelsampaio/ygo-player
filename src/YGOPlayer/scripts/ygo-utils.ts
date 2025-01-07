@@ -8,8 +8,9 @@ import { Deck } from '../game/Deck';
 import { Graveyard } from '../game/Graveyard';
 import { ExtraDeck } from '../game/ExtraDeck';
 import { FieldZone } from '../../YGOCore/types/types';
-import { YGOGameUtils } from '../../YGOCore';
+import { YGODuelEvents, YGOGameUtils } from '../../YGOCore';
 import { Banish } from '../game/Banish';
+import { getDuelEventHandler } from '../duel-events';
 
 type CreateFieldDto = {
     duel: YGODuel
@@ -184,4 +185,21 @@ export function getCardZones(duel: YGODuel, players: number[], zones: ("M" | "S"
 export function cancelMouseEventsCallback(e: React.MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
+}
+
+export function handleDuelEvent(duel: YGODuel, event: YGODuelEvents.DuelLog) {
+    const taskManager = duel.tasks;
+    const handler = getDuelEventHandler(event);
+
+    if (!handler) return () => duel.updateField();
+
+    const onCompleted = () => duel.updateField();
+
+    const props = {
+        duel,
+        event,
+        onCompleted
+    };
+
+    taskManager.process(handler(props));
 }

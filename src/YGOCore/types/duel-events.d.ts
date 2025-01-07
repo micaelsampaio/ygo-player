@@ -14,6 +14,8 @@ export declare namespace YGODuelEvents {
         ToTopDeck = "To Top Deck",
         ToBottomDeck = "To Bottom Deck",
         SpecialSummon = "Special Summon",
+        FusionSummon = "Fusion Summon",
+        SynchroSummon = "Synchro Summon",
         LinkSummon = "Link Summon",
         XYZSummon = "XYZ Summon",
         XYZAttachMaterial = "XYZ Attach Material",
@@ -26,7 +28,8 @@ export declare namespace YGODuelEvents {
         Shuffle = "Shuffle",
         ToST = "To ST",
         Reveal = "Reveal",
-        Target = "Target"
+        Target = "Target",
+        FieldSpell = "Field Spell"
     }
     interface DuelLog {
         type: LogType;
@@ -56,11 +59,31 @@ export declare namespace YGODuelEvents {
         id: number;
         originZone: FieldZone;
         zone: FieldZone;
-        reason?: "Link Summon" | "XYZ To GY" | undefined;
+        reason?: "Fusion Summon" | "Synchro Summon" | "Link Summon" | "XYZ Material" | undefined;
     }
     interface DrawFromDeck extends DuelLog {
         id: number;
         zone: FieldZone;
+    }
+    interface FusionSummon extends DuelLog {
+        id: number;
+        originZone: FieldZone;
+        zone: FieldZone;
+        position: CardPosition;
+        materials: Array<{
+            id: number;
+            zone: FieldZone;
+        }>;
+    }
+    interface SynchroSummon extends DuelLog {
+        id: number;
+        originZone: FieldZone;
+        zone: FieldZone;
+        position: CardPosition;
+        materials: Array<{
+            id: number;
+            zone: FieldZone;
+        }>;
     }
     interface LinkSummon extends DuelLog {
         id: number;
@@ -75,7 +98,7 @@ export declare namespace YGODuelEvents {
         id: number;
         originZone: FieldZone;
         zone: FieldZone;
-        position?: CardPosition;
+        position: CardPosition;
         materials: Array<{
             id: number;
             zone: FieldZone;
