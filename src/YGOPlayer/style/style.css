@@ -1,0 +1,157 @@
+.ygo-player-core {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+.ygo-player-core .ygo-card-menu {
+    background-color: white;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    z-index: 110;
+    height: auto;
+}
+
+.ygo-player-core .ygo-click-overlay {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    height: 100%;
+    z-index: 10;
+}
+
+#ygo-canvas {
+    z-index: 0;
+}
+
+.ygo-player-core .ygo-timeline {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    background-color: white;
+    padding: 20px;
+}
+
+.ygo-player-core .float-right-menu {
+    position: absolute;
+    top: 0px;
+    right: 0px;
+    padding: 10px;
+    max-height: 100%;
+    overflow-y: auto;
+    background: white;
+}
+
+.ygo-player-core .float-right-menu .ygo-card {
+    width: 100px;
+    /* 1.44 ratio */
+    height: 144px;
+    cursor: pointer;
+}
+
+.ygo-player-core .game-popup {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    z-index: 100;
+    top: 0px;
+    left: 0px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.ygo-player-core .game-popup .game-popup-content {
+    width: 800px;
+    height: 500px;
+    background-color: white;
+    border-radius: 5px;
+    overflow-y: auto;
+}
+
+.ygo-player-core .menu-view-main-deck-cards {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    padding: 10px;
+    gap: 10px;
+}
+
+.ygo-player-core .menu-view-main-deck-cards .ygo-card {
+    width: 100px;
+    /* 1.44 ratio */
+    height: 144px;
+    cursor: pointer;
+}
+
+.ygo-player-core .timeline {
+    position: fixed;
+    width: 100%;
+    height: 10px;
+    left: 0px;
+    bottom: 0px;
+    background-color: white;
+    display: flex;
+}
+
+.ygo-player-core .timeline:hover {
+    height: 30px;
+}
+
+.ygo-player-core .timeline>* {
+    flex-grow: 1;
+}
+
+.ygo-player-core .timeline .command {
+    position: relative;
+    border: none;
+    font-size: 16px;
+}
+
+.ygo-player-core .timeline .command-tooltip {
+    position: absolute;
+    padding: 5px 10px;
+    top: -40px;
+    color: white;
+    border-radius: 5px;
+    background: rgba(0, 0, 0, 0.7);
+    display: none;
+    left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap;
+    z-index: 10;
+}
+
+.ygo-player-core .timeline .command-tooltip::after {
+    content: '';
+    position: absolute;
+    bottom: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-top: 6px solid rgba(0, 0, 0, 0.7);
+}
+
+.ygo-player-core .timeline .command:hover>.command-tooltip {
+    display: flex;
+}
+
+.ygo-player-core .timeline .command.current {
+    background: yellow;
+}
+
+.ygo-player-core .timeline .command.prev {
+    background: red;
+}
+
+.ygo-player-core .timeline .command.next {
+    background: gray;
+}
+
+.ygo-player-core .timeline .command:hover {
+    background-color: blue;
+}
