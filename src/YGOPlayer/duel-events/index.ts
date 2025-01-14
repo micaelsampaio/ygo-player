@@ -22,7 +22,6 @@ export function getDuelEventHandler(event: YGODuelEvents.DuelLog): any {
     return eventHandler;
 }
 
-
 export function handleDuelEvent(duel: YGODuel, event: YGODuelEvents.DuelLog) {
     const taskManager = duel.tasks;
     const handler = getDuelEventHandler(event);
