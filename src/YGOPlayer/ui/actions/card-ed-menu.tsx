@@ -4,8 +4,9 @@ import { ActionCardSelection } from "../../actions/ActionSelectCard";
 import { YGODuel } from "../../core/YGODuel";
 import { CardZone } from "../../game/CardZone";
 import { getCardZones, getMonstersZones } from "../../scripts/ygo-utils";
+import { UiGameConfig } from "../YGOUiController";
 
-export function CardExtraDeckMenu({ duel, card, clearAction, mouseEvent }: { duel: YGODuel, zone: FieldZone, card: Card, clearAction: Function, mouseEvent: React.MouseEvent }) {
+export function CardExtraDeckMenu({ duel, config, card, clearAction, mouseEvent }: { duel: YGODuel, zone: FieldZone, card: Card, clearAction: Function, mouseEvent: React.MouseEvent, config: UiGameConfig }) {
     const x = mouseEvent.clientX; // Horizontal mouse position in px
     const y = mouseEvent.clientY; // Vertical mouse position in px
 
@@ -168,8 +169,9 @@ export function CardExtraDeckMenu({ duel, card, clearAction, mouseEvent }: { due
             duel.events.publish("clear-ui-action");
             console.log("TEMP:: MOUSE CLICK REACT", e.target);
         }}>
+
             <div onClick={e => e.stopPropagation()}>
-                <div>
+                {config.actions && <div>
                     EXTRA DECK<br />
 
                     {isLink && <button type="button" onClick={linkSummon}>Link Summon</button>}
@@ -179,7 +181,8 @@ export function CardExtraDeckMenu({ duel, card, clearAction, mouseEvent }: { due
 
                     <button type="button" onClick={specialSummonDEF}>SS Def</button>
                     <button type="button" onClick={specialSummonATK}>Add To Hand</button>
-                </div>
+                </div>}
+
             </div>
         </div>
     </>

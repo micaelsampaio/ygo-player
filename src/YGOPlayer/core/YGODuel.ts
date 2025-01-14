@@ -241,6 +241,15 @@ export class YGODuel {
             //this.events.publish("logs-updated", data);
             //this.updateField();
         });
+
+        this.events.on("enable-game-actions", () => {
+            this.actionManager.enabled = true;
+        });
+
+        this.events.on("disable-game-actions", () => {
+            this.actionManager.clearAction();
+            this.actionManager.enabled = false;
+        });
     }
 
     public updateField() {

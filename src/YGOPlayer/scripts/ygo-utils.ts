@@ -8,9 +8,8 @@ import { Deck } from '../game/Deck';
 import { Graveyard } from '../game/Graveyard';
 import { ExtraDeck } from '../game/ExtraDeck';
 import { Card, FieldZone, FieldZoneData } from '../../YGOCore/types/types';
-import { YGODuelEvents, YGOGameUtils } from '../../YGOCore';
+import { YGOGameUtils } from '../../YGOCore';
 import { Banish } from '../game/Banish';
-import { getDuelEventHandler } from '../duel-events';
 
 type CreateFieldDto = {
     duel: YGODuel

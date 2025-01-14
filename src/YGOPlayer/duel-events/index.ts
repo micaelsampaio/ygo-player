@@ -14,6 +14,7 @@ const events: any = {
     [YGODuelEvents.LogType.SetMonster]: MoveCardEventHandler,
     [YGODuelEvents.LogType.SetST]: MoveCardEventHandler,
     [YGODuelEvents.LogType.SendToGY]: MoveCardEventHandler,
+    //[YGODuelEvents.LogType.DrawCardFromDeck]: MoveCardEventHandler,
 }
 
 export function getDuelEventHandler(event: YGODuelEvents.DuelLog): any {
@@ -32,7 +33,12 @@ export function handleDuelEvent(duel: YGODuel, event: YGODuelEvents.DuelLog) {
         return;
     }
 
-    const onCompleted = () => duel.updateField();
+    duel.events.publish("disable-game-actions");
+
+    const onCompleted = () => {
+        duel.updateField();
+        duel.events.publish("enable-game-actions");
+    }
 
     const props = {
         duel,

@@ -1,5 +1,6 @@
 
 export class YGOActionManager {
+    public enabled: boolean;
     public action: YGOAction;
     public actions: Map<string, YGOAction>;
     private defaultAction = new IdleAction();
@@ -7,6 +8,7 @@ export class YGOActionManager {
     public onChangeAction: ((action: YGOAction) => void) | null;
 
     constructor() {
+        this.enabled = true;
         this.action = this.defaultAction;
         this.actions = new Map();
         this.onChangeAction = null;
@@ -14,6 +16,8 @@ export class YGOActionManager {
     }
 
     setAction(action: YGOAction = this.defaultAction) {
+        if (!this.enabled) return;
+
         const prevAction = this.action;
         console.log("SET ACTION ----------");
         console.log("PREV::", prevAction);

@@ -2,16 +2,18 @@ import { useEffect, useState } from "react";
 import { YGODuel } from "../core/YGODuel";
 import { ACTIONS } from "./actions";
 import { DuelLogMenu } from "./menus/duel-log";
-import { Graveyard } from "./menus/graveyard";
-import { ExtraDeck } from "./menus/extra-deck";
-import { XyzMonsterMaterialsMenu } from "./menus/xyz-monster-materials";
 import { MENUS } from "./menus";
 import { TimeLine } from "./menus/timeline";
+
+export interface UiGameConfig {
+    actions: boolean
+}
 
 export function YGOUiController({ duel }: { duel: YGODuel }) {
     // TODO
 
     const [_, setRender] = useState<number>(-1);
+    const [gameConfig, setGameConfig] = useState<UiGameConfig>({ actions: true });
     const [action, setAction] = useState<{ type: string, data: any }>({ type: "", data: null });
     const [menus, setMenus] = useState<{ key: string, type: string, data: any }[]>([]);
     const clearAction = () => {
@@ -73,6 +75,13 @@ export function YGOUiController({ duel }: { duel: YGODuel }) {
             setRender(performance.now())
         });
 
+        duel.events.on("enable-game-actions", () => {
+            setGameConfig(currentGameConfig => ({ ...currentGameConfig, actions: true }));
+        });
+        duel.events.on("disable-game-actions", () => {
+            setGameConfig(currentGameConfig => ({ ...currentGameConfig, actions: false }));
+        });
+
         // // duel.events.on("on-card-hand-click", (data: any) => {
         // //     // TODO
         // //     console.log("REACT CLICK ", data);
@@ -99,9 +108,9 @@ export function YGOUiController({ duel }: { duel: YGODuel }) {
         {
             menus.map(menu => {
                 const Menu = (MENUS as any)[menu.type] as any;
-                return <Menu key={menu.type} duel={duel} {...menu.data} />
+                return <Menu config={gameConfig} key={menu.type} duel={duel} {...menu.data} visible />
             })
         }
-        {Action && <Action type={action.type} {...action.data} duel={duel} clearAction={clearAction} />}
+        {Action && gameConfig.actions && <Action config={gameConfig} type={action.type} {...action.data} duel={duel} clearAction={clearAction} />}
     </>
 }

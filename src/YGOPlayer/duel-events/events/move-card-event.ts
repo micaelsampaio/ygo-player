@@ -11,7 +11,7 @@ interface MoveCardEventHandlerProps extends DuelEventHandlerProps {
     event: MoveCardCommandData
 }
 
-export function MoveCardEventHandler({ duel, ygo, event }: MoveCardEventHandlerProps) {
+export function MoveCardEventHandler({ duel, ygo, event, onCompleted }: MoveCardEventHandlerProps) {
     const taskManager = duel.tasks;
     const cardReference = ygo.state.getCardById(event.id, event.zone);
 
@@ -93,16 +93,8 @@ export function MoveCardEventHandler({ duel, ygo, event }: MoveCardEventHandlerP
             card.destroy();
         }
 
-        duel.updateField();
+        onCompleted();
     }));
 
     taskManager.startTask(sequence);
-
-    //card.gameObject.rotation.copy(startRotation);
-
-    //cardSequence.add(null as any).add(null as any);
-
-    //taskManager.startTask(null as any);
-
-    //taskManager.startTask(cardSequence);
 }
