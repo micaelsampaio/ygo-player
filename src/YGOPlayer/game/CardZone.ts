@@ -22,9 +22,7 @@ export class CardZone extends YGOEntity implements YGOUiElement {
     private mesh: THREE.Mesh;
     private normalMaterial: THREE.MeshBasicMaterial;
     private hoverMaterial: THREE.MeshBasicMaterial;
-    public card: GameCard | null;
-    private isMonsterZone: boolean;
-    private isSpellTrapZone: boolean;
+    private card: GameCard | null;
     public onClickCb: ((cardZone: CardZone) => void) | null;
 
     constructor({ duel, player, position, rotation, zone }: { duel: YGODuel, player: number, zone: FieldZone, position: THREE.Vector3, rotation: THREE.Euler }) {
@@ -36,9 +34,6 @@ export class CardZone extends YGOEntity implements YGOUiElement {
         this.rotation = rotation;
         this.player = player;
         this.card = null;
-        //  TODO CREATE "MESH"
-        this.isMonsterZone = zone.startsWith("M") || zone.startsWith("EMZ");
-        this.isSpellTrapZone = zone.startsWith("S") || zone.startsWith("F");
 
         const geometry = new THREE.BoxGeometry(2.8, 2.8, 0.05);
 
@@ -47,7 +42,7 @@ export class CardZone extends YGOEntity implements YGOUiElement {
 
         const cube = new THREE.Mesh(geometry, this.normalMaterial);
         cube.position.copy(this.position);
-        cube.position.y += 0.1;
+        cube.position.z += 0.05;
         cube.rotation.copy(this.rotation);
 
         this.duel.core.scene.add(cube);
@@ -55,7 +50,7 @@ export class CardZone extends YGOEntity implements YGOUiElement {
         this.mesh = cube;
 
         this.position = cube.position.clone();
-        this.position.y += 0.1;
+        this.position.z += 0.1;
         this.onClickCb = null;
 
         this.duel.gameController.getComponent<YGOMouseEvents>("mouse_events")?.registerElement(this);
@@ -95,79 +90,127 @@ export class CardZone extends YGOEntity implements YGOUiElement {
         this.mesh.material = this.normalMaterial;
     }
 
-    setCard(card: GameCard | null) {
+    setCard(card: Card | null) {
+        //this.card = card;
+        if (!card) {
+            this.destroyCard();
+            return;
+        }
+
+        // TODO CREATE GAME CARD
+        this.card = new GameCard({ duel: this.duel, card });
+        this.updateCard();
+    }
+
+    setGameCard(card: GameCard | null) {
+        if (!card) {
+            this.destroyCard();
+            return;
+        }
+
         this.card = card;
+        this.updateCard();
     }
 
-    getCardPositionAndRotation(card: Card) {
-        if (this.isMonsterZone) {
-            if (YGOGameUtils.isFaceDown(card)) {
-                const rotation = this.rotation.clone();
-                rotation.y += YGOMath.degToRad(180);
-                rotation.z += YGOMath.degToRad(-90);
-                return {
-                    position: this.position,
-                    rotation,
-                    scale: 1
-                }
-            } else if (card.position === "faceup-defense") {
-                const rotation = this.rotation.clone();
-                rotation.z += YGOMath.degToRad(90);
-
-                return {
-                    position: this.position,
-                    rotation,
-                    scale: 1
-                }
-            } else {
-                return {
-                    position: this.position,
-                    rotation: this.rotation,
-                    scale: 1
-                }
-            }
-        } else {
-            if (YGOGameUtils.isFaceDown(card)) {
-                const rotation = this.rotation.clone();
-                rotation.y += YGOMath.degToRad(180);
-                return {
-                    position: this.position,
-                    rotation,
-                    scale: 1
-                }
-            } else {
-                return {
-                    position: this.position,
-                    rotation: this.rotation,
-                    scale: 1
-                }
-            }
-        }
+    getGameCard(): GameCard | null {
+        return this.card;
     }
 
-    reconcileCardWithState(card: Card | null) {
-        if (!card && this.card) {
-            // remove card
-            this.card.destroy();
-            this.setCard(null);
-        } else if (card && !this.card) {
-            // create card
-            const gameCard = new GameCard({
-                duel: this.duel,
-                card
-            });
-            this.setCard(gameCard);
-        } else if (card && this.card && this.card.cardReference !== card) {
-            this.card.setCard(card);
-        }
+    getCardReference(): Card | null {
+        return this.card?.cardReference || null;
+    }
 
+    removeCard() {
         if (this.card) {
-            const { position, rotation, scale } = this.getCardPositionAndRotation(this.card.cardReference);
-            this.card.gameObject.position.copy(position);
-            this.card.gameObject.rotation.copy(rotation);
-            this.card.gameObject.scale.set(scale, scale, scale);
+            this.card = null;
         }
     }
+
+    destroyCard() {
+        if (this.card) {
+            this.card.destroy();
+            this.card = null;
+        }
+    }
+
+    updateCard() {
+        if (!this.card) return;
+
+        // ROTATION ETC 
+
+        // TODO CARD POSITION YARA YARA
+        // TODO UPDATE POSITION ROTATION YARE YARE
+    }
+
+    // getCardPositionAndRotation(card: Card) {
+    //     if (this.isMonsterZone) {
+    //         if (YGOGameUtils.isFaceDown(card)) {
+    //             const rotation = this.rotation.clone();
+    //             rotation.y += YGOMath.degToRad(180);
+    //             rotation.z += YGOMath.degToRad(-90);
+    //             return {
+    //                 position: this.position,
+    //                 rotation,
+    //                 scale: 1
+    //             }
+    //         } else if (card.position === "faceup-defense") {
+    //             const rotation = this.rotation.clone();
+    //             rotation.z += YGOMath.degToRad(90);
+
+    //             return {
+    //                 position: this.position,
+    //                 rotation,
+    //                 scale: 1
+    //             }
+    //         } else {
+    //             return {
+    //                 position: this.position,
+    //                 rotation: this.rotation,
+    //                 scale: 1
+    //             }
+    //         }
+    //     } else {
+    //         if (YGOGameUtils.isFaceDown(card)) {
+    //             const rotation = this.rotation.clone();
+    //             rotation.y += YGOMath.degToRad(180);
+    //             return {
+    //                 position: this.position,
+    //                 rotation,
+    //                 scale: 1
+    //             }
+    //         } else {
+    //             return {
+    //                 position: this.position,
+    //                 rotation: this.rotation,
+    //                 scale: 1
+    //             }
+    //         }
+    //     }
+    // }
+
+    // reconcileCardWithState(card: Card | null) {
+    //     if (!card && this.card) {
+    //         // remove card
+    //         this.card.destroy();
+    //         this.setCard(null);
+    //     } else if (card && !this.card) {
+    //         // create card
+    //         const gameCard = new GameCard({
+    //             duel: this.duel,
+    //             card
+    //         });
+    //         this.setCard(gameCard);
+    //     } else if (card && this.card && this.card.cardReference !== card) {
+    //         this.card.setCard(card);
+    //     }
+
+    //     if (this.card) {
+    //         const { position, rotation, scale } = this.getCardPositionAndRotation(this.card.cardReference);
+    //         this.card.gameObject.position.copy(position);
+    //         this.card.gameObject.rotation.copy(rotation);
+    //         this.card.gameObject.scale.set(scale, scale, scale);
+    //     }
+    // }
 
     isEmpty() {
         return !this.card;

@@ -35,6 +35,7 @@ export class GameCard extends YGOEntity {
             backMaterial,  // Back
         ];
         this.gameObject = new THREE.Mesh(geometry, materials);
+
         this.duel.core.scene.add(this.gameObject);
         if (card) this.setCard(card);
     }

@@ -23,7 +23,7 @@ export function CardExtraDeckMenu({ duel, card, clearAction, mouseEvent }: { due
 
                 const materials = cardZones.map(cardZone => {
                     return {
-                        id: cardZone.card!.cardReference.id,
+                        id: cardZone.getCardReference()!.id,
                         zone: cardZone.zone
                     }
                 });
@@ -65,7 +65,7 @@ export function CardExtraDeckMenu({ duel, card, clearAction, mouseEvent }: { due
 
                 const materials = cardZones.map(cardZone => {
                     return {
-                        id: cardZone.card!.cardReference.id,
+                        id: cardZone.getCardReference()!.id,
                         zone: cardZone.zone
                     }
                 });

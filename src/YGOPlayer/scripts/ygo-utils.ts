@@ -7,7 +7,7 @@ import { GameHand } from '../game/Hand';
 import { Deck } from '../game/Deck';
 import { Graveyard } from '../game/Graveyard';
 import { ExtraDeck } from '../game/ExtraDeck';
-import { FieldZone } from '../../YGOCore/types/types';
+import { Card, FieldZone, FieldZoneData } from '../../YGOCore/types/types';
 import { YGODuelEvents, YGOGameUtils } from '../../YGOCore';
 import { Banish } from '../game/Banish';
 import { getDuelEventHandler } from '../duel-events';
@@ -19,7 +19,8 @@ type CreateFieldDto = {
 
 export function createFields({ duel, fieldModel }: CreateFieldDto) {
 
-    console.log("CREATE FIELDS", fieldModel);
+    fieldModel.rotation.copy(YGOMath.degToRadEuler(90, 0, 0));
+    fieldModel.position.set(0, 0, 0);
 
     const zones: any = [];
     const offsetY = 0.1;
@@ -29,23 +30,21 @@ export function createFields({ duel, fieldModel }: CreateFieldDto) {
             const position = child.position;
             position.y += offsetY;
 
-            // child.material = new THREE.MeshBasicMaterial({
-            //     color: 0xff0000
-            // });
+            child.visible = false;
 
-            zones[child.name] = child;
-
-            // zone: child.name,
-            //     position,
-            //     rotation: side === 0 ? YGOMath.degToRadEuler(270, 0, 0) : YGOMath.degToRadEuler(270, 0, 180),
-            //     gameObject: child,
-            //     side,
-
-            // const data: GameFieldLocation = {
-
+            // if (child.name === "M-1") {
+            //     child.material = new THREE.MeshBasicMaterial({
+            //         color: 0xff00ff,
+            //         side: THREE.DoubleSide // Make the material double-sided
+            //     });
+            // } else {
+            //     child.material = new THREE.MeshBasicMaterial({
+            //         color: 0xff0000,
+            //         side: THREE.DoubleSide // Make the material double-sided
+            //     });
             // }
 
-            // fieldLocations.set(child.name, data);
+            zones[child.name] = child;
         }
     });
 
@@ -104,8 +103,8 @@ function createCardZone(duel: YGODuel, player: number, zone: FieldZone, zoneObje
         duel,
         zone,
         player,
-        position: zoneObject.position.clone(),
-        rotation: player === 0 ? YGOMath.degToRadEuler(270, 0, 0) : YGOMath.degToRadEuler(270, 0, 180),
+        position: zoneObject.getWorldPosition(new THREE.Vector3()),
+        rotation: player === 0 ? YGOMath.degToRadEuler(0, 0, 0) : YGOMath.degToRadEuler(0, 0, 180),
     });
 
     return cardZone;
@@ -132,11 +131,11 @@ export function getXyzMonstersZones(duel: YGODuel, players: number[]): CardZone[
 
     players.forEach(player => {
         duel.fields[player].monsterZone.forEach(zone => {
-            if (zone.hasCard() && YGOGameUtils.isXYZMonter(zone.card!.cardReference)) result.push(zone);
+            if (zone.hasCard() && YGOGameUtils.isXYZMonter(zone.getCardReference()!)) result.push(zone);
         });
 
         duel.fields[player].extraMonsterZone.forEach(zone => {
-            if (zone.hasCard() && YGOGameUtils.isXYZMonter(zone.card!.cardReference)) result.push(zone);
+            if (zone.hasCard() && YGOGameUtils.isXYZMonter(zone.getCardReference()!)) result.push(zone);
         });
     });
 
@@ -187,23 +186,138 @@ export function cancelMouseEventsCallback(e: React.MouseEvent) {
     e.stopPropagation();
 }
 
-export function handleDuelEvent(duel: YGODuel, event: YGODuelEvents.DuelLog) {
-    const taskManager = duel.tasks;
-    const handler = getDuelEventHandler(event);
+export function getCardRotation(card: Card, zone: FieldZone) {
+    const zoneData = YGOGameUtils.getZoneData(zone);
+    return getCardRotationFromFieldZoneData(card, zoneData);
+}
 
-    if (!handler) {
-        if (taskManager.isProcessing()) taskManager.complete();
-        duel.updateField();
-        return;
+export function getCardRotationFromFieldZoneData(card: Card, zoneData: FieldZoneData) {
+    let rotation: THREE.Euler = new THREE.Euler(0, 0, 0);
+
+    if (zoneData.zone === "GY") {
+        // GY do nothig let go as default rotation
+    } else if (zoneData.zone === "H") {
+        // GY do nothig let go as default rotation
+    } else if (zoneData.zone === "D") {
+        rotation.y = THREE.MathUtils.degToRad(180);
+    } else if (zoneData.zone === "B") {
+        if (YGOGameUtils.isFaceDown(card)) {
+            rotation.y = THREE.MathUtils.degToRad(180);
+        }
+        rotation.z = THREE.MathUtils.degToRad(90);
+    } else if (zoneData.zone === "S") {
+        if (YGOGameUtils.isFaceDown(card)) {
+            rotation.y = THREE.MathUtils.degToRad(180);
+        }
+    } else if (zoneData.zone === "F") {
+        if (YGOGameUtils.isFaceDown(card)) {
+            rotation.y = THREE.MathUtils.degToRad(180);
+        }
+    } else { // monster or extra monster zone
+        if (!YGOGameUtils.isLinkMonster(card)) { // TODO FIX DEF NOT WORKING
+            if (YGOGameUtils.isFaceDown(card)) {
+                rotation.y = THREE.MathUtils.degToRad(180);
+                if (YGOGameUtils.isDefense(card)) {
+                    rotation.z = THREE.MathUtils.degToRad(90);
+                }
+            } else {
+                if (YGOGameUtils.isDefense(card)) {
+                    rotation.z = THREE.MathUtils.degToRad(90);
+                }
+            }
+        }
     }
 
-    const onCompleted = () => duel.updateField();
+    if (zoneData.player === 1) {
+        rotation.z += THREE.MathUtils.degToRad(180);
+    }
 
-    const props = {
-        duel,
-        event,
-        onCompleted
-    };
+    return rotation;
+}
+export function getZonePosition(duel: YGODuel, zone: FieldZone) {
+    const zoneData = YGOGameUtils.getZoneData(zone);
+    return getZonePositionFromZoneData(duel, zoneData);
+}
 
-    taskManager.process(handler(props));
+export function getZonePositionFromZoneData(duel: YGODuel, zoneData: FieldZoneData) {
+    let position: THREE.Vector3;
+    const zoneIndex = zoneData.zoneIndex! - 1;
+    const field = duel.fields[zoneData.player];
+
+    if (zoneData.zone === "M") {
+        position = field.monsterZone[zoneIndex].position;
+    } else if (zoneData.zone === "S") {
+        position = field.spellTrapZone[zoneIndex].position;
+    } else if (zoneData.zone === "H") {
+        const cardInHand = field.hand.getCard(zoneIndex);
+        position = cardInHand ? cardInHand.gameObject.position : field.monsterZone[0].position;
+    } else if (zoneData.zone === "EMZ") {
+        position = field.extraMonsterZone[zoneIndex].gameObject.position;
+    } else if (zoneData.zone === "GY") {
+        position = field.graveyard.gameObject.position;
+    } else if (zoneData.zone === "B") {
+        position = field.banishedZone.gameObject.position;
+    } else if (zoneData.zone === "D") {
+        position = field.deck.gameObject.position;
+    } else if (zoneData.zone === "ED") {
+        position = field.extraDeck.gameObject.position;
+    } else {
+        position = field.monsterZone[0].position;
+    }
+
+    return position;
+}
+
+// export function setupCardOnField(duel: YGODuel, card: Card, originZone: FieldZone, zone: FieldZone): GameCard {
+//     const originZoneData = YGOGameUtils.getZoneData(originZone);
+//     const zoneData = YGOGameUtils.getZoneData(zone);
+//     const originCardZone = getGameZone(duel, originZoneData);
+//     const cardZone = getGameZone(duel, zoneData);
+//     const originGameCard = originCardZone ? originCardZone.getGameCard() : null;
+//     let gameCard: GameCard | null = null;
+
+//     if (originGameCard && originCardZone) {
+//         originCardZone.removeCard();
+//         if (cardZone) {
+//             cardZone.setGameCard(originGameCard);
+//             gameCard = cardZone.getGameCard();
+//         }
+//     } else {
+//         if (cardZone) {
+//             cardZone.setGameCard(originGameCard);
+//             gameCard = cardZone.getGameCard();
+//         }
+//     }
+
+//     if (!gameCard) {
+//         gameCard = new GameCard({ duel, card });
+//         gameCard.gameObject.visible = false;
+//     }
+
+//     return gameCard!;
+
+// }
+
+const FIELD_ZONES = ["M", "S", "F", "EMZ"]
+export function isFieldZone(zoneData: FieldZoneData) {
+    return FIELD_ZONES.includes(zoneData.zone);
+}
+
+export function getGameZone(duel: YGODuel, zoneData: FieldZoneData): CardZone | null {
+    const field = duel.fields[zoneData.player];
+
+    if (isFieldZone(zoneData)) {
+        switch (zoneData.zone) {
+            case "F":
+                return field.fieldZone;
+            case "S":
+                return field.spellTrapZone[zoneData.zoneIndex];
+            case "EMZ":
+                return field.extraMonsterZone[zoneData.zoneIndex];
+            default:
+                field.monsterZone[zoneData.zoneIndex];
+        }
+    }
+
+    return null;
 }

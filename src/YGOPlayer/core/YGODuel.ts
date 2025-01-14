@@ -1,12 +1,12 @@
 import * as THREE from 'three';
 import { YGOPlayerCore } from './YGOPlayerCore';
 import { GameFieldLocation, YGOUiElement } from '../types';
-import { YGOCommands, YGOCore, YGODuelEvents } from '../../YGOCore';
+import { YGOCommands, YGOCore } from '../../YGOCore';
 import { YGOEntity } from './YGOEntity';
 import { GameController } from '../game/GameController';
 import { EventBus } from '../scripts/event-bus';
 import { YGOMouseEvents } from './components/YGOMouseEvents';
-import { createFields, handleDuelEvent } from '../scripts/ygo-utils';
+import { createFields } from '../scripts/ygo-utils';
 import { PlayerField } from '../game/PlayerField';
 import { YGOMath } from './YGOMath';
 import { GameCardHand } from '../game/GameCardHand';
@@ -14,16 +14,22 @@ import { ActionCardSelection } from '../actions/ActionSelectCard';
 import { YGOActionManager as ActionManager } from './components/YGOAction';
 import { ActionCardHandMenu } from '../actions/ActionCardHandMenu';
 import { ActionCardZoneMenu } from '../actions/ActionCardZoneMenu';
-import { YGOTaskController } from './components/YGOTaskController';
+import { YGOTaskController } from './components/tasks/YGOTaskController';
 import YUBEL from '../../decks/YUBEL.json';
 import CHIMERA from '../../decks/CHIMERA.json';
+import { GameCard } from '../game/GameCard';
+import { PositionTransition } from '../duel-events/utils/positionTransition';
+import { YGOTaskSequence } from './components/tasks/YGOTaskSequence';
+import { WaitTransition } from '../duel-events/utils/waitTransition';
+import { CallbackTransition } from '../duel-events/utils/callback';
+import { handleDuelEvent } from '../duel-events';
 
 export class YGODuel {
     public core: YGOPlayerCore;
     public fields: PlayerField[];
     public ygo!: YGOCore;
     public fieldLocations!: Map<string, GameFieldLocation>;
-    public camera: THREE.PerspectiveCamera;
+    public camera: THREE.Camera;
     public entities: YGOEntity[];
     public events: EventBus<any>;
     public actionManager: ActionManager;
@@ -46,9 +52,6 @@ export class YGODuel {
         this.events = new EventBus();
 
         (window as any).YGODuel = this;
-
-        console.log(YGOCommands);
-        console.dir(YGOCommands);
     }
 
     async load() {
@@ -56,12 +59,13 @@ export class YGODuel {
             const [fieldModel] = await Promise.all([
                 this.core.loadGLTFAsync(`http://127.0.0.1:8080/models/field.glb`)
             ]);
-
             this.core.scene.add(fieldModel.scene);
-            this.core.camera.position.set(0, 15, 0);
-            this.core.camera.lookAt(0, 0, 0);
+            this.core.camera.position.set(0, 0, 15);
+            //this.core.camera.position.set(0, -10, 15);
+            //this.core.camera.lookAt(0, 5, 0);
             this.gameController.addComponent("mouse_events", this.mouseEvents);
             this.gameController.addComponent("tasks", this.tasks)
+
             this.fields = createFields({ duel: this, fieldModel: fieldModel.scene });
             this.gameController.addComponent("action_card_selection", new ActionCardSelection({ duel: this }));
             this.entities.push(this.gameController);
@@ -111,6 +115,9 @@ export class YGODuel {
             // cube2.rotation.copy(this.fieldLocations.get("Hand2")!.rotation);
             // this.core.scene.add(cube2);
 
+            setTimeout(() => {
+                this.test();
+            }, 500);
         } catch (error) {
             console.error("ERROR:");
             console.error(error);
@@ -225,6 +232,7 @@ export class YGODuel {
         this.ygo.duelLog.events.on("new-log", (event) => {
             console.log("--- NEW LOG ---");
             console.log(event);
+            this.events.publish("render-ui");
             handleDuelEvent(this, event);
         })
 
@@ -246,19 +254,22 @@ export class YGODuel {
             for (let i = 0; i < gameField.monsterZone.length; ++i) {
                 const cardZone = gameField.monsterZone[i];
                 const card = duelField.monsterZone[i];
-                cardZone.reconcileCardWithState(card);
+                cardZone.setCard(card);
+                cardZone.updateCard();
             }
 
             for (let i = 0; i < gameField.spellTrapZone.length; ++i) {
                 const cardZone = gameField.spellTrapZone[i];
                 const card = duelField.spellTrapZone[i];
-                cardZone.reconcileCardWithState(card);
+                cardZone.setCard(card);
+                cardZone.updateCard();
             }
 
             for (let i = 0; i < gameField.extraMonsterZone.length; ++i) {
                 const cardZone = gameField.extraMonsterZone[i];
                 const card = duelField.extraMonsterZone[i];
-                cardZone.reconcileCardWithState(card);
+                cardZone.setCard(card);
+                cardZone.updateCard();
             }
 
             for (let i = 0; i < gameField.hand.cards.length; ++i) {
@@ -285,8 +296,8 @@ export class YGODuel {
         const totalCards = duelField.hand.length; // Total number of cards in hand
 
         const handWidth = (totalCards - 1) * cardSpacing + cardWidth;
-        const handY = 5;
-        const handZ = 6.8 * (playerIndex === 0 ? 1 : -1);
+        const handY = 6.8 * (playerIndex === 0 ? -1 : 1);
+        const handZ = 5;
 
         for (let i = 0; i < totalCards; ++i) {
             if (!gameField.hand.cards[i]) {
@@ -299,7 +310,7 @@ export class YGODuel {
             gameField.hand.cards[i].gameObject.position.x = xOffset + i * cardSpacing;
             gameField.hand.cards[i].gameObject.position.y = handY;
             gameField.hand.cards[i].gameObject.position.z = handZ;
-            gameField.hand.cards[i].gameObject.rotation.copy(YGOMath.degToRadEuler(270, 0, 0));
+            gameField.hand.cards[i].gameObject.rotation.copy(YGOMath.degToRadEuler(0, 0, 0));
             const currentGameObject = gameField.hand.cards[i].gameObject;
             if (currentGameObject) currentGameObject.name = "CARD " + i;
         }
@@ -315,7 +326,7 @@ export class YGODuel {
         this.deltaTime = this.core.deltaTime;
 
         for (const entity of this.entities) {
-            entity.update(0);
+            entity.update(this.deltaTime);
         }
     }
 
@@ -339,5 +350,49 @@ export class YGODuel {
 
     public getActivePlayer() {
         return this.currentPlayerIndex;
+    }
+
+    public test() {
+        const card = new GameCard({ card: this.ygo.getField(0).hand[0], duel: this });
+        const tempPos = this.fields[0].graveyard.gameObject.position.clone();
+        tempPos.z += 1;
+
+        card.gameObject.position.copy(tempPos);
+
+        return;
+
+
+
+        const pos1 = this.fields[0].hand.getCard(4)!.gameObject.position.clone();
+
+        const pos2 = this.fields[0].monsterZone[3].position.clone();
+
+        const pos3 = this.fields[0].monsterZone[3].position.clone();
+
+        card.gameObject.position.copy(pos1);
+
+        pos2.z += 6;
+
+        this.tasks.startTask(new YGOTaskSequence().add(
+            new PositionTransition({
+                gameObject: card.gameObject,
+                position: pos1,
+                duration: 0
+            })
+        ).add(
+            new PositionTransition({
+                gameObject: card.gameObject,
+                position: pos2,
+                duration: 0.35
+            })
+        ).add(
+            new PositionTransition({
+                gameObject: card.gameObject,
+                position: pos3,
+                duration: 0.25
+            })
+        ).add(new WaitTransition(0.5)).add(new CallbackTransition(() => {
+            alert("Done")
+        })));
     }
 }

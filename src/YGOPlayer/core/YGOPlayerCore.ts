@@ -5,7 +5,7 @@ import { FontLoader } from 'three/addons/loaders/FontLoader.js';
 
 export class YGOPlayerCore {
     public scene: THREE.Scene;
-    public camera: THREE.PerspectiveCamera;
+    public camera: THREE.Camera;
     public textureLoader: THREE.TextureLoader;
     public fontLoader: FontLoader;
     public gltfLoader: GLTFLoader;
@@ -18,6 +18,16 @@ export class YGOPlayerCore {
         this.deltaTime = 0;
         this.previousFrame = performance.now();
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        // const aspect = window.innerWidth / window.innerHeight;
+        // const frustumSize = 15;  // Size of the camera's frustum
+        // this.camera = new THREE.OrthographicCamera(
+        //     -frustumSize * aspect / 2,  // left
+        //     frustumSize * aspect / 2,   // right
+        //     frustumSize / 2,           // top
+        //     -frustumSize / 2,          // bottom
+        //     0.1,                       // near plane
+        //     1000                       // far plane
+        // );
         this.textureLoader = new THREE.TextureLoader();
         this.gltfLoader = new GLTFLoader();
         this.fontLoader = new FontLoader();
@@ -27,7 +37,7 @@ export class YGOPlayerCore {
 
     public render() {
         const now = performance.now();
-        this.deltaTime = now - this.previousFrame;
+        this.deltaTime = (now - this.previousFrame) / 1000;
         this.previousFrame = now;
 
         this.renderer.render(this.scene, this.camera);

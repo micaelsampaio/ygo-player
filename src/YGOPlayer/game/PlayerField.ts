@@ -1,4 +1,5 @@
 import { Card, PlayerInfo } from "../../YGOCore/types/types"
+import { Banish } from "./Banish"
 import { CardZone } from "./CardZone"
 import { Deck } from "./Deck"
 import { ExtraDeck } from "./ExtraDeck"
@@ -16,9 +17,10 @@ export class PlayerField {
     // extraMonsterZone: Array<YGOGameCard>;
     public mainDeck: Deck
     public extraDeck: ExtraDeck
+    public deck: Deck
     public hand: GameHand
     public graveyard: Graveyard
-    public banishedZone: any
+    public banishedZone: Banish
     public monsterZone: [CardZone, CardZone, CardZone, CardZone, CardZone]
     public spellTrapZone: [CardZone, CardZone, CardZone, CardZone, CardZone]
     public fieldZone: CardZone
@@ -33,7 +35,8 @@ export class PlayerField {
         this.extraMonsterZone = [] as any;
         this.fieldZone = null as any;
         this.graveyard = null as any;
-        this.banishedZone = null;
+        this.banishedZone = null as any;
+        this.deck = null as any;
     }
 
 }

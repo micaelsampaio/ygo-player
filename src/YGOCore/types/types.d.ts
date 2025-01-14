@@ -1,8 +1,13 @@
 export declare const NUM_ZONES: number;
-export type PlayerSide = 0 | 1;
+export type PlayerSide = 0 | 1 | number;
 export type CardPosition = "faceup-attack" | "faceup-defense" | "faceup" | "facedown";
 export type FieldZone = `M-${1 | 2 | 3 | 4 | 5}` | `M2-${1 | 2 | 3 | 4 | 5}` | `S-${1 | 2 | 3 | 4 | 5}` | `S2-${1 | 2 | 3 | 4 | 5}` | `EMZ` | `EMZ2` | `EMZ-${1 | 2}` | `EMZ2-${1 | 2}` | `ORU-${1 | 2 | 3 | 4 | 5}` | `ORU2-${1 | 2 | 3 | 4 | 5}` | `ORUEMZ-${1 | 2}` | `ORUEMZ2-${1 | 2}` | "H" | "H2" | `H-${number}` | `H2-${number}` | "F" | "F2" | "GY" | "GY2" | `GY-${number}` | `GY2-${number}` | "B" | "B2" | `B-${number}` | `B2-${number}` | "D" | "D2" | `D-${number}` | `D2-${number}` | "ED" | "ED2" | `ED-${number}` | `ED2-${number}`;
 export type FieldZoneId = "M" | "S" | "EMZ" | "GY" | "D" | "ED" | "B" | "F" | "ORU" | "ORUEMZ" | "H";
+export type FieldZoneData = {
+    zone: FieldZoneId;
+    player: number;
+    zoneIndex: number;
+};
 export declare enum CardBaseType {
     NormalMonster = 0,
     EffectMonster = 1,

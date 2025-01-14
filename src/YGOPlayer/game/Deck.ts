@@ -22,9 +22,9 @@ export class Deck extends YGOEntity implements YGOUiElement {
         this.normalMaterial = new THREE.MeshBasicMaterial({ color: 0x00555 });
         this.hoverMaterial = new THREE.MeshBasicMaterial({ color: 0x00ffff });
 
-        const geometry = new THREE.BoxGeometry(2, 0.1, 2);
+        const geometry = new THREE.BoxGeometry(2, 2, 0.1);
         const cube = new THREE.Mesh(geometry, this.normalMaterial);
-        cube.position.set(9, 1, 6);
+        cube.position.set(9, -6, 0);
 
         this.duel.core.scene.add(cube);
         this.gameObject = cube;

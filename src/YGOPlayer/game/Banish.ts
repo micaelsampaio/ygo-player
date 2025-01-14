@@ -21,9 +21,9 @@ export class Banish extends YGOEntity implements YGOUiElement {
         this.normalMaterial = new THREE.MeshBasicMaterial({ color: 0x00555 });
         this.hoverMaterial = new THREE.MeshBasicMaterial({ color: 0x00ffff });
 
-        const geometry = new THREE.BoxGeometry(2, 0.1, 2);
+        const geometry = new THREE.BoxGeometry(2, 2, 0.1);
         const cube = new THREE.Mesh(geometry, this.normalMaterial);
-        cube.position.set(10.5, 1, 0.5);
+        cube.position.set(11.5, -3, 0);
 
         this.duel.core.scene.add(cube);
         this.gameObject = cube;

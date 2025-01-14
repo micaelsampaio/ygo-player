@@ -11,6 +11,6 @@ export declare class YGOGameState {
     removeCard(zone: FieldZone): Card | null;
     getCardData(cardId: number): Card | null;
     shuffleDeck(player: number): void;
-    getPlayerIndexFromZone(zone: string): 0 | 1;
+    getPlayerIndexFromZone(zone: string): number;
     getAvailableZones(fieldZones: ("M" | "M2" | "S" | "S2" | "F" | "F2" | "EMZ")[]): FieldZone[];
 }

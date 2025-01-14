@@ -1,4 +1,4 @@
-import { Card, CardBaseType, FieldZone, FieldZoneId, PlayerField } from "../types/types";
+import { Card, CardBaseType, FieldZone, FieldZoneId, FieldZoneData, PlayerField } from "../types/types";
 export declare class YGOGameUtils {
     static isLinkMonster(card: Card): boolean;
     static isXYZMonter(card: Card): boolean;
@@ -8,15 +8,13 @@ export declare class YGOGameUtils {
     static isSpellTrap(card: Card): boolean;
     static isSpell(card: Card): boolean;
     static isTrap(card: Card): boolean;
+    static isDefense(card: Card): boolean;
+    static isAttack(card: Card): boolean;
     static hasLinkMonstersInField(field: PlayerField): boolean;
     static hasXyzMonstersInField(field: PlayerField): boolean;
-    static getPlayerIndexFromZone(zone: string): (0 | 1);
+    static getPlayerIndexFromZone(zone: string): number;
     static createZone(zone: FieldZoneId, player: number, position?: number): FieldZone;
-    static getZoneInfo(zone: FieldZone): {
-        zone: FieldZoneId;
-        player: 0 | 1;
-        zonePosition: number | null;
-    };
+    static getZoneData(zone: FieldZone): FieldZoneData;
     static getCardBaseType(card: Card): CardBaseType;
     static getCardsBaseType(cards: Card[]): CardBaseType[];
     static toSortedCards(cards: Card[]): Card[];

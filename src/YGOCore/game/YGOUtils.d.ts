@@ -1,7 +1,7 @@
 import { Card, FieldZone, PlayerField, YGOProps } from "../types/types";
 import { YGOCore } from "./YGOCore";
 export declare class YGOUtils {
-    static getPlayerIndexFromZone(zone: string): (0 | 1);
+    static getPlayerIndexFromZone(zone: string): number;
     static parseMainDeck({ mainDeck, player }: {
         mainDeck: Card[];
         player: number;

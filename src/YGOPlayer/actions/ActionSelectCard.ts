@@ -138,7 +138,6 @@ export class ActionCardSelection extends YGOComponent implements YGOAction {
         const cube = new THREE.Mesh(geometry, material);
         cube.position.copy(position);
         cube.rotation.copy(rotation);
-        cube.position.y += 0.1;
         cube.visible = false;
         this.duel.core.scene.add(cube);
         return cube

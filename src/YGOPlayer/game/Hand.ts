@@ -4,6 +4,7 @@ import { YGOEntity } from '../core/YGOEntity';
 import { GameCardHand } from './GameCardHand';
 
 export class GameHand extends YGOEntity {
+
     private duel: YGODuel;
 
     public canHoverHand: boolean = true;
@@ -17,22 +18,6 @@ export class GameHand extends YGOEntity {
         this.duel = duel;
         this.cards = [];
     }
-
-    // override update(dt: number): void {
-    //     const gameField = this.duel.state.fields[0];
-
-    //     if (!gameField || !gameField.hand) return;
-
-    //     const handCardsWidth = gameField.hand.length * 3 - 1.5;
-
-    //     for (let i = 0; i < gameField.hand.length; ++i) {
-    //         const x = i * 3;
-    //         const pos = gameField.hand[i].gameObject!.position.clone();
-    //         pos.x = (-handCardsWidth / 2) + x;
-    //         gameField.hand[i].gameObject!.position.lerp(pos, 0.05);
-    //     }
-
-    // }
 
     public disableHand() {
 
@@ -48,6 +33,19 @@ export class GameHand extends YGOEntity {
 
     public onCardHover() {
 
+    }
+
+    getCard(index: number): GameCardHand | null {
+        return this.cards[index];
+    }
+
+    removeCardFromCardReference(card: Card) {
+        const index = this.cards.findIndex(c => c.card === card);
+
+        if (index > 0) {
+            this.cards[index].destroy();
+            this.cards = this.cards.filter((_, i) => i !== index);
+        }
     }
 
     public onCardClick(card: Card) {
