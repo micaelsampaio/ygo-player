@@ -1,6 +1,6 @@
 import { YGOTask } from "../../core/components/tasks/YGOTask";
 
-export class WaitTransition extends YGOTask {
+export class WaitForSeconds extends YGOTask {
     private duration: number;
 
     constructor(duration: number) {

@@ -1,4 +1,4 @@
-import { Card, PlayerInfo } from "../../YGOCore/types/types"
+import { PlayerInfo } from "../../YGOCore/types/types"
 import { Banish } from "./Banish"
 import { CardZone } from "./CardZone"
 import { Deck } from "./Deck"

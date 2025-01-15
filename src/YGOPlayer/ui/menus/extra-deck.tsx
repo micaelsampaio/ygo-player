@@ -32,6 +32,7 @@ export function ExtraDeck({ duel, visible = true }: { duel: YGODuel, visible: bo
             <img onClick={(e) => {
                 action.eventData = { duel, card, mouseEvent: e };
                 duel.actionManager.setAction(action);
+                duel.events.publish("set-selected-card", { player: 0, card });
             }}
                 key={card.index}
                 src={`http://127.0.0.1:8080/images/cards_small/${card.id}.jpg`}

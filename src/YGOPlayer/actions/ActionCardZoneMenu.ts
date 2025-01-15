@@ -16,7 +16,6 @@ export class ActionCardZoneMenu implements YGOAction {
     }
 
     public onActionStart() {
-        console.log("START ACTION IN HAND")
         this.duel.events.publish("set-ui-action", {
             type: "card-zone-menu",
             data: this.data
@@ -36,7 +35,6 @@ export class ActionCardZoneMenu implements YGOAction {
     }
 
     public onActionEnd() {
-        console.log("END ACTION IN HAND")
         this.duel.events.publish("clear-ui-action");
 
         // const container = document.getElementById("ygo-player-core")! as HTMLDivElement;

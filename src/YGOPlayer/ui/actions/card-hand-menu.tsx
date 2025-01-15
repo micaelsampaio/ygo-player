@@ -228,7 +228,6 @@ export function CardHandMenu({ duel: duel2, card: card2, index, clearAction, mou
             e.stopPropagation();
             e.preventDefault();
             duel.events.publish("clear-ui-action");
-            console.log("TEMP:: MOUSE CLICK REACT", e.target);
         }}>
             <div onClick={e => e.stopPropagation()}>
                 {isMonster && <>

@@ -96,7 +96,6 @@ export function CardGraveyardMenu({ duel, card, clearAction, mouseEvent }: { due
             e.stopPropagation();
             e.preventDefault();
             duel.events.publish("clear-ui-action");
-            console.log("TEMP:: MOUSE CLICK REACT", e.target);
         }}>
             <div onClick={e => e.stopPropagation()}>
                 <button type="button" onClick={specialSummonATK}>SS Atk</button>

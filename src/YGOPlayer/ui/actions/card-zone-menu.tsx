@@ -80,7 +80,6 @@ export function CardZoneMenu({ duel, card, zone, clearAction, mouseEvent }: { du
             e.stopPropagation();
             e.preventDefault();
             duel.events.publish("clear-ui-action");
-            console.log("TEMP:: MOUSE CLICK REACT", e.target);
         }}>
             {isXYZ && <div>
                 <div>

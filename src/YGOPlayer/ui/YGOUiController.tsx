@@ -17,23 +17,15 @@ export function YGOUiController({ duel }: { duel: YGODuel }) {
     const [action, setAction] = useState<{ type: string, data: any }>({ type: "", data: null });
     const [menus, setMenus] = useState<{ key: string, type: string, data: any }[]>([]);
     const clearAction = () => {
-        console.log("XX CLEAR ACTION");
         setAction({ type: '', data: null });
     };
 
-    console.log("XX ACTION: ", action);
-    console.log("XX MENU: ", action);
-
     useEffect(() => {
-        // TODO
-
         const clearAction = () => {
-            console.log("XX CLEAR ACTION");
             setAction({ type: "", data: null });
         }
 
         duel.events.on("set-ui-action", ({ type, data }: any) => {
-            console.log("XX SET ACTION", type);
             setAction({ type, data });
         });
 
@@ -55,7 +47,7 @@ export function YGOUiController({ duel }: { duel: YGODuel }) {
 
             setMenus((currentMenus) => {
                 const currentMenu = currentMenus.find(m => m.type === type);
-
+                
                 if (currentMenu) {
                     return currentMenus.filter(m => m.type !== type)
                 }
@@ -71,6 +63,27 @@ export function YGOUiController({ duel }: { duel: YGODuel }) {
             setMenus((currentMenus) => currentMenus.filter(m => m.key !== key));
         });
 
+        duel.events.on("set-selected-card", (data: any) => {
+
+            console.log("SET SELECTED CARD", data);
+
+            setMenus(currentMenus => {
+                const type = "selected-card-menu";
+                if (!data.card) {
+                    return currentMenus.filter(m => m.key !== type);
+                } else {
+                    const currentMenu = currentMenus.find(m => m.type === type);
+
+                    if (currentMenu) {
+                        currentMenu.data = data;
+                        return [...currentMenus];
+                    }
+
+                    return [...currentMenus, { key: type, type: "selected-card-menu", data }];
+                }
+            });
+        })
+
         duel.events.on("render-ui", () => {
             setRender(performance.now())
         });
@@ -81,6 +94,8 @@ export function YGOUiController({ duel }: { duel: YGODuel }) {
         duel.events.on("disable-game-actions", () => {
             setGameConfig(currentGameConfig => ({ ...currentGameConfig, actions: false }));
         });
+
+
 
         // // duel.events.on("on-card-hand-click", (data: any) => {
         // //     // TODO
@@ -97,10 +112,9 @@ export function YGOUiController({ duel }: { duel: YGODuel }) {
 
     const Action = (ACTIONS as any)[action.type] as any;
 
-    console.log(action.data);
     if (!duel) return null;
-    console.log("Action::", action);
-    console.log("MENUS::", menus);
+    // console.log("Action::", action);
+    // console.log("MENUS::", menus);
     return <>
         <DuelLogMenu duel={duel} />
         <TimeLine duel={duel} />

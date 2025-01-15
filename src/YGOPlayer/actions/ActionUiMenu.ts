@@ -14,7 +14,6 @@ export class ActionUiMenu implements YGOAction {
     }
 
     public onActionStart() {
-        console.log("XX START ACTION IN HAND")
         this.duel.events.publish("set-ui-action", {
             type: this.eventType,
             data: this.eventData

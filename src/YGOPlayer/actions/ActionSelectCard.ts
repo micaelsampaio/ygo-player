@@ -28,11 +28,9 @@ export class ActionCardSelection extends YGOComponent implements YGOAction {
     }
 
     public onActionStart(): void {
-        console.log("ACTION START ::: SELECT CARD");
         this.hideAllSelectionCards();
 
         for (const cardzone of this.zones) {
-            console.log("   >>> SHOW ZONES", cardzone.zone);
             this.cardSelectionZones.get(cardzone.zone)!.visible = true;
             cardzone.onClickCb = () => this.onCardZoneClick(cardzone);
         }
@@ -67,7 +65,6 @@ export class ActionCardSelection extends YGOComponent implements YGOAction {
     }
 
     private clear() {
-        console.log(">>> CLEAR");
         this.mouseEvents.onClickCb = null;
         this.onCancelled = null;
         this.hideAllSelectionCards();
@@ -75,8 +72,6 @@ export class ActionCardSelection extends YGOComponent implements YGOAction {
     }
 
     private hideAllSelectionCards() {
-        console.log("   >>> HIDE ZONES");
-
         for (const [, card] of this.cardSelectionZones) {
             card.visible = false;
         }
@@ -104,7 +99,6 @@ export class ActionCardSelection extends YGOComponent implements YGOAction {
     }
 
     public cancelSelection() {
-        console.log(">>> CANCEL SELECTION");
         this.clear();
         this.duel.actionManager.clearAction();
         this.duel.events.publish("clear-ui-action");

@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { YGOPlayerCore } from './YGOPlayerCore';
 import { GameFieldLocation, YGOUiElement } from '../types';
-import { YGOCommands, YGOCore } from '../../YGOCore';
+import { YGOCore } from '../../YGOCore';
 import { YGOEntity } from './YGOEntity';
 import { GameController } from '../game/GameController';
 import { EventBus } from '../scripts/event-bus';
@@ -18,9 +18,9 @@ import { YGOTaskController } from './components/tasks/YGOTaskController';
 import YUBEL from '../../decks/YUBEL.json';
 import CHIMERA from '../../decks/CHIMERA.json';
 import { GameCard } from '../game/GameCard';
-import { PositionTransition } from '../duel-events/utils/positionTransition';
+import { PositionTransition } from '../duel-events/utils/position-transition';
 import { YGOTaskSequence } from './components/tasks/YGOTaskSequence';
-import { WaitTransition } from '../duel-events/utils/waitTransition';
+import { WaitForSeconds } from '../duel-events/utils/wait-for-seconds';
 import { CallbackTransition } from '../duel-events/utils/callback';
 import { handleDuelEvent } from '../duel-events';
 
@@ -145,27 +145,14 @@ export class YGODuel {
                 mainDeck: deck2.mainDeck as any,
                 extraDeck: deck2.extraDeck as any,
             }],
-            // options: {
-            //     fieldState: [
-            //         [
-            //             { id: 62318994, zone: "M-1" }, // lotus
-            //             { id: 90829280, zone: "M-2" }, // spirit of yubel
-            //             { id: 14558127, zone: "H-3" }, // Ash blossom
-            //             { id: 80312545, zone: "H-4" }, // Spirt gates
-            //             { id: 10045474, zone: "H-5" }, // imperm,
-
-            //             // { id: 62318994, zone: "H-6" }, // lotus
-            //             // { id: 90829280, zone: "H-7" }, // spirit of yubel
-            //             // { id: 14558127, zone: "H-8" }, // Ash blossom
-            //             // { id: 80312545, zone: "H-9" }, // Spirt gates
-            //             // { id: 10045474, zone: "H-10" }, // imperm,
-
-            //             // { id: 27439792, zone: "H-11" }, // imperm,
-            //             // { id: 81034083, zone: "H-12" }, // imperm,
-            //             // { id: 81034083, zone: "H-13" }, // imperm,
-            //         ]
-            //     ]
-            // }
+            options: {
+                fieldState: [
+                    [
+                        { id: 62318994, zone: "M-1" }, // lotus
+                        { id: 90829280, zone: "M-2" }, // spirit of yubel
+                    ]
+                ]
+            }
         });
 
         setTimeout(() => {
@@ -174,61 +161,6 @@ export class YGODuel {
         }); // next fram call
 
 
-        // this.ygo.duelLog.events.on("new", (log) => {
-        // Animation V1
-
-        //     if (log.type === "Normal Summon" ||
-        //         log.type === "Special Summon" ||
-        //         log.type === "Set Monster" 
-        //     ) {
-        //         const ygo = this.ygo;
-        //         const duel = this;
-        //         const normalSummonGenerator = function* () {
-        //             const gameZoneIndex = Number(log.data.zone.split("-")[1]) - 1;
-        //             const originZoneIndex = Number(log.data.originZone.split("-")[1]) - 1;
-        //             const card = ygo.state.fields[log.player].monsterZone[gameZoneIndex]!;
-        //             const zone = duel.fields[log.player].monsterZone[gameZoneIndex];
-        //             const handCard = duel.fields[log.player].hand.cards[originZoneIndex];
-        //             const startPosition = handCard.gameObject.position.clone();
-        //             const endPosition = zone.position.clone();
-
-        //             const gameCard = new GameCard({
-        //                 duel,
-        //                 card
-        //             });
-
-        //             //duel.fields[log.player].hand.cards[originZoneIndex].destroy();
-        //             const { rotation } = zone.getCardPositionAndRotation(card);
-        //             gameCard.gameObject.rotation.copy(rotation);
-
-        //             let startTime = Date.now();
-
-        //             while (Date.now() - startTime < 250) {
-        //                 let time = (Date.now() - startTime) / 250;
-
-        //                 const pos = startPosition.clone().lerpVectors(startPosition, endPosition, time);
-
-        //                 // const arcHeight = 5;
-        //                 // const arcProgress = Math.sin(time * Math.PI);
-        //                 // pos.y += arcHeight * arcProgress;
-
-        //                 gameCard.gameObject.position.copy(pos);
-
-        //                 yield null;
-        //             }
-
-        //             zone.setCard(gameCard);
-        //             zone.reconcileCardWithState(card);
-        //             duel.updateField();
-        //         };
-
-        //         this.tasks.setCommandTask(normalSummonGenerator());
-        //     } else {
-        //         this.updateField();
-        //     }
-
-        //     this.events.publish("logs-updated", this.ygo.duelLog.entries);
-        // });
         this.ygo.duelLog.events.on("new-log", (event) => {
             console.log("--- NEW LOG ---");
             console.log(event);
@@ -238,7 +170,7 @@ export class YGODuel {
 
         this.ygo.duelLog.events.on("update-logs", (data) => {
             // TODO THIS
-            //this.events.publish("logs-updated", data);
+            this.events.publish("logs-updated", data);
             //this.updateField();
         });
 
@@ -254,7 +186,6 @@ export class YGODuel {
 
     public updateField() {
         console.log("PROCESS: UPDATE FIELD::")
-        const cardInitialProps = { duel: this };
 
         for (let playerIndex = 0; playerIndex < this.fields.length; ++playerIndex) {
             const gameField = this.fields[playerIndex];
@@ -362,13 +293,14 @@ export class YGODuel {
     }
 
     public test() {
+        return;
+
         const card = new GameCard({ card: this.ygo.getField(0).hand[0], duel: this });
         const tempPos = this.fields[0].graveyard.gameObject.position.clone();
         tempPos.z += 1;
 
         card.gameObject.position.copy(tempPos);
 
-        return;
 
 
 
@@ -400,7 +332,7 @@ export class YGODuel {
                 position: pos3,
                 duration: 0.25
             })
-        ).add(new WaitTransition(0.5)).add(new CallbackTransition(() => {
+        ).add(new WaitForSeconds(0.5)).add(new CallbackTransition(() => {
             alert("Done")
         })));
     }

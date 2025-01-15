@@ -32,6 +32,7 @@ export interface YGOProps {
     }[];
     options?: {
         lp?: number;
+        draw?: number;
         shuffleDecks?: boolean;
         fieldState?: FileldStateEntry[][];
     };
@@ -43,7 +44,10 @@ export interface FileldStateEntry {
     def?: number;
     owner?: number;
     position?: CardPosition;
-    materials?: Array<number>;
+    materials?: Array<{
+        id: number;
+        owner?: number;
+    }>;
 }
 export interface CardData {
     id: number;
@@ -90,7 +94,6 @@ export interface PlayerField {
     mainDeck: Card[];
     extraDeck: Card[];
     hand: Card[];
-    initialHandSize: number;
     initialMainDeckOrder: number[];
     graveyard: Card[];
     banishedZone: Card[];

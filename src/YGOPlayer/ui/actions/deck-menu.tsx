@@ -21,7 +21,6 @@ export function DeckMenu({ duel, clearAction, mouseEvent }: { duel: YGODuel, cle
             e.stopPropagation();
             e.preventDefault();
             duel.events.publish("clear-ui-action");
-            console.log("TEMP:: MOUSE CLICK REACT", e.target);
         }}>
             <div onClick={e => e.stopPropagation()}>
                 <div>

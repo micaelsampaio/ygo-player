@@ -5,9 +5,8 @@ import { YGOUiElement } from '../../types';
 import { EventBus } from '../../scripts/event-bus';
 
 export class YGOMouseEvents extends YGOComponent {
-    private duel: YGODuel;
     private elements: Set<YGOUiElement>;
-    private camera: THREE.PerspectiveCamera;
+    private camera: THREE.Camera;
     private raycaster: THREE.Raycaster;
     private mouseDownElement: YGOUiElement | null;
     private hoverElement: YGOUiElement | null;
@@ -18,7 +17,6 @@ export class YGOMouseEvents extends YGOComponent {
 
     constructor(duel: YGODuel) {
         super("mouse_events");
-        this.duel = duel;
         this.elements = new Set();
         this.camera = duel.core.camera;
         this.raycaster = new THREE.Raycaster();
@@ -89,8 +87,6 @@ export class YGOMouseEvents extends YGOComponent {
     }
 
     private event_OnMouseClick(event: MouseEvent) {
-        console.log("TEMP:: MOUSE CLICK", event.target);
-
         const elements = this.getIntersectsElements(event);
         let clickElement: YGOUiElement | null = null;
 

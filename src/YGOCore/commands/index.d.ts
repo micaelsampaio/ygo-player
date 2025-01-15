@@ -1,6 +1,8 @@
 import { Command } from "../types/commands";
 import { ActivateCardCommand } from "./ActivateCardCommand";
 import { BanishCommand } from "./BanishCommand";
+import { ChangeCardAtkDefCommand } from "./ChangeCardAtkDefCommand";
+import { ChangeCardPositionCommand } from "./ChangeCardPositionCommand";
 import { DestroyCardCommand } from "./DestroyCard";
 import { DrawFromDeckCommand } from "./DrawFromDeckCommand";
 import { FieldSpellCommand } from "./FieldSpellCommand";
@@ -44,6 +46,8 @@ export declare const Commands: {
     ToExtraDeckCommand: typeof ToExtraDeckCommand;
     ToHandCommand: typeof ToHandCommand;
     FieldSpellCommand: typeof FieldSpellCommand;
+    ChangeCardPositionCommand: typeof ChangeCardPositionCommand;
+    ChangeCardAtkDefCommand: typeof ChangeCardAtkDefCommand;
 };
 export declare const COMMANDS_BY_NAME: any;
 export declare function GetCommandByClassName<T = Command>(commandClassName: string): T | null;

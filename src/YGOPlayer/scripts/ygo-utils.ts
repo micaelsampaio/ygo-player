@@ -217,7 +217,7 @@ export function getCardRotationFromFieldZoneData(card: Card, zoneData: FieldZone
             if (YGOGameUtils.isFaceDown(card)) {
                 rotation.y = THREE.MathUtils.degToRad(180);
                 if (YGOGameUtils.isDefense(card)) {
-                    rotation.z = THREE.MathUtils.degToRad(90);
+                    rotation.z = THREE.MathUtils.degToRad(-90);
                 }
             } else {
                 if (YGOGameUtils.isDefense(card)) {
@@ -267,36 +267,6 @@ export function getZonePositionFromZoneData(duel: YGODuel, zoneData: FieldZoneDa
     return position;
 }
 
-// export function setupCardOnField(duel: YGODuel, card: Card, originZone: FieldZone, zone: FieldZone): GameCard {
-//     const originZoneData = YGOGameUtils.getZoneData(originZone);
-//     const zoneData = YGOGameUtils.getZoneData(zone);
-//     const originCardZone = getGameZone(duel, originZoneData);
-//     const cardZone = getGameZone(duel, zoneData);
-//     const originGameCard = originCardZone ? originCardZone.getGameCard() : null;
-//     let gameCard: GameCard | null = null;
-
-//     if (originGameCard && originCardZone) {
-//         originCardZone.removeCard();
-//         if (cardZone) {
-//             cardZone.setGameCard(originGameCard);
-//             gameCard = cardZone.getGameCard();
-//         }
-//     } else {
-//         if (cardZone) {
-//             cardZone.setGameCard(originGameCard);
-//             gameCard = cardZone.getGameCard();
-//         }
-//     }
-
-//     if (!gameCard) {
-//         gameCard = new GameCard({ duel, card });
-//         gameCard.gameObject.visible = false;
-//     }
-
-//     return gameCard!;
-
-// }
-
 const FIELD_ZONES = ["M", "S", "F", "EMZ"]
 export function isFieldZone(zoneData: FieldZoneData) {
     return FIELD_ZONES.includes(zoneData.zone);
@@ -310,11 +280,11 @@ export function getGameZone(duel: YGODuel, zoneData: FieldZoneData): CardZone | 
             case "F":
                 return field.fieldZone;
             case "S":
-                return field.spellTrapZone[zoneData.zoneIndex];
+                return field.spellTrapZone[zoneData.zoneIndex - 1];
             case "EMZ":
-                return field.extraMonsterZone[zoneData.zoneIndex];
+                return field.extraMonsterZone[zoneData.zoneIndex - 1];
             default:
-                field.monsterZone[zoneData.zoneIndex];
+                return field.monsterZone[zoneData.zoneIndex - 1];
         }
     }
 

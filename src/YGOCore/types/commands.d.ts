@@ -1,6 +1,6 @@
 import { YGOCore } from "../game/YGOCore";
 import { CardPosition, FieldZone } from "./types";
-export type CommandType = "NULL" | "Normal Summon" | "Tribute Summon" | "Tribute Set" | "Special Summon" | "Banish" | "Banish FD" | "Shuffle Deck" | "Draw From Deck" | "Mill From Deck" | "Fusion Summon" | "Synchro Summon" | "Link Summon" | "XYZ Summon" | "XYZ Attach Material" | "XYZ Detach Material" | "Set Monster" | "Set ST" | "To ST" | "Send To GY" | "Destroy" | "Activate" | "Change Battle Position" | "Move Card" | "To Top Deck" | "To Bottom Deck" | "To Hand" | "Reveal" | "Target" | "Field Spell";
+export type CommandType = "NULL" | "Normal Summon" | "Tribute Summon" | "Tribute Set" | "Special Summon" | "Banish" | "Banish FD" | "Shuffle Deck" | "Draw From Deck" | "Mill From Deck" | "Fusion Summon" | "Synchro Summon" | "Link Summon" | "XYZ Summon" | "XYZ Attach Material" | "XYZ Detach Material" | "Set Monster" | "Set ST" | "To ST" | "Send To GY" | "Destroy" | "Activate" | "Change Battle Position" | "Move Card" | "To Top Deck" | "To Bottom Deck" | "To Hand" | "Reveal" | "Target" | "Field Spell" | "Change Card Position" | "Change Card Atk Def";
 export interface Command {
     type: CommandType;
     parent: Command | null;
@@ -106,13 +106,6 @@ export interface MoveCardCommandData {
     position?: CardPosition;
     log?: boolean;
 }
-export interface ChangeBattlePositionCommandData {
-    player: number;
-    id: number;
-    originZone: FieldZone;
-    zone: FieldZone;
-    position: CardPosition;
-}
 export interface SetMonsterCommandData {
     player: number;
     id: number;
@@ -162,6 +155,19 @@ export interface ActivateCardCommandData {
     id: number;
     originZone?: FieldZone;
     zone: FieldZone;
+}
+export interface ChangeCardPositionCommandData {
+    player: number;
+    id: number;
+    zone: FieldZone;
+    position: CardPosition;
+}
+export interface ChangeCardAtkDefCommandData {
+    player: number;
+    id: number;
+    zone: FieldZone;
+    atk?: number;
+    def?: number;
 }
 export interface BanishCommandData {
     player: number;

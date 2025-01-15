@@ -25,4 +25,6 @@ export declare const YGOCommands: {
     ToExtraDeckCommand: typeof import("./commands/ToExtraDeckCommand").ToExtraDeckCommand;
     ToHandCommand: typeof import("./commands/ToHandCommand").ToHandCommand;
     FieldSpellCommand: typeof import("./commands/FieldSpellCommand").FieldSpellCommand;
+    ChangeCardPositionCommand: typeof import("./commands/ChangeCardPositionCommand").ChangeCardPositionCommand;
+    ChangeCardAtkDefCommand: typeof import("./commands/ChangeCardAtkDefCommand").ChangeCardAtkDefCommand;
 };

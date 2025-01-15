@@ -29,7 +29,9 @@ export declare namespace YGODuelEvents {
         ToST = "To ST",
         Reveal = "Reveal",
         Target = "Target",
-        FieldSpell = "Field Spell"
+        FieldSpell = "Field Spell",
+        ChangeCardPosition = "Change Card Position",
+        ChangeCardAtkDef = "Change Card Atk Def"
     }
     interface DuelLog {
         type: LogType;
@@ -139,5 +141,16 @@ export declare namespace YGODuelEvents {
     interface Target extends DuelLog {
         id: number;
         zone: FieldZone;
+    }
+    interface ChangeCardPosition extends DuelLog {
+        id: number;
+        zone: FieldZone;
+        position: CardPosition;
+    }
+    interface ChangeCardAtkDef extends DuelLog {
+        id: number;
+        zone: FieldZone;
+        atk: number | null;
+        def: number | null;
     }
 }

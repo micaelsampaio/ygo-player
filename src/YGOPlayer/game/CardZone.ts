@@ -5,9 +5,8 @@ import { YGOUiElement } from "../types";
 import { YGOMouseEvents } from '../core/components/YGOMouseEvents';
 import { GameCard } from './GameCard';
 import { Card, FieldZone } from '../../YGOCore/types/types';
-import { YGOMath } from '../core/YGOMath';
 import { ActionCardZoneMenu } from '../actions/ActionCardZoneMenu';
-import { YGOGameUtils } from '../../YGOCore';
+import { getCardRotation } from '../scripts/ygo-utils';
 
 export class CardZone extends YGOEntity implements YGOUiElement {
 
@@ -61,20 +60,28 @@ export class CardZone extends YGOEntity implements YGOUiElement {
 
         console.log("CARD: ", this.card?.cardReference.name);
 
-        if (!this.onClickCb && this.card?.cardReference) {
+        this.duel.events.publish("set-selected-card", {
+            player: 0,
+            card: this.getCardReference()
+        });
+
+        if (!this.onClickCb) {
             event.preventDefault();
             event.stopPropagation();
 
-            console.log("MOUSE CLICK CARD");
-            //duel, card, index, clearAction, mouseEvent
-            const action = this.duel.actionManager.getAction<ActionCardZoneMenu>("card-zone-menu");
-            action.setData({
-                duel: this.duel,
-                card: this.card.cardReference,
-                zone: this.zone,
-                mouseEvent: event
-            })
-            this.duel.actionManager.setAction(action);
+            if (this.getCardReference()) {
+                const action = this.duel.actionManager.getAction<ActionCardZoneMenu>("card-zone-menu");
+                action.setData({
+                    duel: this.duel,
+                    card: this.card!.cardReference,
+                    zone: this.zone,
+                    mouseEvent: event
+                })
+                this.duel.actionManager.setAction(action);
+            } else {
+                this.duel.events.publish("clear-ui-action");
+            }
+
         }
 
         if (this.onClickCb) {
@@ -91,25 +98,27 @@ export class CardZone extends YGOEntity implements YGOUiElement {
     }
 
     setCard(card: Card | null) {
-        //this.card = card;
         if (!card) {
             this.destroyCard();
             return;
         }
 
-        // TODO CREATE GAME CARD
+        if (card === this.getCardReference()) return;
+
+        if (this.card) this.card.destroy();
+
         this.card = new GameCard({ duel: this.duel, card });
-        this.updateCard();
     }
 
     setGameCard(card: GameCard | null) {
+        if (card === this.card) return;
+
         if (!card) {
             this.destroyCard();
             return;
         }
 
         this.card = card;
-        this.updateCard();
     }
 
     getGameCard(): GameCard | null {
@@ -136,81 +145,17 @@ export class CardZone extends YGOEntity implements YGOUiElement {
     updateCard() {
         if (!this.card) return;
 
-        // ROTATION ETC 
+        const card = this.getCardReference();
 
-        // TODO CARD POSITION YARA YARA
-        // TODO UPDATE POSITION ROTATION YARE YARE
+        if (!card) return;
+
+        console.log("UPDATE CARD:: ", card.name);
+
+        const rotation = getCardRotation(this.getCardReference()!, this.zone);
+        this.card.gameObject.position.copy(this.position);
+        this.card.gameObject.rotation.copy(rotation);
+        console.log(this.position);
     }
-
-    // getCardPositionAndRotation(card: Card) {
-    //     if (this.isMonsterZone) {
-    //         if (YGOGameUtils.isFaceDown(card)) {
-    //             const rotation = this.rotation.clone();
-    //             rotation.y += YGOMath.degToRad(180);
-    //             rotation.z += YGOMath.degToRad(-90);
-    //             return {
-    //                 position: this.position,
-    //                 rotation,
-    //                 scale: 1
-    //             }
-    //         } else if (card.position === "faceup-defense") {
-    //             const rotation = this.rotation.clone();
-    //             rotation.z += YGOMath.degToRad(90);
-
-    //             return {
-    //                 position: this.position,
-    //                 rotation,
-    //                 scale: 1
-    //             }
-    //         } else {
-    //             return {
-    //                 position: this.position,
-    //                 rotation: this.rotation,
-    //                 scale: 1
-    //             }
-    //         }
-    //     } else {
-    //         if (YGOGameUtils.isFaceDown(card)) {
-    //             const rotation = this.rotation.clone();
-    //             rotation.y += YGOMath.degToRad(180);
-    //             return {
-    //                 position: this.position,
-    //                 rotation,
-    //                 scale: 1
-    //             }
-    //         } else {
-    //             return {
-    //                 position: this.position,
-    //                 rotation: this.rotation,
-    //                 scale: 1
-    //             }
-    //         }
-    //     }
-    // }
-
-    // reconcileCardWithState(card: Card | null) {
-    //     if (!card && this.card) {
-    //         // remove card
-    //         this.card.destroy();
-    //         this.setCard(null);
-    //     } else if (card && !this.card) {
-    //         // create card
-    //         const gameCard = new GameCard({
-    //             duel: this.duel,
-    //             card
-    //         });
-    //         this.setCard(gameCard);
-    //     } else if (card && this.card && this.card.cardReference !== card) {
-    //         this.card.setCard(card);
-    //     }
-
-    //     if (this.card) {
-    //         const { position, rotation, scale } = this.getCardPositionAndRotation(this.card.cardReference);
-    //         this.card.gameObject.position.copy(position);
-    //         this.card.gameObject.rotation.copy(rotation);
-    //         this.card.gameObject.scale.set(scale, scale, scale);
-    //     }
-    // }
 
     isEmpty() {
         return !this.card;

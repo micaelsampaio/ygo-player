@@ -47,7 +47,6 @@ export function CardDeckMenu({ duel, card, clearAction, mouseEvent }: { duel: YG
             e.stopPropagation();
             e.preventDefault();
             duel.events.publish("clear-ui-action");
-            console.log("TEMP:: MOUSE CLICK REACT", e.target);
         }}>
             <div onClick={e => e.stopPropagation()}>
                 <div>

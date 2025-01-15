@@ -42,8 +42,6 @@ export class GameCardHand extends YGOEntity implements YGOUiElement {
         event.preventDefault();
         event.stopPropagation();
 
-        console.log("MOUSE CLICK CARD");
-        //duel, card, index, clearAction, mouseEvent
         const action = this.duel.actionManager.getAction<ActionCardHandMenu>("card-hand-menu");
         action.setData({
             duel: this.duel,

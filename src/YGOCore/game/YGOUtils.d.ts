@@ -19,4 +19,6 @@ export declare class YGOUtils {
     static getOverlayZone(zone: FieldZone): FieldZone;
     static initializePlayersFields(props: YGOProps): [PlayerField, PlayerField];
     static getFieldsAsString(ygo: YGOCore): string;
+    private static recoverFields;
+    static isNumeric(val: any): boolean;
 }
