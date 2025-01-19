@@ -74,6 +74,7 @@ export interface Card {
     atk: number;
     def: number;
     level: number;
+    linkval: number;
     attribute: string;
     card_images: any;
     index: number;

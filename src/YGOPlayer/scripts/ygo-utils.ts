@@ -260,6 +260,8 @@ export function getZonePositionFromZoneData(duel: YGODuel, zoneData: FieldZoneDa
         position = field.deck.gameObject.position;
     } else if (zoneData.zone === "ED") {
         position = field.extraDeck.gameObject.position;
+    } else if (zoneData.zone === "F") {
+        position = field.fieldZone.gameObject.position;
     } else {
         position = field.monsterZone[0].position;
     }
@@ -289,4 +291,50 @@ export function getGameZone(duel: YGODuel, zoneData: FieldZoneData): CardZone | 
     }
 
     return null;
+}
+
+export function getTransformFromCamera(duel: YGODuel, gameObject: any): { x: number, y: number, width: number, height: number } {
+    const width = gameObject.geometry.parameters.width;
+    const height = gameObject.geometry.parameters.height;
+
+    const corners = [
+        new THREE.Vector3(-width / 2, -height / 2, 0),  // bottom-left
+        new THREE.Vector3(width / 2, -height / 2, 0),   // bottom-right
+        new THREE.Vector3(-width / 2, height / 2, 0),   // top-left
+        new THREE.Vector3(width / 2, height / 2, 0)     // top-right
+    ];
+
+    const screenCorners = corners.map(corner => {
+        corner.applyMatrix4(gameObject.matrixWorld);
+        corner.project(duel.camera);
+        return corner;
+    });
+
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    screenCorners.forEach(corner => {
+        minX = Math.min(minX, corner.x);
+        minY = Math.min(minY, corner.y);
+        maxX = Math.max(maxX, corner.x);
+        maxY = Math.max(maxY, corner.y);
+    });
+
+    const canvas = duel.core.renderer.domElement;
+    const halfWidth = canvas.width / 2;
+    const halfHeight = canvas.height / 2;
+
+    const screenWidth = (maxX - minX) * halfWidth;
+    const screenHeight = (maxY - minY) * halfHeight;
+
+    const vector = gameObject.getWorldPosition(new THREE.Vector3());
+    vector.project(duel.core.camera);
+
+    const screenX = vector.x * halfWidth + halfWidth;
+    const screenY = -vector.y * halfHeight + halfHeight;
+
+    return {
+        x: screenX - screenWidth / 2,
+        y: screenY - screenHeight / 2,
+        width: screenWidth,
+        height: screenHeight,
+    }
 }

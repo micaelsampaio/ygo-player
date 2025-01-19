@@ -6,7 +6,7 @@ import { YGOEntity } from './YGOEntity';
 import { GameController } from '../game/GameController';
 import { EventBus } from '../scripts/event-bus';
 import { YGOMouseEvents } from './components/YGOMouseEvents';
-import { createFields } from '../scripts/ygo-utils';
+import { createFields, getTransformFromCamera } from '../scripts/ygo-utils';
 import { PlayerField } from '../game/PlayerField';
 import { YGOMath } from './YGOMath';
 import { GameCardHand } from '../game/GameCardHand';
@@ -57,7 +57,8 @@ export class YGODuel {
     async load() {
         try {
             const [fieldModel] = await Promise.all([
-                this.core.loadGLTFAsync(`http://127.0.0.1:8080/models/field.glb`)
+                this.core.loadGLTFAsync(`http://127.0.0.1:8080/models/field.glb`),
+                this.core.loadFontAsync("GameFont", "https://threejs.org/examples/fonts/helvetiker_regular.typeface.json"),
             ]);
             this.core.scene.add(fieldModel.scene);
             this.core.camera.position.set(0, 0, 15);
@@ -148,6 +149,9 @@ export class YGODuel {
             options: {
                 fieldState: [
                     [
+                        { id: 93729896, zone: "H" },
+                        { id: 62318994, zone: "H" }, // lotus
+                        { id: 62318994, zone: "H" }, // lotus
                         { id: 62318994, zone: "M-1" }, // lotus
                         { id: 90829280, zone: "M-2" }, // spirit of yubel
                     ]
@@ -219,6 +223,11 @@ export class YGODuel {
                     gameField.hand.cards[i].card = null as any;
                 }
             }
+
+            const fieldZoneCard = gameField.fieldZone;
+            const fieldZoneCardZone = duelField.fieldZone;
+            fieldZoneCard.setCard(fieldZoneCardZone);
+            fieldZoneCard.updateCard();
 
             this.updateHand(playerIndex);
         }
@@ -294,15 +303,51 @@ export class YGODuel {
 
     public test() {
         return;
-
         const card = new GameCard({ card: this.ygo.getField(0).hand[0], duel: this });
+
         const tempPos = this.fields[0].graveyard.gameObject.position.clone();
-        tempPos.z += 1;
+        tempPos.z = 2;
 
         card.gameObject.position.copy(tempPos);
 
+        const div = document.createElement("div");
+        div.style.position = "fixed";
+        div.style.width = "50px";
+        div.style.height = "50px";
+        div.style.background = "rgba(0,0,255,0.5)";
+        //div.style.transformOrigin = "center";
+
+        document.body.appendChild(div);
+
+        this.tasks.startTask(new YGOTaskSequence()
+            .add(new PositionTransition({
+                gameObject: card.gameObject,
+                position: new THREE.Vector3(-10, 0, 1),
+                duration: 2
+            }))
+            .add(new PositionTransition({
+                gameObject: card.gameObject,
+                position: new THREE.Vector3(10, 5, 5),
+                duration: 2
+            }))
+            .add(new PositionTransition({
+                gameObject: card.gameObject,
+                position: new THREE.Vector3(-10, 5, -5),
+                duration: 2
+            }))
+        );
 
 
+        setInterval(() => {
+            const { x, y, width, height } = getTransformFromCamera(this, card.gameObject);
+
+            div.style.left = `${x}px`; // Adjust to center
+            div.style.top = `${y}px`; // Adjust to center
+            div.style.width = `${width}px`;
+            div.style.height = `${height}px`;
+        }, 10);
+
+        return;
 
         const pos1 = this.fields[0].hand.getCard(4)!.gameObject.position.clone();
 

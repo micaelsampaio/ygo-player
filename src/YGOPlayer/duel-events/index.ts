@@ -14,6 +14,9 @@ const events: any = {
     [YGODuelEvents.LogType.SetMonster]: MoveCardEventHandler,
     [YGODuelEvents.LogType.SetST]: MoveCardEventHandler,
     [YGODuelEvents.LogType.SendToGY]: MoveCardEventHandler,
+    [YGODuelEvents.LogType.Banish]: MoveCardEventHandler,
+    [YGODuelEvents.LogType.BanishFD]: MoveCardEventHandler,
+    [YGODuelEvents.LogType.FieldSpell]: MoveCardEventHandler,
     //[YGODuelEvents.LogType.DrawCardFromDeck]: MoveCardEventHandler,
 }
 

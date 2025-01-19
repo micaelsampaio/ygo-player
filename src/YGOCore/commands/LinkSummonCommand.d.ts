@@ -1,6 +1,7 @@
 import { BaseCommand } from './BaseCommand';
 import { LinkSummonCommandData } from '../types/commands';
 export declare class LinkSummonCommand extends BaseCommand {
+    baseType: string;
     private data;
     private commands;
     private position;

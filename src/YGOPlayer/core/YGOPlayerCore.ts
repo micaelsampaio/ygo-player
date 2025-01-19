@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 //@ts-ignore
 import { GLTF, GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
-import { FontLoader } from 'three/addons/loaders/FontLoader.js';
+import { Font, FontLoader } from 'three/addons/loaders/FontLoader.js';
 
 export class YGOPlayerCore {
     public scene: THREE.Scene;
@@ -12,12 +12,14 @@ export class YGOPlayerCore {
     public renderer: THREE.WebGLRenderer;
     public deltaTime: number;
     private previousFrame: number;
+    public fonts = new Map<string, Font>();
 
     constructor({ canvas }: { canvas: HTMLCanvasElement }) {
         this.scene = new THREE.Scene();
         this.deltaTime = 0;
         this.previousFrame = performance.now();
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        this.fonts = new Map();
         // const aspect = window.innerWidth / window.innerHeight;
         // const frustumSize = 15;  // Size of the camera's frustum
         // this.camera = new THREE.OrthographicCamera(
@@ -53,5 +55,14 @@ export class YGOPlayerCore {
                 (error: Error) => reject(error)
             );
         });
+    }
+
+    public async loadFontAsync(name: string, url: string): Promise<Font> {
+        return new Promise((resolve) => {
+            this.fontLoader.load(url, (font) => {
+                resolve(font);
+                this.fonts.set(name, font);
+            })
+        })
     }
 }

@@ -1,14 +1,16 @@
 import { YGOCommands, YGOGameUtils } from "../../../YGOCore";
 import { ActionCardSelection } from "../../actions/ActionSelectCard";
 import { YGODuel } from "../../core/YGODuel";
-import { getCardZones, getXyzMonstersZones } from "../../scripts/ygo-utils";
+import { getCardZones, getTransformFromCamera, getXyzMonstersZones } from "../../scripts/ygo-utils";
 import { Card } from "../../../YGOCore/types/types";
+import { useLayoutEffect, useRef, useState } from "react";
 
 export function CardHandMenu({ duel: duel2, card: card2, index, clearAction, mouseEvent }: any) {
     const x = mouseEvent.clientX; // Horizontal mouse position in px
     const y = mouseEvent.clientY; // Vertical mouse position in px
     const duel = duel2 as YGODuel;
     const card = card2 as Card;
+    const menuRef = useRef<HTMLDivElement>(null);
 
     const normalSummon = (e: React.MouseEvent) => {
         e.preventDefault();
@@ -194,37 +196,65 @@ export function CardHandMenu({ duel: duel2, card: card2, index, clearAction, mou
         });
     }
 
-    // useEffect(() => {
+    const ActivateFieldSpell = (e: React.MouseEvent) => {
+        const ygo = duel.ygo;
 
-    //     duel.mouseEvents.onClickCb = ({ elements }: any) => {
-    //         // if (elements.length > 0) {
-    //         //     const clickElement = elements[0].object;
-    //         //     const selectedZone = zones.find(zone => zone.gameObject === clickElement);
+        clearAction();
 
-    //         //     if (selectedZone) {
-    //         //         onSelectZone(selectedZone);
-    //         //         this.clear();
-    //         //         return;
-    //         //     }
+        const zones = getCardZones(duel, [0], ["F"]);
 
-    //         // }
+        if (zones.length > 0) {
+            ygo.exec(new YGOCommands.FieldSpellCommand({
+                player: 0,
+                id: card.id,
+                originZone: `H-${index + 1}`,
+                zone: zones[0].zone as any,
+                position: "faceup"
+            }));
+        }
+    }
 
-    //         clearAction();
-    //     };
+    const SetFieldSpell = (e: React.MouseEvent) => {
+        const ygo = duel.ygo;
 
-    //     return () => {
-    //         duel.mouseEvents.onClickCb = null;
-    //     }
-    // }, []);
+        clearAction();
+
+        const zones = getCardZones(duel, [0], ["F"]);
+
+        if (zones.length > 0) {
+            ygo.exec(new YGOCommands.FieldSpellCommand({
+                player: 0,
+                id: card.id,
+                originZone: `H-${index + 1}`,
+                zone: zones[0].zone as any,
+                position: "facedown"
+            }));
+        }
+    }
+
+    useLayoutEffect(() => {
+        const container = menuRef.current!;
+        const cardFromHand = duel.fields[0].hand.getCardFromReference(card)!;
+        const size = container.getBoundingClientRect();
+
+        const { x, y, width, height } = getTransformFromCamera(duel, cardFromHand.gameObject);
+
+        container.style.top = (y - size.height) + "px";
+        container.style.left = x + "px";
+    }, [card]);
+
     const field = duel.ygo.state.fields[0];
     const freeMonsterZones = field.monsterZone.filter(zone => !zone).length;
     const freeSpellTrapZones = field.spellTrapZone.filter(zone => !zone).length;
-    console.log("freeMonsterZones", freeMonsterZones);
+    const isFieldSpellFree = !field.fieldZone;
+    const isFieldSpell = YGOGameUtils.isFieldSpell(card);
+    const isSpell = !isFieldSpell && YGOGameUtils.isSpell(card);
+    const isTrap = YGOGameUtils.isTrap(card);
     const isMonster = card.type.includes("Monster");
     const hasXyzMonstersInField = YGOGameUtils.hasXyzMonstersInField(field);
 
     return <>
-        <div className="ygo-card-menu" style={{ top: `${y}px`, left: `${x}px` }} onClick={(e) => {
+        <div ref={menuRef} className="ygo-card-menu" onClick={(e) => {
             e.stopPropagation();
             e.preventDefault();
             duel.events.publish("clear-ui-action");
@@ -247,12 +277,20 @@ export function CardHandMenu({ duel: duel2, card: card2, index, clearAction, mou
                 {hasXyzMonstersInField && <div>
                     <button type="button" onClick={attachMaterial}>Attach Material</button>
                 </div>}
-                {!isMonster && <>
+                {(isSpell || isTrap) && <>
                     <div>
                         <button type="button" disabled={freeSpellTrapZones === 0} onClick={ActivateSpellTrap}>Activate</button>
                     </div>
                     <div>
                         <button type="button" disabled={freeSpellTrapZones === 0} onClick={SetSpellTrap}>Set</button>
+                    </div>
+                </>}
+                {(isFieldSpell) && <>
+                    <div>
+                        <button type="button" disabled={!isFieldSpellFree} onClick={ActivateFieldSpell}>Activate Field</button>
+                    </div>
+                    <div>
+                        <button type="button" disabled={freeSpellTrapZones === 0} onClick={SetFieldSpell}>Set Field</button>
                     </div>
                 </>}
                 <div>

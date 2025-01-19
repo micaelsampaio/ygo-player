@@ -8,6 +8,7 @@ export declare class YGOGameUtils {
     static isSpellTrap(card: Card): boolean;
     static isSpell(card: Card): boolean;
     static isTrap(card: Card): boolean;
+    static isFieldSpell(card: Card): boolean;
     static isDefense(card: Card): boolean;
     static isAttack(card: Card): boolean;
     static hasLinkMonstersInField(field: PlayerField): boolean;

@@ -19,10 +19,7 @@ export class YGOActionManager {
         if (!this.enabled) return;
 
         const prevAction = this.action;
-        console.log("SET ACTION ----------");
-        console.log("PREV::", prevAction);
         this.action = action;
-        console.log("NEW::", this.action);
 
         if (prevAction?.onActionEnd) prevAction.onActionEnd();
         if (this.action.onActionStart) this.action.onActionStart();

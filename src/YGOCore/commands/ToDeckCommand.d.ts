@@ -2,6 +2,7 @@ import { BaseCommand } from './BaseCommand';
 import { ToDeckCommandData } from '../types/commands';
 import { YGOCore } from '../game/YGOCore';
 export declare class ToDeckCommand extends BaseCommand {
+    baseType: string;
     private data;
     private zone;
     private commands;

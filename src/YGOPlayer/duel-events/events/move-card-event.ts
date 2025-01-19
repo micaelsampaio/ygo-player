@@ -44,6 +44,8 @@ export function MoveCardEventHandler({ duel, ygo, event, onCompleted }: MoveCard
         card = new GameCard({ duel, card: cardReference });
     }
 
+    card.hideCardStats();
+
     card.gameObject.position.copy(startPosition);
     card.gameObject.rotation.copy(startRotation);
 
@@ -61,7 +63,7 @@ export function MoveCardEventHandler({ duel, ygo, event, onCompleted }: MoveCard
 
     const sequence = new YGOTaskSequence();
 
-    if (originZoneData.zone === "GY") {
+    if (originZoneData.zone === "GY" || originZoneData.zone === "B") {
         const aboveZonePos = startPosition.clone();
         aboveZonePos.z += 1;
 
@@ -76,28 +78,29 @@ export function MoveCardEventHandler({ duel, ygo, event, onCompleted }: MoveCard
         taskManager.startTask(new ScaleTransition({
             gameObject: card.gameObject,
             scale: new THREE.Vector3(1, 1, 1),
-            duration: 0.2 * durationScale
+            duration: 0.5 * durationScale
         }));
 
         rotationDelay = 0.3;
     }
 
-    if (zoneData.zone === "M" || zoneData.zone === "S" || zoneData.zone === "GY") {
+    if (zoneData.zone === "M" || zoneData.zone === "S" || zoneData.zone === "GY" || zoneData.zone === "B") {
         const aboveZonePos = endPosition.clone();
         aboveZonePos.z += 1;
+        aboveZonePos.y += 1;
 
         sequence.add(new PositionTransition({
             gameObject: card.gameObject,
             position: aboveZonePos,
             duration: 0.5 * durationScale
-        }))
+        }));
 
-        if (zoneData.zone === "GY") {
+        if (zoneData.zone === "GY" || zoneData.zone === "B") {
             sequence.add(new CallbackTransition(() => {
                 taskManager.startTask(new ScaleTransition({
                     gameObject: card.gameObject,
                     scale: new THREE.Vector3(0, 0, 0),
-                    duration: 0.2 * durationScale
+                    duration: 0.5 * durationScale
                 }));
             }));
         }
@@ -133,6 +136,8 @@ export function MoveCardEventHandler({ duel, ygo, event, onCompleted }: MoveCard
 
         if (!cardZone) {
             card.destroy();
+        } else {
+            card.showCardStats();
         }
 
         onCompleted();

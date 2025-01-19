@@ -153,7 +153,10 @@ export class ActionCardSelection extends YGOComponent implements YGOAction {
             const card = this.createCardSelection(cardZone.position, cardZone.rotation);
             this.cardSelectionZones.set(cardZone.zone, card);
         }
-        console.log(this.cardSelectionZones);
+
+        const fieldSpellCardZone = this.duel.fields[0].fieldZone;
+        const fieldSpellCard = this.createCardSelection(fieldSpellCardZone.position, fieldSpellCardZone.rotation);
+        this.cardSelectionZones.set(fieldSpellCardZone.zone, fieldSpellCard);
     }
 
 }

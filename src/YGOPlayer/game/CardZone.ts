@@ -25,7 +25,6 @@ export class CardZone extends YGOEntity implements YGOUiElement {
     public onClickCb: ((cardZone: CardZone) => void) | null;
 
     constructor({ duel, player, position, rotation, zone }: { duel: YGODuel, player: number, zone: FieldZone, position: THREE.Vector3, rotation: THREE.Euler }) {
-        // TODO
         super();
         this.duel = duel;
         this.zone = zone;
@@ -149,12 +148,11 @@ export class CardZone extends YGOEntity implements YGOUiElement {
 
         if (!card) return;
 
-        console.log("UPDATE CARD:: ", card.name);
-
         const rotation = getCardRotation(this.getCardReference()!, this.zone);
         this.card.gameObject.position.copy(this.position);
         this.card.gameObject.rotation.copy(rotation);
-        console.log(this.position);
+
+        this.card.updateCardStats();
     }
 
     isEmpty() {

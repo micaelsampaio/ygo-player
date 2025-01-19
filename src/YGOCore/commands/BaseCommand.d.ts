@@ -3,6 +3,7 @@ import { CommandType, Command } from "../types/commands";
 export declare abstract class BaseCommand implements Command {
     protected YGO: YGOCore;
     type: CommandType;
+    baseType: string;
     commandId: number;
     parent: Command | null;
     constructor();

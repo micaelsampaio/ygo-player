@@ -5,7 +5,7 @@ import { ActionUiMenu } from "../../actions/ActionUiMenu";
 export function Banish({ duel, visible = true }: { duel: YGODuel, visible: boolean }) {
 
     const action = useMemo(() => {
-        const action = new ActionUiMenu(duel, { eventType: "card-gy-menu" });
+        const action = new ActionUiMenu(duel, { eventType: "card-b-menu" });
         return action;
     }, [duel])
 
