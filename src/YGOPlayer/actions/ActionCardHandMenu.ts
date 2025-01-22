@@ -20,24 +20,9 @@ export class ActionCardHandMenu implements YGOAction {
             type: "card-hand-menu",
             data: this.data
         });
-
-        // this.clickCb = (e: MouseEvent) => {
-        //     e.preventDefault();
-        //     e.stopPropagation();
-
-        //     this.duel.actionManager.clearAction();
-        //     console.log("CANCEL CARD IN HAND");
-        // }
-
-        // const container = document.getElementById("ygo-player-core")! as HTMLDivElement;
-
-        // container.addEventListener("click", this.clickCb);
     }
 
     public onActionEnd() {
         this.duel.events.publish("clear-ui-action");
-
-        // const container = document.getElementById("ygo-player-core")! as HTMLDivElement;
-        // container.removeEventListener("click", this.clickCb);
     }
 }

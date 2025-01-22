@@ -21,7 +21,6 @@ export class ActionUiMenu implements YGOAction {
     }
 
     public onActionEnd() {
-        console.log("XX ACTION ENDS");
         this.duel.events.publish("clear-ui-action");
     }
 }

@@ -138,7 +138,5 @@ export class YGOMouseEvents extends YGOComponent {
 
             this.hoverElement = null;
         }
-
-        //console.log("MOUSE MOVE >", event);
     }
 }

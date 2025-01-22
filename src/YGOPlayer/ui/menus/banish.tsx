@@ -14,7 +14,6 @@ export function Banish({ duel, visible = true }: { duel: YGODuel, visible: boole
 
     const field = duel.ygo.state.fields[0];
     const cards = field.banishedZone;
-    console.log("GY >> ", cards);
 
     return <div className="float-right-menu" onMouseMove={(e) => {
         e.preventDefault();

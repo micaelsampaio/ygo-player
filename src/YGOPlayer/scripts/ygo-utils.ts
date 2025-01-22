@@ -251,7 +251,7 @@ export function getZonePositionFromZoneData(duel: YGODuel, zoneData: FieldZoneDa
         const cardInHand = field.hand.getCard(zoneIndex);
         position = cardInHand ? cardInHand.gameObject.position : field.monsterZone[0].position;
     } else if (zoneData.zone === "EMZ") {
-        position = field.extraMonsterZone[zoneIndex].gameObject.position;
+        position = field.extraMonsterZone[zoneIndex].position;
     } else if (zoneData.zone === "GY") {
         position = field.graveyard.gameObject.position;
     } else if (zoneData.zone === "B") {

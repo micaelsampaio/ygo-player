@@ -14,7 +14,6 @@ export function ExtraDeck({ duel, visible = true }: { duel: YGODuel, visible: bo
 
     const field = duel.ygo.state.fields[0];
     const cards = field.extraDeck;
-    console.log("extra cards >> ", cards);
 
     return <div className="float-right-menu" onMouseMove={(e) => {
         e.preventDefault();

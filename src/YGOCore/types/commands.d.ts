@@ -104,6 +104,7 @@ export interface MoveCardCommandData {
     originZone: FieldZone;
     zone: FieldZone;
     position?: CardPosition;
+    reason?: string;
     log?: boolean;
 }
 export interface SetMonsterCommandData {

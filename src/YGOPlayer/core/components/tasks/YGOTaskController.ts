@@ -2,9 +2,13 @@ import { YGOComponent } from "../../YGOComponent";
 import { YGODuel } from "../../YGODuel";
 import { YGOTask } from "./YGOTask";
 
+interface TaskEvents {
+    onCompleted?: (task: YGOTask) => void
+}
+
 export class YGOTaskController extends YGOComponent {
     private duel: YGODuel;
-    private tasks: YGOTask[] = [];
+    private tasks: { task: YGOTask, events: TaskEvents | undefined }[] = [];
 
     constructor(duel: YGODuel) {
         super("duel_events_controller");
@@ -16,9 +20,9 @@ export class YGOTaskController extends YGOComponent {
 
     }
 
-    startTask(task: YGOTask) {
+    startTask(task: YGOTask, events?: TaskEvents) {
         task.start();
-        this.tasks.push(task);
+        this.tasks.push({ task, events });
     }
 
     isProcessing() {
@@ -38,12 +42,32 @@ export class YGOTaskController extends YGOComponent {
     private updateTasks(dt: number) {
         if (this.tasks.length > 0) {
             for (let i = this.tasks.length - 1; i >= 0; --i) {
-                this.tasks[i].update(dt);
+                const task = this.tasks[i].task;
+                task.update(dt);
 
-                if (this.tasks[i].isCompleted()) {
-                    this.tasks[i].finish();
+                if (task.isCompleted()) {
+                    task.finish();
+                    this.tasks[i].events?.onCompleted!(task);
                     this.tasks.splice(i, 1);
                 }
+            }
+        }
+    }
+
+    completeTask(task: YGOTask) {
+        let iterations = 1000;
+        while (--iterations > 0) {
+            task.update(1);
+
+            if (task.isCompleted()) {
+                task.finish();
+                const i = this.tasks.findIndex(t => t.task === task);
+                if (i !== -1) {
+                    this.tasks[i].events?.onCompleted!(task);
+                    this.tasks.splice(i, 1);
+                }
+
+                break;
             }
         }
     }

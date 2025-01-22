@@ -9,17 +9,12 @@ export function CardGraveyardMenu({ duel, card, clearAction, mouseEvent }: { due
     const y = mouseEvent.clientY; // Vertical mouse position in px
 
     const specialSummonATK = (e: React.MouseEvent) => {
-        console.log("TEMP:: NORMAL SUMMON", e.target);
-
-        console.log("   >> NORMAL SUMMON CARD");
-
         const ygo = duel.ygo;
 
         clearAction();
         const gyIndex = duel.ygo.state.fields[0].graveyard.findIndex((c) => c === card);
         const cardSelection = duel.gameController.getComponent<ActionCardSelection>("action_card_selection")!;
         const zones = getCardZones(duel, [0], ["M"]);
-        console.log("AVAILABLE ZONES 1111::", zones);
 
         cardSelection.startSelection({
             zones,
@@ -36,17 +31,12 @@ export function CardGraveyardMenu({ duel, card, clearAction, mouseEvent }: { due
     }
 
     const specialSummonDEF = (e: React.MouseEvent) => {
-        console.log("TEMP:: NORMAL SUMMON", e.target);
-
-        console.log("   >> NORMAL SUMMON CARD");
-
         const ygo = duel.ygo;
 
         clearAction();
         const gyIndex = duel.ygo.state.fields[0].graveyard.findIndex((c) => c === card);
         const cardSelection = duel.gameController.getComponent<ActionCardSelection>("action_card_selection")!;
         const zones = getCardZones(duel, [0], ["M"]);
-        console.log("AVAILABLE ZONES 1111::", zones);
 
         cardSelection.startSelection({
             zones,
@@ -82,8 +72,6 @@ export function CardGraveyardMenu({ duel, card, clearAction, mouseEvent }: { due
                     originZone: `GY-${gyIndex + 1}`,
                     zone: cardZone.zone
                 }));
-                console.log("ATTACH MATERIAL")
-                console.log(ygo.state.fields)
             }
         });
     }

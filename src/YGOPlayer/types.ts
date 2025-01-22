@@ -1,5 +1,11 @@
 import * as THREE from 'three';
 
+export enum YGODuelState {
+    REPLAY = "replay",
+    EDITOR = "editor",
+    EXEC_COMMAND = "exec_command",
+    UNDO_COMMAND = "undo_command",
+}
 export interface GameFieldLocation {
     zone: string
     position: THREE.Vector3

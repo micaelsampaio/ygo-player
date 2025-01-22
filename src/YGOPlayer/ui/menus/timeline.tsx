@@ -8,36 +8,47 @@ export function TimeLine({ duel }: { duel: YGODuel }) {
     const commands = duel.ygo.commands;
     const currentCommand = duel.ygo.commandIndex;
 
-    // TODO EVENTS TO GET COMMAND ETC...
-
     const onCommandClick = (command: Command) => {
-        // TODO DISABLE ACTIONS
-        // COMPLETE ALL ACTIONS
-        // EXEC
-        const res = duel.ygo.goToCommand(command);
+        duel.commands.startRecover();
+        duel.ygo.goToCommand(command);
+        duel.updateField();
+        duel.commands.endRecover();
     }
 
     const prev = () => {
+        duel.commands.startRecover();
+
         if (duel.ygo.hasPrevCommand()) {
             duel.ygo.undo();
         }
+
+        duel.updateField();
+        duel.commands.endRecover();
     }
 
     const play = () => {
-        let timer: any;
-        timer = setInterval(() => {
+        const nextEvent = () => {
             if (duel.ygo.hasNextCommand()) {
                 duel.ygo.redo();
             } else {
-                clearInterval(timer);
+                duel.events.off("commands-process-completed", nextEvent);
             }
-        }, 500);
+        }
+
+        duel.events.on("commands-process-completed", nextEvent);
+
+        nextEvent();
     }
 
     const next = () => {
+        duel.commands.startRecover();
+
         if (duel.ygo.hasNextCommand()) {
             duel.ygo.redo();
         }
+
+        duel.updateField();
+        duel.commands.endRecover();
     }
 
     return <div className="timeline" onMouseMove={cancelMouseEventsCallback} onClick={cancelMouseEventsCallback}>

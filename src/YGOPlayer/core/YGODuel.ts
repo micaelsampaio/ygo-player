@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { YGOPlayerCore } from './YGOPlayerCore';
-import { GameFieldLocation, YGOUiElement } from '../types';
+import { GameFieldLocation, YGODuelState, YGOUiElement } from '../types';
 import { YGOCore } from '../../YGOCore';
 import { YGOEntity } from './YGOEntity';
 import { GameController } from '../game/GameController';
@@ -15,16 +15,18 @@ import { YGOActionManager as ActionManager } from './components/YGOAction';
 import { ActionCardHandMenu } from '../actions/ActionCardHandMenu';
 import { ActionCardZoneMenu } from '../actions/ActionCardZoneMenu';
 import { YGOTaskController } from './components/tasks/YGOTaskController';
-import YUBEL from '../../decks/YUBEL.json';
-import CHIMERA from '../../decks/CHIMERA.json';
 import { GameCard } from '../game/GameCard';
 import { PositionTransition } from '../duel-events/utils/position-transition';
 import { YGOTaskSequence } from './components/tasks/YGOTaskSequence';
 import { WaitForSeconds } from '../duel-events/utils/wait-for-seconds';
 import { CallbackTransition } from '../duel-events/utils/callback';
-import { handleDuelEvent } from '../duel-events';
+import { YGOCommandsController } from './components/tasks/YGOCommandsController';
+
+import YUBEL from '../../decks/YUBEL.json';
+import CHIMERA from '../../decks/CHIMERA.json';
 
 export class YGODuel {
+    public state: YGODuelState;
     public core: YGOPlayerCore;
     public fields: PlayerField[];
     public ygo!: YGOCore;
@@ -36,10 +38,12 @@ export class YGODuel {
     public gameController: GameController;
     public mouseEvents: YGOMouseEvents;
     public tasks: YGOTaskController;
+    public commands: YGOCommandsController;
     public deltaTime: number = 0;
     private currentPlayerIndex = 0;
 
     constructor({ canvas }: any) {
+        this.state = YGODuelState.EDITOR;
         this.core = new YGOPlayerCore({ canvas });
         this.core.renderer.setAnimationLoop(this.update.bind(this));
         this.camera = this.core.camera;
@@ -48,6 +52,7 @@ export class YGODuel {
         this.gameController = new GameController(this);
         this.actionManager = new ActionManager();
         this.tasks = new YGOTaskController(this);
+        this.commands = new YGOCommandsController(this);
         this.mouseEvents = new YGOMouseEvents(this);
         this.events = new EventBus();
 
@@ -65,44 +70,14 @@ export class YGODuel {
             //this.core.camera.position.set(0, -10, 15);
             //this.core.camera.lookAt(0, 5, 0);
             this.gameController.addComponent("mouse_events", this.mouseEvents);
-            this.gameController.addComponent("tasks", this.tasks)
+            this.gameController.addComponent("tasks", this.tasks);
+            this.gameController.addComponent("commands", this.commands);
 
             this.fields = createFields({ duel: this, fieldModel: fieldModel.scene });
             this.gameController.addComponent("action_card_selection", new ActionCardSelection({ duel: this }));
             this.entities.push(this.gameController);
 
             this.createActions();
-
-            this.events.on("normal-summon", ({ player, cb }: any) => {
-                this.fields[player].monsterZone.forEach((cardZone) => {
-                    // TODO
-                    cardZone.onClickCb = () => {
-                        console.log(cardZone.zone);
-                        cb(cardZone.zone);
-                        this.fields[player].monsterZone.forEach(cardZone2 => cardZone2.onClickCb = null);
-                    }
-                });
-            });
-            this.events.on("set-monster", ({ player, cb }: any) => {
-                this.fields[player].monsterZone.forEach((cardZone) => {
-                    // TODO
-                    cardZone.onClickCb = () => {
-                        console.log(cardZone.zone);
-                        cb(cardZone.zone);
-                        this.fields[player].monsterZone.forEach(cardZone2 => cardZone2.onClickCb = null);
-                    }
-                });
-            });
-            this.events.on("set-card", ({ player, cb }: any) => {
-                this.fields[player].spellTrapZone.forEach((cardZone) => {
-                    // TODO
-                    cardZone.onClickCb = () => {
-                        console.log(cardZone.zone);
-                        cb(cardZone.zone);
-                        this.fields[player].spellTrapZone.forEach(cardZone2 => cardZone2.onClickCb = null);
-                    }
-                });
-            });
 
             // const geometry = new THREE.BoxGeometry(3, 3 * 1.45, 0.05);
             // const material = new THREE.MeshBasicMaterial({ color: 0x0000ff });
@@ -164,18 +139,15 @@ export class YGODuel {
             this.updateField();
         }); // next fram call
 
+        this.ygo.duelLog.events.on("new-log", (command) => {
+            if (this.commands.isRecovering()) return;
 
-        this.ygo.duelLog.events.on("new-log", (event) => {
-            console.log("--- NEW LOG ---");
-            console.log(event);
             this.events.publish("render-ui");
-            handleDuelEvent(this, event);
-        })
+            this.commands.add(command);
+        });
 
         this.ygo.duelLog.events.on("update-logs", (data) => {
-            // TODO THIS
             this.events.publish("logs-updated", data);
-            //this.updateField();
         });
 
         this.events.on("enable-game-actions", () => {
@@ -189,7 +161,7 @@ export class YGODuel {
     }
 
     public updateField() {
-        console.log("PROCESS: UPDATE FIELD::")
+        console.log("update field");
 
         for (let playerIndex = 0; playerIndex < this.fields.length; ++playerIndex) {
             const gameField = this.fields[playerIndex];

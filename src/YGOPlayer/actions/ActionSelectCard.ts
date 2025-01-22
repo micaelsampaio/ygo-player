@@ -59,7 +59,6 @@ export class ActionCardSelection extends YGOComponent implements YGOAction {
     }
 
     public onActionEnd(): void {
-        console.log("ACTION END ::: SELECT END");
         this.clear();
         this.duel.events.publish("clear-ui-action");
     }
@@ -78,7 +77,6 @@ export class ActionCardSelection extends YGOComponent implements YGOAction {
     }
 
     public startSelection({ zones, onSelectionCompleted }: { zones: CardZone[], onSelectionCompleted: (cardZone: CardZone) => void }): void {
-        console.log("START >> SELECTION ", zones.map(zone => zone.zone));
         this.isMultipleSelection = false;
         this.zones = zones;
         this.onSelectionCompleted = onSelectionCompleted;
@@ -87,7 +85,6 @@ export class ActionCardSelection extends YGOComponent implements YGOAction {
     }
 
     public startMultipleSelection({ zones, onSelectionCompleted, onCancelled = null }: { zones: CardZone[], onSelectionCompleted: (cardZones: CardZone[]) => void, onCancelled?: (() => void) | null }): void {
-        console.log("START MULTIPLE >> SELECTION ", zones.map(zone => zone.zone));
         this.isMultipleSelection = true;
         this.zones = zones;
         this.selectedZones = [];

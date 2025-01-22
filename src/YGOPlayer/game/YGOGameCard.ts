@@ -67,9 +67,6 @@ export class YGOGameCard {
         }
     }
     destroy() {        
-        if (this.gameObject) {
-            console.log("REMOVE OBJ ", this.gameObject);
-        }
         if (this.gameObject) this.duel.core.scene.remove(this.gameObject);
         this.gameObject = null;
         this.cardReference = null;

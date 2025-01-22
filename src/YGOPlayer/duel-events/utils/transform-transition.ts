@@ -47,10 +47,7 @@ export class TransformTransition extends YGOTask {
 
     public update(dt: number) {
         this.elapsedTime += dt;
-
-
         this.elapsedTime += this.duel.deltaTime;
-        console.log("TIME: ", this.elapsedTime, this.duration);
 
         const t = this.elapsedTime / this.duration;
 

@@ -13,13 +13,19 @@ export function DuelLogMenu({ duel }: { duel: YGODuel }) {
     }, [duel]);
 
     const undo = () => {
+        duel.commands.startRecover();
         duel.ygo.undo();
+        duel.updateField();
+        duel.commands.endRecover();
     }
 
     const undoByCommand = (logIndex: number) => {
+        duel.commands.startRecover();
         for (let i = logs.length - 1; i >= logIndex; --i) {
             duel.ygo.undo();
         }
+        duel.updateField();
+        duel.commands.endRecover();
     }
 
     return <div className="ygo-timeline">

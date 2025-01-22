@@ -106,9 +106,6 @@ export function CardExtraDeckMenu({ duel, config, card, clearAction, mouseEvent 
     const specialSummonATK = (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
-        console.log("TEMP:: NORMAL SUMMON", e.target);
-
-        console.log("   >> NORMAL SUMMON CARD");
 
         const ygo = duel.ygo;
 
@@ -116,7 +113,6 @@ export function CardExtraDeckMenu({ duel, config, card, clearAction, mouseEvent 
         const gyIndex = duel.ygo.state.fields[0].graveyard.findIndex((c) => c === card);
         const cardSelection = duel.gameController.getComponent<ActionCardSelection>("action_card_selection")!;
         const zones = getCardZones(duel, [0], ["M"]);
-        console.log("AVAILABLE ZONES 1111::", zones);
 
         cardSelection.startSelection({
             zones,
@@ -133,17 +129,12 @@ export function CardExtraDeckMenu({ duel, config, card, clearAction, mouseEvent 
     }
 
     const specialSummonDEF = (e: React.MouseEvent) => {
-        console.log("TEMP:: NORMAL SUMMON", e.target);
-
-        console.log("   >> NORMAL SUMMON CARD");
-
         const ygo = duel.ygo;
 
         clearAction();
         const gyIndex = duel.ygo.state.fields[0].graveyard.findIndex((c) => c === card);
         const cardSelection = duel.gameController.getComponent<ActionCardSelection>("action_card_selection")!;
         const zones = getCardZones(duel, [0], ["M"]);
-        console.log("AVAILABLE ZONES 1111::", zones);
 
         cardSelection.startSelection({
             zones,

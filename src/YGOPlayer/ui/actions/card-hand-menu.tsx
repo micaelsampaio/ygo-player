@@ -15,9 +15,6 @@ export function CardHandMenu({ duel: duel2, card: card2, index, clearAction, mou
     const normalSummon = (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
-        console.log("TEMP:: NORMAL SUMMON", e.target);
-
-        console.log("   >> NORMAL SUMMON CARD");
 
         const ygo = duel.ygo;
 
@@ -25,7 +22,6 @@ export function CardHandMenu({ duel: duel2, card: card2, index, clearAction, mou
 
         const cardSelection = duel.gameController.getComponent<ActionCardSelection>("action_card_selection")!;
         const zones = getCardZones(duel, [0], ["M"]);
-        console.log("AVAILABLE ZONES 1111::", zones);
 
         cardSelection.startSelection({
             zones,
@@ -48,8 +44,6 @@ export function CardHandMenu({ duel: duel2, card: card2, index, clearAction, mou
         const cardSelection = duel.gameController.getComponent<ActionCardSelection>("action_card_selection")!;
         const zones = getCardZones(duel, [0], ["M"]);
 
-        console.log("AVAILABLE ZONES::", zones);
-
         cardSelection.startSelection({
             zones,
             onSelectionCompleted: (cardZone: any) => {
@@ -64,17 +58,12 @@ export function CardHandMenu({ duel: duel2, card: card2, index, clearAction, mou
     }
 
     const specialSummonATK = (e: React.MouseEvent) => {
-        console.log("TEMP:: NORMAL SUMMON", e.target);
-
-        console.log("   >> NORMAL SUMMON CARD");
-
         const ygo = duel.ygo;
 
         clearAction();
 
         const cardSelection = duel.gameController.getComponent<ActionCardSelection>("action_card_selection")!;
         const zones = getCardZones(duel, [0], ["M"]);
-        console.log("AVAILABLE ZONES 1111::", zones);
 
         cardSelection.startSelection({
             zones,
@@ -90,17 +79,12 @@ export function CardHandMenu({ duel: duel2, card: card2, index, clearAction, mou
         });
     }
     const specialSummonDEF = (e: React.MouseEvent) => {
-        console.log("TEMP:: NORMAL SUMMON", e.target);
-
-        console.log("   >> NORMAL SUMMON CARD");
-
         const ygo = duel.ygo;
 
         clearAction();
 
         const cardSelection = duel.gameController.getComponent<ActionCardSelection>("action_card_selection")!;
         const zones = getCardZones(duel, [0], ["M"]);
-        console.log("AVAILABLE ZONES 1111::", zones);
 
         cardSelection.startSelection({
             zones,
@@ -159,7 +143,6 @@ export function CardHandMenu({ duel: duel2, card: card2, index, clearAction, mou
     }
 
     const SendToGy = (e: React.MouseEvent) => {
-        console.log("TEMP:: Send TO GY SUMMON", e.target);
         e.stopPropagation();
         e.preventDefault();
 
@@ -170,6 +153,23 @@ export function CardHandMenu({ duel: duel2, card: card2, index, clearAction, mou
             id: card.id,
             originZone: `H-${index + 1}`,
         }));
+    }
+
+
+    const SendAllCardsToGY = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        e.preventDefault();
+
+        clearAction();
+
+        const zones = duel.fields[0].monsterZone.filter(zone => zone && zone.hasCard());
+        zones.map(zone => {
+            duel.ygo.exec(new YGOCommands.SendCardToGYCommand({
+                player: 0,
+                id: zone.getCardReference()!.id,
+                originZone: zone.zone,
+            }));
+        })
     }
 
     const attachMaterial = () => {
@@ -190,8 +190,6 @@ export function CardHandMenu({ duel: duel2, card: card2, index, clearAction, mou
                     originZone: `H-${index + 1}`,
                     zone: cardZone.zone
                 }));
-                console.log("ATTACH MATERIAL")
-                console.log(ygo.state.fields)
             }
         });
     }
@@ -295,6 +293,10 @@ export function CardHandMenu({ duel: duel2, card: card2, index, clearAction, mou
                 </>}
                 <div>
                     <button type="button" onClick={SendToGy}>Discard</button>
+                </div>
+                <div>
+                    <button type="button" onClick={SendAllCardsToGY}>Debug (Clear Field)</button>
+                    <button type="button" onClick={() => duel.updateField()}>Update Field</button>
                 </div>
             </div>
         </div>

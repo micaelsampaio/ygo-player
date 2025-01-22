@@ -34,7 +34,6 @@ export class Deck extends YGOEntity implements YGOUiElement {
     }
 
     onMouseClick(event: MouseEvent): void {
-        console.log("CLICK DECK");
         this.action.eventData = { duel: this.duel, mouseEvent: event };
         this.duel.actionManager.setAction(this.action);
     }

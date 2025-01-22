@@ -47,7 +47,7 @@ export function YGOUiController({ duel }: { duel: YGODuel }) {
 
             setMenus((currentMenus) => {
                 const currentMenu = currentMenus.find(m => m.type === type);
-                
+
                 if (currentMenu) {
                     return currentMenus.filter(m => m.type !== type)
                 }
@@ -64,9 +64,6 @@ export function YGOUiController({ duel }: { duel: YGODuel }) {
         });
 
         duel.events.on("set-selected-card", (data: any) => {
-
-            console.log("SET SELECTED CARD", data);
-
             setMenus(currentMenus => {
                 const type = "selected-card-menu";
                 if (!data.card) {
@@ -96,25 +93,12 @@ export function YGOUiController({ duel }: { duel: YGODuel }) {
         });
 
 
-
-        // // duel.events.on("on-card-hand-click", (data: any) => {
-        // //     // TODO
-        // //     console.log("REACT CLICK ", data);
-        // //     setAction({ type: "CARD_HAND_MENU", data });
-        // // });
-
-        // duel.events.on("clear-actions", () => {
-        //     setAction({ type: "", data: null });
-        // });
-
-        // //duel.events.on
     }, []);
 
     const Action = (ACTIONS as any)[action.type] as any;
 
     if (!duel) return null;
-    // console.log("Action::", action);
-    // console.log("MENUS::", menus);
+
     return <>
         <DuelLogMenu duel={duel} />
         <TimeLine duel={duel} />

@@ -9,7 +9,6 @@ export function CardZoneMenu({ duel, card, zone, clearAction, mouseEvent }: { du
     const y = mouseEvent.clientY; // Vertical mouse position in px
 
     const sendToGY = (e: React.MouseEvent) => {
-        console.log("TEMP:: Send TO GY SUMMON", e.target);
         e.stopPropagation();
         e.preventDefault();
 
@@ -64,8 +63,6 @@ export function CardZoneMenu({ duel, card, zone, clearAction, mouseEvent }: { du
                     originZone: zone,
                     zone: cardZone.zone
                 }));
-                console.log("ATTACH MATERIAL")
-                console.log(ygo.state.fields)
             }
         });
     }
