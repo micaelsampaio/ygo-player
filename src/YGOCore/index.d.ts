@@ -15,6 +15,8 @@ export declare const YGOCommands: {
     TributeSummonCommand: typeof import("./commands/TributeSummonCommand").TributeSummonCommand;
     TributeSetCommand: typeof import("./commands/TributeSetCommand").TributeSetCommand;
     LinkSummonCommand: typeof import("./commands/LinkSummonCommand").LinkSummonCommand;
+    FusionSummonCommand: typeof import("./commands/FusionSummonCommand").FusionSummonCommand;
+    SynchroSummonCommand: typeof import("./commands/SynchroSummonCommand").SynchroSummonCommand;
     XYZSummonCommand: typeof import("./commands/XYZSummonCommand").XYZSummonCommand;
     XYZAttachMaterialCommand: typeof import("./commands/XYZAttachMaterialCommand").XYZAttachMaterialCommand;
     XYZDetachMaterialCommand: typeof import("./commands/XYZDetachMaterialCommand").XYZDetachMaterialCommand;

@@ -130,11 +130,11 @@ export function getXyzMonstersZones(duel: YGODuel, players: number[]): CardZone[
 
     players.forEach(player => {
         duel.fields[player].monsterZone.forEach(zone => {
-            if (zone.hasCard() && YGOGameUtils.isXYZMonter(zone.getCardReference()!)) result.push(zone);
+            if (zone.hasCard() && YGOGameUtils.isXYZMonster(zone.getCardReference()!)) result.push(zone);
         });
 
         duel.fields[player].extraMonsterZone.forEach(zone => {
-            if (zone.hasCard() && YGOGameUtils.isXYZMonter(zone.getCardReference()!)) result.push(zone);
+            if (zone.hasCard() && YGOGameUtils.isXYZMonster(zone.getCardReference()!)) result.push(zone);
         });
     });
 

@@ -68,7 +68,7 @@ export function CardZoneMenu({ duel, card, zone, clearAction, mouseEvent }: { du
     }
 
     const field = duel.ygo.state.fields[0];
-    const isXYZ = YGOGameUtils.isXYZMonter(card);
+    const isXYZ = YGOGameUtils.isXYZMonster(card);
     const hasXyzMonstersInField = YGOGameUtils.hasXyzMonstersInField(field);
     const canAttachMaterial = isXYZ ? getXyzMonstersZones(duel, [0]).length > 1 : true;
 

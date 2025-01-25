@@ -166,7 +166,7 @@ export class GameCardStats {
     }
 
     private updateMaterials() {
-        if (!YGOGameUtils.isXYZMonter(this.card)) return;
+        if (!YGOGameUtils.isXYZMonster(this.card)) return;
 
         const materials = this.card.materials.length;
 

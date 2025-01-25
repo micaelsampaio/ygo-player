@@ -25,6 +25,8 @@ export function SelectedCardMenu({ duel, card, visible = true }: { duel: YGODuel
         <img className="ygo-card" src={`http://127.0.0.1:8080/images/cards_small/${card.id}.jpg`} />
 
         <div style={{ fontSize: "16px" }}>
+            {card.typeline && card.typeline.join(" / ")} <br />
+
             {
                 card.desc && card.desc
             }

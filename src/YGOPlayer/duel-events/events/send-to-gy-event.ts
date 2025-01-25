@@ -12,10 +12,8 @@ export class SendToGyEventHandler extends YGOComponent {
 
     constructor(private props: SendToGyEventHandlerProps) {
         super("send_card_to_gy_command");
-        console.log("GY >>", this.props.event);
 
         if (!this.props.event.reason) {
-            alert(this.props.event.reason);
             this.childCommand = new MoveCardEventHandler(props as any);
         }
     }
