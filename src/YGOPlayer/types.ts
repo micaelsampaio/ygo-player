@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { Card, FieldZone } from '../YGOCore/types/types';
 
 export enum YGODuelState {
     REPLAY = "replay",
@@ -22,4 +23,9 @@ export interface YGOUiElement {
     onMouseClick?(event: MouseEvent): void
     onMouseEnter?(event: MouseEvent): void
     onMouseLeave?(event: MouseEvent): void
+}
+
+export interface CardZoneKV {
+    card: Card,
+    zone: FieldZone
 }

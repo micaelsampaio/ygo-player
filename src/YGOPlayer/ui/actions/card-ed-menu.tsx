@@ -4,8 +4,10 @@ import { Card, CardPosition, FieldZone } from "../../../YGOCore/types/types";
 import { ActionCardSelection } from "../../actions/ActionSelectCard";
 import { YGODuel } from "../../core/YGODuel";
 import { CardZone } from "../../game/CardZone";
-import { getCardZones, getMonstersZones } from "../../scripts/ygo-utils";
+import { getCardZones, getGameZone, getMonstersZones } from "../../scripts/ygo-utils";
 import { UiGameConfig } from "../YGOUiController";
+import { ActionUiMenu } from "../../actions/ActionUiMenu";
+import { CardZoneKV } from "../../types";
 
 export function CardExtraDeckMenu({ duel, config, card, clearAction, mouseEvent }: { duel: YGODuel, zone: FieldZone, card: Card, clearAction: Function, mouseEvent: React.MouseEvent, config: UiGameConfig }) {
     const x = mouseEvent.clientX; // Horizontal mouse position in px
@@ -154,6 +156,60 @@ export function CardExtraDeckMenu({ duel, config, card, clearAction, mouseEvent 
         synchroSummon({ position: "faceup-defense" });
     }
 
+    const fusionSummon = ({ position }: { position: CardPosition }) => {
+        duel.events.publish("toggle-ui-menu", {
+            key: "game-popup", type: "select-card-menu", data: {
+                onSelectCards: (cards: CardZoneKV[]) => {
+
+                    duel.events.publish("close-ui-menu", { type: "select-card-menu" });
+
+                    const ygo = duel.ygo;
+                    const cardSelection = duel.gameController.getComponent<ActionCardSelection>("action_card_selection")!;
+                    const cardIndex = duel.ygo.state.fields[0].extraDeck.findIndex((c) => c === card);
+
+                    const materials = cards.map(cardData => {
+                        return { id: cardData.card.id, zone: cardData.zone };
+                    })
+
+                    const zonesToSummon = getCardZones(duel, [0], ["M", "EMZ"]);
+
+                    materials.forEach(material => {
+                        const zoneData = YGOGameUtils.getZoneData(material.zone);
+                        if (zoneData.zone === "M") {
+                            const cardZone = getGameZone(duel, zoneData)!;
+                            zonesToSummon.push(cardZone);
+                        }
+                    });
+
+                    cardSelection.startSelection({
+                        zones: zonesToSummon,
+                        onSelectionCompleted: (cardZone: any) => {
+
+                            ygo.exec(new YGOCommands.FusionSummonCommand({
+                                player: 0,
+                                id: card.id,
+                                materials,
+                                originZone: `ED-${cardIndex + 1}`,
+                                zone: cardZone.zone,
+                                position
+                            }));
+
+                            clearAction();
+                        }
+                    });
+                }
+            }
+        });
+    }
+
+    const fusionSummonATK = () => {
+        fusionSummon({ position: "faceup-attack" });
+    }
+
+    const fusionSummonDEF = () => {
+        fusionSummon({ position: "faceup-defense" });
+    }
+
     const specialSummonATK = (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
@@ -234,6 +290,16 @@ export function CardExtraDeckMenu({ duel, config, card, clearAction, mouseEvent 
                         </div>
                         <div>
                             <button type="button" onClick={synchroSummonDEF}>Synchro Summon DEF</button>
+                        </div>
+                    </div>
+                    }
+
+                    {isFusion && <div>
+                        <div>
+                            <button type="button" onClick={fusionSummonATK}>Fusion Summon ATK</button>
+                        </div>
+                        <div>
+                            <button type="button" onClick={fusionSummonDEF}>Fusion Summon DEF</button>
                         </div>
                     </div>
                     }

@@ -170,3 +170,9 @@
     width: 200px;
     height: 288px;
 }
+
+/* TODO FIX THIS  */
+
+.ygo-player-core .ygo-card.selected {
+    border: 2px solid yellow;
+}

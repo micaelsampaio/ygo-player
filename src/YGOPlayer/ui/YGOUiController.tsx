@@ -10,12 +10,13 @@ export interface UiGameConfig {
 }
 
 export function YGOUiController({ duel }: { duel: YGODuel }) {
-    // TODO
-
     const [_, setRender] = useState<number>(-1);
     const [gameConfig, setGameConfig] = useState<UiGameConfig>({ actions: true });
     const [action, setAction] = useState<{ type: string, data: any }>({ type: "", data: null });
     const [menus, setMenus] = useState<{ key: string, type: string, data: any }[]>([]);
+
+    console.log(menus.map(m => m.key));
+
     const clearAction = () => {
         setAction({ type: '', data: null });
     };
@@ -58,9 +59,14 @@ export function YGOUiController({ duel }: { duel: YGODuel }) {
             });
         });
 
-        duel.events.on("close-ui-menu", ({ key }: { key: string }) => {
+        duel.events.on("close-ui-menu", ({ key, type }: { key: string, type: string }) => {
             clearAction();
-            setMenus((currentMenus) => currentMenus.filter(m => m.key !== key));
+            
+            if (key) {
+                setMenus((currentMenus) => currentMenus.filter(m => m.key !== key));
+            } else if (type) {
+                setMenus((currentMenus) => currentMenus.filter(m => m.type !== type));
+            }
         });
 
         duel.events.on("set-selected-card", (data: any) => {
@@ -106,6 +112,7 @@ export function YGOUiController({ duel }: { duel: YGODuel }) {
         {
             menus.map(menu => {
                 const Menu = (MENUS as any)[menu.type] as any;
+                console.log(menu.key, Menu);
                 return <Menu config={gameConfig} key={menu.type} duel={duel} {...menu.data} visible />
             })
         }
