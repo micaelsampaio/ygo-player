@@ -199,17 +199,15 @@ export function CardHandMenu({ duel: duel2, card: card2, index, clearAction, mou
 
         clearAction();
 
-        const zones = getCardZones(duel, [0], ["F"]);
+        const cardZone = duel.fields[0].fieldZone;        
 
-        if (zones.length > 0) {
-            ygo.exec(new YGOCommands.FieldSpellCommand({
-                player: 0,
-                id: card.id,
-                originZone: `H-${index + 1}`,
-                zone: zones[0].zone as any,
-                position: "faceup"
-            }));
-        }
+        ygo.exec(new YGOCommands.FieldSpellCommand({
+            player: 0,
+            id: card.id,
+            originZone: `H-${index + 1}`,
+            zone: cardZone.zone as any,
+            position: "faceup"
+        }));
     }
 
     const SetFieldSpell = (e: React.MouseEvent) => {
@@ -244,7 +242,6 @@ export function CardHandMenu({ duel: duel2, card: card2, index, clearAction, mou
     const field = duel.ygo.state.fields[0];
     const freeMonsterZones = field.monsterZone.filter(zone => !zone).length;
     const freeSpellTrapZones = field.spellTrapZone.filter(zone => !zone).length;
-    const isFieldSpellFree = !field.fieldZone;
     const isFieldSpell = YGOGameUtils.isFieldSpell(card);
     const isSpell = !isFieldSpell && YGOGameUtils.isSpell(card);
     const isTrap = YGOGameUtils.isTrap(card);
@@ -285,7 +282,7 @@ export function CardHandMenu({ duel: duel2, card: card2, index, clearAction, mou
                 </>}
                 {(isFieldSpell) && <>
                     <div>
-                        <button type="button" disabled={!isFieldSpellFree} onClick={ActivateFieldSpell}>Activate Field</button>
+                        <button type="button" onClick={ActivateFieldSpell}>Activate Field</button>
                     </div>
                     <div>
                         <button type="button" disabled={freeSpellTrapZones === 0} onClick={SetFieldSpell}>Set Field</button>
