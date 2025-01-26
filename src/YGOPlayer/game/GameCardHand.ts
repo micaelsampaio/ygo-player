@@ -66,8 +66,11 @@ export class GameCardHand extends YGOEntity implements YGOUiElement {
             return;
         }
 
+        const prevCard = this.card;
         this.card = card;
-        // TODO
+
+        if (prevCard && prevCard.id === this.card.id) return;
+
         const textureLoader = this.duel.core.textureLoader;
         const frontTexture = textureLoader.load(`http://127.0.0.1:8080/images/cards_small/${card.id}.jpg`);
         const backTexture = textureLoader.load('http://127.0.0.1:8080/images/card_back.png');

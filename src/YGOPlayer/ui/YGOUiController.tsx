@@ -15,8 +15,6 @@ export function YGOUiController({ duel }: { duel: YGODuel }) {
     const [action, setAction] = useState<{ type: string, data: any }>({ type: "", data: null });
     const [menus, setMenus] = useState<{ key: string, type: string, data: any }[]>([]);
 
-    console.log(menus.map(m => m.key));
-
     const clearAction = () => {
         setAction({ type: '', data: null });
     };

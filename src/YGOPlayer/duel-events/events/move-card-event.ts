@@ -63,7 +63,7 @@ export class MoveCardEventHandler extends YGOComponent {
 
         if (originZoneData.zone === "H") {
             duel.fields[originZoneData.player].hand.removeCardFromCardReference(this.cardReference);
-            duel.updateHand(originZoneData.player);
+            duel.renderField();
         }
 
         if (cardZone) {

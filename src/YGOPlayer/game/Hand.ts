@@ -27,9 +27,6 @@ export class GameHand extends YGOEntity {
 
     }
 
-    public updateHand() {
-
-    }
 
     public onCardHover() {
 
@@ -38,7 +35,7 @@ export class GameHand extends YGOEntity {
     getCard(index: number): GameCardHand | null {
         return this.cards[index];
     }
-    
+
     getCardFromReference(card: Card): GameCardHand | null {
         return this.cards.find(c => c.card === card) || null;
     }
@@ -46,9 +43,10 @@ export class GameHand extends YGOEntity {
     removeCardFromCardReference(card: Card) {
         const index = this.cards.findIndex(c => c.card === card);
 
-        if (index > 0) {
+        if (index >= 0) {
             this.cards[index].destroy();
             this.cards = this.cards.filter((_, i) => i !== index);
+            this.cards.forEach((c, index) => c.handIndex = index);
         }
     }
 

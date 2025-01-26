@@ -6,7 +6,6 @@ import { YGODuel } from "../../core/YGODuel";
 import { CardZone } from "../../game/CardZone";
 import { getCardZones, getGameZone, getMonstersZones } from "../../scripts/ygo-utils";
 import { UiGameConfig } from "../YGOUiController";
-import { ActionUiMenu } from "../../actions/ActionUiMenu";
 import { CardZoneKV } from "../../types";
 
 export function CardExtraDeckMenu({ duel, config, card, clearAction, mouseEvent }: { duel: YGODuel, zone: FieldZone, card: Card, clearAction: Function, mouseEvent: React.MouseEvent, config: UiGameConfig }) {
@@ -259,10 +258,9 @@ export function CardExtraDeckMenu({ duel, config, card, clearAction, mouseEvent 
 
     useLayoutEffect(() => {
         const container = menuRef.current!;
-        const size = container.getBoundingClientRect();
         container.style.left = "unset";
         container.style.top = y + "px";
-        container.style.right = (size.width - 30) + "px";
+        container.style.right = 100 + "px";
     }, [card, x, y]);
 
 
@@ -282,7 +280,7 @@ export function CardExtraDeckMenu({ duel, config, card, clearAction, mouseEvent 
                 {config.actions && <div>
                     EXTRA DECK<br />
 
-                    {isLink && <button type="button" onClick={linkSummon}>Link Summon</button>}
+                    {isLink && <div><button type="button" onClick={linkSummon}>Link Summon</button></div>}
 
                     {isSynchro && <div>
                         <div>
@@ -304,11 +302,14 @@ export function CardExtraDeckMenu({ duel, config, card, clearAction, mouseEvent 
                     </div>
                     }
 
-                    {isXYZ && <button type="button" onClick={xyzSummonATK}>XYZ Summon ATK</button>}
-                    {isXYZ && <button type="button" onClick={xyzSummonDEF}>XYZ Summon DEF</button>}
-
-                    <button type="button" onClick={specialSummonDEF}>SS Def</button>
-                    <button type="button" onClick={specialSummonATK}>Add To Hand</button>
+                    {isXYZ && <div><button type="button" onClick={xyzSummonATK}>XYZ Summon ATK</button></div>}
+                    {isXYZ && <div> <button type="button" onClick={xyzSummonDEF}>XYZ Summon DEF</button></div>}
+                    <div>
+                        <button type="button" onClick={specialSummonDEF}>SS ATK</button>
+                    </div>
+                    <div>
+                        <button type="button" onClick={specialSummonDEF}>SS DEF</button>
+                    </div>
                 </div>}
 
             </div>

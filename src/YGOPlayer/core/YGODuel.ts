@@ -24,6 +24,7 @@ import { YGOCommandsController } from './components/tasks/YGOCommandsController'
 
 import YUBEL from '../../decks/YUBEL.json';
 import CHIMERA from '../../decks/CHIMERA.json';
+import { CardZone } from '../game/CardZone';
 
 export class YGODuel {
     public state: YGODuelState;
@@ -161,8 +162,6 @@ export class YGODuel {
     }
 
     public updateField() {
-        console.log("update field");
-
         for (let playerIndex = 0; playerIndex < this.fields.length; ++playerIndex) {
             const gameField = this.fields[playerIndex];
             const duelField = this.ygo.state.fields[playerIndex];
@@ -171,75 +170,134 @@ export class YGODuel {
                 const cardZone = gameField.monsterZone[i];
                 const card = duelField.monsterZone[i];
                 cardZone.setCard(card);
-                cardZone.updateCard();
             }
 
             for (let i = 0; i < gameField.spellTrapZone.length; ++i) {
                 const cardZone = gameField.spellTrapZone[i];
                 const card = duelField.spellTrapZone[i];
                 cardZone.setCard(card);
-                cardZone.updateCard();
             }
 
             for (let i = 0; i < gameField.extraMonsterZone.length; ++i) {
                 const cardZone = gameField.extraMonsterZone[i];
                 const card = duelField.extraMonsterZone[i];
                 cardZone.setCard(card);
-                cardZone.updateCard();
             }
 
-            for (let i = 0; i < gameField.hand.cards.length; ++i) {
-                if (duelField.hand[i]) {
-                    gameField.hand.cards[i].setCard(duelField.hand[i]);
-                } else {
-                    gameField.hand.cards[i].card = null as any;
+            // TODO IMPROVE THE LOOPS AND ARRAY CREATIONS
+            const hand: Array<GameCardHand | null> = [];
+
+            for (let i = 0; i < duelField.hand.length; ++i) {
+                const cardZone = gameField.hand.getCardFromReference(duelField.hand[i]);
+                hand[i] = cardZone;
+            }
+
+            gameField.hand.cards.forEach(card => {
+                if (card && !hand.includes(card)) {
+                    console.log("DESTROY CARD IN HAND: ", card.card.name);
+                    card.destroy();
                 }
+            });
+
+            gameField.hand.cards = [];
+
+            for (let i = 0; i < hand.length; ++i) {
+                if (!hand[i]) {
+                    const card = new GameCardHand({ duel: this })
+                    card.setCard(duelField.hand[i]);
+                    gameField.hand.cards[i] = card;
+                } else {
+                    gameField.hand.cards[i] = hand[i]!;
+                }
+                gameField.hand.cards[i].handIndex = i;
             }
 
             const fieldZoneCard = gameField.fieldZone;
             const fieldZoneCardZone = duelField.fieldZone;
             fieldZoneCard.setCard(fieldZoneCardZone);
             fieldZoneCard.updateCard();
-
-            this.updateHand(playerIndex);
         }
+
+        this.renderField();
 
         this.events.publish("render-ui");
     }
 
-    public updateHand(playerIndex: number) {
-        const cardInitialProps = { duel: this };
-        const gameField = this.fields[playerIndex];
-        const duelField = this.ygo.state.fields[playerIndex];
+    // public updateHand(playerIndex: number) {
 
-        const cardWidth = 3; // Width of each card
-        const cardSpacing = 2.2; // Space between cards
-        const totalCards = duelField.hand.length; // Total number of cards in hand
+    //     for(let i = 0; i< )
+    //     // const cardInitialProps = { duel: this };
+    //     // const gameField = this.fields[playerIndex];
+    //     // const duelField = this.ygo.state.fields[playerIndex];
 
-        const handWidth = (totalCards - 1) * cardSpacing + cardWidth;
-        const handY = 6.8 * (playerIndex === 0 ? -1 : 1);
-        const handZ = 5;
+    //     // const cardWidth = 3; // Width of each card
+    //     // const cardSpacing = 2.2; // Space between cards
+    //     // const totalCards = duelField.hand.length; // Total number of cards in hand
 
-        for (let i = 0; i < totalCards; ++i) {
-            if (!gameField.hand.cards[i]) {
-                gameField.hand.cards.push(new GameCardHand(cardInitialProps));
+    //     // const handWidth = (totalCards - 1) * cardSpacing + cardWidth;
+    //     // const handY = 6.8 * (playerIndex === 0 ? -1 : 1);
+    //     // const handZ = 5;
+
+    //     // for (let i = 0; i < totalCards; ++i) {
+    //     //     if (!gameField.hand.cards[i]) {
+    //     //         gameField.hand.cards.push(new GameCardHand(cardInitialProps));
+    //     //     }
+
+    //     //     gameField.hand.cards[i].handIndex = i;
+    //     //     gameField.hand.cards[i].setCard(duelField.hand[i]);
+    //     //     const xOffset = -handWidth / 2 + cardWidth / 2; // Start position to center
+    //     //     gameField.hand.cards[i].gameObject.position.x = xOffset + i * cardSpacing;
+    //     //     gameField.hand.cards[i].gameObject.position.y = handY;
+    //     //     gameField.hand.cards[i].gameObject.position.z = handZ;
+    //     //     gameField.hand.cards[i].gameObject.rotation.copy(YGOMath.degToRadEuler(0, 0, 0));
+    //     //     const currentGameObject = gameField.hand.cards[i].gameObject;
+    //     //     if (currentGameObject) currentGameObject.name = "CARD " + i;
+    //     // }
+
+    //     // for (let i = gameField.hand.cards.length - 1; i >= duelField.hand.length; --i) {
+    //     //     this.destroy(gameField.hand.cards[i]);
+    //     //     gameField.hand.cards.splice(i, 1);
+    //     // }
+    // }
+
+    public renderField() { // only renders and updates cards
+        for (let playerIndex = 0; playerIndex < this.fields.length; ++playerIndex) {
+            const gameField = this.fields[playerIndex];
+
+            for (let i = 0; i < gameField.monsterZone.length; ++i) {
+                gameField.monsterZone[i].updateCard();
             }
 
-            gameField.hand.cards[i].handIndex = i;
-            gameField.hand.cards[i].setCard(duelField.hand[i]);
-            const xOffset = -handWidth / 2 + cardWidth / 2; // Start position to center
-            gameField.hand.cards[i].gameObject.position.x = xOffset + i * cardSpacing;
-            gameField.hand.cards[i].gameObject.position.y = handY;
-            gameField.hand.cards[i].gameObject.position.z = handZ;
-            gameField.hand.cards[i].gameObject.rotation.copy(YGOMath.degToRadEuler(0, 0, 0));
-            const currentGameObject = gameField.hand.cards[i].gameObject;
-            if (currentGameObject) currentGameObject.name = "CARD " + i;
+            for (let i = 0; i < gameField.spellTrapZone.length; ++i) {
+                gameField.spellTrapZone[i].updateCard();
+            }
+
+            for (let i = 0; i < gameField.extraMonsterZone.length; ++i) {
+                gameField.extraMonsterZone[i].updateCard();
+            }
+
+            gameField.fieldZone.updateCard();
+
+            // hand 
+            const cardWidth = 3;
+            const cardSpacing = 2.2;
+            const totalCards = gameField.hand.cards.length;
+
+            const handWidth = (totalCards - 1) * cardSpacing + cardWidth;
+            const handY = 6.8 * (playerIndex === 0 ? -1 : 1);
+            const handZ = 5;
+
+            for (let i = 0; i < gameField.hand.cards.length; ++i) {
+                const xOffset = -handWidth / 2 + cardWidth / 2;
+                const handCard = gameField.hand.getCard(i)!;
+                handCard.gameObject.position.set(xOffset + i * cardSpacing, handY, handZ);
+                handCard.gameObject.rotation.set(0, 0, 0);
+            }
+
         }
 
-        for (let i = gameField.hand.cards.length - 1; i >= duelField.hand.length; --i) {
-            this.destroy(gameField.hand.cards[i]);
-            gameField.hand.cards.splice(i, 1);
-        }
+
+        this.events.publish("render-ui");
     }
 
     public update() {
