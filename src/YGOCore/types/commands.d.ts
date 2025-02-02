@@ -1,6 +1,6 @@
 import { YGOCore } from "../game/YGOCore";
 import { CardPosition, FieldZone } from "./types";
-export type CommandType = "NULL" | "Normal Summon" | "Tribute Summon" | "Tribute Set" | "Special Summon" | "Banish" | "Banish FD" | "Shuffle Deck" | "Draw From Deck" | "Mill From Deck" | "Fusion Summon" | "Synchro Summon" | "Link Summon" | "XYZ Summon" | "XYZ Attach Material" | "XYZ Detach Material" | "Set Monster" | "Set ST" | "To ST" | "Send To GY" | "Destroy" | "Activate" | "Change Battle Position" | "Move Card" | "To Top Deck" | "To Bottom Deck" | "To Hand" | "Reveal" | "Target" | "Field Spell" | "Change Card Position" | "Change Card Atk Def";
+export type CommandType = "NULL" | "Normal Summon" | "Tribute Summon" | "Tribute Set" | "Special Summon" | "Banish" | "Banish FD" | "Shuffle Deck" | "Start Hand" | "Draw From Deck" | "Mill From Deck" | "Fusion Summon" | "Synchro Summon" | "Link Summon" | "XYZ Summon" | "XYZ Attach Material" | "XYZ Detach Material" | "Set Monster" | "Set ST" | "To ST" | "To Extra Deck" | "Send To GY" | "Destroy" | "Activate" | "Change Battle Position" | "Move Card" | "To Top Deck" | "To Bottom Deck" | "To Hand" | "Reveal" | "Target" | "Field Spell" | "Change Card Position" | "Change Card Atk Def" | "Flip";
 export interface Command {
     type: CommandType;
     parent: Command | null;
@@ -117,7 +117,7 @@ export interface SetCardCommandData {
     player: number;
     id: number;
     originZone: FieldZone;
-    zone: FieldZone;
+    zone?: FieldZone;
 }
 export interface ToSTCommandData {
     player: number;
@@ -146,6 +146,10 @@ export interface ToExtraDeckCommandData {
 export interface DrawFromDeckCommandData {
     player: number;
     numberOfCards?: number;
+}
+export interface StartHandCommandData {
+    player: number;
+    numberOfCards: number;
 }
 export interface MillFromDeckCommandData {
     player: number;
@@ -190,7 +194,7 @@ export interface ShuffleDeckCommandData {
 export interface RevealCommandData {
     player: number;
     id: number;
-    zone: FieldZone;
+    originZone: FieldZone;
 }
 export interface ToHandCommandData {
     player: number;
@@ -210,9 +214,8 @@ export interface FieldSpellCommandData {
     position?: "faceup" | "facedown";
     reveal?: boolean;
 }
-export interface RevealCommandData {
+export interface FlipCommandData {
     player: number;
     id: number;
-    zone: FieldZone;
-    position?: CardPosition;
+    originZone: FieldZone;
 }

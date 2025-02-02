@@ -10,7 +10,7 @@ export enum YGOCommandsControllerState {
 }
 
 export class YGOCommandsController extends YGOComponent {
-
+    
     private state: YGOCommandsControllerState;
     private duel: YGODuel;
     private commands: YGOComponent[];

@@ -6,11 +6,13 @@ export declare namespace YGODuelEvents {
         SendToGY = "Send To GY",
         Banish = "Banish",
         BanishFD = "Banish FD",
+        StartHand = "Start Hand",
         DrawCardFromDeck = "Draw From Deck",
         MillCardFromDeck = "Mill From Deck",
         TributeSummon = "Tribute Summon",
         TributeSet = "Tribute Set",
         ToHand = "To Hand",
+        ToExtraDeck = "To Extra Deck",
         ToTopDeck = "To Top Deck",
         ToBottomDeck = "To Bottom Deck",
         SpecialSummon = "Special Summon",
@@ -31,7 +33,8 @@ export declare namespace YGODuelEvents {
         Target = "Target",
         FieldSpell = "Field Spell",
         ChangeCardPosition = "Change Card Position",
-        ChangeCardAtkDef = "Change Card Atk Def"
+        ChangeCardAtkDef = "Change Card Atk Def",
+        Flip = "Flip"
     }
     interface DuelLog {
         type: LogType;
@@ -65,7 +68,15 @@ export declare namespace YGODuelEvents {
     }
     interface DrawFromDeck extends DuelLog {
         id: number;
+        originZone: FieldZone;
         zone: FieldZone;
+    }
+    interface StartHand extends DuelLog {
+        cards: {
+            id: number;
+            zone: FieldZone;
+        }[];
+        core: boolean;
     }
     interface FusionSummon extends DuelLog {
         id: number;
@@ -136,7 +147,7 @@ export declare namespace YGODuelEvents {
     }
     interface Reveal extends DuelLog {
         id: number;
-        zone: FieldZone;
+        originZone: FieldZone;
     }
     interface Target extends DuelLog {
         id: number;
@@ -152,5 +163,15 @@ export declare namespace YGODuelEvents {
         zone: FieldZone;
         atk: number | null;
         def: number | null;
+    }
+    interface Flip extends DuelLog {
+        id: number;
+        originZone: FieldZone;
+    }
+    interface ToExtraDeck extends DuelLog {
+        id: number;
+        originZone: FieldZone;
+    }
+    interface MillCardFromDeck extends DuelLog {
     }
 }

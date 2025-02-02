@@ -19,9 +19,9 @@ export abstract class YGOEntity {
         component.start();
     }
 
-    getComponent<T = YGOComponent>(name: string): T | null {
+    getComponent<T = YGOComponent>(name: string): T {
         const component = this.components[name] as T;
-        return component || null;
+        return component;
     }
 
     removeComponent<T = YGOComponent>(component: string | YGOComponent): T | null {

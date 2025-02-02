@@ -1,103 +1,88 @@
+import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 import { YGOCommands, YGOGameUtils } from "../../../YGOCore";
 import { Card, FieldZone } from "../../../YGOCore/types/types";
 import { ActionCardSelection } from "../../actions/ActionSelectCard";
 import { YGODuel } from "../../core/YGODuel";
-import { getXyzMonstersZones } from "../../scripts/ygo-utils";
+import { getCardZones, getTransformFromCamera, getXyzMonstersZones } from "../../scripts/ygo-utils";
+import { CardMenu } from "../components/CardMenu";
+import { GameCard } from "../../game/GameCard";
 
-export function CardZoneMenu({ duel, card, zone, clearAction, mouseEvent }: { duel: YGODuel, zone: FieldZone, card: Card, clearAction: Function, mouseEvent: React.MouseEvent }) {
-    const x = mouseEvent.clientX; // Horizontal mouse position in px
-    const y = mouseEvent.clientY; // Vertical mouse position in px
+export function CardZoneMenu({ duel, card, zone, gameCard, clearAction, mouseEvent }: { duel: YGODuel, gameCard: GameCard, zone: FieldZone, card: Card, clearAction: Function, mouseEvent: React.MouseEvent }) {
+    const menuRef = useRef<HTMLDivElement>()
+    const ygo = duel.ygo;
+    const player = duel.getActivePlayer();
 
-    const sendToGY = (e: React.MouseEvent) => {
-        e.stopPropagation();
-        e.preventDefault();
+    const sendToGY = useCallback(() => {
+        duel.gameActions.sendToGy({ card, originZone: zone });
+    }, [card, zone]);
 
-        clearAction();
+    const banish = useCallback(() => {
+        duel.gameActions.banish({ card, originZone: zone, position: "faceup" });
+    }, [card, zone]);
 
-        duel.ygo.exec(new YGOCommands.SendCardToGYCommand({
-            player: 0,
-            id: card.id,
-            originZone: zone
-        }));
-    }
+    const banishFD = useCallback(() => {
+        duel.gameActions.banish({ card, originZone: zone, position: "faceup" });
+    }, [card, zone]);
 
-    const banish = () => {
-        banishCommand("faceup");
-    }
+    const toHand = useCallback(() => {
+        duel.gameActions.toHand({ card, originZone: zone });
+    }, [card, zone]);
 
-    const banishFD = () => {
-        banishCommand("facedown");
-    }
-
-    const banishCommand = (position = "faceup") => {
-        clearAction();
-
-        duel.ygo.exec(new YGOCommands.BanishCommand({
-            player: 0,
-            id: card.id,
-            originZone: zone,
-            position: position === 'faceup' ? "faceup" : "facedown"
-        }));
-    }
+    const toExtraDeck = useCallback(() => {
+        duel.gameActions.toExtraDeck({ card, originZone: zone });
+    }, [card, zone]);
 
     const viewMaterials = () => {
         duel.events.publish("toggle-ui-menu", { key: "game-overlay", autoClose: true, type: "xyz-monster-materials", data: { card, zone } });
     }
 
+    const attachMaterial = useCallback(() => {
+        duel.gameActions.attachMaterial({ card, originZone: zone });
+    }, [card, zone]);
 
-    const attachMaterial = () => {
-        clearAction();
-        const ygo = duel.ygo;
-        const cardSelection = duel.gameController.getComponent<ActionCardSelection>("action_card_selection")!;
-        const xyzZones = getXyzMonstersZones(duel, [0]);
+    const toST = useCallback(() => {
+        duel.gameActions.toST({ card, originZone: zone });
+    }, [card, zone]);
 
-        if (xyzZones.length === 0) return;
+    useLayoutEffect(() => {
+        const container = menuRef.current!;
+        const size = container.getBoundingClientRect();
+        const { x, y, width, height } = getTransformFromCamera(duel, gameCard.gameObject);
+        container.style.top = (y - size.height) + "px";
+        container.style.left = (x - (size.width / 2) + (width / 2)) + "px";
+    }, [card]);
 
-        cardSelection.startSelection({
-            zones: xyzZones,
-            onSelectionCompleted: (cardZone: any) => {
-
-                ygo.exec(new YGOCommands.XYZAttachMaterialCommand({
-                    player: 0,
-                    id: card.id,
-                    originZone: zone,
-                    zone: cardZone.zone
-                }));
-            }
-        });
-    }
-
-    const field = duel.ygo.state.fields[0];
+    const field = duel.ygo.state.fields[player];
     const isXYZ = YGOGameUtils.isXYZMonster(card);
+    const isLink = YGOGameUtils.isLinkMonster(card);
     const hasXyzMonstersInField = YGOGameUtils.hasXyzMonstersInField(field);
     const canAttachMaterial = isXYZ ? getXyzMonstersZones(duel, [0]).length > 1 : true;
+    const isMonsterZone = zone.includes("M");
+    const isMainDeckCard = card.isMainDeckCard;
 
-    return <>
-        <div className="ygo-card-menu" style={{ top: `${y}px`, left: `${x}px` }} onClick={(e) => {
-            e.stopPropagation();
-            e.preventDefault();
-            duel.events.publish("clear-ui-action");
-        }}>
-            {isXYZ && <div>
-                <div>
-                    <button type="button" onClick={viewMaterials}>View Materials</button>
-                </div>
-            </div>}
-            <div onClick={e => e.stopPropagation()}>
-                <button type="button" onClick={sendToGY}>Send To GY</button>
-            </div>
-            <div onClick={e => e.stopPropagation()}>
-                <button type="button" onClick={banish}>Banish</button>
-            </div>
-            <div onClick={e => e.stopPropagation()}>
-                <button type="button" onClick={banishFD}>Banish FD</button>
-            </div>
-            {
-                hasXyzMonstersInField && <div>
-                    {canAttachMaterial && <button type="button" onClick={attachMaterial}>Attach Material</button>}
-                </div>
-            }
-        </div>
-    </>
+    return <CardMenu menuRef={menuRef}>
 
+        {isXYZ && <>
+            <button type="button" className="ygo-card-item" onClick={viewMaterials}>View Materials</button>
+        </>}
+
+        {isMainDeckCard && <button type="button" className="ygo-card-item" onClick={toHand}>To Hand</button>}
+
+        {!isMainDeckCard && <button type="button" className="ygo-card-item" onClick={toExtraDeck}>To Extra Deck</button>}
+
+        {
+            isMonsterZone && <>
+                <button type="button" className="ygo-card-item" onClick={toST}>TO ST</button>
+            </>
+        }
+        <button type="button" className="ygo-card-item" onClick={sendToGY}>Send To GY</button>
+        <button type="button" className="ygo-card-item" onClick={banish}>Banish</button>
+        <button type="button" className="ygo-card-item" onClick={banishFD}>Banish FD</button>
+
+        {
+            hasXyzMonstersInField && <>
+                {canAttachMaterial && <button type="button" className="ygo-card-item" onClick={attachMaterial}>Attach Material</button>}
+            </>
+        }
+    </CardMenu>
 }

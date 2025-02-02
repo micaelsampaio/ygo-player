@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { YGODuel } from "../../core/YGODuel";
 import { ActionUiMenu } from "../../actions/ActionUiMenu";
 
-export function ExtraDeck({ duel, visible = true }: { duel: YGODuel, visible: boolean }) {
+export function ExtraDeck({ duel, clearAction, visible = true }: { duel: YGODuel, visible: boolean, clearAction: () => void }) {
 
     const action = useMemo(() => {
         const action = new ActionUiMenu(duel, { eventType: "card-extra-deck-menu" });
@@ -24,12 +24,14 @@ export function ExtraDeck({ duel, visible = true }: { duel: YGODuel, visible: bo
             e.preventDefault();
             e.stopPropagation();
         }}
+
+        onScroll={() => duel.events.publish("clear-ui-action")}
     >
         <h2>EX Deck</h2>
         <hr />
         {cards.map(card => <div>
             <img onClick={(e) => {
-                action.eventData = { duel, card, mouseEvent: e };
+                action.eventData = { duel, card, mouseEvent: e, htmlCardElement: e.target };
                 duel.actionManager.setAction(action);
                 duel.events.publish("set-selected-card", { player: 0, card });
             }}

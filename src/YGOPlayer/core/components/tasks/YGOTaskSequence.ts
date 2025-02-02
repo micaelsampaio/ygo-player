@@ -5,6 +5,11 @@ export class YGOTaskSequence extends YGOTask {
     private tasks: YGOTask[] = [];
     private currentTask: YGOTask | undefined;
 
+    constructor(...tasks: YGOTask[]) {
+        super();
+        this.tasks = tasks;
+    }
+
     public add(task: YGOTask): YGOTaskSequence {
         this.tasks.push(task);
         return this;

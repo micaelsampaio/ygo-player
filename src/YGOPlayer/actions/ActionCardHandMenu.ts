@@ -12,10 +12,12 @@ export class ActionCardHandMenu implements YGOAction {
     }
 
     public setData(data: any) {
+        this.data?.cardInHand?.setActive(false);
         this.data = data;
     }
 
     public onActionStart() {
+        this.data.cardInHand?.setActive(true);
         this.duel.events.publish("set-ui-action", {
             type: "card-hand-menu",
             data: this.data
@@ -23,6 +25,7 @@ export class ActionCardHandMenu implements YGOAction {
     }
 
     public onActionEnd() {
+        this.data.cardInHand?.setActive(false);
         this.duel.events.publish("clear-ui-action");
     }
 }

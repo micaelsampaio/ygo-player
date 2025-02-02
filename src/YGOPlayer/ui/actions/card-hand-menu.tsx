@@ -1,245 +1,82 @@
-import { YGOCommands, YGOGameUtils } from "../../../YGOCore";
-import { ActionCardSelection } from "../../actions/ActionSelectCard";
+import { YGOGameUtils } from "../../../YGOCore";
 import { YGODuel } from "../../core/YGODuel";
-import { getCardZones, getTransformFromCamera, getXyzMonstersZones } from "../../scripts/ygo-utils";
-import { Card } from "../../../YGOCore/types/types";
-import { useLayoutEffect, useRef, useState } from "react";
+import { getTransformFromCamera } from "../../scripts/ygo-utils";
+import { Card, FieldZone } from "../../../YGOCore/types/types";
+import { useCallback, useLayoutEffect, useRef } from "react";
+import { CardMenu } from "../components/CardMenu";
 
-export function CardHandMenu({ duel: duel2, card: card2, index, clearAction, mouseEvent }: any) {
-    const x = mouseEvent.clientX; // Horizontal mouse position in px
-    const y = mouseEvent.clientY; // Vertical mouse position in px
-    const duel = duel2 as YGODuel;
-    const card = card2 as Card;
+export function CardHandMenu({ duel, card, index }: { duel: YGODuel, card: Card, index: number, clearAction: () => void }) {
     const menuRef = useRef<HTMLDivElement>(null);
+    const originZone: FieldZone = `H-${index + 1}`;
 
-    const normalSummon = (e: React.MouseEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
+    const normalSummon = useCallback(() => {
+        duel.gameActions.normalSummon({ card, originZone });
+    }, [card, index]);
 
-        const ygo = duel.ygo;
+    const setSummon = useCallback(() => {
+        duel.gameActions.setSummon({ card, originZone });
+    }, [card, index]);
 
-        clearAction();
+    const specialSummonATK = useCallback(() => {
+        duel.gameActions.specialSummon({ card, originZone, position: "faceup-attack" });
+    }, [card, index]);
 
-        const cardSelection = duel.gameController.getComponent<ActionCardSelection>("action_card_selection")!;
-        const zones = getCardZones(duel, [0], ["M"]);
+    const specialSummonDEF = useCallback(() => {
+        duel.gameActions.specialSummon({ card, originZone, position: "faceup-defense" });
+    }, [card, index]);
 
-        cardSelection.startSelection({
-            zones,
-            onSelectionCompleted: (cardZone: any) => {
-                ygo.exec(new YGOCommands.NormalSummonCommand({
-                    player: 0,
-                    id: card.id,
-                    originZone: `H-${index + 1}`,
-                    zone: cardZone.zone
-                }));
-            }
-        });
-    }
+    const setSpellTrap = useCallback(() => {
+        duel.gameActions.setSpellTrap({ card, originZone });
+    }, [card, index]);
 
-    const SetSummon = (e: React.MouseEvent) => {
-        const ygo = duel.ygo;
+    const activateSpellTrap = useCallback(() => {
+        duel.gameActions.activateCard({ card, originZone, selectZone: true });
+    }, [card, index]);
 
-        clearAction();
+    const revealCard = useCallback(() => {
+        duel.gameActions.revealCard({ card, originZone });
+    }, [card, index]);
 
-        const cardSelection = duel.gameController.getComponent<ActionCardSelection>("action_card_selection")!;
-        const zones = getCardZones(duel, [0], ["M"]);
+    const sendToGy = useCallback(() => {
+        duel.gameActions.sendToGy({ card, originZone });
+    }, [card, index]);
 
-        cardSelection.startSelection({
-            zones,
-            onSelectionCompleted: (cardZone: any) => {
-                ygo.exec(new YGOCommands.SetMonsterCommand({
-                    player: 0,
-                    id: card.id,
-                    originZone: `H-${index + 1}`,
-                    zone: cardZone.zone
-                }));
-            }
-        });
-    }
+    const banish = useCallback(() => {
+        duel.gameActions.banish({ card, originZone, position: "faceup" });
+    }, [card, index]);
 
-    const specialSummonATK = (e: React.MouseEvent) => {
-        const ygo = duel.ygo;
+    const banishFD = useCallback(() => {
+        duel.gameActions.banish({ card, originZone, position: "facedown" });
+    }, [card, index]);
 
-        clearAction();
+    const toST = useCallback(() => {
+        duel.gameActions.toST({ card, originZone });
+    }, [card, index]);
 
-        const cardSelection = duel.gameController.getComponent<ActionCardSelection>("action_card_selection")!;
-        const zones = getCardZones(duel, [0], ["M"]);
+    const activateFieldSpell = useCallback(() => {
+        duel.gameActions.fieldSpell({ card, originZone, position: "faceup" });
+    }, [card, index]);
 
-        cardSelection.startSelection({
-            zones,
-            onSelectionCompleted: (cardZone: any) => {
-                ygo.exec(new YGOCommands.SpecialSummonCommand({
-                    player: 0,
-                    id: card.id,
-                    originZone: `H-${index + 1}`,
-                    zone: cardZone.zone,
-                    position: "faceup-attack"
-                }));
-            }
-        });
-    }
-    const specialSummonDEF = (e: React.MouseEvent) => {
-        const ygo = duel.ygo;
+    const setFieldSpell = useCallback(() => {
+        duel.gameActions.fieldSpell({ card, originZone, position: "facedown" });
+    }, [card, index]);
 
-        clearAction();
-
-        const cardSelection = duel.gameController.getComponent<ActionCardSelection>("action_card_selection")!;
-        const zones = getCardZones(duel, [0], ["M"]);
-
-        cardSelection.startSelection({
-            zones,
-            onSelectionCompleted: (cardZone: any) => {
-                ygo.exec(new YGOCommands.SpecialSummonCommand({
-                    player: 0,
-                    id: card.id,
-                    originZone: `H-${index + 1}`,
-                    zone: cardZone.zone,
-                    position: "faceup-defense"
-                }));
-            }
-        });
-    }
-
-    const SetSpellTrap = (e: React.MouseEvent) => {
-        const ygo = duel.ygo;
-
-        clearAction();
-
-        const cardSelection = duel.gameController.getComponent<ActionCardSelection>("action_card_selection")!;
-        const zones = getCardZones(duel, [0], ["S"]);
-
-        cardSelection.startSelection({
-            zones,
-            onSelectionCompleted: (cardZone: any) => {
-                ygo.exec(new YGOCommands.SetCardCommand({
-                    player: 0,
-                    id: card.id,
-                    originZone: `H-${index + 1}`,
-                    zone: cardZone.zone
-                }));
-            }
-        });
-    }
-
-    const ActivateSpellTrap = (e: React.MouseEvent) => {
-        const ygo = duel.ygo;
-
-        clearAction();
-
-        const cardSelection = duel.gameController.getComponent<ActionCardSelection>("action_card_selection")!;
-        const zones = getCardZones(duel, [0], ["S"]);
-
-        cardSelection.startSelection({
-            zones,
-            onSelectionCompleted: (cardZone: any) => {
-                ygo.exec(new YGOCommands.ActivateCardCommand({
-                    player: 0,
-                    id: card.id,
-                    originZone: `H-${index + 1}`,
-                    zone: cardZone.zone
-                }));
-            }
-        });
-    }
-
-    const SendToGy = (e: React.MouseEvent) => {
-        e.stopPropagation();
-        e.preventDefault();
-
-        clearAction();
-
-        duel.ygo.exec(new YGOCommands.SendCardToGYCommand({
-            player: 0,
-            id: card.id,
-            originZone: `H-${index + 1}`,
-        }));
-    }
-
-
-    const SendAllCardsToGY = (e: React.MouseEvent) => {
-        e.stopPropagation();
-        e.preventDefault();
-
-        clearAction();
-
-        const zones = duel.fields[0].monsterZone.filter(zone => zone && zone.hasCard());
-        zones.map(zone => {
-            duel.ygo.exec(new YGOCommands.SendCardToGYCommand({
-                player: 0,
-                id: zone.getCardReference()!.id,
-                originZone: zone.zone,
-            }));
-        })
-    }
-
-    const attachMaterial = () => {
-        clearAction();
-        const ygo = duel.ygo;
-        const cardSelection = duel.gameController.getComponent<ActionCardSelection>("action_card_selection")!;
-        const xyzZones = getXyzMonstersZones(duel, [0]);
-
-        if (xyzZones.length === 0) return;
-
-        cardSelection.startSelection({
-            zones: xyzZones,
-            onSelectionCompleted: (cardZone: any) => {
-
-                ygo.exec(new YGOCommands.XYZAttachMaterialCommand({
-                    player: 0,
-                    id: card.id,
-                    originZone: `H-${index + 1}`,
-                    zone: cardZone.zone
-                }));
-            }
-        });
-    }
-
-    const ActivateFieldSpell = (e: React.MouseEvent) => {
-        const ygo = duel.ygo;
-
-        clearAction();
-
-        const cardZone = duel.fields[0].fieldZone;        
-
-        ygo.exec(new YGOCommands.FieldSpellCommand({
-            player: 0,
-            id: card.id,
-            originZone: `H-${index + 1}`,
-            zone: cardZone.zone as any,
-            position: "faceup"
-        }));
-    }
-
-    const SetFieldSpell = (e: React.MouseEvent) => {
-        const ygo = duel.ygo;
-
-        clearAction();
-
-        const zones = getCardZones(duel, [0], ["F"]);
-
-        if (zones.length > 0) {
-            ygo.exec(new YGOCommands.FieldSpellCommand({
-                player: 0,
-                id: card.id,
-                originZone: `H-${index + 1}`,
-                zone: zones[0].zone as any,
-                position: "facedown"
-            }));
-        }
-    }
+    const attachMaterial = useCallback(() => {
+        duel.gameActions.attachMaterial({ card, originZone });
+    }, [card, index]);
 
     useLayoutEffect(() => {
         const container = menuRef.current!;
         const cardFromHand = duel.fields[0].hand.getCardFromReference(card)!;
         const size = container.getBoundingClientRect();
-
         const { x, y, width, height } = getTransformFromCamera(duel, cardFromHand.gameObject);
-
+        container.style.width = (width * 1.5) + "px";
         container.style.top = (y - size.height) + "px";
         container.style.left = x + "px";
     }, [card]);
 
-    const field = duel.ygo.state.fields[0];
+    const player = duel.getActivePlayer();
+    const field = duel.ygo.state.fields[player];
     const freeMonsterZones = field.monsterZone.filter(zone => !zone).length;
     const freeSpellTrapZones = field.spellTrapZone.filter(zone => !zone).length;
     const isFieldSpell = YGOGameUtils.isFieldSpell(card);
@@ -249,54 +86,35 @@ export function CardHandMenu({ duel: duel2, card: card2, index, clearAction, mou
     const hasXyzMonstersInField = YGOGameUtils.hasXyzMonstersInField(field);
 
     return <>
-        <div ref={menuRef} className="ygo-card-menu" onClick={(e) => {
-            e.stopPropagation();
-            e.preventDefault();
-            duel.events.publish("clear-ui-action");
-        }}>
-            <div onClick={e => e.stopPropagation()}>
-                {isMonster && <>
-                    <div>
-                        <button disabled={freeMonsterZones === 0} type="button" onClick={normalSummon}>Normal Summon</button>
-                    </div>
-                    <div>
-                        <button disabled={freeMonsterZones === 0} type="button" onClick={SetSummon}>Set</button>
-                    </div>
-                    <div>
-                        <button disabled={freeMonsterZones === 0} type="button" onClick={specialSummonATK}>Special Summon ATK</button>
-                    </div>
-                    <div>
-                        <button disabled={freeMonsterZones === 0} type="button" onClick={specialSummonDEF}>Special Summon DEF</button>
-                    </div>
-                </>}
-                {hasXyzMonstersInField && <div>
-                    <button type="button" onClick={attachMaterial}>Attach Material</button>
-                </div>}
-                {(isSpell || isTrap) && <>
-                    <div>
-                        <button type="button" disabled={freeSpellTrapZones === 0} onClick={ActivateSpellTrap}>Activate</button>
-                    </div>
-                    <div>
-                        <button type="button" disabled={freeSpellTrapZones === 0} onClick={SetSpellTrap}>Set</button>
-                    </div>
-                </>}
-                {(isFieldSpell) && <>
-                    <div>
-                        <button type="button" onClick={ActivateFieldSpell}>Activate Field</button>
-                    </div>
-                    <div>
-                        <button type="button" disabled={freeSpellTrapZones === 0} onClick={SetFieldSpell}>Set Field</button>
-                    </div>
-                </>}
+        <CardMenu menuRef={menuRef} >
+            {isMonster && <>
+                <button className="ygo-card-item" disabled={freeMonsterZones === 0} type="button" onClick={normalSummon}>Normal Summon</button>
+                <button className="ygo-card-item" disabled={freeMonsterZones === 0} type="button" onClick={setSummon}>Set</button>
+                <button className="ygo-card-item" disabled={freeMonsterZones === 0} type="button" onClick={specialSummonATK}>Special Summon ATK</button>
+                <button className="ygo-card-item" disabled={freeMonsterZones === 0} type="button" onClick={specialSummonDEF}>Special Summon DEF</button>
+            </>}
+            {hasXyzMonstersInField && <div>
+                <button className="ygo-card-item" type="button" onClick={attachMaterial}>Attach Material</button>
+            </div>}
+            {(isSpell || isTrap) && <>
+                <button className="ygo-card-item" type="button" disabled={freeSpellTrapZones === 0} onClick={activateSpellTrap}>Activate</button>
+
+                <button className="ygo-card-item" type="button" disabled={freeSpellTrapZones === 0} onClick={setSpellTrap}>Set</button>
+            </>}
+            {(isFieldSpell) && <>
                 <div>
-                    <button type="button" onClick={SendToGy}>Discard</button>
+                    <button className="ygo-card-item" type="button" onClick={activateFieldSpell}>Activate Field</button>
                 </div>
                 <div>
-                    <button type="button" onClick={SendAllCardsToGY}>Debug (Clear Field)</button>
-                    <button type="button" onClick={() => duel.updateField()}>Update Field</button>
+                    <button className="ygo-card-item" type="button" disabled={freeSpellTrapZones === 0} onClick={setFieldSpell}>Set Field</button>
                 </div>
-            </div>
-        </div>
+            </>}
+            <button className="ygo-card-item" onClick={toST}>To S/T</button>
+            <button className="ygo-card-item" type="button" onClick={sendToGy}>To Graveyard</button>
+            <button className="ygo-card-item" type="button" onClick={banish}>Banish</button>
+            <button className="ygo-card-item" type="button" onClick={banishFD}>Banish FD</button>
+            <button className="ygo-card-item" onClick={revealCard}>Reveal</button>
+        </CardMenu>
     </>
 
 }

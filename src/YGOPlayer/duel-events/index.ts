@@ -3,6 +3,7 @@ import { YGOTask } from "../core/components/tasks/YGOTask";
 import { YGODuel } from "../core/YGODuel";
 import { LinkSummonEventHandler } from "./events/link-summon-event";
 import { MoveCardEventHandler } from "./events/move-card-event";
+import { RevealEventHandler } from "./events/reveal-event";
 import { SendToGyEventHandler } from "./events/send-to-gy-event";
 import { UpdateFieldEvent } from "./events/update-field-event";
 
@@ -22,7 +23,12 @@ const events: any = {
     [YGODuelEvents.LogType.Banish]: MoveCardEventHandler,
     [YGODuelEvents.LogType.BanishFD]: MoveCardEventHandler,
     [YGODuelEvents.LogType.FieldSpell]: MoveCardEventHandler,
+    [YGODuelEvents.LogType.ToST]: MoveCardEventHandler,
+    [YGODuelEvents.LogType.ToHand]: MoveCardEventHandler,
+    [YGODuelEvents.LogType.ToExtraDeck]: MoveCardEventHandler,
+    [YGODuelEvents.LogType.DrawCardFromDeck]: MoveCardEventHandler,
     [YGODuelEvents.LogType.LinkSummon]: LinkSummonEventHandler,
+    [YGODuelEvents.LogType.Reveal]: RevealEventHandler,
     DEFAULT: UpdateFieldEvent
 }
 

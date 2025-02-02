@@ -17,7 +17,6 @@ export class PlayerField {
     // extraMonsterZone: Array<YGOGameCard>;
     public mainDeck: Deck
     public extraDeck: ExtraDeck
-    public deck: Deck
     public hand: GameHand
     public graveyard: Graveyard
     public banishedZone: Banish
@@ -36,7 +35,6 @@ export class PlayerField {
         this.fieldZone = null as any;
         this.graveyard = null as any;
         this.banishedZone = null as any;
-        this.deck = null as any;
     }
 
 }

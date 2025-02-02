@@ -23,7 +23,7 @@ export function Graveyard({ duel, visible = true }: { duel: YGODuel, visible: bo
         <hr />
         {gy.map(card => <div>
             <img onClick={(e) => {
-                action.eventData = { duel, card, mouseEvent: e };
+                action.eventData = { duel, card, mouseEvent: e, htmlCardElement: e.target };
                 duel.actionManager.setAction(action);
                 duel.events.publish("set-selected-card", { player: 0, card });
             }}

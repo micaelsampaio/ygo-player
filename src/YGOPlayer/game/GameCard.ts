@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { YGOEntity } from "../core/YGOEntity";
 import { YGODuel } from '../core/YGODuel';
-import { Card } from '../../YGOCore/types/types';
+import { Card, FieldZoneData } from '../../YGOCore/types/types';
 import { YGOGameUtils } from '../../YGOCore';
 import { GameCardStats } from './GameCardStats';
 
@@ -46,9 +46,8 @@ export class GameCard extends YGOEntity {
     setCard(card: Card) {
         this.cardReference = card;
 
-        const textureLoader = this.duel.core.textureLoader;
-        const frontTexture = textureLoader.load(`http://127.0.0.1:8080/images/cards_small/${card.id}.jpg`);
-        const backTexture = textureLoader.load('http://127.0.0.1:8080/images/card_back.png');
+        const frontTexture = this.duel.assets.getTexture(`http://127.0.0.1:8080/images/cards_small/${card.id}.jpg`);
+        const backTexture = this.duel.assets.getTexture('http://127.0.0.1:8080/images/card_back.png');
         const frontMaterial = new THREE.MeshBasicMaterial({ map: frontTexture }); // Front with texture
         const backMaterial = new THREE.MeshBasicMaterial({ map: backTexture });  // Back
         const depthMaterial = new THREE.MeshBasicMaterial({ color: 0xb5b5b5 }); // Depth
@@ -68,8 +67,13 @@ export class GameCard extends YGOEntity {
         this.gameObject.name = card.name;
     }
 
-    public updateCardStats() {
+    public updateCardStats(zoneData: FieldZoneData) {
         if (!this.hasStats) return;
+
+        if (zoneData.zone === "S" && this.cardStats) {
+            this.cardStats.hide();
+            return;
+        }
 
         if (YGOGameUtils.isSpellTrap(this.cardReference)) {
             return;

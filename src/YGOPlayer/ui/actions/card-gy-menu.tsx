@@ -1,99 +1,51 @@
-import { YGOCommands, YGOGameUtils } from "../../../YGOCore";
+import { useCallback, useLayoutEffect, useRef } from "react";
+import { YGOGameUtils } from "../../../YGOCore";
 import { Card, FieldZone } from "../../../YGOCore/types/types";
-import { ActionCardSelection } from "../../actions/ActionSelectCard";
 import { YGODuel } from "../../core/YGODuel";
-import { getCardZones, getXyzMonstersZones } from "../../scripts/ygo-utils";
+import { CardMenu } from "../components/CardMenu";
 
-export function CardGraveyardMenu({ duel, card, clearAction, mouseEvent }: { duel: YGODuel, zone: FieldZone, card: Card, clearAction: Function, mouseEvent: React.MouseEvent }) {
-    const x = mouseEvent.clientX; // Horizontal mouse position in px
-    const y = mouseEvent.clientY; // Vertical mouse position in px
+export function CardGraveyardMenu({ duel, card, htmlCardElement, clearAction, mouseEvent }: { duel: YGODuel, zone: FieldZone, card: Card, htmlCardElement: HTMLDivElement, clearAction: Function, mouseEvent: React.MouseEvent }) {
+    const menuRef = useRef<HTMLDivElement>(null);
+    const player = duel.getActivePlayer();
+    const field = duel.ygo.state.fields[player];
+    const cardIndex = duel.ygo.state.fields[player].graveyard.findIndex((c) => c === card);
+    const originZone: FieldZone = YGOGameUtils.createZone("GY", player, cardIndex + 1);
 
-    const specialSummonATK = (e: React.MouseEvent) => {
-        const ygo = duel.ygo;
+    const specialSummonATK = useCallback(() => {
+        duel.gameActions.specialSummon({ card, originZone, position: "faceup-attack" });
+    }, [card, originZone]);
 
-        clearAction();
-        const gyIndex = duel.ygo.state.fields[0].graveyard.findIndex((c) => c === card);
-        const cardSelection = duel.gameController.getComponent<ActionCardSelection>("action_card_selection")!;
-        const zones = getCardZones(duel, [0], ["M"]);
+    const specialSummonDEF = useCallback(() => {
+        duel.gameActions.specialSummon({ card, originZone, position: "faceup-defense" });
+    }, [card, originZone]);
 
-        cardSelection.startSelection({
-            zones,
-            onSelectionCompleted: (cardZone: any) => {
-                ygo.exec(new YGOCommands.SpecialSummonCommand({
-                    player: 0,
-                    id: card.id,
-                    originZone: `GY-${gyIndex + 1}`,
-                    zone: cardZone.zone,
-                    position: "faceup-attack"
-                }));
-            }
-        });
-    }
+    const attachMaterial = useCallback(() => {
+        duel.gameActions.attachMaterial({ card, originZone });
+    }, [card, originZone]);
 
-    const specialSummonDEF = (e: React.MouseEvent) => {
-        const ygo = duel.ygo;
+    const toHand = useCallback(() => {
+        duel.gameActions.toHand({ card, originZone });
+    }, [card, originZone]);
 
-        clearAction();
-        const gyIndex = duel.ygo.state.fields[0].graveyard.findIndex((c) => c === card);
-        const cardSelection = duel.gameController.getComponent<ActionCardSelection>("action_card_selection")!;
-        const zones = getCardZones(duel, [0], ["M"]);
 
-        cardSelection.startSelection({
-            zones,
-            onSelectionCompleted: (cardZone: any) => {
-                ygo.exec(new YGOCommands.SpecialSummonCommand({
-                    player: 0,
-                    id: card.id,
-                    originZone: `GY-${gyIndex + 1}`,
-                    zone: cardZone.zone,
-                    position: "faceup-defense"
-                }));
-            }
-        });
-    }
+    useLayoutEffect(() => {
+        const container = menuRef.current!;
+        const cardRect = htmlCardElement.getBoundingClientRect();
+        const containerRect = container.getBoundingClientRect();
+        container.style.left = cardRect.left - containerRect.width + "px";
+        container.style.top = cardRect.top + "px";
+    }, [card, htmlCardElement]);
 
-    const attachMaterial = () => {
-        clearAction();
-        const ygo = duel.ygo;
-        const cardSelection = duel.gameController.getComponent<ActionCardSelection>("action_card_selection")!;
-        const xyzZones = getXyzMonstersZones(duel, [0]);
-
-        if (xyzZones.length === 0) return;
-
-        const gyIndex = duel.ygo.state.fields[0].graveyard.findIndex((c) => c === card);
-
-        cardSelection.startSelection({
-            zones: xyzZones,
-            onSelectionCompleted: (cardZone: any) => {
-
-                ygo.exec(new YGOCommands.XYZAttachMaterialCommand({
-                    player: 0,
-                    id: card.id,
-                    originZone: `GY-${gyIndex + 1}`,
-                    zone: cardZone.zone
-                }));
-            }
-        });
-    }
-
-    const field = duel.ygo.state.fields[0];
     const hasXyzMonstersInField = YGOGameUtils.hasXyzMonstersInField(field);
 
     return <>
-        <div className="ygo-card-menu" style={{ top: `${y}px`, left: `${x}px` }} onClick={(e) => {
-            e.stopPropagation();
-            e.preventDefault();
-            duel.events.publish("clear-ui-action");
-        }}>
-            <div onClick={e => e.stopPropagation()}>
-                <button type="button" onClick={specialSummonATK}>SS Atk</button>
-                <button type="button" onClick={specialSummonDEF}>SS Def</button>
-                <button type="button" onClick={specialSummonATK}>Add To Hand</button>
-                {hasXyzMonstersInField && <div>
-                    <button type="button" onClick={attachMaterial}>Attach Material</button>
-                </div>}
-            </div>
-        </div>
+        <CardMenu menuRef={menuRef} >
+            <button type="button" className="ygo-card-item" onClick={specialSummonATK}>SS Atk</button>
+            <button type="button" className="ygo-card-item" onClick={specialSummonDEF}>SS Def</button>
+            <button type="button" className="ygo-card-item" onClick={toHand}>Add To Hand</button>
+            {hasXyzMonstersInField && <>
+                <button type="button" className="ygo-card-item" onClick={attachMaterial}>Attach Material</button>
+            </>}
+        </CardMenu>
     </>
-
 }

@@ -4,9 +4,10 @@ import { YGOEntity } from "../core/YGOEntity";
 import { YGOUiElement } from "../types";
 import { YGOMouseEvents } from '../core/components/YGOMouseEvents';
 import { GameCard } from './GameCard';
-import { Card, FieldZone } from '../../YGOCore/types/types';
+import { Card, FieldZone, FieldZoneData } from '../../YGOCore/types/types';
 import { ActionCardZoneMenu } from '../actions/ActionCardZoneMenu';
 import { getCardRotation } from '../scripts/ygo-utils';
+import { YGOGameUtils } from '../../YGOCore';
 
 export class CardZone extends YGOEntity implements YGOUiElement {
 
@@ -15,6 +16,7 @@ export class CardZone extends YGOEntity implements YGOUiElement {
 
     private duel: YGODuel;
     public zone: FieldZone;
+    public zoneData: FieldZoneData;
     public position: THREE.Vector3;
     public rotation: THREE.Euler;
     public player: number;
@@ -32,6 +34,7 @@ export class CardZone extends YGOEntity implements YGOUiElement {
         this.rotation = rotation;
         this.player = player;
         this.card = null;
+        this.zoneData = YGOGameUtils.getZoneData(this.zone);
 
         const geometry = new THREE.BoxGeometry(2.8, 2.8, 0.05);
 
@@ -68,12 +71,14 @@ export class CardZone extends YGOEntity implements YGOUiElement {
                 const action = this.duel.actionManager.getAction<ActionCardZoneMenu>("card-zone-menu");
                 action.setData({
                     duel: this.duel,
+                    gameCard: this.card,
                     card: this.card!.cardReference,
                     zone: this.zone,
                     mouseEvent: event
                 })
                 this.duel.actionManager.setAction(action);
             } else {
+                this.duel.actionManager.clearAction();
                 this.duel.events.publish("clear-ui-action");
             }
 
@@ -148,7 +153,8 @@ export class CardZone extends YGOEntity implements YGOUiElement {
         this.card.gameObject.position.copy(this.position);
         this.card.gameObject.rotation.copy(rotation);
 
-        this.card.updateCardStats();
+        this.card.updateCardStats(this.zoneData);
+        this.card.gameObject.visible = true;
     }
 
     isEmpty() {

@@ -193,9 +193,7 @@ export function getCardRotation(card: Card, zone: FieldZone) {
 export function getCardRotationFromFieldZoneData(card: Card, zoneData: FieldZoneData) {
     let rotation: THREE.Euler = new THREE.Euler(0, 0, 0);
 
-    if (zoneData.zone === "GY") {
-        // GY do nothig let go as default rotation
-    } else if (zoneData.zone === "H") {
+    if (zoneData.zone === "GY" || zoneData.zone === "H") {
         // GY do nothig let go as default rotation
     } else if (zoneData.zone === "D") {
         rotation.y = THREE.MathUtils.degToRad(180);
@@ -253,11 +251,11 @@ export function getZonePositionFromZoneData(duel: YGODuel, zoneData: FieldZoneDa
     } else if (zoneData.zone === "EMZ") {
         position = field.extraMonsterZone[zoneIndex].position;
     } else if (zoneData.zone === "GY") {
-        position = field.graveyard.gameObject.position;
+        position = field.graveyard.gameObject.position.clone();
     } else if (zoneData.zone === "B") {
         position = field.banishedZone.gameObject.position;
     } else if (zoneData.zone === "D") {
-        position = field.deck.gameObject.position;
+        position = field.mainDeck.gameObject.position;
     } else if (zoneData.zone === "ED") {
         position = field.extraDeck.gameObject.position;
     } else if (zoneData.zone === "F") {

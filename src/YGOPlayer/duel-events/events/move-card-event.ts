@@ -8,15 +8,14 @@ import { CallbackTransition } from "../utils/callback";
 import { PositionTransition } from "../utils/position-transition";
 import { RotationTransition } from "../utils/rotation-transition";
 import { ScaleTransition } from "../utils/scale-transition";
-import { WaitForSeconds } from "../utils/wait-for-seconds";
 import { YGOComponent } from "../../core/YGOComponent";
 import { Card } from "../../../YGOCore/types/types";
 import * as THREE from 'three';
+import { MultipleTasks } from "../utils/multiple-tasks";
 
 interface MoveCardEventHandlerProps extends DuelEventHandlerProps {
     event: MoveCardCommandData
 }
-
 
 export class MoveCardEventHandler extends YGOComponent {
     private props: MoveCardEventHandlerProps
@@ -26,6 +25,7 @@ export class MoveCardEventHandler extends YGOComponent {
         super("move_card_command");
         this.props = props;
         const event = this.props.event;
+        console.log("Move Card: ", event)
         this.cardReference = this.props.ygo.state.getCardById(event.id, event.zone);
     }
 
@@ -37,6 +37,12 @@ export class MoveCardEventHandler extends YGOComponent {
         const originCardZone = getGameZone(duel, originZoneData);
         const cardZone = getGameZone(duel, zoneData);
 
+        if (zoneData.zone === "H") { // if card goes to hand
+            duel.updateHand(event.player);
+            duel.renderHand(event.player);
+            duel.fields[event.player].hand.getCard(zoneData.zoneIndex - 1)!.gameObject.visible = false;
+        }
+
         let startPosition = getZonePositionFromZoneData(duel, originZoneData);
         let startRotation = getCardRotationFromFieldZoneData(this.cardReference, originZoneData);
 
@@ -47,8 +53,9 @@ export class MoveCardEventHandler extends YGOComponent {
 
         if (originCardZone) {
             card = originCardZone.getGameCard()!;
-            originCardZone.removeCard();
+            startPosition = card.gameObject.position.clone();
             startRotation = card.gameObject.rotation.clone();
+            originCardZone.removeCard();
         }
 
         // @ts-ignore
@@ -71,7 +78,6 @@ export class MoveCardEventHandler extends YGOComponent {
         }
 
         let durationScale = 1;
-        let rotationDelay = 0;
 
         const sequence = new YGOTaskSequence();
 
@@ -79,21 +85,19 @@ export class MoveCardEventHandler extends YGOComponent {
             const aboveZonePos = startPosition.clone();
             aboveZonePos.z += 1;
 
-            sequence.add(new PositionTransition({
-                gameObject: card.gameObject,
-                position: aboveZonePos,
-                duration: 0.25 * durationScale
-            }));
-
             card.gameObject.scale.set(0, 0, 0);
 
-            this.props.startTask(new ScaleTransition({
-                gameObject: card.gameObject,
-                scale: new THREE.Vector3(1, 1, 1),
-                duration: 0.5 * durationScale
-            }));
-
-            rotationDelay = 0.3;
+            sequence.add(new MultipleTasks(
+                new PositionTransition({
+                    gameObject: card.gameObject,
+                    position: aboveZonePos,
+                    duration: 0.25 * durationScale
+                }), new ScaleTransition({
+                    gameObject: card.gameObject,
+                    scale: new THREE.Vector3(1, 1, 1),
+                    duration: 0.5 * durationScale
+                }))
+            );
         }
 
         if (zoneData.zone === "M" || zoneData.zone === "S" || zoneData.zone === "GY" || zoneData.zone === "B") {
@@ -101,18 +105,27 @@ export class MoveCardEventHandler extends YGOComponent {
             aboveZonePos.z += 1;
             aboveZonePos.y += 1;
 
-            sequence.add(new PositionTransition({
-                gameObject: card.gameObject,
-                position: aboveZonePos,
-                duration: 0.5 * durationScale
-            }));
+            sequence.add(
+                new MultipleTasks(
+                    new PositionTransition({
+                        gameObject: card.gameObject,
+                        position: aboveZonePos,
+                        duration: 0.5 * durationScale
+                    }),
+                    new RotationTransition({
+                        gameObject: card.gameObject,
+                        rotation: endRotation,
+                        duration: 0.3
+                    })
+                )
+            );
 
             if (zoneData.zone === "GY" || zoneData.zone === "B") {
                 sequence.add(new CallbackTransition(() => {
                     this.props.startTask(new ScaleTransition({
                         gameObject: card.gameObject,
                         scale: new THREE.Vector3(0, 0, 0),
-                        duration: 0.5 * durationScale
+                        duration: 0.25 * durationScale
                     }));
                 }));
             }
@@ -123,25 +136,21 @@ export class MoveCardEventHandler extends YGOComponent {
                 duration: 0.25 * durationScale
             }));
 
-            this.props.startTask(new YGOTaskSequence()
-                .add(new WaitForSeconds(rotationDelay))
-                .add(new RotationTransition({
-                    gameObject: card.gameObject,
-                    rotation: endRotation,
-                    duration: 0.3
-                })));
         } else {
-            sequence.add(new PositionTransition({
-                gameObject: card.gameObject,
-                position: endPosition,
-                duration: 1 * durationScale
-            }));
-
-            this.props.startTask(new RotationTransition({
-                gameObject: card.gameObject,
-                rotation: endRotation,
-                duration: 0.3
-            }));
+            sequence.add(
+                new MultipleTasks(
+                    new PositionTransition({
+                        gameObject: card.gameObject,
+                        position: endPosition,
+                        duration: 0.5 * durationScale
+                    }),
+                    new RotationTransition({
+                        gameObject: card.gameObject,
+                        rotation: endRotation,
+                        duration: 0.3
+                    })
+                )
+            );
         }
 
         sequence.add(new CallbackTransition(() => {
@@ -157,10 +166,4 @@ export class MoveCardEventHandler extends YGOComponent {
 
         this.props.startTask(sequence);
     }
-}
-
-export function MoveCardEventHandler2({ duel, ygo, event, onCompleted }: MoveCardEventHandlerProps) {
-    const cardReference = ygo.state.getCardById(event.id, event.zone);
-
-
 }

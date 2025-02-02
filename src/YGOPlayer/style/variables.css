@@ -1,0 +1,19 @@
+:root {
+    --ygo-primary-color: #4a90e2;
+    --ygo-secondary-color: #50e3c2;
+    --ygo-background-color: #181818;
+    --ygo-text-color: #e0e0e0;
+    --ygo-heading-color: #ffffff;
+    --ygo-border-color: #444444;
+    --ygo-hover-color: #6ec1e4;
+
+    --ygo-space-xs: 8px;
+    --ygo-space-sm: 16px;
+    --ygo-space-md: 24px;
+    --ygo-space-lg: 32px;
+    --ygo-space-xl: 48px;
+
+    --ygo-border-radius-small: 4px;
+    --ygo-border-radius-medium: 8px;
+    --ygo-border-radius-large: 16px;
+}

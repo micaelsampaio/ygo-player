@@ -29,4 +29,7 @@ export declare const YGOCommands: {
     FieldSpellCommand: typeof import("./commands/FieldSpellCommand").FieldSpellCommand;
     ChangeCardPositionCommand: typeof import("./commands/ChangeCardPositionCommand").ChangeCardPositionCommand;
     ChangeCardAtkDefCommand: typeof import("./commands/ChangeCardAtkDefCommand").ChangeCardAtkDefCommand;
+    FlipCommand: typeof import("./commands/FlipCommand").FlipCommand;
+    ToSTCommand: typeof import("./commands/ToSTCommand").ToSTCommand;
 };
+export declare const debug_version = 2;

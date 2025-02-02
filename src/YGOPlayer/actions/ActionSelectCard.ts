@@ -23,10 +23,9 @@ export class ActionCardSelection extends YGOComponent implements YGOAction {
         this.selectedZones = [];
         this.isMultipleSelection = false;
         this.onCancelled = null;
-        this.createCardSelections();
         this.mouseEvents = duel.gameController.getComponent<YGOMouseEvents>("mouse_events")!;
     }
-
+    
     public onActionStart(): void {
         this.hideAllSelectionCards();
 
@@ -134,7 +133,7 @@ export class ActionCardSelection extends YGOComponent implements YGOAction {
         return cube
     }
 
-    private createCardSelections() {
+    public createCardSelections() {
         for (const field of this.duel.fields) {
             for (const cardZone of field.monsterZone) {
                 const card = this.createCardSelection(cardZone.position, cardZone.rotation);

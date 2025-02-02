@@ -1,3 +1,5 @@
+@import "./variables.css";
+
 .ygo-player-core {
     width: 100%;
     height: 100%;
@@ -5,12 +7,49 @@
 }
 
 .ygo-player-core .ygo-card-menu {
-    background-color: white;
+    background-color: var(--ygo-background-color);
+    color: var(--ygo-text-color);
     position: absolute;
     top: 0px;
     left: 0px;
     z-index: 110;
     height: auto;
+    padding: 10px;
+    border-radius: var(--ygo-border-radius-medium);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 150px;
+}
+
+.ygo-player-core .ygo-card-menu>.ygo-card-menu-items {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.ygo-player-core .ygo-card-menu .ygo-card-item {
+    padding: 5px 10px;
+    text-align: center;
+    background-color: var(--ygo-border-color);
+    border: none;
+    color: white;
+    display: inline-block;
+    width: 100%;
+    font-size: 14px;
+    font-weight: bold;
+    border-radius: var(--ygo-border-radius-small);
+    text-overflow: ellipsis;
+}
+
+.ygo-player-core .ygo-card-menu .ygo-card-item:not(:disabled):hover {
+    background-color: var(--ygo-hover-color);
+    color: var(--ygo-text-color);
+}
+
+.ygo-player-core .ygo-card-menu .ygo-card-item:disabled {
+    opacity: 0.2;
+    cursor: not-allowed;
 }
 
 .ygo-player-core .ygo-click-overlay {

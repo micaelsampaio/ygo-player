@@ -4,6 +4,7 @@ export declare class SetCardCommand extends BaseCommand {
     baseType: string;
     private data;
     private moveCardCommand;
+    private prevPosition;
     constructor(data: SetCardCommandData);
     exec(): void;
     undo(): void;
