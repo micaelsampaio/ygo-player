@@ -69,10 +69,10 @@ export function CardHandMenu({ duel, card, index }: { duel: YGODuel, card: Card,
         const container = menuRef.current!;
         const cardFromHand = duel.fields[0].hand.getCardFromReference(card)!;
         const size = container.getBoundingClientRect();
-        const { x, y, width, height } = getTransformFromCamera(duel, cardFromHand.gameObject);
-        container.style.width = (width * 1.5) + "px";
+        const { x, y, width } = getTransformFromCamera(duel, cardFromHand.gameObject);
+        //container.style.width = (width * 1.5) + "px";
         container.style.top = (y - size.height) + "px";
-        container.style.left = x + "px";
+        container.style.left = x + (width / 2) - (size.width / 2) + "px";
     }, [card]);
 
     const player = duel.getActivePlayer();

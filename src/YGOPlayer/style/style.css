@@ -22,6 +22,10 @@
     width: 150px;
 }
 
+.ygo-player-core {
+    border-radius: 100%;
+}
+
 .ygo-player-core .ygo-card-menu>.ygo-card-menu-items {
     display: flex;
     flex-direction: column;

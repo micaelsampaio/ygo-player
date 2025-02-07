@@ -195,6 +195,8 @@ export function getCardRotationFromFieldZoneData(card: Card, zoneData: FieldZone
 
     if (zoneData.zone === "GY" || zoneData.zone === "H") {
         // GY do nothig let go as default rotation
+    } else if (zoneData.zone === "ED") {
+        rotation.y = THREE.MathUtils.degToRad(180);
     } else if (zoneData.zone === "D") {
         rotation.y = THREE.MathUtils.degToRad(180);
     } else if (zoneData.zone === "B") {
@@ -257,7 +259,7 @@ export function getZonePositionFromZoneData(duel: YGODuel, zoneData: FieldZoneDa
     } else if (zoneData.zone === "D") {
         position = field.mainDeck.gameObject.position;
     } else if (zoneData.zone === "ED") {
-        position = field.extraDeck.gameObject.position;
+        position = field.extraDeck.position;
     } else if (zoneData.zone === "F") {
         position = field.fieldZone.gameObject.position;
     } else {

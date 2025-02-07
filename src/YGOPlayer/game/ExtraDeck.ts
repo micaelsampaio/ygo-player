@@ -11,6 +11,8 @@ export class ExtraDeck extends YGOEntity implements YGOUiElement {
     private normalMaterial: THREE.MeshBasicMaterial;
     private hoverMaterial: THREE.MeshBasicMaterial;
     private mesh: THREE.Mesh;
+    public position: THREE.Vector3;
+    public faceDownRotation: THREE.Euler;
     //private action: ActionUiMenu;
 
     constructor({ duel, player, position }: { duel: YGODuel, player: number, zone: string, position: THREE.Vector3 }) {
@@ -24,6 +26,12 @@ export class ExtraDeck extends YGOEntity implements YGOUiElement {
         const geometry = new THREE.BoxGeometry(2, 2, 0.1);
         const cube = new THREE.Mesh(geometry, this.normalMaterial);
         cube.position.set(-9, -6, 0);
+
+        this.position = cube.position.clone();
+        this.position.z += 0.5;
+
+        this.faceDownRotation = cube.rotation.clone();
+        this.faceDownRotation.y += THREE.MathUtils.degToRad(180);
 
         this.duel.core.scene.add(cube);
         this.gameObject = cube;
