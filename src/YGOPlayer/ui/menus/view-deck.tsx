@@ -32,7 +32,7 @@ export function ViewDeckPopup({ duel, visible = true }: { duel: YGODuel, visible
         onClick={e => {
             e.preventDefault();
             e.stopPropagation();
-            duel.events.publish("close-ui-menu", { key: "game-popup" });
+            duel.events.publish("close-ui-menu", { group: "game-popup" });
         }}
     >
 

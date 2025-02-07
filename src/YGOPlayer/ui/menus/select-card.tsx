@@ -79,7 +79,7 @@ export function SelectCardPopup({ duel, visible = true, onSelectCards: onSelecte
         onClick={e => {
             e.preventDefault();
             e.stopPropagation();
-            duel.events.publish("close-ui-menu", { key: "game-popup" });
+            duel.events.publish("close-ui-menu", { group: "game-popup" });
         }}
     >
 

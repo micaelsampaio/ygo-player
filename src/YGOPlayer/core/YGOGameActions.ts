@@ -217,7 +217,7 @@ export class YGOGameActions {
         const player = this.duel.getActivePlayer();
 
         this.duel.events.publish("toggle-ui-menu", {
-            key: "game-popup", type: "select-card-menu", data: {
+            group: "game-popup", type: "select-card-menu", data: {
                 onSelectCards: (cards: CardZoneKV[]) => {
 
                     this.duel.events.publish("close-ui-menu", { type: "select-card-menu" });

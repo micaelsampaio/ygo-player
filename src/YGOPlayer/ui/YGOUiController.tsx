@@ -13,7 +13,7 @@ export function YGOUiController({ duel }: { duel: YGODuel }) {
     const [_, setRender] = useState<number>(-1);
     const [gameConfig, setGameConfig] = useState<UiGameConfig>({ actions: true });
     const [action, setAction] = useState<{ type: string, data: any }>({ type: "", data: null });
-    const [menus, setMenus] = useState<{ key: string, type: string, data: any }[]>([]);
+    const [menus, setMenus] = useState<{ group: string, visible: boolean, type: string, data: any }[]>([]);
 
     const clearAction = () => {
         setAction({ type: '', data: null });
@@ -32,16 +32,16 @@ export function YGOUiController({ duel }: { duel: YGODuel }) {
             clearAction();
         });
 
-        duel.events.on("set-ui-menu", ({ key, type, data }: any) => {
+        duel.events.on("set-ui-menu", ({ group, type, data }: any) => {
             clearAction();
             setMenus((currentMenus) => {
                 const menus = currentMenus.filter(m => m.type !== type);
-                menus.push({ key, type, data });
+                menus.push({ group, type, data, visible: true });
                 return menus;
             });
         });
 
-        duel.events.on("toggle-ui-menu", ({ key, type, data }: any) => {
+        duel.events.on("toggle-ui-menu", ({ group, type, data }: any) => {
             clearAction();
 
             setMenus((currentMenus) => {
@@ -51,17 +51,42 @@ export function YGOUiController({ duel }: { duel: YGODuel }) {
                     return currentMenus.filter(m => m.type !== type)
                 }
 
-                const menus = currentMenus.filter(m => m.key !== key);
-                menus.push({ key, type, data });
+                const menus = currentMenus.filter(m => m.group !== group);
+                menus.push({ group, type, data, visible: true });
                 return menus;
             });
         });
 
-        duel.events.on("close-ui-menu", ({ key, type }: { key: string, type: string }) => {
+        duel.events.on("set-ui-menu-visibility", ({ group, type, visibility }: any) => {
+
+            setMenus((currentMenus) => {
+
+                if (group) {
+                    return currentMenus.map(menu => {
+                        if (menu.group === group) {
+                            return { ...menu, visible: visibility }
+                        }
+                        return menu;
+                    })
+                }
+                if (type) {
+                    return currentMenus.map(menu => {
+                        if (menu.type === type) {
+                            return { ...menu, visible: visibility }
+                        }
+                        return menu;
+                    })
+                }
+
+                return { ...menus };
+            });
+        });
+
+        duel.events.on("close-ui-menu", ({ group, type }: { group: string, type: string }) => {
             clearAction();
-            
-            if (key) {
-                setMenus((currentMenus) => currentMenus.filter(m => m.key !== key));
+
+            if (group) {
+                setMenus((currentMenus) => currentMenus.filter(m => m.group !== group));
             } else if (type) {
                 setMenus((currentMenus) => currentMenus.filter(m => m.type !== type));
             }
@@ -71,7 +96,7 @@ export function YGOUiController({ duel }: { duel: YGODuel }) {
             setMenus(currentMenus => {
                 const type = "selected-card-menu";
                 if (!data.card) {
-                    return currentMenus.filter(m => m.key !== type);
+                    return currentMenus.filter(m => m.type !== type);
                 } else {
                     const currentMenu = currentMenus.find(m => m.type === type);
 
@@ -80,7 +105,7 @@ export function YGOUiController({ duel }: { duel: YGODuel }) {
                         return [...currentMenus];
                     }
 
-                    return [...currentMenus, { key: type, type: "selected-card-menu", data }];
+                    return [...currentMenus, { group: type, visible: true, type: "selected-card-menu", data }];
                 }
             });
         })
@@ -110,7 +135,6 @@ export function YGOUiController({ duel }: { duel: YGODuel }) {
         {
             menus.map(menu => {
                 const Menu = (MENUS as any)[menu.type] as any;
-                console.log(menu.key, Menu);
                 return <Menu config={gameConfig} key={menu.type} duel={duel} {...menu.data} visible />
             })
         }

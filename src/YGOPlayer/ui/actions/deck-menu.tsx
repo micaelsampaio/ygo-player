@@ -13,7 +13,7 @@ export function DeckMenu({ duel, deck, mouseEvent }: { duel: YGODuel, deck: Deck
     }
 
     const viewDeck = () => {
-        duel.events.publish("toggle-ui-menu", { key: "game-popup", type: "view-main-deck" });
+        duel.events.publish("toggle-ui-menu", { group: "game-popup", type: "view-main-deck" });
     }
 
     useLayoutEffect(() => {

@@ -39,7 +39,7 @@ export class Banish extends YGOEntity implements YGOUiElement {
     }
 
     onMouseClick(event: MouseEvent): void {
-        this.duel.events.publish("toggle-ui-menu", { key: "game-overlay", type: "banish" })
+        this.duel.events.publish("toggle-ui-menu", { group: "game-overlay", type: "banish" })
     }
 
     onMouseEnter(): void {

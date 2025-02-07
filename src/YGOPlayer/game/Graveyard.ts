@@ -38,7 +38,7 @@ export class Graveyard extends YGOEntity implements YGOUiElement {
     }
 
     onMouseClick(event: MouseEvent): void {
-        this.duel.events.publish("toggle-ui-menu", { key: "game-overlay", type: "gy" })
+        this.duel.events.publish("toggle-ui-menu", { group: "game-overlay", type: "gy" })
     }
 
     onMouseEnter(): void {
