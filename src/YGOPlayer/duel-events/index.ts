@@ -1,6 +1,7 @@
 import { YGOCore, YGODuelEvents } from "../../YGOCore";
 import { YGOTask } from "../core/components/tasks/YGOTask";
 import { YGODuel } from "../core/YGODuel";
+import { ActivateCardHandler } from "./events/activate-card-event";
 import { LinkSummonEventHandler } from "./events/link-summon-event";
 import { MoveCardEventHandler } from "./events/move-card-event";
 import { RevealEventHandler } from "./events/reveal-event";
@@ -29,7 +30,8 @@ const events: any = {
     [YGODuelEvents.LogType.DrawCardFromDeck]: MoveCardEventHandler,
     [YGODuelEvents.LogType.LinkSummon]: LinkSummonEventHandler,
     [YGODuelEvents.LogType.Reveal]: RevealEventHandler,
-    DEFAULT: UpdateFieldEvent
+    [YGODuelEvents.LogType.Activate]: ActivateCardHandler,
+    DEFAULT: UpdateFieldEvent,
 }
 
 export function getDuelEventHandler(event: YGODuelEvents.DuelLog): any {

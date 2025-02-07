@@ -7,16 +7,16 @@ import { getCardRotationFromFieldZoneData, getGameZone, getZonePositionFromZoneD
 import { PositionTransition } from "../utils/position-transition";
 import { RotationTransition } from "../utils/rotation-transition";
 import { WaitForSeconds } from "../utils/wait-for-seconds";
-import { YGOComponent } from "../../core/YGOComponent";
 import { Card } from "../../../YGOCore/types/types";
 import { CallbackTransition } from '../utils/callback';
+import { YGOCommandHandler } from '../../core/components/YGOCommandHandler';
 
 interface LinkSummonEventHandlerProps extends DuelEventHandlerProps {
     event: YGODuelEvents.LinkSummon
 }
 
 
-export class LinkSummonEventHandler extends YGOComponent {
+export class LinkSummonEventHandler extends YGOCommandHandler {
     private props: LinkSummonEventHandlerProps
     private cardReference: Card;
 

@@ -2,6 +2,7 @@ import { YGODuelEvents } from "../../../../YGOCore";
 import { getDuelEventHandler } from "../../../duel-events";
 import { YGOComponent } from "../../YGOComponent";
 import { YGODuel } from "../../YGODuel";
+import { YGOCommandHandler } from "../YGOCommandHandler";
 import { YGOTask } from "./YGOTask";
 
 export enum YGOCommandsControllerState {
@@ -10,11 +11,11 @@ export enum YGOCommandsControllerState {
 }
 
 export class YGOCommandsController extends YGOComponent {
-    
+
     private state: YGOCommandsControllerState;
     private duel: YGODuel;
-    private commands: YGOComponent[];
-    private currentCommand: YGOComponent | undefined;
+    private commands: YGOCommandHandler[];
+    private currentCommand: YGOCommandHandler | undefined;
     private tasks: YGOTask[];
 
     constructor(duel: YGODuel) {
@@ -98,6 +99,7 @@ export class YGOCommandsController extends YGOComponent {
             this.tasks.forEach(task => this.duel.tasks.completeTask(task));
             this.tasks = [];
         }
+        this.currentCommand?.finish();
         this.currentCommand = undefined;
     }
 

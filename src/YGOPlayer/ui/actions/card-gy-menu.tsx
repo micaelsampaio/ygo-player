@@ -27,6 +27,10 @@ export function CardGraveyardMenu({ duel, card, htmlCardElement, clearAction, mo
         duel.gameActions.toHand({ card, originZone });
     }, [card, originZone]);
 
+    const activateCard = useCallback(() => {
+        duel.gameActions.activateCard({ card, originZone, selectZone: false });
+    }, [card, originZone]);
+
 
     useLayoutEffect(() => {
         const container = menuRef.current!;
@@ -43,6 +47,7 @@ export function CardGraveyardMenu({ duel, card, htmlCardElement, clearAction, mo
             <button type="button" className="ygo-card-item" onClick={specialSummonATK}>SS Atk</button>
             <button type="button" className="ygo-card-item" onClick={specialSummonDEF}>SS Def</button>
             <button type="button" className="ygo-card-item" onClick={toHand}>Add To Hand</button>
+            <button type="button" className="ygo-card-item" onClick={activateCard}>Activate Card</button>
             {hasXyzMonstersInField && <>
                 <button type="button" className="ygo-card-item" onClick={attachMaterial}>Attach Material</button>
             </>}

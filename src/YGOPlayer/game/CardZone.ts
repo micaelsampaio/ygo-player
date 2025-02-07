@@ -121,8 +121,8 @@ export class CardZone extends YGOEntity implements YGOUiElement {
         this.card = card;
     }
 
-    getGameCard(): GameCard | null {
-        return this.card;
+    getGameCard(): GameCard {
+        return this.card!;
     }
 
     getCardReference(): Card | null {

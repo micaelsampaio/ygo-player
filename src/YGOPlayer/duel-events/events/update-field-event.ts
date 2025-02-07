@@ -1,7 +1,7 @@
 import { DuelEventHandlerProps } from "..";
-import { YGOComponent } from "../../core/YGOComponent";
+import { YGOCommandHandler } from "../../core/components/YGOCommandHandler";
 
-export class UpdateFieldEvent extends YGOComponent {
+export class UpdateFieldEvent extends YGOCommandHandler {
 
     constructor(private props: DuelEventHandlerProps) {
         super("update_field_command");

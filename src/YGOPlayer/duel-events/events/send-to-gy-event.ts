@@ -1,14 +1,14 @@
 import { DuelEventHandlerProps } from "..";
 import { YGODuelEvents } from "../../../YGOCore";
-import { YGOComponent } from "../../core/YGOComponent";
+import { YGOCommandHandler } from "../../core/components/YGOCommandHandler";
 import { MoveCardEventHandler } from "./move-card-event";
 
 interface SendToGyEventHandlerProps extends DuelEventHandlerProps {
     event: YGODuelEvents.SendToGY
 }
 
-export class SendToGyEventHandler extends YGOComponent {
-    private childCommand: YGOComponent | undefined;
+export class SendToGyEventHandler extends YGOCommandHandler {
+    private childCommand: YGOCommandHandler | undefined;
 
     constructor(private props: SendToGyEventHandlerProps) {
         super("send_card_to_gy_command");
@@ -25,6 +25,12 @@ export class SendToGyEventHandler extends YGOComponent {
             setTimeout(() => {
                 this.props.onCompleted();
             });
+        }
+    }
+
+    public finish(): void {
+        if (this.childCommand) {
+            this.childCommand.finish();
         }
     }
 }

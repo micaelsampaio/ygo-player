@@ -44,6 +44,10 @@ export function CardZoneMenu({ duel, card, zone, gameCard, clearAction, mouseEve
         duel.gameActions.toST({ card, originZone: zone });
     }, [card, zone]);
 
+    const activateCard = useCallback(() => {
+        duel.gameActions.activateCard({ card, originZone: zone, selectZone: false });
+    }, [card, zone]);
+
     useLayoutEffect(() => {
         const container = menuRef.current!;
         const size = container.getBoundingClientRect();
@@ -54,6 +58,7 @@ export function CardZoneMenu({ duel, card, zone, gameCard, clearAction, mouseEve
 
     const field = duel.ygo.state.fields[player];
     const isXYZ = YGOGameUtils.isXYZMonster(card);
+    const isFaceUp = YGOGameUtils.isFaceUp(card);
     const isLink = YGOGameUtils.isLinkMonster(card);
     const hasXyzMonstersInField = YGOGameUtils.hasXyzMonstersInField(field);
     const canAttachMaterial = isXYZ ? getXyzMonstersZones(duel, [0]).length > 1 : true;
@@ -83,6 +88,9 @@ export function CardZoneMenu({ duel, card, zone, gameCard, clearAction, mouseEve
             hasXyzMonstersInField && <>
                 {canAttachMaterial && <button type="button" className="ygo-card-item" onClick={attachMaterial}>Attach Material</button>}
             </>
+        }
+        {
+            isFaceUp && <button type="button" className="ygo-card-item" onClick={activateCard}>Activate</button>
         }
     </CardMenu>
 }

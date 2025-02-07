@@ -253,9 +253,9 @@ export function getZonePositionFromZoneData(duel: YGODuel, zoneData: FieldZoneDa
     } else if (zoneData.zone === "EMZ") {
         position = field.extraMonsterZone[zoneIndex].position;
     } else if (zoneData.zone === "GY") {
-        position = field.graveyard.gameObject.position.clone();
+        position = field.graveyard.position;
     } else if (zoneData.zone === "B") {
-        position = field.banishedZone.gameObject.position;
+        position = field.banishedZone.position;
     } else if (zoneData.zone === "D") {
         position = field.mainDeck.gameObject.position;
     } else if (zoneData.zone === "ED") {

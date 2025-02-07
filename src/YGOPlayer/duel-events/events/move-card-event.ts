@@ -8,16 +8,16 @@ import { CallbackTransition } from "../utils/callback";
 import { PositionTransition } from "../utils/position-transition";
 import { RotationTransition } from "../utils/rotation-transition";
 import { ScaleTransition } from "../utils/scale-transition";
-import { YGOComponent } from "../../core/YGOComponent";
 import { Card } from "../../../YGOCore/types/types";
 import * as THREE from 'three';
 import { MultipleTasks } from "../utils/multiple-tasks";
+import { YGOCommandHandler } from "../../core/components/YGOCommandHandler";
 
 interface MoveCardEventHandlerProps extends DuelEventHandlerProps {
     event: MoveCardCommandData
 }
 
-export class MoveCardEventHandler extends YGOComponent {
+export class MoveCardEventHandler extends YGOCommandHandler {
     private props: MoveCardEventHandlerProps
     private cardReference: Card;
 
@@ -36,6 +36,11 @@ export class MoveCardEventHandler extends YGOComponent {
 
         const originCardZone = getGameZone(duel, originZoneData);
         const cardZone = getGameZone(duel, zoneData);
+
+        duel.events.publish("set-selected-card", {
+            player: zoneData.player,
+            card: this.cardReference
+        });
 
         if (zoneData.zone === "H") { // if card goes to hand
             duel.updateHand(event.player);

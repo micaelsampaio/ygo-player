@@ -12,6 +12,9 @@ export class GameCardHand extends YGOEntity implements YGOUiElement {
     public handIndex: number;
     public position: THREE.Vector3;
     public isActive: boolean;
+    public isUiElement: boolean = true;
+    public isUiElementClick: boolean = true;
+    public isUiElementHover: boolean = true;
 
     constructor({ duel }: { duel: YGODuel }) {
         super();
@@ -43,6 +46,7 @@ export class GameCardHand extends YGOEntity implements YGOUiElement {
     }
 
     onMouseClick?(event: MouseEvent): void {
+        if (!this.isUiElementClick) return;
         event.preventDefault();
         event.stopPropagation();
 
@@ -63,12 +67,14 @@ export class GameCardHand extends YGOEntity implements YGOUiElement {
     }
 
     onMouseEnter?(event: MouseEvent): void {
+        if (!this.isUiElementHover) return;
         this.gameObject.position.copy(this.position);
         this.gameObject.position.y += 0.3;
     }
 
     onMouseLeave?(event: MouseEvent): void {
         if (this.isActive) return;
+        if (!this.isUiElementHover) return;
         this.gameObject.position.copy(this.position);
     }
 

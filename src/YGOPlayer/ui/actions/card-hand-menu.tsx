@@ -33,6 +33,10 @@ export function CardHandMenu({ duel, card, index }: { duel: YGODuel, card: Card,
         duel.gameActions.activateCard({ card, originZone, selectZone: true });
     }, [card, index]);
 
+    const activateCard = useCallback(() => {
+        duel.gameActions.activateCard({ card, originZone, selectZone: false });
+    }, [card, index]);
+
     const revealCard = useCallback(() => {
         duel.gameActions.revealCard({ card, originZone });
     }, [card, index]);
@@ -82,6 +86,7 @@ export function CardHandMenu({ duel, card, index }: { duel: YGODuel, card: Card,
     const isFieldSpell = YGOGameUtils.isFieldSpell(card);
     const isSpell = !isFieldSpell && YGOGameUtils.isSpell(card);
     const isTrap = YGOGameUtils.isTrap(card);
+    const isSpellOrTrap = YGOGameUtils.isSpellTrap(card);
     const isMonster = card.type.includes("Monster");
     const hasXyzMonstersInField = YGOGameUtils.hasXyzMonstersInField(field);
 
@@ -98,7 +103,6 @@ export function CardHandMenu({ duel, card, index }: { duel: YGODuel, card: Card,
             </div>}
             {(isSpell || isTrap) && <>
                 <button className="ygo-card-item" type="button" disabled={freeSpellTrapZones === 0} onClick={activateSpellTrap}>Activate</button>
-
                 <button className="ygo-card-item" type="button" disabled={freeSpellTrapZones === 0} onClick={setSpellTrap}>Set</button>
             </>}
             {(isFieldSpell) && <>
@@ -114,6 +118,8 @@ export function CardHandMenu({ duel, card, index }: { duel: YGODuel, card: Card,
             <button className="ygo-card-item" type="button" onClick={banish}>Banish</button>
             <button className="ygo-card-item" type="button" onClick={banishFD}>Banish FD</button>
             <button className="ygo-card-item" onClick={revealCard}>Reveal</button>
+
+            {!isSpellOrTrap && <button className="ygo-card-item" onClick={activateCard}>Activate on Hand</button>}
         </CardMenu>
     </>
 

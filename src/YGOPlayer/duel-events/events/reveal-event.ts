@@ -3,7 +3,6 @@ import { DuelEventHandlerProps } from "..";
 import { YGODuelEvents, YGOGameUtils } from "../../../YGOCore";
 import { YGOTaskSequence } from "../../core/components/tasks/YGOTaskSequence";
 import { GameCard } from "../../game/GameCard";
-import { getCardRotationFromFieldZoneData, getGameZone, getZonePositionFromZoneData } from "../../scripts/ygo-utils";
 import { PositionTransition } from "../utils/position-transition";
 import { RotationTransition } from "../utils/rotation-transition";
 import { WaitForSeconds } from "../utils/wait-for-seconds";

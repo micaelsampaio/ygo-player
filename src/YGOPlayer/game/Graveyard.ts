@@ -11,7 +11,8 @@ export class Graveyard extends YGOEntity implements YGOUiElement {
     private normalMaterial: THREE.MeshBasicMaterial;
     private hoverMaterial: THREE.MeshBasicMaterial;
     private mesh: THREE.Mesh;
-    //private action: ActionUiMenu;
+    public position: THREE.Vector3;
+    public rotation: THREE.Euler;
 
     constructor({ duel, player, position }: { duel: YGODuel, player: number, zone: string, position: THREE.Vector3 }) {
         super();
@@ -28,6 +29,10 @@ export class Graveyard extends YGOEntity implements YGOUiElement {
         this.duel.core.scene.add(cube);
         this.gameObject = cube;
         this.mesh = cube;
+
+        this.position = this.gameObject.position.clone();
+        this.rotation = this.gameObject.rotation.clone();
+        this.position.z += 0.1;
 
         this.duel.gameController.getComponent<YGOMouseEvents>("mouse_events")?.registerElement(this);
     }
