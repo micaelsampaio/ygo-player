@@ -3,8 +3,8 @@ import { SetCardCommandData } from '../types/commands';
 export declare class SetCardCommand extends BaseCommand {
     baseType: string;
     private data;
-    private moveCardCommand;
     private prevPosition;
+    private commands;
     constructor(data: SetCardCommandData);
     exec(): void;
     undo(): void;

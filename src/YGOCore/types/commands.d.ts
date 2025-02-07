@@ -118,6 +118,7 @@ export interface SetCardCommandData {
     id: number;
     originZone: FieldZone;
     zone?: FieldZone;
+    reveal?: boolean;
 }
 export interface ToSTCommandData {
     player: number;

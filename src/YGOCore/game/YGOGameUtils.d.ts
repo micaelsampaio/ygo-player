@@ -1,6 +1,7 @@
 import { Card, CardBaseType, FieldZone, FieldZoneId, FieldZoneData, PlayerField } from "../types/types";
 export declare class YGOGameUtils {
     static isLinkMonster(card: Card): boolean;
+    static isMonster(card: Card): boolean;
     static isXYZMonster(card: Card): boolean;
     static isSynchroMonster(card: Card): boolean;
     static isFusionMonster(card: Card): boolean;

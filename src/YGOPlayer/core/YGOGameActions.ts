@@ -259,7 +259,7 @@ export class YGOGameActions {
         });
     }
 
-    public setSpellTrap({ card, originZone }: { card: Card, originZone: FieldZone }) {
+    public setSpellTrap({ card, originZone, reveal = false }: { card: Card, originZone: FieldZone, reveal: boolean }) {
         this.clearAction();
 
         const ygo = this.duel.ygo;
@@ -273,7 +273,8 @@ export class YGOGameActions {
                     player,
                     id: card.id,
                     originZone,
-                    zone: cardZone.zone
+                    zone: cardZone.zone,
+                    reveal
                 }));
             }
         });
