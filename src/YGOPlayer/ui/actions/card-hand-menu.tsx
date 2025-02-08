@@ -26,7 +26,7 @@ export function CardHandMenu({ duel, card, index }: { duel: YGODuel, card: Card,
     }, [card, index]);
 
     const setSpellTrap = useCallback(() => {
-        duel.gameActions.setSpellTrap({ card, originZone });
+        duel.gameActions.setCard({ card, originZone });
     }, [card, index]);
 
     const activateSpellTrap = useCallback(() => {

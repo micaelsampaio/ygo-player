@@ -31,5 +31,6 @@ export declare const YGOCommands: {
     ChangeCardAtkDefCommand: typeof import("./commands/ChangeCardAtkDefCommand").ChangeCardAtkDefCommand;
     FlipCommand: typeof import("./commands/FlipCommand").FlipCommand;
     ToSTCommand: typeof import("./commands/ToSTCommand").ToSTCommand;
+    MoveCardCommand: typeof import("./commands/MoveCardCommand").MoveCardCommand;
 };
-export declare const debug_version = 2;
+export declare const debug_version = 3;

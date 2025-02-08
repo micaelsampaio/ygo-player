@@ -2,6 +2,7 @@ import { YGOCore, YGODuelEvents } from "../../YGOCore";
 import { YGOTask } from "../core/components/tasks/YGOTask";
 import { YGODuel } from "../core/YGODuel";
 import { ActivateCardHandler } from "./events/activate-card-event";
+import { ChangeCardPositionHandler } from "./events/change-card-position";
 import { LinkSummonEventHandler } from "./events/link-summon-event";
 import { MoveCardEventHandler } from "./events/move-card-event";
 import { RevealEventHandler } from "./events/reveal-event";
@@ -16,21 +17,30 @@ export interface DuelEventHandlerProps {
 }
 
 const events: any = {
+    /// Move Card
     [YGODuelEvents.LogType.NormalSummon]: MoveCardEventHandler,
     [YGODuelEvents.LogType.SpecialSummon]: MoveCardEventHandler,
-    [YGODuelEvents.LogType.SetMonster]: MoveCardEventHandler,
-    [YGODuelEvents.LogType.SetST]: MoveCardEventHandler,
     [YGODuelEvents.LogType.SendToGY]: SendToGyEventHandler,
     [YGODuelEvents.LogType.Banish]: MoveCardEventHandler,
     [YGODuelEvents.LogType.BanishFD]: MoveCardEventHandler,
     [YGODuelEvents.LogType.FieldSpell]: MoveCardEventHandler,
     [YGODuelEvents.LogType.ToST]: MoveCardEventHandler,
     [YGODuelEvents.LogType.ToHand]: MoveCardEventHandler,
+    [YGODuelEvents.LogType.ToTopDeck]: MoveCardEventHandler,
+    [YGODuelEvents.LogType.ToBottomDeck]: MoveCardEventHandler,
     [YGODuelEvents.LogType.ToExtraDeck]: MoveCardEventHandler,
     [YGODuelEvents.LogType.DrawCardFromDeck]: MoveCardEventHandler,
+    [YGODuelEvents.LogType.MoveCard]: MoveCardEventHandler,
+    /// Change Card Position
+    [YGODuelEvents.LogType.SetST]: ChangeCardPositionHandler,
+    [YGODuelEvents.LogType.SetMonster]: ChangeCardPositionHandler,
+    [YGODuelEvents.LogType.ChangeCardPosition]: ChangeCardPositionHandler,
+    [YGODuelEvents.LogType.Flip]: ChangeCardPositionHandler,
+    /// Others
     [YGODuelEvents.LogType.LinkSummon]: LinkSummonEventHandler,
     [YGODuelEvents.LogType.Reveal]: RevealEventHandler,
     [YGODuelEvents.LogType.Activate]: ActivateCardHandler,
+    /// Default
     DEFAULT: UpdateFieldEvent,
 }
 

@@ -165,7 +165,7 @@ export interface ActivateCardCommandData {
 export interface ChangeCardPositionCommandData {
     player: number;
     id: number;
-    zone: FieldZone;
+    originZone: FieldZone;
     position: CardPosition;
 }
 export interface ChangeCardAtkDefCommandData {

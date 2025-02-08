@@ -13,13 +13,14 @@ import { MoveCardEventHandler } from "./move-card-event";
 import { CallbackTransition } from '../utils/callback';
 import { PositionTransition } from '../utils/position-transition';
 import { WaitForSeconds } from '../utils/wait-for-seconds';
+import { ChangeCardPositionHandler } from './change-card-position';
 
 interface ActivateCardHandlerProps extends DuelEventHandlerProps {
     event: YGODuelEvents.Activate
 }
 
 export class ActivateCardHandler extends YGOCommandHandler {
-    private moveCommand: MoveCardEventHandler | undefined;
+    private command: YGOCommandHandler | undefined;
 
     constructor(private props: ActivateCardHandlerProps) {
         super("send_card_to_gy_command");
@@ -31,19 +32,21 @@ export class ActivateCardHandler extends YGOCommandHandler {
 
     public start(): void {
 
-        const { event } = this.props;
+        const { ygo, event } = this.props;
+
         if (event.originZone && event.zone) {
             this.startMoveCommand();
+        } else if (event.previousPosition === "facedown") {
+            this.startChangeCardPositionCommand();
         } else {
             this.startActivateCommand();
         }
     }
 
     private startMoveCommand() {
-        console.log("START MOVE COMMAND");
         const { event } = this.props;
 
-        this.moveCommand = new MoveCardEventHandler({
+        this.command = new MoveCardEventHandler({
             ...this.props,
             event: {
                 id: event.id,
@@ -53,12 +56,35 @@ export class ActivateCardHandler extends YGOCommandHandler {
                 type: "Move Card"
             },
             onCompleted: () => {
-                this.moveCommand?.finish();
-                this.moveCommand = undefined;
+                this.command?.finish();
+                this.command = undefined;
                 this.startActivateCommand();
             }
         });
-        this.moveCommand.start();
+        this.command.start();
+    }
+
+    private startChangeCardPositionCommand() {
+        const { event } = this.props;
+
+        this.command = new ChangeCardPositionHandler({
+            ...this.props,
+            event: {
+                ...event,
+                type: YGODuelEvents.LogType.ChangeCardPosition,
+                id: event.id,
+                player: event.player,
+                originZone: event.zone,
+                previousPosition: event.previousPosition,
+                position: event.position,
+            },
+            onCompleted: () => {
+                this.command?.finish();
+                this.command = undefined;
+                this.startActivateCommand();
+            }
+        });
+        this.command.start();
     }
 
     private startActivateCommand() {
@@ -149,6 +175,6 @@ export class ActivateCardHandler extends YGOCommandHandler {
     }
 
     public finish(): void {
-        this.moveCommand?.finish();
+        this.command?.finish();
     }
 }

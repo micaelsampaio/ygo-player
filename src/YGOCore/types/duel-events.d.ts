@@ -25,7 +25,6 @@ export declare namespace YGODuelEvents {
         XYZOverlay = "XYZOverlay",
         SetST = "Set ST",
         Activate = "Activate",
-        ChangeBattlePosition = "Change Battle Position",
         MoveCard = "Move Card",
         Shuffle = "Shuffle",
         ToST = "To ST",
@@ -58,7 +57,12 @@ export declare namespace YGODuelEvents {
     interface SetMonster extends DuelLog {
         id: number;
         originZone: FieldZone;
-        zone: FieldZone;
+        zone?: FieldZone;
+    }
+    interface SetST extends DuelLog {
+        id: number;
+        originZone: FieldZone;
+        zone?: FieldZone;
     }
     interface SendToGY extends DuelLog {
         id: number;
@@ -136,6 +140,8 @@ export declare namespace YGODuelEvents {
         id: number;
         originZone?: FieldZone;
         zone: FieldZone;
+        previousPosition: CardPosition;
+        position: CardPosition;
     }
     interface Banish extends DuelLog {
         id: number;
@@ -155,7 +161,8 @@ export declare namespace YGODuelEvents {
     }
     interface ChangeCardPosition extends DuelLog {
         id: number;
-        zone: FieldZone;
+        originZone: FieldZone;
+        previousPosition: CardPosition;
         position: CardPosition;
     }
     interface ChangeCardAtkDef extends DuelLog {
@@ -167,6 +174,8 @@ export declare namespace YGODuelEvents {
     interface Flip extends DuelLog {
         id: number;
         originZone: FieldZone;
+        previousPosition: CardPosition;
+        position: CardPosition;
     }
     interface ToExtraDeck extends DuelLog {
         id: number;

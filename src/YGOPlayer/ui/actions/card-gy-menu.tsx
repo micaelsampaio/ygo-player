@@ -31,6 +31,29 @@ export function CardGraveyardMenu({ duel, card, htmlCardElement, clearAction, mo
         duel.gameActions.activateCard({ card, originZone, selectZone: false });
     }, [card, originZone]);
 
+    const toST = useCallback(() => {
+        duel.gameActions.toST({ card, originZone });
+    }, [card, originZone]);
+
+    const banish = useCallback(() => {
+        duel.gameActions.banish({ card, originZone, position: "faceup" });
+    }, [card, originZone]);
+
+    const banishFD = useCallback(() => {
+        duel.gameActions.banish({ card, originZone, position: "facedown" });
+    }, [card, originZone]);
+
+    const toTopDeck = useCallback(() => {
+        duel.gameActions.toDeck({ card, originZone, position: "top" });
+    }, [card, originZone]);
+
+    const toBottomDeck = useCallback(() => {
+        duel.gameActions.toDeck({ card, originZone, position: "bottom" });
+    }, [card, originZone]);
+
+    const toExtraDeck = useCallback(() => {
+        duel.gameActions.toExtraDeck({ card, originZone });
+    }, [card, originZone]);
 
     useLayoutEffect(() => {
         const container = menuRef.current!;
@@ -41,13 +64,29 @@ export function CardGraveyardMenu({ duel, card, htmlCardElement, clearAction, mo
     }, [card, htmlCardElement]);
 
     const hasXyzMonstersInField = YGOGameUtils.hasXyzMonstersInField(field);
+    const isMonster = YGOGameUtils.isMonster(card);
 
     return <>
         <CardMenu menuRef={menuRef} >
-            <button type="button" className="ygo-card-item" onClick={specialSummonATK}>SS Atk</button>
-            <button type="button" className="ygo-card-item" onClick={specialSummonDEF}>SS Def</button>
-            <button type="button" className="ygo-card-item" onClick={toHand}>Add To Hand</button>
-            <button type="button" className="ygo-card-item" onClick={activateCard}>Activate Card</button>
+            <button type="button" className="ygo-card-item" onClick={toST}>TO ST</button>
+            <button type="button" className="ygo-card-item" onClick={() => alert("TODO")}>Target</button>
+            {card.isMainDeckCard && <>
+                <button type="button" className="ygo-card-item" onClick={toBottomDeck}>To Bottom Deck</button>
+                <button type="button" className="ygo-card-item" onClick={toTopDeck}>To Top Deck</button>
+            </>}
+            {!card.isMainDeckCard && <>
+                <button type="button" className="ygo-card-item" onClick={toExtraDeck}>To Extra Deck</button>
+            </>}
+            <button type="button" className="ygo-card-item" onClick={banishFD}>Banish FD</button>
+            <button type="button" className="ygo-card-item" onClick={banish}>Banish</button>
+            <button type="button" className="ygo-card-item" onClick={toHand}>To Hand</button>
+            <button type="button" className="ygo-card-item" onClick={activateCard}>Activate</button>
+            {
+                isMonster && <>
+                    <button type="button" className="ygo-card-item" onClick={specialSummonATK}>SS ATK</button>
+                    <button type="button" className="ygo-card-item" onClick={specialSummonDEF}>SS DEF</button>
+                </>
+            }
             {hasXyzMonstersInField && <>
                 <button type="button" className="ygo-card-item" onClick={attachMaterial}>Attach Material</button>
             </>}

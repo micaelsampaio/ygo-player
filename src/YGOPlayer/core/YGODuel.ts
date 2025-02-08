@@ -22,7 +22,7 @@ import { CallbackTransition } from '../duel-events/utils/callback';
 import { YGOCommandsController } from './components/tasks/YGOCommandsController';
 import { YGOAssets } from './YGOAssets';
 
-import YUBEL from '../../decks/YUBEL.json';
+import YUBEL from '../../decks/YUBEL_FS.json';
 import CHIMERA from '../../decks/CHIMERA.json';
 import { YGOGameActions } from './YGOGameActions';
 
@@ -126,15 +126,15 @@ export class YGODuel {
                 extraDeck: deck2.extraDeck as any,
             }],
             options: {
-                // fieldState: [
-                //     [
-                //         { id: 93729896, zone: "H" },
-                //         { id: 62318994, zone: "H" }, // lotus
-                //         { id: 62318994, zone: "H" }, // lotus
-                //         { id: 62318994, zone: "M-1" }, // lotus
-                //         { id: 90829280, zone: "M-2" }, // spirit of yubel
-                //     ]
-                // ]
+                fieldState: [
+                    [
+                        // { id: 93729896, zone: "H" },
+                        // { id: 62318994, zone: "H" }, // lotus
+                        // { id: 62318994, zone: "H" }, // lotus
+                        { id: 62318994, zone: "M-1" }, // lotus
+                        { id: 90829280, zone: "M-3", position: "faceup-defense" }, // spirit of yubel
+                    ]
+                ]
             }
         });
 
@@ -145,6 +145,8 @@ export class YGODuel {
 
         this.ygo.duelLog.events.on("new-log", (command) => {
             if (this.commands.isRecovering()) return;
+
+            console.log("command >>> ", command);
 
             this.events.publish("render-ui");
             this.commands.add(command);

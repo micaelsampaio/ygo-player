@@ -41,7 +41,7 @@ export function CardDeckMenu({ duel, card, mouseEvent }: { duel: YGODuel, zone: 
 
     const setSpellTrap = useCallback(() => {
         closeViewDeckMenu();
-        duel.gameActions.setSpellTrap({ card, originZone, reveal: false }); // TODO FIX REVEAL
+        duel.gameActions.setCard({ card, originZone, reveal: false }); // TODO FIX REVEAL
     }, [card, originZone]);
 
     const banish = useCallback(() => {

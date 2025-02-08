@@ -32,6 +32,30 @@ export function CardZoneMenu({ duel, card, zone, gameCard, clearAction, mouseEve
         duel.gameActions.toExtraDeck({ card, originZone: zone });
     }, [card, zone]);
 
+    const toTopDeck = useCallback(() => {
+        duel.gameActions.toDeck({ card, originZone: zone, position: "top" });
+    }, [card, zone]);
+
+    const toBottomDeck = useCallback(() => {
+        duel.gameActions.toDeck({ card, originZone: zone, position: "top" });
+    }, [card, zone]);
+
+    const setCard = useCallback(() => {
+        duel.gameActions.setCard({ card, originZone: zone, selectZone: false });
+    }, [card, zone]);
+
+    const flip = useCallback(() => {
+        duel.gameActions.flip({ card, originZone: zone });
+    }, [card, zone]);
+
+    const changeBattleToATK = useCallback(() => {
+        duel.gameActions.changeBattlePosition({ card, originZone: zone, position: "faceup-attack" });
+    }, [card, zone]);
+
+    const changeBattleToDEF = useCallback(() => {
+        duel.gameActions.changeBattlePosition({ card, originZone: zone, position: "faceup-defense" });
+    }, [card, zone]);
+
     const viewMaterials = () => {
         duel.events.publish("toggle-ui-menu", { group: "game-overlay", autoClose: true, type: "xyz-monster-materials", data: { card, zone } });
     }
@@ -40,12 +64,12 @@ export function CardZoneMenu({ duel, card, zone, gameCard, clearAction, mouseEve
         duel.gameActions.attachMaterial({ card, originZone: zone });
     }, [card, zone]);
 
-    const toST = useCallback(() => {
-        duel.gameActions.toST({ card, originZone: zone });
-    }, [card, zone]);
-
     const activateCard = useCallback(() => {
         duel.gameActions.activateCard({ card, originZone: zone, selectZone: false });
+    }, [card, zone]);
+
+    const moveCard = useCallback(() => {
+        duel.gameActions.moveCard({ card, originZone: zone });
     }, [card, zone]);
 
     useLayoutEffect(() => {
@@ -63,26 +87,50 @@ export function CardZoneMenu({ duel, card, zone, gameCard, clearAction, mouseEve
     const hasXyzMonstersInField = YGOGameUtils.hasXyzMonstersInField(field);
     const canAttachMaterial = isXYZ ? getXyzMonstersZones(duel, [0]).length > 1 : true;
     const isMonsterZone = zone.includes("M");
+    const isMonster = YGOGameUtils.isMonster(card);
     const isMainDeckCard = card.isMainDeckCard;
+    const isAttack = YGOGameUtils.isAttack(card);
+    const isSpellTrap = YGOGameUtils.isSpellTrap(card);
 
     return <CardMenu menuRef={menuRef}>
-
         {isXYZ && <>
             <button type="button" className="ygo-card-item" onClick={viewMaterials}>View Materials</button>
         </>}
+
+        <button type="button" className="ygo-card-item" onClick={moveCard}>Move</button>
+
+        <button type="button" className="ygo-card-item" onClick={() => alert("TODO")}>Target</button>
+        <button type="button" className="ygo-card-item" onClick={toBottomDeck}>To Bottom Deck</button>
+        <button type="button" className="ygo-card-item" onClick={toTopDeck}>To Top. Deck</button>
+
+        <button type="button" className="ygo-card-item" onClick={banish}>Banish</button>
+
+        <button type="button" className="ygo-card-item" onClick={banishFD}>Banish FD</button>
 
         {isMainDeckCard && <button type="button" className="ygo-card-item" onClick={toHand}>To Hand</button>}
 
         {!isMainDeckCard && <button type="button" className="ygo-card-item" onClick={toExtraDeck}>To Extra Deck</button>}
 
-        {
-            isMonsterZone && <>
-                <button type="button" className="ygo-card-item" onClick={toST}>TO ST</button>
+        {isMonsterZone && isMonster && !isLink && <>
+            {isFaceUp && <>
+                <button type="button" className="ygo-card-item" onClick={setCard}>Set</button>
+                {!isAttack && <button type="button" className="ygo-card-item" onClick={changeBattleToATK}>TO ATK</button>}
+                {isAttack && <button type="button" className="ygo-card-item" onClick={changeBattleToDEF}>TO DEF</button>}
             </>
-        }
+            }
+            {!isFaceUp && <>
+                <button type="button" className="ygo-card-item" onClick={flip}>Flip</button>
+            </>
+            }
+        </>}
+
+        {isSpellTrap && isFaceUp && <>
+            <button type="button" className="ygo-card-item" onClick={setCard}>Set</button>
+        </>}
+
+        {(isMonster && isFaceUp) || (isSpellTrap) && <button type="button" className="ygo-card-item" onClick={activateCard}>Activate</button>}
+
         <button type="button" className="ygo-card-item" onClick={sendToGY}>Send To GY</button>
-        <button type="button" className="ygo-card-item" onClick={banish}>Banish</button>
-        <button type="button" className="ygo-card-item" onClick={banishFD}>Banish FD</button>
 
         {
             hasXyzMonstersInField && <>

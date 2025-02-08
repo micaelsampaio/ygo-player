@@ -15,6 +15,11 @@ export class YGOTaskSequence extends YGOTask {
         return this;
     }
 
+    public addMultiple(...tasks: YGOTask[]): YGOTaskSequence {
+        tasks.forEach(task => this.tasks.push(task));
+        return this;
+    }
+
     public start(): void {
         this.runNext();
     }

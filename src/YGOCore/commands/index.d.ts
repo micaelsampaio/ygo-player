@@ -10,6 +10,7 @@ import { FlipCommand } from "./FlipCommand";
 import { FusionSummonCommand } from "./FusionSummonCommand";
 import { LinkSummonCommand } from "./LinkSummonCommand";
 import { MillFromDeckCommand } from "./MillFromDeckCommand";
+import { MoveCardCommand } from "./MoveCardCommand";
 import { NormalSummonCommand } from "./NormalSummonCommand";
 import { RevealCommand } from "./RevealCommand";
 import { SendCardToGYCommand } from "./SendCardToGY";
@@ -56,6 +57,7 @@ export declare const Commands: {
     ChangeCardAtkDefCommand: typeof ChangeCardAtkDefCommand;
     FlipCommand: typeof FlipCommand;
     ToSTCommand: typeof ToSTCommand;
+    MoveCardCommand: typeof MoveCardCommand;
 };
 export declare const COMMANDS_BY_NAME: any;
 export declare function GetCommandByClassName<T = Command>(commandClassName: string): T | null;
