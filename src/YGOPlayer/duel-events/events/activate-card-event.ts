@@ -36,7 +36,7 @@ export class ActivateCardHandler extends YGOCommandHandler {
 
         if (event.originZone && event.zone) {
             this.startMoveCommand();
-        } else if (event.previousPosition === "facedown") {
+        } else if (event.previousPosition === "facedown" && !event.zone.startsWith("H")) {
             this.startChangeCardPositionCommand();
         } else {
             this.startActivateCommand();

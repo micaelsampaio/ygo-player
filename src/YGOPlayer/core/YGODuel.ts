@@ -126,18 +126,46 @@ export class YGODuel {
                 extraDeck: deck2.extraDeck as any,
             }],
             options: {
-                fieldState: [
-                    [
-                        // { id: 93729896, zone: "H" },
-                        // { id: 62318994, zone: "H" }, // lotus
-                        // { id: 62318994, zone: "H" }, // lotus
-                        { id: 62318994, zone: "M-1" }, // lotus
-                        { id: 90829280, zone: "M-3", position: "faceup-defense" }, // spirit of yubel
-                    ]
-                ]
+                // fieldState: [
+                //     [
+                //         { id: 93729896, zone: "H" },
+                //         // { id: 62318994, zone: "H" }, // lotus
+                //         // { id: 62318994, zone: "H" }, // lotus
+                //         //{ id: 62318994, zone: "M-1" }, // lotus
+                //         //{ id: 90829280, zone: "M-3", position: "faceup-defense" }, // spirit of yubel
+                //     ]
+                // ]
             }
         });
 
+        // const replay = { "players": [{ "name": "Player 1", "deck": [97651498, 97268402, 94145021, 94145021, 24215921, 24215921, 62318994, 62318994, 62318994, 23434538, 23434538, 81034083, 81034083, 14558127, 14558127, 14558127, 73642296, 42141493, 42141493, 41165831, 60764609, 60764609, 32909498, 68304193, 68304193, 78371393, 90829280, 90829280, 4779091, 2295440, 98567237, 98567237, 93729896, 93729896, 71832012, 80312545, 69540484, 65261141, 24224830, 24224830, 65681983, 10045474, 10045474, 10045474, 80801743], "mainDeckOrder": [6, 9, 18, 14, 2, 23, 20, 43, 28, 31, 2, 36, 10, 43, 40, 30, 29, 18, 11, 20, 3, 19, 14, 18, 32, 23, 31, 14, 40, 38, 1, 4, 43, 35, 41, 36, 36, 44, 6, 19, 18, 40, 15, 28, 10], "extraDeck": [97651498, 97268402, 94145021, 94145021, 24215921, 24215921, 62318994, 62318994, 62318994, 23434538, 23434538, 81034083, 81034083, 14558127, 14558127, 14558127, 73642296, 42141493, 42141493, 41165831, 60764609, 60764609, 32909498, 68304193, 68304193, 78371393, 90829280, 90829280, 4779091, 2295440, 98567237, 98567237, 93729896, 93729896, 71832012, 80312545, 69540484, 65261141, 24224830, 24224830, 65681983, 10045474, 10045474, 10045474, 80801743] }, { "name": "Player 2", "deck": [23434538, 23434538, 23434538, 14558127, 14558127, 14558127, 34541543, 84478195, 92565383, 92565383, 92565383, 23076639, 23076639, 23076639, 28954097, 28954097, 28954097, 55461744, 55461744, 58143852, 58143852, 58143852, 78371393, 90829280, 27204311, 27204311, 27204311, 25311006, 25311006, 93729896, 93729896, 93729896, 48130397, 48130397, 24224830, 24224830, 65681983, 63136489, 63136489, 10045474, 10045474, 10045474], "mainDeckOrder": [41, 39, 21, 12, 21, 33, 9, 19, 14, 0, 28, 12, 35, 38, 34, 19, 6, 10, 27, 5, 5, 35, 35, 1, 32, 9, 14, 26, 5, 38, 37, 21, 21, 8, 34, 3, 36, 1, 27, 25, 27, 37], "extraDeck": [23434538, 23434538, 23434538, 14558127, 14558127, 14558127, 34541543, 84478195, 92565383, 92565383, 92565383, 23076639, 23076639, 23076639, 28954097, 28954097, 28954097, 55461744, 55461744, 58143852, 58143852, 58143852, 78371393, 90829280, 27204311, 27204311, 27204311, 25311006, 25311006, 93729896, 93729896, 93729896, 48130397, 48130397, 24224830, 24224830, 65681983, 63136489, 63136489, 10045474, 10045474, 10045474] }], "commands": [{ "type": "StartHandCommand", "data": { "player": 0, "numberOfCards": 5 } }, { "type": "StartHandCommand", "data": { "player": 1, "numberOfCards": 5 } }, { "type": "FieldSpellCommand", "data": { "player": 0, "id": 93729896, "originZone": "H-1", "zone": "F", "position": "faceup" } }, { "type": "ActivateCardCommand", "data": { "player": 0, "id": 93729896, "zone": "F" } }, { "type": "ToHandCommand", "data": { "player": 0, "id": 62318994, "originZone": "D-19" } }, { "type": "SpecialSummonCommand", "data": { "player": 0, "id": 62318994, "originZone": "H-1", "zone": "M-3", "position": "faceup-attack" } }, { "type": "ActivateCardCommand", "data": { "player": 0, "id": 62318994, "zone": "M-3" } }, { "type": "SendCardToGYCommand", "data": { "player": 0, "id": 62318994, "originZone": "M-3" } }, { "type": "SpecialSummonCommand", "data": { "player": 0, "id": 90829280, "originZone": "D-5", "zone": "M-3", "position": "faceup-attack" } }, { "type": "ActivateCardCommand", "data": { "player": 0, "id": 90829280, "zone": "M-3" } }, { "type": "ToSTCommand", "data": { "player": 0, "id": 65261141, "originZone": "D-10", "zone": "S-3" } }, { "type": "SetCardCommand", "data": { "id": 65261141, "player": 0, "originZone": "S-3", "reveal": false } }, { "type": "ActivateCardCommand", "data": { "player": 0, "id": 65261141, "zone": "S-3" } }, { "type": "SendCardToGYCommand", "data": { "player": 0, "id": 90829280, "originZone": "M-3" } }, { "type": "ToHandCommand", "data": { "player": 0, "id": 24215921, "originZone": "D-11" } }, { "type": "ActivateCardCommand", "data": { "player": 0, "id": 90829280, "zone": "GY-1" } }, { "type": "ActivateCardCommand", "data": { "player": 0, "id": 93729896, "zone": "F" } }, { "type": "ToHandCommand", "data": { "player": 0, "id": 4779091, "originZone": "D-8" } }, { "type": "SpecialSummonCommand", "data": { "player": 0, "id": 4779091, "originZone": "H-2", "zone": "M-5", "position": "faceup-attack" } }, { "type": "SpecialSummonCommand", "data": { "player": 0, "id": 78371393, "originZone": "D-19", "zone": "M-4", "position": "faceup-attack" } }, { "type": "ToDeckCommand", "data": { "player": 0, "id": 62318994, "originZone": "GY-2", "position": "top", "shuffle": false } }, { "type": "ToDeckCommand", "data": { "player": 0, "id": 90829280, "originZone": "GY-1", "position": "top", "shuffle": false } }, { "type": "SpecialSummonCommand", "data": { "player": 0, "id": 80453041, "originZone": "ED-3", "zone": "M-1", "position": "faceup-attack" } }, { "type": "LinkSummonCommand", "data": { "player": 0, "id": 71818935, "materials": [{ "id": 4779091, "zone": "M-5" }, { "id": 78371393, "zone": "M-4" }], "originZone": "ED-10", "zone": "EMZ-2" } }, { "type": "LinkSummonCommand", "data": { "player": 0, "id": 2463794, "materials": [{ "id": 71818935, "zone": "EMZ-2" }], "originZone": "ED-8", "zone": "EMZ-2" } }, { "type": "ActivateCardCommand", "data": { "player": 0, "id": 2463794, "zone": "EMZ-2" } }, { "type": "SendCardToGYCommand", "data": { "player": 0, "id": 2463794, "originZone": "EMZ-2" } }, { "type": "SpecialSummonCommand", "data": { "player": 0, "id": 60764609, "originZone": "D-33", "zone": "M-5", "position": "faceup-attack" } }], "endField": [[{ "id": 80453041, "zone": "M-1" }, { "id": 60764609, "zone": "M-5" }, { "id": 65261141, "zone": "S-3" }, { "id": 2463794, "zone": "GY" }, { "id": 71818935, "zone": "GY" }, { "id": 78371393, "zone": "GY" }, { "id": 4779091, "zone": "GY" }], []] };
+
+        // this.ygo = new YGOCore({
+        //     players: [{
+        //         name: 'Player 1',
+        //         mainDeck: deck1.mainDeck as any,
+        //         extraDeck: deck1.extraDeck as any,
+        //         mainDeckOrder: replay.players[0].mainDeckOrder
+        //     },
+        //     {
+        //         name: 'Player 2',
+        //         mainDeck: deck2.mainDeck as any,
+        //         extraDeck: deck2.extraDeck as any,
+        //         mainDeckOrder: replay.players[1].mainDeckOrder
+        //     }],
+        //     commands: replay.commands,
+        //     // options: {
+        //     //     // fieldState: [
+        //     //     //     [
+        //     //     //         { id: 93729896, zone: "H" },
+        //     //     //         // { id: 62318994, zone: "H" }, // lotus
+        //     //     //         // { id: 62318994, zone: "H" }, // lotus
+        //     //     //         //{ id: 62318994, zone: "M-1" }, // lotus
+        //     //     //         //{ id: 90829280, zone: "M-3", position: "faceup-defense" }, // spirit of yubel
+        //     //     //     ]
+        //     //     // ]
+        //     // }
+        // });
         setTimeout(() => {
             this.ygo.start();
             this.updateField();
