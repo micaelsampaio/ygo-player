@@ -21,19 +21,7 @@ export declare class YGOCore {
     hasNextCommand(): boolean;
     hasPrevCommand(): boolean;
     getNextCommandId(): number;
-    getReplayData(): {
-        players: {
-            name: string;
-            deck: number[];
-            mainDeckOrder: number[];
-            extraDeck: number[];
-        }[];
-        commands: {
-            type: string;
-            data: unknown;
-        }[];
-        endField: any;
-    };
+    getReplayData(): import("../types/types").YGOReplayData;
     getField(player: number): PlayerField;
     private createYGOCommands;
 }

@@ -8,6 +8,7 @@ type YGODuelLogEventMap = {
 export declare class YGODuelLog {
     logs: YGODuelEvents.DuelLog[];
     events: EventBus<YGODuelLogEventMap>;
+    enabled: boolean;
     constructor();
     dispatch<T extends YGODuelEvents.DuelLog>(log: T): void;
     peek(): YGODuelEvents.DuelLog | null;

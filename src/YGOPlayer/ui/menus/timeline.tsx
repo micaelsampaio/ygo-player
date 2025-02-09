@@ -16,6 +16,7 @@ export function TimeLine({ duel }: { duel: YGODuel }) {
     }
 
     const prev = () => {
+        if (duel.commands.isRecovering()) return;
         duel.commands.startRecover();
 
         if (duel.ygo.hasPrevCommand()) {
@@ -26,11 +27,20 @@ export function TimeLine({ duel }: { duel: YGODuel }) {
         duel.commands.endRecover();
     }
 
+    const next = () => {
+        if (duel.commands.isRecovering()) return;
+
+        if (duel.ygo.hasNextCommand()) {
+            duel.ygo.redo();
+        }
+    }
+
     const play = () => {
         const nextEvent = () => {
             if (duel.ygo.hasNextCommand()) {
                 duel.ygo.redo();
             } else {
+                duel.commands.endRecover();
                 duel.events.off("commands-process-completed", nextEvent);
             }
         }
@@ -40,20 +50,10 @@ export function TimeLine({ duel }: { duel: YGODuel }) {
         nextEvent();
     }
 
-    const next = () => {
-        duel.commands.startRecover();
-
-        if (duel.ygo.hasNextCommand()) {
-            duel.ygo.redo();
-        }
-
-        duel.updateField();
-        duel.commands.endRecover();
-    }
-
     return <div className="timeline" onMouseMove={cancelMouseEventsCallback} onClick={cancelMouseEventsCallback}>
         <div style={{ flexGrow: "unset" }}><button onClick={play}>play</button></div>
-        <div style={{ flexGrow: "unset" }}><button onClick={prev}>prev</button></div>
+        <div style={{ flexGrow: "unset" }}><button onClick={prev}>Prev Play</button></div>
+        <div style={{ flexGrow: "unset" }}><button onClick={next}>Next Play</button></div>
         {commands.map((command, index) => {
             const commandClass = getCommandClass(index, currentCommand);
             const color = getCommandColor(command);
@@ -61,7 +61,6 @@ export function TimeLine({ duel }: { duel: YGODuel }) {
                 <div className="command-tooltip">{(command as any).type}</div>
             </button>
         })}
-        <div style={{ flexGrow: "unset" }}><button onClick={next}>next</button></div>
     </div>
 }
 

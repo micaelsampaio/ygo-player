@@ -7,7 +7,7 @@ import { GameHand } from '../game/Hand';
 import { Deck } from '../game/Deck';
 import { Graveyard } from '../game/Graveyard';
 import { ExtraDeck } from '../game/ExtraDeck';
-import { Card, FieldZone, FieldZoneData } from '../../YGOCore/types/types';
+import { Card, FieldZone, FieldZoneData, YGOReplayData } from '../../YGOCore/types/types';
 import { YGOGameUtils } from '../../YGOCore';
 import { Banish } from '../game/Banish';
 
@@ -336,5 +336,35 @@ export function getTransformFromCamera(duel: YGODuel, gameObject: any): { x: num
         y: screenY - screenHeight / 2,
         width: screenWidth,
         height: screenHeight,
+    }
+}
+
+export function replayToYGOProps(playersData: { mainDeck: Card[], extraDeck: Card[] }[], replay: YGOReplayData) {
+    const players = replay.players.map((player, playerIndex) => {
+        const { mainDeck: mainDeckProps, extraDeck: extraDeckProps } = playersData[playerIndex];
+        const mainDeck = player.mainDeck.map((id) => {
+            const card = mainDeckProps.find(c => c.id === id);
+            if (!card) throw new Error("card not found in deck");
+            return card;
+        });
+        const extraDeck = player.extraDeck.map((id) => {
+            const card = extraDeckProps.find(c => c.id === id);
+            if (!card) throw new Error("card not found in extra deck");
+            return card;
+        });
+
+        return {
+            name: player.name,
+            mainDeck,
+            extraDeck
+        }
+
+    });
+    return {
+        players,
+        commands: replay.commands,
+        options: {
+            shuffleDecks: false
+        }
     }
 }

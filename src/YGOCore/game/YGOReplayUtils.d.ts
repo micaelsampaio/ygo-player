@@ -1,17 +1,6 @@
+import { YGOReplayData } from "../types/types";
 import { YGOCore } from "./YGOCore";
 export declare class YGOReplayUtils {
-    static createReplayData(ygo: YGOCore): {
-        players: {
-            name: string;
-            deck: number[];
-            mainDeckOrder: number[];
-            extraDeck: number[];
-        }[];
-        commands: {
-            type: string;
-            data: unknown;
-        }[];
-        endField: any;
-    };
+    static createReplayData(ygo: YGOCore): YGOReplayData;
     private static getMonsterCardInfo;
 }

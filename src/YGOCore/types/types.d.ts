@@ -19,23 +19,24 @@ export declare enum CardBaseType {
     XYZMonster = 7,
     LinkMonster = 8
 }
+export interface YGOPropsOptions {
+    lp?: number;
+    draw?: number;
+    shuffleDecks?: boolean;
+    fieldState?: FileldStateEntry[];
+}
+export interface YGOPropsPlayer {
+    name: string;
+    mainDeck: CardData[];
+    extraDeck: CardData[];
+}
 export interface YGOProps {
-    players: {
-        name: string;
-        mainDeck: CardData[];
-        extraDeck: CardData[];
-        mainDeckOrder?: number[];
-    }[];
+    players: YGOPropsPlayer[];
     commands?: {
         type: string;
         data: any;
     }[];
-    options?: {
-        lp?: number;
-        draw?: number;
-        shuffleDecks?: boolean;
-        fieldState?: FileldStateEntry[][];
-    };
+    options?: YGOPropsOptions;
 }
 export interface FileldStateEntry {
     id: number;
@@ -95,7 +96,10 @@ export interface PlayerField {
     mainDeck: Card[];
     extraDeck: Card[];
     hand: Card[];
-    initialMainDeckOrder: number[];
+    data: {
+        mainDeckOrdered: number[];
+        extraDeckOrdered: number[];
+    };
     graveyard: Card[];
     banishedZone: Card[];
     monsterZone: Array<Card | null>;
@@ -106,4 +110,14 @@ export interface PlayerField {
 export interface GameState {
     players: PlayerInfo[];
     fields: PlayerField[];
+}
+export interface YGOReplayData {
+    players: {
+        name: string;
+        mainDeck: number[];
+        extraDeck: number[];
+    }[];
+    initialField: FileldStateEntry[];
+    endField: FileldStateEntry[];
+    commands: any[];
 }
