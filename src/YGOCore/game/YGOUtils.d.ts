@@ -18,7 +18,7 @@ export declare class YGOUtils {
     static getCardsInGame(fields: PlayerField[]): Map<number, Card>;
     static getOverlayZone(zone: FieldZone): FieldZone;
     static initializePlayersFields(props: YGOProps): [PlayerField, PlayerField];
-    static getFieldsAsString(ygo: YGOCore): string;
     private static recoverFields;
     static isNumeric(val: any): boolean;
+    static getFieldsAsString(ygo: YGOCore): string;
 }

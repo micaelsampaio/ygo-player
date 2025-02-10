@@ -1,8 +1,9 @@
 import * as THREE from 'three';
-import { Card, FieldZone } from '../YGOCore/types/types';
+import { Card, CardData, FieldZone, FileldStateEntry, YGOProps, YGOPropsOptions, YGOReplayData } from '../YGOCore/types/types';
 
 export enum YGODuelState {
     REPLAY = "replay",
+    PLAY = "play",
     EDITOR = "editor",
     EXEC_COMMAND = "exec_command",
     UNDO_COMMAND = "undo_command",
@@ -28,4 +29,25 @@ export interface YGOUiElement {
 export interface CardZoneKV {
     card: Card,
     zone: FieldZone
+}
+
+export interface YGOPlayerData {
+    name: string,
+    mainDeck: CardData[],
+    extraDeck: CardData[],
+}
+export interface YGOReplayDeckData {
+    mainDeck: CardData[],
+    extraDeck: CardData[],
+}
+
+export interface YGOPlayerStartEditorProps {
+    players: YGOPlayerData[],
+    options: YGOPropsOptions
+}
+
+export interface YGOPlayerStartReplayProps {
+    decks: YGOReplayDeckData[],
+    replay: YGOReplayData,
+    options: YGOPropsOptions
 }

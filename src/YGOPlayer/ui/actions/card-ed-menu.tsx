@@ -51,8 +51,9 @@ export function CardExtraDeckMenu({ duel, config, card, htmlCardElement, clearAc
         const container = menuRef.current!;
         const cardRect = htmlCardElement.getBoundingClientRect();
         const containerRect = container.getBoundingClientRect();
+        const top = Math.min(window.innerHeight - containerRect.height, cardRect.top);
         container.style.left = cardRect.left - containerRect.width + "px";
-        container.style.top = cardRect.top + "px";
+        container.style.top = top + "px";
     }, [card, htmlCardElement]);
 
     const isLink = YGOGameUtils.isLinkMonster(card);

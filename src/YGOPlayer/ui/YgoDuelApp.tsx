@@ -2,8 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import { YGODuel } from "../core/YGODuel";
 import { YGOUiController } from "./YGOUiController";
 import "../style/style.css";
+import { YGOProps } from "../../YGOCore/types/types";
 
-export function YgoDuelApp() {
+export function YgoDuelApp({ config }: { config: YGOProps }) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [ygo, setYGO] = useState<YGODuel>();
 
@@ -11,9 +12,7 @@ export function YgoDuelApp() {
         if (!canvasRef.current) return;
 
         const init = async () => {
-            const ygo = new YGODuel({
-                canvas: canvasRef.current
-            });
+            const ygo = new YGODuel({ canvas: canvasRef.current!, config });
             await ygo.load();
             setYGO(ygo);
         }

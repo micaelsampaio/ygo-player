@@ -344,12 +344,12 @@ export function replayToYGOProps(playersData: { mainDeck: Card[], extraDeck: Car
         const { mainDeck: mainDeckProps, extraDeck: extraDeckProps } = playersData[playerIndex];
         const mainDeck = player.mainDeck.map((id) => {
             const card = mainDeckProps.find(c => c.id === id);
-            if (!card) throw new Error("card not found in deck");
+            if (!card) throw new Error(`card "${id}" not found in main deck`);
             return card;
         });
         const extraDeck = player.extraDeck.map((id) => {
             const card = extraDeckProps.find(c => c.id === id);
-            if (!card) throw new Error("card not found in extra deck");
+            if (!card) throw new Error(`card "${id}" not found in extra deck`);
             return card;
         });
 
@@ -364,7 +364,8 @@ export function replayToYGOProps(playersData: { mainDeck: Card[], extraDeck: Car
         players,
         commands: replay.commands,
         options: {
-            shuffleDecks: false
+            fieldState: replay.initialField ? replay.initialField : undefined,
+            shuffleDecks: false,
         }
     }
 }

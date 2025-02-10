@@ -1,0 +1,875 @@
+{
+    "players": [
+        {
+            "name": "Player 1",
+            "mainDeck": [
+                23434538,
+                81034083,
+                94145021,
+                98567237,
+                60764609,
+                4779091,
+                41165831,
+                93729896,
+                97651498,
+                62318994,
+                24215921,
+                78371393,
+                62318994,
+                65681983,
+                24224830,
+                14558127,
+                42141493,
+                98567237,
+                80801743,
+                68304193,
+                32909498,
+                23434538,
+                24224830,
+                94145021,
+                2295440,
+                97268402,
+                10045474,
+                60764609,
+                73642296,
+                90829280,
+                69540484,
+                68304193,
+                71832012,
+                62318994,
+                90829280,
+                24215921,
+                65261141,
+                42141493,
+                10045474,
+                14558127,
+                10045474,
+                80312545,
+                14558127,
+                81034083,
+                93729896
+            ],
+            "extraDeck": [
+                82135803,
+                46640168,
+                80453041,
+                80453041,
+                27552504,
+                79559912,
+                70636044,
+                4280258,
+                2463794,
+                49867899,
+                71818935,
+                71607202,
+                29301450,
+                24269961,
+                67680512
+            ]
+        },
+        {
+            "name": "Player 2",
+            "mainDeck": [
+                23076639,
+                14558127,
+                92565383,
+                28954097,
+                92565383,
+                34541543,
+                10045474,
+                48130397,
+                63136489,
+                84478195,
+                23434538,
+                23434538,
+                93729896,
+                48130397,
+                24224830,
+                55461744,
+                55461744,
+                58143852,
+                90829280,
+                27204311,
+                14558127,
+                25311006,
+                93729896,
+                27204311,
+                23434538,
+                24224830,
+                58143852,
+                23076639,
+                27204311,
+                93729896,
+                10045474,
+                78371393,
+                23076639,
+                28954097,
+                10045474,
+                14558127,
+                25311006,
+                65681983,
+                63136489,
+                58143852,
+                28954097,
+                92565383
+            ],
+            "extraDeck": [
+                69601012,
+                69601012,
+                38264974,
+                1769875,
+                11765832,
+                11321089,
+                11321089,
+                80453041,
+                80453041,
+                47172959,
+                22850702,
+                27552504,
+                35103106,
+                71607202,
+                29301450
+            ]
+        }
+    ],
+    "commands": [
+        {
+            "type": "StartHandCommand",
+            "data": {
+                "player": 0,
+                "numberOfCards": 5
+            }
+        },
+        {
+            "type": "StartHandCommand",
+            "data": {
+                "player": 1,
+                "numberOfCards": 5
+            }
+        },
+        {
+            "type": "ActivateCardCommand",
+            "data": {
+                "player": 0,
+                "id": 60764609,
+                "zone": "H-1"
+            }
+        },
+        {
+            "type": "SendCardToGYCommand",
+            "data": {
+                "player": 0,
+                "id": 60764609,
+                "originZone": "H-1"
+            }
+        },
+        {
+            "type": "ToHandCommand",
+            "data": {
+                "player": 0,
+                "id": 98567237,
+                "originZone": "D-16"
+            }
+        },
+        {
+            "type": "ActivateCardCommand",
+            "data": {
+                "player": 0,
+                "id": 98567237,
+                "originZone": "H-2",
+                "zone": "S-3"
+            }
+        },
+        {
+            "type": "ToHandCommand",
+            "data": {
+                "player": 0,
+                "id": 97651498,
+                "originZone": "D-7"
+            }
+        },
+        {
+            "type": "SendCardToGYCommand",
+            "data": {
+                "player": 0,
+                "id": 97651498,
+                "originZone": "H-2"
+            }
+        },
+        {
+            "type": "SendCardToGYCommand",
+            "data": {
+                "player": 0,
+                "id": 98567237,
+                "originZone": "S-3"
+            }
+        },
+        {
+            "type": "ActivateCardCommand",
+            "data": {
+                "player": 0,
+                "id": 97651498,
+                "zone": "GY-2"
+            }
+        },
+        {
+            "type": "SpecialSummonCommand",
+            "data": {
+                "player": 0,
+                "id": 97651498,
+                "originZone": "GY-2",
+                "zone": "M-1",
+                "position": "faceup-defense"
+            }
+        },
+        {
+            "type": "LinkSummonCommand",
+            "data": {
+                "player": 0,
+                "id": 2463794,
+                "materials": [
+                    {
+                        "id": 97651498,
+                        "zone": "M-1"
+                    }
+                ],
+                "originZone": "ED-9",
+                "zone": "EMZ-1"
+            }
+        },
+        {
+            "type": "ActivateCardCommand",
+            "data": {
+                "player": 0,
+                "id": 2463794,
+                "zone": "EMZ-1"
+            }
+        },
+        {
+            "type": "SendCardToGYCommand",
+            "data": {
+                "player": 0,
+                "id": 2463794,
+                "originZone": "EMZ-1"
+            }
+        },
+        {
+            "type": "SpecialSummonCommand",
+            "data": {
+                "player": 0,
+                "id": 60764609,
+                "originZone": "D-24",
+                "zone": "M-1",
+                "position": "faceup-attack"
+            }
+        },
+        {
+            "type": "ActivateCardCommand",
+            "data": {
+                "player": 0,
+                "id": 60764609,
+                "zone": "GY-4"
+            }
+        },
+        {
+            "type": "ToDeckCommand",
+            "data": {
+                "player": 0,
+                "id": 97651498,
+                "originZone": "GY-2",
+                "position": "bottom",
+                "shuffle": false
+            }
+        },
+        {
+            "type": "SpecialSummonCommand",
+            "data": {
+                "player": 0,
+                "id": 60764609,
+                "originZone": "GY-3",
+                "zone": "M-2",
+                "position": "faceup-defense"
+            }
+        },
+        {
+            "type": "LinkSummonCommand",
+            "data": {
+                "player": 0,
+                "id": 49867899,
+                "materials": [
+                    {
+                        "id": 60764609,
+                        "zone": "M-1"
+                    },
+                    {
+                        "id": 60764609,
+                        "zone": "M-2"
+                    }
+                ],
+                "originZone": "ED-9",
+                "zone": "EMZ-1"
+            }
+        },
+        {
+            "type": "ActivateCardCommand",
+            "data": {
+                "player": 0,
+                "id": 49867899,
+                "zone": "EMZ-1"
+            }
+        },
+        {
+            "type": "ToExtraDeckCommand",
+            "data": {
+                "player": 0,
+                "id": 2463794,
+                "originZone": "GY-3"
+            }
+        },
+        {
+            "type": "ToDeckCommand",
+            "data": {
+                "player": 0,
+                "id": 60764609,
+                "originZone": "GY-2",
+                "position": "bottom",
+                "shuffle": false
+            }
+        },
+        {
+            "type": "SpecialSummonCommand",
+            "data": {
+                "player": 0,
+                "id": 46640168,
+                "originZone": "ED-2",
+                "zone": "M-1",
+                "position": "faceup-defense"
+            }
+        },
+        {
+            "type": "ActivateCardCommand",
+            "data": {
+                "player": 0,
+                "id": 46640168,
+                "zone": "M-1"
+            }
+        },
+        {
+            "type": "SpecialSummonCommand",
+            "data": {
+                "player": 0,
+                "id": 60764609,
+                "originZone": "GY-1",
+                "zone": "M-2",
+                "position": "faceup-defense"
+            }
+        },
+        {
+            "type": "XYZSummonCommand",
+            "data": {
+                "player": 0,
+                "id": 27552504,
+                "materials": [
+                    {
+                        "id": 46640168,
+                        "zone": "M-1"
+                    },
+                    {
+                        "id": 60764609,
+                        "zone": "M-2"
+                    }
+                ],
+                "originZone": "ED-4",
+                "zone": "M-1",
+                "position": "faceup-defense"
+            }
+        },
+        {
+            "type": "ActivateCardCommand",
+            "data": {
+                "player": 0,
+                "id": 27552504,
+                "zone": "M-1"
+            }
+        },
+        {
+            "type": "SendCardToGYCommand",
+            "data": {
+                "player": 0,
+                "id": 62318994,
+                "originZone": "D-12"
+            }
+        },
+        {
+            "type": "LinkSummonCommand",
+            "data": {
+                "player": 0,
+                "id": 71607202,
+                "materials": [
+                    {
+                        "id": 27552504,
+                        "zone": "M-1"
+                    },
+                    {
+                        "id": 49867899,
+                        "zone": "EMZ-1"
+                    }
+                ],
+                "originZone": "ED-9",
+                "zone": "EMZ-1"
+            }
+        },
+        {
+            "type": "ActivateCardCommand",
+            "data": {
+                "player": 0,
+                "id": 71607202,
+                "zone": "EMZ-1"
+            }
+        },
+        {
+            "type": "SendCardToGYCommand",
+            "data": {
+                "player": 0,
+                "id": 23434538,
+                "originZone": "H-1"
+            }
+        },
+        {
+            "type": "SpecialSummonCommand",
+            "data": {
+                "player": 0,
+                "id": 62318994,
+                "originZone": "GY-6",
+                "zone": "M-1",
+                "position": "faceup-defense"
+            }
+        },
+        {
+            "type": "ActivateCardCommand",
+            "data": {
+                "player": 0,
+                "id": 46640168,
+                "zone": "GY-5"
+            }
+        },
+        {
+            "type": "ToExtraDeckCommand",
+            "data": {
+                "player": 0,
+                "id": 49867899,
+                "originZone": "GY-2"
+            }
+        },
+        {
+            "type": "ActivateCardCommand",
+            "data": {
+                "player": 0,
+                "id": 62318994,
+                "zone": "M-1"
+            }
+        },
+        {
+            "type": "SendCardToGYCommand",
+            "data": {
+                "player": 0,
+                "id": 62318994,
+                "originZone": "M-1"
+            }
+        },
+        {
+            "type": "SpecialSummonCommand",
+            "data": {
+                "player": 0,
+                "id": 90829280,
+                "originZone": "D-31",
+                "zone": "M-1",
+                "position": "faceup-attack"
+            }
+        },
+        {
+            "type": "ActivateCardCommand",
+            "data": {
+                "player": 0,
+                "id": 90829280,
+                "zone": "M-1"
+            }
+        },
+        {
+            "type": "ToSTCommand",
+            "data": {
+                "player": 0,
+                "id": 65261141,
+                "originZone": "D-32",
+                "zone": "S-1"
+            }
+        },
+        {
+            "type": "SetCardCommand",
+            "data": {
+                "id": 65261141,
+                "player": 0,
+                "originZone": "S-1",
+                "reveal": false
+            }
+        },
+        {
+            "type": "ActivateCardCommand",
+            "data": {
+                "player": 0,
+                "id": 65261141,
+                "zone": "S-1"
+            }
+        },
+        {
+            "type": "ActivateCardCommand",
+            "data": {
+                "player": 0,
+                "id": 65261141,
+                "zone": "S-1"
+            }
+        },
+        {
+            "type": "SendCardToGYCommand",
+            "data": {
+                "player": 0,
+                "id": 90829280,
+                "originZone": "M-1"
+            }
+        },
+        {
+            "type": "ToHandCommand",
+            "data": {
+                "player": 0,
+                "id": 24215921,
+                "originZone": "D-10"
+            }
+        },
+        {
+            "type": "ActivateCardCommand",
+            "data": {
+                "player": 0,
+                "id": 90829280,
+                "zone": "GY-1"
+            }
+        },
+        {
+            "type": "SpecialSummonCommand",
+            "data": {
+                "player": 0,
+                "id": 78371393,
+                "originZone": "D-10",
+                "zone": "M-5",
+                "position": "faceup-attack"
+            }
+        },
+        {
+            "type": "ActivateCardCommand",
+            "data": {
+                "player": 0,
+                "id": 24215921,
+                "zone": "H-1"
+            }
+        },
+        {
+            "type": "SpecialSummonCommand",
+            "data": {
+                "player": 0,
+                "id": 24215921,
+                "originZone": "H-1",
+                "zone": "M-4",
+                "position": "faceup-defense"
+            }
+        },
+        {
+            "type": "ActivateCardCommand",
+            "data": {
+                "player": 0,
+                "id": 24215921,
+                "zone": "M-4"
+            }
+        },
+        {
+            "type": "SendCardToGYCommand",
+            "data": {
+                "player": 0,
+                "id": 78371393,
+                "originZone": "M-5"
+            }
+        },
+        {
+            "type": "SpecialSummonCommand",
+            "data": {
+                "player": 0,
+                "id": 4779091,
+                "originZone": "D-6",
+                "zone": "M-5",
+                "position": "faceup-attack"
+            }
+        },
+        {
+            "type": "ToDeckCommand",
+            "data": {
+                "player": 0,
+                "id": 78371393,
+                "originZone": "GY-1",
+                "position": "bottom",
+                "shuffle": false
+            }
+        },
+        {
+            "type": "ToDeckCommand",
+            "data": {
+                "player": 0,
+                "id": 62318994,
+                "originZone": "GY-2",
+                "position": "bottom",
+                "shuffle": false
+            }
+        },
+        {
+            "type": "SpecialSummonCommand",
+            "data": {
+                "player": 0,
+                "id": 80453041,
+                "originZone": "ED-3",
+                "zone": "M-1",
+                "position": "faceup-attack"
+            }
+        },
+        {
+            "type": "LinkSummonCommand",
+            "data": {
+                "player": 0,
+                "id": 24269961,
+                "materials": [
+                    {
+                        "id": 4779091,
+                        "zone": "M-5"
+                    },
+                    {
+                        "id": 24215921,
+                        "zone": "M-4"
+                    }
+                ],
+                "originZone": "ED-10",
+                "zone": "M-2"
+            }
+        },
+        {
+            "type": "ActivateCardCommand",
+            "data": {
+                "player": 0,
+                "id": 24269961,
+                "zone": "M-2"
+            }
+        },
+        {
+            "type": "ToHandCommand",
+            "data": {
+                "player": 0,
+                "id": 41165831,
+                "originZone": "D-8"
+            }
+        },
+        {
+            "type": "ActivateCardCommand",
+            "data": {
+                "player": 0,
+                "id": 41165831,
+                "zone": "H-1"
+            }
+        },
+        {
+            "type": "ActivateCardCommand",
+            "data": {
+                "player": 0,
+                "id": 24215921,
+                "zone": "GY-1"
+            }
+        },
+        {
+            "type": "BanishCommand",
+            "data": {
+                "player": 0,
+                "id": 24215921,
+                "originZone": "GY-1",
+                "position": "faceup"
+            }
+        },
+        {
+            "type": "SpecialSummonCommand",
+            "data": {
+                "player": 0,
+                "id": 90829280,
+                "originZone": "GY-2",
+                "zone": "M-5",
+                "position": "faceup-attack"
+            }
+        },
+        {
+            "type": "LinkSummonCommand",
+            "data": {
+                "player": 0,
+                "id": 67680512,
+                "materials": [
+                    {
+                        "id": 90829280,
+                        "zone": "M-5"
+                    },
+                    {
+                        "id": 24269961,
+                        "zone": "M-2"
+                    }
+                ],
+                "originZone": "ED-10",
+                "zone": "M-2"
+            }
+        },
+        {
+            "type": "ActivateCardCommand",
+            "data": {
+                "player": 0,
+                "id": 41165831,
+                "zone": "H-1"
+            }
+        },
+        {
+            "type": "SendCardToGYCommand",
+            "data": {
+                "player": 0,
+                "id": 71607202,
+                "originZone": "EMZ-1"
+            }
+        },
+        {
+            "type": "SpecialSummonCommand",
+            "data": {
+                "player": 0,
+                "id": 41165831,
+                "originZone": "H-1",
+                "zone": "M-5",
+                "position": "faceup-attack"
+            }
+        },
+        {
+            "type": "ActivateCardCommand",
+            "data": {
+                "player": 0,
+                "id": 24269961,
+                "zone": "GY-2"
+            }
+        },
+        {
+            "type": "BanishCommand",
+            "data": {
+                "player": 0,
+                "id": 24269961,
+                "originZone": "GY-2",
+                "position": "faceup"
+            }
+        },
+        {
+            "type": "SpecialSummonCommand",
+            "data": {
+                "player": 0,
+                "id": 46640168,
+                "originZone": "GY-7",
+                "zone": "M-4",
+                "position": "faceup-attack"
+            }
+        },
+        {
+            "type": "XYZSummonCommand",
+            "data": {
+                "player": 0,
+                "id": 79559912,
+                "materials": [
+                    {
+                        "id": 46640168,
+                        "zone": "M-4"
+                    },
+                    {
+                        "id": 41165831,
+                        "zone": "M-5"
+                    }
+                ],
+                "originZone": "ED-3",
+                "zone": "M-5",
+                "position": "faceup-attack"
+            }
+        }
+    ],
+    "initialField": [
+        {
+            "id": 60764609,
+            "zone": "H"
+        },
+        {
+            "id": 23434538,
+            "zone": "H"
+        }
+    ],
+    "endField": [
+        {
+            "id": 80453041,
+            "zone": "M-1"
+        },
+        {
+            "id": 67680512,
+            "zone": "M-2"
+        },
+        {
+            "id": 79559912,
+            "zone": "M-5",
+            "materials": [
+                {
+                    "id": 46640168
+                },
+                {
+                    "id": 41165831
+                }
+            ]
+        },
+        {
+            "id": 65261141,
+            "zone": "S-1"
+        },
+        {
+            "id": 71607202,
+            "zone": "GY"
+        },
+        {
+            "id": 90829280,
+            "zone": "GY"
+        },
+        {
+            "id": 4779091,
+            "zone": "GY"
+        },
+        {
+            "id": 23434538,
+            "zone": "GY"
+        },
+        {
+            "id": 27552504,
+            "zone": "GY"
+        },
+        {
+            "id": 60764609,
+            "zone": "GY"
+        },
+        {
+            "id": 98567237,
+            "zone": "GY"
+        },
+        {
+            "id": 24269961,
+            "zone": "B"
+        },
+        {
+            "id": 24215921,
+            "zone": "B"
+        }
+    ]
+}

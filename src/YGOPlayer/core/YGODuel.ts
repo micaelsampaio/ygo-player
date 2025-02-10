@@ -21,10 +21,8 @@ import { WaitForSeconds } from '../duel-events/utils/wait-for-seconds';
 import { CallbackTransition } from '../duel-events/utils/callback';
 import { YGOCommandsController } from './components/tasks/YGOCommandsController';
 import { YGOAssets } from './YGOAssets';
-
-import YUBEL from '../../decks/YUBEL_FS.json';
-import CHIMERA from '../../decks/CHIMERA.json';
 import { YGOGameActions } from './YGOGameActions';
+import { YGOProps } from '../../YGOCore/types/types';
 
 export class YGODuel {
     public state: YGODuelState;
@@ -44,9 +42,11 @@ export class YGODuel {
     public commands: YGOCommandsController;
     public deltaTime: number = 0;
     private currentPlayerIndex = 0;
+    private config: YGOProps;
 
-    constructor({ canvas }: any) {
+    constructor({ canvas, config }: { canvas: HTMLCanvasElement, config: YGOProps }) {
         this.state = YGODuelState.EDITOR;
+        this.config = config;
         this.core = new YGOPlayerCore({ canvas });
         this.core.renderer.setAnimationLoop(this.update.bind(this));
         this.camera = this.core.camera;
@@ -111,50 +111,9 @@ export class YGODuel {
     }
 
     public startDuel() {
-        const deck1 = JSON.parse(JSON.stringify(YUBEL));
-        const deck2 = JSON.parse(JSON.stringify(CHIMERA));
 
-        const replay = null;
-        const replay2 = null;
+        this.ygo = new YGOCore(this.config);
 
-        if (replay) {
-            const ygoProps = replayToYGOProps([{
-                mainDeck: deck1.mainDeck as any,
-                extraDeck: deck1.extraDeck as any,
-            }, {
-                mainDeck: deck2.mainDeck as any,
-                extraDeck: deck2.extraDeck as any,
-            }], replay as any);
-
-            this.ygo = new YGOCore({
-                players: ygoProps.players,
-                commands: ygoProps.commands,
-                options: ygoProps.options
-            });
-        } else {
-
-            this.ygo = new YGOCore({
-                players: [{
-                    name: 'Player 1',
-                    mainDeck: deck1.mainDeck as any,
-                    extraDeck: deck1.extraDeck as any,
-                },
-                {
-                    name: 'Player 2',
-                    mainDeck: deck2.mainDeck as any,
-                    extraDeck: deck2.extraDeck as any,
-                }],
-                options: {
-                    // fieldState: [
-                    //     { id: 93729896, zone: "H" },
-                    //     { id: 62318994, zone: "H" }, // lotus
-                    //     // { id: 62318994, zone: "H" }, // lotus
-                    //     //{ id: 62318994, zone: "M-1" }, // lotus
-                    //     //{ id: 90829280, zone: "M-3", position: "faceup-defense" }, // spirit of yubel
-                    // ]
-                }
-            });
-        }
 
         setTimeout(() => {
             this.ygo.start();
