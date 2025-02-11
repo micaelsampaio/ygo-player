@@ -5,6 +5,11 @@ import { YGODuel } from "../core/YGODuel";
 import { YGOAction } from '../core/components/YGOAction';
 import { CardZone } from '../game/CardZone';
 import { createCardSelectionGeometry } from '../game/meshes/CardSelectionMesh';
+import { YGOTaskSequence } from '../core/components/tasks/YGOTaskSequence';
+import { MultipleTasks } from '../duel-events/utils/multiple-tasks';
+import { PositionTransition } from '../duel-events/utils/position-transition';
+import { ScaleTransition } from '../duel-events/utils/scale-transition';
+import { MaterialOpacityTransition } from '../duel-events/utils/material-opacity';
 
 type CardSelectionType = "card" | "zone";
 
@@ -122,6 +127,8 @@ export class ActionCardSelection extends YGOComponent implements YGOAction {
                 this.cardSelectionZones.get(zone.zone)!.card.visible = false;
             }
 
+            this.clickOnZone(zone.position);
+
             zone.onClickCb = () => { };
 
             let availableZones = false;
@@ -137,6 +144,7 @@ export class ActionCardSelection extends YGOComponent implements YGOAction {
         } else {
             this.clear();
             this.onSelectionCompleted(zone);
+            this.clickOnZone(zone.position);
         }
     }
 
@@ -201,6 +209,41 @@ export class ActionCardSelection extends YGOComponent implements YGOAction {
         const fieldSpellCard = this.createCardSelection(fieldSpellCardZone.position, fieldSpellCardZone.rotation);
         const fieldSpellZone = this.createCardZoneSelection(fieldSpellCardZone.position, fieldSpellCardZone.rotation);
         this.cardSelectionZones.set(fieldSpellCardZone.zone, { card: fieldSpellCard, zone: fieldSpellZone });
+    }
+
+
+    private clickOnZone(position: THREE.Vector3) {
+
+        const zoneClick = this.createCardSelection(position, new THREE.Euler(0, 0, 0));
+        zoneClick.visible = true;
+
+        const targetPosition = position.clone();
+        targetPosition.z += 0.25;
+        const scale = zoneClick.scale.clone();
+        scale.multiplyScalar(1.2);
+
+        const seq = new MultipleTasks(
+            new PositionTransition({
+                gameObject: zoneClick,
+                position: targetPosition,
+                duration: 0.15
+            }),
+            new ScaleTransition({
+                gameObject: zoneClick,
+                scale,
+                duration: 0.15
+            }),
+            new MaterialOpacityTransition({
+                material: zoneClick.material,
+                opacity: 0,
+                duration: 0.15
+            })
+        )
+        this.duel.tasks.startTask(seq, {
+            onCompleted: () => {
+                this.duel.core.scene.remove(zoneClick);
+            }
+        });
     }
 
 }

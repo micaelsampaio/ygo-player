@@ -6,6 +6,7 @@ import { Font, FontLoader } from 'three/addons/loaders/FontLoader.js';
 
 export class YGOPlayerCore {
     public scene: THREE.Scene;
+    public canvas: HTMLCanvasElement;
     public camera: THREE.Camera;
     public textureLoader: THREE.TextureLoader;
     public fontLoader: FontLoader;
@@ -17,6 +18,7 @@ export class YGOPlayerCore {
 
     constructor({ canvas }: { canvas: HTMLCanvasElement }) {
         this.scene = new THREE.Scene();
+        this.canvas = canvas;
         this.deltaTime = 0;
         this.previousFrame = performance.now();
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);

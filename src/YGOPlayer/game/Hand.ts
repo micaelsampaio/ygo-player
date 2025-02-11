@@ -61,16 +61,16 @@ export class GameHand extends YGOEntity {
         const totalCards = gameField.hand.cards.length;
 
         const handWidth = (totalCards - 1) * cardSpacing + cardWidth;
-        const handY = 8 * (this.player === 0 ? -1 : 1);
-        const handZ = 4.5;
+        const handY = 7.5 * (this.player === 0 ? -1 : 1);
+        const handZ = 3.5;
 
         const camera = this.duel.camera;
         const cameraPosition = camera.position.clone();
-        const direction = new THREE.Vector3();
-        camera.getWorldDirection(direction);
 
-        // Starting position offset based on camera direction
-        const startPosition = camera.position.clone().add(direction.multiplyScalar(4));
+        const screenHeight = document.querySelector("canvas")!.height;
+        console.log("HEIGHT", screenHeight)
+        const heightInWorldUnits = 0.1 * screenHeight * ((camera as any).fov * Math.PI / 180) / Math.tan((camera as any).fov * Math.PI / 180 / 2);
+            
 
         for (let i = 0; i < totalCards; ++i) {
             // Calculate xOffset for each card
@@ -85,16 +85,6 @@ export class GameHand extends YGOEntity {
             handCard.gameObject.rotation.set(0, 0, 0);
 
             handCard.gameObject.visible = true;
-
-            // Make the card face the camera
-            //handCard.gameObject.lookAt(cameraPosition);
-
-            // Lock the X-axis rotation to avoid any tilt up/down, ensuring the card is only rotated on the Y-axis
-            handCard.gameObject.rotation.z = 0; // Fix X rotation to static
-            handCard.gameObject.rotation.x = THREE.MathUtils.degToRad(10); // Fix Z rotation to static (avoid tilt issues)
-            handCard.gameObject.rotation.y = 0; // Fix Z rotation to static (avoid tilt issues)
-            // Rotation on Y-axis to make the card face the camera
-            // handCard.gameObject.rotation.y = 0;
         }
     }
 

@@ -24,7 +24,6 @@ import { YGOAssets } from './YGOAssets';
 import { YGOGameActions } from './YGOGameActions';
 import { YGOProps } from '../../YGOCore/types/types';
 import { createCardSelectionGeometry } from '../game/meshes/CardSelectionMesh';
-import { YGOMath } from './YGOMath';
 
 export class YGODuel {
     public state: YGODuelState;
@@ -83,13 +82,33 @@ export class YGODuel {
                 // this.assets.loadTextures(Array.from(cards.values()).map(id => `http://127.0.0.1:8080/images/cards_small/${id}.jpg`)),
             ]);
             this.core.scene.add(fieldModel.scene);
-            this.core.camera.position.set(0, -4, 14);
-            this.core.camera.rotation.x += THREE.MathUtils.degToRad(10);
+            this.core.camera.position.set(0, 0, 14);
+            //this.core.camera.rotation.x += THREE.MathUtils.degToRad(10);
 
             this.fields = createFields({ duel: this, fieldModel: fieldModel.scene });
             this.entities.push(this.gameController);
 
             this.gameController.getComponent<ActionCardSelection>("action_card_selection").createCardSelections();
+
+            const geometry = new THREE.PlaneGeometry(22, 22);
+            const material = new THREE.MeshBasicMaterial({ color: 0xff0000, wireframe: true });
+            const map = new THREE.Mesh(geometry, material);
+            this.core.scene.add(map);
+
+            const box = new THREE.Box3().setFromObject(map); // Get the bounding box of the object
+            const center = box.getCenter(new THREE.Vector3()); // Get the center of the object
+            const size = box.getSize(new THREE.Vector3()); // Get the size of the object
+
+            // Adjust camera position based on the size of the object
+            const distance = Math.max(size.x, size.y) / (2 * Math.tan(Math.PI * (this.camera as any).fov / 360));
+            this.camera.position.set(center.x, center.y, distance); // Place camera at a distance
+            this.camera.lookAt(center);
+            // TODO PUT GAME 3D again
+
+            // const cube = new THREE.Mesh(geometry, material);
+            // middlePos.addVectors(pos1, pos2).multiplyScalar(0.5);
+            // // Step 2: Make the camera look at the middle position
+            // this.camera.lookAt(middlePos);
 
             // const geometry = new THREE.BoxGeometry(3, 3 * 1.45, 0.05);
             // const material = new THREE.MeshBasicMaterial({ color: 0x0000ff });

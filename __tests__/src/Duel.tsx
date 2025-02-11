@@ -2,6 +2,7 @@
 import { useEffect } from 'react'
 import { YGOPlayerComponent } from "../../dist";
 
+
 export default function Duel() {
 
   useEffect(() => {
