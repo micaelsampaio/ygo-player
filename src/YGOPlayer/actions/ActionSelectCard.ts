@@ -218,9 +218,9 @@ export class ActionCardSelection extends YGOComponent implements YGOAction {
         zoneClick.visible = true;
 
         const targetPosition = position.clone();
-        targetPosition.z += 0.25;
+        targetPosition.z += 0.35;
         const scale = zoneClick.scale.clone();
-        scale.multiplyScalar(1.2);
+        scale.multiplyScalar(1.3);
 
         const seq = new MultipleTasks(
             new PositionTransition({
