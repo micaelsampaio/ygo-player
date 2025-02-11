@@ -23,6 +23,8 @@ import { YGOCommandsController } from './components/tasks/YGOCommandsController'
 import { YGOAssets } from './YGOAssets';
 import { YGOGameActions } from './YGOGameActions';
 import { YGOProps } from '../../YGOCore/types/types';
+import { createCardSelectionGeometry } from '../game/meshes/CardSelectionMesh';
+import { YGOMath } from './YGOMath';
 
 export class YGODuel {
     public state: YGODuelState;
@@ -81,7 +83,8 @@ export class YGODuel {
                 // this.assets.loadTextures(Array.from(cards.values()).map(id => `http://127.0.0.1:8080/images/cards_small/${id}.jpg`)),
             ]);
             this.core.scene.add(fieldModel.scene);
-            this.core.camera.position.set(0, 0, 15);
+            this.core.camera.position.set(0, -4, 14);
+            this.core.camera.rotation.x += THREE.MathUtils.degToRad(10);
 
             this.fields = createFields({ duel: this, fieldModel: fieldModel.scene });
             this.entities.push(this.gameController);
@@ -311,6 +314,14 @@ export class YGODuel {
     }
 
     public test() {
+        return;
+
+        const cardSelection = createCardSelectionGeometry(4, 5, 0.5);
+        const material = new THREE.MeshBasicMaterial({ color: 0xffff00, opacity: 0.8, transparent: true });
+        const planeWithHole = new THREE.Mesh(cardSelection, material);
+        this.core.scene.add(planeWithHole);
+        planeWithHole.position.z = 2;
+
         return;
         const card = new GameCard({ card: this.ygo.getField(0).hand[0], duel: this });
 

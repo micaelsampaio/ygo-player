@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { YGODuel } from "../core/YGODuel";
 import { YGOUiController } from "./YGOUiController";
-import "../style/style.css";
 import { YGOProps } from "../../YGOCore/types/types";
 
 export function YgoDuelApp({ config }: { config: YGOProps }) {

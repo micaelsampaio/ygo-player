@@ -2,6 +2,7 @@ import { Card } from "../../YGOCore/types/types";
 import { YGODuel } from "../core/YGODuel";
 import { YGOEntity } from '../core/YGOEntity';
 import { GameCardHand } from './GameCardHand';
+import * as THREE from 'three';
 
 export class GameHand extends YGOEntity {
 
@@ -55,22 +56,46 @@ export class GameHand extends YGOEntity {
 
     render() {
         const gameField = this.duel.fields[this.player];
-        // hand 
         const cardWidth = 3;
         const cardSpacing = 2.2;
         const totalCards = gameField.hand.cards.length;
 
         const handWidth = (totalCards - 1) * cardSpacing + cardWidth;
-        const handY = 6.8 * (this.player === 0 ? -1 : 1);
-        const handZ = 5;
+        const handY = 8 * (this.player === 0 ? -1 : 1);
+        const handZ = 4.5;
 
-        for (let i = 0; i < gameField.hand.cards.length; ++i) {
-            const xOffset = -handWidth / 2 + cardWidth / 2;
+        const camera = this.duel.camera;
+        const cameraPosition = camera.position.clone();
+        const direction = new THREE.Vector3();
+        camera.getWorldDirection(direction);
+
+        // Starting position offset based on camera direction
+        const startPosition = camera.position.clone().add(direction.multiplyScalar(4));
+
+        for (let i = 0; i < totalCards; ++i) {
+            // Calculate xOffset for each card
+            const xOffset = -handWidth / 2 + cardWidth / 2 + i * cardSpacing;
+
             const handCard = gameField.hand.getCard(i)!;
-            handCard.gameObject.position.set(xOffset + i * cardSpacing, handY, handZ);
+
+            handCard.gameObject.position.set(xOffset, handY, handZ);
+
             handCard.position = handCard.gameObject.position.clone();
+
             handCard.gameObject.rotation.set(0, 0, 0);
+
             handCard.gameObject.visible = true;
+
+            // Make the card face the camera
+            //handCard.gameObject.lookAt(cameraPosition);
+
+            // Lock the X-axis rotation to avoid any tilt up/down, ensuring the card is only rotated on the Y-axis
+            handCard.gameObject.rotation.z = 0; // Fix X rotation to static
+            handCard.gameObject.rotation.x = THREE.MathUtils.degToRad(10); // Fix Z rotation to static (avoid tilt issues)
+            handCard.gameObject.rotation.y = 0; // Fix Z rotation to static (avoid tilt issues)
+            // Rotation on Y-axis to make the card face the camera
+            // handCard.gameObject.rotation.y = 0;
         }
     }
+
 }   

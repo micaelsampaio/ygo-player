@@ -4,7 +4,7 @@ import { YgoDuelApp } from '../ui/YgoDuelApp';
 import { YGOPlayerStartEditorProps, YGOPlayerStartReplayProps } from '../types';
 import { CardData, YGOProps } from '../../YGOCore/types/types';
 
-class YGOPlayerComponent extends HTMLElement {
+export class YGOPlayerComponent extends HTMLElement {
     private root: ReactDOM.Root | undefined;
 
     constructor() {
@@ -61,8 +61,13 @@ class YGOPlayerComponent extends HTMLElement {
         })
         const config = {
             players,
-            options: props.options
+            commands: props.replay.commands,
+            options: props.options || {}
         }
+
+        config.options.shuffleDecks = false;
+
+        console.log("CONFIG >>", config);
         this.start(config);
     }
 
@@ -75,8 +80,4 @@ class YGOPlayerComponent extends HTMLElement {
 
         this.root.render(createElement(YgoDuelApp, { config }));
     }
-}
-
-if (!customElements.get("ygo-player")) {
-    customElements.define('ygo-player', YGOPlayerComponent);
 }

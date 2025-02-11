@@ -158,7 +158,7 @@ export class ActivateCardHandler extends YGOCommandHandler {
 
     public createActivationEffect(seq: YGOTaskSequence, card: THREE.Object3D, startPos: THREE.Vector3, axis: "z" | "y" = "z") {
         const position = startPos.clone();
-        position[axis] += 2;
+        position[axis] += axis === "y" ? 1.8 : 0.8;
 
         seq.add(
             new PositionTransition({

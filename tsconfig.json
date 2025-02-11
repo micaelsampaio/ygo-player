@@ -1,7 +1,36 @@
 {
-  "files": [],
-  "references": [
-    { "path": "./tsconfig.app.json" },
-    { "path": "./tsconfig.node.json" }
+  "compilerOptions": {
+    "moduleResolution": "node",
+    "lib": [
+      "es2020",
+      "DOM"
+    ],
+    "outDir": "./dist",
+    "noImplicitAny": true,
+    "module": "esnext",
+    "target": "es2020",
+    "jsx": "react-jsx",
+    "allowJs": false,
+    "sourceMap": true,
+    "declaration": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "baseUrl": ".",
+    "paths": {
+      "*": [
+        "node_modules/*"
+      ]
+    },
+    "skipLibCheck": true,
+    "strict": true,
+    "incremental": true,
+    "isolatedModules": true
+  },
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "tests"
   ]
 }

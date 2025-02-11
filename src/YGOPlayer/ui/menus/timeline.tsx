@@ -38,9 +38,8 @@ export function TimeLine({ duel }: { duel: YGODuel }) {
     const play = () => {
         const nextEvent = () => {
             if (duel.ygo.hasNextCommand()) {
-                duel.ygo.redo();
+                setTimeout(() => duel.ygo.redo(), 500);
             } else {
-                duel.commands.endRecover();
                 duel.events.off("commands-process-completed", nextEvent);
             }
         }

@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 //@ts-ignore
 import { GLTF, GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
+//@ts-ignore
 import { Font, FontLoader } from 'three/addons/loaders/FontLoader.js';
 
 export class YGOPlayerCore {
@@ -52,14 +53,14 @@ export class YGOPlayerCore {
                 url,
                 (gltf: GLTF) => resolve(gltf),
                 undefined,
-                (error: Error) => reject(error)
+                (error) => reject(error as Error)
             );
         });
     }
 
     public async loadFontAsync(name: string, url: string): Promise<Font> {
         return new Promise((resolve) => {
-            this.fontLoader.load(url, (font) => {
+            this.fontLoader.load(url, (font: any) => {
                 resolve(font);
                 this.fonts.set(name, font);
             })

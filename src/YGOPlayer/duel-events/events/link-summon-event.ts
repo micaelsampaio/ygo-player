@@ -10,6 +10,7 @@ import { WaitForSeconds } from "../utils/wait-for-seconds";
 import { Card } from "../../../YGOCore/types/types";
 import { CallbackTransition } from '../utils/callback';
 import { YGOCommandHandler } from '../../core/components/YGOCommandHandler';
+import { MultipleTasks } from '../utils/multiple-tasks';
 
 interface LinkSummonEventHandlerProps extends DuelEventHandlerProps {
     event: YGODuelEvents.LinkSummon
@@ -39,6 +40,8 @@ export class LinkSummonEventHandler extends YGOCommandHandler {
 
         const gyZone = YGOGameUtils.createZone("GY", event.player);
         const gyZoneData = YGOGameUtils.getZoneData(gyZone)!;
+
+        const camera = duel.camera;
 
         if (event.materials?.length > 0) {
             for (let i = 0; i < event.materials.length; ++i) {
@@ -87,28 +90,39 @@ export class LinkSummonEventHandler extends YGOCommandHandler {
 
         const cardZone = getGameZone(duel, zoneData);
 
-        const startPosition = new THREE.Vector3(0, 0, 12);
-        const startRotation = new THREE.Euler(0, 0, 0)
 
         const endPosition = getZonePositionFromZoneData(duel, zoneData);
         const endRotation = getCardRotationFromFieldZoneData(this.cardReference, zoneData);
 
+        const direction = new THREE.Vector3();
+        camera.getWorldDirection(direction);
+
+        const startPosition = camera.position.clone().add(direction.multiplyScalar(4));
 
         const card = new GameCard({ duel, card: this.cardReference });
         card.hideCardStats();
         card.gameObject.position.copy(startPosition);
-        card.gameObject.rotation.copy(startRotation);
         card.gameObject.visible = false;
+        card.gameObject.lookAt(camera.position);
 
         sequence.add(new CallbackTransition(() => {
             card.gameObject.visible = true;
         }))
             .add(new WaitForSeconds(1))
-            .add(new PositionTransition({
-                gameObject: card.gameObject,
-                position: endPosition,
-                duration: 0.5
-            }))
+            .add(
+                new MultipleTasks(
+                    new PositionTransition({
+                        gameObject: card.gameObject,
+                        position: endPosition,
+                        duration: 0.5
+                    }),
+                    new RotationTransition({
+                        gameObject: card.gameObject,
+                        rotation: endRotation,
+                        duration: 0.5
+                    })
+                )
+            )
             .add(new CallbackTransition(() => {
                 this.props.onCompleted();
             }));

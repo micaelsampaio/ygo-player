@@ -32,6 +32,7 @@ export class YGOGameActions {
 
         this.cardSelection.startSelection({
             zones,
+            selectionType: "zone",
             onSelectionCompleted: (cardZone: any) => {
                 ygo.exec(new YGOCommands.NormalSummonCommand({
                     player,
@@ -52,6 +53,7 @@ export class YGOGameActions {
 
         this.cardSelection.startSelection({
             zones,
+            selectionType: "zone",
             onSelectionCompleted: (cardZone: any) => {
                 ygo.exec(new YGOCommands.SetMonsterCommand({
                     player,
@@ -72,6 +74,7 @@ export class YGOGameActions {
 
         this.cardSelection.startSelection({
             zones,
+            selectionType: "zone",
             onSelectionCompleted: (cardZone: any) => {
                 ygo.exec(new YGOCommands.SpecialSummonCommand({
                     player,
@@ -94,6 +97,7 @@ export class YGOGameActions {
 
         this.cardSelection.startMultipleSelection({
             zones,
+            selectionType: "card",
             onSelectionCompleted: (cardZones: CardZone[]) => {
 
                 const materials = cardZones.map(cardZone => {
@@ -108,6 +112,7 @@ export class YGOGameActions {
 
                 this.cardSelection.startSelection({
                     zones: zonesToSummon,
+                    selectionType: "zone",
                     onSelectionCompleted: (cardZone: any) => {
 
                         ygo.exec(new YGOCommands.LinkSummonCommand({
@@ -135,6 +140,7 @@ export class YGOGameActions {
 
         this.cardSelection.startMultipleSelection({
             zones,
+            selectionType: "card",
             onSelectionCompleted: (cardZones: CardZone[]) => {
 
                 const materials = cardZones.map(cardZone => {
@@ -149,6 +155,7 @@ export class YGOGameActions {
 
                 this.cardSelection.startSelection({
                     zones: zonesToSummon,
+                    selectionType: "zone",
                     onSelectionCompleted: (cardZone: any) => {
 
                         ygo.exec(new YGOCommands.XYZSummonCommand({
@@ -179,6 +186,7 @@ export class YGOGameActions {
 
         this.cardSelection.startMultipleSelection({
             zones,
+            selectionType: "card",
             onSelectionCompleted: (cardZones: CardZone[]) => {
 
                 const materials = cardZones.map(cardZone => {
@@ -193,6 +201,7 @@ export class YGOGameActions {
 
                 this.cardSelection.startSelection({
                     zones: zonesToSummon,
+                    selectionType: "zone",
                     onSelectionCompleted: (cardZone: any) => {
 
                         ygo.exec(new YGOCommands.SynchroSummonCommand({
@@ -240,6 +249,7 @@ export class YGOGameActions {
 
                     this.cardSelection.startSelection({
                         zones: zonesToSummon,
+                        selectionType: "zone",
                         onSelectionCompleted: (cardZone: any) => {
 
                             ygo.exec(new YGOCommands.FusionSummonCommand({
@@ -270,6 +280,7 @@ export class YGOGameActions {
 
             this.cardSelection.startSelection({
                 zones,
+                selectionType: "zone",
                 onSelectionCompleted: (cardZone: any) => {
                     ygo.exec(new YGOCommands.SetCardCommand({
                         player,
@@ -303,6 +314,7 @@ export class YGOGameActions {
 
             this.cardSelection.startSelection({
                 zones,
+                selectionType: "zone",
                 onSelectionCompleted: (cardZone: any) => {
                     ygo.exec(new YGOCommands.ActivateCardCommand({
                         player,
@@ -360,6 +372,7 @@ export class YGOGameActions {
 
         this.cardSelection.startSelection({
             zones,
+            selectionType: "zone",
             onSelectionCompleted: (cardZone: any) => {
                 ygo.exec(new YGOCommands.ToSTCommand({
                     player,
@@ -397,6 +410,7 @@ export class YGOGameActions {
 
         this.cardSelection.startSelection({
             zones: xyzZones,
+            selectionType: "zone",
             onSelectionCompleted: (cardZone: any) => {
                 ygo.exec(new YGOCommands.XYZAttachMaterialCommand({
                     player,
@@ -451,6 +465,7 @@ export class YGOGameActions {
 
         this.cardSelection.startSelection({
             zones,
+            selectionType: "zone",
             onSelectionCompleted: (cardZone: any) => {
                 ygo.exec(new YGOCommands.MoveCardCommand({
                     player,
