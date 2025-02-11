@@ -7,7 +7,7 @@ import { CardMenu } from "../components/CardMenu";
 
 export function CardHandMenu({ duel, card, index }: { duel: YGODuel, card: Card, index: number, clearAction: () => void }) {
     const menuRef = useRef<HTMLDivElement>(null);
-    const originZone: FieldZone = `H-${index + 1}`;
+    const originZone: FieldZone = YGOGameUtils.createZone("H", card.owner, index + 1);
 
     const normalSummon = useCallback(() => {
         duel.gameActions.normalSummon({ card, originZone });
@@ -71,11 +71,17 @@ export function CardHandMenu({ duel, card, index }: { duel: YGODuel, card: Card,
 
     useLayoutEffect(() => {
         const container = menuRef.current!;
-        const cardFromHand = duel.fields[0].hand.getCardFromReference(card)!;
+        const cardFromHand = duel.fields[card.owner].hand.getCardFromReference(card)!;
         const size = container.getBoundingClientRect();
-        const { x, y, width } = getTransformFromCamera(duel, cardFromHand.gameObject);
+        console.log(size);
+        const { x, y, width, height } = getTransformFromCamera(duel, cardFromHand.gameObject);
+        console.log(width, height);
         //container.style.width = (width * 1.5) + "px";
-        container.style.top = (y - size.height) + "px";
+        if (card.owner === 0) {
+            container.style.top = (y - size.height) + "px";
+        } else {
+            container.style.top = (y + height) + "px";
+        }
         container.style.left = x + (width / 2) - (size.width / 2) + "px";
     }, [card]);
 

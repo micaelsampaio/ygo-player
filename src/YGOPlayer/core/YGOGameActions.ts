@@ -28,7 +28,7 @@ export class YGOGameActions {
 
         const ygo = this.duel.ygo;
         const player = this.duel.getActivePlayer();
-        const zones = getCardZones(this.duel, [player], ["M"]);
+        const zones = getCardZones(this.duel, [card.owner], ["M"]);
 
         this.cardSelection.startSelection({
             zones,
@@ -49,7 +49,7 @@ export class YGOGameActions {
 
         const ygo = this.duel.ygo;
         const player = this.duel.getActivePlayer();
-        const zones = getCardZones(this.duel, [player], ["M"]);
+        const zones = getCardZones(this.duel, [card.owner], ["M"]);
 
         this.cardSelection.startSelection({
             zones,
@@ -70,7 +70,7 @@ export class YGOGameActions {
 
         const ygo = this.duel.ygo;
         const player = this.duel.getActivePlayer();
-        const zones = getCardZones(this.duel, [player], ["M"]);
+        const zones = getCardZones(this.duel, [card.owner], ["M"]);
 
         this.cardSelection.startSelection({
             zones,
@@ -92,8 +92,8 @@ export class YGOGameActions {
         this.clearAction();
         const ygo = this.duel.ygo;
         const player = this.duel.getActivePlayer();
-        const cardIndex = this.duel.ygo.state.fields[player].extraDeck.findIndex((c) => c === card);
-        const zones = getMonstersZones(this.duel, [player]).filter(zone => YGOGameUtils.isFaceUp(zone.getCardReference()!));
+        const cardIndex = this.duel.ygo.state.fields[card.owner].extraDeck.findIndex((c) => c === card);
+        const zones = getMonstersZones(this.duel, [card.owner]).filter(zone => YGOGameUtils.isFaceUp(zone.getCardReference()!));
 
         this.cardSelection.startMultipleSelection({
             zones,
@@ -135,8 +135,8 @@ export class YGOGameActions {
         this.clearAction();
         const ygo = this.duel.ygo;
         const player = this.duel.getActivePlayer();
-        const cardIndex = this.duel.ygo.state.fields[player].extraDeck.findIndex((c) => c === card);
-        const zones = getMonstersZones(this.duel, [player]).filter(zone => YGOGameUtils.isFaceUp(zone.getCardReference()!));
+        const cardIndex = this.duel.ygo.state.fields[card.owner].extraDeck.findIndex((c) => c === card);
+        const zones = getMonstersZones(this.duel, [card.owner]).filter(zone => YGOGameUtils.isFaceUp(zone.getCardReference()!));
 
         this.cardSelection.startMultipleSelection({
             zones,
@@ -150,7 +150,7 @@ export class YGOGameActions {
                     }
                 });
 
-                const zonesToSummon = getCardZones(this.duel, [player], ["M", "EMZ"]);
+                const zonesToSummon = getCardZones(this.duel, [card.owner], ["M", "EMZ"]);
                 cardZones.forEach(z => zonesToSummon.push(z));
 
                 this.cardSelection.startSelection({
@@ -181,8 +181,8 @@ export class YGOGameActions {
 
         const ygo = this.duel.ygo;
         const player = this.duel.getActivePlayer();
-        const cardIndex = this.duel.ygo.state.fields[player].extraDeck.findIndex((c) => c === card);
-        const zones = getMonstersZones(this.duel, [player]);
+        const cardIndex = this.duel.ygo.state.fields[card.owner].extraDeck.findIndex((c) => c === card);
+        const zones = getMonstersZones(this.duel, [card.owner]);
 
         this.cardSelection.startMultipleSelection({
             zones,
@@ -196,7 +196,7 @@ export class YGOGameActions {
                     }
                 });
 
-                const zonesToSummon = getCardZones(this.duel, [player], ["M", "EMZ"]);
+                const zonesToSummon = getCardZones(this.duel, [card.owner], ["M", "EMZ"]);
                 cardZones.forEach(z => zonesToSummon.push(z));
 
                 this.cardSelection.startSelection({
@@ -231,13 +231,13 @@ export class YGOGameActions {
 
                     this.duel.events.publish("close-ui-menu", { type: "select-card-menu" });
 
-                    const cardIndex = this.duel.ygo.state.fields[player].extraDeck.findIndex((c) => c === card);
+                    const cardIndex = this.duel.ygo.state.fields[card.owner].extraDeck.findIndex((c) => c === card);
 
                     const materials = cards.map(cardData => {
                         return { id: cardData.card.id, zone: cardData.zone };
                     })
 
-                    const zonesToSummon = getCardZones(this.duel, [player], ["M", "EMZ"]);
+                    const zonesToSummon = getCardZones(this.duel, [card.owner], ["M", "EMZ"]);
 
                     materials.forEach(material => {
                         const zoneData = YGOGameUtils.getZoneData(material.zone);
@@ -276,7 +276,7 @@ export class YGOGameActions {
         const player = this.duel.getActivePlayer();
 
         if (selectZone) {
-            const zones = getCardZones(this.duel, [player], ["S"]);
+            const zones = getCardZones(this.duel, [card.owner], ["S"]);
 
             this.cardSelection.startSelection({
                 zones,
@@ -310,7 +310,7 @@ export class YGOGameActions {
 
 
         if (selectZone) {
-            const zones = getCardZones(this.duel, [player], ["S"]);
+            const zones = getCardZones(this.duel, [card.owner], ["S"]);
 
             this.cardSelection.startSelection({
                 zones,
@@ -368,7 +368,7 @@ export class YGOGameActions {
 
         const ygo = this.duel.ygo;
         const player = this.duel.getActivePlayer();
-        const zones = getCardZones(this.duel, [player], ["S"]);
+        const zones = getCardZones(this.duel, [card.owner], ["S"]);
 
         this.cardSelection.startSelection({
             zones,
@@ -389,7 +389,7 @@ export class YGOGameActions {
 
         const ygo = this.duel.ygo;
         const player = this.duel.getActivePlayer();
-        const cardZone = this.duel.fields[player].fieldZone;
+        const cardZone = this.duel.fields[card.owner].fieldZone;
 
         ygo.exec(new YGOCommands.FieldSpellCommand({
             player,
@@ -404,7 +404,7 @@ export class YGOGameActions {
         this.clearAction();
         const ygo = this.duel.ygo;
         const player = this.duel.getActivePlayer();
-        const xyzZones = getXyzMonstersZones(this.duel, [player]);
+        const xyzZones = getXyzMonstersZones(this.duel, [card.owner]);
 
         if (xyzZones.length === 0) return;
 
@@ -461,7 +461,7 @@ export class YGOGameActions {
 
         const ygo = this.duel.ygo;
         const player = this.duel.getActivePlayer();
-        const zones = getCardZones(this.duel, [player], ["M", "S"]).filter(c => c.zone !== originZone);
+        const zones = getCardZones(this.duel, [0, 1], ["M", "S"]).filter(c => c.zone !== originZone);
 
         this.cardSelection.startSelection({
             zones,

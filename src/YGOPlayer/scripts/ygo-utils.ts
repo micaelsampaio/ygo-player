@@ -71,14 +71,6 @@ export function createFields({ duel, fieldModel }: CreateFieldDto) {
             field.extraMonsterZone.push(extraMonsterZone);
         }
 
-        // if (player === 0) {
-        //     for (let i = 0; i < 5; ++i) {
-        //         const card = new GameCardHand({ duel });
-        //         card.gameObject.position.set(-4 + i * 2.2, 6, 6);
-        //         card.gameObject.rotation.set(YGOMath.degToRad(270), 0, 0);
-        //     }
-        // }
-
         if (player === 0) {
             const mainDeckPosition = zones["D"].position.clone();
             field.mainDeck = new Deck({ duel, player, zone: "D", position: mainDeckPosition });

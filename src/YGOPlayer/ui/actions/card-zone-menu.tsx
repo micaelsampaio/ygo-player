@@ -76,7 +76,7 @@ export function CardZoneMenu({ duel, card, zone, gameCard, clearAction, mouseEve
         const container = menuRef.current!;
         const size = container.getBoundingClientRect();
         const { x, y, width, height } = getTransformFromCamera(duel, gameCard.gameObject);
-        container.style.top = (y - size.height) + "px";
+        container.style.top = Math.max(0, (y - size.height)) + "px";
         container.style.left = (x - (size.width / 2) + (width / 2)) + "px";
     }, [card]);
 

@@ -70,7 +70,7 @@ export class GameHand extends YGOEntity {
         const screenHeight = document.querySelector("canvas")!.height;
         console.log("HEIGHT", screenHeight)
         const heightInWorldUnits = 0.1 * screenHeight * ((camera as any).fov * Math.PI / 180) / Math.tan((camera as any).fov * Math.PI / 180 / 2);
-            
+
 
         for (let i = 0; i < totalCards; ++i) {
             // Calculate xOffset for each card
@@ -82,7 +82,11 @@ export class GameHand extends YGOEntity {
 
             handCard.position = handCard.gameObject.position.clone();
 
-            handCard.gameObject.rotation.set(0, 0, 0);
+            if (handCard.card.owner === 0) {
+                handCard.gameObject.rotation.set(0, 0, 0);
+            } else {
+                handCard.gameObject.rotation.set(0, 0, THREE.MathUtils.degToRad(180))
+            }
 
             handCard.gameObject.visible = true;
         }

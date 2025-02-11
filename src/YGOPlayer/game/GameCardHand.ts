@@ -69,7 +69,7 @@ export class GameCardHand extends YGOEntity implements YGOUiElement {
     onMouseEnter?(event: MouseEvent): void {
         if (!this.isUiElementHover) return;
         this.gameObject.position.copy(this.position);
-        this.gameObject.position.y += 0.3;
+        this.gameObject.position.y += this.card.owner === 0 ? 0.3 : -0.3;
     }
 
     onMouseLeave?(event: MouseEvent): void {
@@ -112,7 +112,7 @@ export class GameCardHand extends YGOEntity implements YGOUiElement {
         if (status) {
             this.isActive = status;
             this.gameObject.position.copy(this.position)
-            this.gameObject.position.y += 0.3;
+            this.gameObject.position.y += this.card.owner === 0 ? 0.3 : -0.3;
         } else {
             this.isActive = status;
             this.gameObject.position.copy(this.position);
