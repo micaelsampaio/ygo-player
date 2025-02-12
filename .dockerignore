@@ -1,0 +1,23 @@
+# Ignore local environment files
+.env
+.DS_Store
+
+# Ignore logs and temporary files
+npm-debug.log*
+*.log
+*.tmp
+
+# Ignore Git-related files
+.git
+.gitignore
+
+# Ignore editor and system files
+.vscode
+.idea
+*.swp
+
+node_modules
+
+__tests__/package-lock.json
+
+__tests__/node_modules
