@@ -107,7 +107,7 @@ export class YGOGameActions {
                     }
                 });
 
-                const zonesToSummon = getCardZones(this.duel, [0], ["M", "EMZ"]);
+                const zonesToSummon = getCardZones(this.duel, [card.owner], ["M", "EMZ"]);
                 cardZones.forEach(z => zonesToSummon.push(z));
 
                 this.cardSelection.startSelection({

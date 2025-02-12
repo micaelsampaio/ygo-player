@@ -71,7 +71,7 @@ export class ExtraDeck extends YGOEntity implements YGOUiElement {
     }
 
     onMouseClick(event: MouseEvent): void {
-        this.duel.events.publish("toggle-ui-menu", { group: "game-overlay", type: "extra-deck" })
+        this.duel.events.publish("toggle-ui-menu", { group: "game-overlay", type: "extra-deck", data: { player: this.player, extraDeck: this } })
     }
 
     onMouseEnter(): void {
