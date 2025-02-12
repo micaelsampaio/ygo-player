@@ -38,8 +38,8 @@ export class CardZone extends YGOEntity implements YGOUiElement {
 
         const geometry = new THREE.BoxGeometry(2.8, 2.8, 0.05);
 
-        this.normalMaterial = new THREE.MeshBasicMaterial({ color: zone.startsWith("M") ? 0x00ff00 : 0x0000ff });
-        this.hoverMaterial = new THREE.MeshBasicMaterial({ color: 0x00ffff });
+        this.normalMaterial = new THREE.MeshBasicMaterial({ color: zone.startsWith("M") ? 0x00ff00 : 0x0000ff, transparent: true, opacity: 0 });
+        this.hoverMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.3 });
 
         const cube = new THREE.Mesh(geometry, this.normalMaterial);
         cube.position.copy(this.position);
@@ -149,7 +149,7 @@ export class CardZone extends YGOEntity implements YGOUiElement {
 
         if (!card) return;
 
-        const rotation = getCardRotation(this.getCardReference()!, this.zone);
+        const rotation = getCardRotation(this.duel, this.getCardReference()!, this.zone);
         this.card.gameObject.position.copy(this.position);
         this.card.gameObject.rotation.copy(rotation);
 

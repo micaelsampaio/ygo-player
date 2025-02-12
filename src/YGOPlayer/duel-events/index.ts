@@ -30,6 +30,7 @@ const events: any = {
     [YGODuelEvents.LogType.ToBottomDeck]: MoveCardEventHandler,
     [YGODuelEvents.LogType.ToExtraDeck]: MoveCardEventHandler,
     [YGODuelEvents.LogType.DrawCardFromDeck]: MoveCardEventHandler,
+    [YGODuelEvents.LogType.MillCardFromDeck]: MoveCardEventHandler,
     [YGODuelEvents.LogType.MoveCard]: MoveCardEventHandler,
     /// Change Card Position
     [YGODuelEvents.LogType.SetST]: ChangeCardPositionHandler,

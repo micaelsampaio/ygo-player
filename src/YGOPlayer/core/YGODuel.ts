@@ -76,8 +76,9 @@ export class YGODuel {
 
     async load() {
         try {
-            const [fieldModel] = await Promise.all([
+            const [fieldModel, gameFieldScene] = await Promise.all([
                 this.core.loadGLTFAsync(`http://127.0.0.1:8080/models/field.glb`),
+                this.core.loadGLTFAsync(`http://127.0.0.1:8080/models/game_field.glb`),
                 this.core.loadFontAsync("GameFont", "https://threejs.org/examples/fonts/helvetiker_regular.typeface.json"),
                 // this.assets.loadTextures(Array.from(cards.values()).map(id => `http://127.0.0.1:8080/images/cards_small/${id}.jpg`)),
             ]);
@@ -94,6 +95,42 @@ export class YGODuel {
             const material = new THREE.MeshBasicMaterial({ color: 0xff0000, wireframe: true });
             const map = new THREE.Mesh(geometry, material);
             this.core.scene.add(map);
+
+            const gameField = gameFieldScene.scene as THREE.Scene;
+
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 1); // white light with intensity 1
+            directionalLight.position.set(10, 10, 10); // You can adjust these values
+            directionalLight.target.position.set(0, 0, 0); // points to the center of the scene
+            directionalLight.castShadow = true;
+            directionalLight.shadow.mapSize.width = 1024;  // Higher value for better quality shadows
+            directionalLight.shadow.mapSize.height = 1024;
+            directionalLight.shadow.camera.near = 0.5;
+            directionalLight.shadow.camera.far = 50;
+
+            this.core.scene.add(directionalLight);
+
+            gameField.position.set(0, 0, 0);
+
+            gameField.children.forEach((child: any) => {
+                if (child.isMesh) {
+                    const material = new THREE.MeshStandardMaterial({
+                        color: new THREE.Color(0xCCCCCC),
+                        shadowSide: THREE.FrontSide,
+                    });
+
+                    child.material = material;
+                    child.castShadow = true;
+                    child.receiveShadow = true;
+                }
+            });
+
+            gameField.rotateX(THREE.MathUtils.degToRad(90));
+
+            const clonedGameField = gameField.clone();
+            clonedGameField.rotateY(THREE.MathUtils.degToRad(180));
+
+            this.core.scene.add(gameField);
+            this.core.scene.add(clonedGameField);
 
             const box = new THREE.Box3().setFromObject(map);
             const center = box.getCenter(new THREE.Vector3());
@@ -294,6 +331,10 @@ export class YGODuel {
             gameField.fieldZone.updateCard();
 
             gameField.hand.render();
+
+            gameField.mainDeck.updateDeck();
+
+            gameField.extraDeck.updateExtraDeck();
         }
 
 

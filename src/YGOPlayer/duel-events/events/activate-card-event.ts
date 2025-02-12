@@ -104,7 +104,7 @@ export class ActivateCardHandler extends YGOCommandHandler {
         if (zoneData.zone === "GY" || zoneData.zone === "B") {
             const card = new GameCard({ duel, card: cardReference, stats: false });
             const startPosition: THREE.Vector3 = getZonePositionFromZoneData(duel, zoneData).clone();
-            const startRotation: THREE.Euler = getCardRotationFromFieldZoneData(cardReference, zoneData).clone();
+            const startRotation: THREE.Euler = getCardRotationFromFieldZoneData(duel, cardReference, zoneData).clone();
 
             card.gameObject.position.copy(startPosition);
             card.gameObject.rotation.copy(startRotation);

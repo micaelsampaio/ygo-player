@@ -21,7 +21,7 @@ export function createFields({ duel, fieldModel }: CreateFieldDto) {
     fieldModel.rotation.copy(YGOMath.degToRadEuler(90, 0, 0));
     fieldModel.position.set(0, 0, 0);
 
-    const zones: any = [];
+    const zones: { [key: string]: THREE.Mesh } = {};
     const offsetY = 0.1;
 
     fieldModel.children.forEach((child: any) => {
@@ -47,6 +47,13 @@ export function createFields({ duel, fieldModel }: CreateFieldDto) {
         }
     });
 
+    console.log("zones", zones);
+    const cube2 = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshBasicMaterial({ color: 0xffffff }));
+    cube2.position.copy(zones["M-1"].position);
+    cube2.rotation.copy(zones["M-1"].rotation);
+
+    duel.core.scene.add(cube2);
+
     const fields: PlayerField[] = [];
 
     for (let player = 0; player < 2; ++player) {
@@ -71,13 +78,19 @@ export function createFields({ duel, fieldModel }: CreateFieldDto) {
             field.extraMonsterZone.push(extraMonsterZone);
         }
 
-        if (player === 0) {
-            const mainDeckPosition = zones["D"].position.clone();
-            field.mainDeck = new Deck({ duel, player, zone: "D", position: mainDeckPosition });
-            field.banishedZone = new Banish({ duel, player, zone: "D", position: mainDeckPosition });
-            field.graveyard = new Graveyard({ duel, player, zone: "GY", position: mainDeckPosition });
-            field.extraDeck = new ExtraDeck({ duel, player, zone: "ED", position: mainDeckPosition });
-        }
+        const mainDeckZone = `D${player === 0 ? '' : '2'}`;
+        const extraDeckZone = `ED${player === 0 ? '' : '2'}`;
+        const gyZone = `GY${player === 0 ? '' : '2'}`;
+        const banishZone = `B${player === 0 ? '' : '2'}`;
+        const mainDeckPosition = zones[mainDeckZone].getWorldPosition(new THREE.Vector3());
+        const extraDeckPosition = zones[extraDeckZone].getWorldPosition(new THREE.Vector3());
+        const gyPosition = zones[gyZone].getWorldPosition(new THREE.Vector3());
+        const banishPosition = zones[banishZone].getWorldPosition(new THREE.Vector3());
+
+        field.mainDeck = new Deck({ duel, player, zone: mainDeckZone, position: mainDeckPosition });
+        field.extraDeck = new ExtraDeck({ duel, player, zone: extraDeckZone, position: extraDeckPosition });
+        field.graveyard = new Graveyard({ duel, player, zone: gyZone, position: gyPosition });
+        field.banishedZone = new Banish({ duel, player, zone: banishZone, position: banishPosition });
 
         const fieldZoneId: FieldZone = `F${playerSufix}`;
         field.fieldZone = createCardZone(duel, player, fieldZoneId, zones[fieldZoneId]);
@@ -177,20 +190,21 @@ export function cancelMouseEventsCallback(e: React.MouseEvent) {
     e.stopPropagation();
 }
 
-export function getCardRotation(card: Card, zone: FieldZone) {
+export function getCardRotation(duel: YGODuel, card: Card, zone: FieldZone) {
     const zoneData = YGOGameUtils.getZoneData(zone);
-    return getCardRotationFromFieldZoneData(card, zoneData);
+    return getCardRotationFromFieldZoneData(duel, card, zoneData);
 }
 
-export function getCardRotationFromFieldZoneData(card: Card, zoneData: FieldZoneData) {
+export function getCardRotationFromFieldZoneData(duel: YGODuel, card: Card, zoneData: FieldZoneData) {
     let rotation: THREE.Euler = new THREE.Euler(0, 0, 0);
+    const field = duel.fields[zoneData.player];
 
     if (zoneData.zone === "GY" || zoneData.zone === "H") {
         // GY do nothig let go as default rotation
     } else if (zoneData.zone === "ED") {
-        rotation.y = THREE.MathUtils.degToRad(180);
+        rotation = field.extraDeck.getCardTransform().rotation;
     } else if (zoneData.zone === "D") {
-        rotation.y = THREE.MathUtils.degToRad(180);
+        rotation = field.mainDeck.getCardTransform().rotation;
     } else if (zoneData.zone === "B") {
         if (YGOGameUtils.isFaceDown(card)) {
             rotation.y = THREE.MathUtils.degToRad(180);
@@ -249,9 +263,9 @@ export function getZonePositionFromZoneData(duel: YGODuel, zoneData: FieldZoneDa
     } else if (zoneData.zone === "B") {
         position = field.banishedZone.position;
     } else if (zoneData.zone === "D") {
-        position = field.mainDeck.gameObject.position;
+        position = field.mainDeck.getCardTransform().position;
     } else if (zoneData.zone === "ED") {
-        position = field.extraDeck.position;
+        position = field.extraDeck.getCardTransform().position;
     } else if (zoneData.zone === "F") {
         position = field.fieldZone.gameObject.position;
     } else {

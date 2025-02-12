@@ -8,6 +8,7 @@ export class Banish extends YGOEntity implements YGOUiElement {
 
     public isUiElement: boolean = true;
     private duel: YGODuel;
+    public player: number;
     private normalMaterial: THREE.MeshBasicMaterial;
     private hoverMaterial: THREE.MeshBasicMaterial;
     private mesh: THREE.Mesh;
@@ -18,14 +19,14 @@ export class Banish extends YGOEntity implements YGOUiElement {
     constructor({ duel, player, position }: { duel: YGODuel, player: number, zone: string, position: THREE.Vector3 }) {
         super();
         this.duel = duel;
-        //this.action = new ActionUiMenu(duel, { eventType: "graveyard-menu" });
+        this.player = player;
 
         this.normalMaterial = new THREE.MeshBasicMaterial({ color: 0x00555 });
         this.hoverMaterial = new THREE.MeshBasicMaterial({ color: 0x00ffff });
 
         const geometry = new THREE.BoxGeometry(2, 2, 0.1);
         const cube = new THREE.Mesh(geometry, this.normalMaterial);
-        cube.position.set(11.5, -3, 0);
+        cube.position.copy(position)
 
         this.duel.core.scene.add(cube);
         this.gameObject = cube;
@@ -39,7 +40,7 @@ export class Banish extends YGOEntity implements YGOUiElement {
     }
 
     onMouseClick(event: MouseEvent): void {
-        this.duel.events.publish("toggle-ui-menu", { group: "game-overlay", type: "banish" })
+        this.duel.events.publish("toggle-ui-menu", { group: "game-overlay", type: "banish", data: { banish: this } })
     }
 
     onMouseEnter(): void {

@@ -1,8 +1,9 @@
 import { useMemo } from "react";
 import { YGODuel } from "../../core/YGODuel";
 import { ActionUiMenu } from "../../actions/ActionUiMenu";
+import { Banish as GameBanish } from "../../../YGOPlayer/game/Banish";
 
-export function Banish({ duel, visible = true }: { duel: YGODuel, visible: boolean }) {
+export function Banish({ duel, visible = true }: { duel: YGODuel, banish: GameBanish, visible: boolean }) {
 
     const action = useMemo(() => {
         const action = new ActionUiMenu(duel, { eventType: "card-banish-menu" });

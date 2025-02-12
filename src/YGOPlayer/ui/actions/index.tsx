@@ -1,3 +1,4 @@
+import { CardBanishMenu } from "./card-banish-menu";
 import { CardDeckMenu } from "./card-deck-menu";
 import { CardExtraDeckMenu } from "./card-ed-menu";
 import { CardGraveyardMenu } from "./card-gy-menu";
@@ -11,7 +12,7 @@ export const ACTIONS = {
     "deck-menu": DeckMenu,
     "card-zone-menu": CardZoneMenu,
     "card-gy-menu": CardGraveyardMenu,
-    "card-banish-menu": CardGraveyardMenu,
+    "card-banish-menu": CardBanishMenu,
     "card-extra-deck-menu": CardExtraDeckMenu,
     "card-multiple-selection-menu": CardMultipleSelectionMenu,
     "card-deck-menu": CardDeckMenu,

@@ -63,6 +63,10 @@ export class GameCardStats {
             localPosition.x -= 1.5;
             this.gameGroup.position.copy(localPosition);
         }
+
+        if (this.card.owner === 1) {
+            this.gameGroup.rotateZ(YGOMath.degToRad(180));
+        }
     }
 
     private destroyAtkDef() {
@@ -157,7 +161,11 @@ export class GameCardStats {
         const textMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
         const textMesh = new THREE.Mesh(textGeometry, textMaterial);
 
-        textMesh.position.set(0.5, 1.5, 0);
+        if (this.card.owner === 0) {
+            textMesh.position.set(0.5, 0.5, 0);
+        } else {
+            textMesh.position.set(-0.8, -0.8, 0);
+        }
 
         this.levelTextGeometry = textGeometry;
         this.levelTextMesh = textMesh;

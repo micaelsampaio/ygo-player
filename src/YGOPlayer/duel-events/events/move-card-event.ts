@@ -42,6 +42,13 @@ export class MoveCardEventHandler extends YGOCommandHandler {
             card: this.cardReference
         });
 
+        if (originZoneData.zone === "D") {
+            duel.fields[originZoneData.player].mainDeck.updateDeck();
+        }
+        if (originZoneData.zone === "ED") {
+            duel.fields[originZoneData.player].extraDeck.updateExtraDeck();
+        }
+
         if (zoneData.zone === "H") { // if card goes to hand
             duel.updateHand(event.player);
             duel.renderHand(event.player);
@@ -49,10 +56,10 @@ export class MoveCardEventHandler extends YGOCommandHandler {
         }
 
         let startPosition = getZonePositionFromZoneData(duel, originZoneData);
-        let startRotation = getCardRotationFromFieldZoneData(this.cardReference, originZoneData);
+        let startRotation = getCardRotationFromFieldZoneData(duel, this.cardReference, originZoneData);
 
         let endPosition = getZonePositionFromZoneData(duel, zoneData);
-        let endRotation = getCardRotationFromFieldZoneData(this.cardReference, zoneData);
+        let endRotation = getCardRotationFromFieldZoneData(duel, this.cardReference, zoneData);
 
         let card: GameCard | undefined = undefined;
 

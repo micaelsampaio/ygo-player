@@ -70,7 +70,7 @@ export class ChangeCardPositionHandler extends YGOCommandHandler {
         if (cardZone) {
             const card = getGameZone(duel, zoneData)!.getGameCard();
             const startPosition: THREE.Vector3 = card.gameObject.position.clone();
-            const targetRotation = getCardRotationFromFieldZoneData(cardReference, zoneData);
+            const targetRotation = getCardRotationFromFieldZoneData(duel, cardReference, zoneData);
             const abovePosition = startPosition.clone();
             abovePosition.z += 1;
 

@@ -8,6 +8,7 @@ export class Graveyard extends YGOEntity implements YGOUiElement {
 
     public isUiElement: boolean = true;
     private duel: YGODuel;
+    public player: number;
     private normalMaterial: THREE.MeshBasicMaterial;
     private hoverMaterial: THREE.MeshBasicMaterial;
     private mesh: THREE.Mesh;
@@ -17,13 +18,14 @@ export class Graveyard extends YGOEntity implements YGOUiElement {
     constructor({ duel, player, position }: { duel: YGODuel, player: number, zone: string, position: THREE.Vector3 }) {
         super();
         this.duel = duel;
+        this.player = player;
 
         this.normalMaterial = new THREE.MeshBasicMaterial({ color: 0x00555 });
         this.hoverMaterial = new THREE.MeshBasicMaterial({ color: 0x00ffff });
 
         const geometry = new THREE.BoxGeometry(2, 2, 0.1);
         const cube = new THREE.Mesh(geometry, this.normalMaterial);
-        cube.position.set(9, -3, 0);
+        cube.position.copy(position)
 
         this.duel.core.scene.add(cube);
         this.gameObject = cube;
@@ -37,7 +39,7 @@ export class Graveyard extends YGOEntity implements YGOUiElement {
     }
 
     onMouseClick(event: MouseEvent): void {
-        this.duel.events.publish("toggle-ui-menu", { group: "game-overlay", type: "gy" })
+        this.duel.events.publish("toggle-ui-menu", { group: "game-overlay", type: "gy", data: { graveyard: this } })
     }
 
     onMouseEnter(): void {

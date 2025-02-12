@@ -16,7 +16,6 @@ interface LinkSummonEventHandlerProps extends DuelEventHandlerProps {
     event: YGODuelEvents.LinkSummon
 }
 
-
 export class LinkSummonEventHandler extends YGOCommandHandler {
     private props: LinkSummonEventHandlerProps
     private cardReference: Card;
@@ -54,10 +53,10 @@ export class LinkSummonEventHandler extends YGOCommandHandler {
                 originCardZone.removeCard();
 
                 const startPosition = getZonePositionFromZoneData(duel, originZoneData);
-                const startRotation = getCardRotationFromFieldZoneData(material, originZoneData);
+                const startRotation = getCardRotationFromFieldZoneData(duel, material, originZoneData);
 
                 const endPosition = getZonePositionFromZoneData(duel, gyZoneData);
-                const endRotation = getCardRotationFromFieldZoneData(material, gyZoneData);
+                const endRotation = getCardRotationFromFieldZoneData(duel, material, gyZoneData);
 
                 card.gameObject.position.copy(startPosition);
                 card.gameObject.rotation.copy(startRotation);
@@ -89,10 +88,8 @@ export class LinkSummonEventHandler extends YGOCommandHandler {
         }
 
         const cardZone = getGameZone(duel, zoneData);
-
-
         const endPosition = getZonePositionFromZoneData(duel, zoneData);
-        const endRotation = getCardRotationFromFieldZoneData(this.cardReference, zoneData);
+        const endRotation = getCardRotationFromFieldZoneData(duel, this.cardReference, zoneData);
 
         const direction = new THREE.Vector3();
         camera.getWorldDirection(direction);
@@ -107,6 +104,7 @@ export class LinkSummonEventHandler extends YGOCommandHandler {
 
         sequence.add(new CallbackTransition(() => {
             card.gameObject.visible = true;
+            duel.fields[originZoneData.player].extraDeck.updateExtraDeck();
         }))
             .add(new WaitForSeconds(1))
             .add(

@@ -4,9 +4,9 @@ import { Card, FieldZone } from "../../../YGOCore/types/types";
 import { YGODuel } from "../../core/YGODuel";
 import { CardMenu } from "../components/CardMenu";
 
-export function CardGraveyardMenu({ duel, card, htmlCardElement, clearAction, mouseEvent }: { duel: YGODuel, zone: FieldZone, card: Card, htmlCardElement: HTMLDivElement, clearAction: Function, mouseEvent: React.MouseEvent }) {
+export function CardBanishMenu({ duel, card, htmlCardElement, clearAction, mouseEvent }: { duel: YGODuel, zone: FieldZone, card: Card, htmlCardElement: HTMLDivElement, clearAction: Function, mouseEvent: React.MouseEvent }) {
     const menuRef = useRef<HTMLDivElement>(null);
-    const player = duel.getActivePlayer();
+    const player = card.owner;
     const field = duel.ygo.state.fields[player];
     const cardIndex = duel.ygo.state.fields[player].graveyard.findIndex((c) => c === card);
     const originZone: FieldZone = YGOGameUtils.createZone("B", player, cardIndex + 1);

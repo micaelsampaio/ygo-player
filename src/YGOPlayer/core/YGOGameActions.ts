@@ -517,4 +517,11 @@ export class YGOGameActions {
         }));
     }
 
+    public drawFromDeck({ player }: { player: number }) {
+        this.duel.ygo.exec(new YGOCommands.DrawFromDeckCommand({ player }));
+    }
+
+    public milFromDeck({ player, numberOfCards = 1 }: { player: number, numberOfCards?: number }) {
+        this.duel.ygo.exec(new YGOCommands.MillFromDeckCommand({ player, numberOfCards }));
+    }
 }
