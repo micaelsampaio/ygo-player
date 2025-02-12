@@ -51,7 +51,7 @@ export function CardDeckMenu({ duel, card, mouseEvent }: { duel: YGODuel, zone: 
 
     const banishFD = useCallback(() => {
         closeViewDeckMenu();
-        duel.gameActions.banish({ card, originZone, position: "faceup" });
+        duel.gameActions.banish({ card, originZone, position: "facedown" });
     }, [card, originZone]);
 
     const reveal = useCallback(() => {

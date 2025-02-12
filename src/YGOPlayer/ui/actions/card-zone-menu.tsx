@@ -21,7 +21,7 @@ export function CardZoneMenu({ duel, card, zone, gameCard, clearAction, mouseEve
     }, [card, zone]);
 
     const banishFD = useCallback(() => {
-        duel.gameActions.banish({ card, originZone: zone, position: "faceup" });
+        duel.gameActions.banish({ card, originZone: zone, position: "facedown" });
     }, [card, zone]);
 
     const toHand = useCallback(() => {

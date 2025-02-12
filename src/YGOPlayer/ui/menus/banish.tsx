@@ -5,7 +5,7 @@ import { ActionUiMenu } from "../../actions/ActionUiMenu";
 export function Banish({ duel, visible = true }: { duel: YGODuel, visible: boolean }) {
 
     const action = useMemo(() => {
-        const action = new ActionUiMenu(duel, { eventType: "card-b-menu" });
+        const action = new ActionUiMenu(duel, { eventType: "card-banish-menu" });
         return action;
     }, [duel])
 
@@ -24,11 +24,12 @@ export function Banish({ duel, visible = true }: { duel: YGODuel, visible: boole
         {cards.map(card => <div>
             <div style={{ position: "relative" }}>
                 <img onClick={(e) => {
-                    action.eventData = { duel, card, mouseEvent: e };
+                    action.eventData = { duel, card, mouseEvent: e, htmlCardElement: e.target };
                     duel.actionManager.setAction(action);
-                }} src={`http://127.0.0.1:8080/images/cards_small/${card.id}.jpg`} 
-                key={card.index}
-                className="ygo-card" />
+                    duel.events.publish("set-selected-card", { player: 0, card });
+                }} src={`http://127.0.0.1:8080/images/cards_small/${card.id}.jpg`}
+                    key={card.index}
+                    className="ygo-card" />
                 {card.position === "facedown" && <div style={{ position: "absolute", bottom: '5px', left: '0px', background: "red", color: "white", padding: "5px 10px" }}>FD</div>}
             </div>
         </div>)}

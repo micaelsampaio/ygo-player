@@ -17,7 +17,6 @@ export class Graveyard extends YGOEntity implements YGOUiElement {
     constructor({ duel, player, position }: { duel: YGODuel, player: number, zone: string, position: THREE.Vector3 }) {
         super();
         this.duel = duel;
-        //this.action = new ActionUiMenu(duel, { eventType: "graveyard-menu" });
 
         this.normalMaterial = new THREE.MeshBasicMaterial({ color: 0x00555 });
         this.hoverMaterial = new THREE.MeshBasicMaterial({ color: 0x00ffff });

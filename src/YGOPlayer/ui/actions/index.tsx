@@ -11,6 +11,7 @@ export const ACTIONS = {
     "deck-menu": DeckMenu,
     "card-zone-menu": CardZoneMenu,
     "card-gy-menu": CardGraveyardMenu,
+    "card-banish-menu": CardGraveyardMenu,
     "card-extra-deck-menu": CardExtraDeckMenu,
     "card-multiple-selection-menu": CardMultipleSelectionMenu,
     "card-deck-menu": CardDeckMenu,
