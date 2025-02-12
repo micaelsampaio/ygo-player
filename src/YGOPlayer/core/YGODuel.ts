@@ -32,7 +32,7 @@ export class YGODuel {
     public fields: PlayerField[];
     public ygo!: YGOCore;
     public fieldLocations!: Map<string, GameFieldLocation>;
-    public camera: THREE.Camera;
+    public camera: THREE.PerspectiveCamera;
     public entities: YGOEntity[];
     public events: EventBus<any>;
     public actionManager: ActionManager;
@@ -82,8 +82,8 @@ export class YGODuel {
                 // this.assets.loadTextures(Array.from(cards.values()).map(id => `http://127.0.0.1:8080/images/cards_small/${id}.jpg`)),
             ]);
             this.core.scene.add(fieldModel.scene);
-            this.core.camera.position.set(0, 0, 14);
-            //this.core.camera.rotation.x += THREE.MathUtils.degToRad(10);
+            // this.core.camera.position.set(0, 0, 14);
+            // this.core.camera.rotation.x += THREE.MathUtils.degToRad(10);
 
             this.fields = createFields({ duel: this, fieldModel: fieldModel.scene });
             this.entities.push(this.gameController);
@@ -95,12 +95,11 @@ export class YGODuel {
             const map = new THREE.Mesh(geometry, material);
             this.core.scene.add(map);
 
-            const box = new THREE.Box3().setFromObject(map); // Get the bounding box of the object
-            const center = box.getCenter(new THREE.Vector3()); // Get the center of the object
-            const size = box.getSize(new THREE.Vector3()); // Get the size of the object
+            const box = new THREE.Box3().setFromObject(map);
+            const center = box.getCenter(new THREE.Vector3());
+            const size = box.getSize(new THREE.Vector3());
 
-            // Adjust camera position based on the size of the object
-            const distance = Math.max(size.x, size.y) / (2 * Math.tan(Math.PI * (this.camera as any).fov / 360));
+            const distance = Math.max(size.x, size.y) / (2 * Math.tan(Math.PI * this.camera.fov / 360));
             this.camera.position.set(center.x, center.y, distance); // Place camera at a distance
             this.camera.lookAt(center);
             // TODO PUT GAME 3D again

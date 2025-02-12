@@ -54,14 +54,13 @@ export class GameCardStats {
         this.updateLevel();
         this.updateMaterials();
 
-        // TODO FIX THIS :) @RMS
-        if (this.parent.rotation.z !== 0) {
+        if (YGOGameUtils.isAttack(this.card)) {
+            this.gameGroup.position.set(0, -1.5, 0.2);
+        } else {
             this.gameGroup.rotation.set(0, 0, YGOMath.degToRad(-90));
             let localPosition = this.parent.worldToLocal(this.parent.position.clone());
             localPosition.x -= 1.5;
             this.gameGroup.position.copy(localPosition);
-        } else {
-            this.gameGroup.position.set(0, -1.5, 0.2);
         }
     }
 

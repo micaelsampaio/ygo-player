@@ -20,7 +20,7 @@ export class GameCard extends YGOEntity {
         this.hasStats = stats;
 
         const CARD_RATIO = 1.45;
-        const width = 1.8, height = width * CARD_RATIO, depth = 0.02;
+        const width = 1.9, height = width * CARD_RATIO, depth = 0.02;
         const geometry = new THREE.BoxGeometry(width, height, depth);
 
         const frontMaterial = new THREE.MeshBasicMaterial({ color: 0xff00ff }); // Depth
