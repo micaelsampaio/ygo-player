@@ -56,6 +56,7 @@ export class GameCardStats {
 
         if (YGOGameUtils.isAttack(this.card)) {
             this.gameGroup.position.set(0, -1.5, 0.2);
+            this.gameGroup.rotation.set(0, 0, 0);
         } else {
             this.gameGroup.rotation.set(0, 0, YGOMath.degToRad(-90));
             let localPosition = this.parent.worldToLocal(this.parent.position.clone());
