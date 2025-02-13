@@ -30,7 +30,7 @@
 # --- Stage 2: Serve with Nginx ---
     FROM nginx:alpine AS server
 
-    COPY --from=builder /app/__tests__/dist/ /var/www/html/
+    COPY --from=builder /app/__tests__/dist/ /usr/share/nginx/html/
     
     EXPOSE 80
     CMD ["nginx","-g","daemon off;"]
