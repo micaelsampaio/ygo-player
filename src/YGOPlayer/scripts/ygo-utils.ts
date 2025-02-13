@@ -47,13 +47,6 @@ export function createFields({ duel, fieldModel }: CreateFieldDto) {
         }
     });
 
-    console.log("zones", zones);
-    const cube2 = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshBasicMaterial({ color: 0xffffff }));
-    cube2.position.copy(zones["M-1"].position);
-    cube2.rotation.copy(zones["M-1"].rotation);
-
-    duel.core.scene.add(cube2);
-
     const fields: PlayerField[] = [];
 
     for (let player = 0; player < 2; ++player) {
