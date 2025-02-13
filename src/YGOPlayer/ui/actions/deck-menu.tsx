@@ -35,9 +35,9 @@ export function DeckMenu({ duel, deck }: { duel: YGODuel, deck: Deck, clearActio
     const mainDeckSize = duel.ygo.state.fields[0].mainDeck.length;
 
     return <CardMenu menuRef={menuRef}>
-        <button className="ygo-card-item" disabled={mainDeckSize === 0} type="button" onClick={drawFromDeck}>Draw</button>
         <button className="ygo-card-item" disabled={mainDeckSize === 0} type="button" onClick={milFromDeck}>Mil</button>
         <button className="ygo-card-item" type="button" onClick={viewDeck}>View Deck</button>
+        <button className="ygo-card-item" disabled={mainDeckSize === 0} type="button" onClick={drawFromDeck}>Draw</button>
     </CardMenu >
 
 }

@@ -64,13 +64,6 @@ export function createFields({ duel, fieldModel }: CreateFieldDto) {
             field.spellTrapZone.push(spellZone);
         }
 
-        for (let i = 0; i < 2; ++i) {
-            const extraMonsterZoneGlobalId: any = `EMZ-${i + 1}`;
-            const extraMonsterZoneId: any = `EMZ${playerSufix}-${i + 1}`;
-            const extraMonsterZone = createCardZone(duel, player, extraMonsterZoneId, zones[extraMonsterZoneGlobalId]);
-            field.extraMonsterZone.push(extraMonsterZone);
-        }
-
         const mainDeckZone = `D${player === 0 ? '' : '2'}`;
         const extraDeckZone = `ED${player === 0 ? '' : '2'}`;
         const gyZone = `GY${player === 0 ? '' : '2'}`;
@@ -90,6 +83,14 @@ export function createFields({ duel, fieldModel }: CreateFieldDto) {
         field.hand = new GameHand(duel, player);
 
         fields.push(field);
+    }
+
+    for (let i = 0; i < 2; ++i) {
+        const extraMonsterZoneGlobalId: any = `EMZ-${i + 1}`;
+        const extraMonsterZoneId: any = `EMZ-${i + 1}`;
+        const extraMonsterZone = createCardZone(duel, 0, extraMonsterZoneId, zones[extraMonsterZoneGlobalId]);
+        fields[0].extraMonsterZone.push(extraMonsterZone);
+        fields[1].extraMonsterZone.push(extraMonsterZone);
     }
 
     return fields;

@@ -119,7 +119,7 @@ export class YGOGameActions {
                             player,
                             id: card.id,
                             materials,
-                            originZone: `ED-${cardIndex + 1}`,
+                            originZone: YGOGameUtils.createZone("ED", card.owner, cardIndex),
                             zone: cardZone.zone,
                         }));
 
@@ -162,7 +162,7 @@ export class YGOGameActions {
                             player,
                             id: card.id,
                             materials,
-                            originZone: `ED-${cardIndex + 1}`,
+                            originZone: YGOGameUtils.createZone("ED", card.owner, cardIndex),
                             zone: cardZone.zone,
                             position
                         }));
@@ -208,7 +208,7 @@ export class YGOGameActions {
                             player,
                             id: card.id,
                             materials,
-                            originZone: `ED-${cardIndex + 1}`,
+                            originZone: YGOGameUtils.createZone("ED", card.owner, cardIndex),
                             zone: cardZone.zone,
                             position
                         }));
@@ -256,7 +256,7 @@ export class YGOGameActions {
                                 player,
                                 id: card.id,
                                 materials,
-                                originZone: `ED-${cardIndex + 1}`,
+                                originZone: YGOGameUtils.createZone("ED", card.owner, cardIndex),
                                 zone: cardZone.zone,
                                 position
                             }));

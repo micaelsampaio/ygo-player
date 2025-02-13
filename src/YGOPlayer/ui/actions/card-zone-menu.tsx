@@ -1,15 +1,13 @@
-import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
-import { YGOCommands, YGOGameUtils } from "../../../YGOCore";
+import { useCallback, useLayoutEffect, useRef } from "react";
+import { YGOGameUtils } from "../../../YGOCore";
 import { Card, FieldZone } from "../../../YGOCore/types/types";
-import { ActionCardSelection } from "../../actions/ActionSelectCard";
 import { YGODuel } from "../../core/YGODuel";
-import { getCardZones, getTransformFromCamera, getXyzMonstersZones } from "../../scripts/ygo-utils";
+import { getTransformFromCamera, getXyzMonstersZones } from "../../scripts/ygo-utils";
 import { CardMenu } from "../components/CardMenu";
 import { GameCard } from "../../game/GameCard";
 
 export function CardZoneMenu({ duel, card, zone, gameCard, clearAction, mouseEvent }: { duel: YGODuel, gameCard: GameCard, zone: FieldZone, card: Card, clearAction: Function, mouseEvent: React.MouseEvent }) {
     const menuRef = useRef<HTMLDivElement>()
-    const ygo = duel.ygo;
     const player = duel.getActivePlayer();
 
     const sendToGY = useCallback(() => {
