@@ -42,11 +42,13 @@ export interface YGOReplayDeckData {
 }
 
 export interface YGOPlayerStartEditorProps {
+    cdnUrl: string,
     players: YGOPlayerData[],
     options: YGOPropsOptions
 }
 
 export interface YGOPlayerStartReplayProps {
+    cdnUrl: string,
     decks: YGOReplayDeckData[],
     replay: YGOReplayData,
     options: YGOPropsOptions

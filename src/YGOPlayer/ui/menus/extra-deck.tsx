@@ -36,7 +36,7 @@ export function ExtraDeck({ duel, player, clearAction, visible = true }: { playe
                 duel.events.publish("set-selected-card", { player, card });
             }}
                 key={card.index}
-                src={`http://127.0.0.1:8080/images/cards_small/${card.id}.jpg`}
+                src={`${duel.config.cdnUrl}/images/cards_small/${card.id}.jpg`}
                 className="ygo-card" />
         </div>)}
     </div>

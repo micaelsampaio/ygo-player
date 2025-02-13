@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';  // Use the new 'react-dom/client' pack
 import { YgoDuelApp } from '../ui/YgoDuelApp';
 import { YGOPlayerStartEditorProps, YGOPlayerStartReplayProps } from '../types';
 import { CardData, YGOProps } from '../../YGOCore/types/types';
+import { YGOConfig } from '../core/YGOConfig';
 
 export class YGOPlayerComponent extends HTMLElement {
     private root: ReactDOM.Root | undefined;
@@ -32,6 +33,7 @@ export class YGOPlayerComponent extends HTMLElement {
 
     editor(props: YGOPlayerStartEditorProps) {
         const config = {
+            cdnUrl: props.cdnUrl,
             players: props.players,
             options: props.options
         }
@@ -62,16 +64,16 @@ export class YGOPlayerComponent extends HTMLElement {
         const config = {
             players,
             commands: props.replay.commands,
-            options: props.options || {}
+            options: props.options || {},
+            cdnUrl: props.cdnUrl,
         }
 
         config.options.shuffleDecks = false;
-
-        console.log("CONFIG >>", config);
+        
         this.start(config);
     }
 
-    private start(config: YGOProps) {
+    private start(config: YGOConfig) {
         if (!this.root) throw new Error("There is no root to render");
 
         const dispatch = () => {

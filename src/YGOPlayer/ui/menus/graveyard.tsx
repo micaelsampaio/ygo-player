@@ -29,7 +29,7 @@ export function Graveyard({ duel, graveyard, visible = true }: { duel: YGODuel, 
                 duel.events.publish("set-selected-card", { graveyard, player: graveyard.player, card });
             }}
                 key={card.index}
-                src={`http://127.0.0.1:8080/images/cards_small/${card.id}.jpg`}
+                src={`${duel.config.cdnUrl}/images/cards_small/${card.id}.jpg`}
                 className="ygo-card" />
         </div>)}
     </div>

@@ -48,7 +48,7 @@ export function ViewDeckPopup({ duel, visible = true }: { duel: YGODuel, visible
 
             <div className="menu-view-main-deck-cards">
                 {
-                    cardsToShow.map(card => <img key={card.index} onClick={(e) => onCardClick(e, card)} src={`http://127.0.0.1:8080/images/cards_small/${card.id}.jpg`} className="ygo-card" />)}
+                    cardsToShow.map(card => <img key={card.index} onClick={(e) => onCardClick(e, card)} src={`${duel.config.cdnUrl}/images/cards_small/${card.id}.jpg`} className="ygo-card" />)}
             </div>
 
         </div>

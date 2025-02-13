@@ -102,7 +102,7 @@ export function SelectCardPopup({ duel, visible = true, onSelectCards: onSelecte
                     <div>
                         {field.hand.map(card => {
                             if (!card) return null;
-                            return <img key={card.index} src={`http://127.0.0.1:8080/images/cards_small/${card.id}.jpg`} className={`ygo-card ${selectedCards.current.has(card) ? "selected" : ""}`} onClick={() => onSelectCard("H", card)} />
+                            return <img key={card.index} src={`${duel.config.cdnUrl}/images/cards_small/${card.id}.jpg`} className={`ygo-card ${selectedCards.current.has(card) ? "selected" : ""}`} onClick={() => onSelectCard("H", card)} />
                         })}
                     </div>
                 </div>}
@@ -114,7 +114,7 @@ export function SelectCardPopup({ duel, visible = true, onSelectCards: onSelecte
                     <div>
                         {field.monsterZone.map(card => {
                             if (!card) return null;
-                            return <img key={card.index} src={`http://127.0.0.1:8080/images/cards_small/${card.id}.jpg`} className={`ygo-card ${selectedCards.current.has(card) ? "selected" : ""}`} onClick={() => onSelectCard("M", card)} />
+                            return <img key={card.index} src={`${duel.config.cdnUrl}/images/cards_small/${card.id}.jpg`} className={`ygo-card ${selectedCards.current.has(card) ? "selected" : ""}`} onClick={() => onSelectCard("M", card)} />
                         })}
                     </div>
                 </div>}
@@ -141,7 +141,7 @@ export function SelectCardPopup({ duel, visible = true, onSelectCards: onSelecte
                         <div>
                             {field.mainDeck.map(card => {
                                 if (!card) return null;
-                                return <img key={card.index} src={`http://127.0.0.1:8080/images/cards_small/${card.id}.jpg`} className={`ygo-card ${selectedCards.current.has(card) ? "selected" : ""}`} onClick={() => onSelectCard("D", card)} />
+                                return <img key={card.index} src={`${duel.config.cdnUrl}/images/cards_small/${card.id}.jpg`} className={`ygo-card ${selectedCards.current.has(card) ? "selected" : ""}`} onClick={() => onSelectCard("D", card)} />
                             })}
                         </div>
                     </div>

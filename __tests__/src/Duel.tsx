@@ -16,14 +16,15 @@ export default function Duel() {
       const config: any = {
         decks: duelData.players,
         replay: duelData.replay,
+        cdnUrl: String(import.meta.env.VITE_YGO_CDN_URL)
       };
 
       ygo.replay(config);
     } else {
       const config: any = {
         players: duelData.players,
+        cdnUrl: String(import.meta.env.VITE_YGO_CDN_URL)
       };
-
       ygo.editor(config);
     }
 

@@ -25,6 +25,7 @@ import { YGOGameActions } from './YGOGameActions';
 import { YGOProps } from '../../YGOCore/types/types';
 import { createCardSelectionGeometry } from '../game/meshes/CardSelectionMesh';
 import { YGODuelScene } from './YGODuelScene';
+import { YGOConfig } from './YGOConfig';
 
 export class YGODuel {
     public state: YGODuelState;
@@ -44,10 +45,10 @@ export class YGODuel {
     public commands: YGOCommandsController;
     public deltaTime: number = 0;
     private currentPlayerIndex = 0;
-    private config: YGOProps;
+    public config: YGOConfig;
     public duelScene: YGODuelScene;
 
-    constructor({ canvas, config }: { canvas: HTMLCanvasElement, config: YGOProps }) {
+    constructor({ canvas, config }: { canvas: HTMLCanvasElement, config: YGOConfig }) {
         this.state = YGODuelState.EDITOR;
         this.config = config;
         this.core = new YGOPlayerCore({ canvas });
@@ -80,8 +81,8 @@ export class YGODuel {
     async load() {
         try {
             const [fieldModel, gameFieldScene] = await Promise.all([
-                this.core.loadGLTFAsync(`http://127.0.0.1:8080/models/field.glb`),
-                this.core.loadGLTFAsync(`http://127.0.0.1:8080/models/game_field.glb`),
+                this.core.loadGLTFAsync(`${this.config.cdnUrl}/models/field.glb`),
+                this.core.loadGLTFAsync(`${this.config.cdnUrl}/models/game_field.glb`),
                 this.core.loadFontAsync("GameFont", "https://threejs.org/examples/fonts/helvetiker_regular.typeface.json"),
                 // this.assets.loadTextures(Array.from(cards.values()).map(id => `http://127.0.0.1:8080/images/cards_small/${id}.jpg`)),
             ]);

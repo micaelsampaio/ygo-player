@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { YGODuel } from "../core/YGODuel";
 import { YGOUiController } from "./YGOUiController";
-import { YGOProps } from "../../YGOCore/types/types";
+import { YGOConfig } from "../core/YGOConfig";
 
-export function YgoDuelApp({ config }: { config: YGOProps }) {
+export function YgoDuelApp({ config }: { config: YGOConfig }) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [ygo, setYGO] = useState<YGODuel>();
 

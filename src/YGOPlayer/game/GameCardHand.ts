@@ -89,8 +89,8 @@ export class GameCardHand extends YGOEntity implements YGOUiElement {
 
         if (prevCard && prevCard.id === this.card.id) return;
 
-        const frontTexture = this.duel.assets.getTexture(`http://127.0.0.1:8080/images/cards_small/${card.id}.jpg`);
-        const backTexture = this.duel.assets.getTexture('http://127.0.0.1:8080/images/card_back.png');
+        const frontTexture = this.duel.assets.getTexture(`${this.duel.config.cdnUrl}/images/cards_small/${card.id}.jpg`);
+        const backTexture = this.duel.assets.getTexture(`${this.duel.config.cdnUrl}/images/card_back.png`);
         const frontMaterial = new THREE.MeshBasicMaterial({ map: frontTexture }); // Front with texture
         const backMaterial = new THREE.MeshBasicMaterial({ map: backTexture });  // Back
         const depthMaterial = new THREE.MeshBasicMaterial({ color: 0xb5b5b5 }); // Depth

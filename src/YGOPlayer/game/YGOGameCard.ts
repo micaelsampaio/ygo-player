@@ -34,8 +34,8 @@ export class YGOGameCard {
         const width = 2, height = width * CARD_RATIO, depth = 0.02;
         const geometry = new THREE.BoxGeometry(width, height, depth);
 
-        const frontTexture = textureLoader.load(`http://127.0.0.1:8080/images/cards_small/${card.id}.jpg`);
-        const backTexture = textureLoader.load('http://127.0.0.1:8080/images/card_back.png');
+        const frontTexture = textureLoader.load(`${this.duel.config.cdnUrl}/images/cards_small/${card.id}.jpg`);
+        const backTexture = textureLoader.load(`${this.duel.config.cdnUrl}/images/card_back.png`);
         const frontMaterial = new THREE.MeshBasicMaterial({ map: frontTexture }); // Front with texture
         const backMaterial = new THREE.MeshBasicMaterial({ map: backTexture });  // Back
         const depthMaterial = new THREE.MeshBasicMaterial({ color: 0xb5b5b5 }); // Depth

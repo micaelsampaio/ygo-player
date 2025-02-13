@@ -34,7 +34,7 @@ export function XyzMonsterMaterialsMenu({ duel, card, visible = true }: { duel: 
                 duel.actionManager.setAction(action);
             }}
                 key={card.index}
-                src={`http://127.0.0.1:8080/images/cards_small/${card.id}.jpg`}
+                src={`${duel.config.cdnUrl}/images/cards_small/${card.id}.jpg`}
                 className="ygo-card" />
         </div>)}
     </div>
