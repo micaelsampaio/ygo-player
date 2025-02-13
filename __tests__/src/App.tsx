@@ -6,7 +6,7 @@ import { useState } from "react";
 
 function App() {
 
-  const [replays, setReplay] = useState(() => {
+  const [replays] = useState(() => {
 
     const allKeys = Object.keys(localStorage);
     const replayKeys = allKeys.filter(key => key.startsWith('replay_'));
