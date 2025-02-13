@@ -6,12 +6,18 @@ import { useState } from "react";
 
 function App() {
 
-  const [replays] = useState(() => {
+  const [replays, setReplay] = useState(() => {
 
     const allKeys = Object.keys(localStorage);
     const replayKeys = allKeys.filter(key => key.startsWith('replay_'));
 
     return replayKeys;
+  });
+
+  const [decks, setDecks] = useState(() => {
+    const allKeys = Object.keys(localStorage);
+    const decks = allKeys.filter(key => key.startsWith('deck_'));
+    return decks;
   });
 
   let navigate = useNavigate();
@@ -34,6 +40,33 @@ function App() {
     navigate("/duel");
   }
 
+  const duelWithDeckFromStore = (e: any, deckId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const deckData = JSON.parse(localStorage.getItem(deckId)!) as any;
+
+    localStorage.setItem("duel-data", JSON.stringify({
+      players: [{
+        name: "player1",
+        mainDeck: deckData.mainDeck,
+        extraDeck: deckData.extraDeck,
+      }, {
+        name: "player2",
+        mainDeck: YUBEL.mainDeck,
+        extraDeck: YUBEL.extraDeck,
+      }]
+    }))
+    navigate("/duel");
+  }
+
+  const deleteDeck = (deckId: string) => {
+    if (confirm("Are you sure you want to delete " + deckId) == true) {
+      localStorage.removeItem(deckId);
+      setDecks(decks => decks.filter(d => d !== deckId));
+    }
+  }
+
   const openRelay = (e: any, replayId: string) => {
     e.preventDefault();
     e.stopPropagation();
@@ -49,6 +82,16 @@ function App() {
       <ul>
         <li><Link onClick={e => duel(e, YUBEL, CHIMERA)} to="#">Duel as Yubel</Link></li>
         <li><Link onClick={e => duel(e, CHIMERA, YUBEL)} to="#">Duel as Chimera</Link></li>
+
+        {decks.map((deckId) => {
+          return <li>
+            <Link to="#" onClick={e => duelWithDeckFromStore(e, deckId)}>Duel as {deckId}</Link>
+            {" "}<button onClick={() => deleteDeck(deckId)}>delete</button>
+          </li>
+        })}
+        <li>
+          <Link to={"/deck"}>Download deck</Link>
+        </li>
       </ul>
 
       {replays.length > 0 && <div>
