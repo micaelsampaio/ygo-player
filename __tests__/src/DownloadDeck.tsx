@@ -9,6 +9,10 @@ export function DownloadDeck() {
 
     const fetchDeck = async () => {
         try {
+            if (!deckName) return alert("NO DECK NAME");
+
+            if (!deckAsText) return alert("NO DECK DATA");
+
             const deckData = ydkToJson(deckAsText);
             const deck = await downloadDeck(deckData, {
                 events: {
@@ -27,6 +31,17 @@ export function DownloadDeck() {
         }
     }
 
+    const readYDKFromFile = (file: File) => {
+        const reader = new FileReader();
+
+        reader.onload = function (e: any) {
+            setDeckAsText(e.target.result);
+        };
+
+        // Read the file as text
+        reader.readAsText(file);
+    }
+
     return <>
         <h1># Download Deck</h1>
         <div>
@@ -43,10 +58,13 @@ export function DownloadDeck() {
             <textarea
                 style={{ width: "100%", maxWidth: "600px", padding: "10px" }}
                 rows={40}
-                placeholder=""
+                placeholder="Paste here the YDK File"
                 value={deckAsText}
                 onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setDeckAsText(e.target.value)}
             ></textarea>
+            <input type="file" onChange={(e: any) => {
+                readYDKFromFile(e.target.files[0]);
+            }}></input>
         </div>
         <div>
 
