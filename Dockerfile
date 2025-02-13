@@ -25,14 +25,16 @@
 
     COPY __tests__ __tests__/
 
-    ENV VITE_YGO_CDN_URL
-
     RUN cd __tests__ && npm run build
 
-# --- Stage 2: Serve with Nginx ---
+# --- Stage 3: Serve with Nginx ---
     FROM nginx:alpine AS server
 
+    # Copy the custom Nginx config
+    COPY nginx.conf /etc/nginx/conf.d/default.conf
+    
+    # Copy built files
     COPY --from=builder /app/__tests__/dist/ /usr/share/nginx/html/
     
     EXPOSE 80
-    CMD ["nginx","-g","daemon off;"]
+    CMD ["nginx", "-g", "daemon off;"]
