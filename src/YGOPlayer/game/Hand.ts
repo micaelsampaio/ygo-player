@@ -56,36 +56,35 @@ export class GameHand extends YGOEntity {
 
     render() {
         const gameField = this.duel.fields[this.player];
+        const camera = this.duel.camera;
+
         const cardWidth = 3;
         const cardSpacing = 2.2;
         const totalCards = gameField.hand.cards.length;
-
         const handWidth = (totalCards - 1) * cardSpacing + cardWidth;
-        const handY = 7.5 * (this.player === 0 ? -1 : 1);
+
+        const fov = (camera as any).fov * Math.PI / 180;
+        const distance = camera.position.z;
+
         const handZ = 7;
+        const visibleHeightAtZ = 2 * Math.tan(fov / 2) * Math.abs(distance - handZ);
 
-        const camera = this.duel.camera;
-        const cameraPosition = camera.position.clone();
-
-        const screenHeight = document.querySelector("canvas")!.height;
-        console.log("HEIGHT", screenHeight)
-        const heightInWorldUnits = 0.1 * screenHeight * ((camera as any).fov * Math.PI / 180) / Math.tan((camera as any).fov * Math.PI / 180 / 2);
-
+        const screenEdgeOffset = 0.15;//untis from bottom of the screen
+        const handY = (this.player === 0)
+            ? -visibleHeightAtZ / 2 + screenEdgeOffset
+            : visibleHeightAtZ / 2 - screenEdgeOffset;
 
         for (let i = 0; i < totalCards; ++i) {
-            // Calculate xOffset for each card
             const xOffset = -handWidth / 2 + cardWidth / 2 + i * cardSpacing;
-
             const handCard = gameField.hand.getCard(i)!;
 
             handCard.gameObject.position.set(xOffset, handY, handZ);
-
             handCard.position = handCard.gameObject.position.clone();
 
             if (handCard.card.owner === 0) {
                 handCard.gameObject.rotation.set(0, 0, 0);
             } else {
-                handCard.gameObject.rotation.set(0, 0, THREE.MathUtils.degToRad(180))
+                handCard.gameObject.rotation.set(0, 0, THREE.MathUtils.degToRad(180));
             }
 
             handCard.gameObject.visible = true;

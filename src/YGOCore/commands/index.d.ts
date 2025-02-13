@@ -19,6 +19,7 @@ import { SetMonsterCommand } from "./SetMonsterCommand";
 import { ShuffleDeckCommand } from "./ShuffleDeck";
 import { SpecialSummonCommand } from "./SpecialSummonCommand";
 import { SynchroSummonCommand } from "./SynchroSummonCommand";
+import { TargetCommand } from "./TargetCommand";
 import { ToDeckCommand } from "./ToDeckCommand";
 import { ToExtraDeckCommand } from "./ToExtraDeckCommand";
 import { ToHandCommand } from "./ToHandCommand";
@@ -58,6 +59,7 @@ export declare const Commands: {
     FlipCommand: typeof FlipCommand;
     ToSTCommand: typeof ToSTCommand;
     MoveCardCommand: typeof MoveCardCommand;
+    TargetCommand: typeof TargetCommand;
 };
 export declare const COMMANDS_BY_NAME: any;
 export declare function GetCommandByClassName<T = Command>(commandClassName: string): T | null;

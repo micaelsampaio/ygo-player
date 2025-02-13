@@ -162,6 +162,11 @@ export interface ActivateCardCommandData {
     originZone?: FieldZone;
     zone: FieldZone;
 }
+export interface TargetCommandData {
+    player: number;
+    id: number;
+    originZone: FieldZone;
+}
 export interface ChangeCardPositionCommandData {
     player: number;
     id: number;
@@ -201,11 +206,6 @@ export interface ToHandCommandData {
     player: number;
     id: number;
     originZone: FieldZone;
-}
-export interface TragetCommandData {
-    player: number;
-    id: number;
-    zone: FieldZone;
 }
 export interface FieldSpellCommandData {
     player: number;

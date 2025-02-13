@@ -6,7 +6,7 @@ import { YGOEntity } from './YGOEntity';
 import { GameController } from '../game/GameController';
 import { EventBus } from '../scripts/event-bus';
 import { YGOMouseEvents } from './components/YGOMouseEvents';
-import { createFields, getTransformFromCamera, replayToYGOProps } from '../scripts/ygo-utils';
+import { createFields, getTransformFromCamera } from '../scripts/ygo-utils';
 import { PlayerField } from '../game/PlayerField';
 import { GameCardHand } from '../game/GameCardHand';
 import { ActionCardSelection } from '../actions/ActionSelectCard';
@@ -24,6 +24,7 @@ import { YGOAssets } from './YGOAssets';
 import { YGOGameActions } from './YGOGameActions';
 import { YGOProps } from '../../YGOCore/types/types';
 import { createCardSelectionGeometry } from '../game/meshes/CardSelectionMesh';
+import { YGODuelScene } from './YGODuelScene';
 
 export class YGODuel {
     public state: YGODuelState;
@@ -44,6 +45,7 @@ export class YGODuel {
     public deltaTime: number = 0;
     private currentPlayerIndex = 0;
     private config: YGOProps;
+    public duelScene: YGODuelScene;
 
     constructor({ canvas, config }: { canvas: HTMLCanvasElement, config: YGOProps }) {
         this.state = YGODuelState.EDITOR;
@@ -53,6 +55,7 @@ export class YGODuel {
         this.camera = this.core.camera;
         this.entities = [];
         this.fields = [];
+        this.duelScene = new YGODuelScene(this);
         this.gameController = new GameController(this);
         this.actionManager = new ActionManager();
         this.tasks = new YGOTaskController(this);
@@ -89,57 +92,11 @@ export class YGODuel {
             this.fields = createFields({ duel: this, fieldModel: fieldModel.scene });
             this.entities.push(this.gameController);
 
-            this.gameController.getComponent<ActionCardSelection>("action_card_selection").createCardSelections();
+            this.gameController.getComponent<ActionCardSelection>("action_card_selection").createCardSelections()
 
-            const geometry = new THREE.PlaneGeometry(22, 22);
-            const material = new THREE.MeshBasicMaterial({ color: 0xff0000, wireframe: true });
-            const map = new THREE.Mesh(geometry, material);
-            this.core.scene.add(map);
+            //this.duelScene.createFields({ gameField: gameFieldScene.scene });
 
-            const gameField = gameFieldScene.scene as THREE.Scene;
-
-            const directionalLight = new THREE.DirectionalLight(0xffffff, 1); // white light with intensity 1
-            directionalLight.position.set(10, 10, 10); // You can adjust these values
-            directionalLight.target.position.set(0, 0, 0); // points to the center of the scene
-            directionalLight.castShadow = true;
-            directionalLight.shadow.mapSize.width = 1024;  // Higher value for better quality shadows
-            directionalLight.shadow.mapSize.height = 1024;
-            directionalLight.shadow.camera.near = 0.5;
-            directionalLight.shadow.camera.far = 50;
-
-            this.core.scene.add(directionalLight);
-
-            gameField.position.set(0, 0, 0);
-
-            gameField.children.forEach((child: any) => {
-                if (child.isMesh) {
-                    const material = new THREE.MeshStandardMaterial({
-                        color: new THREE.Color(0xCCCCCC),
-                        shadowSide: THREE.FrontSide,
-                    });
-
-                    child.material = material;
-                    child.castShadow = true;
-                    child.receiveShadow = true;
-                }
-            });
-
-            gameField.rotateX(THREE.MathUtils.degToRad(90));
-
-            const clonedGameField = gameField.clone();
-            clonedGameField.rotateY(THREE.MathUtils.degToRad(180));
-
-            this.core.scene.add(gameField);
-            this.core.scene.add(clonedGameField);
-
-            const box = new THREE.Box3().setFromObject(map);
-            const center = box.getCenter(new THREE.Vector3());
-            const size = box.getSize(new THREE.Vector3());
-
-            const distance = Math.max(size.x, size.y) / (2 * Math.tan(Math.PI * this.camera.fov / 360));
-            this.camera.position.set(center.x, center.y, distance); // Place camera at a distance
-            this.camera.lookAt(center);
-            // TODO PUT GAME 3D again
+            this.core.updateCamera();
 
             // const cube = new THREE.Mesh(geometry, material);
             // middlePos.addVectors(pos1, pos2).multiplyScalar(0.5);
@@ -149,7 +106,8 @@ export class YGODuel {
             // const geometry = new THREE.BoxGeometry(3, 3 * 1.45, 0.05);
             // const material = new THREE.MeshBasicMaterial({ color: 0x0000ff });
             // const cube = new THREE.Mesh(geometry, material);
-            // cube.position.copy(this.fieldLocations.get("Hand")!.position);
+            // cube.position.copy(this.fieconst gameField = gameFieldScene.scene as THREE.Scene;
+
             // cube.rotation.copy(this.fieldLocations.get("Hand")!.rotation);
             // this.core.scene.add(cube);
 

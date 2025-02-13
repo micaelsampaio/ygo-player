@@ -143,6 +143,10 @@ export declare namespace YGODuelEvents {
         previousPosition: CardPosition;
         position: CardPosition;
     }
+    interface Target extends DuelLog {
+        id: number;
+        originZone: FieldZone;
+    }
     interface Banish extends DuelLog {
         id: number;
         originZone: FieldZone;
@@ -154,10 +158,6 @@ export declare namespace YGODuelEvents {
     interface Reveal extends DuelLog {
         id: number;
         originZone: FieldZone;
-    }
-    interface Target extends DuelLog {
-        id: number;
-        zone: FieldZone;
     }
     interface ChangeCardPosition extends DuelLog {
         id: number;
