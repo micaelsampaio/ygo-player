@@ -25,6 +25,8 @@
 
     COPY __tests__ __tests__/
 
+    ENV VITE_YGO_CDN_URL
+
     RUN cd __tests__ && npm run build
 
 # --- Stage 2: Serve with Nginx ---
