@@ -81,7 +81,6 @@ export class CardZone extends YGOEntity implements YGOUiElement {
                 this.duel.actionManager.clearAction();
                 this.duel.events.publish("clear-ui-action");
             }
-
         }
 
         if (this.onClickCb) {
@@ -106,6 +105,10 @@ export class CardZone extends YGOEntity implements YGOUiElement {
         if (card === this.getCardReference()) return;
 
         if (this.card) this.card.destroy();
+
+        if (this.zoneData.zone === "EMZ") {
+            this.zoneData.player = card.owner;
+        }
 
         this.card = new GameCard({ duel: this.duel, card });
     }

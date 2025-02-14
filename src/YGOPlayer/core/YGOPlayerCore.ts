@@ -28,7 +28,9 @@ export class YGOPlayerCore {
         this.textureLoader = new THREE.TextureLoader();
         this.gltfLoader = new GLTFLoader();
         this.fontLoader = new FontLoader();
-        this.renderer = new THREE.WebGLRenderer({ canvas });
+        this.renderer = new THREE.WebGLRenderer({
+            canvas
+        });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
 
         const mapGeometry = new THREE.PlaneGeometry(26, 22);

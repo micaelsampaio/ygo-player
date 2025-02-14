@@ -119,7 +119,7 @@ export class YGOGameActions {
                             player,
                             id: card.id,
                             materials,
-                            originZone: YGOGameUtils.createZone("ED", card.owner, cardIndex),
+                            originZone: YGOGameUtils.createZone("ED", card.owner, cardIndex + 1),
                             zone: cardZone.zone,
                         }));
 

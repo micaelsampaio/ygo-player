@@ -1,5 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
-import { YGOCommands } from "../../../YGOCore";
+import { useCallback, useLayoutEffect, useRef } from "react";
 import { YGODuel } from "../../core/YGODuel";
 import { CardMenu } from "../components/CardMenu";
 import { getTransformFromCamera } from "../../scripts/ygo-utils";
@@ -21,14 +20,14 @@ export function DeckMenu({ duel, deck }: { duel: YGODuel, deck: Deck, clearActio
     }, [deck]);
 
     const viewDeck = () => {
-        duel.events.publish("toggle-ui-menu", { group: "game-popup", type: "view-main-deck" });
+        duel.events.publish("toggle-ui-menu", { group: "game-popup", type: "view-main-deck", data: { duel, deck } });
     }
 
     useLayoutEffect(() => {
         const container = menuRef.current!;
         const size = container.getBoundingClientRect();
         const { x, y, width, height } = getTransformFromCamera(duel, deck.gameObject);
-        container.style.top = (y - size.height) + "px";
+        container.style.top = Math.max(0, (y - size.height)) + "px";
         container.style.left = (x - (size.width / 2) + (width / 2)) + "px";
     }, [deck]);
 

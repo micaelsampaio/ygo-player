@@ -2,8 +2,9 @@ import { useMemo, useState } from "react";
 import { YGODuel } from "../../core/YGODuel";
 import { Card } from "../../../YGOCore/types/types";
 import { ActionUiMenu } from "../../actions/ActionUiMenu";
+import { Deck } from "../../../YGOPlayer/game/Deck";
 
-export function ViewDeckPopup({ duel, visible = true }: { duel: YGODuel, visible: boolean }) {
+export function ViewDeckPopup({ duel, deck, visible = true }: { deck: Deck, duel: YGODuel, visible: boolean }) {
 
     const [search, setSearch] = useState("");
 
@@ -13,13 +14,13 @@ export function ViewDeckPopup({ duel, visible = true }: { duel: YGODuel, visible
     }, [duel])
 
     const onCardClick = (e: React.MouseEvent, card: Card) => {
-        action.eventData = { duel, card, mouseEvent: e };
+        action.eventData = { duel, player: deck.player, deck, card, mouseEvent: e };
         duel.actionManager.setAction(action);
     }
 
     if (!visible) return null;
 
-    const field = duel.ygo.state.fields[0];
+    const field = duel.ygo.state.fields[deck.player];
     const cards = field.mainDeck;
 
     const cardsToShow = cards.filter(c => c.name.toLowerCase().includes(search));

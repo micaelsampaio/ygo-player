@@ -51,7 +51,7 @@ export class GameCard extends YGOEntity {
         const frontMaterial = new THREE.MeshBasicMaterial({ map: frontTexture }); // Front with texture
         const backMaterial = new THREE.MeshBasicMaterial({ map: backTexture });  // Back
         const depthMaterial = new THREE.MeshBasicMaterial({ color: 0xb5b5b5 }); // Depth
-
+        
         const materials = [
             depthMaterial, // Right (depth)
             depthMaterial, // Left (depth)

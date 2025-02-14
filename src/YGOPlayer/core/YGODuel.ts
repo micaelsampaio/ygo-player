@@ -175,18 +175,19 @@ export class YGODuel {
                 cardZone.setCard(card);
             }
 
-            for (let i = 0; i < gameField.extraMonsterZone.length; ++i) {
-                const cardZone = gameField.extraMonsterZone[i];
-                const card = duelField.extraMonsterZone[i];
-                cardZone.setCard(card);
-            }
-
             this.updateHand(playerIndex);
 
             const fieldZoneCard = gameField.fieldZone;
             const fieldZoneCardZone = duelField.fieldZone;
             fieldZoneCard.setCard(fieldZoneCardZone);
             fieldZoneCard.updateCard();
+        }
+
+        for (let i = 0; i < 2; ++i) {
+            const player = this.ygo.state.fields[0].extraMonsterZone[i] ? 0 : this.ygo.state.fields[1].extraMonsterZone[i] ? 1 : 0;
+            const cardFromPlayer = this.ygo.state.fields[0].extraMonsterZone[i] ?? this.ygo.state.fields[0].extraMonsterZone[i];
+            const cardZone = this.fields[player].extraMonsterZone[i];
+            cardZone.setCard(cardFromPlayer);
         }
 
         this.renderField();
