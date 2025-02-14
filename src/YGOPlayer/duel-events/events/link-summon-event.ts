@@ -29,16 +29,13 @@ export class LinkSummonEventHandler extends YGOCommandHandler {
 
     public start(): void {
 
-        const { event, ygo, duel, startTask } = this.props;
+        const { event, duel, startTask } = this.props;
         const sequence = new YGOTaskSequence();
 
         const originZoneData = YGOGameUtils.getZoneData(event.originZone)!;
         const zoneData = YGOGameUtils.getZoneData(event.zone)!;
 
         const rotationDelay = 0.5;
-
-        const gyZone = YGOGameUtils.createZone("GY", event.player);
-        const gyZoneData = YGOGameUtils.getZoneData(gyZone)!;
 
         const camera = duel.camera;
 
@@ -51,6 +48,9 @@ export class LinkSummonEventHandler extends YGOCommandHandler {
                 const card = originCardZone.getGameCard()!;
                 const material = originCardZone.getCardReference()!;
                 originCardZone.removeCard();
+
+                const gyZone = YGOGameUtils.createZone("GY", materialData.owner);
+                const gyZoneData = YGOGameUtils.getZoneData(gyZone)!;
 
                 const startPosition = getZonePositionFromZoneData(duel, originZoneData);
                 const startRotation = getCardRotationFromFieldZoneData(duel, material, originZoneData);

@@ -106,11 +106,10 @@ export class CardZone extends YGOEntity implements YGOUiElement {
 
         if (this.card) this.card.destroy();
 
-        if (this.zoneData.zone === "EMZ") {
-            this.zoneData.player = card.owner;
-        }
 
         this.card = new GameCard({ duel: this.duel, card });
+
+        this.updateZoneData();
     }
 
     setGameCard(card: GameCard | null) {
@@ -122,6 +121,8 @@ export class CardZone extends YGOEntity implements YGOUiElement {
         }
 
         this.card = card;
+
+        this.updateZoneData();
     }
 
     getGameCard(): GameCard {
@@ -152,12 +153,21 @@ export class CardZone extends YGOEntity implements YGOUiElement {
 
         if (!card) return;
 
+        this.updateZoneData();
+
         const rotation = getCardRotation(this.duel, this.getCardReference()!, this.zone);
         this.card.gameObject.position.copy(this.position);
         this.card.gameObject.rotation.copy(rotation);
 
         this.card.updateCardStats(this.zoneData);
         this.card.gameObject.visible = true;
+    }
+
+    private updateZoneData() {
+        if (this.zoneData.zone === "EMZ" && this.card && this.card.cardReference && this.zoneData.player !== this.card.cardReference.owner) {
+            this.zoneData.player = this.card.cardReference.owner;
+            this.zone = `EMZ${this.zoneData.player === 0 ? '' : '2'}-${this.zoneData.zoneIndex + 1}` as any;
+        }
     }
 
     isEmpty() {

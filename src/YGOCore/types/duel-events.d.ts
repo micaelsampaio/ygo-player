@@ -90,6 +90,7 @@ export declare namespace YGODuelEvents {
         materials: Array<{
             id: number;
             zone: FieldZone;
+            owner: number;
         }>;
     }
     interface SynchroSummon extends DuelLog {
@@ -109,6 +110,7 @@ export declare namespace YGODuelEvents {
         materials: Array<{
             id: number;
             zone: FieldZone;
+            owner: number;
         }>;
     }
     interface XYZSummon extends DuelLog {

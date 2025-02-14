@@ -185,7 +185,7 @@ export class YGODuel {
 
         for (let i = 0; i < 2; ++i) {
             const player = this.ygo.state.fields[0].extraMonsterZone[i] ? 0 : this.ygo.state.fields[1].extraMonsterZone[i] ? 1 : 0;
-            const cardFromPlayer = this.ygo.state.fields[0].extraMonsterZone[i] ?? this.ygo.state.fields[0].extraMonsterZone[i];
+            const cardFromPlayer = this.ygo.state.fields[0].extraMonsterZone[i] ?? this.ygo.state.fields[1].extraMonsterZone[i];
             const cardZone = this.fields[player].extraMonsterZone[i];
             cardZone.setCard(cardFromPlayer);
         }
@@ -282,10 +282,6 @@ export class YGODuel {
                 gameField.spellTrapZone[i].updateCard();
             }
 
-            for (let i = 0; i < gameField.extraMonsterZone.length; ++i) {
-                gameField.extraMonsterZone[i].updateCard();
-            }
-
             gameField.fieldZone.updateCard();
 
             gameField.hand.render();
@@ -295,6 +291,9 @@ export class YGODuel {
             gameField.extraDeck.updateExtraDeck();
         }
 
+        for (let i = 0; i < 2; ++i) {
+            this.fields[0].extraMonsterZone[i].updateCard();
+        }
 
         this.events.publish("render-ui");
     }

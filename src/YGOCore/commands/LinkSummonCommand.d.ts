@@ -6,6 +6,7 @@ export declare class LinkSummonCommand extends BaseCommand {
     private data;
     private commands;
     private position;
+    private materials;
     constructor(data: LinkSummonCommandData);
     init(ygo: YGOCore): void;
     exec(): void;

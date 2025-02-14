@@ -156,7 +156,7 @@ export function getCardZones(duel: YGODuel, players: number[], zones: ("M" | "S"
                     zonesToFind = duel.fields[player].spellTrapZone;
                     break;
                 case 'EMZ':
-                    zonesToFind = duel.fields[player].extraMonsterZone;
+                    zonesToFind = duel.fields[player].extraMonsterZone.filter(zone => zone.isEmpty() || zone.getCardReference()?.owner === player);
                     break;
                 case 'F':
                     if (duel.fields[player].fieldZone.isEmpty()) {

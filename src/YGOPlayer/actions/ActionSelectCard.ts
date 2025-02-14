@@ -202,7 +202,8 @@ export class ActionCardSelection extends YGOComponent implements YGOAction {
         for (const cardZone of this.duel.fields[0].extraMonsterZone) {
             const card = this.createCardSelection(cardZone.position, cardZone.rotation);
             const zone = this.createCardZoneSelection(cardZone.position, cardZone.rotation);
-            this.cardSelectionZones.set(cardZone.zone, { card, zone });
+            this.cardSelectionZones.set(`EMZ-${cardZone.zoneData.zoneIndex + 1}`, { card, zone });
+            this.cardSelectionZones.set(`EMZ2-${cardZone.zoneData.zoneIndex + 1}`, { card, zone });
         }
 
         const fieldSpellCardZone = this.duel.fields[0].fieldZone;
@@ -210,7 +211,6 @@ export class ActionCardSelection extends YGOComponent implements YGOAction {
         const fieldSpellZone = this.createCardZoneSelection(fieldSpellCardZone.position, fieldSpellCardZone.rotation);
         this.cardSelectionZones.set(fieldSpellCardZone.zone, { card: fieldSpellCard, zone: fieldSpellZone });
     }
-
 
     private clickOnZone(position: THREE.Vector3) {
 
