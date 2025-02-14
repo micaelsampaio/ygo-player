@@ -1,16 +1,7 @@
-import { createLibp2p } from 'libp2p';
-import { identify } from '@libp2p/identify';
-import { noise } from '@chainsafe/libp2p-noise';
-import { yamux } from '@chainsafe/libp2p-yamux';
-import { webSockets } from '@libp2p/websockets';
-import { webTransport } from '@libp2p/webtransport';
-import { webRTC, webRTCDirect } from '@libp2p/webrtc';
-import * as filters from '@libp2p/websockets/filters';
-import { circuitRelayTransport } from '@libp2p/circuit-relay-v2';
-import { gossipsub } from '@chainsafe/libp2p-gossipsub'
-import { pubsubPeerDiscovery } from '@libp2p/pubsub-peer-discovery'
-import { useEffect, useState } from 'react';
-import styled from 'styled-components';
+import { useEffect, useState } from "react";
+import styled from "styled-components";
+
+import { dkeyedPeerToPeer } from "./p2p.js";
 
 // Styled Components
 const ChatContainer = styled.div`
@@ -46,9 +37,9 @@ const MessageBubble = styled.div<{ isSelf: boolean }>`
   margin-bottom: 10px;
   padding: 8px;
   border-radius: 5px;
-  background-color: ${({ isSelf }) => (isSelf ? '#0078D4' : '#444')};
-  color: ${({ isSelf }) => (isSelf ? '#fff' : '#fff')};
-  align-self: ${({ isSelf }) => (isSelf ? 'flex-end' : 'flex-start')};
+  background-color: ${({ isSelf }) => (isSelf ? "#0078D4" : "#444")};
+  color: ${({ isSelf }) => (isSelf ? "#fff" : "#fff")};
+  align-self: ${({ isSelf }) => (isSelf ? "flex-end" : "flex-start")};
   word-wrap: break-word;
 `;
 
@@ -70,7 +61,7 @@ const InputField = styled.input`
 const SendButton = styled.button`
   width: 5em;
   padding: 8px;
-  background-color: #0078D4;
+  background-color: #0078d4;
   border: none;
   border-radius: 5px;
   cursor: pointer;
@@ -83,99 +74,52 @@ const SendButton = styled.button`
 export default function Chat() {
   const [node, setNode] = useState<any>(null);
   const [peerId, setPeerId] = useState<string>("");
+  const [address, setAddress] = useState<string>("");
   const [opponentId, setOpponentId] = useState<string>("");
   const [connected, setConnected] = useState(false);
   const [messages, setMessages] = useState<string[]>([]);
   const [inputMessage, setInputMessage] = useState("");
 
   useEffect(() => {
-    async function startP2P() {
-      const libp2p = await createLibp2p({
-        addresses: {
-          listen: [
-            '/webrtc',
-          ],
-        },
-        transports: [
-          webSockets({
-            filter: filters.all,
-          }),
-          webTransport(),
-          webRTC(),
-          webRTCDirect(),
-          // Use circuitRelayTransport to support relay functionality
-          circuitRelayTransport({ discoverRelays: 1 })
-        ],
-        connectionEncrypters: [noise()],
-        streamMuxers: [yamux()],
-        connectionGater: {
-          denyDialMultiaddr: async () => false,
-        },
-        peerDiscovery: [
-            pubsubPeerDiscovery()
-          ],
-        services: {
-        pubsub: gossipsub(),
-        identify: identify(),
-        },
-      });
+    const initializePeerToPeer = async () => {
+      const peerToPeer = new dkeyedPeerToPeer();
+      await peerToPeer.startP2P(); // Wait for the asynchronous startP2P function
+      const peerId = peerToPeer.getPeerId();
+      const ma = peerToPeer.getMultiaddrs();
 
-      await libp2p.start();
-      console.log("libp2p started! Peer ID:", libp2p.peerId.toString());
-      console.log("protocols: ",libp2p.getProtocols())
-      console.log("Multiaddrs: ",libp2p.getMultiaddrs())
+      setPeerId(peerId);
+      setAddress(ma);
 
-      setNode(libp2p);
-      setPeerId(libp2p.peerId.toString());
-    }
-
-    startP2P();
-
+      setNode(peerToPeer);
+    };
+    initializePeerToPeer(); // Call the async function
     return () => {
       node?.stop();
     };
   }, []);
 
   async function connectToPeer() {
-    if (!node) return;
-    try {
-
-      const peer = await node.peerStore.get(opponentId);
-
-      if (!peer) {
-        console.error("Peer not found");
-        return;
-      }
-      console.log("Dialling:", opponentId);
-      console.log(opponentId)
-      const addr = peer.multiaddrs[0];
-      await node.dial(addr);
-      setConnected(true);
-      console.log("Connected to:", opponentId);
-    } catch (error) {
-      console.error("Connection failed:", error);
-    }
+    node.connectToPeer(opponentId);
   }
 
   async function sendMessage() {
-    if (!node || !inputMessage.trim()) return;
-    const message = `${peerId}: ${inputMessage}`;
-    const data = new TextEncoder().encode(message);
-    await node.services.pubsub.publish("ygo-chat", data);
-    setMessages((prev) => [...prev, message]);
-    setInputMessage("");
+    console.log("send message");
   }
 
   return (
     <ChatContainer>
       <ChatHeader>
         <h2>Chat</h2>
-        <p>Your Peer ID: <strong>{peerId}</strong></p>
+        <p>
+          Your Peer ID: <strong>{peerId}</strong>
+        </p>
+        <p>
+          Your Address: <strong>{address}</strong>
+        </p>
       </ChatHeader>
 
       {!connected && (
         <InputContainer>
-
           <InputField
             type="text"
             placeholder="Opponent Peer ID"
@@ -183,7 +127,7 @@ export default function Chat() {
             onChange={(e) => setOpponentId(e.target.value)}
           />
           <SendButton onClick={connectToPeer}>Connect</SendButton>
-          </InputContainer>
+        </InputContainer>
       )}
       <InputContainer>
         <InputField
@@ -195,7 +139,7 @@ export default function Chat() {
         <SendButton onClick={sendMessage}>Send</SendButton>
       </InputContainer>
 
-      <Messages >
+      <Messages>
         {messages.map((msg, index) => (
           <MessageBubble key={index} isSelf={msg.startsWith(peerId)}>
             {msg}
