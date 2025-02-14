@@ -1,5 +1,5 @@
 import { Command } from "../types/commands";
-import { PlayerField, YGOProps } from "../types/types";
+import { PlayerField, YGOCoreEvents, YGOProps } from "../types/types";
 import { EventBus } from "../utils/event-bus";
 import { YGODuelLog } from "./YGODuelLog";
 import { YGOGameState } from "./YGOGameState";
@@ -10,7 +10,7 @@ export declare class YGOCore {
     commands: Command[];
     commandIndex: number;
     duelLog: YGODuelLog;
-    events: EventBus<any>;
+    events: EventBus<YGOCoreEvents>;
     constructor(props: YGOProps);
     start(): void;
     exec(command: Command): Command;

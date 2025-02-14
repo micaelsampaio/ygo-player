@@ -1,3 +1,5 @@
+import { Command } from "./commands";
+import { YGODuelEvents } from "./duel-events";
 export declare const NUM_ZONES: number;
 export type PlayerSide = 0 | 1 | number;
 export type CardPosition = "faceup-attack" | "faceup-defense" | "faceup" | "facedown";
@@ -121,3 +123,19 @@ export interface YGOReplayData {
     endField: FileldStateEntry[];
     commands: any[];
 }
+export type YGOCoreEvents = {
+    "command-created": (args: {
+        command: Command;
+    }) => void;
+    "command-executed": (args: {
+        command: Command;
+    }) => void;
+    "command-redo": (args: {
+        command: Command;
+    }) => void;
+    "command-undo": (args: {
+        command: Command;
+    }) => void;
+    'new-log': (log: YGODuelEvents.DuelLog) => void;
+    'update-logs': (logs: YGODuelEvents.DuelLog[]) => void;
+};

@@ -4,12 +4,17 @@ import { YgoDuelApp } from '../ui/YgoDuelApp';
 import { YGOPlayerStartEditorProps, YGOPlayerStartReplayProps } from '../types';
 import { CardData, YGOProps } from '../../YGOCore/types/types';
 import { YGOConfig } from '../core/YGOConfig';
+import { YGODuel } from '../core/YGODuel';
+import { EventBus } from '../scripts/event-bus';
 
 export class YGOPlayerComponent extends HTMLElement {
     private root: ReactDOM.Root | undefined;
+    public duel!: YGODuel;
+    private events: EventBus<any>;
 
     constructor() {
         super();
+        this.events = new EventBus();
     }
 
     connectedCallback() {
@@ -24,11 +29,11 @@ export class YGOPlayerComponent extends HTMLElement {
     }
 
     on(event: string, callback: () => void) {
-
+        this.events.on(event, callback);
     }
 
     off(event: string, callback: () => void) {
-
+        this.events.off(event, callback);
     }
 
     editor(props: YGOPlayerStartEditorProps) {
@@ -69,17 +74,13 @@ export class YGOPlayerComponent extends HTMLElement {
         }
 
         config.options.shuffleDecks = false;
-        
+
         this.start(config);
     }
 
     private start(config: YGOConfig) {
         if (!this.root) throw new Error("There is no root to render");
 
-        const dispatch = () => {
-
-        }
-
-        this.root.render(createElement(YgoDuelApp, { config }));
+        this.root.render(createElement(YgoDuelApp, { bind: (duel: YGODuel) => this.duel = duel, config }));
     }
 }

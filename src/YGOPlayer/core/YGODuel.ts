@@ -22,7 +22,6 @@ import { CallbackTransition } from '../duel-events/utils/callback';
 import { YGOCommandsController } from './components/tasks/YGOCommandsController';
 import { YGOAssets } from './YGOAssets';
 import { YGOGameActions } from './YGOGameActions';
-import { YGOProps } from '../../YGOCore/types/types';
 import { createCardSelectionGeometry } from '../game/meshes/CardSelectionMesh';
 import { YGODuelScene } from './YGODuelScene';
 import { YGOConfig } from './YGOConfig';
@@ -131,13 +130,12 @@ export class YGODuel {
 
         this.ygo = new YGOCore(this.config);
 
-
         setTimeout(() => {
             this.ygo.start();
             this.updateField();
         }); // next frame call
 
-        this.ygo.duelLog.events.on("new-log", (command) => {
+        this.ygo.events.on("new-log", (command) => {
             if (this.commands.isRecovering()) return;
 
             console.log("command >>> ", command);
@@ -146,7 +144,7 @@ export class YGODuel {
             this.commands.add(command);
         });
 
-        this.ygo.duelLog.events.on("update-logs", (data) => {
+        this.ygo.events.on("update-logs", (data) => {
             this.events.publish("logs-updated", data);
         });
 

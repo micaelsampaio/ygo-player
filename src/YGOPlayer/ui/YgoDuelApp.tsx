@@ -3,7 +3,7 @@ import { YGODuel } from "../core/YGODuel";
 import { YGOUiController } from "./YGOUiController";
 import { YGOConfig } from "../core/YGOConfig";
 
-export function YgoDuelApp({ config }: { config: YGOConfig }) {
+export function YgoDuelApp({ config, bind }: { bind?: (duel: YGODuel) => void, config: YGOConfig }) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [ygo, setYGO] = useState<YGODuel>();
 
@@ -21,6 +21,7 @@ export function YgoDuelApp({ config }: { config: YGOConfig }) {
 
     useEffect(() => {
         if (!ygo) return;
+        if (bind) bind(ygo);
         ygo.startDuel();
     }, [ygo])
 

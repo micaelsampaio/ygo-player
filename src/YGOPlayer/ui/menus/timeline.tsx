@@ -1,9 +1,12 @@
+import { useRef } from "react";
 import { Command } from "../../../YGOCore/types/commands";
 import { YGODuel } from "../../core/YGODuel";
 import { cancelMouseEventsCallback } from "../../scripts/ygo-utils";
 
 export function TimeLine({ duel }: { duel: YGODuel }) {
     if (!duel.ygo) return null;
+
+    const pauseCommandRef = useRef(false);
 
     const commands = duel.ygo.commands;
     const currentCommand = duel.ygo.commandIndex;
@@ -16,7 +19,7 @@ export function TimeLine({ duel }: { duel: YGODuel }) {
     }
 
     const prev = () => {
-        if (duel.commands.isRecovering()) return;
+        if (duel.commands.isLocked()) return;
         duel.commands.startRecover();
 
         if (duel.ygo.hasPrevCommand()) {
@@ -28,16 +31,32 @@ export function TimeLine({ duel }: { duel: YGODuel }) {
     }
 
     const next = () => {
-        if (duel.commands.isRecovering()) return;
+        if (duel.commands.isLocked()) return;
 
         if (duel.ygo.hasNextCommand()) {
+            duel.commands.play();
             duel.ygo.redo();
         }
     }
 
     const play = () => {
+        console.log(duel.commands.isLocked());
+        if (duel.commands.isLocked()) return;
+
+        duel.commands.play();
+
         const nextEvent = () => {
+            console.log("IS PLAYING", duel.commands.isPlaying());
+            if (!duel.commands.isPlaying()) return;
+
+            if (pauseCommandRef.current) {
+                pauseCommandRef.current = false;
+                duel.commands.pause();
+                return;
+            }
+            console.log("NEXT COMMAND", duel.ygo.hasNextCommand());
             if (duel.ygo.hasNextCommand()) {
+                console.log("NEXT COMMAND");
                 setTimeout(() => duel.ygo.redo(), 500);
             } else {
                 duel.events.off("commands-process-completed", nextEvent);
@@ -49,8 +68,13 @@ export function TimeLine({ duel }: { duel: YGODuel }) {
         nextEvent();
     }
 
+    const pause = () => {
+        if (duel.commands.isPlaying()) pauseCommandRef.current = true;
+    }
+
     return <div className="timeline" onMouseMove={cancelMouseEventsCallback} onClick={cancelMouseEventsCallback}>
         <div style={{ flexGrow: "unset" }}><button onClick={play}>play</button></div>
+        <div style={{ flexGrow: "unset" }}><button disabled={!duel.commands.isPlaying()} onClick={pause}>pause</button></div>
         <div style={{ flexGrow: "unset" }}><button onClick={prev}>Prev Play</button></div>
         <div style={{ flexGrow: "unset" }}><button onClick={next}>Next Play</button></div>
         {commands.map((command, index) => {
