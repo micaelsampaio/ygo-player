@@ -2,6 +2,7 @@ import { Link } from "react-router"
 import YUBEL from "./decks/YUBEL_FS.json";
 import CHIMERA from "./decks/CHIMERA.json";
 import { useNavigate } from "react-router";
+import Chat from "./Chat";
 import { useState } from "react";
 
 function App() {
@@ -103,6 +104,10 @@ function App() {
           })}
         </ul>
       </div>}
+
+      <Chat />
+
+
     </div>
   )
 }
