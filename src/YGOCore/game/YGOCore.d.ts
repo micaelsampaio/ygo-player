@@ -1,10 +1,12 @@
 import { Command } from "../types/commands";
-import { PlayerField, YGOCoreEvents, YGOProps } from "../types/types";
+import { PlayerField, YGOCoreEvents, YGOPhase, YGOProps } from "../types/types";
 import { EventBus } from "../utils/event-bus";
 import { YGODuelLog } from "./YGODuelLog";
 import { YGOGameState } from "./YGOGameState";
 export declare class YGOCore {
     private commandId;
+    currentPlayer: number;
+    phase: YGOPhase;
     props: YGOProps;
     state: YGOGameState;
     commands: Command[];
@@ -13,6 +15,7 @@ export declare class YGOCore {
     events: EventBus<YGOCoreEvents>;
     constructor(props: YGOProps);
     start(): void;
+    setCurrentPlayer(player: number): void;
     exec(command: Command): Command;
     peek(): Command | null;
     redo(): Command | null;

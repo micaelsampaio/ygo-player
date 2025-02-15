@@ -138,4 +138,18 @@ export type YGOCoreEvents = {
     }) => void;
     'new-log': (log: YGODuelEvents.DuelLog) => void;
     'update-logs': (logs: YGODuelEvents.DuelLog[]) => void;
+    'set-player': (args: {
+        player: number;
+    }) => void;
+    'set-duel-phase': (args: {
+        phase: YGOPhase;
+    }) => void;
 };
+export declare enum YGOPhase {
+    DrawPhase = "Draw Phase",
+    StandbyPhase = "Standby Phase",
+    MainPhase1 = "Main Phase 1",
+    BattlePhase = "Battle Phase",
+    MainPhase2 = "Main Phase 2",
+    EndPhase = "End Phase"
+}
