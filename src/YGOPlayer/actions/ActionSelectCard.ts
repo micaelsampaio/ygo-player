@@ -41,10 +41,12 @@ export class ActionCardSelection extends YGOComponent implements YGOAction {
 
         for (const cardzone of this.zones) {
 
+            const cardZoneData = this.cardSelectionZones.get(cardzone.zone)!;
+
             if (this.selectionType === "zone") {
-                this.cardSelectionZones.get(cardzone.zone)!.zone.visible = true;
+                cardZoneData.zone.visible = true;
             } else {
-                this.cardSelectionZones.get(cardzone.zone)!.card.visible = true;
+                cardZoneData.card.visible = true;
             }
             cardzone.onClickCb = () => this.onCardZoneClick(cardzone);
         }
@@ -202,8 +204,8 @@ export class ActionCardSelection extends YGOComponent implements YGOAction {
         for (const cardZone of this.duel.fields[0].extraMonsterZone) {
             const card = this.createCardSelection(cardZone.position, cardZone.rotation);
             const zone = this.createCardZoneSelection(cardZone.position, cardZone.rotation);
-            this.cardSelectionZones.set(`EMZ-${cardZone.zoneData.zoneIndex + 1}`, { card, zone });
-            this.cardSelectionZones.set(`EMZ2-${cardZone.zoneData.zoneIndex + 1}`, { card, zone });
+            this.cardSelectionZones.set(`EMZ-${cardZone.zoneData.zoneIndex}`, { card, zone });
+            this.cardSelectionZones.set(`EMZ2-${cardZone.zoneData.zoneIndex}`, { card, zone });
         }
 
         const fieldSpellCardZone = this.duel.fields[0].fieldZone;
