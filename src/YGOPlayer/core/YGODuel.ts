@@ -294,11 +294,8 @@ export class YGODuel {
             }
 
             gameField.fieldZone.updateCard();
-
             gameField.hand.render();
-
             gameField.mainDeck.updateDeck();
-
             gameField.extraDeck.updateExtraDeck();
         }
 

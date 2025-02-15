@@ -231,7 +231,9 @@ export function getCardRotationFromFieldZoneData(duel: YGODuel, card: Card, zone
         }
     }
 
-    if (zoneData.player === 1) {
+    rotation = rotation.clone();
+
+    if ((zoneData.zone !== "D" && zoneData.zone !== "ED") && zoneData.player === 1) {
         rotation.z += THREE.MathUtils.degToRad(180);
     }
 
@@ -270,7 +272,7 @@ export function getZonePositionFromZoneData(duel: YGODuel, zoneData: FieldZoneDa
         position = field.monsterZone[0].position;
     }
 
-    return position;
+    return position.clone();
 }
 
 const FIELD_ZONES = ["M", "S", "F", "EMZ"]

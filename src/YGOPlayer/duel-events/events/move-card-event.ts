@@ -45,6 +45,7 @@ export class MoveCardEventHandler extends YGOCommandHandler {
         if (originZoneData.zone === "D") {
             duel.fields[originZoneData.player].mainDeck.updateDeck();
         }
+
         if (originZoneData.zone === "ED") {
             duel.fields[originZoneData.player].extraDeck.updateExtraDeck();
         }
@@ -56,7 +57,7 @@ export class MoveCardEventHandler extends YGOCommandHandler {
         }
 
         let startPosition = getZonePositionFromZoneData(duel, originZoneData);
-        let startRotation = getCardRotationFromFieldZoneData(duel, this.cardReference, originZoneData);
+        let startRotation = getCardRotationFromFieldZoneData(duel, this.cardReference, originZoneData).clone();
 
         let endPosition = getZonePositionFromZoneData(duel, zoneData);
         let endRotation = getCardRotationFromFieldZoneData(duel, this.cardReference, zoneData);
