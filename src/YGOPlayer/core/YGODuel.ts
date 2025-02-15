@@ -94,7 +94,7 @@ export class YGODuel {
 
             this.gameController.getComponent<ActionCardSelection>("action_card_selection").createCardSelections()
 
-            //this.duelScene.createFields({ gameField: gameFieldScene.scene });
+            this.duelScene.createFields({ gameField: gameFieldScene.scene });
 
             this.core.updateCamera();
 
@@ -146,6 +146,11 @@ export class YGODuel {
 
         this.ygo.events.on("update-logs", (data) => {
             this.events.publish("logs-updated", data);
+        });
+
+        this.ygo.events.on("set-player", (data) => {
+            this.currentPlayerIndex = data.player;
+            this.events.publish("render-ui");
         });
 
         this.events.on("enable-game-actions", () => {
@@ -327,6 +332,10 @@ export class YGODuel {
 
     public getActivePlayer() {
         return this.currentPlayerIndex;
+    }
+
+    public setActivePlayer(player: number) {
+        this.ygo.setCurrentPlayer(player);
     }
 
     public test() {

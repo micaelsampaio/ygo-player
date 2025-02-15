@@ -9,6 +9,7 @@ export class YGODuelScene {
 
 
     public createFields({ gameField }: { gameField: THREE.Scene }) {
+        return;
         const directionalLight = new THREE.DirectionalLight(0xffffff, 1); // white light with intensity 1
         directionalLight.position.set(10, 10, 10); // You can adjust these values
         directionalLight.target.position.set(0, 0, 0); // points to the center of the scene

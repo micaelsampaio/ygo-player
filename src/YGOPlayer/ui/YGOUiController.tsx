@@ -4,6 +4,7 @@ import { ACTIONS } from "./actions";
 import { DuelLogMenu } from "./menus/duel-log";
 import { MENUS } from "./menus";
 import { TimeLine } from "./menus/timeline";
+import { ChangeGamePlayer } from "./components/ChangeGamePlayer";
 
 export interface UiGameConfig {
     actions: boolean
@@ -131,6 +132,7 @@ export function YGOUiController({ duel }: { duel: YGODuel }) {
     return <>
         <DuelLogMenu duel={duel} />
         <TimeLine duel={duel} />
+        <ChangeGamePlayer duel={duel} />
 
         {
             menus.map(menu => {
