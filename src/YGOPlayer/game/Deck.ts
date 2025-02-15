@@ -28,14 +28,7 @@ export class Deck extends YGOEntity implements YGOUiElement {
 
         const geometry = new THREE.BoxGeometry(2, 2, 0.1);
         const cube = new THREE.Mesh(geometry, this.normalMaterial);
-
         cube.position.copy(position);
-
-        console.log("POSITION", position)
-
-        // if (player === 0) {
-        //     cube.position.set(9, -6, 0);
-        // }
 
         this.duel.core.scene.add(cube);
         this.gameObject = cube;

@@ -76,7 +76,6 @@ export class YGOCommandsController extends YGOComponent {
         const startTask = (task: YGOTask) => {
             this.tasks.push(task);
             this.duel.tasks.startTask(task);
-            console.log("START TASK", task);
         }
 
         const props = {

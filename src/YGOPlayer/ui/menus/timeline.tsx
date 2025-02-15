@@ -40,13 +40,11 @@ export function TimeLine({ duel }: { duel: YGODuel }) {
     }
 
     const play = () => {
-        console.log(duel.commands.isLocked());
         if (duel.commands.isLocked()) return;
 
         duel.commands.play();
 
         const nextEvent = () => {
-            console.log("IS PLAYING", duel.commands.isPlaying());
             if (!duel.commands.isPlaying()) return;
 
             if (pauseCommandRef.current) {
@@ -54,9 +52,7 @@ export function TimeLine({ duel }: { duel: YGODuel }) {
                 duel.commands.pause();
                 return;
             }
-            console.log("NEXT COMMAND", duel.ygo.hasNextCommand());
             if (duel.ygo.hasNextCommand()) {
-                console.log("NEXT COMMAND");
                 setTimeout(() => duel.ygo.redo(), 500);
             } else {
                 duel.events.off("commands-process-completed", nextEvent);

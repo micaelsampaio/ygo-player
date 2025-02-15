@@ -1,7 +1,6 @@
 import { DeckData } from "./ydk-parser";
 
 async function getCard(id: number) {
-    console.log("downloading > " + id);
     const response = await fetch(`https://db.ygoprodeck.com/api/v7/cardinfo.php?id=${id}`)
     if (!response.ok) throw new Error("failed to fetch");
     const cardsResult = await response.json();

@@ -73,10 +73,7 @@ export function CardHandMenu({ duel, card, index }: { duel: YGODuel, card: Card,
         const container = menuRef.current!;
         const cardFromHand = duel.fields[card.owner].hand.getCardFromReference(card)!;
         const size = container.getBoundingClientRect();
-        console.log(size);
         const { x, y, width, height } = getTransformFromCamera(duel, cardFromHand.gameObject);
-        console.log(width, height);
-        //container.style.width = (width * 1.5) + "px";
         if (card.owner === 0) {
             container.style.top = (y - size.height) + "px";
         } else {

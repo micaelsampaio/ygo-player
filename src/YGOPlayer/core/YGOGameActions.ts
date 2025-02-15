@@ -503,12 +503,7 @@ export class YGOGameActions {
     public changeBattlePosition({ card, originZone, position }: { card: Card, originZone: FieldZone, position: CardPosition }) {
         const ygo = this.duel.ygo;
         const player = this.duel.getActivePlayer();
-        console.log("CHANGE BATTLE", {
-            player,
-            id: card.id,
-            originZone,
-            position,
-        });
+
         ygo.exec(new YGOCommands.ChangeCardPositionCommand({
             player,
             id: card.id,
