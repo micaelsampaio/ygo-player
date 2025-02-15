@@ -83,6 +83,12 @@ export class YGODuel {
                 this.core.loadGLTFAsync(`${this.config.cdnUrl}/models/field.glb`),
                 this.core.loadGLTFAsync(`${this.config.cdnUrl}/models/game_field.glb`),
                 this.core.loadFontAsync("GameFont", "https://threejs.org/examples/fonts/helvetiker_regular.typeface.json"),
+                this.assets.loadImages(
+                    `${this.config.cdnUrl}/images/ui/ic_stars128.png`,
+                    `${this.config.cdnUrl}/images/ui/ic_rank128.png`,
+                    `${this.config.cdnUrl}/images/ui/ic_link128.png`,
+                    `${this.config.cdnUrl}/images/ui/ic_xyz_materials128.png`,
+                )
                 // this.assets.loadTextures(Array.from(cards.values()).map(id => `http://127.0.0.1:8080/images/cards_small/${id}.jpg`)),
             ]);
             this.core.scene.add(fieldModel.scene);
