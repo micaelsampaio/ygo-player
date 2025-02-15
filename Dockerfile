@@ -1,5 +1,5 @@
 # --- Stage 1: Build player component ---
-    FROM node:18-alpine AS player
+    FROM node:22-alpine AS player
     WORKDIR /app
     
     COPY package.json .
@@ -11,7 +11,7 @@
     RUN npm run build
 
 # --- Stage 2: Build __tests__ ---
-    FROM node:18-alpine AS builder
+    FROM node:22-alpine AS builder
 
     WORKDIR /app
 

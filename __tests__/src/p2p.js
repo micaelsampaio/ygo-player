@@ -23,7 +23,13 @@ export class dkeyedPeerToPeer {
   libp2p = null;
 
   constructor() {
-    this.libp2p = null;
+    // all libp2p debug logs
+    localStorage.setItem("debug", "libp2p:*");
+    // networking debug logs
+    localStorage.setItem(
+      "debug",
+      "libp2p:websockets,libp2p:webtransport,libp2p:kad-dht,libp2p:dialer"
+    );
   }
 
   getPeerId() {
@@ -36,6 +42,7 @@ export class dkeyedPeerToPeer {
 
   // Initialize the libp2p instance
   async startP2P() {
+    console.log("Bootstrap Node:", import.meta.env.BOOTSTRAP_NODE);
     this.libp2p = await createLibp2p({
       addresses: {
         listen: ["/p2p-circuit", "/webrtc"],
@@ -44,6 +51,15 @@ export class dkeyedPeerToPeer {
         webSockets({ filter: filters.all }),
         webRTC(),
         circuitRelayTransport(),
+      ],
+      peerDiscovery: [
+        bootstrap({
+          list: [
+            "/ip4/127.0.0.1/tcp/5001/ws/p2p/12D3KooWS2XoZP8164gZXkeBK43X3Wi7QQifggVY9B1jku55F2Rb",
+            //String(import.meta.env.BOOTSTRAP_NODE),
+            // a list of bootstrap peer multiaddrs to connect to on node startup
+          ],
+        }),
       ],
       connectionEncrypters: [noise()],
       streamMuxers: [yamux()],
@@ -71,9 +87,9 @@ export class dkeyedPeerToPeer {
     this.libp2p.addEventListener("self:peer:update", () =>
       this.updateMultiaddrs()
     );
-
-    this.connectToRelay();
-
+    this.libp2p.addEventListener("peer:discovery", (evt) => {
+      console.log("found peer: ", evt.detail.toString());
+    });
     return this.libp2p;
   }
 
@@ -129,13 +145,5 @@ export class dkeyedPeerToPeer {
         );
       }
     }
-  }
-
-  // Connect to a relay peer
-  async connectToRelay() {
-    const relayMa = multiaddr(
-      "/ip4/127.0.0.1/tcp/64271/ws/p2p/12D3KooWCTBGzs1qVdKnnHG4d341qs5pkzo2rF1AY4RuyXDVEYfj"
-    );
-    return await this.connectToPeer(relayMa);
   }
 }

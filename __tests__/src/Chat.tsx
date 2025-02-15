@@ -76,7 +76,9 @@ export default function Chat() {
   const [peerId, setPeerId] = useState<string>("");
   const [address, setAddress] = useState<string>("");
   const [opponentId, setOpponentId] = useState<string>("");
+  // @ts-ignore: Ignoring unused variable
   const [connected, setConnected] = useState(false);
+  // @ts-ignore: Ignoring unused variable
   const [messages, setMessages] = useState<string[]>([]);
   const [inputMessage, setInputMessage] = useState("");
 
@@ -86,10 +88,11 @@ export default function Chat() {
       await peerToPeer.startP2P(); // Wait for the asynchronous startP2P function
       const peerId = peerToPeer.getPeerId();
       const ma = peerToPeer.getMultiaddrs();
-
+      // @ts-ignore
       setPeerId(peerId);
+      // @ts-ignore
       setAddress(ma);
-
+      // @ts-ignore
       setNode(peerToPeer);
     };
     initializePeerToPeer(); // Call the async function
