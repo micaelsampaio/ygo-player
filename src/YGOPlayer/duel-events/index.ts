@@ -3,6 +3,7 @@ import { YGOTask } from "../core/components/tasks/YGOTask";
 import { YGODuel } from "../core/YGODuel";
 import { ActivateCardHandler } from "./events/activate-card-event";
 import { ChangeCardPositionHandler } from "./events/change-card-position";
+import { FusionSummonEventHandler } from "./events/fusion-summon-event";
 import { LinkSummonEventHandler } from "./events/link-summon-event";
 import { MoveCardEventHandler } from "./events/move-card-event";
 import { RevealEventHandler } from "./events/reveal-event";
@@ -43,6 +44,7 @@ const events: any = {
     [YGODuelEvents.LogType.LinkSummon]: LinkSummonEventHandler,
     [YGODuelEvents.LogType.XYZOverlay]: XYZOverlaySummonEventHandler,
     [YGODuelEvents.LogType.XYZSummon]: XYZSummonEventHandler,
+    [YGODuelEvents.LogType.FusionSummon]: FusionSummonEventHandler,
     [YGODuelEvents.LogType.Reveal]: RevealEventHandler,
     [YGODuelEvents.LogType.Activate]: ActivateCardHandler,
     /// Default
