@@ -134,14 +134,14 @@ export class YGODuel {
 
     public startDuel() {
 
-        this.config.options = {
-            ...this.config.options || {},
-            fieldState: [
-                { id: 62318994, zone: "M-1" },
-                { id: 62318994, zone: "M-2" },
-                { id: 62318994, zone: "M-3" },
-            ]
-        }
+        // this.config.options = {
+        //     ...this.config.options || {},
+        //     fieldState: [
+        //         { id: 62318994, zone: "M-1" },
+        //         { id: 62318994, zone: "M-2" },
+        //         { id: 62318994, zone: "M-3" },
+        //     ]
+        // }
 
         this.ygo = new YGOCore(this.config);
 
