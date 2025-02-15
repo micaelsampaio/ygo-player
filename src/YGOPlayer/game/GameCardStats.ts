@@ -175,7 +175,7 @@ export class GameCardStats {
         let iconPath = `${this.duel.config.cdnUrl}/images/ui/ic_xyz_materials128.png`;
 
         let x = isPlayer1 ? 5 : this.canvas.width - 50;
-        let y = this.canvas.height - 60;
+        let y = isPlayer1 ? this.canvas.height - 50 : this.canvas.height - 60;
 
         const icon = this.duel.assets.getImage(iconPath);
 
