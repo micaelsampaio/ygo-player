@@ -15,21 +15,16 @@
     "declaration": true,
     "esModuleInterop": true,
     "resolveJsonModule": true,
-    "baseUrl": ".",
-    "paths": {
-      "*": [
-        "node_modules/*"
-      ]
-    },
     "skipLibCheck": true,
     "strict": true,
     "incremental": true,
-    "isolatedModules": true
+    "isolatedModules": true,
   },
   "include": [
     "src/**/*"
   ],
   "exclude": [
+    "__tests__",
     "node_modules",
     "tests"
   ]
