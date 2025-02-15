@@ -134,6 +134,14 @@ export class YGODuel {
 
     public startDuel() {
 
+        this.config.options = {
+            ...this.config.options || {},
+            fieldState: [
+                { id: 62318994, zone: "M-1" },
+                { id: 62318994, zone: "M-2" },
+                { id: 62318994, zone: "M-3" },
+            ]
+        }
         this.ygo = new YGOCore(this.config);
 
         setTimeout(() => {
@@ -143,7 +151,7 @@ export class YGODuel {
 
         this.ygo.events.on("new-log", (command) => {
             if (this.commands.isRecovering()) return;
-
+            console.log("-------------- command ------------");
             console.log("command >>> ", command);
 
             this.events.publish("render-ui");

@@ -157,12 +157,11 @@ export class YGOGameActions {
                     zones: zonesToSummon,
                     selectionType: "zone",
                     onSelectionCompleted: (cardZone: any) => {
-
                         ygo.exec(new YGOCommands.XYZSummonCommand({
                             player,
                             id: card.id,
                             materials,
-                            originZone: YGOGameUtils.createZone("ED", card.owner, cardIndex),
+                            originZone: YGOGameUtils.createZone("ED", card.owner, cardIndex + 1),
                             zone: cardZone.zone,
                             position
                         }));
@@ -208,7 +207,7 @@ export class YGOGameActions {
                             player,
                             id: card.id,
                             materials,
-                            originZone: YGOGameUtils.createZone("ED", card.owner, cardIndex),
+                            originZone: YGOGameUtils.createZone("ED", card.owner, cardIndex + 1),
                             zone: cardZone.zone,
                             position
                         }));
@@ -256,7 +255,7 @@ export class YGOGameActions {
                                 player,
                                 id: card.id,
                                 materials,
-                                originZone: YGOGameUtils.createZone("ED", card.owner, cardIndex),
+                                originZone: YGOGameUtils.createZone("ED", card.owner, cardIndex + 1),
                                 zone: cardZone.zone,
                                 position
                             }));

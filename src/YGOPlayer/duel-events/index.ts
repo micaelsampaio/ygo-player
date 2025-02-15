@@ -8,6 +8,8 @@ import { MoveCardEventHandler } from "./events/move-card-event";
 import { RevealEventHandler } from "./events/reveal-event";
 import { SendToGyEventHandler } from "./events/send-to-gy-event";
 import { UpdateFieldEvent } from "./events/update-field-event";
+import { XYZOverlaySummonEventHandler } from "./events/xyz-overlay-event";
+import { XYZSummonEventHandler } from "./events/xyz-summon-event";
 
 export interface DuelEventHandlerProps {
     duel: YGODuel,
@@ -39,6 +41,8 @@ const events: any = {
     [YGODuelEvents.LogType.Flip]: ChangeCardPositionHandler,
     /// Others
     [YGODuelEvents.LogType.LinkSummon]: LinkSummonEventHandler,
+    [YGODuelEvents.LogType.XYZOverlay]: XYZOverlaySummonEventHandler,
+    [YGODuelEvents.LogType.XYZSummon]: XYZSummonEventHandler,
     [YGODuelEvents.LogType.Reveal]: RevealEventHandler,
     [YGODuelEvents.LogType.Activate]: ActivateCardHandler,
     /// Default

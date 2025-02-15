@@ -11,6 +11,9 @@ import { Card } from "../../../YGOCore/types/types";
 import { CallbackTransition } from '../utils/callback';
 import { YGOCommandHandler } from '../../core/components/YGOCommandHandler';
 import { MultipleTasks } from '../utils/multiple-tasks';
+import { ScaleTransition } from '../utils/scale-transition';
+import { CardEmptyMesh } from '../../game/meshes/mesh-utils';
+import { MaterialOpacityTransition } from '../utils/material-opacity';
 
 interface LinkSummonEventHandlerProps extends DuelEventHandlerProps {
     event: YGODuelEvents.LinkSummon
@@ -39,6 +42,54 @@ export class LinkSummonEventHandler extends YGOCommandHandler {
 
         const camera = duel.camera;
 
+        // if (event.materials?.length > 0) {
+        //     for (let i = 0; i < event.materials.length; ++i) {
+        //         const materialData = event.materials[i];
+        //         const originZoneData = YGOGameUtils.getZoneData(materialData.zone)!;
+        //         const originCardZone = getGameZone(duel, originZoneData)!;
+
+        //         const card = originCardZone.getGameCard()!;
+        //         const material = originCardZone.getCardReference()!;
+        //         originCardZone.removeCard();
+
+        //         const gyZone = YGOGameUtils.createZone("GY", materialData.owner);
+        //         const gyZoneData = YGOGameUtils.getZoneData(gyZone)!;
+
+        //         const startPosition = getZonePositionFromZoneData(duel, originZoneData);
+        //         const startRotation = getCardRotationFromFieldZoneData(duel, material, originZoneData);
+
+        //         const endPosition = getZonePositionFromZoneData(duel, gyZoneData);
+        //         const endRotation = getCardRotationFromFieldZoneData(duel, material, gyZoneData);
+
+        //         card.gameObject.position.copy(startPosition);
+        //         card.gameObject.rotation.copy(startRotation);
+        //         card.hideCardStats();
+
+        //         startTask(new YGOTaskSequence()
+        //             .add(
+        //                 new PositionTransition({
+        //                     gameObject: card.gameObject,
+        //                     position: endPosition,
+        //                     duration: 0.5
+        //                 })
+        //             ).add(
+        //                 new CallbackTransition(() => {
+        //                     card.destroy();
+        //                 })
+        //             ));
+
+        //         startTask(new YGOTaskSequence()
+        //             .add(new WaitForSeconds(rotationDelay))
+        //             .add(new RotationTransition({
+        //                 gameObject: card.gameObject,
+        //                 rotation: endRotation,
+        //                 duration: 0.3
+        //             })));
+        //     }
+
+        //     sequence.add(new WaitForSeconds(0.5));
+        // }
+
         if (event.materials?.length > 0) {
             for (let i = 0; i < event.materials.length; ++i) {
                 const materialData = event.materials[i];
@@ -46,42 +97,37 @@ export class LinkSummonEventHandler extends YGOCommandHandler {
                 const originCardZone = getGameZone(duel, originZoneData)!;
 
                 const card = originCardZone.getGameCard()!;
-                const material = originCardZone.getCardReference()!;
+                //const material = originCardZone.getCardReference()!;
+
+                const cardEffect = CardEmptyMesh({ color: 0xff0000, transparent: true });
+                cardEffect.material.opacity = 0;
+                duel.core.scene.add(cardEffect);
                 originCardZone.removeCard();
 
-                const gyZone = YGOGameUtils.createZone("GY", materialData.owner);
-                const gyZoneData = YGOGameUtils.getZoneData(gyZone)!;
+                cardEffect.position.copy(card.gameObject.position);
+                cardEffect.rotation.copy(card.gameObject.rotation);
+                cardEffect.position.z += 0.05;
 
-                const startPosition = getZonePositionFromZoneData(duel, originZoneData);
-                const startRotation = getCardRotationFromFieldZoneData(duel, material, originZoneData);
-
-                const endPosition = getZonePositionFromZoneData(duel, gyZoneData);
-                const endRotation = getCardRotationFromFieldZoneData(duel, material, gyZoneData);
-
-                card.gameObject.position.copy(startPosition);
-                card.gameObject.rotation.copy(startRotation);
                 card.hideCardStats();
 
-                startTask(new YGOTaskSequence()
-                    .add(
-                        new PositionTransition({
-                            gameObject: card.gameObject,
-                            position: endPosition,
-                            duration: 0.5
-                        })
-                    ).add(
-                        new CallbackTransition(() => {
-                            card.destroy();
-                        })
-                    ));
-
-                startTask(new YGOTaskSequence()
-                    .add(new WaitForSeconds(rotationDelay))
-                    .add(new RotationTransition({
-                        gameObject: card.gameObject,
-                        rotation: endRotation,
-                        duration: 0.3
-                    })));
+                startTask(new YGOTaskSequence(
+                    new MaterialOpacityTransition({
+                        material: cardEffect.material,
+                        opacity: 1,
+                        duration: 0.15
+                    }),
+                    new CallbackTransition(() => {
+                        card.destroy();
+                    }),
+                    new ScaleTransition({
+                        gameObject: cardEffect,
+                        scale: new THREE.Vector3(0, 0, 0),
+                        duration: 0.2
+                    }),
+                    new CallbackTransition(() => {
+                        duel.core.scene.remove(cardEffect);
+                    })
+                ))
             }
 
             sequence.add(new WaitForSeconds(0.5));

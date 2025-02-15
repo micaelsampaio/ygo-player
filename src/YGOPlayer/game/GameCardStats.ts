@@ -153,7 +153,6 @@ export class GameCardStats {
         }
 
         const icon = this.duel.assets.getImage(iconPath);
-        console.log(icon);
 
         this.ctx.drawImage(icon, 0, 0, icon.width, icon.height, x - 30, y - 17, 20, 20);
 
@@ -185,8 +184,8 @@ export class GameCardStats {
         this.ctx.fillStyle = "#FFFFFF";
         this.ctx.strokeStyle = "black";
         this.ctx.lineWidth = 2;
-        this.ctx.strokeText(materialsStr, x + 30, this.canvas.height - 60);
-        this.ctx.fillText(materialsStr, x + 30, this.canvas.height - 60);
+        this.ctx.strokeText(materialsStr, x + 30, y);
+        this.ctx.fillText(materialsStr, x + 30, y);
 
         this.materials = materials;
     }
