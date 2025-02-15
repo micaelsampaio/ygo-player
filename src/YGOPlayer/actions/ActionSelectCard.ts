@@ -158,7 +158,7 @@ export class ActionCardSelection extends YGOComponent implements YGOAction {
     //////////
 
     private createCardSelection(position: THREE.Vector3, rotation: THREE.Euler) {
-        const cardSelection = createCardSelectionGeometry(2.4, 2.8, 0.15);
+        const cardSelection = createCardSelectionGeometry(2.1, 2.8, 0.1);
         const material = new THREE.MeshBasicMaterial({ color: 0xff0000, opacity: 1, transparent: true });
         const cardSelectionMesh = new THREE.Mesh(cardSelection, material);
 
@@ -173,7 +173,7 @@ export class ActionCardSelection extends YGOComponent implements YGOAction {
 
     private createCardZoneSelection(position: THREE.Vector3, rotation: THREE.Euler) {
 
-        const cardSelection = createCardSelectionGeometry(2.8, 2.8, 0.15);
+        const cardSelection = createCardSelectionGeometry(2.8, 2.8, 0.08);
         const material = new THREE.MeshBasicMaterial({ color: 0xff0000, opacity: 1, transparent: true });
         const cardSelectionMesh = new THREE.Mesh(cardSelection, material);
 
@@ -216,7 +216,7 @@ export class ActionCardSelection extends YGOComponent implements YGOAction {
 
     private clickOnZone(position: THREE.Vector3) {
 
-        const zoneClick = this.createCardSelection(position, new THREE.Euler(0, 0, 0));
+        const zoneClick = this.createCardZoneSelection(position, new THREE.Euler(0, 0, 0));
         zoneClick.visible = true;
 
         const targetPosition = position.clone();
