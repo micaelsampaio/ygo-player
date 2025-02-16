@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { YGODuel } from "../../core/YGODuel";
 import { ActionUiMenu } from "../../actions/ActionUiMenu";
 
-export function ExtraDeck({ duel, player, clearAction, visible = true }: { player: number, duel: YGODuel, visible: boolean, clearAction: () => void }) {
+export function ExtraDeck({ duel, player, hasAction, clearAction, visible = true }: { player: number, duel: YGODuel, visible: boolean, hasAction: boolean, clearAction: () => void }) {
 
     const action = useMemo(() => {
         const action = new ActionUiMenu(duel, { eventType: "card-extra-deck-menu" });
@@ -25,7 +25,11 @@ export function ExtraDeck({ duel, player, clearAction, visible = true }: { playe
             e.stopPropagation();
         }}
 
-        onScroll={() => duel.events.publish("clear-ui-action")}
+        onScroll={() => {
+            if (hasAction) {
+                duel.events.publish("clear-ui-action");
+            }
+        }}
     >
         <h2>EX Deck</h2>
         <hr />

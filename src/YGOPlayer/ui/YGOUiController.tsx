@@ -137,9 +137,21 @@ export function YGOUiController({ duel }: { duel: YGODuel }) {
         {
             menus.map(menu => {
                 const Menu = (MENUS as any)[menu.type] as any;
-                return <Menu config={gameConfig} key={menu.type} duel={duel} {...menu.data} visible />
+                return <Menu
+                    config={gameConfig}
+                    key={menu.type}
+                    duel={duel}
+                    hasAction={!!Action}
+                    {...menu.data}
+                    visible />
             })
         }
-        {Action && gameConfig.actions && <Action config={gameConfig} type={action.type} {...action.data} duel={duel} clearAction={clearAction} />}
+
+        {Action && gameConfig.actions && <Action
+            config={gameConfig}
+            type={action.type}
+            {...action.data}
+            duel={duel}
+            clearAction={clearAction} />}
     </>
 }
