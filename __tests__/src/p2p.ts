@@ -1,20 +1,14 @@
-import { dcutr } from "@libp2p/dcutr";
 import * as filters from "@libp2p/websockets/filters";
 import { identify, identifyPush } from "@libp2p/identify";
 import { ping } from "@libp2p/ping";
 import { webSockets } from "@libp2p/websockets";
 import { multiaddr, protocols } from "@multiformats/multiaddr";
-import { byteStream } from "it-byte-stream";
-import { fromString, toString } from "uint8arrays";
 import { bootstrap } from "@libp2p/bootstrap";
 import { createLibp2p } from "libp2p";
 import { noise } from "@chainsafe/libp2p-noise";
 import { yamux } from "@chainsafe/libp2p-yamux";
-import { webTransport } from "@libp2p/webtransport";
-import { webRTC, webRTCDirect } from "@libp2p/webrtc";
+import { webRTC } from "@libp2p/webrtc";
 import { circuitRelayTransport } from "@libp2p/circuit-relay-v2";
-import { gossipsub } from "@chainsafe/libp2p-gossipsub";
-import { pubsubPeerDiscovery } from "@libp2p/pubsub-peer-discovery";
 
 export class dkeyedPeerToPeer {
   WEBRTC_CODE = protocols("webrtc").code;
@@ -22,7 +16,11 @@ export class dkeyedPeerToPeer {
   ma = null;
   libp2p = null;
 
-  constructor() {
+  private bootstrapNode: string;
+
+  constructor(bootstrapNode: string) {
+    this.bootstrapNode = bootstrapNode;
+
     // all libp2p debug logs
     localStorage.setItem("debug", "libp2p:*");
     // networking debug logs
@@ -40,7 +38,6 @@ export class dkeyedPeerToPeer {
     return this.ma;
   }
 
-  // Initialize the libp2p instance
   async startP2P() {
     console.log("Bootstrap Node:", import.meta.env.BOOTSTRAP_NODE);
     this.libp2p = await createLibp2p({
@@ -54,11 +51,7 @@ export class dkeyedPeerToPeer {
       ],
       peerDiscovery: [
         bootstrap({
-          list: [
-            "/ip4/127.0.0.1/tcp/5001/ws/p2p/12D3KooWS2XoZP8164gZXkeBK43X3Wi7QQifggVY9B1jku55F2Rb",
-            //String(import.meta.env.BOOTSTRAP_NODE),
-            // a list of bootstrap peer multiaddrs to connect to on node startup
-          ],
+          list: [this.bootstrapNode],
         }),
       ],
       connectionEncrypters: [noise()],
@@ -93,8 +86,9 @@ export class dkeyedPeerToPeer {
     return this.libp2p;
   }
 
-  // Update connections list
   async updateConnList() {
+    if (!this.libp2p) return;
+
     this.libp2p.getConnections().map((connection) => {
       console.log("New connection event:");
       if (connection.remoteAddr.protoCodes().includes(this.WEBRTC_CODE)) {
@@ -106,8 +100,9 @@ export class dkeyedPeerToPeer {
     });
   }
 
-  // Update multiaddresses, only show WebRTC addresses
   updateMultiaddrs() {
+    if (!this.libp2p) return;
+
     const multiaddrs = this.libp2p
       .getMultiaddrs()
       .filter((ma) => this.isWebrtc(ma))
@@ -116,15 +111,16 @@ export class dkeyedPeerToPeer {
       });
   }
 
-  // Check if the multiaddr is WebRTC
   isWebrtc(ma) {
     return ma.protoCodes().includes(this.WEBRTC_CODE);
   }
 
-  // Connect to a specific peer
   async connectToPeer(ma) {
+    if (!this.libp2p) throw new Error("Libp2p instance not initialized");
+
     const castedMultiAddress = multiaddr(ma);
     const signal = AbortSignal.timeout(5000);
+
     try {
       if (this.isWebrtc(castedMultiAddress)) {
         const rtt = await this.libp2p.services.ping.ping(castedMultiAddress, {

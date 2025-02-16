@@ -7,7 +7,7 @@ export class dkeyedPeerToPeer {
   ma: string | null;
   libp2p: Libp2p | null;
 
-  constructor();
+  constructor(bootstrapNode: string);
 
   getPeerId(): string | null;
 

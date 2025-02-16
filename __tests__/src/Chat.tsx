@@ -84,7 +84,9 @@ export default function Chat() {
 
   useEffect(() => {
     const initializePeerToPeer = async () => {
-      const peerToPeer = new dkeyedPeerToPeer();
+      const peerToPeer = new dkeyedPeerToPeer(
+        import.meta.env.VITE_BOOTSTRAP_NODE
+      );
       await peerToPeer.startP2P(); // Wait for the asynchronous startP2P function
       const peerId = peerToPeer.getPeerId();
       const ma = peerToPeer.getMultiaddrs();
