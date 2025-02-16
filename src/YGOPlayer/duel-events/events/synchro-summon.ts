@@ -11,20 +11,20 @@ import { Card } from "../../../YGOCore/types/types";
 import { CallbackTransition } from '../utils/callback';
 import { YGOCommandHandler } from '../../core/components/YGOCommandHandler';
 import { MultipleTasks } from '../utils/multiple-tasks';
-import { ScaleTransition } from '../utils/scale-transition';
 import { CardEmptyMesh } from '../../game/meshes/mesh-utils';
 import { MaterialOpacityTransition } from '../utils/material-opacity';
+import { ScaleTransition } from '../utils/scale-transition';
 
-interface LinkSummonEventHandlerProps extends DuelEventHandlerProps {
-    event: YGODuelEvents.LinkSummon
+interface SynchroSummonEventHandlerProps extends DuelEventHandlerProps {
+    event: YGODuelEvents.SynchroSummon
 }
 
-export class LinkSummonEventHandler extends YGOCommandHandler {
-    private props: LinkSummonEventHandlerProps
+export class SynchroSummonEventHandler extends YGOCommandHandler {
+    private props: SynchroSummonEventHandlerProps
     private cardReference: Card;
 
-    constructor(props: LinkSummonEventHandlerProps) {
-        super("link_summon_command");
+    constructor(props: SynchroSummonEventHandlerProps) {
+        super("synchro_summon_command");
         this.props = props;
         const event = this.props.event;
         this.cardReference = this.props.ygo.state.getCardById(event.id, event.zone);
@@ -37,7 +37,7 @@ export class LinkSummonEventHandler extends YGOCommandHandler {
 
         const originZoneData = YGOGameUtils.getZoneData(event.originZone)!;
         const zoneData = YGOGameUtils.getZoneData(event.zone)!;
-        const camera = duel.camera;
+
 
         if (event.materials?.length > 0) {
             for (let i = 0; i < event.materials.length; ++i) {
@@ -46,9 +46,8 @@ export class LinkSummonEventHandler extends YGOCommandHandler {
                 const originCardZone = getGameZone(duel, originZoneData)!;
 
                 const card = originCardZone.getGameCard()!;
-                //const material = originCardZone.getCardReference()!;
 
-                const cardEffect = CardEmptyMesh({ color: 0xff0000, transparent: true });
+                const cardEffect = CardEmptyMesh({ color: 0xffffff, transparent: true });
                 cardEffect.material.opacity = 0;
                 duel.core.scene.add(cardEffect);
                 originCardZone.removeCard();
@@ -82,6 +81,8 @@ export class LinkSummonEventHandler extends YGOCommandHandler {
             sequence.add(new WaitForSeconds(0.5));
         }
 
+
+        const camera = duel.camera;
         const cardZone = getGameZone(duel, zoneData);
         const endPosition = getZonePositionFromZoneData(duel, zoneData);
         const endRotation = getCardRotationFromFieldZoneData(duel, this.cardReference, zoneData);
@@ -90,7 +91,6 @@ export class LinkSummonEventHandler extends YGOCommandHandler {
         camera.getWorldDirection(direction);
 
         const startPosition = camera.position.clone().add(direction.multiplyScalar(4));
-
         const card = new GameCard({ duel, card: this.cardReference });
         card.hideCardStats();
         card.gameObject.position.copy(startPosition);
