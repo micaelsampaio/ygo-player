@@ -71,18 +71,30 @@ export class dkeyedPeerToPeer {
     this.peerId = this.libp2p.peerId.toString();
     console.log("libp2p started! Peer ID:", this.libp2p.peerId.toString());
 
-    // Event listeners
-    this.libp2p.addEventListener("connection:open", () =>
-      this.updateConnList()
-    );
-    this.libp2p.addEventListener("connection:close", () =>
-      this.updateConnList()
-    );
-    this.libp2p.addEventListener("self:peer:update", () =>
-      this.updateMultiaddrs()
-    );
+    this.libp2p.addEventListener("connection:open", (evt) => {
+      console.log("Connection opened with:", evt.detail.remoteAddr.toString());
+      console.dir(evt.detail, { depth: null });
+    });
+
+    this.libp2p.addEventListener("connection:close", (evt) => {
+      console.log("Connection closed with:", evt.detail.remoteAddr.toString());
+    });
+
+    this.libp2p.addEventListener("self:peer:update", () => {
+      console.log("Self peer updated!");
+      this.updateMultiaddrs();
+    });
+
     this.libp2p.addEventListener("peer:discovery", (evt) => {
-      console.log("found peer: ", evt.detail.toString());
+      console.log("Found peer:", evt.detail.id.toString());
+      console.log(
+        "Peer Multiaddrs:",
+        evt.detail.multiaddrs.map((ma) => ma.toString())
+      );
+      console.log(
+        "My Multiaddrs:",
+        this.libp2p.getMultiaddrs().map((ma) => ma.toString())
+      );
     });
     return this.libp2p;
   }
@@ -123,16 +135,12 @@ export class dkeyedPeerToPeer {
     const signal = AbortSignal.timeout(5000);
 
     try {
-      if (this.isWebrtc(castedMultiAddress)) {
-        const rtt = await this.libp2p.services.ping.ping(castedMultiAddress, {
-          signal,
-        });
-        console.log(`Connected to '${castedMultiAddress}'`);
-        console.log(`RTT to ${castedMultiAddress.getPeerId()} was ${rtt}ms`);
-      } else {
-        await this.libp2p.dial(castedMultiAddress, { signal });
-        console.log("Connected to relay");
-      }
+      const rtt = await this.libp2p.services.ping.ping(castedMultiAddress, {
+        signal,
+      });
+      await this.libp2p.dial(castedMultiAddress, { signal });
+      console.log(`Connected to '${castedMultiAddress}'`);
+      console.log(`RTT to ${castedMultiAddress.getPeerId()} was ${rtt}ms`);
     } catch (err) {
       if (signal.aborted) {
         console.log(`Timed out connecting to '${castedMultiAddress}'`);

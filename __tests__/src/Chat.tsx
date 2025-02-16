@@ -127,7 +127,7 @@ export default function Chat() {
         <InputContainer>
           <InputField
             type="text"
-            placeholder="Opponent Peer ID"
+            placeholder="Opponent Address"
             value={opponentId}
             onChange={(e) => setOpponentId(e.target.value)}
           />
