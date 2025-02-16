@@ -11,86 +11,76 @@ import * as filters from "@libp2p/websockets/filters";
 import { createLibp2p } from "libp2p";
 import { webRTC } from "@libp2p/webrtc";
 import { webTransport } from "@libp2p/webtransport";
-
-// If using SSL/TLS
 import fs from "fs";
-const key = fs.readFileSync(process.env.SSL_KEY_PATH);
-const cert = fs.readFileSync(process.env.SSL_CERT_PATH);
 
-const server = await createLibp2p({
-  addresses: {
-    listen: [
-      // WebSocket (WS)
-      "/ip4/0.0.0.0/tcp/5002/ws",
+const enableWSS = process.env.ENABLE_WSS === "true"; // Check if WSS is enabled
 
-      // WebSocket Secure (WSS)
-      "/ip4/0.0.0.0/tcp/5001/wss",
+// If using SSL/TLS and WSS is enabled
+let key, cert;
+if (enableWSS) {
+  key = fs.readFileSync(process.env.SSL_KEY_PATH);
+  cert = fs.readFileSync(process.env.SSL_CERT_PATH);
+}
 
-      // TCP
-      "/ip4/0.0.0.0/tcp/5003",
+const listenAddresses = [
+  "/ip4/0.0.0.0/tcp/3002/ws", // WebSocket (WS)
+  "/ip4/0.0.0.0/tcp/3003", // TCP
+  "/ip4/0.0.0.0/udp/3004/webrtc", // WebRTC
+  "/ip4/0.0.0.0/udp/3005/quic-v1/webtransport", // WebTransport
+  "/ip4/127.0.0.1/tcp/3001/ws", // Local WS
+  "/p2p-circuit", // Circuit relay
+];
 
-      // WebRTC
-      "/ip4/0.0.0.0/udp/5004/webrtc",
+// Add WSS addresses only if enabled
+if (enableWSS) {
+  listenAddresses.push("/ip4/0.0.0.0/tcp/3001/wss");
+}
 
-      // WebTransport
-      "/ip4/0.0.0.0/udp/5005/quic-v1/webtransport",
+const transports = [
+  webSockets({ filter: filters.all }),
+  tcp(),
+  webRTC({
+    rtcConfiguration: {
+      iceServers: [
+        {
+          urls: [
+            "stun:stun.l.google.com:19302",
+            "stun:global.stun.twilio.com:3478",
+          ],
+        },
+      ],
+    },
+  }),
+  webTransport(),
+  circuitRelayTransport({ discoverRelays: 1 }),
+];
 
-      // IPv6 support
-      "/ip6/::/tcp/5001/ws",
-      "/ip6/::/tcp/5002/wss",
-
-      // Local network
-      "/ip4/127.0.0.1/tcp/5001/ws",
-
-      // Circuit relay
-      "/p2p-circuit",
-    ],
-  },
-  transports: [
+// Add WSS transport only if enabled
+if (enableWSS) {
+  transports.push(
     webSockets({
-      filter: filters.all,
       websocket: {
         server: {
           key,
           cert,
           port: 5001,
-          // Allow any origin
           handleProtocols: (protocols) => protocols,
         },
       },
-    }),
-    tcp(),
-    webRTC({
-      rtcConfiguration: {
-        iceServers: [
-          {
-            // STUN servers help the browser discover its own public IPs
-            urls: [
-              "stun:stun.l.google.com:19302",
-              "stun:global.stun.twilio.com:3478",
-            ],
-          },
-        ],
-      },
-    }),
-    webTransport(),
-    circuitRelayTransport({
-      discoverRelays: 1,
-    }),
-  ],
+    })
+  );
+}
+
+const server = await createLibp2p({
+  addresses: { listen: listenAddresses },
+  transports,
   connectionEncrypters: [noise()],
   streamMuxers: [yamux()],
   services: {
     identify: identify(),
     relay: circuitRelayServer({
-      reservations: {
-        maxReservations: 50,
-        maxDuration: 1800000,
-      },
-      hop: {
-        timeout: 30000,
-        maxReservations: 50,
-      },
+      reservations: { maxReservations: 50, maxDuration: 1800000 },
+      hop: { timeout: 30000, maxReservations: 50 },
     }),
   },
   connectionManager: {
@@ -98,14 +88,11 @@ const server = await createLibp2p({
     minConnections: 50,
     pollInterval: 2000,
   },
-  nat: {
-    enabled: true,
-    description: "libp2p relay server",
-  },
+  nat: { enabled: true, description: "libp2p relay server" },
 });
 
 // Log all listening addresses
-console.info("The node is running and listening on the following addresses:");
+console.info("The node is running and listening on:");
 console.info(
   server
     .getMultiaddrs()
@@ -115,19 +102,16 @@ console.info(
 
 // Monitor connections
 server.addEventListener("connection:open", (event) => {
-  console.log("New connection opened:", event.detail.remoteAddr.toString());
+  console.log("New connection:", event.detail.remoteAddr.toString());
 });
-
 server.addEventListener("connection:close", (event) => {
   console.log("Connection closed:", event.detail.remoteAddr.toString());
 });
-
-// Monitor errors
 server.addEventListener("error", (event) => {
   console.error("Node error:", event);
 });
 
-// Keep the process running
+// Graceful shutdown
 process.on("SIGINT", async () => {
   console.log("Shutting down...");
   await server.stop();
