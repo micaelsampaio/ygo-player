@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { YGODuel } from "../core/YGODuel";
 import { ACTIONS } from "./actions";
-import { DuelLogMenu } from "./menus/duel-log";
+import { DuelLogMenu } from "./menus/duel-log/duel-log";
 import { MENUS } from "./menus";
 import { TimeLine } from "./menus/timeline";
 import { ChangeGamePlayer } from "./components/ChangeGamePlayer";

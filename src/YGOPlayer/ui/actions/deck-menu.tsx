@@ -32,7 +32,7 @@ export function DeckMenu({ duel, deck }: { duel: YGODuel, deck: Deck, clearActio
     const mainDeckSize = duel.ygo.state.fields[0].mainDeck.length;
 
     return <CardMenu menuRef={menuRef}>
-        <div className="ygo-d-flex ygo-gap-2">
+        <div className="ygo-flex ygo-gap-2">
             <div className="ygo-flex-grow-1">
                 <button className="ygo-card-item" disabled={mainDeckSize === 0} type="button" onClick={milFromDeck}>Mil</button>
             </div>

@@ -88,8 +88,8 @@ export class YGODuel {
                     `${this.config.cdnUrl}/images/ui/ic_rank128.png`,
                     `${this.config.cdnUrl}/images/ui/ic_link128.png`,
                     `${this.config.cdnUrl}/images/ui/ic_xyz_materials128.png`,
-                )
-                // this.assets.loadTextures(Array.from(cards.values()).map(id => `http://127.0.0.1:8080/images/cards_small/${id}.jpg`)),
+                ),
+                //this.assets.loadTextures(Array.from((this.ygo.state as any).cardsIngame.values()).map(id => `http://127.0.0.1:8080/images/cards_small/${id}.jpg`)),
             ]);
             this.core.scene.add(fieldModel.scene);
             // this.core.camera.position.set(0, 0, 14);

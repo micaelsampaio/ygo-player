@@ -70,14 +70,6 @@
     z-index: 0;
 }
 
-.ygo-player-core .ygo-timeline {
-    position: absolute;
-    top: 0px;
-    left: 0px;
-    background-color: white;
-    padding: 20px;
-}
-
 .ygo-player-core .float-right-menu {
     position: absolute;
     top: 0px;
