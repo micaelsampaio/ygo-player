@@ -108,7 +108,8 @@ export default function Chat() {
   }
 
   async function sendMessage() {
-    console.log("send message");
+    console.log("sending message: ", inputMessage, " to ", opponentId);
+    await node.sendMsgToPeer(opponentId, inputMessage);
   }
 
   return (
