@@ -24,3 +24,10 @@ dist-ssr
 *.sw?
 
 yarn.lock
+
+npm-debug.log
+certs
+*.pem
+*.key
+*.crt
+.git

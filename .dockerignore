@@ -21,3 +21,14 @@ node_modules
 __tests__/package-lock.json
 
 __tests__/node_modules
+
+node_modules
+npm-debug.log
+certs
+*.pem
+*.key
+*.crt
+.env
+.git
+.gitignore
+README.md
