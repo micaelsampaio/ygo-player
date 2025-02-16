@@ -15,8 +15,6 @@ export class ExtraDeck extends YGOEntity implements YGOUiElement {
     private mesh: THREE.Mesh;
     public position: THREE.Vector3;
     public faceDownRotation: THREE.Euler;
-    //private action: ActionUiMenu;
-
     private cards: GameBackCard[];
 
     constructor({ duel, player, position }: { duel: YGODuel, player: number, zone: string, position: THREE.Vector3 }) {
@@ -71,6 +69,9 @@ export class ExtraDeck extends YGOEntity implements YGOUiElement {
     }
 
     onMouseClick(event: MouseEvent): void {
+        if (this.duel.config.autoChangePlayer) {
+            this.duel.setActivePlayer(this.player);
+        }
         this.duel.events.publish("toggle-ui-menu", { group: "game-overlay", type: "extra-deck", data: { player: this.player, extraDeck: this } })
     }
 

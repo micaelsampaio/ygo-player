@@ -50,6 +50,11 @@ export class YGODuel {
     constructor({ canvas, config }: { canvas: HTMLCanvasElement, config: YGOConfig }) {
         this.state = YGODuelState.EDITOR;
         this.config = config;
+
+        if (this.config.autoChangePlayer === undefined) {
+            this.config.autoChangePlayer = true;
+        }
+
         this.core = new YGOPlayerCore({ canvas });
         this.core.renderer.setAnimationLoop(this.update.bind(this));
         this.camera = this.core.camera;
@@ -238,7 +243,7 @@ export class YGODuel {
 
         for (let i = 0; i < hand.length; ++i) {
             if (!hand[i]) {
-                const card = new GameCardHand({ duel: this })
+                const card = new GameCardHand({ duel: this, player: playerIndex })
                 card.setCard(duelField.hand[i]);
                 gameField.hand.cards[i] = card;
             } else {

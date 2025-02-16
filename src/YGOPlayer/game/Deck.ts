@@ -65,6 +65,10 @@ export class Deck extends YGOEntity implements YGOUiElement {
     }
 
     onMouseClick(event: MouseEvent): void {
+        if (this.duel.config.autoChangePlayer) {
+            this.duel.setActivePlayer(this.player);
+        }
+
         this.action.eventData = { duel: this.duel, deck: this, mouseEvent: event };
         this.duel.actionManager.setAction(this.action);
     }

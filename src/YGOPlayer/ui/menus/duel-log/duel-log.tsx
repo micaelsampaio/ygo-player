@@ -12,7 +12,6 @@ const COMPONENTS = {
 
 export function DuelLogMenu({ duel }: { duel: YGODuel }) {
     const [logs, setLogs] = useState<YGODuelEvents.DuelLog[]>([])
-    console.log(logs)
 
     useEffect(() => {
         if (!duel) return;
@@ -39,8 +38,6 @@ export function DuelLogMenu({ duel }: { duel: YGODuel }) {
     }
 
     return <div className="ygo-duel-log-container">
-        LOGS: {logs.length}
-
         <div className="ygo-logs">
             {logs.map((log, index) => {
                 const Component = (COMPONENTS as any)[log.type] || COMPONENTS.default;
@@ -50,18 +47,9 @@ export function DuelLogMenu({ duel }: { duel: YGODuel }) {
                     duel={duel}
                     ygo={duel.ygo}
                     index={index}
+                    undoByCommandIndex={undoByCommand}
                     log={log}
                 />
-
-                // return <div key={index + log.type}>
-                //     <div className="ygo-flex ygo-gap-2">
-                //         <div style={{ width: "8px", height: "24px", background: log.player === 0 ? "blue" : "red" }}>
-                //         </div>
-                //         <div>
-                //             <button onClick={() => undoByCommand(index)}>{log.type}</button>
-                //         </div>
-                //     </div>
-                // </div>
             })}
 
             <div onClick={undo}>

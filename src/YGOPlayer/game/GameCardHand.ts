@@ -15,8 +15,9 @@ export class GameCardHand extends YGOEntity implements YGOUiElement {
     public isUiElement: boolean = true;
     public isUiElementClick: boolean = true;
     public isUiElementHover: boolean = true;
+    public player: number;
 
-    constructor({ duel }: { duel: YGODuel }) {
+    constructor({ duel, player }: { duel: YGODuel, player: number }) {
         super();
 
         this.duel = duel;
@@ -43,6 +44,7 @@ export class GameCardHand extends YGOEntity implements YGOUiElement {
         this.duel.core.scene.add(this.gameObject);
         this.duel.gameController.getComponent<YGOMouseEvents>("mouse_events")?.registerElement(this);
         this.isActive = false;
+        this.player = player;
     }
 
     onMouseClick?(event: MouseEvent): void {
@@ -55,6 +57,10 @@ export class GameCardHand extends YGOEntity implements YGOUiElement {
             card: this.card
         });
 
+        if(this.duel.config.autoChangePlayer){
+            this.duel.setActivePlayer(this.player);
+        }
+        
         const action = this.duel.actionManager.getAction<ActionCardHandMenu>("card-hand-menu");
         action.setData({
             duel: this.duel,

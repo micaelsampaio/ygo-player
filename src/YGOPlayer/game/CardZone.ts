@@ -68,6 +68,10 @@ export class CardZone extends YGOEntity implements YGOUiElement {
             event.stopPropagation();
 
             if (this.getCardReference()) {
+                if (this.duel.config.autoChangePlayer) {
+                    this.duel.setActivePlayer(this.player);
+                }
+
                 const action = this.duel.actionManager.getAction<ActionCardZoneMenu>("card-zone-menu");
                 action.setData({
                     duel: this.duel,
