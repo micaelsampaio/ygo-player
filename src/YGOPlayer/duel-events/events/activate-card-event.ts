@@ -14,6 +14,8 @@ import { CallbackTransition } from '../utils/callback';
 import { PositionTransition } from '../utils/position-transition';
 import { WaitForSeconds } from '../utils/wait-for-seconds';
 import { ChangeCardPositionHandler } from './change-card-position';
+import { GameModalOverlayMesh } from '../../game/meshes/mesh-utils';
+import { MaterialOpacityTransition } from '../utils/material-opacity';
 
 interface ActivateCardHandlerProps extends DuelEventHandlerProps {
     event: YGODuelEvents.Activate
@@ -132,16 +134,37 @@ export class ActivateCardHandler extends YGOCommandHandler {
             }));
         } else if (cardZone) {
             const card = getGameZone(duel, zoneData)!.getGameCard();
-            const startPosition: THREE.Vector3 = card.gameObject.position.clone();
-            const startRotation: THREE.Euler = card.gameObject.rotation.clone()
 
             card.hideCardStats();
 
-            this.createActivationEffect(sequence, card.gameObject, startPosition);
+            const cardOverlay = card.gameObject.clone();
+            duel.core.sceneOverlay.add(cardOverlay);
+
+            card.gameObject.visible = false;
+
+            const modal = GameModalOverlayMesh();
+            modal.material.opacity = 0;
+            duel.core.scene.add(modal);
+            duel.core.enableRenderOverlay();
+
+            this.props.startTask(new YGOTaskSequence(
+                new MaterialOpacityTransition({
+                    material: modal.material,
+                    duration: 0.25,
+                    opacity: 0.7
+                }),
+                new WaitForSeconds(0.4),
+                new MaterialOpacityTransition({
+                    material: modal.material,
+                    duration: 0.25,
+                    opacity: 0
+                }),
+            ))
+
+            this.createActivationEffect(sequence, cardOverlay, card.gameObject.position.clone());
 
             sequence.add(new CallbackTransition(() => {
-                card.gameObject.position.copy(startPosition);
-                card.gameObject.rotation.copy(startRotation);
+                card.gameObject.visible = true;
                 card.updateCardStats(zoneData);
             }));
 
@@ -150,6 +173,7 @@ export class ActivateCardHandler extends YGOCommandHandler {
         }
 
         sequence.add(new CallbackTransition(() => {
+            duel.core.disableRenderOverlay();
             this.props.onCompleted();
         }));
 

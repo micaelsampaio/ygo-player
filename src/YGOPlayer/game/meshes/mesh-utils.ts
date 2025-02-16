@@ -8,3 +8,18 @@ export function CardEmptyMesh({ material, color, depth = 0.02, transparent }: { 
 
     return new THREE.Mesh(geometry, meshMaterial);
 }
+
+export function GameModalOverlayMesh() {
+    const modalGeometry = new THREE.PlaneGeometry(1, 1);
+    const modalMaterial = new THREE.MeshBasicMaterial({
+        color: 0x000000,
+        transparent: true,
+        opacity: 0.8,
+    });
+
+    const modalPlane = new THREE.Mesh(modalGeometry, modalMaterial);
+    modalPlane.scale.set(20, 20, 20);
+    modalPlane.position.set(0, 0, 14);
+
+    return modalPlane;
+}

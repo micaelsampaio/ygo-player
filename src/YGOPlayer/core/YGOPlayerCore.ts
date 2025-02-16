@@ -6,6 +6,7 @@ import { Font, FontLoader } from 'three/addons/loaders/FontLoader.js';
 
 export class YGOPlayerCore {
     public scene: THREE.Scene;
+    public sceneOverlay: THREE.Scene;
     public canvas: HTMLCanvasElement;
     public camera: THREE.PerspectiveCamera;
     public textureLoader: THREE.TextureLoader;
@@ -17,9 +18,12 @@ export class YGOPlayerCore {
     public mapBounds: THREE.Object3D;
     // internal
     private previousFrame: number;
+    private isOverlayEnabled: boolean;
 
     constructor({ canvas }: { canvas: HTMLCanvasElement }) {
+        this.isOverlayEnabled = false;
         this.scene = new THREE.Scene();
+        this.sceneOverlay = new THREE.Scene();
         this.canvas = canvas;
         this.deltaTime = 0;
         this.previousFrame = performance.now();
@@ -45,6 +49,13 @@ export class YGOPlayerCore {
         this.previousFrame = now;
 
         this.renderer.render(this.scene, this.camera);
+
+        if (this.isOverlayEnabled) {
+            this.renderer.autoClear = false;
+            this.renderer.clearDepth();
+            this.renderer.render(this.sceneOverlay, this.camera);
+            this.renderer.autoClear = true;
+        }
     }
 
     public async loadGLTFAsync(url: string): Promise<GLTF> {
@@ -66,6 +77,21 @@ export class YGOPlayerCore {
                 this.fonts.set(name, font);
             })
         })
+    }
+
+    public enableRenderOverlay() {
+        this.isOverlayEnabled = true;
+    }
+
+    public disableRenderOverlay() {
+        this.isOverlayEnabled = false;
+        this.clearSceneOverlay();
+    }
+
+    public clearSceneOverlay() {
+        while (this.sceneOverlay.children.length > 0) {
+            this.sceneOverlay.remove(this.sceneOverlay.children[0]);
+        }
     }
 
     updateCamera() {

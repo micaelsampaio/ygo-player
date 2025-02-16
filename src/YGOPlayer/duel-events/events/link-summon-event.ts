@@ -12,7 +12,7 @@ import { CallbackTransition } from '../utils/callback';
 import { YGOCommandHandler } from '../../core/components/YGOCommandHandler';
 import { MultipleTasks } from '../utils/multiple-tasks';
 import { ScaleTransition } from '../utils/scale-transition';
-import { CardEmptyMesh } from '../../game/meshes/mesh-utils';
+import { CardEmptyMesh, GameModalOverlayMesh } from '../../game/meshes/mesh-utils';
 import { MaterialOpacityTransition } from '../utils/material-opacity';
 
 interface LinkSummonEventHandlerProps extends DuelEventHandlerProps {
@@ -97,26 +97,58 @@ export class LinkSummonEventHandler extends YGOCommandHandler {
         card.gameObject.visible = false;
         card.gameObject.lookAt(camera.position);
 
+        const modal = GameModalOverlayMesh();
+        duel.core.scene.add(modal);
+
+        const cardOverlay = card.gameObject.clone();
+        duel.core.sceneOverlay.add(cardOverlay);
+
+        modal.material.opacity = 0;
+
+        startTask(
+            new YGOTaskSequence(
+                new WaitForSeconds(0.3),
+                new MaterialOpacityTransition({
+                    material: modal.material,
+                    opacity: 0.7,
+                    duration: 0.25
+                }),
+                new WaitForSeconds(1.25),
+                new MaterialOpacityTransition({
+                    material: modal.material,
+                    opacity: 0,
+                    duration: 0.15
+                })
+            )
+        );
+
         sequence.add(new CallbackTransition(() => {
-            card.gameObject.visible = true;
+            cardOverlay.visible = true;
+            duel.core.enableRenderOverlay();
             duel.fields[originZoneData.player].extraDeck.updateExtraDeck();
         }))
             .add(new WaitForSeconds(1))
             .add(
                 new MultipleTasks(
                     new PositionTransition({
-                        gameObject: card.gameObject,
+                        gameObject: cardOverlay,
                         position: endPosition,
                         duration: 0.5
                     }),
                     new RotationTransition({
-                        gameObject: card.gameObject,
+                        gameObject: cardOverlay,
                         rotation: endRotation,
                         duration: 0.5
                     })
                 )
             )
             .add(new CallbackTransition(() => {
+                card.gameObject.position.copy(cardOverlay.position);
+                card.gameObject.rotation.copy(cardOverlay.rotation);
+                card.gameObject.scale.copy(cardOverlay.scale);
+                card.gameObject.visible = true;
+                duel.core.disableRenderOverlay();
+                duel.core.scene.remove(modal);
                 this.props.onCompleted();
             }));
 

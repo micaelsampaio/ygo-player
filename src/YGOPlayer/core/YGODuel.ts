@@ -351,15 +351,34 @@ export class YGODuel {
     }
 
     public test() {
+
         return;
+
+        const modalGeometry = new THREE.PlaneGeometry(1, 1);
+        const modalMaterial = new THREE.MeshBasicMaterial({
+            color: 0x000000,
+            transparent: true,
+            opacity: 0.8,
+        });
+
+        const modalPlane = new THREE.Mesh(modalGeometry, modalMaterial);
+        modalPlane.scale.set(20, 20, 20);
+        modalPlane.position.set(0, 0, 14);
+
+        this.core.scene.add(modalPlane);
 
         const cardSelection = createCardSelectionGeometry(4, 5, 0.5);
-        const material = new THREE.MeshBasicMaterial({ color: 0xffff00, opacity: 0.8, transparent: true });
+        const material = new THREE.MeshBasicMaterial({ color: 0xffff000, opacity: 0.8, transparent: true });
         const planeWithHole = new THREE.Mesh(cardSelection, material);
         this.core.scene.add(planeWithHole);
-        planeWithHole.position.z = 2;
+        this.core.sceneOverlay.add(planeWithHole);
+        this.core.enableRenderOverlay();
+        planeWithHole.position.z = 0;
 
-        return;
+        // this.tasks.startTask(new PositionTransition({
+        //     gameObject: 
+        // }))
+
         const card = new GameCard({ card: this.ygo.getField(0).hand[0], duel: this });
 
         const tempPos = this.fields[0].graveyard.gameObject.position.clone();

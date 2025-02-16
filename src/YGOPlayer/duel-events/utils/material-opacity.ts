@@ -18,12 +18,13 @@ export class MaterialOpacityTransition extends YGOTask {
     }) {
         super();
         this.material = material;
+        this.startOpacity = 0;
         this.endOpacity = opacity;
-        this.startOpacity = this.material.opacity;
         this.duration = duration;
     }
 
     public start(): void {
+        this.startOpacity = this.material.opacity;
         this.elapsedTime = 0;
     }
 
