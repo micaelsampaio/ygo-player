@@ -13,6 +13,8 @@ import { circuitRelayTransport } from "@libp2p/circuit-relay-v2";
 import { pipe } from "it-pipe";
 import { fromString, toString } from "uint8arrays";
 import { Pushable, pushable } from "it-pushable";
+import { gossipsub } from "@chainsafe/libp2p-gossipsub";
+import { pubsubPeerDiscovery } from "@libp2p/pubsub-peer-discovery";
 
 export class dkeyedPeerToPeer {
   WEBRTC_CODE = protocols("webrtc").code;
@@ -57,6 +59,7 @@ export class dkeyedPeerToPeer {
         circuitRelayTransport(),
       ],
       peerDiscovery: [
+        //        pubsubPeerDiscovery(),
         bootstrap({
           list: [this.bootstrapNode],
         }),
@@ -70,8 +73,26 @@ export class dkeyedPeerToPeer {
         identify: identify(),
         identifyPush: identifyPush(),
         ping: ping(),
+        //        pubsub: gossipsub(),
       },
     });
+
+    // Join the discovery channel
+    //    const topic = "peer-discovery";
+
+    //    await this.libp2p.services.pubsub.subscribe(topic);
+    //    console.log("Subscribed to PubSub topic:", topic);
+    //    await this.libp2p.services.pubsub.publish(
+    //      topic,
+    //      new TextEncoder().encode(this.libp2p.peerId.toString())
+    //    );
+    //    await this.libp2p.services.pubsub.addEventListener("message", (evt) => {
+    //      const peerId = new TextDecoder().decode(evt.detail.data);
+    //      console.log("Discovered Peer via PubSub:", peerId);
+    //      if (peerId !== this.libp2p.peerId.toString()) {
+    //        console.log("New Peer Available:", peerId);
+    //      }
+    //   });
 
     // Set up protocol handler immediately after creating libp2p instance
     await this.setupProtocolHandler();
@@ -108,6 +129,10 @@ export class dkeyedPeerToPeer {
     this.libp2p.addEventListener("self:peer:update", () => {
       console.log("Self peer updated!");
       this.updateMultiaddrs();
+    });
+
+    this.libp2p.addEventListener("error", (event) => {
+      console.error("Libp2p error:", event);
     });
 
     return this.libp2p;

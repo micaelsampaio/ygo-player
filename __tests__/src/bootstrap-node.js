@@ -4,7 +4,6 @@ import {
   circuitRelayServer,
   circuitRelayTransport,
 } from "@libp2p/circuit-relay-v2";
-import { identify } from "@libp2p/identify";
 import { webSockets } from "@libp2p/websockets";
 import { tcp } from "@libp2p/tcp";
 import * as filters from "@libp2p/websockets/filters";
@@ -12,6 +11,8 @@ import { createLibp2p } from "libp2p";
 import { webRTC } from "@libp2p/webrtc";
 import { webTransport } from "@libp2p/webtransport";
 import fs from "fs";
+import { identify, identifyPush } from "@libp2p/identify";
+import { gossipsub } from "@chainsafe/libp2p-gossipsub";
 
 const enableWSS = process.env.ENABLE_WSS === "true"; // Check if WSS is enabled
 
@@ -78,16 +79,25 @@ const server = await createLibp2p({
   streamMuxers: [yamux()],
   services: {
     identify: identify(),
+    identifyPush: identifyPush(),
+    pubsub: gossipsub(),
     relay: circuitRelayServer({
-      reservations: { maxReservations: 50, maxDuration: 1800000 },
-      hop: { timeout: 30000, maxReservations: 50 },
+      reservations: {
+        maxReservations: Infinity, // No strict limit
+        maxDuration: Infinity, // No time limit for reservations
+      },
+      hop: {
+        enabled: true,
+        timeout: 60000,
+        maxReservations: Infinity,
+      },
     }),
   },
-  connectionManager: {
-    maxConnections: 1000,
-    minConnections: 50,
-    pollInterval: 2000,
-  },
+  // connectionManager: {
+  //   maxConnections: 1000,
+  //   minConnections: 50,
+  //   pollInterval: 2000,
+  // },
   nat: { enabled: true, description: "libp2p relay server" },
 });
 
@@ -100,13 +110,36 @@ console.info(
     .join("\n")
 );
 
-// Monitor connections
+// Subscribe to a pubsub topic (for example, 'test-topic')
+//const topic = "test-topic";
+//const pubsub = server.services.pubsub;
+//pubsub.subscribe(topic);
+//console.log(`Subscribed to ${topic}`);
+
+// Handle incoming messages for the subscribed topic
+//pubsub.addEventListener("message", (event) => {
+// console.log(
+//   `Message received on ${event.detail.topic}:`,
+//   new TextDecoder().decode(event.detail.data)
+// );
+//});
+
 server.addEventListener("connection:open", (event) => {
   console.log("New connection:", event.detail.remoteAddr.toString());
 });
+
 server.addEventListener("connection:close", (event) => {
   console.log("Connection closed:", event.detail.remoteAddr.toString());
 });
+
+server.addEventListener("peer:connect", (event) => {
+  console.log("Peer connected:", event.detail.peerId);
+});
+
+server.addEventListener("peer:disconnect", (event) => {
+  console.log("Peer disconnected:", event.detail.peerId);
+});
+
 server.addEventListener("error", (event) => {
   console.error("Node error:", event);
 });
