@@ -1,0 +1,82 @@
+.ygo-player-core .ygo-d-flex {
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+}
+
+.ygo-player-core .ygo-flex-row {
+    flex-direction: row;
+}
+
+.ygo-player-core .ygo-flex-row-reverse {
+    flex-direction: row-reverse;
+}
+
+
+.ygo-player-core .ygo-flex-column {
+    flex-direction: column;
+}
+
+
+.ygo-player-core .ygo-flex-column-reverse {
+    flex-direction: column-reverse;
+}
+
+/* Flex grow and shrink */
+
+.ygo-player-core .ygo-flex-grow-0 {
+    flex-grow: 0;
+}
+
+
+.ygo-player-core .ygo-flex-grow-1 {
+    flex-grow: 1;
+}
+
+
+.ygo-player-core .ygo-flex-shrink-0 {
+    flex-shrink: 0;
+}
+
+
+.ygo-player-core .ygo-flex-shrink-1 {
+    flex-shrink: 1;
+}
+
+/* Fill */
+
+.ygo-player-core .ygo-flex-fill {
+    flex: 1 1 auto;
+}
+
+/* Flex wrap */
+
+.ygo-player-core .ygo-flex-wrap {
+    flex-wrap: wrap;
+}
+
+
+.ygo-player-core .ygo-flex-nowrap {
+    flex-wrap: nowrap;
+}
+
+
+.ygo-player-core .ygo-flex-wrap-reverse {
+    flex-wrap: wrap-reverse;
+}
+
+.ygo-player-core .ygo-gap-1 {
+    gap: 5px;
+}
+
+.ygo-player-core .ygo-gap-2 {
+    gap: 10px;
+}
+
+.ygo-player-core .ygo-gap-3 {
+    gap: 16px;
+}
+
+.ygo-player-core .ygo-gap-4 {
+    gap: 20px;
+}
