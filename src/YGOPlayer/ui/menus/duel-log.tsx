@@ -34,7 +34,13 @@ export function DuelLogMenu({ duel }: { duel: YGODuel }) {
         <div>
             {logs.map((log, index) => {
                 return <div key={index + log.type}>
-                    <button onClick={() => undoByCommand(index)}>{log.type}</button>
+                    <div className="ygo-d-flex ygo-gap-2">
+                        <div style={{ width: "8px", height: "24px", background: log.player === 0 ? "blue" : "red" }}>
+                        </div>
+                        <div>
+                            <button onClick={() => undoByCommand(index)}>{log.type}</button>
+                        </div>
+                    </div>
                 </div>
             })}
 
