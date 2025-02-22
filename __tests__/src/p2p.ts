@@ -10,23 +10,29 @@ import { noise } from "@chainsafe/libp2p-noise";
 import { yamux } from "@chainsafe/libp2p-yamux";
 import { webRTC } from "@libp2p/webrtc";
 import { circuitRelayTransport } from "@libp2p/circuit-relay-v2";
+import { webTransport } from "@libp2p/webtransport";
 import { pipe } from "it-pipe";
 import { fromString, toString } from "uint8arrays";
 import { Pushable, pushable } from "it-pushable";
 import { gossipsub } from "@chainsafe/libp2p-gossipsub";
 import { pubsubPeerDiscovery } from "@libp2p/pubsub-peer-discovery";
+import { toString as uint8ArrayToString } from "uint8arrays/to-string";
 
-export class dkeyedPeerToPeer {
+import EventEmitter from "events";
+
+export class dkeyedPeerToPeer extends EventEmitter {
   WEBRTC_CODE = protocols("webrtc").code;
   PROTOCOL = "/chat/1.0.0";
   peerId = null;
   ma = null;
   libp2p = null;
+  private PUBSUB_PEER_DISCOVERY = "peer-discovery";
 
   private bootstrapNode: string;
   private streams: Map<string, Pushable<Uint8Array>>;
 
   constructor(bootstrapNode: string) {
+    super();
     this.bootstrapNode = bootstrapNode;
     this.streams = new Map();
 
@@ -55,11 +61,19 @@ export class dkeyedPeerToPeer {
       },
       transports: [
         webSockets({ filter: filters.all }),
+        webTransport(),
         webRTC(),
-        circuitRelayTransport(),
+        circuitRelayTransport({
+          discoverRelays: 1,
+        }),
       ],
       peerDiscovery: [
-        //        pubsubPeerDiscovery(),
+        pubsubPeerDiscovery({
+          // Every 10 seconds publish our multiaddrs
+          interval: 5000,
+          // The topic that the relay is also subscribed to
+          topics: [this.PUBSUB_PEER_DISCOVERY],
+        }),
         bootstrap({
           list: [this.bootstrapNode],
         }),
@@ -73,7 +87,7 @@ export class dkeyedPeerToPeer {
         identify: identify(),
         identifyPush: identifyPush(),
         ping: ping(),
-        //        pubsub: gossipsub(),
+        pubsub: gossipsub(),
       },
     });
 
@@ -86,13 +100,6 @@ export class dkeyedPeerToPeer {
     //      topic,
     //      new TextEncoder().encode(this.libp2p.peerId.toString())
     //    );
-    //    await this.libp2p.services.pubsub.addEventListener("message", (evt) => {
-    //      const peerId = new TextDecoder().decode(evt.detail.data);
-    //      console.log("Discovered Peer via PubSub:", peerId);
-    //      if (peerId !== this.libp2p.peerId.toString()) {
-    //        console.log("New Peer Available:", peerId);
-    //      }
-    //   });
 
     // Set up protocol handler immediately after creating libp2p instance
     await this.setupProtocolHandler();
@@ -107,23 +114,20 @@ export class dkeyedPeerToPeer {
     );
 
     this.libp2p.addEventListener("peer:discovery", (evt) => {
-      console.log("Found peer:", evt.detail.id.toString());
-      console.log(
-        "Peer Multiaddrs:",
-        evt.detail.multiaddrs.map((ma) => ma.toString())
-      );
-      this.updateMultiaddrs();
+      const id = evt.detail.id.toString();
+      const addrs = evt.detail.multiaddrs.map((ma) => ma.toString());
+      // Emit the event for the React component
+      this.emit("peer:discovery", { id, addresses: addrs, connected: "false" });
     });
 
     this.libp2p.addEventListener("connection:open", (evt) => {
-      console.log("Connection opened with:", evt.detail.remoteAddr.toString());
-      this.updateMultiaddrs();
+      const peerId = evt.detail.remotePeer.toString();
+      this.emit("connection:open", { peerId });
     });
 
     this.libp2p.addEventListener("connection:close", (evt) => {
-      console.log("Connection closed with:", evt.detail.remoteAddr.toString());
-      const peerAddr = evt.detail.remoteAddr.toString();
-      this.streams.delete(peerAddr);
+      const peerId = evt.detail.remotePeer.toString();
+      this.emit("connection:close", { peerId });
     });
 
     this.libp2p.addEventListener("self:peer:update", () => {
@@ -135,6 +139,14 @@ export class dkeyedPeerToPeer {
       console.error("Libp2p error:", event);
     });
 
+    this.libp2p.services.pubsub.addEventListener("message", (message) => {
+      const messageStr = new TextDecoder().decode(message.detail.data);
+      if (messageStr.includes("remove:peer:")) {
+        console.log("Peer Remove Message");
+        const peerId = messageStr.toString().split(":")[2];
+        this.emit("remove:peer", { peerId });
+      }
+    });
     return this.libp2p;
   }
 

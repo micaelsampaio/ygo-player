@@ -13,8 +13,11 @@ import { webTransport } from "@libp2p/webtransport";
 import fs from "fs";
 import { identify, identifyPush } from "@libp2p/identify";
 import { gossipsub } from "@chainsafe/libp2p-gossipsub";
+import { pubsubPeerDiscovery } from "@libp2p/pubsub-peer-discovery";
+import { autoNAT } from "@libp2p/autonat";
 
 const enableWSS = process.env.ENABLE_WSS === "true"; // Check if WSS is enabled
+const PUBSUB_PEER_DISCOVERY = "peer-discovery";
 
 // If using SSL/TLS and WSS is enabled
 let key, cert;
@@ -78,6 +81,7 @@ const server = await createLibp2p({
   connectionEncrypters: [noise()],
   streamMuxers: [yamux()],
   services: {
+    autoNat: autoNAT(),
     identify: identify(),
     identifyPush: identifyPush(),
     pubsub: gossipsub(),
@@ -112,9 +116,9 @@ console.info(
 
 // Subscribe to a pubsub topic (for example, 'test-topic')
 //const topic = "test-topic";
-//const pubsub = server.services.pubsub;
-//pubsub.subscribe(topic);
-//console.log(`Subscribed to ${topic}`);
+const pubsub = server.services.pubsub;
+pubsub.subscribe(PUBSUB_PEER_DISCOVERY);
+console.log(`Subscribed to ${PUBSUB_PEER_DISCOVERY}`);
 
 // Handle incoming messages for the subscribed topic
 //pubsub.addEventListener("message", (event) => {
@@ -124,24 +128,37 @@ console.info(
 // );
 //});
 
-server.addEventListener("connection:open", (event) => {
-  console.log("New connection:", event.detail.remoteAddr.toString());
-});
-
-server.addEventListener("connection:close", (event) => {
-  console.log("Connection closed:", event.detail.remoteAddr.toString());
-});
-
 server.addEventListener("peer:connect", (event) => {
-  console.log("Peer connected:", event.detail.peerId);
+  console.log("Peer Connect:");
+  console.log(event.detail.toString());
+});
+
+server.addEventListener("connection:open", (event) => {
+  console.log("Connection Open:");
+  console.log(event.detail.remotePeer.toString());
+});
+
+server.addEventListener("peer:discovery", (event) => {
+  console.log("Peer Discovery:");
+  console.log(event.detail.id.toString());
 });
 
 server.addEventListener("peer:disconnect", (event) => {
-  console.log("Peer disconnected:", event.detail.peerId);
+  console.log("Peer Disconnect:");
+  console.log(event.detail.toString());
+});
+
+server.addEventListener("connection:close", (event) => {
+  console.log("Connection Close:");
+  const peerId = event.detail.remotePeer.toString();
+  console.log(peerId);
+  const message = "remove:peer:" + peerId;
+  pubsub.publish(PUBSUB_PEER_DISCOVERY, new TextEncoder().encode(message));
 });
 
 server.addEventListener("error", (event) => {
   console.error("Node error:", event);
+  console.log(event.detail.remoteAddr.toString());
 });
 
 // Graceful shutdown
