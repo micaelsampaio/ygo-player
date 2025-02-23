@@ -3,18 +3,33 @@ import YUBEL from "./decks/YUBEL_FS.json";
 import CHIMERA from "./decks/CHIMERA.json";
 import { useNavigate } from "react-router";
 import PlayerLobby from "./PlayerLobby";
-import { memo, useEffect, useState } from "react";
 import { useKaibaNet } from "./useKaibaNet";
+import { memo, useEffect, useState } from "react";
 
 const cdnUrl = String(import.meta.env.VITE_YGO_CDN_URL);
 
 export default function App() {
   const kaibaNet = useKaibaNet();
+
   const [players, setPlayers] = useState(kaibaNet.getPlayers()); // Add reactive state for players
   const updatePlayers = (players) => {
     setPlayers(kaibaNet.getPlayers());
   };
   kaibaNet.on("players:updated", updatePlayers);
+
+  // Effect to update players state when kaibaNet's players change
+
+  useEffect(() => {
+    const updatePlayers = () => {
+      setPlayers(kaibaNet.getPlayers()); // Update players state
+    };
+
+    kaibaNet.on("players:updated", updatePlayers); // Listen for the players:updated event
+
+    return () => {
+      kaibaNet.removeListener("players:updated", updatePlayers); // Clean up the listener
+    };
+  }, [kaibaNet]);
 
   const [replays, setReplays] = useState(() => {
     const allKeys = Object.keys(localStorage);
@@ -27,7 +42,6 @@ export default function App() {
     const decks = allKeys.filter((key) => key.startsWith("deck_"));
     return decks;
   });
-
   const [roomDecks, setRoomDecks] = useState({});
 
   const [selectedDeck, setSelectedDeck] = useState(() => {
