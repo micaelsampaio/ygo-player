@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import styled from "styled-components";
 import { User, Users, Link } from "lucide-react";
-import { dkeyedPeerToPeer } from "./p2p.js";
 
 const LobbyContainer = styled.div`
   position: fixed;
@@ -153,73 +152,24 @@ const EmptyStateSubtext = styled.p`
 
 const truncateId = (id: string) => `${id.slice(0, 6)}...${id.slice(-4)}`;
 
-export default function PeerLobby({ onRoomReady }) {
-  const [node, setNode] = useState<any>(null);
-  const [peerId, setPeerId] = useState("");
-  const [peers, setPeers] = useState(new Map());
+export default function PlayerLobby({ playerId, players, onRoomReady }) {
   const [connecting, setConnecting] = useState("");
 
   useEffect(() => {
-    const initializePeerToPeer = async () => {
-      const peerToPeer = new dkeyedPeerToPeer(
-        import.meta.env.VITE_BOOTSTRAP_NODE
-      );
+    console.log("PlayerLobby: playerId changed:", playerId);
+  }, [playerId]);
 
-      await peerToPeer.startP2P();
-      setPeerId(peerToPeer.getPeerId());
-      setNode(peerToPeer);
+  useEffect(() => {
+    console.log("PlayerLobby: players changed:", players);
+  }, [players]);
 
-      // Listen to our custom events
-      peerToPeer.on("peer:discovery", ({ id, addresses }) => {
-        setPeers((prev) =>
-          new Map(prev).set(id, {
-            id,
-            addresses,
-            connected: false,
-          })
-        );
-      });
-
-      peerToPeer.on("connection:open", ({ peerId }) => {
-        setPeers((prev) => {
-          const updated = new Map(prev);
-          const peer = updated.get(peerId) || { id: peerId, addresses: [] };
-          updated.set(peerId, { ...peer, connected: true });
-          return updated;
-        });
-      });
-
-      peerToPeer.on("connection:close", ({ peerId }) => {
-        setPeers((prev) => {
-          const updated = new Map(prev);
-          const peer = updated.get(peerId);
-          if (peer) {
-            updated.set(peerId, { ...peer, connected: false });
-          }
-          return updated;
-        });
-      });
-      peerToPeer.on("remove:peer", ({ peerId }) => {
-        setPeers((prev) => {
-          const updated = new Map(prev);
-          updated.delete(peerId);
-          return updated;
-        });
-      });
-    };
-
-    initializePeerToPeer();
-  }, []);
-
-  const handleConnect = async (peer) => {
+  const handleConnect = async (player) => {
     try {
-      setConnecting(peer.id);
-      await node.connectToPeer(peer.addresses[0]);
-      await node.subscriveTopic(peer.id);
+      setConnecting(player.id);
+      await onRoomReady();
       setConnecting("");
-      onRoomReady();
     } catch (err) {
-      console.error("Failed to connect:", err);
+      console.error("Failed to room:", err);
       setConnecting("");
     }
   };
@@ -232,39 +182,39 @@ export default function PeerLobby({ onRoomReady }) {
             <Users size={24} color="white" />
           </IconBox>
           <Title>Kaiba Net</Title>
-          <PeerId>Your ID: {truncateId(peerId)}</PeerId>
+          <PeerId>Your ID: {truncateId(playerId)}</PeerId>
         </Header>
 
         <PeerGrid>
-          {Array.from(peers.values()).map((peer) => (
+          {Array.from(players.values()).map((player) => (
             <PeerBox
-              key={peer.id}
-              connected={peer.connected ? "true" : undefined}
+              key={player.id}
+              connected={player.connected ? "true" : undefined}
             >
-              <StatusDot connected={peer.connected ? "true" : undefined} />
+              <StatusDot connected={player.connected ? "true" : undefined} />
               <User size={48} color="#666" />
-              <PeerId2>{truncateId(peer.id)}</PeerId2>
+              <PeerId2>{truncateId(player.id)}</PeerId2>
 
-              {!peer.connected && (
+              {!player.connected && (
                 <ConnectButton
-                  onClick={() => handleConnect(peer)}
-                  disabled={connecting === peer.id}
+                  onClick={() => handleConnect(player)}
+                  disabled={connecting === player.id}
                 >
                   <Link size={16} />
-                  {connecting === peer.id ? "Connecting..." : "Create Room"}
+                  {connecting === player.id ? "Connecting..." : "Create Room"}
                 </ConnectButton>
               )}
 
-              {peer.connected && <ConnectedText>Connected</ConnectedText>}
+              {player.connected && <ConnectedText>Connected</ConnectedText>}
             </PeerBox>
           ))}
 
-          {peers.size === 0 && (
+          {players.size === 0 && (
             <EmptyState>
               <EmptyStateIcon>
                 <Users size={32} color="#666" />
               </EmptyStateIcon>
-              <EmptyStateText>No peers discovered yet...</EmptyStateText>
+              <EmptyStateText>No players discovered yet...</EmptyStateText>
               <EmptyStateSubtext>Waiting for connections</EmptyStateSubtext>
             </EmptyState>
           )}
