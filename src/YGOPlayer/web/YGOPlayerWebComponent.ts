@@ -6,22 +6,22 @@ import { CardData, YGOProps } from '../../YGOCore/types/types';
 import { YGOConfig } from '../core/YGOConfig';
 import { YGODuel } from '../core/YGODuel';
 import { EventBus } from '../scripts/event-bus';
+import { Command } from '../../YGOCore/types/commands';
 
 export interface YGOPlayerComponentEvents {
-    //init: (args: { instance: YGOPlayerComponent, duel: YGODuel }) => void
-    init: () => void
+    "init": (args: { instance: YGOPlayerComponent, duel: YGODuel }) => void
+    "start": (args: { instance: YGOPlayerComponent, duel: YGODuel }) => void
+    "command-created": (args: { command: Command }) => void;
+    "command-executed": (args: { command: Command }) => void;
 }
 
 export class YGOPlayerComponent extends HTMLElement {
     private root: ReactDOM.Root | undefined;
     public duel!: YGODuel;
-    public events: EventBus<any>;
-
-    public test: EventBus<YGOPlayerComponentEvents>;
+    public events: EventBus<YGOPlayerComponentEvents>;
 
     constructor() {
         super();
-        this.test = new EventBus();
         this.events = new EventBus();
     }
 
@@ -36,21 +36,35 @@ export class YGOPlayerComponent extends HTMLElement {
         this.root = ReactDOM.createRoot(container); // Create a root for React 18
     }
 
-    on(event: string, callback: () => void) {
-        //this.events.on(event, callback);
+
+    private bind(duel: YGODuel) {
+        this.duel = duel;
+
+        this.duel.ygo.events.on("command-created", data => this.dispatch("command-created", data));
+        this.duel.ygo.events.on("command-executed", data => this.dispatch("command-executed", data));
+
+        this.events.dispatch("init", { instance: this, duel });
     }
 
-    off(event: string, callback: () => void) {
-        //    this.events.off(event, callback);
+    private start(config: YGOConfig) {
+        if (!this.root) throw new Error("There is no root to render");
+
+        this.root.render(createElement(YgoDuelApp, {
+            bind: this.bind.bind(this),
+            start: (duel) => this.events.dispatch("start", { instance: this, duel }),
+            config
+        }));
     }
 
     editor(props: YGOPlayerStartEditorProps) {
         const config = {
             cdnUrl: props.cdnUrl,
+            commands: props.commands,
             players: props.players,
             options: props.options
         }
-
+        console.log("------- CONFIG ------");
+        console.log(config);
         this.start(config);
     }
 
@@ -86,16 +100,16 @@ export class YGOPlayerComponent extends HTMLElement {
         this.start(config);
     }
 
-    private bind(duel: YGODuel) {
-        this.duel = duel;
+    on<K extends keyof YGOPlayerComponentEvents>(event: K, listener: YGOPlayerComponentEvents[K]): void {
+        this.events.on(event, listener);
     }
 
-    private start(config: YGOConfig) {
-        if (!this.root) throw new Error("There is no root to render");
-
-        this.root.render(createElement(YgoDuelApp, {
-            bind: this.bind.bind(this),
-            config
-        }));
+    off<K extends keyof YGOPlayerComponentEvents>(event: K, listener: YGOPlayerComponentEvents[K]): void {
+        this.events.off(event, listener);
     }
+
+    dispatch<K extends keyof YGOPlayerComponentEvents>(event: K, ...args: Parameters<YGOPlayerComponentEvents[K]>): void {
+        this.events.dispatch(event, ...args);
+    }
+
 }

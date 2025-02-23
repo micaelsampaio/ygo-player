@@ -79,6 +79,8 @@ export class YGODuel {
 
         this.gameActions = new YGOGameActions(this);
 
+        this.ygo = new YGOCore(this.config);
+
         (window as any).YGODuel = this;
     }
 
@@ -147,8 +149,6 @@ export class YGODuel {
         //         { id: 62318994, zone: "M-3" },
         //     ]
         // }
-
-        this.ygo = new YGOCore(this.config);
 
         setTimeout(() => {
             this.ygo.start();
