@@ -44,15 +44,7 @@ export class dkeyedPeerToPeer extends EventEmitter {
       "libp2p:websockets,libp2p:webtransport,libp2p:kad-dht,libp2p:dialer"
     );
   }
-
-  getPeerId() {
-    return this.peerId;
-  }
-
-  getMultiaddrs() {
-    return this.ma;
-  }
-
+  // Intanciates the libp2p node
   async startP2P() {
     console.log("Bootstrap Node:", this.bootstrapNode);
     this.libp2p = await createLibp2p({
@@ -91,16 +83,6 @@ export class dkeyedPeerToPeer extends EventEmitter {
       },
     });
 
-    // Join the discovery channel
-    //    const topic = "peer-discovery";
-
-    //    await this.libp2p.services.pubsub.subscribe(topic);
-    //    console.log("Subscribed to PubSub topic:", topic);
-    //    await this.libp2p.services.pubsub.publish(
-    //      topic,
-    //      new TextEncoder().encode(this.libp2p.peerId.toString())
-    //    );
-
     // Set up protocol handler immediately after creating libp2p instance
     await this.setupProtocolHandler();
 
@@ -131,14 +113,14 @@ export class dkeyedPeerToPeer extends EventEmitter {
     });
 
     this.libp2p.addEventListener("self:peer:update", () => {
-      console.log("Self peer updated!");
-      this.updateMultiaddrs();
+      console.log("Self peer update event");
     });
 
-    this.libp2p.addEventListener("error", (event) => {
-      console.error("Libp2p error:", event);
+    this.libp2p.addEventListener("error", (evt) => {
+      console.error("Libp2p error:", evt);
     });
 
+    // Event listener for topic messages
     this.libp2p.services.pubsub.addEventListener("message", (message) => {
       const messageStr = new TextDecoder().decode(message.detail.data);
       if (messageStr.includes("remove:peer:")) {
@@ -150,44 +132,18 @@ export class dkeyedPeerToPeer extends EventEmitter {
     return this.libp2p;
   }
 
-  private async setupProtocolHandler() {
-    if (!this.libp2p) throw new Error("Libp2p instance not initialized");
-
-    await this.libp2p.handle(this.PROTOCOL, ({ connection, stream }) => {
-      const peerId = connection.remotePeer.toString();
-      console.log(`Setting up protocol handler for peer: ${peerId}`);
-
-      pipe(
-        stream.source,
-        async function* (source) {
-          for await (const msg of source) {
-            const decodedMsg = toString(msg.subarray());
-            console.log(`Received from ${peerId}:`, decodedMsg);
-            yield msg;
-          }
-        },
-        stream.sink
-      ).catch((err) => {
-        console.error(`Stream error with ${peerId}:`, err);
-      });
-    });
+  // Gets the instantiated node peerID
+  getPeerId() {
+    return this.peerId;
   }
 
-  updateMultiaddrs() {
-    if (!this.libp2p) return;
-
-    const allAddrs = this.libp2p.getMultiaddrs();
-    console.log(
-      "All multiaddrs:",
-      allAddrs.map((ma) => ma.toString())
-    );
-    return allAddrs;
+  // Gets the instantiated node multiaddrs
+  getMultiaddrs() {
+    return this.ma;
   }
 
-  isWebrtc(ma) {
-    return ma.protoCodes().includes(this.WEBRTC_CODE);
-  }
-
+  // Opens connection to a peer using the destination peer's multiaddress
+  // In the future this should be done using the peer's peerID and try to connect to all multiaddresses
   async connectToPeer(ma: string) {
     if (!this.libp2p) throw new Error("Libp2p instance not initialized");
 
@@ -218,6 +174,31 @@ export class dkeyedPeerToPeer extends EventEmitter {
     }
   }
 
+  // Sets up the message protocol for peers communcation
+  private async setupProtocolHandler() {
+    if (!this.libp2p) throw new Error("Libp2p instance not initialized");
+
+    await this.libp2p.handle(this.PROTOCOL, ({ connection, stream }) => {
+      const peerId = connection.remotePeer.toString();
+      console.log(`Setting up protocol handler for peer: ${peerId}`);
+
+      pipe(
+        stream.source,
+        async function* (source) {
+          for await (const msg of source) {
+            const decodedMsg = toString(msg.subarray());
+            console.log(`Received from ${peerId}:`, decodedMsg);
+            yield msg;
+          }
+        },
+        stream.sink
+      ).catch((err) => {
+        console.error(`Stream error with ${peerId}:`, err);
+      });
+    });
+  }
+
+  // Sends a message to a peer using the destination peer's multiaddress
   async sendMsgToPeer(peerMultiaddr: string, msg: string) {
     if (!this.libp2p) throw new Error("Libp2p instance not initialized");
 
@@ -263,11 +244,21 @@ export class dkeyedPeerToPeer extends EventEmitter {
     }
   }
 
+  // Closes the message stream to a peer
   async closeConnection(peerMultiaddr: string) {
     const stream = this.streams.get(peerMultiaddr);
     if (stream) {
       stream.end();
       this.streams.delete(peerMultiaddr);
     }
+  }
+  // Subscribes to a topic
+  async subscriveTopic(topic: string) {
+    await this.libp2p.services.pubsub.subscribe(topic);
+  }
+
+  // Sends a message to a topic
+  async messageTopic(topic: string, message: string) {
+    await this.libp2p.services.pubsub.publish(topic, fromString(message));
   }
 }

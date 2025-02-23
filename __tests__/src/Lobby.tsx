@@ -215,6 +215,7 @@ export default function PeerLobby({ onRoomReady }) {
     try {
       setConnecting(peer.id);
       await node.connectToPeer(peer.addresses[0]);
+      await node.subscriveTopic(peer.id);
       setConnecting("");
       onRoomReady();
     } catch (err) {
