@@ -1,4 +1,4 @@
-export * from './YGOCore/index.js';
+export * from './YGOCore';
 export * from './YGOPlayer/web';
 
 import "./YGOPlayer/style/style.css";
