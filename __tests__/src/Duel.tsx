@@ -1,8 +1,7 @@
 
 import { useEffect } from 'react'
-import { YGOPlayerComponent } from "../../dist";
-// import { YGOCommands } from '../../src/YGOCore';
-import { YGODuel } from '../../dist/YGOPlayer/core/YGODuel';
+import { YGOPlayerComponent, YGODuel } from '../../dist';
+// import { YGODuel, JSONCommand } from '../../dist';
 
 
 export default function Duel() {
@@ -18,12 +17,13 @@ export default function Duel() {
     // ygo.on("command-executed", ({ command }) => console.log("---- UI NEW COMMAND CREATED ----", command, command.toJSON()));
     // ygo.on("command-executed", ({ command }) => console.log("---- UI NEW COMMAND EXECUTED ----", command, command.toJSON()));
 
+    // duel.ygo.
     // kaibaCenas.on('init', (config)=> {
     //   ygo.editor(config);
     // })
 
     // kaibaCenas.on('new-command', ()=> {
-    //   if(duel.ygo) duel.ygo.exec(new YGOCommands.JSONCommand(cmd.type, cmd.data));
+    //   if(duel.ygo) duel.ygo.exec(new JSONCommand(cmd.type, cmd.data));
     // })
 
 
