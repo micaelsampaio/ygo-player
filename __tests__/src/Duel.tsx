@@ -1,8 +1,8 @@
 
 import { useEffect } from 'react'
 import { YGOPlayerComponent, YGODuel } from '../../dist';
-// import { YGODuel, JSONCommand } from '../../dist';
 
+//import { YGODuel, JSONCommand } from '../../dist';
 
 export default function Duel() {
 
