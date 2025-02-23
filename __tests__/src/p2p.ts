@@ -133,6 +133,7 @@ export class PeerToPeer extends EventEmitter {
     // Event listener for topic messages
     this.libp2p.services.pubsub.addEventListener("message", (message) => {
       const messageStr = new TextDecoder().decode(message.detail.data);
+      this.emit("topic:" + message.detail.topic + ":message", { messageStr });
       if (messageStr.includes("remove:peer:")) {
         console.log("Peer Remove Message");
         const peerId = messageStr.toString().split(":")[2];
@@ -266,9 +267,18 @@ export class PeerToPeer extends EventEmitter {
     }
   }
   // Subscribes to a topic
-  async subscriveTopic(topic: string) {
+  async subscribeTopic(topic: string) {
+    console.log("P2P:currentTopics:", this.libp2p.services.pubsub.topics);
     console.log("P2P: Subscribing to topic:", topic);
-    await this.libp2p.services.pubsub.subscribe(topic);
+    try {
+      await this.libp2p.services.pubsub.subscribe(topic);
+      console.log(`P2P: Successfully subscribed to topic: ${topic}`);
+      const subs = await this.libp2p.services.pubsub.getSubscribers(topic);
+      console.log(`P2P: Subscribers for topic ${topic}:`, subs);
+    } catch (error) {
+      console.error("P2P: Subscription failed:", error);
+    }
+    console.log("P2P:currentTopics:", this.libp2p.services.pubsub.topics);
   }
 
   // Sends a message to a topic

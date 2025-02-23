@@ -152,7 +152,7 @@ const EmptyStateSubtext = styled.p`
 
 const truncateId = (id: string) => `${id.slice(0, 6)}...${id.slice(-4)}`;
 
-export default function PlayerLobby({ playerId, players, onRoomReady }) {
+export default function PlayerLobby({ playerId, players, onRoomJoin }) {
   const [connecting, setConnecting] = useState("");
   useEffect(() => {
     console.log("PlayerLobby: playerId changed:", playerId);
@@ -165,7 +165,7 @@ export default function PlayerLobby({ playerId, players, onRoomReady }) {
   const handleConnect = async (player) => {
     try {
       setConnecting(player.id);
-      await onRoomReady();
+      await onRoomJoin(player.id);
       setConnecting("");
     } catch (err) {
       console.error("Failed to room:", err);

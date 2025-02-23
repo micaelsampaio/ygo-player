@@ -40,7 +40,7 @@ export class KaibaNet extends EventEmitter {
     this.playerId = peerId;
 
     // Subscribe to topic
-    await this.peerToPeer.subscriveTopic(peerId);
+    await this.peerToPeer.subscribeTopic(peerId);
 
     // Set up event listeners
     this.setupEventListeners();
@@ -101,6 +101,13 @@ export class KaibaNet extends EventEmitter {
         this.emit("players:updated", this.players);
       }
     });
+
+    this.peerToPeer.on(
+      "topic:" + this.playerId + ":message",
+      ({ messageStr }) => {
+        console.log("KaibaNet: Message on PlayerID topic", messageStr);
+      }
+    );
   }
 
   getPlayerId() {
@@ -128,5 +135,19 @@ export class KaibaNet extends EventEmitter {
     this.playerId = null;
     this.initialized = false;
     this.peerToPeer = null;
+  }
+
+  joinRoom(roomId: string, roomDecks: any) {
+    this.peerToPeer.subscribeTopic(roomId);
+
+    const jsonString = JSON.stringify(roomDecks);
+
+    const base64Encoded = btoa(
+      new TextEncoder()
+        .encode(jsonString)
+        .reduce((acc, byte) => acc + String.fromCharCode(byte), "")
+    );
+    console.log("topic:", roomId);
+    this.peerToPeer.messageTopic(roomId, "duel:player:start:" + base64Encoded);
   }
 }

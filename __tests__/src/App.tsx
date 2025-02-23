@@ -61,8 +61,9 @@ export default function App() {
     //navigate("/duel");
   };
 
-  const handleRoomReady = () => {
-    console.log("Room is ready!");
+  const handleRoomJoin = (roomId) => {
+    console.log("App:handleRoomJoin:roomDecks", roomDecks);
+    kaibaNet.joinRoom(roomId, roomDecks);
     navigate("/duel");
   };
 
@@ -232,7 +233,7 @@ export default function App() {
       <PlayerLobby
         playerId={kaibaNet.getPlayerId()}
         players={players}
-        onRoomReady={handleRoomReady}
+        onRoomJoin={handleRoomJoin}
       />
     </div>
   );

@@ -114,8 +114,6 @@ console.info(
     .join("\n")
 );
 
-// Subscribe to a pubsub topic (for example, 'test-topic')
-//const topic = "test-topic";
 const pubsub = server.services.pubsub;
 pubsub.subscribe(PUBSUB_PEER_DISCOVERY);
 console.log(`Subscribed to ${PUBSUB_PEER_DISCOVERY}`);
