@@ -1,15 +1,26 @@
 
 import { useEffect } from 'react'
 import { YGOPlayerComponent } from "../../dist";
+import { YGODuel } from '../../dist/YGOPlayer/core/YGODuel';
 
 
 export default function Duel() {
 
   useEffect(() => {
-
+    let duel!: YGODuel;
     const duelData = JSON.parse(window.localStorage.getItem("duel-data")!);
 
     const ygo = document.querySelector("ygo-player") as YGOPlayerComponent;
+
+    ygo.on("init", ({ duel }) => console.log("duel"));
+    ygo.on("start", ({ duel }) => console.log("duel"));
+    ygo.on("command-executed", ({ command }) => console.log("---- UI NEW COMMAND CREATED ----", command, command.toJSON()));
+    ygo.on("command-executed", ({ command }) => console.log("---- UI NEW COMMAND EXECUTED ----", command, command.toJSON()));
+
+    // GET STATE
+
+    /// duel.ygo.getcurrentStateProps();
+
     console.log("YGO player2", ygo.editor);
 
     if (duelData.replay) {
@@ -24,6 +35,7 @@ export default function Duel() {
       const config: any = {
         players: duelData.players,
         cdnUrl: String(import.meta.env.VITE_YGO_CDN_URL),
+        commands: duelData.commands,
         options: duelData.options
       };
       ygo.editor(config);

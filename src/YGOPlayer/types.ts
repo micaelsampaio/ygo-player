@@ -44,6 +44,7 @@ export interface YGOReplayDeckData {
 export interface YGOPlayerStartEditorProps {
     cdnUrl: string,
     players: YGOPlayerData[],
+    commands: any[],
     options: YGOPropsOptions
 }
 
