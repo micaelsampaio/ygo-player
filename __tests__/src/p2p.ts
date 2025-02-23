@@ -98,7 +98,11 @@ export class PeerToPeer extends EventEmitter {
     this.libp2p.addEventListener("peer:discovery", (evt) => {
       const peerId = evt.detail.id.toString();
       const addrs = evt.detail.multiaddrs.map((ma) => ma.toString());
+<<<<<<< HEAD
       console.log("P2P: Peer Discovery:", peerId, addrs);
+=======
+      console.log("P2P: Peer Discovery:", id, addrs);
+>>>>>>> 93b1a1b (chore: refactor)
       // Emit the event for the React component
       this.emit("peer:discovery", {
         peerId,
@@ -289,6 +293,7 @@ export class PeerToPeer extends EventEmitter {
     }
   }
   // Subscribes to a topic
+<<<<<<< HEAD
   async subscribeTopic(topic: string) {
     console.log("P2P: Attempting to subscribe to topic:", topic);
     try {
@@ -317,6 +322,11 @@ export class PeerToPeer extends EventEmitter {
       console.error("P2P: Subscription failed:", error);
       throw error;
     }
+=======
+  async subscriveTopic(topic: string) {
+    console.log("P2P: Subscribing to topic:", topic);
+    await this.libp2p.services.pubsub.subscribe(topic);
+>>>>>>> 93b1a1b (chore: refactor)
   }
 
   // Sends a message to a topic

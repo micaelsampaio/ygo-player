@@ -3,8 +3,8 @@ import YUBEL from "./decks/YUBEL_FS.json";
 import CHIMERA from "./decks/CHIMERA.json";
 import { useNavigate } from "react-router";
 import PlayerLobby from "./PlayerLobby";
-import { useKaibaNet } from "./useKaibaNet";
 import { memo, useEffect, useState } from "react";
+import { useKaibaNet } from "./useKaibaNet";
 
 const cdnUrl = String(import.meta.env.VITE_YGO_CDN_URL);
 
@@ -27,6 +27,7 @@ export default function App() {
     const decks = allKeys.filter((key) => key.startsWith("deck_"));
     return decks;
   });
+
   const [roomDecks, setRoomDecks] = useState({});
 
   const [selectedDeck, setSelectedDeck] = useState(() => {
