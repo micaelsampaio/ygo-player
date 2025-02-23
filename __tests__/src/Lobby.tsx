@@ -153,7 +153,7 @@ const EmptyStateSubtext = styled.p`
 
 const truncateId = (id: string) => `${id.slice(0, 6)}...${id.slice(-4)}`;
 
-export default function PeerLobby() {
+export default function PeerLobby({ onRoomReady }) {
   const [node, setNode] = useState<any>(null);
   const [peerId, setPeerId] = useState("");
   const [peers, setPeers] = useState(new Map());
@@ -216,6 +216,7 @@ export default function PeerLobby() {
       setConnecting(peer.id);
       await node.connectToPeer(peer.addresses[0]);
       setConnecting("");
+      onRoomReady();
     } catch (err) {
       console.error("Failed to connect:", err);
       setConnecting("");
@@ -249,7 +250,7 @@ export default function PeerLobby() {
                   disabled={connecting === peer.id}
                 >
                   <Link size={16} />
-                  {connecting === peer.id ? "Connecting..." : "Connect"}
+                  {connecting === peer.id ? "Connecting..." : "Create Room"}
                 </ConnectButton>
               )}
 
