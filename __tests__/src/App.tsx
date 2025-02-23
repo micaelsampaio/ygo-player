@@ -106,19 +106,22 @@ export default function App() {
     const { endField = [] } = replayData.replay;
 
     const fieldState = endField.map((card: any) => {
-      const zoneData = getZoneData(card.zone);
-      console.log(card.zone, zoneData);
+      // const zoneData = YGOGameUtils.getZoneData(card.zone);
+      // console.log("ZONE --> ", card.zone, zoneData);
 
-      if (zoneData.player === playerIndex) {
-        return {
-          ...card,
-          zone: transformZoneToPlayer2(card.zone)
-        }
-      }
+      // if (zoneData.player === playerIndex) {
+      //   return {
+      //     ...card,
+      //     zone: YGOGameUtils.invertPlayerInZone(card.zone)
+      //   }
+      // }
       return undefined;
     }).filter((data: any) => data);
 
+    console.log("----> ");
     console.log("fieldState ", fieldState);
+
+    return;
 
     localStorage.setItem("duel-data", JSON.stringify({
       players: [{
@@ -276,19 +279,19 @@ const EndGameBoard = memo(function EndGameBoard({ data, play }: any) {
     ]
 
     endField.forEach((data: any) => {
-      const zoneData = getZoneData(data.zone);
-      const card = getCard(zoneData.player, data.id);
-      const cardData = { ...card, ...data, zoneData };
+      // const zoneData = YGOGameUtils.getZoneData(data.zone);
+      // const card = getCard(zoneData.player, data.id);
+      // const cardData = { ...card, ...data, zoneData };
 
-      if (zoneData.zone === "M") {
-        fields[zoneData.player].monsterZones[zoneData.index - 1] = cardData;
-      }
-      if (zoneData.zone === "S") {
-        fields[zoneData.player].spellTrapZones[zoneData.index - 1] = cardData;
-      }
-      if (zoneData.zone === "EMZ") {
-        fields[zoneData.player].extraMonsterZones[zoneData.index - 1] = cardData;
-      }
+      // if (zoneData.zone === "M") {
+      //   fields[zoneData.player].monsterZones[zoneData.zoneIndex - 1] = cardData;
+      // }
+      // if (zoneData.zone === "S") {
+      //   fields[zoneData.player].spellTrapZones[zoneData.zoneIndex - 1] = cardData;
+      // }
+      // if (zoneData.zone === "EMZ") {
+      //   fields[zoneData.player].extraMonsterZones[zoneData.zoneIndex - 1] = cardData;
+      // }
     })
     fields.reverse();
     setFields(fields);
@@ -351,15 +354,3 @@ const EndGameBoard = memo(function EndGameBoard({ data, play }: any) {
   </div>
 });
 
-const getZoneData = (zone: string) => {
-  const params = zone.split("-");
-  return { player: params.includes("2") ? 1 : 0, zone: params[0].replace("2", ""), index: Number(params[1] || "-1") };
-}
-
-const transformZoneToPlayer2 = (zone: string) => {
-  const zoneData = getZoneData(zone);
-
-  if (zoneData.player === 2) return zone;
-
-  return `${zoneData.zone}2${zoneData.index >= 0 ? `-${zoneData.index}` : ""}`;
-}

@@ -207,15 +207,15 @@ export class YGOUtils {
                 };
 
                 if (hand.length > 0) {
-                    fields[i].hand = hand.toSorted((card1, card2) => card1.index - card2.index).map(cardInHand => cardInHand.card);
+                    fields[i].hand = [...hand].sort((card1, card2) => card1.index - card2.index).map(cardInHand => cardInHand.card);
                 }
 
                 if (graveyard.length > 0) {
-                    fields[i].graveyard = graveyard.toSorted((card1, card2) => card1.index - card2.index).map(cardInHand => cardInHand.card);
+                    fields[i].graveyard = [...graveyard].sort((card1, card2) => card1.index - card2.index).map(cardInHand => cardInHand.card);
                 }
 
                 if (banished.length > 0) {
-                    fields[i].hand = banished.toSorted((card1, card2) => card1.index - card2.index).map(cardInHand => cardInHand.card);
+                    fields[i].hand = [...banished].sort((card1, card2) => card1.index - card2.index).map(cardInHand => cardInHand.card);
                 }
             }
 

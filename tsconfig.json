@@ -1,16 +1,14 @@
 {
   "compilerOptions": {
     "moduleResolution": "node",
-    "target": "ES6",
     "lib": [
-      "ESNext.Array",
-      "DOM",
-      "ESNext"
+      "es2020",
+      "DOM"
     ],
     "outDir": "./dist",
-    "noImplicitAny": false,
-    "strictNullChecks": true,
+    "noImplicitAny": true,
     "module": "esnext",
+    "target": "es2020",
     "jsx": "react-jsx",
     "allowJs": false,
     "sourceMap": true,

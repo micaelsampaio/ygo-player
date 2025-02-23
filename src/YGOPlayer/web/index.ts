@@ -10,7 +10,6 @@ function registerWebComponents() {
 export {
     registerWebComponents,
     YGOPlayerComponent,
-
 }
 
 registerWebComponents();

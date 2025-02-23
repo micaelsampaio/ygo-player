@@ -172,4 +172,9 @@ export class YGOGameUtils {
         }
         return positions;
     }
+
+    static invertPlayerInZone(zone: FieldZone): FieldZone {
+        const zoneData = this.getZoneData(zone);
+        return this.createZone(zoneData.zone, 1 - zoneData.player, zoneData.zoneIndex);
+    }
 }
