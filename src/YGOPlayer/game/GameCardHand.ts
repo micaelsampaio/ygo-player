@@ -52,7 +52,7 @@ export class GameCardHand extends YGOEntity implements YGOUiElement {
         event.preventDefault();
         event.stopPropagation();
 
-        this.duel.events.publish("set-selected-card", {
+        this.duel.events.dispatch("set-selected-card", {
             player: this.card.owner,
             card: this.card
         });

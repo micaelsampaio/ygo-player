@@ -33,7 +33,7 @@ export function ViewDeckPopup({ duel, deck, visible = true }: { deck: Deck, duel
         onClick={e => {
             e.preventDefault();
             e.stopPropagation();
-            duel.events.publish("close-ui-menu", { group: "game-popup" });
+            duel.events.dispatch("close-ui-menu", { group: "game-popup" });
         }}
     >
 

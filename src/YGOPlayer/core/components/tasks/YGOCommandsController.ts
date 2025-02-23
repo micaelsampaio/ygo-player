@@ -66,7 +66,7 @@ export class YGOCommandsController extends YGOComponent {
     add(command: YGODuelEvents.DuelLog) {
         const handler = getDuelEventHandler(command);
 
-        this.duel.events.publish("disable-game-actions");
+        this.duel.events.dispatch("disable-game-actions");
 
         const onCompleted = () => {
             this.currentCommand = undefined;
@@ -96,14 +96,14 @@ export class YGOCommandsController extends YGOComponent {
         if (this.commands.length === 0) {
             this.state = YGOCommandsControllerState.IDLE;
             this.duel.updateField();
-            this.duel.events.publish("enable-game-actions");
-            this.duel.events.publish("commands-process-completed");
+            this.duel.events.dispatch("enable-game-actions");
+            this.duel.events.dispatch("commands-process-completed");
             return;
         }
 
         this.currentCommand = this.commands.shift();
         this.currentCommand?.start();
-        this.duel.events.publish("commands-process-start");
+        this.duel.events.dispatch("commands-process-start");
     }
 
     update(dt?: number): void {

@@ -160,17 +160,17 @@ export class YGODuel {
             console.log("-------------- command ------------");
             console.log("command >>> ", command);
 
-            this.events.publish("render-ui");
+            this.events.dispatch("render-ui");
             this.commands.add(command);
         });
 
         this.ygo.events.on("update-logs", (data) => {
-            this.events.publish("logs-updated", data);
+            this.events.dispatch("logs-updated", data);
         });
 
         this.ygo.events.on("set-player", (data) => {
             this.currentPlayerIndex = data.player;
-            this.events.publish("render-ui");
+            this.events.dispatch("render-ui");
         });
 
         this.events.on("enable-game-actions", () => {
@@ -217,7 +217,7 @@ export class YGODuel {
 
         this.renderField();
 
-        this.events.publish("render-ui");
+        this.events.dispatch("render-ui");
     }
 
     public updateHand(playerIndex: number) {
@@ -317,7 +317,7 @@ export class YGODuel {
             this.fields[0].extraMonsterZone[i].updateCard();
         }
 
-        this.events.publish("render-ui");
+        this.events.dispatch("render-ui");
     }
 
     public update() {

@@ -3,7 +3,7 @@ import { YGODuel } from "../core/YGODuel";
 import { YGOUiController } from "./YGOUiController";
 import { YGOConfig } from "../core/YGOConfig";
 
-export function YgoDuelApp({ config, bind }: { bind?: (duel: YGODuel) => void, config: YGOConfig }) {
+export function YgoDuelApp({ config, bind: onBind, start: onStart }: { bind?: (duel: YGODuel) => void, config: YGOConfig, start?: (duel: YGODuel) => void }) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [ygo, setYGO] = useState<YGODuel>();
 
@@ -12,6 +12,7 @@ export function YgoDuelApp({ config, bind }: { bind?: (duel: YGODuel) => void, c
 
         const init = async () => {
             const ygo = new YGODuel({ canvas: canvasRef.current!, config });
+            if (onBind) onBind(ygo);
             await ygo.load();
             setYGO(ygo);
         }
@@ -21,8 +22,8 @@ export function YgoDuelApp({ config, bind }: { bind?: (duel: YGODuel) => void, c
 
     useEffect(() => {
         if (!ygo) return;
-        if (bind) bind(ygo);
         ygo.startDuel();
+        if (onStart) onStart(ygo);
     }, [ygo])
 
     return <div className="ygo-player-core" id="ygo-player-core" {...ygo?.mouseEvents.eventsReference}>

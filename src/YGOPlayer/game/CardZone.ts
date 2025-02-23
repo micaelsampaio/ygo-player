@@ -58,7 +58,7 @@ export class CardZone extends YGOEntity implements YGOUiElement {
     }
 
     onMouseClick(event: MouseEvent): void {
-        this.duel.events.publish("set-selected-card", {
+        this.duel.events.dispatch("set-selected-card", {
             player: 0,
             card: this.getCardReference()
         });
@@ -83,7 +83,7 @@ export class CardZone extends YGOEntity implements YGOUiElement {
                 this.duel.actionManager.setAction(action);
             } else {
                 this.duel.actionManager.clearAction();
-                this.duel.events.publish("clear-ui-action");
+                this.duel.events.dispatch("clear-ui-action");
             }
         }
 

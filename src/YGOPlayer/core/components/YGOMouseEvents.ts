@@ -105,7 +105,7 @@ export class YGOMouseEvents extends YGOComponent {
         if (this.onClickCb) {
             this.onClickCb({ event, elements });
         } else {
-            this.events.publish("click", { event, elements });
+            this.events.dispatch("click", { event, elements });
         }
 
         this.mouseDownElement = null;

@@ -14,13 +14,13 @@ export class ActionUiMenu implements YGOAction {
     }
 
     public onActionStart() {
-        this.duel.events.publish("set-ui-action", {
+        this.duel.events.dispatch("set-ui-action", {
             type: this.eventType,
             data: this.eventData
         });
     }
 
     public onActionEnd() {
-        this.duel.events.publish("clear-ui-action");
+        this.duel.events.dispatch("clear-ui-action");
     }
 }

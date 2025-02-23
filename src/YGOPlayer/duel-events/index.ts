@@ -71,11 +71,11 @@ export function handleDuelEvent(duel: YGODuel, event: YGODuelEvents.DuelLog) {
 
     if (taskManager.isProcessing()) taskManager.complete();
 
-    duel.events.publish("disable-game-actions");
+    duel.events.dispatch("disable-game-actions");
 
     const onCompleted = () => {
         duel.updateField();
-        duel.events.publish("enable-game-actions");
+        duel.events.dispatch("enable-game-actions");
     }
 
     const props = {

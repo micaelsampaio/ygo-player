@@ -27,7 +27,7 @@ export function ExtraDeck({ duel, player, hasAction, clearAction, visible = true
 
         onScroll={() => {
             if (hasAction) {
-                duel.events.publish("clear-ui-action");
+                duel.events.dispatch("clear-ui-action");
             }
         }}
     >
@@ -37,7 +37,7 @@ export function ExtraDeck({ duel, player, hasAction, clearAction, visible = true
             <img onClick={(e) => {
                 action.eventData = { duel, card, mouseEvent: e, htmlCardElement: e.target };
                 duel.actionManager.setAction(action);
-                duel.events.publish("set-selected-card", { player, card });
+                duel.events.dispatch("set-selected-card", { player, card });
             }}
                 key={card.index}
                 src={`${duel.config.cdnUrl}/images/cards_small/${card.id}.jpg`}

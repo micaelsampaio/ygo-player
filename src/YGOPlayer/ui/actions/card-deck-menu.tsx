@@ -12,7 +12,7 @@ export function CardDeckMenu({ duel, card, mouseEvent }: { duel: YGODuel, zone: 
     const originZone: FieldZone = YGOGameUtils.createZone("D", card.owner, cardIndex + 1);
 
     const closeViewDeckMenu = useCallback(() => {
-        duel.events.publish("close-ui-menu", { type: "view-main-deck" });
+        duel.events.dispatch("close-ui-menu", { type: "view-main-deck" });
     }, []);
 
     const toHand = useCallback(() => {

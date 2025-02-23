@@ -65,7 +65,7 @@ export class ActionCardSelection extends YGOComponent implements YGOAction {
         };
 
         if (this.isMultipleSelection) {
-            this.duel.events.publish("set-ui-action", {
+            this.duel.events.dispatch("set-ui-action", {
                 type: "card-multiple-selection-menu",
                 data: {
                     onCompleted: this.onMultipleSelectionCompletedClick.bind(this)
@@ -76,7 +76,7 @@ export class ActionCardSelection extends YGOComponent implements YGOAction {
 
     public onActionEnd(): void {
         this.clear();
-        this.duel.events.publish("clear-ui-action");
+        this.duel.events.dispatch("clear-ui-action");
     }
 
     private clear() {
@@ -117,7 +117,7 @@ export class ActionCardSelection extends YGOComponent implements YGOAction {
     public cancelSelection() {
         this.clear();
         this.duel.actionManager.clearAction();
-        this.duel.events.publish("clear-ui-action");
+        this.duel.events.dispatch("clear-ui-action");
     }
 
     private onCardZoneClick(zone: CardZone) {

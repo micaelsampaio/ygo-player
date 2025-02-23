@@ -16,13 +16,13 @@ export class ActionCardZoneMenu implements YGOAction {
     }
 
     public onActionStart() {
-        this.duel.events.publish("set-ui-action", {
+        this.duel.events.dispatch("set-ui-action", {
             type: "card-zone-menu",
             data: this.data
         });
     }
 
     public onActionEnd() {
-        this.duel.events.publish("clear-ui-action");
+        this.duel.events.dispatch("clear-ui-action");
     }
 }

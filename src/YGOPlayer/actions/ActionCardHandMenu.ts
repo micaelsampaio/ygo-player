@@ -18,7 +18,7 @@ export class ActionCardHandMenu implements YGOAction {
 
     public onActionStart() {
         this.data.cardInHand?.setActive(true);
-        this.duel.events.publish("set-ui-action", {
+        this.duel.events.dispatch("set-ui-action", {
             type: "card-hand-menu",
             data: this.data
         });
@@ -26,6 +26,6 @@ export class ActionCardHandMenu implements YGOAction {
 
     public onActionEnd() {
         this.data.cardInHand?.setActive(false);
-        this.duel.events.publish("clear-ui-action");
+        this.duel.events.dispatch("clear-ui-action");
     }
 }

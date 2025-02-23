@@ -55,7 +55,7 @@ export function CardZoneMenu({ duel, card, zone, gameCard, clearAction, mouseEve
     }, [card, zone]);
 
     const viewMaterials = () => {
-        duel.events.publish("toggle-ui-menu", { group: "game-overlay", autoClose: true, type: "xyz-monster-materials", data: { card, zone } });
+        duel.events.dispatch("toggle-ui-menu", { group: "game-overlay", autoClose: true, type: "xyz-monster-materials", data: { card, zone } });
     }
 
     const attachMaterial = useCallback(() => {

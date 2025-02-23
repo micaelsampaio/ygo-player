@@ -18,7 +18,7 @@ export function DeckMenu({ duel, deck }: { duel: YGODuel, deck: Deck, clearActio
     }, [deck, millCounter]);
 
     const viewDeck = () => {
-        duel.events.publish("toggle-ui-menu", { group: "game-popup", type: "view-main-deck", data: { duel, deck } });
+        duel.events.dispatch("toggle-ui-menu", { group: "game-popup", type: "view-main-deck", data: { duel, deck } });
     }
 
     useLayoutEffect(() => {

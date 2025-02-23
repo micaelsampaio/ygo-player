@@ -27,7 +27,7 @@ export function Banish({ duel, visible = true }: { duel: YGODuel, banish: GameBa
                 <img onClick={(e) => {
                     action.eventData = { duel, card, mouseEvent: e, htmlCardElement: e.target };
                     duel.actionManager.setAction(action);
-                    duel.events.publish("set-selected-card", { player: 0, card });
+                    duel.events.dispatch("set-selected-card", { player: 0, card });
                 }} src={`${duel.config.cdnUrl}/images/cards_small/${card.id}.jpg`}
                     key={card.index}
                     className="ygo-card" />

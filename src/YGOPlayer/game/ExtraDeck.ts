@@ -72,7 +72,7 @@ export class ExtraDeck extends YGOEntity implements YGOUiElement {
         if (this.duel.config.autoChangePlayer) {
             this.duel.setActivePlayer(this.player);
         }
-        this.duel.events.publish("toggle-ui-menu", { group: "game-overlay", type: "extra-deck", data: { player: this.player, extraDeck: this } })
+        this.duel.events.dispatch("toggle-ui-menu", { group: "game-overlay", type: "extra-deck", data: { player: this.player, extraDeck: this } })
     }
 
     onMouseEnter(): void {

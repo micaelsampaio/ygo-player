@@ -62,7 +62,7 @@ export class ChangeCardPositionHandler extends YGOCommandHandler {
         const cardZone = getGameZone(duel, zoneData);
         const sequence = new YGOTaskSequence();
 
-        duel.events.publish("set-selected-card", {
+        duel.events.dispatch("set-selected-card", {
             player: zoneData.player,
             card: cardReference
         });

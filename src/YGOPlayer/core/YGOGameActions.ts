@@ -18,7 +18,7 @@ export class YGOGameActions {
 
     //////////// UTILS
     private clearAction() {
-        this.duel.events.publish("clear-ui-action");
+        this.duel.events.dispatch("clear-ui-action");
     }
 
     //////////////////////// COMMANDS
@@ -224,11 +224,11 @@ export class YGOGameActions {
         const ygo = this.duel.ygo;
         const player = this.duel.getActivePlayer();
 
-        this.duel.events.publish("toggle-ui-menu", {
+        this.duel.events.dispatch("toggle-ui-menu", {
             group: "game-popup", type: "select-card-menu", data: {
                 onSelectCards: (cards: CardZoneKV[]) => {
 
-                    this.duel.events.publish("close-ui-menu", { type: "select-card-menu" });
+                    this.duel.events.dispatch("close-ui-menu", { type: "select-card-menu" });
 
                     const cardIndex = this.duel.ygo.state.fields[card.owner].extraDeck.findIndex((c) => c === card);
 

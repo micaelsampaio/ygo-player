@@ -12,10 +12,12 @@ export class EventBus<T extends Record<string, (...args: any[]) => void>> {
         this.events.get(event)!.push(listener);
     }
 
-    publish<K extends keyof T>(event: K, ...args: Parameters<T[K]>): void {
+    dispatch<K extends keyof T>(event: K, ...args: Parameters<T[K]>): void {
         const listeners = this.events.get(event);
         if (listeners) {
-            listeners.forEach(listener => listener(...args));
+            listeners.forEach(listener => {
+                listener(...args)
+            });
         }
     }
 

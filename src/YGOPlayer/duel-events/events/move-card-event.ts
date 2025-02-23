@@ -37,7 +37,7 @@ export class MoveCardEventHandler extends YGOCommandHandler {
         const originCardZone = getGameZone(duel, originZoneData);
         const cardZone = getGameZone(duel, zoneData);
 
-        duel.events.publish("set-selected-card", {
+        duel.events.dispatch("set-selected-card", {
             player: zoneData.player,
             card: this.cardReference
         });
