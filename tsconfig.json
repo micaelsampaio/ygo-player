@@ -6,7 +6,8 @@
       "DOM"
     ],
     "outDir": "./dist",
-    "noImplicitAny": true,
+    "noImplicitAny": false,
+    "strictNullChecks": true,
     "module": "esnext",
     "target": "es2020",
     "jsx": "react-jsx",

@@ -26,6 +26,8 @@ export interface YGOPropsOptions {
     draw?: number;
     shuffleDecks?: boolean;
     fieldState?: FileldStateEntry[];
+    startCommand?: number;
+    execCommands?: boolean;
 }
 export interface YGOPropsPlayer {
     name: string;

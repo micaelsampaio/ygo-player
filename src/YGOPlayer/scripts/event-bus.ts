@@ -1,4 +1,4 @@
-export class EventBus<T extends Record<string, (...args: any[]) => void>> {
+export class EventBus<T extends Record<keyof (T), (...args: any[]) => void>> {
     private events: Map<keyof T, Function[]>;
 
     constructor() {

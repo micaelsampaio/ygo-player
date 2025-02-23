@@ -27,4 +27,5 @@ export declare class YGOCore {
     getReplayData(): import("../types/types").YGOReplayData;
     getField(player: number): PlayerField;
     private createYGOCommands;
+    getCurrentStateProps(): YGOProps;
 }
