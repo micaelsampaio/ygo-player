@@ -18,30 +18,34 @@ function App() {
     const decks = allKeys.filter((key) => key.startsWith("deck_"));
     return decks;
   });
+  const [roomDecks, setRoomDecks] = useState({});
 
   let navigate = useNavigate();
 
   const duel = (e: any, deck1: any, deck2: any) => {
     e.preventDefault();
     e.stopPropagation();
+    const roomJson = {
+      players: [
+        {
+          name: "player1",
+          mainDeck: deck1.mainDeck,
+          extraDeck: deck1.extraDeck,
+        },
+        {
+          name: "player2",
+          mainDeck: deck2.mainDeck,
+          extraDeck: deck2.extraDeck,
+        },
+      ],
+    };
+    localStorage.setItem("duel-data", JSON.stringify(roomJson));
+    setRoomDecks(roomJson);
+    //navigate("/duel");
+  };
 
-    localStorage.setItem(
-      "duel-data",
-      JSON.stringify({
-        players: [
-          {
-            name: "player1",
-            mainDeck: deck1.mainDeck,
-            extraDeck: deck1.extraDeck,
-          },
-          {
-            name: "player2",
-            mainDeck: deck2.mainDeck,
-            extraDeck: deck2.extraDeck,
-          },
-        ],
-      })
-    );
+  const handleRoomReady = () => {
+    console.log("Room is ready!");
     navigate("/duel");
   };
 
@@ -135,7 +139,7 @@ function App() {
         </div>
       )}
 
-      <PeerLobby />
+      <PeerLobby onRoomReady={handleRoomReady} />
     </div>
   );
 }
