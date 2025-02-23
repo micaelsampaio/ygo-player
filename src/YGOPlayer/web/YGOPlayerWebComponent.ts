@@ -17,8 +17,11 @@ export class YGOPlayerComponent extends HTMLElement {
     public duel!: YGODuel;
     public events: EventBus<any>;
 
+    public test: EventBus<YGOPlayerComponentEvents>;
+
     constructor() {
         super();
+        this.test = new EventBus();
         this.events = new EventBus();
     }
 

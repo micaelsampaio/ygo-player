@@ -21,4 +21,5 @@ export declare class YGOUtils {
     private static recoverFields;
     static isNumeric(val: any): boolean;
     static getFieldsAsString(ygo: YGOCore): string;
+    static getYGOCoreStateProps(ygo: YGOCore): YGOProps;
 }

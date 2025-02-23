@@ -1,4 +1,4 @@
-export declare class EventBus<T extends Record<string, (...args: any[]) => void>> {
+export declare class EventBus<T extends Record<keyof (T), (...args: any[]) => void>> {
     private events;
     constructor();
     on<K extends keyof T>(event: K, listener: T[K]): void;
