@@ -96,11 +96,15 @@ export class PeerToPeer extends EventEmitter {
     );
 
     this.libp2p.addEventListener("peer:discovery", (evt) => {
-      const id = evt.detail.id.toString();
+      const peerId = evt.detail.id.toString();
       const addrs = evt.detail.multiaddrs.map((ma) => ma.toString());
-      console.log("P2P: Peer Discovery:", id, addrs);
+      console.log("P2P: Peer Discovery:", peerId, addrs);
       // Emit the event for the React component
-      this.emit("peer:discovery", { id, addresses: addrs, connected: "false" });
+      this.emit("peer:discovery", {
+        peerId,
+        addresses: addrs,
+        connected: "false",
+      });
     });
 
     this.libp2p.addEventListener("connection:open", (evt) => {

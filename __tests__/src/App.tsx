@@ -10,22 +10,11 @@ const cdnUrl = String(import.meta.env.VITE_YGO_CDN_URL);
 
 export default function App() {
   const kaibaNet = useKaibaNet();
-
   const [players, setPlayers] = useState(kaibaNet.getPlayers()); // Add reactive state for players
-
-  // Effect to update players state when kaibaNet's players change
-
-  useEffect(() => {
-    const updatePlayers = () => {
-      setPlayers(kaibaNet.getPlayers()); // Update players state
-    };
-
-    kaibaNet.on("players:updated", updatePlayers); // Listen for the players:updated event
-
-    return () => {
-      kaibaNet.removeListener("players:updated", updatePlayers); // Clean up the listener
-    };
-  }, [kaibaNet]);
+  const updatePlayers = (players) => {
+    setPlayers(kaibaNet.getPlayers());
+  };
+  kaibaNet.on("players:updated", updatePlayers);
 
   const [replays, setReplays] = useState(() => {
     const allKeys = Object.keys(localStorage);
@@ -240,7 +229,6 @@ export default function App() {
           </ul>
         </div>
       )}
-
       <PlayerLobby
         playerId={kaibaNet.getPlayerId()}
         players={players}

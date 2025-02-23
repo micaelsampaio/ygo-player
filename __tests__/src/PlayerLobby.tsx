@@ -154,7 +154,6 @@ const truncateId = (id: string) => `${id.slice(0, 6)}...${id.slice(-4)}`;
 
 export default function PlayerLobby({ playerId, players, onRoomReady }) {
   const [connecting, setConnecting] = useState("");
-
   useEffect(() => {
     console.log("PlayerLobby: playerId changed:", playerId);
   }, [playerId]);

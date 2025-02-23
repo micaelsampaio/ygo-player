@@ -3,7 +3,10 @@ import EventEmitter from "events";
 
 export class KaibaNet extends EventEmitter {
   private static instance: KaibaNet | null = null;
-  private players = new Map();
+  private players: Map<
+    string,
+    { id: string; addresses: string[]; connected: boolean }
+  > = new Map();
   private playerId: string | null = null;
   private initialized = false;
   private peerToPeer: PeerToPeer | null = null; // Store the PeerToPeer instance
@@ -47,48 +50,56 @@ export class KaibaNet extends EventEmitter {
 
   private setupEventListeners() {
     if (!this.peerToPeer) return;
-
-    // Remove any existing listeners first
-    this.peerToPeer.removeAllListeners();
-
     // Set up new listeners
-    this.peerToPeer.on("peer:discovery", ({ id, addresses }) => {
-      console.log("KaibaNet: Peer discovered", id);
-      this.players.set(id, {
-        id,
-        addresses,
-        connected: false,
-      });
-      // Emit event when player is discovered or updated
-      this.emit("players:updated", Array.from(this.players.values()));
+    this.peerToPeer.removeAllListeners("peer:discovery");
+    this.peerToPeer.on("peer:discovery", ({ peerId, addresses, connected }) => {
+      console.log("KaibaNet: Peer discovered", peerId, addresses);
+      const currentPlayer = this.players.get(peerId);
+      if (!currentPlayer || currentPlayer.connected !== false) {
+        this.players = new Map(this.players).set(peerId, {
+          id: peerId,
+          addresses,
+          connected: false,
+        });
+        // Emit event when player is discovered or updated
+        this.emit("players:updated", this.players);
+      }
     });
 
     this.peerToPeer.on("connection:open", ({ peerId }) => {
       console.log("KaibaNet: Connection opened", peerId);
-      const player = this.players.get(peerId) || {
-        id: peerId,
-        addresses: [],
-      };
-      this.players.set(peerId, { ...player, connected: true });
-      // Emit event when a player's connection is updated
-      this.emit("players:updated", Array.from(this.players.values()));
+      const player = this.players.get(peerId) || { id: peerId, addresses: [] };
+      if (player.connected !== true) {
+        this.players = new Map(this.players).set(peerId, {
+          ...player,
+          connected: true,
+        });
+        // Emit event when a player's connection is updated
+        this.emit("players:updated", this.players);
+      }
     });
 
     this.peerToPeer.on("connection:close", ({ peerId }) => {
       console.log("KaibaNet: Connection closed", peerId);
       const player = this.players.get(peerId);
-      if (player) {
-        this.players.set(peerId, { ...player, connected: false });
+      if (player && player.connected !== false) {
+        this.players = new Map(this.players).set(peerId, {
+          ...player,
+          connected: false,
+        });
+        // Emit event when a player's connection is updated
+        this.emit("players:updated", this.players);
       }
-      // Emit event when a player's connection is updated
-      this.emit("players:updated", Array.from(this.players.values()));
     });
 
     this.peerToPeer.on("remove:peer", ({ peerId }) => {
       console.log("KaibaNet: Peer removed", peerId);
-      this.players.delete(peerId);
-      // Emit event when player is removed
-      this.emit("players:updated", Array.from(this.players.values()));
+      if (this.players.has(peerId)) {
+        this.players = new Map(this.players);
+        this.players.delete(peerId);
+        // Emit event when player is removed
+        this.emit("players:updated", this.players);
+      }
     });
   }
 
@@ -104,11 +115,15 @@ export class KaibaNet extends EventEmitter {
     return this.peerToPeer;
   }
 
-  cleanup() {
+  cleanListeners() {
     if (this.peerToPeer) {
       this.peerToPeer.removeAllListeners();
     }
     this.removeAllListeners();
+  }
+
+  cleanup() {
+    this.cleanListeners();
     this.players.clear();
     this.playerId = null;
     this.initialized = false;
