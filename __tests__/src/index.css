@@ -4,5 +4,16 @@ body {
   margin: 0;
   width: 100%;
   height: 100%;
-  overflow: hidden;
+}
+
+.row {
+  display: flex;
+}
+
+.border {
+  border: 1px solid #dbdbdb;
+}
+
+.col {
+  width: 100%;
 }
