@@ -1,6 +1,7 @@
 
 import { useEffect } from 'react'
 import { YGOPlayerComponent } from "../../dist";
+// import { YGOCommands } from '../../src/YGOCore';
 import { YGODuel } from '../../dist/YGOPlayer/core/YGODuel';
 
 
@@ -12,10 +13,19 @@ export default function Duel() {
 
     const ygo = document.querySelector("ygo-player") as YGOPlayerComponent;
 
-    ygo.on("init", ({ duel }) => console.log("duel"));
-    ygo.on("start", ({ duel }) => console.log("duel"));
-    ygo.on("command-executed", ({ command }) => console.log("---- UI NEW COMMAND CREATED ----", command, command.toJSON()));
-    ygo.on("command-executed", ({ command }) => console.log("---- UI NEW COMMAND EXECUTED ----", command, command.toJSON()));
+    // ygo.on("init", ({ duel }) => console.log("duel"));
+    // ygo.on("start", ({ duel }) => console.log("duel"));
+    // ygo.on("command-executed", ({ command }) => console.log("---- UI NEW COMMAND CREATED ----", command, command.toJSON()));
+    // ygo.on("command-executed", ({ command }) => console.log("---- UI NEW COMMAND EXECUTED ----", command, command.toJSON()));
+
+    // kaibaCenas.on('init', (config)=> {
+    //   ygo.editor(config);
+    // })
+
+    // kaibaCenas.on('new-command', ()=> {
+    //   if(duel.ygo) duel.ygo.exec(new YGOCommands.JSONCommand(cmd.type, cmd.data));
+    // })
+
 
     // GET STATE
 

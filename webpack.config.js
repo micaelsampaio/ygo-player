@@ -9,6 +9,8 @@ export default {
         library: {
             name: 'YGOPlayer',
             type: 'umd',
+            export: 'default',
+            umdNamedDefine: true,
         },
         clean: true,
     },

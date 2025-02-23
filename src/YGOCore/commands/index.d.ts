@@ -29,7 +29,8 @@ import { TributeSummonCommand } from "./TributeSummonCommand";
 import { XYZAttachMaterialCommand } from "./XYZAttachMaterialCommand";
 import { XYZDetachMaterialCommand } from "./XYZDetachMaterialCommand";
 import { XYZSummonCommand } from "./XYZSummonCommand";
-export declare const Commands: {
+import { JSONCommand } from './JSONCommand';
+export interface YGOCommandsList {
     NormalSummonCommand: typeof NormalSummonCommand;
     SetMonsterCommand: typeof SetMonsterCommand;
     SetCardCommand: typeof SetCardCommand;
@@ -60,6 +61,8 @@ export declare const Commands: {
     ToSTCommand: typeof ToSTCommand;
     MoveCardCommand: typeof MoveCardCommand;
     TargetCommand: typeof TargetCommand;
-};
+    JSONCommand: typeof JSONCommand;
+}
+export declare const Commands: YGOCommandsList;
 export declare const COMMANDS_BY_NAME: any;
 export declare function GetCommandByClassName<T = Command>(commandClassName: string): T | null;
