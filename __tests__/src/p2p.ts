@@ -268,17 +268,22 @@ export class PeerToPeer extends EventEmitter {
   }
   // Subscribes to a topic
   async subscribeTopic(topic: string) {
-    console.log("P2P:currentTopics:", this.libp2p.services.pubsub.topics);
-    console.log("P2P: Subscribing to topic:", topic);
+    console.log("P2P: Attempting to subscribe to topic:", topic);
     try {
       await this.libp2p.services.pubsub.subscribe(topic);
       console.log(`P2P: Successfully subscribed to topic: ${topic}`);
+
+      // Log current topics to verify subscription
+      const currentTopics = this.libp2p.services.pubsub.getTopics();
+      console.log("P2P: Current topics:", currentTopics);
+
+      // Log subscribers for this topic
       const subs = await this.libp2p.services.pubsub.getSubscribers(topic);
       console.log(`P2P: Subscribers for topic ${topic}:`, subs);
     } catch (error) {
       console.error("P2P: Subscription failed:", error);
+      throw error;
     }
-    console.log("P2P:currentTopics:", this.libp2p.services.pubsub.topics);
   }
 
   // Sends a message to a topic
