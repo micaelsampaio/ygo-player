@@ -20,20 +20,20 @@ import { toString as uint8ArrayToString } from "uint8arrays/to-string";
 
 import EventEmitter from "events";
 
-export class dkeyedPeerToPeer extends EventEmitter {
-  WEBRTC_CODE = protocols("webrtc").code;
+export class PeerToPeer extends EventEmitter {
   PROTOCOL = "/chat/1.0.0";
   peerId = null;
   ma = null;
   libp2p = null;
-  private PUBSUB_PEER_DISCOVERY = "peer-discovery";
+  discoveryTopic = null;
 
   private bootstrapNode: string;
   private streams: Map<string, Pushable<Uint8Array>>;
 
-  constructor(bootstrapNode: string) {
+  constructor(bootstrapNode: string, discoveryTopic: string) {
     super();
     this.bootstrapNode = bootstrapNode;
+    this.discoveryTopic = discoveryTopic;
     this.streams = new Map();
 
     // all libp2p debug logs
@@ -46,7 +46,7 @@ export class dkeyedPeerToPeer extends EventEmitter {
   }
   // Intanciates the libp2p node
   async startP2P() {
-    console.log("Bootstrap Node:", this.bootstrapNode);
+    console.log("P2P: Bootstrap Node:", this.bootstrapNode);
     this.libp2p = await createLibp2p({
       addresses: {
         listen: ["/p2p-circuit", "/webrtc"],
@@ -64,7 +64,7 @@ export class dkeyedPeerToPeer extends EventEmitter {
           // Every 10 seconds publish our multiaddrs
           interval: 5000,
           // The topic that the relay is also subscribed to
-          topics: [this.PUBSUB_PEER_DISCOVERY],
+          topics: [this.discoveryTopic],
         }),
         bootstrap({
           list: [this.bootstrapNode],
@@ -88,32 +88,42 @@ export class dkeyedPeerToPeer extends EventEmitter {
 
     await this.libp2p.start();
     this.peerId = this.libp2p.peerId.toString();
-    console.log("libp2p started! Peer ID:", this.peerId);
+    console.log("P2P: libp2p started! Peer ID:", this.peerId);
 
     console.log(
-      "Initial multiaddrs:",
+      "P2P: Initial multiaddrs:",
       this.libp2p.getMultiaddrs().map((ma) => ma.toString())
     );
 
     this.libp2p.addEventListener("peer:discovery", (evt) => {
-      const id = evt.detail.id.toString();
+      const peerId = evt.detail.id.toString();
       const addrs = evt.detail.multiaddrs.map((ma) => ma.toString());
+      console.log("P2P: Peer Discovery:", peerId, addrs);
       // Emit the event for the React component
-      this.emit("peer:discovery", { id, addresses: addrs, connected: "false" });
+      this.emit("peer:discovery", {
+        peerId,
+        addresses: addrs,
+        connected: "false",
+      });
     });
 
     this.libp2p.addEventListener("connection:open", (evt) => {
       const peerId = evt.detail.remotePeer.toString();
+      console.log("P2P: Connection Open:", peerId);
       this.emit("connection:open", { peerId });
     });
 
     this.libp2p.addEventListener("connection:close", (evt) => {
       const peerId = evt.detail.remotePeer.toString();
+      console.log("P2P: Connection Close:", peerId);
       this.emit("connection:close", { peerId });
     });
 
     this.libp2p.addEventListener("self:peer:update", () => {
-      console.log("Self peer update event");
+      console.log(
+        "P2P: Self peer update event",
+        this.libp2p.getMultiaddrs().map((ma) => ma.toString())
+      );
     });
 
     this.libp2p.addEventListener("error", (evt) => {
@@ -121,8 +131,17 @@ export class dkeyedPeerToPeer extends EventEmitter {
     });
 
     // Event listener for topic messages
+
+    this.libp2p.services.pubsub.addEventListener(
+      "subscription-change",
+      (data) => {
+        console.log("P2p: Subscription Change", data);
+      }
+    );
+
     this.libp2p.services.pubsub.addEventListener("message", (message) => {
       const messageStr = new TextDecoder().decode(message.detail.data);
+      this.emit("topic:" + message.detail.topic + ":message", { messageStr });
       if (messageStr.includes("remove:peer:")) {
         console.log("Peer Remove Message");
         const peerId = messageStr.toString().split(":")[2];
@@ -145,22 +164,37 @@ export class dkeyedPeerToPeer extends EventEmitter {
   // Opens connection to a peer using the destination peer's multiaddress
   // In the future this should be done using the peer's peerID and try to connect to all multiaddresses
   async connectToPeer(ma: string) {
+    console.log("P2P: Connecting to peer:", ma);
     if (!this.libp2p) throw new Error("Libp2p instance not initialized");
 
     const castedMultiAddress = multiaddr(ma);
-    const signal = AbortSignal.timeout(5000);
+    const signal = AbortSignal.timeout(10000); // 10 seconds timeout
 
     try {
       await this.libp2p.dial(castedMultiAddress, { signal });
       console.log(`Connected to '${castedMultiAddress}'`);
 
-      try {
-        const rtt = await this.libp2p.services.ping.ping(castedMultiAddress, {
-          signal,
-        });
-        console.log(`RTT to ${castedMultiAddress.getPeerId()} was ${rtt}ms`);
-      } catch (pingErr) {
-        console.warn(`Connected but ping failed: ${pingErr.message}`);
+      const peerId = castedMultiAddress.getPeerId();
+      const connections = this.libp2p.getConnections(peerId);
+
+      if (!connections.length) {
+        console.warn(`Dialed peer '${peerId}', but no active connection.`);
+        return;
+      }
+
+      if (this.libp2p.services.ping) {
+        try {
+          const rtt = await this.libp2p.services.ping.ping(castedMultiAddress, {
+            signal,
+          });
+          console.log(`RTT to ${peerId} was ${rtt}ms`);
+        } catch (pingErr) {
+          console.warn(
+            `Ping failed, but connection is established: ${pingErr.message}`
+          );
+        }
+      } else {
+        console.warn("Ping service is not available.");
       }
     } catch (err) {
       if (signal.aborted) {
@@ -176,6 +210,7 @@ export class dkeyedPeerToPeer extends EventEmitter {
 
   // Sets up the message protocol for peers communcation
   private async setupProtocolHandler() {
+    console.log("P2P: Setting up protocol handler");
     if (!this.libp2p) throw new Error("Libp2p instance not initialized");
 
     await this.libp2p.handle(this.PROTOCOL, ({ connection, stream }) => {
@@ -200,6 +235,7 @@ export class dkeyedPeerToPeer extends EventEmitter {
 
   // Sends a message to a peer using the destination peer's multiaddress
   async sendMsgToPeer(peerMultiaddr: string, msg: string) {
+    console.log("P2P: Sending message to peer:", peerMultiaddr, msg);
     if (!this.libp2p) throw new Error("Libp2p instance not initialized");
 
     try {
@@ -253,12 +289,39 @@ export class dkeyedPeerToPeer extends EventEmitter {
     }
   }
   // Subscribes to a topic
-  async subscriveTopic(topic: string) {
-    await this.libp2p.services.pubsub.subscribe(topic);
+  async subscribeTopic(topic: string) {
+    console.log("P2P: Attempting to subscribe to topic:", topic);
+    try {
+      await this.libp2p.services.pubsub.subscribe(topic);
+      console.log(`P2P: Successfully subscribed to topic: ${topic}`);
+
+      // Log current topics to verify subscription
+      const currentTopics = await this.libp2p.services.pubsub.getTopics();
+      console.log("P2P: Current topics:", currentTopics);
+
+      const subs = await this.libp2p.services.pubsub.getSubscribers(topic);
+      console.log(`P2P: Subscribers for topic ${topic}:`, subs);
+      console.log("Gossipsub mesh:", this.libp2p.services.pubsub);
+      console.log("Connected Peers:", this.libp2p.services.pubsub.getPeers());
+      const { topics, subscriptions, mesh } = await this.libp2p.services.pubsub;
+      console.log(
+        "P2P: Current mesh:",
+        "topics:",
+        topics,
+        "subscriptions:",
+        subscriptions,
+        "mesh:",
+        mesh
+      );
+    } catch (error) {
+      console.error("P2P: Subscription failed:", error);
+      throw error;
+    }
   }
 
   // Sends a message to a topic
   async messageTopic(topic: string, message: string) {
+    console.log("P2P: Message topic:", topic, message);
     await this.libp2p.services.pubsub.publish(topic, fromString(message));
   }
 }
