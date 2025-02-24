@@ -7,10 +7,9 @@ export default {
         path: path.resolve(process.cwd(), 'dist'),
         filename: 'index.js',
         library: {
-            name: 'YGOPlayer',
-            type: 'umd',
+            type: 'module'
         },
-        clean: true,
+        clean: true
     },
     resolve: {
         extensions: ['.ts', '.tsx', '.js', '.jsx', '.css'],
@@ -33,7 +32,9 @@ export default {
             filename: 'style.css',
         }),
     ],
-    mode: 'production',
+    experiments: {
+        outputModule: true,
+    }
 };
 
 
