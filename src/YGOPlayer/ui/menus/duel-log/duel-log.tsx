@@ -41,7 +41,6 @@ export function DuelLogMenu({ duel }: { duel: YGODuel }) {
     return <div className="ygo-duel-log-container">
         <div className="ygo-logs">
             {logs.map((log, index) => {
-                console.log(log)
                 const Component = (COMPONENTS as any)[log.type] || COMPONENTS.default;
 
                 return <div className="ygo-flex">

@@ -20,6 +20,7 @@ export function SelectedCardMenu({ duel, card, visible = true }: { duel: YGODuel
             {
                 card.name
             }
+            <div style={{ fontSize: "10px" }}>{card.id}</div>
         </div>
 
         <img className="ygo-card" src={`${duel.config.cdnUrl}/images/cards_small/${card.id}.jpg`} />
