@@ -4,6 +4,7 @@ import CHIMERA from "./decks/CHIMERA.json";
 import { useNavigate } from "react-router";
 import PeerLobby from "./Lobby";
 import { memo, useEffect, useState } from "react";
+import { YGOGameUtils } from '../../dist/index.js';
 
 const cdnUrl = String(import.meta.env.VITE_YGO_CDN_URL)
 
@@ -106,15 +107,15 @@ export default function App() {
     const { endField = [] } = replayData.replay;
 
     const fieldState = endField.map((card: any) => {
-      // const zoneData = YGOGameUtils.getZoneData(card.zone);
-      // console.log("ZONE --> ", card.zone, zoneData);
+      const zoneData = YGOGameUtils.getZoneData(card.zone);
+      console.log("ZONE --> ", card.zone, zoneData);
 
-      // if (zoneData.player === playerIndex) {
-      //   return {
-      //     ...card,
-      //     zone: YGOGameUtils.invertPlayerInZone(card.zone)
-      //   }
-      // }
+      if (zoneData.player === playerIndex) {
+        return {
+          ...card,
+          zone: YGOGameUtils.invertPlayerInZone(card.zone)
+        }
+      }
       return undefined;
     }).filter((data: any) => data);
 
@@ -279,19 +280,19 @@ const EndGameBoard = memo(function EndGameBoard({ data, play }: any) {
     ]
 
     endField.forEach((data: any) => {
-      // const zoneData = YGOGameUtils.getZoneData(data.zone);
-      // const card = getCard(zoneData.player, data.id);
-      // const cardData = { ...card, ...data, zoneData };
+      const zoneData = YGOGameUtils.getZoneData(data.zone);
+      const card = getCard(zoneData.player, data.id);
+      const cardData = { ...card, ...data, zoneData };
 
-      // if (zoneData.zone === "M") {
-      //   fields[zoneData.player].monsterZones[zoneData.zoneIndex - 1] = cardData;
-      // }
-      // if (zoneData.zone === "S") {
-      //   fields[zoneData.player].spellTrapZones[zoneData.zoneIndex - 1] = cardData;
-      // }
-      // if (zoneData.zone === "EMZ") {
-      //   fields[zoneData.player].extraMonsterZones[zoneData.zoneIndex - 1] = cardData;
-      // }
+      if (zoneData.zone === "M") {
+        fields[zoneData.player].monsterZones[zoneData.zoneIndex - 1] = cardData;
+      }
+      if (zoneData.zone === "S") {
+        fields[zoneData.player].spellTrapZones[zoneData.zoneIndex - 1] = cardData;
+      }
+      if (zoneData.zone === "EMZ") {
+        fields[zoneData.player].extraMonsterZones[zoneData.zoneIndex - 1] = cardData;
+      }
     })
     fields.reverse();
     setFields(fields);

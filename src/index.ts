@@ -2,7 +2,7 @@
 import "./YGOPlayer/style/style.css";
 
 /// TS
-//export * from './YGOCore';
+export * from './YGOCore';
 export * from './YGOPlayer/web';
 export * from './YGOPlayer/core/YGODuel';
 
