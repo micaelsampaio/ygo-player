@@ -5,8 +5,6 @@ export function DefaultLogRow({ log, duel, ygo }: { log: any, duel: YGODuel, ygo
 
     const card = ygo.state.getCardData(log.id)!;
 
-    console.log("CARD ", card);
-
     if (!card) {
         return <div className="ygo-duel-log-default-row">
             {log.type}

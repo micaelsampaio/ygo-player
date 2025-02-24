@@ -4,9 +4,10 @@ import "./duel-log.css";
 import { YGODuelEvents } from "../../../../YGOCore";
 import { DefaultLogRow } from "./default-log";
 import { SimpleLogRow } from "./log-simple";
+import { StartHandLogRow } from "./start-hand";
 
 const COMPONENTS = {
-    [YGODuelEvents.LogType.StartHand]: SimpleLogRow,
+    [YGODuelEvents.LogType.StartHand]: StartHandLogRow,
     default: DefaultLogRow
 }
 
@@ -40,16 +41,22 @@ export function DuelLogMenu({ duel }: { duel: YGODuel }) {
     return <div className="ygo-duel-log-container">
         <div className="ygo-logs">
             {logs.map((log, index) => {
+                console.log(log)
                 const Component = (COMPONENTS as any)[log.type] || COMPONENTS.default;
 
-                return <Component
-                    key={index + log.type}
-                    duel={duel}
-                    ygo={duel.ygo}
-                    index={index}
-                    undoByCommandIndex={undoByCommand}
-                    log={log}
-                />
+                return <div className="ygo-flex">
+                    <div style={{ width: "5px", background: log.player === 0 ? "red" : "blue" }}></div>
+                    <div className="ygo-flex-grow-1">
+                        <Component
+                            key={index + log.type}
+                            duel={duel}
+                            ygo={duel.ygo}
+                            index={index}
+                            undoByCommandIndex={undoByCommand}
+                            log={log}
+                        />
+                    </div>
+                </div>
             })}
 
             <div onClick={undo}>
