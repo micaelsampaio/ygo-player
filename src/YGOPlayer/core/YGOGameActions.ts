@@ -399,27 +399,7 @@ export class YGOGameActions {
         }));
     }
 
-    public attachMaterial({ card, originZone }: { card: Card, originZone: FieldZone }) {
-        this.clearAction();
-        const ygo = this.duel.ygo;
-        const player = this.duel.getActivePlayer();
-        const xyzZones = getXyzMonstersZones(this.duel, [card.owner]);
 
-        if (xyzZones.length === 0) return;
-
-        this.cardSelection.startSelection({
-            zones: xyzZones,
-            selectionType: "zone",
-            onSelectionCompleted: (cardZone: any) => {
-                ygo.exec(new YGOCommands.XYZAttachMaterialCommand({
-                    player,
-                    id: card.id,
-                    originZone,
-                    zone: cardZone.zone
-                }));
-            }
-        });
-    }
 
     public toHand({ card, originZone }: { card: Card, originZone: FieldZone }) {
         this.clearAction();
@@ -517,5 +497,40 @@ export class YGOGameActions {
 
     public milFromDeck({ player, numberOfCards = 1 }: { player: number, numberOfCards?: number }) {
         this.duel.ygo.exec(new YGOCommands.MillFromDeckCommand({ player, numberOfCards }));
+    }
+
+    public attachMaterial({ card, originZone }: { card: Card, originZone: FieldZone }) {
+        this.clearAction();
+        const ygo = this.duel.ygo;
+        const player = this.duel.getActivePlayer();
+        const xyzZones = getXyzMonstersZones(this.duel, [card.owner]);
+
+        if (xyzZones.length === 0) return;
+
+        this.cardSelection.startSelection({
+            zones: xyzZones,
+            selectionType: "zone",
+            onSelectionCompleted: (cardZone: any) => {
+                ygo.exec(new YGOCommands.XYZAttachMaterialCommand({
+                    player,
+                    id: card.id,
+                    originZone,
+                    zone: cardZone.zone
+                }));
+            }
+        });
+    }
+
+    public detachMaterial({ card, originZone, materialIndex }: { card: Card, originZone: FieldZone, materialIndex: number }) {
+        this.clearAction();
+        const ygo = this.duel.ygo;
+        const player = this.duel.getActivePlayer();
+
+        ygo.exec(new YGOCommands.XYZDetachMaterialCommand({
+            player,
+            id: card.id,
+            originZone,
+            materialIndex,
+        }));
     }
 }

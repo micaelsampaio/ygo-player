@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
 import { YGODuel } from "../../../core/YGODuel";
 import "./duel-log.css";
-import { YGODuelEvents, YGODuelLog } from "../../../../YGOCore";
+import { YGODuelEvents } from "../../../../YGOCore";
 import { DefaultLogRow } from "./default-log";
 import { SimpleLogRow } from "./log-simple";
 

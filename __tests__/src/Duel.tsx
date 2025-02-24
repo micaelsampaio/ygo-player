@@ -7,10 +7,10 @@ import { YGOPlayerComponent, YGODuel } from '../../dist';
 export default function Duel() {
 
   useEffect(() => {
-    let duel!: YGODuel;
+    let duel!: typeof YGODuel;
     const duelData = JSON.parse(window.localStorage.getItem("duel-data")!);
 
-    const ygo = document.querySelector("ygo-player") as YGOPlayerComponent;
+    const ygo = document.querySelector("ygo-player") as typeof YGOPlayerComponent;
 
     // ygo.on("init", ({ duel }) => console.log("duel"));
     // ygo.on("start", ({ duel }) => console.log("duel"));
@@ -48,6 +48,15 @@ export default function Duel() {
         commands: duelData.commands,
         options: duelData.options
       };
+
+      if (!config.options) config.options = {};
+
+      config.options.fieldState = [
+        { id: 10802915, zone: "M-1" },
+        { id: 51473858, zone: "M-2" },
+        { id: 27868563, zone: "M-3" },
+      ];
+
       ygo.editor(config);
     }
 

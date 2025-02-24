@@ -1,12 +1,12 @@
 import { useMemo } from "react";
 import { YGODuel } from "../../core/YGODuel";
 import { ActionUiMenu } from "../../actions/ActionUiMenu";
-import { Card } from "../../../YGOCore/types/types";
+import { Card, FieldZone } from "../../../YGOCore/types/types";
 
-export function XyzMonsterMaterialsMenu({ duel, card, visible = true }: { duel: YGODuel, card: Card, visible: boolean }) {
+export function XyzMonsterMaterialsMenu({ duel, card, zone, visible = true }: { duel: YGODuel, card: Card, zone: FieldZone, visible: boolean }) {
 
     const action = useMemo(() => {
-        const action = new ActionUiMenu(duel, { eventType: "card-extra-deck-menu" });
+        const action = new ActionUiMenu(duel, { eventType: "card-materials-menu" });
         return action;
     }, [duel])
 
@@ -28,13 +28,13 @@ export function XyzMonsterMaterialsMenu({ duel, card, visible = true }: { duel: 
     >
         <h2>Materials</h2>
         <hr />
-        {materials.map(card => <div>
+        {materials.map(material => <div>
             <img onClick={(e) => {
-                action.eventData = { duel, card, mouseEvent: e };
+                action.eventData = { duel, card, material, originZone: zone, mouseEvent: e, htmlCardElement: e.target };
                 duel.actionManager.setAction(action);
             }}
-                key={card.index}
-                src={`${duel.config.cdnUrl}/images/cards_small/${card.id}.jpg`}
+                key={material.index}
+                src={`${duel.config.cdnUrl}/images/cards_small/${material.id}.jpg`}
                 className="ygo-card" />
         </div>)}
     </div>

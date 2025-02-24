@@ -77,7 +77,7 @@ export default function App() {
     //navigate("/duel");
   };
 
-  const handleGameStart = async (gameState) => {
+  const handleGameStart = async (gameState: any) => {
     console.log("decodedGameState", gameState);
     console.log(gameState);
     navigate("/duel");
@@ -85,7 +85,7 @@ export default function App() {
 
   kaibaNet.setOnGameStartCallback(handleGameStart);
 
-  const handleRoomJoin = async (roomId) => {
+  const handleRoomJoin = async (roomId: any) => {
     console.log("App:handleRoomJoin:roomDecks", roomDecks);
     await kaibaNet.joinRoom(roomId, roomDecks);
     navigate("/duel");
