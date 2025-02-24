@@ -131,6 +131,14 @@ export class PeerToPeer extends EventEmitter {
     });
 
     // Event listener for topic messages
+
+    this.libp2p.services.pubsub.addEventListener(
+      "subscription-change",
+      (data) => {
+        console.log("P2p: Subscription Change", data);
+      }
+    );
+
     this.libp2p.services.pubsub.addEventListener("message", (message) => {
       const messageStr = new TextDecoder().decode(message.detail.data);
       this.emit("topic:" + message.detail.topic + ":message", { messageStr });
@@ -160,19 +168,33 @@ export class PeerToPeer extends EventEmitter {
     if (!this.libp2p) throw new Error("Libp2p instance not initialized");
 
     const castedMultiAddress = multiaddr(ma);
-    const signal = AbortSignal.timeout(5000);
+    const signal = AbortSignal.timeout(10000); // 10 seconds timeout
 
     try {
       await this.libp2p.dial(castedMultiAddress, { signal });
       console.log(`Connected to '${castedMultiAddress}'`);
 
-      try {
-        const rtt = await this.libp2p.services.ping.ping(castedMultiAddress, {
-          signal,
-        });
-        console.log(`RTT to ${castedMultiAddress.getPeerId()} was ${rtt}ms`);
-      } catch (pingErr) {
-        console.warn(`Connected but ping failed: ${pingErr.message}`);
+      const peerId = castedMultiAddress.getPeerId();
+      const connections = this.libp2p.getConnections(peerId);
+
+      if (!connections.length) {
+        console.warn(`Dialed peer '${peerId}', but no active connection.`);
+        return;
+      }
+
+      if (this.libp2p.services.ping) {
+        try {
+          const rtt = await this.libp2p.services.ping.ping(castedMultiAddress, {
+            signal,
+          });
+          console.log(`RTT to ${peerId} was ${rtt}ms`);
+        } catch (pingErr) {
+          console.warn(
+            `Ping failed, but connection is established: ${pingErr.message}`
+          );
+        }
+      } else {
+        console.warn("Ping service is not available.");
       }
     } catch (err) {
       if (signal.aborted) {
@@ -274,12 +296,23 @@ export class PeerToPeer extends EventEmitter {
       console.log(`P2P: Successfully subscribed to topic: ${topic}`);
 
       // Log current topics to verify subscription
-      const currentTopics = this.libp2p.services.pubsub.getTopics();
+      const currentTopics = await this.libp2p.services.pubsub.getTopics();
       console.log("P2P: Current topics:", currentTopics);
 
-      // Log subscribers for this topic
       const subs = await this.libp2p.services.pubsub.getSubscribers(topic);
       console.log(`P2P: Subscribers for topic ${topic}:`, subs);
+      console.log("Gossipsub mesh:", this.libp2p.services.pubsub);
+      console.log("Connected Peers:", this.libp2p.services.pubsub.getPeers());
+      const { topics, subscriptions, mesh } = await this.libp2p.services.pubsub;
+      console.log(
+        "P2P: Current mesh:",
+        "topics:",
+        topics,
+        "subscriptions:",
+        subscriptions,
+        "mesh:",
+        mesh
+      );
     } catch (error) {
       console.error("P2P: Subscription failed:", error);
       throw error;

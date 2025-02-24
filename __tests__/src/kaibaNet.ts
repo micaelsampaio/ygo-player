@@ -10,6 +10,7 @@ export class KaibaNet extends EventEmitter {
   private playerId: string | null = null;
   private initialized = false;
   private peerToPeer: PeerToPeer | null = null; // Store the PeerToPeer instance
+  private onGameStartCallback = null;
 
   private constructor() {
     super();
@@ -23,6 +24,10 @@ export class KaibaNet extends EventEmitter {
       KaibaNet.instance = new KaibaNet();
     }
     return KaibaNet.instance;
+  }
+
+  setOnGameStartCallback(callback) {
+    this.onGameStartCallback = callback;
   }
 
   async initialize() {
@@ -105,7 +110,24 @@ export class KaibaNet extends EventEmitter {
     this.peerToPeer.on(
       "topic:" + this.playerId + ":message",
       ({ messageStr }) => {
-        console.log("KaibaNet: Message on PlayerID topic", messageStr);
+        console.log(
+          "KaibaNet: Message on PlayerID ",
+          this.playerId,
+          "topic",
+          messageStr
+        );
+        if (messageStr.includes("duel:player:start:")) {
+          console.log("Room start message");
+          const gameStateBase64 = messageStr.toString().split(":")[3];
+          // Decode Base64 → Convert from binary → Parse JSON
+          const decodedGameState = JSON.parse(
+            new TextDecoder().decode(
+              Uint8Array.from(atob(gameStateBase64), (c) => c.charCodeAt(0))
+            )
+          );
+
+          this.onGameStartCallback(decodedGameState);
+        }
       }
     );
   }
@@ -137,17 +159,30 @@ export class KaibaNet extends EventEmitter {
     this.peerToPeer = null;
   }
 
-  joinRoom(roomId: string, roomDecks: any) {
-    this.peerToPeer.subscribeTopic(roomId);
+  async joinRoom(roomId: string, roomDecks: any) {
+    console.log("Destination Addresses:", this.players.get(roomId).addresses);
 
+    // Connect to the peer
+    await this.peerToPeer.connectToPeer(this.players.get(roomId).addresses[1]);
+
+    // Subscribe to the topic
+    await this.peerToPeer.subscribeTopic(roomId);
+
+    // Wait for subscription to propagate
+    await new Promise((resolve) => setTimeout(resolve, 300)); // Wait 300ms
+
+    // Encode the room decks data
     const jsonString = JSON.stringify(roomDecks);
-
     const base64Encoded = btoa(
       new TextEncoder()
         .encode(jsonString)
         .reduce((acc, byte) => acc + String.fromCharCode(byte), "")
     );
-    console.log("topic:", roomId);
-    this.peerToPeer.messageTopic(roomId, "duel:player:start:" + base64Encoded);
+
+    // Send message after delay
+    await this.peerToPeer.messageTopic(
+      roomId,
+      "duel:player:start:" + base64Encoded
+    );
   }
 }
