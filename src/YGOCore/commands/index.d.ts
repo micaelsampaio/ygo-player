@@ -28,6 +28,7 @@ import { TributeSetCommand } from "./TributeSetCommand";
 import { TributeSummonCommand } from "./TributeSummonCommand";
 import { XYZAttachMaterialCommand } from "./XYZAttachMaterialCommand";
 import { XYZDetachMaterialCommand } from "./XYZDetachMaterialCommand";
+import { XYZOverlaySummonCommand } from "./XYZOverlaySummonCommand";
 import { XYZSummonCommand } from "./XYZSummonCommand";
 export interface YGOCommandsList {
     NormalSummonCommand: typeof NormalSummonCommand;
@@ -45,6 +46,7 @@ export interface YGOCommandsList {
     FusionSummonCommand: typeof FusionSummonCommand;
     SynchroSummonCommand: typeof SynchroSummonCommand;
     XYZSummonCommand: typeof XYZSummonCommand;
+    XYZOverlaySummonCommand: typeof XYZOverlaySummonCommand;
     XYZAttachMaterialCommand: typeof XYZAttachMaterialCommand;
     XYZDetachMaterialCommand: typeof XYZDetachMaterialCommand;
     ToDeckCommand: typeof ToDeckCommand;

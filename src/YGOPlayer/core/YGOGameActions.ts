@@ -174,6 +174,49 @@ export class YGOGameActions {
         });
     }
 
+    public xyzOverlaySummon({ card, position = "faceup-attack" }: { card: Card, position?: CardPosition }) {
+        this.clearAction();
+        const ygo = this.duel.ygo;
+        const player = this.duel.getActivePlayer();
+        const cardIndex = this.duel.ygo.state.fields[card.originalOwner].extraDeck.findIndex((c) => c === card);
+        const zones = getMonstersZones(this.duel, [card.originalOwner]).filter(zone => YGOGameUtils.isFaceUp(zone.getCardReference()!));
+
+        this.cardSelection.startMultipleSelection({
+            zones,
+            selectionType: "card",
+            onSelectionCompleted: (cardZones: CardZone[]) => {
+
+                const materials = cardZones.map(cardZone => {
+                    return {
+                        id: cardZone.getCardReference()!.id,
+                        zone: cardZone.zone
+                    }
+                });
+
+                const zonesToSummon = getCardZones(this.duel, [card.originalOwner], ["M", "EMZ"]);
+                cardZones.forEach(z => zonesToSummon.push(z));
+
+                this.cardSelection.startSelection({
+                    zones: zonesToSummon,
+                    selectionType: "zone",
+                    onSelectionCompleted: (cardZone: any) => {
+                        ygo.exec(new YGOCommands.XYZOverlaySummonCommand({
+                            player,
+                            id: card.id,
+                            materials,
+                            originZone: YGOGameUtils.createZone("ED", card.originalOwner, cardIndex + 1),
+                            zone: cardZone.zone,
+                            position
+                        }));
+
+                        this.clearAction();
+                    }
+                });
+
+            }
+        });
+    }
+
     public synchroSummon({ card, position = "faceup-attack" }: { card: Card, position?: CardPosition }) {
 
         this.clearAction();

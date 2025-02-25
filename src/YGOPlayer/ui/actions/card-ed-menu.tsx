@@ -23,6 +23,14 @@ export function CardExtraDeckMenu({ duel, config, card, htmlCardElement, clearAc
         duel.gameActions.xyzSummon({ card, position: "faceup-defense" });
     }, [card]);
 
+    const xyzOverlaySummonATK = useCallback(() => {
+        duel.gameActions.xyzOverlaySummon({ card, position: "faceup-attack" });
+    }, [card]);
+
+    const xyzOverlaySummonDEF = useCallback(() => {
+        duel.gameActions.xyzOverlaySummon({ card, position: "faceup-defense" });
+    }, [card]);
+
     const synchroSummonATK = useCallback(() => {
         duel.gameActions.synchroSummon({ card, position: "faceup-attack" });
     }, [card]);
@@ -78,9 +86,15 @@ export function CardExtraDeckMenu({ duel, config, card, htmlCardElement, clearAc
                 </>
                 }
 
-                {isXYZ && <button className="ygo-card-item" type="button" onClick={xyzSummonATK}>XYZ Summon ATK</button>}
-                {isXYZ && <button className="ygo-card-item" type="button" onClick={xyzSummonDEF}>XYZ Summon DEF</button>}
+                {isXYZ && <>
+                    <button className="ygo-card-item" type="button" onClick={xyzSummonATK}>XYZ Summon ATK</button>
+                    <button className="ygo-card-item" type="button" onClick={xyzSummonDEF}>XYZ Summon DEF</button>
+                    <button className="ygo-card-item" type="button" onClick={xyzOverlaySummonATK}>XYZ Overlay ATK</button>
+                    <button className="ygo-card-item" type="button" onClick={xyzOverlaySummonDEF}>XYZ Overlay DEF</button>
+                </>}
+
                 <button type="button" className="ygo-card-item" onClick={specialSummonATK}>SS ATK</button>
+
                 {!isLink && <button type="button" className="ygo-card-item" onClick={specialSummonDEF}>SS DEF</button>}
             </>}
         </CardMenu>

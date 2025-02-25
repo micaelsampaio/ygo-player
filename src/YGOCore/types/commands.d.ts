@@ -1,6 +1,6 @@
 import { YGOCore } from "../game/YGOCore";
 import { CardPosition, FieldZone } from "./types";
-export type CommandType = "NULL" | "Normal Summon" | "Tribute Summon" | "Tribute Set" | "Special Summon" | "Banish" | "Banish FD" | "Shuffle Deck" | "Start Hand" | "Draw From Deck" | "Mill From Deck" | "Fusion Summon" | "Synchro Summon" | "Link Summon" | "XYZ Summon" | "XYZ Attach Material" | "XYZ Detach Material" | "XYZ Move Material" | "Set Monster" | "Set ST" | "To ST" | "To Extra Deck" | "Send To GY" | "Destroy" | "Activate" | "Change Battle Position" | "Move Card" | "To Top Deck" | "To Bottom Deck" | "To Hand" | "Reveal" | "Target" | "Field Spell" | "Change Card Position" | "Change Card Atk Def" | "Flip";
+export type CommandType = "NULL" | "Normal Summon" | "Tribute Summon" | "Tribute Set" | "Special Summon" | "Banish" | "Banish FD" | "Shuffle Deck" | "Start Hand" | "Draw From Deck" | "Mill From Deck" | "Fusion Summon" | "Synchro Summon" | "Link Summon" | "XYZ Summon" | "XYZ Overlay Summon" | "XYZ Attach Material" | "XYZ Detach Material" | "XYZ Move Material" | "Set Monster" | "Set ST" | "To ST" | "To Extra Deck" | "Send To GY" | "Destroy" | "Activate" | "Change Battle Position" | "Move Card" | "To Top Deck" | "To Bottom Deck" | "To Hand" | "Reveal" | "Target" | "Field Spell" | "Change Card Position" | "Change Card Atk Def" | "Flip";
 export interface Command {
     type: CommandType;
     parent: Command | null;

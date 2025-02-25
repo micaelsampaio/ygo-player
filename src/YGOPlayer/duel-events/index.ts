@@ -50,6 +50,7 @@ const events: any = {
     /// Summons
     [YGODuelEvents.LogType.LinkSummon]: LinkSummonEventHandler,
     [YGODuelEvents.LogType.XYZSummon]: XYZSummonEventHandler,
+    [YGODuelEvents.LogType.XYZOverlaySummon]: XYZSummonEventHandler,
     [YGODuelEvents.LogType.FusionSummon]: FusionSummonEventHandler,
     [YGODuelEvents.LogType.SynchroSummon]: SynchroSummonEventHandler,
     // Others
