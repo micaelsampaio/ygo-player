@@ -118,6 +118,7 @@ export class KaibaNet extends EventEmitter {
     //When we receive a message with the player joining the duel room, emit an event with the player's ID
     if (messageStr.includes("duel:player:join:")) {
       const playerJoinedId = messageStr.split(":")[3];
+      console.log("KaibaNet: Player joined Message received", playerJoinedId);
       this.emit("duel:player:join:", playerJoinedId);
     }
     // When we receive a message with the game state, emit an event with the decoded gameState
