@@ -69,13 +69,13 @@ export class GameCardStats {
         const atk = this.card.currentAtk || this.card.atk;
         const def = this.card.currentAtk || this.card.def;
         const level = this.card.level || this.card.linkval;
-        const owner = this.card.originalOwner;
+        const owner = this.card.owner;
         const materials = this.card.materials.length;
 
         if (this.atk !== atk) return true;
         if (this.def !== def) return true;
         if (this.level !== level) return true;
-        if (this.originalOwner !== owner) return true;
+        if (this.owner !== owner) return true;
         if (this.materials !== materials) return true;
 
         return false;
