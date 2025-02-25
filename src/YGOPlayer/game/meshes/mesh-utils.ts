@@ -1,9 +1,8 @@
 import * as THREE from 'three';
-import { GameCard } from '../GameCard';
 
 export function CardEmptyMesh({ material, card, color, depth = 0.02, transparent }: { material?: THREE.Material, color?: THREE.ColorRepresentation, depth?: number, card?: THREE.Object3D, transparent?: boolean } | undefined = {}) {
     const CARD_RATIO = 1.45;
-    const width = 1.9, height = width * CARD_RATIO;
+    const height = 3.5, width = height / CARD_RATIO;
     const geometry = new THREE.BoxGeometry(width, height, depth);
     const meshMaterial = material || new THREE.MeshBasicMaterial({ color, transparent });
     const mesh = new THREE.Mesh(geometry, meshMaterial);

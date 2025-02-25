@@ -98,8 +98,7 @@ export class YGODuel {
                 ),
                 //this.assets.loadTextures(Array.from((this.ygo.state as any).cardsIngame.values()).map(id => `http://127.0.0.1:8080/images/cards_small/${id}.jpg`)),
             ]);
-            this.core.scene.add(fieldModel.scene);
-            // this.core.camera.position.set(0, 0, 14);
+            this.core.camera.position.set(0, 0, 20);
             // this.core.camera.rotation.x += THREE.MathUtils.degToRad(10);
 
             this.fields = createFields({ duel: this, fieldModel: fieldModel.scene });
@@ -110,24 +109,6 @@ export class YGODuel {
             this.duelScene.createFields({ gameField: gameFieldScene.scene });
 
             this.core.updateCamera();
-
-            // const cube = new THREE.Mesh(geometry, material);
-            // middlePos.addVectors(pos1, pos2).multiplyScalar(0.5);
-            // // Step 2: Make the camera look at the middle position
-            // this.camera.lookAt(middlePos);
-
-            // const geometry = new THREE.BoxGeometry(3, 3 * 1.45, 0.05);
-            // const material = new THREE.MeshBasicMaterial({ color: 0x0000ff });
-            // const cube = new THREE.Mesh(geometry, material);
-            // cube.position.copy(this.fieconst gameField = gameFieldScene.scene as THREE.Scene;
-
-            // cube.rotation.copy(this.fieldLocations.get("Hand")!.rotation);
-            // this.core.scene.add(cube);
-
-            // const cube2 = new THREE.Mesh(geometry, material);
-            // cube2.position.copy(this.fieldLocations.get("Hand2")!.position);
-            // cube2.rotation.copy(this.fieldLocations.get("Hand2")!.rotation);
-            // this.core.scene.add(cube2);
 
             setTimeout(() => {
                 this.test();
@@ -140,7 +121,6 @@ export class YGODuel {
     }
 
     public startDuel() {
-
         // this.config.options = {
         //     ...this.config.options || {},
         //     fieldState: [

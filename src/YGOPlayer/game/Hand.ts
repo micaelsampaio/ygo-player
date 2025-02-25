@@ -62,8 +62,8 @@ export class GameHand extends YGOEntity {
         const gameField = this.duel.fields[this.player];
         const camera = this.duel.camera;
 
-        const cardWidth = 3;
-        const cardSpacing = 2.2;
+        const cardWidth = 10;
+        const cardSpacing = 2.5;
         const totalCards = gameField.hand.cards.length;
         const handWidth = (totalCards - 1) * cardSpacing + cardWidth;
 

@@ -158,13 +158,13 @@ export class ActionCardSelection extends YGOComponent implements YGOAction {
     //////////
 
     private createCardSelection(position: THREE.Vector3, rotation: THREE.Euler) {
-        const cardSelection = createCardSelectionGeometry(2.1, 2.8, 0.1);
+        const cardSelection = createCardSelectionGeometry(2.65, 3.7, 0.1);
         const material = new THREE.MeshBasicMaterial({ color: 0xff0000, opacity: 1, transparent: true });
         const cardSelectionMesh = new THREE.Mesh(cardSelection, material);
 
         cardSelectionMesh.position.copy(position);
         cardSelectionMesh.rotation.copy(rotation);
-        cardSelectionMesh.position.z += 0.02;
+        cardSelectionMesh.position.z += 0.01;
         cardSelectionMesh.visible = false;
         this.duel.core.scene.add(cardSelectionMesh);
 
@@ -173,13 +173,13 @@ export class ActionCardSelection extends YGOComponent implements YGOAction {
 
     private createCardZoneSelection(position: THREE.Vector3, rotation: THREE.Euler) {
 
-        const cardSelection = createCardSelectionGeometry(2.8, 2.8, 0.08);
+        const cardSelection = createCardSelectionGeometry(3.9, 3.9, 0.08);
         const material = new THREE.MeshBasicMaterial({ color: 0xff0000, opacity: 1, transparent: true });
         const cardSelectionMesh = new THREE.Mesh(cardSelection, material);
 
         cardSelectionMesh.position.copy(position);
         cardSelectionMesh.rotation.copy(rotation);
-        cardSelectionMesh.position.z += 0.02;
+        cardSelectionMesh.position.z += 0.01;
         cardSelectionMesh.visible = false;
         this.duel.core.scene.add(cardSelectionMesh);
 

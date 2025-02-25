@@ -20,7 +20,7 @@ export class GameCard extends YGOEntity {
         this.hasStats = stats;
 
         const CARD_RATIO = 1.45;
-        const width = 1.9, height = width * CARD_RATIO, depth = 0.02;
+        const height = 3.5, width = height / CARD_RATIO, depth = 0.02;
         const geometry = new THREE.BoxGeometry(width, height, depth);
 
         const frontMaterial = new THREE.MeshBasicMaterial({ color: 0xff00ff }); // Depth
@@ -51,7 +51,7 @@ export class GameCard extends YGOEntity {
         const frontMaterial = new THREE.MeshBasicMaterial({ map: frontTexture }); // Front with texture
         const backMaterial = new THREE.MeshBasicMaterial({ map: backTexture });  // Back
         const depthMaterial = new THREE.MeshBasicMaterial({ color: 0xb5b5b5 }); // Depth
-        
+
         const materials = [
             depthMaterial, // Right (depth)
             depthMaterial, // Left (depth)

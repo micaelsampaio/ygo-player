@@ -61,7 +61,7 @@ export class MoveCardEventHandler extends YGOCommandHandler {
 
         let endPosition = getZonePositionFromZoneData(duel, zoneData);
         let endRotation = getCardRotationFromFieldZoneData(duel, this.cardReference, zoneData);
-
+        let scale = new THREE.Vector3(1, 1, 1);
         let card: GameCard | undefined = undefined;
 
         if (originCardZone) {
@@ -69,6 +69,10 @@ export class MoveCardEventHandler extends YGOCommandHandler {
             startPosition = card.gameObject.position.clone();
             startRotation = card.gameObject.rotation.clone();
             originCardZone.removeCard();
+        }
+
+        if (cardZone) {
+            scale = cardZone.scale.clone();
         }
 
         // @ts-ignore
@@ -129,6 +133,11 @@ export class MoveCardEventHandler extends YGOCommandHandler {
                         gameObject: card.gameObject,
                         rotation: endRotation,
                         duration: 0.3
+                    }),
+                    new ScaleTransition({
+                        gameObject: card.gameObject,
+                        scale,
+                        duration: 0.3
                     })
                 )
             );
@@ -160,6 +169,11 @@ export class MoveCardEventHandler extends YGOCommandHandler {
                     new RotationTransition({
                         gameObject: card.gameObject,
                         rotation: endRotation,
+                        duration: 0.3
+                    }),
+                    new ScaleTransition({
+                        gameObject: card.gameObject,
+                        scale,
                         duration: 0.3
                     })
                 )

@@ -23,7 +23,7 @@ export class Graveyard extends YGOEntity implements YGOUiElement {
         this.normalMaterial = new THREE.MeshBasicMaterial({ color: 0x00555 });
         this.hoverMaterial = new THREE.MeshBasicMaterial({ color: 0x00ffff });
 
-        const geometry = new THREE.BoxGeometry(2, 2, 0.1);
+        const geometry = new THREE.BoxGeometry(3, 3, 0.1);
         const cube = new THREE.Mesh(geometry, this.normalMaterial);
         cube.position.copy(position)
 

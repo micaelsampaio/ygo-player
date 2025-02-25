@@ -25,7 +25,7 @@ export class ExtraDeck extends YGOEntity implements YGOUiElement {
         this.normalMaterial = new THREE.MeshBasicMaterial({ color: 0x00555, transparent: true, opacity: 0 });
         this.hoverMaterial = new THREE.MeshBasicMaterial({ color: 0x00ffff });
 
-        const geometry = new THREE.BoxGeometry(2, 2, 0.1);
+        const geometry = new THREE.BoxGeometry(4, 4, 0.1);
         const cube = new THREE.Mesh(geometry, this.normalMaterial);
 
         this.position = position.clone();

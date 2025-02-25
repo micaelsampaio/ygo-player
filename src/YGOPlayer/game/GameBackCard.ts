@@ -14,7 +14,7 @@ export class GameBackCard extends YGOEntity {
         this.duel = duel;
 
         const CARD_RATIO = 1.45;
-        const width = 1.9, height = width * CARD_RATIO, depth = 0.02;
+        const height = 3.5, width = height / CARD_RATIO, depth = 0.02;
         const geometry = new THREE.BoxGeometry(width, height, depth);
         const backTexture = this.duel.assets.getTexture(`${this.duel.config.cdnUrl}/images/card_back.png`);
         const backMaterial = new THREE.MeshBasicMaterial({ map: backTexture });  // Back

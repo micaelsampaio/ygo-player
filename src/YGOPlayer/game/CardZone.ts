@@ -19,6 +19,8 @@ export class CardZone extends YGOEntity implements YGOUiElement {
     public zoneData: FieldZoneData;
     public position: THREE.Vector3;
     public rotation: THREE.Euler;
+    public size: THREE.Vector2;
+    public scale: THREE.Vector3;
     public player: number;
     private mesh: THREE.Mesh;
     private normalMaterial: THREE.MeshBasicMaterial;
@@ -36,8 +38,15 @@ export class CardZone extends YGOEntity implements YGOUiElement {
         this.card = null;
         this.zoneData = YGOGameUtils.getZoneData(this.zone);
 
-        const geometry = new THREE.BoxGeometry(2.8, 2.8, 0.05);
+        if (this.zone.startsWith("S") || this.zone.startsWith("F")) {
+            this.size = new THREE.Vector2(4, 3.5);
+            this.scale = new THREE.Vector3(1, 1, 1).multiplyScalar(0.88);
+        } else {
+            this.size = new THREE.Vector2(4, 4);
+            this.scale = new THREE.Vector3(1, 1, 1);
+        }
 
+        const geometry = new THREE.PlaneGeometry(this.size.x, this.size.y);
         this.normalMaterial = new THREE.MeshBasicMaterial({ color: zone.startsWith("M") ? 0x00ff00 : 0x0000ff, transparent: true, opacity: 0 });
         this.hoverMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.3 });
 
@@ -113,6 +122,8 @@ export class CardZone extends YGOEntity implements YGOUiElement {
 
         this.card = new GameCard({ duel: this.duel, card });
 
+        this.card.gameObject.scale.copy(this.scale);
+
         this.updateZoneData();
     }
 
@@ -162,6 +173,7 @@ export class CardZone extends YGOEntity implements YGOUiElement {
         const rotation = getCardRotation(this.duel, this.getCardReference()!, this.zone);
         this.card.gameObject.position.copy(this.position);
         this.card.gameObject.rotation.copy(rotation);
+        this.card.gameObject.scale.copy(this.scale);
 
         this.card.updateCardStats(this.zoneData);
         this.card.gameObject.visible = true;

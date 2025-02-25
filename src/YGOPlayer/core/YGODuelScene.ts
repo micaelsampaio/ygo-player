@@ -9,7 +9,7 @@ export class YGODuelScene {
 
 
     public createFields({ gameField }: { gameField: THREE.Scene }) {
-        return;
+
         const directionalLight = new THREE.DirectionalLight(0xffffff, 1); // white light with intensity 1
         directionalLight.position.set(10, 10, 10); // You can adjust these values
         directionalLight.target.position.set(0, 0, 0); // points to the center of the scene
@@ -23,18 +23,18 @@ export class YGODuelScene {
 
         gameField.position.set(0, 0, 0);
 
-        gameField.children.forEach((child: any) => {
-            if (child.isMesh) {
-                const material = new THREE.MeshStandardMaterial({
-                    color: new THREE.Color(0xCCCCCC),
-                    shadowSide: THREE.FrontSide,
-                });
+        // gameField.children.forEach((child: any) => {
+        //     // if (child.isMesh) {
+        //     //     const material = new THREE.MeshStandardMaterial({
+        //     //         color: new THREE.Color(0xCCCCCC),
+        //     //         shadowSide: THREE.FrontSide,
+        //     //     });
 
-                child.material = material;
-                child.castShadow = true;
-                child.receiveShadow = true;
-            }
-        });
+        //     //     child.material = material;
+        //     //     child.castShadow = true;
+        //     //     child.receiveShadow = true;
+        //     // }
+        // });
 
         gameField.rotateX(THREE.MathUtils.degToRad(90));
 

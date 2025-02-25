@@ -31,7 +31,7 @@ export class YGOGameCard {
 
         const textureLoader = this.duel.core.textureLoader;
         const CARD_RATIO = 1.45;
-        const width = 2, height = width * CARD_RATIO, depth = 0.02;
+        const height = 3.5, width = height / CARD_RATIO, depth = 0.02;
         const geometry = new THREE.BoxGeometry(width, height, depth);
 
         const frontTexture = textureLoader.load(`${this.duel.config.cdnUrl}/images/cards_small/${card.id}.jpg`);

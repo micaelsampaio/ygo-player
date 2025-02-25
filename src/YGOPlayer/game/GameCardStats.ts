@@ -36,7 +36,7 @@ export class GameCardStats {
 
         this.texture = new THREE.Texture(this.canvas)
         const material = new THREE.MeshBasicMaterial({ map: this.texture, transparent: true });
-        this.mesh = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 2.2), material);
+        this.mesh = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 3.2), material);
 
         this.parent.add(this.mesh);
         this.mesh.position.set(0, -0.5, 0.2);

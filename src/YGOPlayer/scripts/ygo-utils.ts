@@ -22,30 +22,17 @@ export function createFields({ duel, fieldModel }: CreateFieldDto) {
     fieldModel.position.set(0, 0, 0);
 
     const zones: { [key: string]: THREE.Mesh } = {};
-    const offsetY = 0.1;
+    const fieldModelP2 = fieldModel.clone();
+    fieldModelP2.rotateY(THREE.MathUtils.degToRad(180));
 
-    fieldModel.children.forEach((child: any) => {
-        if (child.isMesh) {
-            const position = child.position;
-            position.y += offsetY;
+    fieldModelP2.children.forEach((child: any) => parseFieldZoneChildren(child, 1, zones));
+    fieldModel.children.forEach((child: any) => parseFieldZoneChildren(child, 0, zones));
 
-            child.visible = false;
+    fieldModel.name = "FIELD1";
+    fieldModelP2.name = "FIELD2";
 
-            // if (child.name === "M-1") {
-            //     child.material = new THREE.MeshBasicMaterial({
-            //         color: 0xff00ff,
-            //         side: THREE.DoubleSide // Make the material double-sided
-            //     });
-            // } else {
-            //     child.material = new THREE.MeshBasicMaterial({
-            //         color: 0xff0000,
-            //         side: THREE.DoubleSide // Make the material double-sided
-            //     });
-            // }
-
-            zones[child.name] = child;
-        }
-    });
+    duel.core.scene.add(fieldModel);
+    duel.core.scene.add(fieldModelP2);
 
     const fields: PlayerField[] = [];
 
@@ -64,10 +51,11 @@ export function createFields({ duel, fieldModel }: CreateFieldDto) {
             field.spellTrapZone.push(spellZone);
         }
 
-        const mainDeckZone = `D${player === 0 ? '' : '2'}`;
-        const extraDeckZone = `ED${player === 0 ? '' : '2'}`;
-        const gyZone = `GY${player === 0 ? '' : '2'}`;
-        const banishZone = `B${player === 0 ? '' : '2'}`;
+        const mainDeckZone = YGOGameUtils.createZone("D", player);
+        const extraDeckZone = YGOGameUtils.createZone("ED", player);
+        const gyZone = YGOGameUtils.createZone("GY", player);
+        const banishZone = YGOGameUtils.createZone("B", player);
+
         const mainDeckPosition = zones[mainDeckZone].getWorldPosition(new THREE.Vector3());
         const extraDeckPosition = zones[extraDeckZone].getWorldPosition(new THREE.Vector3());
         const gyPosition = zones[gyZone].getWorldPosition(new THREE.Vector3());
@@ -78,7 +66,7 @@ export function createFields({ duel, fieldModel }: CreateFieldDto) {
         field.graveyard = new Graveyard({ duel, player, zone: gyZone, position: gyPosition });
         field.banishedZone = new Banish({ duel, player, zone: banishZone, position: banishPosition });
 
-        const fieldZoneId: FieldZone = `F${playerSufix}`;
+        const fieldZoneId: FieldZone = YGOGameUtils.createZone("F", player);
         field.fieldZone = createCardZone(duel, player, fieldZoneId, zones[fieldZoneId]);
         field.hand = new GameHand(duel, player);
 
@@ -374,5 +362,29 @@ export function replayToYGOProps(playersData: { mainDeck: Card[], extraDeck: Car
             fieldState: replay.initialField ? replay.initialField : undefined,
             shuffleDecks: false,
         }
+    }
+}
+
+function parseFieldZoneChildren(child: THREE.Mesh, player: number, zones: any) {
+    if (child.isMesh) {
+        const position = child.getWorldPosition(new THREE.Vector3());
+        position.z += 0.05;
+
+        child.visible = true;
+
+        child.material = new THREE.MeshBasicMaterial({
+            color: 0x0000ff,
+            transparent: true,
+            opacity: 0.2,
+            side: THREE.DoubleSide // Make the material double-sided
+        });
+
+        const zoneData = YGOGameUtils.getZoneData(child.name as any);
+        console.log(child.name, zoneData);
+        const zoneName = YGOGameUtils.createZone(zoneData.zone, player, zoneData.zoneIndex)
+        console.log(zoneName);
+        zones[zoneName] = child;
+
+        console.log(child.name);
     }
 }
