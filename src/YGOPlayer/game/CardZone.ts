@@ -168,8 +168,8 @@ export class CardZone extends YGOEntity implements YGOUiElement {
     }
 
     private updateZoneData() {
-        if (this.zoneData.zone === "EMZ" && this.card && this.card.cardReference && this.zoneData.player !== this.card.cardReference.owner) {
-            this.zoneData.player = this.card.cardReference.owner;
+        if (this.zoneData.zone === "EMZ" && this.card && this.card.cardReference && this.zoneData.player !== this.card.cardReference.originalOwner) {
+            this.zoneData.player = this.card.cardReference.originalOwner;
             this.zone = `EMZ${this.zoneData.player === 0 ? '' : '2'}-${this.zoneData.zoneIndex + 1}` as any;
         }
     }

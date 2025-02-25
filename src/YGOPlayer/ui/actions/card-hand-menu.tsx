@@ -7,7 +7,7 @@ import { CardMenu } from "../components/CardMenu";
 
 export function CardHandMenu({ duel, card, index }: { duel: YGODuel, card: Card, index: number, clearAction: () => void }) {
     const menuRef = useRef<HTMLDivElement>(null);
-    const originZone: FieldZone = YGOGameUtils.createZone("H", card.owner, index + 1);
+    const originZone: FieldZone = YGOGameUtils.createZone("H", card.originalOwner, index + 1);
 
     const normalSummon = useCallback(() => {
         duel.gameActions.normalSummon({ card, originZone });
@@ -71,10 +71,10 @@ export function CardHandMenu({ duel, card, index }: { duel: YGODuel, card: Card,
 
     useLayoutEffect(() => {
         const container = menuRef.current!;
-        const cardFromHand = duel.fields[card.owner].hand.getCardFromReference(card)!;
+        const cardFromHand = duel.fields[card.originalOwner].hand.getCardFromReference(card)!;
         const size = container.getBoundingClientRect();
         const { x, y, width, height } = getTransformFromCamera(duel, cardFromHand.gameObject);
-        if (card.owner === 0) {
+        if (card.originalOwner === 0) {
             container.style.top = (y - size.height) + "px";
         } else {
             container.style.top = (y + height) + "px";
@@ -91,7 +91,7 @@ export function CardHandMenu({ duel, card, index }: { duel: YGODuel, card: Card,
     const isTrap = YGOGameUtils.isTrap(card);
     const isSpellOrTrap = YGOGameUtils.isSpellTrap(card);
     const isMonster = card.type.includes("Monster");
-    const hasXyzMonstersInField = YGOGameUtils.hasXyzMonstersInField(field);
+    const hasXyzMonstersInField = YGOGameUtils.XyzMonstersInFieldsCounter(duel.ygo) > 0;
 
     return <>
         <CardMenu menuRef={menuRef} >

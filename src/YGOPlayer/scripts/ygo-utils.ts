@@ -117,7 +117,7 @@ export function getMonstersZones(duel: YGODuel, players: number[]): CardZone[] {
         });
 
         duel.fields[player].extraMonsterZone.forEach(zone => {
-            if (zone.hasCard() && zone.getCardReference()?.owner === player) result.push(zone);
+            if (zone.hasCard() && zone.getCardReference()?.originalOwner === player) result.push(zone);
         });
     });
 
@@ -133,7 +133,7 @@ export function getXyzMonstersZones(duel: YGODuel, players: number[]): CardZone[
         });
 
         duel.fields[player].extraMonsterZone.forEach(zone => {
-            if (zone.hasCard() && YGOGameUtils.isXYZMonster(zone.getCardReference()!) && zone.getCardReference()?.owner === player) result.push(zone);
+            if (zone.hasCard() && YGOGameUtils.isXYZMonster(zone.getCardReference()!) && zone.getCardReference()?.originalOwner === player) result.push(zone);
         });
     });
 
@@ -156,7 +156,7 @@ export function getCardZones(duel: YGODuel, players: number[], zones: ("M" | "S"
                     zonesToFind = duel.fields[player].spellTrapZone;
                     break;
                 case 'EMZ':
-                    zonesToFind = duel.fields[player].extraMonsterZone.filter(zone => zone.isEmpty() || zone.getCardReference()?.owner === player);
+                    zonesToFind = duel.fields[player].extraMonsterZone.filter(zone => zone.isEmpty() || zone.getCardReference()?.originalOwner === player);
                     zonesToFind.forEach(zone => {
                         zone.zone = `EMZ${player === 0 ? '' : "2"}-${zone.zoneData.zoneIndex}` as any;
                         zone.zoneData.player = player;

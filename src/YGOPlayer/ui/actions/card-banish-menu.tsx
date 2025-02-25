@@ -6,7 +6,7 @@ import { CardMenu } from "../components/CardMenu";
 
 export function CardBanishMenu({ duel, card, htmlCardElement, clearAction, mouseEvent }: { duel: YGODuel, zone: FieldZone, card: Card, htmlCardElement: HTMLDivElement, clearAction: Function, mouseEvent: React.MouseEvent }) {
     const menuRef = useRef<HTMLDivElement>(null);
-    const player = card.owner;
+    const player = card.originalOwner;
     const field = duel.ygo.state.fields[player];
     const cardIndex = duel.ygo.state.fields[player].graveyard.findIndex((c) => c === card);
     const originZone: FieldZone = YGOGameUtils.createZone("B", player, cardIndex + 1);

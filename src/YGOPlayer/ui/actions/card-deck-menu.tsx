@@ -7,9 +7,9 @@ import { YGOGameUtils } from "../../../YGOCore";
 export function CardDeckMenu({ duel, card, mouseEvent }: { duel: YGODuel, zone: FieldZone, card: Card, clearAction: Function, mouseEvent: React.MouseEvent }) {
     const x = mouseEvent.clientX; // Horizontal mouse position in px
     const y = mouseEvent.clientY; // Vertical mouse position in px
-    const field = duel.ygo.getField(card.owner);
+    const field = duel.ygo.getField(card.originalOwner);
     const cardIndex = field.mainDeck.findIndex((cardToSearch) => cardToSearch === card);
-    const originZone: FieldZone = YGOGameUtils.createZone("D", card.owner, cardIndex + 1);
+    const originZone: FieldZone = YGOGameUtils.createZone("D", card.originalOwner, cardIndex + 1);
 
     const closeViewDeckMenu = useCallback(() => {
         duel.events.dispatch("close-ui-menu", { type: "view-main-deck" });

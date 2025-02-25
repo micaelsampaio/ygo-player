@@ -7,7 +7,7 @@ import { CardMenu } from "../components/CardMenu";
 
 export function CardExtraDeckMenu({ duel, config, card, htmlCardElement, clearAction, mouseEvent }: { duel: YGODuel, zone: FieldZone, card: Card, htmlCardElement: HTMLDivElement, clearAction: Function, mouseEvent: React.MouseEvent, config: UiGameConfig }) {
     const menuRef = useRef<HTMLDivElement>(null);
-    const player = card.owner;
+    const player = card.originalOwner;
     const cardIndex = duel.ygo.state.fields[player].extraDeck.findIndex((c) => c === card);
     const originZone: FieldZone = YGOGameUtils.createZone("ED", player, cardIndex + 1);
 

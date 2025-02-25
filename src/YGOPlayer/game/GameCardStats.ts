@@ -69,13 +69,13 @@ export class GameCardStats {
         const atk = this.card.currentAtk || this.card.atk;
         const def = this.card.currentAtk || this.card.def;
         const level = this.card.level || this.card.linkval;
-        const owner = this.card.owner;
+        const owner = this.card.originalOwner;
         const materials = this.card.materials.length;
 
         if (this.atk !== atk) return true;
         if (this.def !== def) return true;
         if (this.level !== level) return true;
-        if (this.owner !== owner) return true;
+        if (this.originalOwner !== owner) return true;
         if (this.materials !== materials) return true;
 
         return false;
@@ -84,7 +84,7 @@ export class GameCardStats {
     render() {
         if (!this.needsUpdate()) return;
 
-        const isPlayer1 = this.card.owner === 0;
+        const isPlayer1 = this.card.originalOwner === 0;
 
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
@@ -113,7 +113,7 @@ export class GameCardStats {
     }
 
     renderAtkDef() {
-        const isPlayer1 = this.card.owner === 0;
+        const isPlayer1 = this.card.originalOwner === 0;
         const atk = this.card.currentAtk || this.card.atk;
         const def = this.card.currentAtk || this.card.def;
 
@@ -137,7 +137,7 @@ export class GameCardStats {
     }
 
     renderLevel() {
-        const isPlayer1 = this.card.owner === 0;
+        const isPlayer1 = this.card.originalOwner === 0;
         const level = (this.card.level || this.card.linkval);
         const levelStr = String(level);
         let iconPath: string;
@@ -168,7 +168,7 @@ export class GameCardStats {
 
     renderMaterials() {
         if (!YGOGameUtils.isXYZMonster(this.card)) return;
-        const isPlayer1 = this.card.owner === 0;
+        const isPlayer1 = this.card.originalOwner === 0;
         const materials = this.card.materials.length;
         const materialsStr = String(materials);
         let iconPath = `${this.duel.config.cdnUrl}/images/ui/ic_xyz_materials128.png`;
