@@ -125,6 +125,7 @@ export declare namespace YGODuelEvents {
     }
     interface XYZAttach extends DuelLog {
         id: number;
+        materialId: number;
         originZone: FieldZone;
         overlayZone: FieldZone;
     }
@@ -136,6 +137,8 @@ export declare namespace YGODuelEvents {
     interface XYZDetach extends DuelLog {
         id: number;
         overlayZone: FieldZone;
+        owner: number;
+        materialId: number;
         materialIndex: number;
     }
     interface Activate extends DuelLog {

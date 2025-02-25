@@ -275,7 +275,7 @@ export function getZonePositionFromZoneData(duel: YGODuel, zoneData: FieldZoneDa
     return position.clone();
 }
 
-const FIELD_ZONES = ["M", "S", "F", "EMZ"]
+const FIELD_ZONES = ["M", "S", "F", "EMZ", "ORU", "ORUEMZ"];
 export function isFieldZone(zoneData: FieldZoneData) {
     return FIELD_ZONES.includes(zoneData.zone);
 }
@@ -290,6 +290,7 @@ export function getGameZone(duel: YGODuel, zoneData: FieldZoneData): CardZone | 
             case "S":
                 return field.spellTrapZone[zoneData.zoneIndex - 1];
             case "EMZ":
+            case "ORUEMZ":
                 return field.extraMonsterZone[zoneData.zoneIndex - 1];
             default:
                 return field.monsterZone[zoneData.zoneIndex - 1];

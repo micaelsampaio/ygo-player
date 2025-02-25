@@ -503,7 +503,7 @@ export class YGOGameActions {
         this.clearAction();
         const ygo = this.duel.ygo;
         const player = this.duel.getActivePlayer();
-        const xyzZones = getXyzMonstersZones(this.duel, [card.owner]);
+        const xyzZones = getXyzMonstersZones(this.duel, [0, 1]);
 
         if (xyzZones.length === 0) return;
 

@@ -10,6 +10,8 @@ import { RevealEventHandler } from "./events/reveal-event";
 import { SendToGyEventHandler } from "./events/send-to-gy-event";
 import { SynchroSummonEventHandler } from "./events/synchro-summon";
 import { UpdateFieldEvent } from "./events/update-field-event";
+import { XYZAttachMaterialHandler } from "./events/xyz-attach-material-event";
+import { XYZDetachMaterialHandler } from "./events/xyz-detach-material-event";
 import { XYZOverlaySummonEventHandler } from "./events/xyz-overlay-event";
 import { XYZSummonEventHandler } from "./events/xyz-summon-event";
 
@@ -41,9 +43,12 @@ const events: any = {
     [YGODuelEvents.LogType.SetMonster]: ChangeCardPositionHandler,
     [YGODuelEvents.LogType.ChangeCardPosition]: ChangeCardPositionHandler,
     [YGODuelEvents.LogType.Flip]: ChangeCardPositionHandler,
+    //XYZ
+    [YGODuelEvents.LogType.XYZOverlay]: XYZOverlaySummonEventHandler,
+    [YGODuelEvents.LogType.XYZDetachMaterial]: XYZDetachMaterialHandler,
+    [YGODuelEvents.LogType.XYZAttachMaterial]: XYZAttachMaterialHandler,
     /// Summons
     [YGODuelEvents.LogType.LinkSummon]: LinkSummonEventHandler,
-    [YGODuelEvents.LogType.XYZOverlay]: XYZOverlaySummonEventHandler,
     [YGODuelEvents.LogType.XYZSummon]: XYZSummonEventHandler,
     [YGODuelEvents.LogType.FusionSummon]: FusionSummonEventHandler,
     [YGODuelEvents.LogType.SynchroSummon]: SynchroSummonEventHandler,

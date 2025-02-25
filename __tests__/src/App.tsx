@@ -43,7 +43,7 @@ export default function App() {
     const decks = allKeys.filter((key) => key.startsWith("deck_"));
     return decks;
   });
-  const [roomDecks, setRoomDecks] = useState({});
+  const [roomDecks, setRoomDecks] = useState<any>({});
 
   const [selectedDeck, setSelectedDeck] = useState(() => {
     const deck = window.localStorage.getItem("selected-deck")!;
@@ -87,6 +87,18 @@ export default function App() {
 
   const handleRoomJoin = async (roomId: any) => {
     console.log("App:handleRoomJoin:roomDecks", roomDecks);
+
+    // for (let player = 0; player < 2; ++player) {
+    //   for (let i = roomDecks.players[player].mainDeck.length - 1; i > 0; i--) {
+    //     const j = Math.floor(Math.random() * (i + 1));
+    //     [roomDecks.players[player].mainDeck[i], roomDecks.players[player].mainDeck[j]] = [roomDecks.players[player].mainDeck[j], roomDecks.players[player].mainDeck[i]];
+    //   }
+    // }
+
+    roomDecks.options = {
+      shuffleDecks: false
+    };
+
     await kaibaNet.joinRoom(roomId, roomDecks);
     navigate("/duel");
   };

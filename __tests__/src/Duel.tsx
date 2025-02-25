@@ -51,11 +51,14 @@ export default function Duel() {
 
       if (!config.options) config.options = {};
 
-      config.options.fieldState = [
-        { id: 10802915, zone: "M-1" },
-        { id: 51473858, zone: "M-2" },
-        { id: 27868563, zone: "M-3" },
-      ];
+      // config.options.fieldState = [
+      //   { id: 10802915, zone: "M-1" },
+      //   { id: 51473858, zone: "M-2" },
+      //   { id: 27868563, zone: "M-3" },
+      //   { id: 90448279, zone: "M-4" },
+      //   { id: 80993256, zone: "EMZ-1", position: "faceup-attack" },
+      //   { id: 79559912, zone: "M2-2" }
+      // ];
 
       ygo.editor(config);
     }
