@@ -131,7 +131,6 @@ export class PeerToPeer extends EventEmitter {
     });
 
     // Event listener for topic messages
-
     this.libp2p.services.pubsub.addEventListener(
       "subscription-change",
       (data) => {
@@ -152,16 +151,16 @@ export class PeerToPeer extends EventEmitter {
   }
 
   // Gets the instantiated node peerID
-  getPeerId() {
+  public getPeerId() {
     return this.peerId;
   }
 
   // Gets the instantiated node multiaddrs
-  getMultiaddrs() {
+  public getMultiaddrs() {
     return this.ma;
   }
 
-  getDiscoveryTopic() {
+  public getDiscoveryTopic() {
     return this.discoveryTopic;
   }
 
@@ -238,7 +237,7 @@ export class PeerToPeer extends EventEmitter {
   }
 
   // Sends a message to a peer using the destination peer's multiaddress
-  async sendMsgToPeer(peerMultiaddr: string, msg: string) {
+  public async sendMsgToPeer(peerMultiaddr: string, msg: string) {
     console.log("P2P: Sending message to peer:", peerMultiaddr, msg);
     if (!this.libp2p) throw new Error("Libp2p instance not initialized");
 
@@ -293,7 +292,7 @@ export class PeerToPeer extends EventEmitter {
     }
   }
   // Subscribes to a topic
-  async subscribeTopic(topic: string) {
+  public async subscribeTopic(topic: string) {
     console.log("P2P: Attempting to subscribe to topic:", topic);
     try {
       await this.libp2p.services.pubsub.subscribe(topic);
@@ -324,7 +323,7 @@ export class PeerToPeer extends EventEmitter {
   }
 
   // Sends a message to a topic
-  async messageTopic(topic: string, message: string) {
+  private async messageTopic(topic: string, message: string) {
     console.log("P2P: Message topic:", topic, message);
     await this.libp2p.services.pubsub.publish(topic, fromString(message));
   }

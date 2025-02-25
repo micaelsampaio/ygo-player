@@ -2,7 +2,6 @@ import { Link } from "react-router";
 import YUBEL from "./decks/YUBEL_FS.json";
 import CHIMERA from "./decks/CHIMERA.json";
 import { useNavigate } from "react-router";
-import PlayerLobby from "./PlayerLobby";
 import RoomLobby from "./RoomLobby";
 import { useKaibaNet } from "./useKaibaNet";
 import { memo, useEffect, useState } from "react";
@@ -12,21 +11,23 @@ const cdnUrl = String(import.meta.env.VITE_YGO_CDN_URL);
 
 export default function App() {
   const kaibaNet = useKaibaNet();
-  const currentRooms = kaibaNet.getRooms();
+  const [rooms, setRooms] = useState(() => kaibaNet.getRooms());
 
-  const [players, setPlayers] = useState(currentRooms);
-  const [rooms, setRooms] = useState(kaibaNet.getRooms());
-
-  const onPlayersUpdated = (players) => {
-    setPlayers(kaibaNet.getPlayers());
+  const onRoomsUpdated = (updatedRooms) => {
+    console.log("App: Updated rooms", updatedRooms);
+    setRooms(new Map(updatedRooms));
   };
-  const onRoomsUpdated = async (rooms) => {
-    const newRooms = kaibaNet.getRooms();
-    setRooms(newRooms);
-  };
-  kaibaNet.on("rooms:updated", onRoomsUpdated);
 
-  kaibaNet.on("players:updated", onPlayersUpdated);
+  useEffect(() => {
+    console.log("kaibaNet in useEffect:", kaibaNet); // Ensure this is the same instance
+    console.log("Setting up event listener for rooms:updated");
+    kaibaNet.removeAllListeners("rooms:updated");
+    kaibaNet.on("rooms:updated", onRoomsUpdated);
+    return () => {
+      console.log("Cleaning up event listener for rooms:updated");
+      kaibaNet.off("rooms:updated", onRoomsUpdated);
+    };
+  }, [kaibaNet]);
 
   const [replays, setReplays] = useState(() => {
     const allKeys = Object.keys(localStorage);
@@ -87,6 +88,7 @@ export default function App() {
   };
 
   const handleRoomJoin = async (roomId: any) => {
+    console.log("App:handleRoomJoin:roomDecks", roomDecks);
     await kaibaNet.joinRoom(roomId);
     //navigate("/duel");
   };
