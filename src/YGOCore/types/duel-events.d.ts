@@ -20,6 +20,7 @@ export declare namespace YGODuelEvents {
         LinkSummon = "Link Summon",
         FusionSummon = "Fusion Summon",
         XYZSummon = "XYZ Summon",
+        XYZOverlaySummon = "XYZ Overlay Summon",
         XYZAttachMaterial = "XYZ Attach Material",
         XYZDetachMaterial = "XYZ Detach Material",
         XYZOverlay = "XYZOverlay",
@@ -123,8 +124,19 @@ export declare namespace YGODuelEvents {
             zone: FieldZone;
         }>;
     }
+    interface XYZOverlaySummon extends DuelLog {
+        id: number;
+        originZone: FieldZone;
+        zone: FieldZone;
+        position: CardPosition;
+        materials: Array<{
+            id: number;
+            zone: FieldZone;
+        }>;
+    }
     interface XYZAttach extends DuelLog {
         id: number;
+        materialId: number;
         originZone: FieldZone;
         overlayZone: FieldZone;
     }
@@ -136,6 +148,8 @@ export declare namespace YGODuelEvents {
     interface XYZDetach extends DuelLog {
         id: number;
         overlayZone: FieldZone;
+        owner: number;
+        materialId: number;
         materialIndex: number;
     }
     interface Activate extends DuelLog {

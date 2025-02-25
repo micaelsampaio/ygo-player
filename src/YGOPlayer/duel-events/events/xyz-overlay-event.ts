@@ -9,7 +9,6 @@ import { CardEmptyMesh } from '../../game/meshes/mesh-utils';
 import { MaterialOpacityTransition } from '../utils/material-opacity';
 import { getGameZone } from '../../scripts/ygo-utils';
 import { CallbackTransition } from '../utils/callback';
-import { CardZone } from '../../game/CardZone';
 
 interface XYZOverlaySummonEventHandlerProps extends DuelEventHandlerProps {
     event: YGODuelEvents.XYZOverlay

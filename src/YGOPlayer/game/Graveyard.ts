@@ -31,9 +31,14 @@ export class Graveyard extends YGOEntity implements YGOUiElement {
         this.gameObject = cube;
         this.mesh = cube;
 
+
+        if (player === 1) {
+            this.gameObject.rotateZ(THREE.MathUtils.degToRad(180));
+        }
+
         this.position = this.gameObject.position.clone();
-        this.rotation = this.gameObject.rotation.clone();
         this.position.z += 0.1;
+        this.rotation = this.gameObject.rotation.clone();
 
         this.duel.gameController.getComponent<YGOMouseEvents>("mouse_events")?.registerElement(this);
     }

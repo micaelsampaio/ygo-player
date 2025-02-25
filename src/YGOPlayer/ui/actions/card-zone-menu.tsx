@@ -82,13 +82,13 @@ export function CardZoneMenu({ duel, card, zone, gameCard, clearAction, mouseEve
     const isXYZ = YGOGameUtils.isXYZMonster(card);
     const isFaceUp = YGOGameUtils.isFaceUp(card);
     const isLink = YGOGameUtils.isLinkMonster(card);
-    const hasXyzMonstersInField = YGOGameUtils.hasXyzMonstersInField(field);
-    const canAttachMaterial = isXYZ ? getXyzMonstersZones(duel, [0]).length > 1 : true;
     const isMonsterZone = zone.includes("M");
     const isMonster = YGOGameUtils.isMonster(card);
     const isMainDeckCard = card.isMainDeckCard;
     const isAttack = YGOGameUtils.isAttack(card);
     const isSpellTrap = YGOGameUtils.isSpellTrap(card);
+    const xyzMonstersInFieldCounter = YGOGameUtils.XyzMonstersInFieldsCounter(duel.ygo);
+    const canAttachMaterial = (isXYZ && xyzMonstersInFieldCounter > 1) || (!isXYZ && xyzMonstersInFieldCounter > 0);
 
     return <CardMenu menuRef={menuRef}>
         {isXYZ && <>
@@ -131,10 +131,11 @@ export function CardZoneMenu({ duel, card, zone, gameCard, clearAction, mouseEve
         <button type="button" className="ygo-card-item" onClick={sendToGY}>Send To GY</button>
 
         {
-            hasXyzMonstersInField && <>
-                {canAttachMaterial && <button type="button" className="ygo-card-item" onClick={attachMaterial}>Attach Material</button>}
+            canAttachMaterial && <>
+                <button type="button" className="ygo-card-item" onClick={attachMaterial}>Attach Material</button>
             </>
         }
+
         {
             isFaceUp && <button type="button" className="ygo-card-item" onClick={activateCard}>Activate</button>
         }

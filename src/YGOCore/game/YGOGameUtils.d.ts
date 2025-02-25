@@ -1,4 +1,5 @@
 import { Card, CardBaseType, FieldZone, FieldZoneId, FieldZoneData, PlayerField } from "../types/types";
+import { YGOCore } from "./YGOCore";
 export declare class YGOGameUtils {
     static isLinkMonster(card: Card): boolean;
     static isMonster(card: Card): boolean;
@@ -16,6 +17,8 @@ export declare class YGOGameUtils {
     static isAttack(card: Card): boolean;
     static hasLinkMonstersInField(field: PlayerField): boolean;
     static hasXyzMonstersInField(field: PlayerField): boolean;
+    static XyzMonstersInFieldCounter(field: PlayerField): number;
+    static XyzMonstersInFieldsCounter(duel: YGOCore): number;
     static getPlayerIndexFromZone(zone: string): number;
     static createZone(zone: FieldZoneId, player: number, position?: number): FieldZone;
     static createOverlayZone(zone: string, player: number, zoneIndex: number): FieldZone;

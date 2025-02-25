@@ -44,6 +44,10 @@ export class GameHand extends YGOEntity {
         return this.cards.find(c => c.card === card)!;
     }
 
+    getCardFromCardId(id: number): GameCardHand {
+        return this.cards.find(c => c.card.id === id)!;
+    }
+
     removeCardFromCardReference(card: Card) {
         const index = this.cards.findIndex(c => c.card === card);
 
@@ -81,7 +85,7 @@ export class GameHand extends YGOEntity {
             handCard.gameObject.position.set(xOffset, handY, handZ);
             handCard.position = handCard.gameObject.position.clone();
 
-            if (handCard.card.owner === 0) {
+            if (handCard.card.originalOwner === 0) {
                 handCard.gameObject.rotation.set(0, 0, 0);
             } else {
                 handCard.gameObject.rotation.set(0, 0, THREE.MathUtils.degToRad(180));

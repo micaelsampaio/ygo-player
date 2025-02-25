@@ -40,7 +40,7 @@ export default function App() {
     const decks = allKeys.filter((key) => key.startsWith("deck_"));
     return decks;
   });
-  const [roomDecks, setRoomDecks] = useState({});
+  const [roomDecks, setRoomDecks] = useState<any>({});
 
   const [selectedDeck, setSelectedDeck] = useState(() => {
     const deck = window.localStorage.getItem("selected-deck")!;
