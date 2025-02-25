@@ -22,10 +22,10 @@ import EventEmitter from "events";
 
 export class PeerToPeer extends EventEmitter {
   PROTOCOL = "/chat/1.0.0";
-  peerId = null;
-  ma = null;
+  private peerId = null;
+  private ma = null;
   libp2p = null;
-  discoveryTopic = null;
+  private discoveryTopic = null;
 
   private bootstrapNode: string;
   private streams: Map<string, Pushable<Uint8Array>>;
@@ -159,6 +159,10 @@ export class PeerToPeer extends EventEmitter {
   // Gets the instantiated node multiaddrs
   getMultiaddrs() {
     return this.ma;
+  }
+
+  getDiscoveryTopic() {
+    return this.discoveryTopic;
   }
 
   // Opens connection to a peer using the destination peer's multiaddress

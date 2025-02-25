@@ -3,34 +3,30 @@ import YUBEL from "./decks/YUBEL_FS.json";
 import CHIMERA from "./decks/CHIMERA.json";
 import { useNavigate } from "react-router";
 import PlayerLobby from "./PlayerLobby";
+import RoomLobby from "./RoomLobby";
 import { useKaibaNet } from "./useKaibaNet";
 import { memo, useEffect, useState } from "react";
-import { YGOGameUtils } from '../../dist/index.js';
+import { YGOGameUtils } from "../../dist/index.js";
 
 const cdnUrl = String(import.meta.env.VITE_YGO_CDN_URL);
 
 export default function App() {
   const kaibaNet = useKaibaNet();
+  const currentRooms = kaibaNet.getRooms();
 
-  const [players, setPlayers] = useState(kaibaNet.getPlayers()); // Add reactive state for players
-  const updatePlayers = (players) => {
+  const [players, setPlayers] = useState(currentRooms);
+  const [rooms, setRooms] = useState(kaibaNet.getRooms());
+
+  const onPlayersUpdated = (players) => {
     setPlayers(kaibaNet.getPlayers());
   };
-  kaibaNet.on("players:updated", updatePlayers);
+  const onRoomsUpdated = async (rooms) => {
+    const newRooms = kaibaNet.getRooms();
+    setRooms(newRooms);
+  };
+  kaibaNet.on("rooms:updated", onRoomsUpdated);
 
-  // Effect to update players state when kaibaNet's players change
-
-  useEffect(() => {
-    const updatePlayers = () => {
-      setPlayers(kaibaNet.getPlayers()); // Update players state
-    };
-
-    kaibaNet.on("players:updated", updatePlayers); // Listen for the players:updated event
-
-    return () => {
-      kaibaNet.removeListener("players:updated", updatePlayers); // Clean up the listener
-    };
-  }, [kaibaNet]);
+  kaibaNet.on("players:updated", onPlayersUpdated);
 
   const [replays, setReplays] = useState(() => {
     const allKeys = Object.keys(localStorage);
@@ -55,9 +51,7 @@ export default function App() {
 
   let navigate = useNavigate();
 
-  const duel = (e: any, deck1: any, deck2: any) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const duel = (deck1: any, deck2: any) => {
     const roomJson = {
       players: [
         {
@@ -72,49 +66,29 @@ export default function App() {
         },
       ],
     };
+    console.log("duel", roomJson);
     localStorage.setItem("duel-data", JSON.stringify(roomJson));
     setRoomDecks(roomJson);
-    //navigate("/duel");
-  };
-
-  const handleGameStart = async (gameState: any) => {
-    console.log("decodedGameState", gameState);
-    console.log(gameState);
+    kaibaNet.createRoom();
     navigate("/duel");
   };
 
-  kaibaNet.setOnGameStartCallback(handleGameStart);
-
-  const handleRoomJoin = async (roomId: any) => {
-    console.log("App:handleRoomJoin:roomDecks", roomDecks);
-    await kaibaNet.joinRoom(roomId, roomDecks);
-    navigate("/duel");
+  const duelAs = (e: any, deck1: any, deck2: any) => {
+    e.preventDefault();
+    e.stopPropagation();
+    duel(deck1, deck2);
   };
 
   const duelWithDeckFromStore = (e: any, deckId: string) => {
     e.preventDefault();
     e.stopPropagation();
-
     const deckData = JSON.parse(localStorage.getItem(deckId)!) as any;
+    duel(deckData, YUBEL);
+  };
 
-    localStorage.setItem(
-      "duel-data",
-      JSON.stringify({
-        players: [
-          {
-            name: "player1",
-            mainDeck: deckData.mainDeck,
-            extraDeck: deckData.extraDeck,
-          },
-          {
-            name: "player2",
-            mainDeck: YUBEL.mainDeck,
-            extraDeck: YUBEL.extraDeck,
-          },
-        ],
-      })
-    );
-    navigate("/duel");
+  const handleRoomJoin = async (roomId: any) => {
+    await kaibaNet.joinRoom(roomId);
+    //navigate("/duel");
   };
 
   const deleteDeck = (deckId: string) => {
@@ -136,18 +110,20 @@ export default function App() {
     const otherDeckData = replayData.players[playerIndex];
     const { endField = [] } = replayData.replay;
 
-    const fieldState = endField.map((card: any) => {
-      const zoneData = YGOGameUtils.getZoneData(card.zone);
-      console.log("ZONE --> ", card.zone, zoneData);
+    const fieldState = endField
+      .map((card: any) => {
+        const zoneData = YGOGameUtils.getZoneData(card.zone);
+        console.log("ZONE --> ", card.zone, zoneData);
 
-      if (zoneData.player === playerIndex) {
-        return {
-          ...card,
-          zone: YGOGameUtils.invertPlayerInZone(card.zone)
+        if (zoneData.player === playerIndex) {
+          return {
+            ...card,
+            zone: YGOGameUtils.invertPlayerInZone(card.zone),
+          };
         }
-      }
-      return undefined;
-    }).filter((data: any) => data);
+        return undefined;
+      })
+      .filter((data: any) => data);
 
     console.log("----> ");
     console.log("fieldState ", fieldState);
@@ -192,12 +168,12 @@ export default function App() {
       <h1># Decks</h1>
       <ul>
         <li>
-          <Link onClick={(e) => duel(e, YUBEL, CHIMERA)} to="#">
+          <Link onClick={(e) => duelAs(e, YUBEL, CHIMERA)} to="#">
             Duel as Yubel
           </Link>
         </li>
         <li>
-          <Link onClick={(e) => duel(e, CHIMERA, YUBEL)} to="#">
+          <Link onClick={(e) => duelAs(e, CHIMERA, YUBEL)} to="#">
             Duel as Chimera
           </Link>
         </li>
@@ -253,9 +229,10 @@ export default function App() {
           </ul>
         </div>
       )}
-      <PlayerLobby
+
+      <RoomLobby
         playerId={kaibaNet.getPlayerId()}
-        players={players}
+        rooms={rooms}
         onRoomJoin={handleRoomJoin}
       />
     </div>
@@ -335,12 +312,14 @@ const EndGameBoard = memo(function EndGameBoard({ data, play }: any) {
         fields[zoneData.player].monsterZones[zoneData.zoneIndex - 1] = cardData;
       }
       if (zoneData.zone === "S") {
-        fields[zoneData.player].spellTrapZones[zoneData.zoneIndex - 1] = cardData;
+        fields[zoneData.player].spellTrapZones[zoneData.zoneIndex - 1] =
+          cardData;
       }
       if (zoneData.zone === "EMZ") {
-        fields[zoneData.player].extraMonsterZones[zoneData.zoneIndex - 1] = cardData;
+        fields[zoneData.player].extraMonsterZones[zoneData.zoneIndex - 1] =
+          cardData;
       }
-    })
+    });
     fields.reverse();
     setFields(fields);
   }, [data]);
@@ -385,13 +364,13 @@ const EndGameBoard = memo(function EndGameBoard({ data, play }: any) {
         const extraMonsterZone1 = fields[0].extraMonsterZones[0]
           ? 0
           : fields[1].extraMonsterZones[0]
-            ? 1
-            : -1;
+          ? 1
+          : -1;
         const extraMonsterZone2 = fields[0].extraMonsterZones[1]
           ? 0
           : fields[1].extraMonsterZones[1]
-            ? 1
-            : -1;
+          ? 1
+          : -1;
 
         const extraMonsterZones = (
           <>

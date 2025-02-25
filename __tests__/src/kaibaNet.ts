@@ -7,10 +7,11 @@ export class KaibaNet extends EventEmitter {
     string,
     { id: string; addresses: string[]; connected: boolean }
   > = new Map();
+  private rooms: Map<string, { id: string; connected: boolean }> = new Map();
   private playerId: string | null = null;
   private initialized = false;
   private peerToPeer: PeerToPeer | null = null; // Store the PeerToPeer instance
-  private onGameStartCallback = null;
+  private onGameRefreshStateCallback = null;
 
   private constructor() {
     super();
@@ -24,10 +25,6 @@ export class KaibaNet extends EventEmitter {
       KaibaNet.instance = new KaibaNet();
     }
     return KaibaNet.instance;
-  }
-
-  setOnGameStartCallback(callback) {
-    this.onGameStartCallback = callback;
   }
 
   async initialize() {
@@ -51,6 +48,22 @@ export class KaibaNet extends EventEmitter {
     this.setupEventListeners();
 
     this.initialized = true;
+  }
+
+  getPlayerId() {
+    return this.playerId;
+  }
+
+  getPlayers() {
+    return this.players;
+  }
+
+  getPeerToPeer() {
+    return this.peerToPeer;
+  }
+
+  getRooms() {
+    return this.rooms;
   }
 
   private setupEventListeners() {
@@ -96,7 +109,6 @@ export class KaibaNet extends EventEmitter {
         this.emit("players:updated", this.players);
       }
     });
-
     this.peerToPeer.on("remove:peer", ({ peerId }) => {
       console.log("KaibaNet: Peer removed", peerId);
       if (this.players.has(peerId)) {
@@ -107,41 +119,47 @@ export class KaibaNet extends EventEmitter {
       }
     });
 
+    // On messages received on the player's topic ( player created duel room)
     this.peerToPeer.on(
       "topic:" + this.playerId + ":message",
       ({ messageStr }) => {
         console.log(
-          "KaibaNet: Message on PlayerID ",
+          "KaibaNet: Message on PlayerID",
           this.playerId,
-          "topic",
+          "Topic:",
           messageStr
         );
-        if (messageStr.includes("duel:player:start:")) {
-          console.log("Room start message");
+        //When we receive a message with the player joining the duel room, emit an event with the player's ID
+        if (messageStr.includes("duel:player:join:")) {
+          const playerJoinedId = messageStr.split(":")[3];
+          this.emit("duel:player:join:", playerJoinedId);
+        }
+        // When we receive a message with the game state, emit an event with the decoded gameState
+        if (messageStr.includes("duel:refresh:state:")) {
           const gameStateBase64 = messageStr.toString().split(":")[3];
-          // Decode Base64 → Convert from binary → Parse JSON
           const decodedGameState = JSON.parse(
             new TextDecoder().decode(
               Uint8Array.from(atob(gameStateBase64), (c) => c.charCodeAt(0))
             )
           );
-
-          this.onGameStartCallback(decodedGameState);
+          this.emit("duel:refresh:state:", decodedGameState);
         }
       }
     );
-  }
-
-  getPlayerId() {
-    return this.playerId;
-  }
-
-  getPlayers() {
-    return this.players;
-  }
-
-  getPeerToPeer() {
-    return this.peerToPeer;
+    // on messages received on the discovery topic
+    this.peerToPeer.on(
+      "topic:" + this.peerToPeer.getDiscoveryTopic() + ":message",
+      ({ messageStr }) => {
+        if (messageStr.includes("room:create:")) {
+          const roomId = messageStr.split(":")[2];
+          this.rooms = new Map(this.rooms).set(roomId, {
+            id: roomId,
+            connected: false,
+          });
+          this.emit("rooms:updated", this.rooms);
+        }
+      }
+    );
   }
 
   cleanListeners() {
@@ -159,9 +177,21 @@ export class KaibaNet extends EventEmitter {
     this.peerToPeer = null;
   }
 
-  async joinRoom(roomId: string, roomDecks: any) {
-    console.log("Destination Addresses:", this.players.get(roomId).addresses);
+  // Sends a message to the discovery topic announcing the creation of a room
+  async createRoom() {
+    const discoveryTopic = await this.peerToPeer.getDiscoveryTopic();
+    this.rooms = new Map(this.rooms).set(this.playerId, {
+      id: this.playerId,
+      connected: false,
+    });
+    await this.peerToPeer.messageTopic(
+      discoveryTopic,
+      "room:create:" + this.playerId
+    );
+    this.emit("rooms:updated", this.rooms);
+  }
 
+  async joinRoom(roomId: string) {
     // Connect to the peer
     await this.peerToPeer.connectToPeer(this.players.get(roomId).addresses[1]);
 
@@ -171,18 +201,25 @@ export class KaibaNet extends EventEmitter {
     // Wait for subscription to propagate
     await new Promise((resolve) => setTimeout(resolve, 300)); // Wait 300ms
 
+    // Message the topic that the player has joined
+    await this.peerToPeer.messageTopic(
+      roomId,
+      "duel:player:join:" + this.playerId
+    );
+  }
+
+  async refreshGameState(roomId: string, gameState: string) {
     // Encode the room decks data
-    const jsonString = JSON.stringify(roomDecks);
+    const jsonString = JSON.stringify(gameState);
     const base64Encoded = btoa(
       new TextEncoder()
         .encode(jsonString)
         .reduce((acc, byte) => acc + String.fromCharCode(byte), "")
     );
-
     // Send message after delay
     await this.peerToPeer.messageTopic(
       roomId,
-      "duel:player:start:" + base64Encoded
+      "duel:refresh:state:" + base64Encoded
     );
   }
 }
