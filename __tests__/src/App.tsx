@@ -3,6 +3,7 @@ import YUBEL from "./decks/YUBEL_FS.json";
 import CHIMERA from "./decks/CHIMERA.json";
 import { useNavigate } from "react-router";
 import PlayerLobby from "./PlayerLobby";
+import RoomLobby from "./RoomLobby";
 import { useKaibaNet } from "./useKaibaNet";
 import { memo, useEffect, useState } from "react";
 import { YGOGameUtils } from "../../dist/index.js";
@@ -11,26 +12,21 @@ const cdnUrl = String(import.meta.env.VITE_YGO_CDN_URL);
 
 export default function App() {
   const kaibaNet = useKaibaNet();
+  const currentRooms = kaibaNet.getRooms();
 
-  const [players, setPlayers] = useState(kaibaNet.getPlayers()); // Add reactive state for players
-  const updatePlayers = (players) => {
+  const [players, setPlayers] = useState(currentRooms);
+  const [rooms, setRooms] = useState(kaibaNet.getRooms());
+
+  const onPlayersUpdated = (players) => {
     setPlayers(kaibaNet.getPlayers());
   };
-  kaibaNet.on("players:updated", updatePlayers);
+  const onRoomsUpdated = async (rooms) => {
+    const newRooms = kaibaNet.getRooms();
+    setRooms(newRooms);
+  };
+  kaibaNet.on("rooms:updated", onRoomsUpdated);
 
-  // Effect to update players state when kaibaNet's players change
-
-  useEffect(() => {
-    const updatePlayers = () => {
-      setPlayers(kaibaNet.getPlayers()); // Update players state
-    };
-
-    kaibaNet.on("players:updated", updatePlayers); // Listen for the players:updated event
-
-    return () => {
-      kaibaNet.removeListener("players:updated", updatePlayers); // Clean up the listener
-    };
-  }, [kaibaNet]);
+  kaibaNet.on("players:updated", onPlayersUpdated);
 
   const [replays, setReplays] = useState(() => {
     const allKeys = Object.keys(localStorage);
@@ -73,6 +69,8 @@ export default function App() {
     console.log("duel", roomJson);
     localStorage.setItem("duel-data", JSON.stringify(roomJson));
     setRoomDecks(roomJson);
+    kaibaNet.createRoom();
+    navigate("/duel");
   };
 
   const duelAs = (e: any, deck1: any, deck2: any) => {
@@ -88,18 +86,9 @@ export default function App() {
     duel(deckData, YUBEL);
   };
 
-  const handleGameStart = async (gameState: any) => {
-    console.log("decodedGameState", gameState);
-    console.log(gameState);
-    navigate("/duel");
-  };
-
-  kaibaNet.setOnGameStartCallback(handleGameStart);
-
   const handleRoomJoin = async (roomId: any) => {
-    console.log("App:handleRoomJoin:roomDecks", roomDecks);
-    await kaibaNet.joinRoom(roomId, roomDecks);
-    navigate("/duel");
+    await kaibaNet.joinRoom(roomId);
+    //navigate("/duel");
   };
 
   const deleteDeck = (deckId: string) => {
@@ -240,9 +229,10 @@ export default function App() {
           </ul>
         </div>
       )}
-      <PlayerLobby
+
+      <RoomLobby
         playerId={kaibaNet.getPlayerId()}
-        players={players}
+        rooms={rooms}
         onRoomJoin={handleRoomJoin}
       />
     </div>
