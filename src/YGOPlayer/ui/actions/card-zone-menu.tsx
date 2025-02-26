@@ -70,6 +70,14 @@ export function CardZoneMenu({ duel, card, zone, gameCard, clearAction, mouseEve
         duel.gameActions.moveCard({ card, originZone: zone });
     }, [card, zone]);
 
+    const destroyCard = useCallback(() => {
+        duel.gameActions.destroyCard({ card, originZone: zone });
+    }, [card, zone]);
+
+    const targetCard = useCallback(() => {
+        duel.gameActions.targetCard({ card, originZone: zone });
+    }, [card, zone]);
+
     useLayoutEffect(() => {
         const container = menuRef.current!;
         const size = container.getBoundingClientRect();
@@ -96,8 +104,9 @@ export function CardZoneMenu({ duel, card, zone, gameCard, clearAction, mouseEve
         </>}
 
         <button type="button" className="ygo-card-item" onClick={moveCard}>Move</button>
+        <button type="button" className="ygo-card-item" onClick={destroyCard}>Destroy</button>
 
-        <button type="button" className="ygo-card-item" onClick={() => alert("TODO")}>Target</button>
+        <button type="button" className="ygo-card-item" onClick={targetCard}>Target</button>
         <button type="button" className="ygo-card-item" onClick={toBottomDeck}>To Bottom Deck</button>
         <button type="button" className="ygo-card-item" onClick={toTopDeck}>To Top. Deck</button>
 

@@ -15,6 +15,7 @@ export declare namespace YGODuelEvents {
         ToExtraDeck = "To Extra Deck",
         ToTopDeck = "To Top Deck",
         ToBottomDeck = "To Bottom Deck",
+        Destroy = "Destroy",
         SpecialSummon = "Special Summon",
         SynchroSummon = "Synchro Summon",
         LinkSummon = "Link Summon",
@@ -198,5 +199,7 @@ export declare namespace YGODuelEvents {
         originZone: FieldZone;
     }
     interface MillCardFromDeck extends DuelLog {
+    }
+    interface Destroy extends MoveCard {
     }
 }

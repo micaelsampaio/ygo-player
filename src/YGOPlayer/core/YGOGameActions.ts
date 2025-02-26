@@ -576,4 +576,30 @@ export class YGOGameActions {
             materialIndex,
         }));
     }
+
+    public destroyCard({ card, originZone }: { card: Card, originZone: FieldZone }) {
+        this.clearAction();
+
+        const ygo = this.duel.ygo;
+        const player = this.duel.getActivePlayer();
+
+        ygo.exec(new YGOCommands.DestroyCardCommand({
+            player,
+            id: card.id,
+            originZone
+        }));
+    }
+
+    public targetCard({ card, originZone }: { card: Card, originZone: FieldZone }) {
+        this.clearAction();
+
+        const ygo = this.duel.ygo;
+        const player = this.duel.getActivePlayer();
+
+        ygo.exec(new YGOCommands.TargetCommand({
+            player,
+            id: card.id,
+            originZone
+        }));
+    }
 }

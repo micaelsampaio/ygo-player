@@ -32,10 +32,11 @@ export class XYZDetachMaterialHandler extends YGOCommandHandler {
 
         const zoneData = YGOGameUtils.getZoneData(event.overlayZone);
         const cardReference = duel.ygo.state.getCardData(event.materialId)!;
-        const gy = duel.fields[event.owner].graveyard.gameObject;
+        const gy = duel.fields[event.owner].graveyard;
 
-        let endPosition: THREE.Vector3 = gy.position.clone();
-        let endRotation: THREE.Euler = gy.rotation.clone();
+        const endPosition: THREE.Vector3 = gy.cardPosition.clone();
+        const endRotation: THREE.Euler = gy.rotation.clone();
+
         let startPosition: THREE.Vector3;
         let startRotation: THREE.Euler;
 
@@ -97,6 +98,8 @@ export class XYZDetachMaterialHandler extends YGOCommandHandler {
                 }),
             ),
         );
+
+        gy.createSendToGraveyardEffect({ card: card.gameObject, sequence });
 
         startTask(new YGOTaskSequence(
             new WaitForSeconds(0.1),

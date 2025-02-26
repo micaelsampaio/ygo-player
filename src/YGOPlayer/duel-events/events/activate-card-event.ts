@@ -14,7 +14,7 @@ import { CallbackTransition } from '../utils/callback';
 import { PositionTransition } from '../utils/position-transition';
 import { WaitForSeconds } from '../utils/wait-for-seconds';
 import { ChangeCardPositionHandler } from './change-card-position';
-import { GameModalOverlayMesh } from '../../game/meshes/mesh-utils';
+import { CardActivationEffect, GameModalOverlayMesh } from '../../game/meshes/mesh-utils';
 import { MaterialOpacityTransition } from '../utils/material-opacity';
 
 interface ActivateCardHandlerProps extends DuelEventHandlerProps {
@@ -137,10 +137,13 @@ export class ActivateCardHandler extends YGOCommandHandler {
 
             card.hideCardStats();
 
+
             const cardOverlay = card.gameObject.clone();
             duel.core.sceneOverlay.add(cardOverlay);
 
             card.gameObject.visible = false;
+
+            CardActivationEffect({ duel, card: cardOverlay, startTask: this.props.startTask });
 
             const modal = GameModalOverlayMesh();
             modal.material.opacity = 0;

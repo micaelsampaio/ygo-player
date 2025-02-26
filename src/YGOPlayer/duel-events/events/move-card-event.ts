@@ -98,65 +98,57 @@ export class MoveCardEventHandler extends YGOCommandHandler {
 
         const sequence = new YGOTaskSequence();
 
-        if (originZoneData.zone === "GY" || originZoneData.zone === "B") {
-            const aboveZonePos = startPosition.clone();
-            aboveZonePos.z += 1;
+        // if (originZoneData.zone === "GY" || originZoneData.zone === "B") {
+        //     // const aboveZonePos = startPosition.clone();
+        //     // aboveZonePos.z += 1;
 
-            card.gameObject.scale.set(0, 0, 0);
+        //     // card.gameObject.scale.set(0, 0, 0);
 
-            sequence.add(new MultipleTasks(
-                new PositionTransition({
-                    gameObject: card.gameObject,
-                    position: aboveZonePos,
-                    duration: 0.25 * durationScale
-                }), new ScaleTransition({
-                    gameObject: card.gameObject,
-                    scale: new THREE.Vector3(1, 1, 1),
-                    duration: 0.5 * durationScale
-                }))
-            );
-        }
+        //     // sequence.add(new MultipleTasks(
+        //     //     new PositionTransition({
+        //     //         gameObject: card.gameObject,
+        //     //         position: aboveZonePos,
+        //     //         duration: 0.25 * durationScale
+        //     //     }), new ScaleTransition({
+        //     //         gameObject: card.gameObject,
+        //     //         scale: new THREE.Vector3(1, 1, 1),
+        //     //         duration: 0.5 * durationScale
+        //     //     }))
+        //     // );
+        //     const gy = duel.fields[this.cardReference.originalOwner].graveyard;
+        //     gy.createSendToGraveyardEffect({ card: card.gameObject, sequence });
+        // }
 
         if (zoneData.zone === "M" || zoneData.zone === "S" || zoneData.zone === "GY" || zoneData.zone === "B") {
-            const aboveZonePos = endPosition.clone();
-            aboveZonePos.z += 1;
-            aboveZonePos.y += 1;
 
             sequence.add(
                 new MultipleTasks(
                     new PositionTransition({
                         gameObject: card.gameObject,
-                        position: aboveZonePos,
-                        duration: 0.5 * durationScale
+                        position: endPosition,
+                        duration: 0.4 * durationScale
                     }),
                     new RotationTransition({
                         gameObject: card.gameObject,
                         rotation: endRotation,
-                        duration: 0.3
+                        duration: 0.25
                     }),
                     new ScaleTransition({
                         gameObject: card.gameObject,
                         scale,
-                        duration: 0.3
+                        duration: 0.25
                     })
                 )
             );
 
-            if (zoneData.zone === "GY" || zoneData.zone === "B") {
-                sequence.add(new CallbackTransition(() => {
-                    this.props.startTask(new ScaleTransition({
-                        gameObject: card.gameObject,
-                        scale: new THREE.Vector3(0, 0, 0),
-                        duration: 0.25 * durationScale
-                    }));
-                }));
+            if (zoneData.zone === "GY") {
+                const gy = duel.fields[this.cardReference.originalOwner].graveyard;
+                gy.createSendToGraveyardEffect({ card: card.gameObject, sequence });
             }
-
-            sequence.add(new PositionTransition({
-                gameObject: card.gameObject,
-                position: endPosition,
-                duration: 0.25 * durationScale
-            }));
+            if (zoneData.zone === "B") {
+                const banish = duel.fields[this.cardReference.originalOwner].banishedZone;
+                banish.createBanishCardEffect({ card: card.gameObject, sequence });
+            }
 
         } else {
             sequence.add(
