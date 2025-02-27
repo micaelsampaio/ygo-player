@@ -1,15 +1,19 @@
 
 import { useEffect } from 'react'
 import { YGOPlayerComponent, YGODuel } from '../../dist';
+import { useLocation } from 'react-router-dom';
 
 //import { YGODuel, JSONCommand } from '../../dist';
 
 export default function Duel() {
-
+  const location = useLocation();
+  const { duelDataProp } = location.state;
+  
   useEffect(() => {
     let duel!: typeof YGODuel;
-    const duelData = JSON.parse(window.localStorage.getItem("duel-data")!);
+    const duelData = duelDataProp? duelDataProp : JSON.parse(window.localStorage.getItem("duel-data")!);
 
+    console.log("duelData", duelData);
     const ygo = document.querySelector("ygo-player") as typeof YGOPlayerComponent;
 
     // ygo.on("init", ({ duel }) => console.log("duel"));

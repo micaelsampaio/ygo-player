@@ -1,7 +1,6 @@
-import { Link } from "react-router";
 import YUBEL from "./decks/YUBEL_FS.json";
 import CHIMERA from "./decks/CHIMERA.json";
-import { useNavigate } from "react-router";
+import { useNavigate,Link } from "react-router-dom";
 import RoomLobby from "./RoomLobby";
 import { useKaibaNet } from "./useKaibaNet";
 import { memo, useEffect, useState } from "react";
@@ -71,7 +70,7 @@ export default function App() {
     localStorage.setItem("duel-data", JSON.stringify(roomJson));
     setRoomDecks(roomJson);
     kaibaNet.createRoom();
-    navigate("/duel");
+    navigate("/duel",{state: {duelDataProp: roomJson}});
   };
 
   const duelAs = (e: any, deck1: any, deck2: any) => {
