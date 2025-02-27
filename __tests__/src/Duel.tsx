@@ -1,41 +1,38 @@
 
-import { useEffect } from 'react'
+import { useEffect,useState } from 'react'
 import { YGOPlayerComponent, YGODuel } from '../../dist';
 import { useLocation } from 'react-router-dom';
+import { useKaibaNet } from './useKaibaNet';
 
 //import { YGODuel, JSONCommand } from '../../dist';
 
 export default function Duel() {
+  const [duelData, setDuelData] = useState<any>(null);
+  const [roomId, setRoomId] = useState<string>("");
+  const kaibaNet = useKaibaNet();
   const location = useLocation();
-  const { duelDataProp } = location.state;
   
   useEffect(() => {
-    let duel!: typeof YGODuel;
-    const duelData = duelDataProp? duelDataProp : JSON.parse(window.localStorage.getItem("duel-data")!);
+    // Get data from location state or localStorage
+    const newDuelData = location.state?.duelDataProp || JSON.parse(localStorage.getItem("duel-data") || "null");
+    const newRoomId = location.state?.roomIdProp || "";
 
-    console.log("duelData", duelData);
+    if (!newDuelData) {
+      console.error("No duel data found");
+      return;
+    }
+
+    setDuelData(newDuelData);
+    setRoomId(newRoomId);
+  }, [location]);
+
+  // Setup YGO player after duel data is available
+  useEffect(() => {
+    if (!duelData) return;
+
     const ygo = document.querySelector("ygo-player") as typeof YGOPlayerComponent;
-
-    // ygo.on("init", ({ duel }) => console.log("duel"));
-    // ygo.on("start", ({ duel }) => console.log("duel"));
-    // ygo.on("command-executed", ({ command }) => console.log("---- UI NEW COMMAND CREATED ----", command, command.toJSON()));
-    // ygo.on("command-executed", ({ command }) => console.log("---- UI NEW COMMAND EXECUTED ----", command, command.toJSON()));
-
-    // duel.ygo.
-    // kaibaCenas.on('init', (config)=> {
-    //   ygo.editor(config);
-    // })
-
-    // kaibaCenas.on('new-command', ()=> {
-    //   if(duel.ygo) duel.ygo.exec(new JSONCommand(cmd.type, cmd.data));
-    // })
-
-
-    // GET STATE
-
-    /// duel.ygo.getcurrentStateProps();
-
-    console.log("YGO player2", ygo.editor);
+    console.log("duelData", duelData);
+    console.log("roomId", roomId);
 
     if (duelData.replay) {
       const config: any = {
@@ -50,25 +47,32 @@ export default function Duel() {
         players: duelData.players,
         cdnUrl: String(import.meta.env.VITE_YGO_CDN_URL),
         commands: duelData.commands,
-        options: duelData.options
+        options: duelData.options || {}
       };
-
-      if (!config.options) config.options = {};
-
-      // config.options.fieldState = [
-      //   { id: 10802915, zone: "M-1" },
-      //   { id: 51473858, zone: "M-2" },
-      //   { id: 27868563, zone: "M-3" },
-      //   { id: 90448279, zone: "M-4" },
-      //   { id: 80993256, zone: "EMZ-1", position: "faceup-attack" },
-      //   { id: 79559912, zone: "M2-2" }
-      // ];
 
       ygo.editor(config);
     }
+  }, [duelData]);
 
+  // Handle player join events
+  useEffect(() => {
+    if (!duelData || !roomId) return;  // Only setup listener when we have both duelData and roomId
 
-  }, [])
+    const handlePlayerJoin = (playerJoinedId: string) => {
+      console.log('Player joined:', playerJoinedId);
+      // the room owner sends duel data to the player that joined the room
+      if (kaibaNet.getPlayerId() === roomId) {
+        console.log('Duel data:', duelData);
+        kaibaNet.refreshGameState(roomId, duelData);
+      }
+    };
+
+    kaibaNet.on('duel:player:join:', handlePlayerJoin);
+
+    return () => {
+      kaibaNet.off('duel:player:join:', handlePlayerJoin);
+    };
+  }, [duelData, roomId, kaibaNet]);
 
   const saveReplay = () => {
     const duel = (window as any).YGODuel;

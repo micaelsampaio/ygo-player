@@ -215,6 +215,7 @@ export class KaibaNet extends EventEmitter {
   }
 
   async refreshGameState(roomId: string, gameState: string) {
+    console.log("KaibaNet: Refreshing game state", roomId, gameState);
     // Encode the room decks data
     const jsonString = JSON.stringify(gameState);
     const base64Encoded = btoa(

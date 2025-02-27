@@ -70,7 +70,8 @@ export default function App() {
     localStorage.setItem("duel-data", JSON.stringify(roomJson));
     setRoomDecks(roomJson);
     kaibaNet.createRoom();
-    navigate("/duel",{state: {duelDataProp: roomJson}});
+    // duel owner starts the room and enters the duel
+    navigate("/duel",{state: {roomIdProp: kaibaNet.getPlayerId(),duelDataProp: roomJson}});
   };
 
   const duelAs = (e: any, deck1: any, deck2: any) => {
