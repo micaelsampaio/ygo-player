@@ -1,35 +1,33 @@
-
-import { useEffect,useState } from 'react'
+import { useEffect, useState } from 'react'
 import { YGOPlayerComponent, YGODuel } from '../../dist';
 import { useLocation } from 'react-router-dom';
 import { useKaibaNet } from './useKaibaNet';
 
-//import { YGODuel, JSONCommand } from '../../dist';
-
 export default function Duel() {
   const [duelData, setDuelData] = useState<any>(null);
   const [roomId, setRoomId] = useState<string>("");
+  const [isLoading, setIsLoading] = useState(true);
   const kaibaNet = useKaibaNet();
   const location = useLocation();
-  
+
+  // Initialize duel data and room ID
   useEffect(() => {
-    // Get data from location state or localStorage
     const newDuelData = location.state?.duelDataProp || JSON.parse(localStorage.getItem("duel-data") || "null");
     const newRoomId = location.state?.roomIdProp || "";
 
-    if (!newDuelData) {
-      console.error("No duel data found");
-      return;
+    if (newDuelData) {
+      setDuelData(newDuelData);
+      setIsLoading(false);
     }
-
-    setDuelData(newDuelData);
+    console.log("newRoomId:", newRoomId);
     setRoomId(newRoomId);
   }, [location]);
 
   // Setup YGO player after duel data is available
   useEffect(() => {
     if (!duelData) return;
-
+    console.log("Duel: Setting up YGO player with data:", duelData);
+    
     const ygo = document.querySelector("ygo-player") as typeof YGOPlayerComponent;
     console.log("duelData", duelData);
     console.log("roomId", roomId);
@@ -54,13 +52,47 @@ export default function Duel() {
     }
   }, [duelData]);
 
+// Handle game state refresh events
+useEffect(() => {
+  if (!roomId) {
+    console.log("No roomId yet, skipping game state refresh listener setup");
+    return;
+  }
+
+  console.log("Setting up game state refresh listener. RoomId:", roomId);
+
+  const handleGameStateRefresh = (gameState: any) => {
+    console.log('Duel: Received game state refresh:', gameState);
+    setDuelData(prevData => {
+      console.log('Duel: Updating duel data', { prevData, gameState });
+      return {
+        ...prevData,
+        ...gameState
+      };
+    });
+    setIsLoading(false);
+  };
+
+  // Add this log to verify the event is being subscribed
+  console.log("Subscribing to duel:refresh:state: event");
+  kaibaNet.on('duel:refresh:state:', handleGameStateRefresh);
+  
+  // Test the event handling
+  console.log("Testing event emission");
+  kaibaNet.emit('duel:refresh:state:', { test: true });
+
+  return () => {
+    console.log("Cleaning up game state refresh listener");
+    kaibaNet.off('duel:refresh:state:', handleGameStateRefresh);
+  };
+}, [roomId, kaibaNet]);
+
   // Handle player join events
   useEffect(() => {
-    if (!duelData || !roomId) return;  // Only setup listener when we have both duelData and roomId
+    if (!duelData || !roomId) return;
 
     const handlePlayerJoin = (playerJoinedId: string) => {
       console.log('Player joined:', playerJoinedId);
-      // the room owner sends duel data to the player that joined the room
       if (kaibaNet.getPlayerId() === roomId) {
         console.log('Duel data:', duelData);
         kaibaNet.refreshGameState(roomId, duelData);
@@ -89,12 +121,27 @@ export default function Duel() {
     window.localStorage.setItem(`replay_${replayName}_${Date.now()}`, JSON.stringify(replayData));
   }
 
+  if (isLoading && !duelData) {
+    return (
+      <div style={{ 
+        width: "100%", 
+        height: "100%", 
+        display: "flex", 
+        justifyContent: "center", 
+        alignItems: "center" 
+      }}>
+        <div>Waiting for duel data...</div>
+      </div>
+    );
+  }
+
   return (
     <div style={{ width: "100%", height: "100%", overflow: "hidden", position: "relative" }}>
-      <div style={{ position: 'fixed', top: '10px', right: '10px', zIndex: 9999 }}><button onClick={saveReplay}>Save Replay</button></div>
-
+      <div style={{ position: 'fixed', top: '10px', right: '10px', zIndex: 9999 }}>
+        <button onClick={saveReplay}>Save Replay</button>
+      </div>
       {/* @ts-ignore */}
       <ygo-player />
     </div>
-  )
+  );
 }
