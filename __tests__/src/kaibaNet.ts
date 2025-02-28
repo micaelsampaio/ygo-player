@@ -152,28 +152,28 @@ export class KaibaNet extends EventEmitter {
   };
 
   private setupEventListeners() {
-      if (!this.peerToPeer) return;
+    if (!this.peerToPeer) return;
 
-      this.peerToPeer.removeAllListeners("peer:discovery");
-      this.peerToPeer.on("peer:discovery", this.addPlayer);
+    this.peerToPeer.removeAllListeners("peer:discovery");
+    this.peerToPeer.on("peer:discovery", this.addPlayer);
 
-      this.peerToPeer.on("connection:open", this.connectPlayer);
-      this.peerToPeer.on("connection:close", this.disconnectPlayer);
-      this.peerToPeer.on("remove:peer", this.removePlayer);
+    this.peerToPeer.on("connection:open", this.connectPlayer);
+    this.peerToPeer.on("connection:close", this.disconnectPlayer);
+    this.peerToPeer.on("remove:peer", this.removePlayer);
 
-      // Listen to discovery topic
+    // Listen to discovery topic
+    this.peerToPeer.on(
+      "topic:" + this.peerToPeer.getDiscoveryTopic() + ":message",
+      this.discoveryTopicMessageHandler
+    );
+
+    // If we have a roomId, set up room topic listener
+    if (this.roomId) {
       this.peerToPeer.on(
-        "topic:" + this.peerToPeer.getDiscoveryTopic() + ":message",
-        this.discoveryTopicMessageHandler
+        "topic:" + this.roomId + ":message",
+        this.roomTopicMessageHandler
       );
-
-      // If we have a roomId, set up room topic listener
-      if (this.roomId) {
-        this.peerToPeer.on(
-          "topic:" + this.roomId + ":message",
-          this.roomTopicMessageHandler
-        );
-      }
+    }
   }
 
   cleanListeners() {
@@ -216,30 +216,54 @@ export class KaibaNet extends EventEmitter {
     this.emit("rooms:updated", this.rooms);
   }
 
-  async joinRoom(roomId: string) {
-    this.roomId = roomId; // Set roomId as joiner
+  async joinRoom(roomId: string, retryAttempts = 5, retryDelay = 1000) {
+    this.roomId = roomId;
 
-    // Connect to the peer
-    await this.peerToPeer.connectToPeer(this.players.get(roomId).addresses[1]);
+    // Try to connect to the peer with retries
+    for (let attempt = 1; attempt <= retryAttempts; attempt++) {
+        try {
+            const player = this.players.get(roomId);
+            
+            if (!player) {
+                console.log(`Attempt ${attempt}: Waiting for player discovery...`);
+                await new Promise(resolve => setTimeout(resolve, retryDelay));
+                continue;
+            }
 
-    // Subscribe to the room topic
-    await this.peerToPeer.subscribeTopic(roomId);
+            console.log(`Attempt ${attempt}: Connecting to peer...`);
+            await this.peerToPeer.connectToPeer(player.addresses[1]);
+            
+            // If we get here, connection was successful
+            console.log("Successfully connected to peer");
+            
+            // Subscribe to the room topic
+            await this.peerToPeer.subscribeTopic(roomId);
 
-    // Set up room topic listener
-    this.peerToPeer.on(
-      "topic:" + roomId + ":message",
-      this.roomTopicMessageHandler
-    );
+            // Set up room topic listener
+            this.peerToPeer.on(
+                "topic:" + roomId + ":message",
+                this.roomTopicMessageHandler
+            );
 
-    // Wait for subscription to propagate
-    await new Promise((resolve) => setTimeout(resolve, 300));
+            // Wait for subscription to propagate
+            await new Promise((resolve) => setTimeout(resolve, 300));
 
-    // Message the topic that the player has joined
-    await this.peerToPeer.messageTopic(
-      roomId,
-      "duel:player:join:" + this.playerId
-    );
-  }
+            // Message the topic that the player has joined
+            await this.peerToPeer.messageTopic(
+                roomId,
+                "duel:player:join:" + this.playerId
+            );
+
+            return; // Success! Exit the function
+        } catch (error) {
+            console.log(`Attempt ${attempt} failed:`, error);
+            if (attempt === retryAttempts) {
+                throw new Error(`Failed to join room after ${retryAttempts} attempts`);
+            }
+            await new Promise(resolve => setTimeout(resolve, retryDelay));
+        }
+    }
+}
 
   public cleanupRoomListener(roomId: string) {
     if (!this.peerToPeer) return;

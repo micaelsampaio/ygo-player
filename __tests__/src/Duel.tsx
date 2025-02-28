@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { YGOPlayerComponent, YGODuel } from "../../dist";
-import { useLocation } from "react-router-dom";
+import { useLocation,useParams } from "react-router-dom";
 import { useKaibaNet } from "./useKaibaNet";
 
 export default function Duel() {
@@ -9,21 +9,29 @@ export default function Duel() {
   const [isLoading, setIsLoading] = useState(true);
   const kaibaNet = useKaibaNet();
   const location = useLocation();
+  const { roomId: urlRoomId } = useParams();
 
   // Initialize duel data and room ID
   useEffect(() => {
     const newDuelData =
       location.state?.duelDataProp ||
       JSON.parse(localStorage.getItem("duel-data") || "null");
-    const newRoomId = location.state?.roomIdProp || "";
+    const newRoomId = location.state?.roomIdProp || urlRoomId || "";
 
     if (newDuelData) {
       setDuelData(newDuelData);
       setIsLoading(false);
     }
-    console.log("newRoomId:", newRoomId);
-    setRoomId(newRoomId);
-  }, [location]);
+    if (newRoomId) {
+      console.log("newRoomId:", newRoomId);
+      setRoomId(newRoomId);
+
+      // If we came from URL parameter and don't have data, join the room
+      if (urlRoomId && !location.state?.duelDataProp) {
+        kaibaNet.joinRoom(newRoomId);
+      }
+    }
+  }, [location, urlRoomId, kaibaNet]);
 
   // Setup YGO player after duel data is available
   useEffect(() => {

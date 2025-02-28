@@ -13,6 +13,8 @@ createRoot(document.getElementById("root")!).render(
       <Routes>
         <Route path="/" element={<App />} />
         <Route path="/duel" element={<Duel />} />
+        <Route path="/duel/:roomId" element={<Duel />} />
+
         <Route path="/deck" element={<DownloadDeck />} />
       </Routes>
     </BrowserRouter>

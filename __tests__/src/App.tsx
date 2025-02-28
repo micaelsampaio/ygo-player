@@ -70,9 +70,11 @@ export default function App() {
     localStorage.setItem("duel-data", JSON.stringify(roomJson));
     setRoomDecks(roomJson);
     kaibaNet.createRoom();
+
     // duel owner starts the room and enters the duel
-    navigate("/duel", {
-      state: { roomIdProp: kaibaNet.getPlayerId(), duelDataProp: roomJson },
+    const roomId=kaibaNet.getPlayerId()?kaibaNet.getPlayerId():""
+    navigate(`/duel/${roomId}`, {
+      state: { roomIdProp: roomId, duelDataProp: roomJson },
     });
   };
 
@@ -92,7 +94,7 @@ export default function App() {
   const handleRoomJoin = async (roomId: any) => {
     console.log("App:handleRoomJoin:roomDecks", roomDecks);
     await kaibaNet.joinRoom(roomId);
-    navigate("/duel", { state: { roomIdProp: roomId } });
+    navigate(`/duel/${roomId}`, { state: { roomIdProp: roomId } });
   };
 
   const deleteDeck = (deckId: string) => {
