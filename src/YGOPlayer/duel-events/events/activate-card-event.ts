@@ -34,7 +34,8 @@ export class ActivateCardHandler extends YGOCommandHandler {
 
     public start(): void {
 
-        const { ygo, event } = this.props;
+        const { event } = this.props;
+        console.log("TCL:: EVENT ::: ", event)
 
         if (event.originZone && event.zone) {
             this.startMoveCommand();
@@ -103,30 +104,63 @@ export class ActivateCardHandler extends YGOCommandHandler {
             card: cardReference
         });
 
+        const modal = GameModalOverlayMesh();
+        modal.material.opacity = 0;
+        duel.core.scene.add(modal);
+        duel.core.enableRenderOverlay();
+
+        this.props.startTask(new YGOTaskSequence(
+            new MaterialOpacityTransition({
+                material: modal.material,
+                duration: 0.25,
+                opacity: 0.7
+            }),
+            new WaitForSeconds(0.4),
+            new MaterialOpacityTransition({
+                material: modal.material,
+                duration: 0.25,
+                opacity: 0
+            }),
+        ));
+
         if (zoneData.zone === "GY" || zoneData.zone === "B") {
             const card = new GameCard({ duel, card: cardReference, stats: false });
             const startPosition: THREE.Vector3 = getZonePositionFromZoneData(duel, zoneData).clone();
             const startRotation: THREE.Euler = getCardRotationFromFieldZoneData(duel, cardReference, zoneData).clone();
-
             card.gameObject.position.copy(startPosition);
             card.gameObject.rotation.copy(startRotation);
 
-            this.createActivationEffect(sequence, card.gameObject, startPosition);
+            const cardOverlay = card.gameObject.clone();
+            card.destroy();
 
-            sequence.add(new CallbackTransition(() => {
-                card.destroy();
-            }));
+            duel.core.sceneOverlay.add(cardOverlay);
+
+            CardActivationEffect({ duel, card: cardOverlay, startTask: this.props.startTask });
+
+            this.createActivationEffect(sequence, cardOverlay, startPosition);
+
         } else if (zoneData.zone === "H") {
             const card = field.hand.getCardFromReference(cardReference);
             const startPosition: THREE.Vector3 = card.position.clone();
             const startRotation: THREE.Euler = card.gameObject.rotation.clone();
 
+            const cardOverlay = card.gameObject.clone();
+            duel.core.sceneOverlay.add(cardOverlay);
+
+            card.gameObject.visible = false;
+
+            const up = new THREE.Vector3(0, 1, 0);
+            up.applyQuaternion(card.gameObject.quaternion);
+
             card.isUiElementClick = false;
             card.isUiElementHover = false;
 
-            this.createActivationEffect(sequence, card.gameObject, startPosition, "y");
+            CardActivationEffect({ duel, card: cardOverlay, startTask: this.props.startTask });
+
+            this.createActivationEffect(sequence, cardOverlay, startPosition, up);
 
             sequence.add(new CallbackTransition(() => {
+                card.gameObject.visible = true;
                 card.gameObject.position.copy(startPosition);
                 card.gameObject.rotation.copy(startRotation);
                 card.isUiElementClick = true;
@@ -137,32 +171,12 @@ export class ActivateCardHandler extends YGOCommandHandler {
 
             card.hideCardStats();
 
-
             const cardOverlay = card.gameObject.clone();
             duel.core.sceneOverlay.add(cardOverlay);
 
             card.gameObject.visible = false;
 
             CardActivationEffect({ duel, card: cardOverlay, startTask: this.props.startTask });
-
-            const modal = GameModalOverlayMesh();
-            modal.material.opacity = 0;
-            duel.core.scene.add(modal);
-            duel.core.enableRenderOverlay();
-
-            this.props.startTask(new YGOTaskSequence(
-                new MaterialOpacityTransition({
-                    material: modal.material,
-                    duration: 0.25,
-                    opacity: 0.7
-                }),
-                new WaitForSeconds(0.4),
-                new MaterialOpacityTransition({
-                    material: modal.material,
-                    duration: 0.25,
-                    opacity: 0
-                }),
-            ))
 
             this.createActivationEffect(sequence, cardOverlay, card.gameObject.position.clone());
 
@@ -183,9 +197,9 @@ export class ActivateCardHandler extends YGOCommandHandler {
         this.props.startTask(sequence);
     }
 
-    public createActivationEffect(seq: YGOTaskSequence, card: THREE.Object3D, startPos: THREE.Vector3, axis: "z" | "y" = "z") {
+    public createActivationEffect(seq: YGOTaskSequence, card: THREE.Object3D, startPos: THREE.Vector3, axis: THREE.Vector3 = new THREE.Vector3(0, 0, 1)) {
         const position = startPos.clone();
-        position[axis] += axis === "y" ? 1.8 : 0.8;
+        position.add(axis);
 
         seq.add(
             new PositionTransition({

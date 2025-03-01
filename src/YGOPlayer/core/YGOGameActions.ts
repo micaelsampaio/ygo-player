@@ -510,10 +510,11 @@ export class YGOGameActions {
         if (card.isMainDeckCard) {
             this.toHand({ card, originZone });
         } else {
+            const zoneData = YGOGameUtils.getZoneData(originZone);
             this.duel.execCommand(new YGOCommands.ToExtraDeckCommand({
                 player,
                 id: card.id,
-                originZone,
+                originZone: YGOGameUtils.createZone(zoneData.zone, card.owner, zoneData.zoneIndex),
             }));
         }
     }

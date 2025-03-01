@@ -6,13 +6,11 @@ import { DuelEventHandlerProps } from "..";
 import { YGODuelEvents, YGOGameUtils } from "../../../YGOCore";
 import { YGOTaskSequence } from "../../core/components/tasks/YGOTaskSequence";
 import { YGOCommandHandler } from "../../core/components/YGOCommandHandler";
-import { GameCard } from "../../game/GameCard";
-import { getCardRotationFromFieldZoneData, getGameZone, getZonePositionFromZoneData } from "../../scripts/ygo-utils";
+import { getCardRotationFromFieldZoneData, getGameZone } from "../../scripts/ygo-utils";
 import { MoveCardEventHandler } from "./move-card-event";
 import { CallbackTransition } from '../utils/callback';
 import { PositionTransition } from '../utils/position-transition';
 import { WaitForSeconds } from '../utils/wait-for-seconds';
-import { MultipleTasks } from '../utils/multiple-tasks';
 import { RotationTransition } from '../utils/rotation-transition';
 
 interface ChangeCardPositionHandlerProps extends DuelEventHandlerProps {

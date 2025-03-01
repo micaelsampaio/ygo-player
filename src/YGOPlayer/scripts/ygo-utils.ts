@@ -193,7 +193,7 @@ export function getCardRotationFromFieldZoneData(duel: YGODuel, card: Card, zone
         rotation = field.mainDeck.getCardTransform().rotation;
     } else if (zoneData.zone === "B") {
         if (YGOGameUtils.isFaceDown(card)) {
-            rotation.y = THREE.MathUtils.degToRad(180);
+            rotation.y = THREE.MathUtils.degToRad(-180);
         }
         rotation.z = THREE.MathUtils.degToRad(90);
     } else if (zoneData.zone === "S") {

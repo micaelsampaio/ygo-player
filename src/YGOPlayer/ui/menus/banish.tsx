@@ -3,7 +3,7 @@ import { YGODuel } from "../../core/YGODuel";
 import { ActionUiMenu } from "../../actions/ActionUiMenu";
 import { Banish as GameBanish } from "../../../YGOPlayer/game/Banish";
 
-export function Banish({ duel, visible = true }: { duel: YGODuel, banish: GameBanish, visible: boolean }) {
+export function Banish({ duel, banish, visible = true }: { duel: YGODuel, banish: GameBanish, visible: boolean }) {
 
     const action = useMemo(() => {
         const action = new ActionUiMenu(duel, { eventType: "card-banish-menu" });
@@ -13,7 +13,7 @@ export function Banish({ duel, visible = true }: { duel: YGODuel, banish: GameBa
     if (!visible) return null;
     if (!duel.ygo) return null;
 
-    const field = duel.ygo.state.fields[0];
+    const field = duel.ygo.state.fields[banish.player];
     const cards = field.banishedZone;
 
     return <div className="float-right-menu" onMouseMove={(e) => {

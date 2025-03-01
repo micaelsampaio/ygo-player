@@ -8,7 +8,7 @@ export function CardBanishMenu({ duel, card, htmlCardElement, clearAction, mouse
     const menuRef = useRef<HTMLDivElement>(null);
     const player = card.originalOwner;
     const field = duel.ygo.state.fields[player];
-    const cardIndex = duel.ygo.state.fields[player].graveyard.findIndex((c) => c === card);
+    const cardIndex = duel.ygo.state.fields[player].banishedZone.findIndex((c) => c === card);
     const originZone: FieldZone = YGOGameUtils.createZone("B", player, cardIndex + 1);
 
     const specialSummonATK = useCallback(() => {
@@ -62,6 +62,7 @@ export function CardBanishMenu({ duel, card, htmlCardElement, clearAction, mouse
 
     const hasXyzMonstersInField = YGOGameUtils.hasXyzMonstersInField(field);
     const isMonster = YGOGameUtils.isMonster(card);
+    const isFaceup = YGOGameUtils.isFaceUp(card);
 
     return <>
         <CardMenu menuRef={menuRef} >
@@ -76,7 +77,8 @@ export function CardBanishMenu({ duel, card, htmlCardElement, clearAction, mouse
             </>}
             <button type="button" className="ygo-card-item" onClick={toGY}>To GY</button>
             <button type="button" className="ygo-card-item" onClick={toHand}>To Hand</button>
-            <button type="button" className="ygo-card-item" onClick={activateCard}>Activate</button>
+            {isFaceup && <button type="button" className="ygo-card-item" onClick={activateCard}>Activate</button>}
+
             {
                 isMonster && <>
                     <button type="button" className="ygo-card-item" onClick={specialSummonATK}>SS ATK</button>
