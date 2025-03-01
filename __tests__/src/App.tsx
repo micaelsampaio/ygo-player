@@ -56,23 +56,34 @@ export default function App() {
       players: [
         {
           name: "player1",
-          mainDeck: deck1.mainDeck,
+          mainDeck: [...deck1.mainDeck],
           extraDeck: deck1.extraDeck,
         },
         {
           name: "player2",
-          mainDeck: deck2.mainDeck,
+          mainDeck: [...deck2.mainDeck],
           extraDeck: deck2.extraDeck,
         },
       ],
+      options: {
+        shuffleDecks: false
+      }
     };
+
+    roomJson.players.forEach(player => {
+      for (let i = player.mainDeck.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [player.mainDeck[i], player.mainDeck[j]] = [player.mainDeck[j], player.mainDeck[i]];
+      }
+    });
+
     console.log("duel", roomJson);
     localStorage.setItem("duel-data", JSON.stringify(roomJson));
     setRoomDecks(roomJson);
     kaibaNet.createRoom();
 
     // duel owner starts the room and enters the duel
-    const roomId=kaibaNet.getPlayerId()?kaibaNet.getPlayerId():""
+    const roomId = kaibaNet.getPlayerId() ? kaibaNet.getPlayerId() : ""
     navigate(`/duel/${roomId}`, {
       state: { roomIdProp: roomId, duelDataProp: roomJson },
     });
@@ -370,13 +381,13 @@ const EndGameBoard = memo(function EndGameBoard({ data, play }: any) {
         const extraMonsterZone1 = fields[0].extraMonsterZones[0]
           ? 0
           : fields[1].extraMonsterZones[0]
-          ? 1
-          : -1;
+            ? 1
+            : -1;
         const extraMonsterZone2 = fields[0].extraMonsterZones[1]
           ? 0
           : fields[1].extraMonsterZones[1]
-          ? 1
-          : -1;
+            ? 1
+            : -1;
 
         const extraMonsterZones = (
           <>

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { YGOPlayerComponent, YGODuel } from "../../dist";
-import { useLocation,useParams } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
 import { useKaibaNet } from "./useKaibaNet";
 
 export default function Duel() {
@@ -36,7 +36,7 @@ export default function Duel() {
   // Setup YGO player after duel data is available
   useEffect(() => {
     if (!duelData) return;
-    console.log("Duel: Setting up YGO player with data:", duelData);
+    console.log("TCL: Duel: Setting up YGO player with data:", duelData);
 
     const ygo = document.querySelector("ygo-player")! as YGOPlayerComponent;
     console.log("duelData", duelData);
@@ -100,8 +100,11 @@ export default function Duel() {
     const handlePlayerJoin = (playerJoinedId: string) => {
       console.log("Player joined:", playerJoinedId);
       if (kaibaNet.getPlayerId() === roomId) {
-        console.log("Duel data:", duelData);
-        kaibaNet.refreshGameState(roomId, duelData);
+        const ygo = document.querySelector("ygo-player")! as YGOPlayerComponent;
+        const currentDuelState = ygo.duel.ygo.getCurrentStateProps();
+        console.log("Duel data: ", currentDuelState)
+
+        kaibaNet.refreshGameState(roomId, currentDuelState);
       }
     };
 
