@@ -40,7 +40,7 @@ export function TimeLine({ duel }: { duel: YGODuel }) {
     }
 
     const play = () => {
-        if (duel.commands.isLocked()) return;
+        if (duel.commands.isPlaying()) return;
 
         duel.commands.play();
 
@@ -52,9 +52,11 @@ export function TimeLine({ duel }: { duel: YGODuel }) {
                 duel.commands.pause();
                 return;
             }
+
             if (duel.ygo.hasNextCommand()) {
                 setTimeout(() => duel.ygo.redo(), 500);
             } else {
+                duel.commands.pause();
                 duel.events.off("commands-process-completed", nextEvent);
             }
         }

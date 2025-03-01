@@ -29,9 +29,7 @@ export class YGOCommandsController extends YGOComponent {
     }
 
     start(): void {
-        if (this.commands.length === 0) {
-            this.commands.push()
-        }
+       
     }
 
     getState() {
@@ -94,7 +92,7 @@ export class YGOCommandsController extends YGOComponent {
         if (this.currentCommand) return;
 
         if (this.commands.length === 0) {
-            this.state = YGOCommandsControllerState.IDLE;
+            if (!this.isPlaying()) this.setState(YGOCommandsControllerState.IDLE);
             this.duel.updateField();
             this.duel.events.dispatch("enable-game-actions");
             this.duel.events.dispatch("commands-process-completed");
