@@ -2,6 +2,7 @@ import { YGODuel } from "./YGODuel";
 import * as THREE from "three";
 
 export class YGODuelScene {
+    public selectedCardPlaceholder!: THREE.Object3D;
 
     constructor(private duel: YGODuel) {
 
@@ -30,5 +31,11 @@ export class YGODuelScene {
 
         this.duel.core.scene.add(gameField);
         this.duel.core.scene.add(clonedGameField);
+
+        const selectedCardGeometry = new THREE.PlaneGeometry(7, 15);
+        const selectedCardMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000, wireframe: true });
+        this.selectedCardPlaceholder = new THREE.Mesh(selectedCardGeometry, selectedCardMaterial);
+        this.selectedCardPlaceholder.position.set(-16.5, 0, 0.1);
+        this.duel.core.scene.add(this.selectedCardPlaceholder);
     }
 }

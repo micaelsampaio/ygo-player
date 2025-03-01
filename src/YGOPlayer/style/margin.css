@@ -5,3 +5,7 @@
 .ygo-player-core .ygo-p-0 {
     padding: 0px !important;
 }
+
+.ygo-scroll-y {
+    overflow-y: auto;
+}
