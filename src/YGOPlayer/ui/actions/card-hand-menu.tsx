@@ -17,6 +17,14 @@ export function CardHandMenu({ duel, card, index }: { duel: YGODuel, card: Card,
         duel.gameActions.setSummon({ card, originZone });
     }, [card, index]);
 
+    const tributeSummonATK = useCallback(() => {
+        duel.gameActions.tributeSummon({ card, originZone });
+    }, [card, index]);
+
+    const tributeSummonDEF = useCallback(() => {
+        duel.gameActions.tributeSummon({ card, originZone, position: "faceup-defense" });
+    }, [card, index]);
+
     const specialSummonATK = useCallback(() => {
         duel.gameActions.specialSummon({ card, originZone, position: "faceup-attack" });
     }, [card, index]);
@@ -91,6 +99,7 @@ export function CardHandMenu({ duel, card, index }: { duel: YGODuel, card: Card,
     const isTrap = YGOGameUtils.isTrap(card);
     const isSpellOrTrap = YGOGameUtils.isSpellTrap(card);
     const isMonster = card.type.includes("Monster");
+    const canTribute = isMonster && card.level > 4;
     const hasXyzMonstersInField = YGOGameUtils.XyzMonstersInFieldsCounter(duel.ygo) > 0;
 
     return <>
@@ -101,6 +110,8 @@ export function CardHandMenu({ duel, card, index }: { duel: YGODuel, card: Card,
                 <button className="ygo-card-item" disabled={freeMonsterZones === 0} type="button" onClick={specialSummonATK}>Special Summon ATK</button>
                 <button className="ygo-card-item" disabled={freeMonsterZones === 0} type="button" onClick={specialSummonDEF}>Special Summon DEF</button>
             </>}
+            {canTribute && <button className="ygo-card-item" disabled={freeMonsterZones === 0} type="button" onClick={tributeSummonATK}>Tribute Summon ATK</button>}
+            {canTribute && <button className="ygo-card-item" disabled={freeMonsterZones === 0} type="button" onClick={tributeSummonDEF}>Tribute Summon DEF</button>}
             {hasXyzMonstersInField && <div>
                 <button className="ygo-card-item" type="button" onClick={attachMaterial}>Attach Material</button>
             </div>}

@@ -80,6 +80,15 @@ export class YGODuel {
 
         this.gameActions = new YGOGameActions(this);
 
+        // this.config.options = {
+        //     ...this.config.options || {},
+        //     fieldState: [
+        //         { id: 72270339, zone: "M-1" },
+        //         { id: 9674034, zone: "M-2" },
+        //         // { id: 33854624, zone: "M-3" },
+        //     ]
+        // }
+
         this.ygo = new YGOCore(this.config);
 
         (window as any).YGODuel = this;
@@ -122,15 +131,6 @@ export class YGODuel {
     }
 
     public startDuel() {
-        // this.config.options = {
-        //     ...this.config.options || {},
-        //     fieldState: [
-        //         { id: 62318994, zone: "M-1" },
-        //         { id: 62318994, zone: "M-2" },
-        //         { id: 62318994, zone: "M-3" },
-        //     ]
-        // }
-
         setTimeout(() => {
             this.ygo.start();
             this.updateField();

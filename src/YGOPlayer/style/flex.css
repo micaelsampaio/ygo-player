@@ -66,17 +66,24 @@
 }
 
 .ygo-player-core .ygo-gap-1 {
-    gap: 5px;
+    gap: var(--ygo-gap-xs);
 }
 
 .ygo-player-core .ygo-gap-2 {
-    gap: 10px;
+    gap: var(--ygo-gap-sm);
 }
 
 .ygo-player-core .ygo-gap-3 {
-    gap: 16px;
+    gap: var(--ygo-gap-md);
 }
 
 .ygo-player-core .ygo-gap-4 {
     gap: 20px;
+}
+
+.ygo-player-core .ygo-items-center {
+    align-items: center;
+}
+.ygo-player-core .ygo-justify-center {
+    justify-content: center;
 }

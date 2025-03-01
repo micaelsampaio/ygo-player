@@ -6,13 +6,27 @@
     --ygo-heading-color: #ffffff;
     --ygo-border-color: #444444;
     --ygo-hover-color: #6ec1e4;
-    --ygo-bg-modal-color: rgba(0, 0, 0, 0.8);
+    --ygo-overlay-background-color: rgba(0, 0, 0, 0.8);
+
+    --ygo-form-input-placeholder-text-color: rgba(255, 255, 255, 0.6);
+    --ygo-form--input-text-color: #FFF;
 
     --ygo-space-xs: 8px;
     --ygo-space-sm: 16px;
     --ygo-space-md: 24px;
     --ygo-space-lg: 32px;
     --ygo-space-xl: 48px;
+
+    --ygo-font-xs: 8px;
+    --ygo-font-sm: 16px;
+    --ygo-font-md: 18px;
+    --ygo-font-lg: 20px;
+    --ygo-font-xl: 24px;
+    --ygo-font-xxl: 30px;
+
+    --ygo-gap-xs: 5px;
+    --ygo-gap-sm: 10px;
+    --ygo-gap-md: 16px;
 
     --ygo-border-radius-small: 4px;
     --ygo-border-radius-medium: 8px;

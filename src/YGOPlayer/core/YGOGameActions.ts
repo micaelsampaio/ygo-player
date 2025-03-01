@@ -84,6 +84,51 @@ export class YGOGameActions {
         });
     }
 
+    public tributeSummon({ card, position = "faceup-attack", originZone }: { card: Card, originZone: FieldZone, position?: CardPosition }) {
+
+        this.clearAction();
+
+        const player = this.duel.getActivePlayer();
+
+        const zones = getMonstersZones(this.duel, [card.originalOwner]);
+
+        this.cardSelection.startMultipleSelection({
+            zones,
+            selectionType: "card",
+            onSelectionCompleted: (cardZones: CardZone[]) => {
+
+                const tributes = cardZones.map(cardZone => {
+                    return {
+                        id: cardZone.getCardReference()!.id,
+                        zone: cardZone.zone
+                    }
+                });
+
+                const zonesToSummon = getCardZones(this.duel, [card.originalOwner], ["M"]);
+                cardZones.forEach(z => zonesToSummon.push(z));
+
+                this.cardSelection.startSelection({
+                    zones: zonesToSummon,
+                    selectionType: "zone",
+                    onSelectionCompleted: (cardZone: any) => {
+
+                        this.duel.execCommand(new YGOCommands.TributeSummonCommand({
+                            player,
+                            id: card.id,
+                            tributes,
+                            originZone,
+                            zone: cardZone.zone,
+                            position
+                        }));
+
+                        this.clearAction();
+                    }
+                });
+
+            }
+        });
+    }
+
     public linkSummon({ card }: { card: Card }) {
 
         this.clearAction();
@@ -264,15 +309,22 @@ export class YGOGameActions {
 
         this.duel.events.dispatch("toggle-ui-menu", {
             group: "game-popup", type: "select-card-menu", data: {
+                filter: {
+                    monsters: true,
+                    field: true,
+                    hand: true,
+                    mainDeck: true,
+                },
                 onSelectCards: (cards: CardZoneKV[]) => {
 
-                    this.duel.events.dispatch("close-ui-menu", { type: "select-card-menu" });
+                    this.duel.events.dispatch("close-ui-menu", { type: "select-card-menu", });
 
                     const cardIndex = this.duel.ygo.state.fields[card.originalOwner].extraDeck.findIndex((c) => c === card);
 
                     const materials = cards.map(cardData => {
                         return { id: cardData.card.id, zone: cardData.zone };
                     })
+                    console.log("TCL: ", materials);
 
                     const zonesToSummon = getCardZones(this.duel, [card.originalOwner], ["M", "EMZ"]);
 
