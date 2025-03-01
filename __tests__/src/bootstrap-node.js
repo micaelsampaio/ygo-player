@@ -151,10 +151,18 @@ server.addEventListener("connection:close", async (event) => {
   const peerId = event.detail.remotePeer.toString();
   console.log(peerId);
   const message = "remove:peer:" + peerId;
+  
   try {
+    // Check if there are subscribers before publishing
+    const subscribers = await pubsub.getSubscribers(PUBSUB_PEER_DISCOVERY);
+    if (!subscribers || subscribers.length === 0) {
+      console.log("No subscribers found for peer discovery topic");
+      return;
+    }
+
     await pubsub.publish(PUBSUB_PEER_DISCOVERY, new TextEncoder().encode(message));
   } catch (error) {
-    console.log("TODO @ILR é aqui que rebenta o server");
+    console.log("Error publishing disconnect message:", error);
   }
 });
 

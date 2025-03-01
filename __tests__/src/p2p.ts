@@ -326,9 +326,16 @@ export class PeerToPeer extends EventEmitter {
   public async messageTopic(topic: string, message: string) {
     console.log("P2P: Message topic:", topic, message);
     try {
-      await this.libp2p.services.pubsub.publish(topic, fromString(message));
+        // Check if there are subscribers before publishing
+        const subscribers = await this.libp2p.services.pubsub.getSubscribers(topic);
+        if (!subscribers || subscribers.length === 0) {
+            console.log("P2P: No subscribers found for topic:", topic);
+            return;
+        }
+
+        await this.libp2p.services.pubsub.publish(topic, fromString(message));
     } catch (error) {
-      console.log("TODO @ILR é aqui que rebenta o server");
+        console.log("P2P: Error publishing message:", error);
     }
   }
 }
