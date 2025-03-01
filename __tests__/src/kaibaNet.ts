@@ -134,6 +134,13 @@ export class KaibaNet extends EventEmitter {
       console.log("KaibaNet: Player joined room", playerJoinedId);
       this.emit("duel:player:join:", playerJoinedId);
     }
+
+    // Handle player join messages in room topic
+    if (messageStr.includes("duel:command:exec:")) {
+      const command = b64ToObject(messageStr.split(":")[3]);
+      console.log("TCL:: EXEC COMMAND ", command)
+      this.emit("duel:command:exec", command);
+    }
   };
 
   private discoveryTopicMessageHandler = ({ messageStr }) => {
@@ -221,49 +228,49 @@ export class KaibaNet extends EventEmitter {
 
     // Try to connect to the peer with retries
     for (let attempt = 1; attempt <= retryAttempts; attempt++) {
-        try {
-            const player = this.players.get(roomId);
-            
-            if (!player) {
-                console.log(`Attempt ${attempt}: Waiting for player discovery...`);
-                await new Promise(resolve => setTimeout(resolve, retryDelay));
-                continue;
-            }
+      try {
+        const player = this.players.get(roomId);
 
-            console.log(`Attempt ${attempt}: Connecting to peer...`);
-            await this.peerToPeer.connectToPeer(player.addresses[1]);
-            
-            // If we get here, connection was successful
-            console.log("Successfully connected to peer");
-            
-            // Subscribe to the room topic
-            await this.peerToPeer.subscribeTopic(roomId);
-
-            // Set up room topic listener
-            this.peerToPeer.on(
-                "topic:" + roomId + ":message",
-                this.roomTopicMessageHandler
-            );
-
-            // Wait for subscription to propagate
-            await new Promise((resolve) => setTimeout(resolve, 300));
-
-            // Message the topic that the player has joined
-            await this.peerToPeer.messageTopic(
-                roomId,
-                "duel:player:join:" + this.playerId
-            );
-
-            return; // Success! Exit the function
-        } catch (error) {
-            console.log(`Attempt ${attempt} failed:`, error);
-            if (attempt === retryAttempts) {
-                throw new Error(`Failed to join room after ${retryAttempts} attempts`);
-            }
-            await new Promise(resolve => setTimeout(resolve, retryDelay));
+        if (!player) {
+          console.log(`Attempt ${attempt}: Waiting for player discovery...`);
+          await new Promise(resolve => setTimeout(resolve, retryDelay));
+          continue;
         }
+
+        console.log(`Attempt ${attempt}: Connecting to peer...`);
+        await this.peerToPeer.connectToPeer(player.addresses[1]);
+
+        // If we get here, connection was successful
+        console.log("Successfully connected to peer");
+
+        // Subscribe to the room topic
+        await this.peerToPeer.subscribeTopic(roomId);
+
+        // Set up room topic listener
+        this.peerToPeer.on(
+          "topic:" + roomId + ":message",
+          this.roomTopicMessageHandler
+        );
+
+        // Wait for subscription to propagate
+        await new Promise((resolve) => setTimeout(resolve, 300));
+
+        // Message the topic that the player has joined
+        await this.peerToPeer.messageTopic(
+          roomId,
+          "duel:player:join:" + this.playerId
+        );
+
+        return; // Success! Exit the function
+      } catch (error) {
+        console.log(`Attempt ${attempt} failed:`, error);
+        if (attempt === retryAttempts) {
+          throw new Error(`Failed to join room after ${retryAttempts} attempts`);
+        }
+        await new Promise(resolve => setTimeout(resolve, retryDelay));
+      }
     }
-}
+  }
 
   public cleanupRoomListener(roomId: string) {
     if (!this.peerToPeer) return;
@@ -287,4 +294,33 @@ export class KaibaNet extends EventEmitter {
       "duel:refresh:state:" + base64Encoded
     );
   }
+
+  async execYGOCommand(roomId: string, command: any) {
+    const commandB64 = objectToB64(command);
+    await this.peerToPeer.messageTopic(
+      roomId,
+      "duel:command:exec:" + commandB64
+    );
+  }
+}
+
+function objectToB64(json: any) {
+  const jsonStr = JSON.stringify(json);
+  return stringToB64(jsonStr);
+}
+function stringToB64(str: string) {
+  const base64Encoded = btoa(
+    new TextEncoder()
+      .encode(str)
+      .reduce((acc, byte) => acc + String.fromCharCode(byte), "")
+  );
+  return base64Encoded;
+}
+function b64ToString(str: any) {
+  return new TextDecoder().decode(
+    Uint8Array.from(atob(str), (c) => c.charCodeAt(0))
+  )
+}
+function b64ToObject(data: any) {
+  return JSON.parse(b64ToString(data));
 }

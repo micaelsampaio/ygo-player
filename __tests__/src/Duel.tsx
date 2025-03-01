@@ -38,7 +38,7 @@ export default function Duel() {
     if (!duelData) return;
     console.log("TCL: Duel: Setting up YGO player with data:", duelData);
 
-    const ygo = document.querySelector("ygo-player")! as YGOPlayerComponent;
+    const ygo: YGOPlayerComponent = document.querySelector("ygo-player")! as any;
     console.log("duelData", duelData);
     console.log("roomId", roomId);
 
@@ -68,6 +68,20 @@ export default function Duel() {
       console.log("No roomId yet, skipping game state refresh listener setup");
       return;
     }
+    let SEND_COMMAND_ALLOWED = true;
+    const ygo: YGOPlayerComponent = document.querySelector("ygo-player")! as any;
+
+    ygo.on("start", () => {
+      const handleCommandExecuted = (data: any) => {
+        console.log("TCL: SEND COMMAND ", JSON.stringify(data.command.toJSON()));
+        if(SEND_COMMAND_ALLOWED){
+          kaibaNet.execYGOCommand(roomId, data.command.toCommandData());
+        }
+      }
+      setTimeout(() => {
+        ygo.on("command-executed", handleCommandExecuted);
+      }, 1000)
+    });
 
     console.log("Setting up game state refresh listener. RoomId:", roomId);
 
@@ -83,13 +97,31 @@ export default function Duel() {
       setIsLoading(false);
     };
 
+    const handleCommandExec = (command: any) => {
+      console.log("TCL: Received a command to EXEC ", command);
+      const ygoCore = ygo.duel.ygo;
+      const commands = ygoCore.commands;
+
+      if (commands.length > 0) {
+        const currentCommand = commands.find((c: any) => c.commandId === command.commandId);
+        if (currentCommand) return;
+      }
+      console.log("TCL: WILL EXEC ", command);
+      SEND_COMMAND_ALLOWED = false;
+      ygo.duel.execCommand(JSON.stringify(command));
+      SEND_COMMAND_ALLOWED = true;
+    }
+
     // Add this log to verify the event is being subscribed
     console.log("Subscribing to duel:refresh:state: event");
     kaibaNet.on("duel:refresh:state:", handleGameStateRefresh);
 
+    kaibaNet.on("duel:command:exec", handleCommandExec)
+
     return () => {
       console.log("Cleaning up game state refresh listener");
       kaibaNet.off("duel:refresh:state:", handleGameStateRefresh);
+      kaibaNet.off("duel:command:exec", handleCommandExec);
     };
   }, [roomId, kaibaNet]);
 
@@ -100,7 +132,7 @@ export default function Duel() {
     const handlePlayerJoin = (playerJoinedId: string) => {
       console.log("Player joined:", playerJoinedId);
       if (kaibaNet.getPlayerId() === roomId) {
-        const ygo = document.querySelector("ygo-player")! as YGOPlayerComponent;
+        const ygo: YGOPlayerComponent = document.querySelector("ygo-player")! as any;
         const currentDuelState = ygo.duel.ygo.getCurrentStateProps();
         console.log("Duel data: ", currentDuelState)
 
@@ -144,11 +176,9 @@ export default function Duel() {
         position: "relative",
       }}
     >
-      {/* Only render YGO player when we have data */}
-      {duelData && (
-        /* @ts-ignore */
-        <ygo-player />
-      )}
+
+      {/* @ts-ignore */}
+      <ygo-player />
 
       {/* Show loading state when no data */}
       {isLoading && !duelData && (

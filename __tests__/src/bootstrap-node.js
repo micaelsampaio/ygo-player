@@ -146,12 +146,16 @@ server.addEventListener("peer:disconnect", (event) => {
   console.log(event.detail.toString());
 });
 
-server.addEventListener("connection:close", (event) => {
+server.addEventListener("connection:close", async (event) => {
   console.log("Connection Close:");
   const peerId = event.detail.remotePeer.toString();
   console.log(peerId);
   const message = "remove:peer:" + peerId;
-  pubsub.publish(PUBSUB_PEER_DISCOVERY, new TextEncoder().encode(message));
+  try {
+    await pubsub.publish(PUBSUB_PEER_DISCOVERY, new TextEncoder().encode(message));
+  } catch (error) {
+    console.log("TODO @ILR é aqui que rebenta o server");
+  }
 });
 
 server.addEventListener("error", (event) => {

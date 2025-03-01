@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { YGOPlayerCore } from './YGOPlayerCore';
 import { GameFieldLocation, YGODuelState, YGOUiElement } from '../types';
-import { YGOCore } from '../../YGOCore';
+import { JSONCommand, YGOCore } from '../../YGOCore';
 import { YGOEntity } from './YGOEntity';
 import { GameController } from '../game/GameController';
 import { EventBus } from '../scripts/event-bus';
@@ -25,6 +25,7 @@ import { YGOGameActions } from './YGOGameActions';
 import { createCardSelectionGeometry } from '../game/meshes/CardSelectionMesh';
 import { YGODuelScene } from './YGODuelScene';
 import { YGOConfig } from './YGOConfig';
+import { Command } from '../../YGOCore/types/commands';
 
 export class YGODuel {
     public state: YGODuelState;
@@ -441,5 +442,20 @@ export class YGODuel {
         ).add(new WaitForSeconds(0.5)).add(new CallbackTransition(() => {
             alert("Done")
         })));
+    }
+
+    getGameState() {
+        return this.ygo.getCurrentStateProps();
+    }
+
+    execCommand(command: Command | string) {
+        console.log("TCL: YGO DUEL WILL EXEC ", command);
+        if (typeof command === "string") {
+            console.log("TCL: EXEC STRING")
+            this.ygo.exec(new JSONCommand(JSON.parse(command)));
+        } else {
+            console.log("TCL: EXEC DATA")
+            this.ygo.exec(command);
+        }
     }
 }

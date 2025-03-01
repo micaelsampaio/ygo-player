@@ -14,6 +14,12 @@ export interface Command {
         type: string;
         data: T;
     };
+    toCommandData<T extends any = any>(): {
+        commandId: number;
+        timestamp: number;
+        type: string;
+        data: T;
+    };
 }
 export interface CommandData<T> {
     type: CommandType;

@@ -26,7 +26,6 @@ export class YGOGameActions {
     public normalSummon({ card, originZone }: { card: Card, originZone: FieldZone }) {
         this.clearAction();
 
-        const ygo = this.duel.ygo;
         const player = this.duel.getActivePlayer();
         const zones = getCardZones(this.duel, [card.originalOwner], ["M"]);
 
@@ -34,7 +33,7 @@ export class YGOGameActions {
             zones,
             selectionType: "zone",
             onSelectionCompleted: (cardZone: any) => {
-                ygo.exec(new YGOCommands.NormalSummonCommand({
+                this.duel.execCommand(new YGOCommands.NormalSummonCommand({
                     player,
                     id: card.id,
                     originZone,
@@ -47,7 +46,6 @@ export class YGOGameActions {
     public setSummon({ card, originZone }: { card: Card, originZone: FieldZone }) {
         this.clearAction();
 
-        const ygo = this.duel.ygo;
         const player = this.duel.getActivePlayer();
         const zones = getCardZones(this.duel, [card.originalOwner], ["M"]);
 
@@ -55,7 +53,7 @@ export class YGOGameActions {
             zones,
             selectionType: "zone",
             onSelectionCompleted: (cardZone: any) => {
-                ygo.exec(new YGOCommands.SetMonsterCommand({
+                this.duel.execCommand(new YGOCommands.SetMonsterCommand({
                     player,
                     id: card.id,
                     originZone,
@@ -68,7 +66,6 @@ export class YGOGameActions {
     public specialSummon({ card, originZone, position = "faceup-attack" }: { card: Card, originZone: FieldZone, position?: CardPosition }) {
         this.clearAction();
 
-        const ygo = this.duel.ygo;
         const player = this.duel.getActivePlayer();
         const zones = getCardZones(this.duel, [card.originalOwner], ["M"]);
 
@@ -76,7 +73,7 @@ export class YGOGameActions {
             zones,
             selectionType: "zone",
             onSelectionCompleted: (cardZone: any) => {
-                ygo.exec(new YGOCommands.SpecialSummonCommand({
+                this.duel.execCommand(new YGOCommands.SpecialSummonCommand({
                     player,
                     id: card.id,
                     originZone,
@@ -90,7 +87,7 @@ export class YGOGameActions {
     public linkSummon({ card }: { card: Card }) {
 
         this.clearAction();
-        const ygo = this.duel.ygo;
+
         const player = this.duel.getActivePlayer();
         const cardIndex = this.duel.ygo.state.fields[card.originalOwner].extraDeck.findIndex((c) => c === card);
         const zones = getMonstersZones(this.duel, [card.originalOwner]).filter(zone => YGOGameUtils.isFaceUp(zone.getCardReference()!));
@@ -115,7 +112,7 @@ export class YGOGameActions {
                     selectionType: "zone",
                     onSelectionCompleted: (cardZone: any) => {
 
-                        ygo.exec(new YGOCommands.LinkSummonCommand({
+                        this.duel.execCommand(new YGOCommands.LinkSummonCommand({
                             player,
                             id: card.id,
                             materials,
@@ -133,7 +130,7 @@ export class YGOGameActions {
 
     public xyzSummon({ card, position = "faceup-attack" }: { card: Card, position?: CardPosition }) {
         this.clearAction();
-        const ygo = this.duel.ygo;
+
         const player = this.duel.getActivePlayer();
         const cardIndex = this.duel.ygo.state.fields[card.originalOwner].extraDeck.findIndex((c) => c === card);
         const zones = getMonstersZones(this.duel, [card.originalOwner]).filter(zone => YGOGameUtils.isFaceUp(zone.getCardReference()!));
@@ -157,7 +154,7 @@ export class YGOGameActions {
                     zones: zonesToSummon,
                     selectionType: "zone",
                     onSelectionCompleted: (cardZone: any) => {
-                        ygo.exec(new YGOCommands.XYZSummonCommand({
+                        this.duel.execCommand(new YGOCommands.XYZSummonCommand({
                             player,
                             id: card.id,
                             materials,
@@ -176,7 +173,7 @@ export class YGOGameActions {
 
     public xyzOverlaySummon({ card, position = "faceup-attack" }: { card: Card, position?: CardPosition }) {
         this.clearAction();
-        const ygo = this.duel.ygo;
+
         const player = this.duel.getActivePlayer();
         const cardIndex = this.duel.ygo.state.fields[card.originalOwner].extraDeck.findIndex((c) => c === card);
         const zones = getMonstersZones(this.duel, [card.originalOwner]).filter(zone => YGOGameUtils.isFaceUp(zone.getCardReference()!));
@@ -200,7 +197,7 @@ export class YGOGameActions {
                     zones: zonesToSummon,
                     selectionType: "zone",
                     onSelectionCompleted: (cardZone: any) => {
-                        ygo.exec(new YGOCommands.XYZOverlaySummonCommand({
+                        this.duel.execCommand(new YGOCommands.XYZOverlaySummonCommand({
                             player,
                             id: card.id,
                             materials,
@@ -221,7 +218,6 @@ export class YGOGameActions {
 
         this.clearAction();
 
-        const ygo = this.duel.ygo;
         const player = this.duel.getActivePlayer();
         const cardIndex = this.duel.ygo.state.fields[card.originalOwner].extraDeck.findIndex((c) => c === card);
         const zones = getMonstersZones(this.duel, [card.originalOwner]);
@@ -246,7 +242,7 @@ export class YGOGameActions {
                     selectionType: "zone",
                     onSelectionCompleted: (cardZone: any) => {
 
-                        ygo.exec(new YGOCommands.SynchroSummonCommand({
+                        this.duel.execCommand(new YGOCommands.SynchroSummonCommand({
                             player,
                             id: card.id,
                             materials,
@@ -264,7 +260,6 @@ export class YGOGameActions {
     }
 
     public fusionSummon({ card, position = "faceup-attack" }: { card: Card, position?: CardPosition }) {
-        const ygo = this.duel.ygo;
         const player = this.duel.getActivePlayer();
 
         this.duel.events.dispatch("toggle-ui-menu", {
@@ -294,7 +289,7 @@ export class YGOGameActions {
                         selectionType: "zone",
                         onSelectionCompleted: (cardZone: any) => {
 
-                            ygo.exec(new YGOCommands.FusionSummonCommand({
+                            this.duel.execCommand(new YGOCommands.FusionSummonCommand({
                                 player,
                                 id: card.id,
                                 materials,
@@ -314,7 +309,6 @@ export class YGOGameActions {
     public setCard({ card, originZone, zone, reveal = false, selectZone = true }: { card: Card, originZone: FieldZone, zone?: FieldZone, reveal?: boolean, selectZone?: boolean }) {
         this.clearAction();
 
-        const ygo = this.duel.ygo;
         const player = this.duel.getActivePlayer();
 
         if (selectZone) {
@@ -324,7 +318,7 @@ export class YGOGameActions {
                 zones,
                 selectionType: "zone",
                 onSelectionCompleted: (cardZone: any) => {
-                    ygo.exec(new YGOCommands.SetCardCommand({
+                    this.duel.execCommand(new YGOCommands.SetCardCommand({
                         player,
                         id: card.id,
                         originZone,
@@ -334,7 +328,7 @@ export class YGOGameActions {
                 }
             });
         } else {
-            ygo.exec(new YGOCommands.SetCardCommand({
+            this.duel.execCommand(new YGOCommands.SetCardCommand({
                 id: card.id,
                 player,
                 originZone,
@@ -347,9 +341,7 @@ export class YGOGameActions {
     public activateCard({ card, originZone, selectZone = false }: { card: Card, originZone: FieldZone, selectZone?: boolean }) {
         this.clearAction();
 
-        const ygo = this.duel.ygo;
         const player = this.duel.getActivePlayer();
-
 
         if (selectZone) {
             const zones = getCardZones(this.duel, [card.originalOwner], ["S"]);
@@ -358,7 +350,7 @@ export class YGOGameActions {
                 zones,
                 selectionType: "zone",
                 onSelectionCompleted: (cardZone: any) => {
-                    ygo.exec(new YGOCommands.ActivateCardCommand({
+                    this.duel.execCommand(new YGOCommands.ActivateCardCommand({
                         player,
                         id: card.id,
                         originZone,
@@ -367,7 +359,7 @@ export class YGOGameActions {
                 }
             });
         } else {
-            ygo.exec(new YGOCommands.ActivateCardCommand({
+            this.duel.execCommand(new YGOCommands.ActivateCardCommand({
                 player,
                 id: card.id,
                 zone: originZone
@@ -379,7 +371,7 @@ export class YGOGameActions {
 
         this.clearAction();
 
-        this.duel.ygo.exec(new YGOCommands.SendCardToGYCommand({
+        this.duel.execCommand(new YGOCommands.SendCardToGYCommand({
             player: this.duel.getActivePlayer(),
             id: card.id,
             originZone,
@@ -389,7 +381,7 @@ export class YGOGameActions {
     public revealCard({ card, originZone }: { card: Card, originZone: FieldZone }) {
         this.clearAction();
 
-        this.duel.ygo.exec(new YGOCommands.RevealCommand({
+        this.duel.execCommand(new YGOCommands.RevealCommand({
             player: this.duel.getActivePlayer(),
             id: card.id,
             originZone
@@ -397,7 +389,7 @@ export class YGOGameActions {
     }
 
     public banish({ card, originZone, position = "faceup" }: { card: Card, originZone: FieldZone, position?: "faceup" | "facedown" }) {
-        this.duel.ygo.exec(new YGOCommands.BanishCommand({
+        this.duel.execCommand(new YGOCommands.BanishCommand({
             player: this.duel.getActivePlayer(),
             id: card.id,
             originZone,
@@ -408,7 +400,6 @@ export class YGOGameActions {
     public toST({ card, originZone }: { card: Card, originZone: FieldZone }) {
         this.clearAction();
 
-        const ygo = this.duel.ygo;
         const player = this.duel.getActivePlayer();
         const zones = getCardZones(this.duel, [card.originalOwner], ["S"]);
 
@@ -416,7 +407,7 @@ export class YGOGameActions {
             zones,
             selectionType: "zone",
             onSelectionCompleted: (cardZone: any) => {
-                ygo.exec(new YGOCommands.ToSTCommand({
+                this.duel.execCommand(new YGOCommands.ToSTCommand({
                     player,
                     id: card.id,
                     originZone,
@@ -429,11 +420,10 @@ export class YGOGameActions {
     public fieldSpell({ card, originZone, position = "faceup" }: { card: Card, originZone: FieldZone, position?: "faceup" | "facedown" }) {
         this.clearAction();
 
-        const ygo = this.duel.ygo;
         const player = this.duel.getActivePlayer();
         const cardZone = this.duel.fields[card.originalOwner].fieldZone;
 
-        ygo.exec(new YGOCommands.FieldSpellCommand({
+        this.duel.execCommand(new YGOCommands.FieldSpellCommand({
             player,
             id: card.id,
             originZone,
@@ -447,11 +437,10 @@ export class YGOGameActions {
     public toHand({ card, originZone }: { card: Card, originZone: FieldZone }) {
         this.clearAction();
 
-        const ygo = this.duel.ygo;
         const player = this.duel.getActivePlayer();
 
         if (card.isMainDeckCard) {
-            ygo.exec(new YGOCommands.ToHandCommand({
+            this.duel.execCommand(new YGOCommands.ToHandCommand({
                 player,
                 id: card.id,
                 originZone
@@ -464,13 +453,12 @@ export class YGOGameActions {
 
     public toExtraDeck({ card, originZone }: { card: Card, originZone: FieldZone }) {
         this.clearAction();
-        const ygo = this.duel.ygo;
         const player = this.duel.getActivePlayer();
 
         if (card.isMainDeckCard) {
             this.toHand({ card, originZone });
         } else {
-            ygo.exec(new YGOCommands.ToExtraDeckCommand({
+            this.duel.execCommand(new YGOCommands.ToExtraDeckCommand({
                 player,
                 id: card.id,
                 originZone,
@@ -481,7 +469,6 @@ export class YGOGameActions {
     public moveCard({ card, originZone }: { card: Card, originZone: FieldZone }) {
         this.clearAction();
 
-        const ygo = this.duel.ygo;
         const player = this.duel.getActivePlayer();
         const zones = getCardZones(this.duel, [0, 1], ["M", "S"]).filter(c => c.zone !== originZone);
 
@@ -489,7 +476,7 @@ export class YGOGameActions {
             zones,
             selectionType: "zone",
             onSelectionCompleted: (cardZone: any) => {
-                ygo.exec(new YGOCommands.MoveCardCommand({
+                this.duel.execCommand(new YGOCommands.MoveCardCommand({
                     player,
                     id: card.id,
                     originZone,
@@ -500,9 +487,8 @@ export class YGOGameActions {
     }
 
     public toDeck({ card, originZone, shuffle = false, position = "top" }: { card: Card, originZone: FieldZone, position: "top" | "bottom" | undefined, shuffle?: boolean }) {
-        const ygo = this.duel.ygo;
         const player = this.duel.getActivePlayer();
-        ygo.exec(new YGOCommands.ToDeckCommand({
+        this.duel.execCommand(new YGOCommands.ToDeckCommand({
             player,
             id: card.id,
             originZone,
@@ -513,9 +499,8 @@ export class YGOGameActions {
 
 
     public flip({ card, originZone }: { card: Card, originZone: FieldZone }) {
-        const ygo = this.duel.ygo;
         const player = this.duel.getActivePlayer();
-        ygo.exec(new YGOCommands.FlipCommand({
+        this.duel.execCommand(new YGOCommands.FlipCommand({
             player,
             id: card.id,
             originZone,
@@ -523,10 +508,9 @@ export class YGOGameActions {
     }
 
     public changeBattlePosition({ card, originZone, position }: { card: Card, originZone: FieldZone, position: CardPosition }) {
-        const ygo = this.duel.ygo;
         const player = this.duel.getActivePlayer();
 
-        ygo.exec(new YGOCommands.ChangeCardPositionCommand({
+        this.duel.execCommand(new YGOCommands.ChangeCardPositionCommand({
             player,
             id: card.id,
             originZone,
@@ -535,16 +519,15 @@ export class YGOGameActions {
     }
 
     public drawFromDeck({ player }: { player: number }) {
-        this.duel.ygo.exec(new YGOCommands.DrawFromDeckCommand({ player }));
+        this.duel.execCommand(new YGOCommands.DrawFromDeckCommand({ player }));
     }
 
     public milFromDeck({ player, numberOfCards = 1 }: { player: number, numberOfCards?: number }) {
-        this.duel.ygo.exec(new YGOCommands.MillFromDeckCommand({ player, numberOfCards }));
+        this.duel.execCommand(new YGOCommands.MillFromDeckCommand({ player, numberOfCards }));
     }
 
     public attachMaterial({ card, originZone }: { card: Card, originZone: FieldZone }) {
         this.clearAction();
-        const ygo = this.duel.ygo;
         const player = this.duel.getActivePlayer();
         const xyzZones = getXyzMonstersZones(this.duel, [0, 1]);
 
@@ -554,7 +537,7 @@ export class YGOGameActions {
             zones: xyzZones,
             selectionType: "zone",
             onSelectionCompleted: (cardZone: any) => {
-                ygo.exec(new YGOCommands.XYZAttachMaterialCommand({
+                this.duel.execCommand(new YGOCommands.XYZAttachMaterialCommand({
                     player,
                     id: card.id,
                     originZone,
@@ -566,10 +549,9 @@ export class YGOGameActions {
 
     public detachMaterial({ card, originZone, materialIndex }: { card: Card, originZone: FieldZone, materialIndex: number }) {
         this.clearAction();
-        const ygo = this.duel.ygo;
         const player = this.duel.getActivePlayer();
 
-        ygo.exec(new YGOCommands.XYZDetachMaterialCommand({
+        this.duel.execCommand(new YGOCommands.XYZDetachMaterialCommand({
             player,
             id: card.id,
             originZone,
@@ -580,10 +562,9 @@ export class YGOGameActions {
     public destroyCard({ card, originZone }: { card: Card, originZone: FieldZone }) {
         this.clearAction();
 
-        const ygo = this.duel.ygo;
         const player = this.duel.getActivePlayer();
 
-        ygo.exec(new YGOCommands.DestroyCardCommand({
+        this.duel.execCommand(new YGOCommands.DestroyCardCommand({
             player,
             id: card.id,
             originZone
@@ -593,10 +574,9 @@ export class YGOGameActions {
     public targetCard({ card, originZone }: { card: Card, originZone: FieldZone }) {
         this.clearAction();
 
-        const ygo = this.duel.ygo;
         const player = this.duel.getActivePlayer();
 
-        ygo.exec(new YGOCommands.TargetCommand({
+        this.duel.execCommand(new YGOCommands.TargetCommand({
             player,
             id: card.id,
             originZone

@@ -325,6 +325,10 @@ export class PeerToPeer extends EventEmitter {
   // Sends a message to a topic
   public async messageTopic(topic: string, message: string) {
     console.log("P2P: Message topic:", topic, message);
-    await this.libp2p.services.pubsub.publish(topic, fromString(message));
+    try {
+      await this.libp2p.services.pubsub.publish(topic, fromString(message));
+    } catch (error) {
+      console.log("TODO @ILR é aqui que rebenta o server");
+    }
   }
 }

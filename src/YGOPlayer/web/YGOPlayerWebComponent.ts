@@ -40,8 +40,12 @@ export class YGOPlayerComponent extends HTMLElement {
     private bind(duel: YGODuel) {
         this.duel = duel;
 
-        this.duel.ygo.events.on("command-created", data => this.dispatch("command-created", data));
-        this.duel.ygo.events.on("command-executed", data => this.dispatch("command-executed", data));
+        this.duel.ygo.events.on("command-created", data => {
+            this.dispatch("command-created", data)
+        });
+        this.duel.ygo.events.on("command-executed", data => {
+            this.dispatch("command-executed", data)
+        });
 
         this.events.dispatch("init", { instance: this, duel });
     }
