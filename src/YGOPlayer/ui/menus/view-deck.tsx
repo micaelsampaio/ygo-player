@@ -45,8 +45,8 @@ export function ViewDeckPopup({ duel, deck, visible = true }: { deck: Deck, duel
             if (!showCard) return false;
 
             return card.name.toLowerCase().includes(search);
-        })
-    }, [search, cards, typesOfCards]);
+        }).reverse();
+    }, [search, cards, cards.length, typesOfCards]);
 
     return <div className="game-popup" onMouseMove={(e) => {
         e.preventDefault();
