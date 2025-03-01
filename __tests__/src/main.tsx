@@ -1,5 +1,5 @@
 import { createRoot } from "react-dom/client";
-import { BrowserRouter, Route, Routes } from "react-router";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
 import "./index.css";
 import "../../dist";
 import App from "./App.tsx";
@@ -13,6 +13,8 @@ createRoot(document.getElementById("root")!).render(
       <Routes>
         <Route path="/" element={<App />} />
         <Route path="/duel" element={<Duel />} />
+        <Route path="/duel/:roomId" element={<Duel />} />
+
         <Route path="/deck" element={<DownloadDeck />} />
       </Routes>
     </BrowserRouter>

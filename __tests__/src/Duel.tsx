@@ -1,37 +1,48 @@
-
-import { useEffect } from 'react'
-import { YGOPlayerComponent, YGODuel } from '../../dist';
-
-//import { YGODuel, JSONCommand } from '../../dist';
+import { useEffect, useState } from "react";
+import { YGOPlayerComponent, YGODuel } from "../../dist";
+import { useLocation,useParams } from "react-router-dom";
+import { useKaibaNet } from "./useKaibaNet";
 
 export default function Duel() {
+  const [duelData, setDuelData] = useState<any>(null);
+  const [roomId, setRoomId] = useState<string>("");
+  const [isLoading, setIsLoading] = useState(true);
+  const kaibaNet = useKaibaNet();
+  const location = useLocation();
+  const { roomId: urlRoomId } = useParams();
 
+  // Initialize duel data and room ID
   useEffect(() => {
-    let duel!: typeof YGODuel;
-    const duelData = JSON.parse(window.localStorage.getItem("duel-data")!);
+    const newDuelData =
+      location.state?.duelDataProp ||
+      JSON.parse(localStorage.getItem("duel-data") || "null");
+    const newRoomId = location.state?.roomIdProp || urlRoomId || "";
 
-    const ygo = document.querySelector("ygo-player") as typeof YGOPlayerComponent;
+    if (newDuelData) {
+      setDuelData(newDuelData);
+      setIsLoading(false);
+    }
+    if (newRoomId) {
+      console.log("newRoomId:", newRoomId);
+      setRoomId(newRoomId);
 
-    // ygo.on("init", ({ duel }) => console.log("duel"));
-    // ygo.on("start", ({ duel }) => console.log("duel"));
-    // ygo.on("command-executed", ({ command }) => console.log("---- UI NEW COMMAND CREATED ----", command, command.toJSON()));
-    // ygo.on("command-executed", ({ command }) => console.log("---- UI NEW COMMAND EXECUTED ----", command, command.toJSON()));
+      // If we came from URL parameter and don't have data, join the room
+      if (urlRoomId && !location.state?.duelDataProp) {
+        kaibaNet.joinRoom(newRoomId);
+      }
+    }
+  }, [location, urlRoomId, kaibaNet]);
 
-    // duel.ygo.
-    // kaibaCenas.on('init', (config)=> {
-    //   ygo.editor(config);
-    // })
+  // Setup YGO player after duel data is available
+  useEffect(() => {
+    if (!duelData) return;
+    console.log("Duel: Setting up YGO player with data:", duelData);
 
-    // kaibaCenas.on('new-command', ()=> {
-    //   if(duel.ygo) duel.ygo.exec(new JSONCommand(cmd.type, cmd.data));
-    // })
-
-
-    // GET STATE
-
-    /// duel.ygo.getcurrentStateProps();
-
-    console.log("YGO player2", ygo.editor);
+    const ygo = document.querySelector(
+      "ygo-player"
+    ) as typeof YGOPlayerComponent;
+    console.log("duelData", duelData);
+    console.log("roomId", roomId);
 
     if (duelData.replay) {
       const config: any = {
@@ -46,25 +57,62 @@ export default function Duel() {
         players: duelData.players,
         cdnUrl: String(import.meta.env.VITE_YGO_CDN_URL),
         commands: duelData.commands,
-        options: duelData.options
+        options: duelData.options || {},
       };
-
-      if (!config.options) config.options = {};
-
-      // config.options.fieldState = [
-      //   { id: 10802915, zone: "M-1" },
-      //   { id: 51473858, zone: "M-2" },
-      //   { id: 27868563, zone: "M-3" },
-      //   { id: 90448279, zone: "M-4" },
-      //   { id: 80993256, zone: "EMZ-1", position: "faceup-attack" },
-      //   { id: 79559912, zone: "M2-2" }
-      // ];
 
       ygo.editor(config);
     }
+  }, [duelData]);
 
+  // Handle game state refresh events
+  useEffect(() => {
+    if (!roomId) {
+      console.log("No roomId yet, skipping game state refresh listener setup");
+      return;
+    }
 
-  }, [])
+    console.log("Setting up game state refresh listener. RoomId:", roomId);
+
+    const handleGameStateRefresh = (gameState: any) => {
+      console.log("Duel: Received game state refresh:", gameState);
+      setDuelData((prevData) => {
+        console.log("Duel: Updating duel data", { prevData, gameState });
+        return {
+          ...prevData,
+          ...gameState,
+        };
+      });
+      setIsLoading(false);
+    };
+
+    // Add this log to verify the event is being subscribed
+    console.log("Subscribing to duel:refresh:state: event");
+    kaibaNet.on("duel:refresh:state:", handleGameStateRefresh);
+
+    return () => {
+      console.log("Cleaning up game state refresh listener");
+      kaibaNet.off("duel:refresh:state:", handleGameStateRefresh);
+    };
+  }, [roomId, kaibaNet]);
+
+  // Handle player join events
+  useEffect(() => {
+    if (!duelData || !roomId) return;
+
+    const handlePlayerJoin = (playerJoinedId: string) => {
+      console.log("Player joined:", playerJoinedId);
+      if (kaibaNet.getPlayerId() === roomId) {
+        console.log("Duel data:", duelData);
+        kaibaNet.refreshGameState(roomId, duelData);
+      }
+    };
+
+    kaibaNet.on("duel:player:join:", handlePlayerJoin);
+
+    return () => {
+      kaibaNet.off("duel:player:join:", handlePlayerJoin);
+    };
+  }, [duelData, roomId, kaibaNet]);
 
   const saveReplay = () => {
     const duel = (window as any).YGODuel;
@@ -72,21 +120,60 @@ export default function Duel() {
     const duelData = JSON.parse(window.localStorage.getItem("duel-data")!);
     const replay = duel.ygo.getReplayData();
 
-    const replayName = prompt("Give name to the replay", "")!.replace(/[^a-zA-Z ]/g, '').replace(/ /g, '-') as string;
+    const replayName = prompt("Give name to the replay", "")!
+      .replace(/[^a-zA-Z ]/g, "")
+      .replace(/ /g, "-") as string;
     const replayData = {
       players: duelData.players,
-      replay
-    }
+      replay,
+    };
 
-    window.localStorage.setItem(`replay_${replayName}_${Date.now()}`, JSON.stringify(replayData));
-  }
+    window.localStorage.setItem(
+      `replay_${replayName}_${Date.now()}`,
+      JSON.stringify(replayData)
+    );
+  };
 
   return (
-    <div style={{ width: "100%", height: "100%", overflow: "hidden", position: "relative" }}>
-      <div style={{ position: 'fixed', top: '10px', right: '10px', zIndex: 9999 }}><button onClick={saveReplay}>Save Replay</button></div>
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        overflow: "hidden",
+        position: "relative",
+      }}
+    >
+      {/* Only render YGO player when we have data */}
+      {duelData && (
+        /* @ts-ignore */
+        <ygo-player />
+      )}
 
-      {/* @ts-ignore */}
-      <ygo-player />
+      {/* Show loading state when no data */}
+      {isLoading && !duelData && (
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            backgroundColor: "rgba(0, 0, 0, 0.5)", // semi-transparent overlay
+            zIndex: 1000,
+          }}
+        >
+          <div>Waiting for duel data...</div>
+        </div>
+      )}
+
+      <div
+        style={{ position: "fixed", top: "10px", right: "10px", zIndex: 9999 }}
+      >
+        <button onClick={saveReplay}>Save Replay</button>
+      </div>
     </div>
-  )
+  );
 }

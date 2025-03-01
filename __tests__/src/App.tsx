@@ -1,7 +1,6 @@
-import { Link } from "react-router";
 import YUBEL from "./decks/YUBEL_FS.json";
 import CHIMERA from "./decks/CHIMERA.json";
-import { useNavigate } from "react-router";
+import { useNavigate, Link } from "react-router-dom";
 import RoomLobby from "./RoomLobby";
 import { useKaibaNet } from "./useKaibaNet";
 import { memo, useEffect, useState } from "react";
@@ -71,7 +70,12 @@ export default function App() {
     localStorage.setItem("duel-data", JSON.stringify(roomJson));
     setRoomDecks(roomJson);
     kaibaNet.createRoom();
-    navigate("/duel");
+
+    // duel owner starts the room and enters the duel
+    const roomId=kaibaNet.getPlayerId()?kaibaNet.getPlayerId():""
+    navigate(`/duel/${roomId}`, {
+      state: { roomIdProp: roomId, duelDataProp: roomJson },
+    });
   };
 
   const duelAs = (e: any, deck1: any, deck2: any) => {
@@ -90,7 +94,7 @@ export default function App() {
   const handleRoomJoin = async (roomId: any) => {
     console.log("App:handleRoomJoin:roomDecks", roomDecks);
     await kaibaNet.joinRoom(roomId);
-    //navigate("/duel");
+    navigate(`/duel/${roomId}`, { state: { roomIdProp: roomId } });
   };
 
   const deleteDeck = (deckId: string) => {
