@@ -28,6 +28,7 @@ export interface YGOPropsOptions {
     fieldState?: FileldStateEntry[];
     startCommand?: number;
     execCommands?: boolean;
+    currentGameTime?: number;
 }
 export interface YGOPropsPlayer {
     name: string;

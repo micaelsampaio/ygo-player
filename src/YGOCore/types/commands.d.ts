@@ -5,6 +5,7 @@ export interface Command {
     type: CommandType;
     parent: Command | null;
     commandId: number;
+    timestamp: number;
     init(ygo: YGOCore): void;
     isValid(): boolean;
     exec(): void;

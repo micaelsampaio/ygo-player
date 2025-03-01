@@ -95,7 +95,7 @@ export class Banish extends YGOEntity implements YGOUiElement {
             new ScaleTransition({
                 gameObject: card,
                 scale: new THREE.Vector3(0.2, 0.2, 0.2),
-                duration: 0.3
+                duration: 0.15
             }),
             new CallbackTransition(() => {
                 card.remove(cardEffect);

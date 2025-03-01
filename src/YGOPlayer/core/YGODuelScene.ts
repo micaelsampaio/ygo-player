@@ -23,19 +23,6 @@ export class YGODuelScene {
 
         gameField.position.set(0, 0, 0);
 
-        // gameField.children.forEach((child: any) => {
-        //     // if (child.isMesh) {
-        //     //     const material = new THREE.MeshStandardMaterial({
-        //     //         color: new THREE.Color(0xCCCCCC),
-        //     //         shadowSide: THREE.FrontSide,
-        //     //     });
-
-        //     //     child.material = material;
-        //     //     child.castShadow = true;
-        //     //     child.receiveShadow = true;
-        //     // }
-        // });
-
         gameField.rotateX(THREE.MathUtils.degToRad(90));
 
         const clonedGameField = gameField.clone();

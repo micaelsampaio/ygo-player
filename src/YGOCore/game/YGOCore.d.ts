@@ -4,7 +4,6 @@ import { EventBus } from "../utils/event-bus";
 import { YGODuelLog } from "./YGODuelLog";
 import { YGOGameState } from "./YGOGameState";
 export declare class YGOCore {
-    private commandId;
     currentPlayer: number;
     phase: YGOPhase;
     props: YGOProps;
@@ -13,6 +12,8 @@ export declare class YGOCore {
     commandIndex: number;
     duelLog: YGODuelLog;
     events: EventBus<YGOCoreEvents>;
+    private startDuelTime;
+    private duelTimeOffset;
     constructor(props: YGOProps);
     start(): void;
     setCurrentPlayer(player: number): void;
@@ -24,6 +25,7 @@ export declare class YGOCore {
     hasNextCommand(): boolean;
     hasPrevCommand(): boolean;
     getNextCommandId(): number;
+    getCurrentTime(): number;
     getReplayData(): import("../types/types").YGOReplayData;
     getField(player: number): PlayerField;
     private createYGOCommands;

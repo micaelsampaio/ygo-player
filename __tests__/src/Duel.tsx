@@ -38,9 +38,7 @@ export default function Duel() {
     if (!duelData) return;
     console.log("Duel: Setting up YGO player with data:", duelData);
 
-    const ygo = document.querySelector(
-      "ygo-player"
-    ) as typeof YGOPlayerComponent;
+    const ygo = document.querySelector("ygo-player")! as YGOPlayerComponent;
     console.log("duelData", duelData);
     console.log("roomId", roomId);
 
@@ -75,7 +73,7 @@ export default function Duel() {
 
     const handleGameStateRefresh = (gameState: any) => {
       console.log("Duel: Received game state refresh:", gameState);
-      setDuelData((prevData) => {
+      setDuelData((prevData: any) => {
         console.log("Duel: Updating duel data", { prevData, gameState });
         return {
           ...prevData,

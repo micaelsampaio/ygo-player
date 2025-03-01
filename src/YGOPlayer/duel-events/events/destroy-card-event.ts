@@ -26,14 +26,11 @@ export class DestroyCardEventHandler extends YGOCommandHandler {
 
     public start(): void {
         const { event, duel } = this.props;
-        console.log("-------- DESTROY EVENT ------------")
-        console.log(event);
 
         const sequence = new YGOTaskSequence();
         const originZoneData = YGOGameUtils.getZoneData(event.originZone)!;
         const cardZone = getGameZone(duel, originZoneData);
 
-        console.log(cardZone);
 
         let card = cardZone?.getGameCard();
         let gy!: Graveyard;
@@ -53,6 +50,7 @@ export class DestroyCardEventHandler extends YGOCommandHandler {
             gy = duel.fields[originZoneData.player].graveyard;
         }
 
+        card.hideCardStats();
         card.gameObject.visible = false;
 
         startPosition.z += 0.05;

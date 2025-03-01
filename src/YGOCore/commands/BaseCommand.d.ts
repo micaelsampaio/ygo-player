@@ -4,6 +4,7 @@ export declare abstract class BaseCommand implements Command {
     protected YGO: YGOCore;
     type: CommandType;
     baseType: string;
+    timestamp: number;
     commandId: number;
     parent: Command | null;
     constructor();

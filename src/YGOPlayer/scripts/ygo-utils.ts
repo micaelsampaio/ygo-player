@@ -370,14 +370,15 @@ function parseFieldZoneChildren(child: THREE.Mesh, player: number, zones: any) {
         const position = child.getWorldPosition(new THREE.Vector3());
         position.z += 0.05;
 
-        child.visible = true;
+        // PUT THIS TRUE IF YOU WANT TO SEE THE MODELS
+        child.visible = false;
 
-        child.material = new THREE.MeshBasicMaterial({
-            color: 0x0000ff,
-            transparent: true,
-            opacity: 0.2,
-            side: THREE.DoubleSide // Make the material double-sided
-        });
+        // child.material = new THREE.MeshBasicMaterial({
+        //     color: 0x0000ff,
+        //     transparent: true,
+        //     opacity: 0.2,
+        //     side: THREE.DoubleSide // Make the material double-sided
+        // });
 
         const zoneData = YGOGameUtils.getZoneData(child.name as any);
         console.log(child.name, zoneData);
