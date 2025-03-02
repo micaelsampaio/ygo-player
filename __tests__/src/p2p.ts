@@ -17,6 +17,7 @@ import { Pushable, pushable } from "it-pushable";
 import { gossipsub } from "@chainsafe/libp2p-gossipsub";
 import { pubsubPeerDiscovery } from "@libp2p/pubsub-peer-discovery";
 import { toString as uint8ArrayToString } from "uint8arrays/to-string";
+import { peerIdFromString } from '@libp2p/peer-id';
 
 import EventEmitter from "events";
 
@@ -35,17 +36,18 @@ export class PeerToPeer extends EventEmitter {
     this.bootstrapNode = bootstrapNode;
     this.discoveryTopic = discoveryTopic;
     this.streams = new Map();
+    this.setupDebugLogs();
+  }
 
-    // all libp2p debug logs
+  private setupDebugLogs() {
     localStorage.setItem("debug", "libp2p:*");
-    // networking debug logs
     localStorage.setItem(
       "debug",
       "libp2p:websockets,libp2p:webtransport,libp2p:kad-dht,libp2p:dialer"
     );
   }
-  // Intanciates the libp2p node
-  async startP2P() {
+
+  public async startP2P() {
     console.log("P2P: Bootstrap Node:", this.bootstrapNode);
     this.libp2p = await createLibp2p({
       addresses: {
@@ -61,9 +63,7 @@ export class PeerToPeer extends EventEmitter {
       ],
       peerDiscovery: [
         pubsubPeerDiscovery({
-          // Every 10 seconds publish our multiaddrs
           interval: 5000,
-          // The topic that the relay is also subscribed to
           topics: [this.discoveryTopic],
         }),
         bootstrap({
@@ -83,23 +83,48 @@ export class PeerToPeer extends EventEmitter {
       },
     });
 
-    // Set up protocol handler immediately after creating libp2p instance
     await this.setupProtocolHandler();
-
     await this.libp2p.start();
+    
     this.peerId = this.libp2p.peerId.toString();
     console.log("P2P: libp2p started! Peer ID:", this.peerId);
-
     console.log(
       "P2P: Initial multiaddrs:",
       this.libp2p.getMultiaddrs().map((ma) => ma.toString())
     );
 
+    this.setupEventListeners();
+  }
+
+  private async setupProtocolHandler() {
+    console.log("P2P: Setting up protocol handler");
+    if (!this.libp2p) throw new Error("Libp2p instance not initialized");
+
+    await this.libp2p.handle(this.PROTOCOL, ({ connection, stream }) => {
+      const peerId = connection.remotePeer.toString();
+      console.log(`Setting up protocol handler for peer: ${peerId}`);
+
+      pipe(
+        stream.source,
+        async function* (source) {
+          for await (const msg of source) {
+            const decodedMsg = toString(msg.subarray());
+            console.log(`Received from ${peerId}:`, decodedMsg);
+            yield msg;
+          }
+        },
+        stream.sink
+      ).catch((err) => {
+        console.error(`Stream error with ${peerId}:`, err);
+      });
+    });
+  }
+
+  private setupEventListeners() {
     this.libp2p.addEventListener("peer:discovery", (evt) => {
       const peerId = evt.detail.id.toString();
       const addrs = evt.detail.multiaddrs.map((ma) => ma.toString());
       console.log("P2P: Peer Discovery:", peerId, addrs);
-      // Emit the event for the React component
       this.emit("peer:discovery", {
         peerId,
         addresses: addrs,
@@ -130,13 +155,9 @@ export class PeerToPeer extends EventEmitter {
       console.error("Libp2p error:", evt);
     });
 
-    // Event listener for topic messages
-    this.libp2p.services.pubsub.addEventListener(
-      "subscription-change",
-      (data) => {
-        console.log("P2p: Subscription Change", data);
-      }
-    );
+    this.libp2p.services.pubsub.addEventListener("subscription-change", (data) => {
+      console.log("P2p: Subscription Change", data);
+    });
 
     this.libp2p.services.pubsub.addEventListener("message", (message) => {
       const messageStr = new TextDecoder().decode(message.detail.data);
@@ -147,96 +168,156 @@ export class PeerToPeer extends EventEmitter {
         this.emit("remove:peer", { peerId });
       }
     });
-    return this.libp2p;
   }
 
-  // Gets the instantiated node peerID
-  public getPeerId() {
-    return this.peerId;
-  }
-
-  // Gets the instantiated node multiaddrs
-  public getMultiaddrs() {
-    return this.ma;
-  }
-
-  public getDiscoveryTopic() {
-    return this.discoveryTopic;
-  }
-
-  // Opens connection to a peer using the destination peer's multiaddress
-  // In the future this should be done using the peer's peerID and try to connect to all multiaddresses
-  async connectToPeer(ma: string) {
+  private async tryAddress(ma: string) {
     console.log("P2P: Connecting to peer:", ma);
     if (!this.libp2p) throw new Error("Libp2p instance not initialized");
 
     const castedMultiAddress = multiaddr(ma);
-    const signal = AbortSignal.timeout(10000); // 10 seconds timeout
+    const signal = AbortSignal.timeout(10000);
 
     try {
-      await this.libp2p.dial(castedMultiAddress, { signal });
-      console.log(`Connected to '${castedMultiAddress}'`);
+        await this.libp2p.dial(castedMultiAddress, { signal });
+        console.log(`Connected to '${castedMultiAddress}'`);
 
-      const peerId = castedMultiAddress.getPeerId();
-      const connections = this.libp2p.getConnections(peerId);
+        const peerId = castedMultiAddress.getPeerId();
+        const connections = this.libp2p.getConnections(peerId);
 
-      if (!connections.length) {
-        console.warn(`Dialed peer '${peerId}', but no active connection.`);
-        return;
-      }
-
-      if (this.libp2p.services.ping) {
-        try {
-          const rtt = await this.libp2p.services.ping.ping(castedMultiAddress, {
-            signal,
-          });
-          console.log(`RTT to ${peerId} was ${rtt}ms`);
-        } catch (pingErr) {
-          console.warn(
-            `Ping failed, but connection is established: ${pingErr.message}`
-          );
+        if (!connections.length) {
+            console.warn(`Dialed peer '${peerId}', but no active connection.`);
+            throw new Error("No active connection after dial");
         }
-      } else {
-        console.warn("Ping service is not available.");
-      }
+
+        if (this.libp2p.services.ping) {
+            try {
+                const rtt = await this.libp2p.services.ping.ping(castedMultiAddress, {
+                    signal,
+                });
+                console.log(`RTT to ${peerId} was ${rtt}ms`);
+                return true; // Successfully connected and pinged
+            } catch (pingErr) {
+                console.warn(`Ping failed, but connection is established: ${pingErr.message}`);
+                return true; // Connection established even though ping failed
+            }
+        }
+        return true; // Connection successful even without ping service
     } catch (err) {
-      if (signal.aborted) {
-        console.log(`Timed out connecting to '${castedMultiAddress}'`);
-      } else {
-        console.log(
-          `Connecting to '${castedMultiAddress}' failed - ${err.message}`
-        );
-      }
-      throw err;
+        if (signal.aborted) {
+            console.log(`Timed out connecting to '${castedMultiAddress}'`);
+        } else {
+            console.log(`Connecting to '${castedMultiAddress}' failed - ${err.message}`);
+        }
+        throw err;
     }
   }
 
-  // Sets up the message protocol for peers communcation
-  private async setupProtocolHandler() {
-    console.log("P2P: Setting up protocol handler");
+  private async connectToPeerById(peerId: string): Promise<boolean> {
+    console.log("P2P: Attempting to connect to peer by ID:", peerId);
     if (!this.libp2p) throw new Error("Libp2p instance not initialized");
 
-    await this.libp2p.handle(this.PROTOCOL, ({ connection, stream }) => {
-      const peerId = connection.remotePeer.toString();
-      console.log(`Setting up protocol handler for peer: ${peerId}`);
+    try {
+        let peerInfo;
+        try {
+            const validPeerId = peerIdFromString(peerId);
+            console.log("Valid PeerId created:", validPeerId.toString());
+            
+            const peers = await this.libp2p.peerStore.all();
+            const peerExists = peers.some(p => p.id.toString() === validPeerId.toString());
+            
+            if (!peerExists) {
+                console.log(`Peer ${peerId} not found in peer store`);
+                return false;
+            }
 
-      pipe(
-        stream.source,
-        async function* (source) {
-          for await (const msg of source) {
-            const decodedMsg = toString(msg.subarray());
-            console.log(`Received from ${peerId}:`, decodedMsg);
-            yield msg;
-          }
-        },
-        stream.sink
-      ).catch((err) => {
-        console.error(`Stream error with ${peerId}:`, err);
-      });
-    });
+            peerInfo = await this.libp2p.peerStore.get(validPeerId);
+            
+            if (!peerInfo || !peerInfo.addresses || peerInfo.addresses.length === 0) {
+                console.log(`No known addresses for peer ${peerId}`);
+                return false;
+            }
+
+            // Modify addresses to include target peer ID for circuit addresses
+            const addresses = peerInfo.addresses.map(addr => {
+                const addrStr = addr.multiaddr.toString();
+                if (addrStr.includes('/p2p-circuit')) {
+                    // Only append peer ID if it's not already there
+                    if (!addrStr.endsWith(peerId)) {
+                        return `${addrStr}/p2p/${peerId}`;
+                    }
+                }
+                return addrStr;
+            });
+
+            console.log("Attempting to connect with addresses:", addresses);
+            return await this.tryAddresses(addresses);
+        } catch (peerIdErr) {
+            console.log(`Invalid PeerId format: ${peerId}`, peerIdErr);
+            return false;
+        }
+    } catch (err) {
+        console.error(`Unexpected error connecting to peer ${peerId}:`, err);
+        return false;
+    }
   }
 
-  // Sends a message to a peer using the destination peer's multiaddress
+  private async tryAddresses(addresses: string[]): Promise<boolean> {
+    console.log("P2P: Trying multiple addresses:", addresses);
+    
+    for (const addr of addresses) {
+      try {
+        const connected = await this.tryAddress(addr);
+        if (connected) {
+          console.log(`Successfully connected to ${addr}`);
+          return true;
+        }
+      } catch (err) {
+        console.log(`Failed to connect to ${addr}:`, err.message);
+        continue;
+      }
+    }
+    
+    console.log("Failed to connect to any address");
+    return false;
+  }
+
+  public async connectToPeerWithFallback(peerId: string, addresses: string[]): Promise<boolean> {
+    console.log("P2P: Attempting to connect to peer", peerId, "with fallback addresses:", addresses);
+
+    try {
+      // Check if already connected first
+      if (await this.isPeerConnected(peerId)) {
+        console.log(`Already connected to peer ${peerId}, skipping connection attempt`);
+        return true;
+      }
+
+      const connectedById = await this.connectToPeerById(peerId);
+      if (connectedById) {
+        console.log(`Successfully connected to peer ${peerId} using PeerID`);
+        return true;
+      }
+
+      console.log(`Failed to connect using PeerID ${peerId}, trying provided addresses`);
+      const connectedByAddr = await this.tryAddresses(addresses);
+      if (connectedByAddr) {
+        console.log(`Successfully connected to peer ${peerId} using provided addresses`);
+        return true;
+      }
+
+      console.log(`Failed to connect to peer ${peerId} using any method`);
+      return false;
+    } catch (err) {
+      console.error(`Error connecting to peer ${peerId}:`, err);
+      return false;
+    }
+  }
+
+  private async isPeerConnected(peerId: string): Promise<boolean> {
+    if (!this.libp2p) throw new Error("Libp2p instance not initialized");
+    const connections = this.libp2p.getConnections(peerId);
+    return connections.length > 0;
+  }
+
   public async sendMsgToPeer(peerMultiaddr: string, msg: string) {
     console.log("P2P: Sending message to peer:", peerMultiaddr, msg);
     if (!this.libp2p) throw new Error("Libp2p instance not initialized");
@@ -252,11 +333,9 @@ export class PeerToPeer extends EventEmitter {
       if (!stream) {
         console.log("Creating new stream for peer");
 
-        // **Debugging: Check if dialProtocol works**
         const connection = await this.libp2p.dial(targetPeer);
         console.log(`Connected to ${targetPeer.toString()}, opening stream...`);
 
-        // **Try opening a stream**
         const newStream = await connection.newStream(this.PROTOCOL);
 
         if (!newStream) {
@@ -283,22 +362,20 @@ export class PeerToPeer extends EventEmitter {
     }
   }
 
-  // Closes the message stream to a peer
-  async closeConnection(peerMultiaddr: string) {
+  private async closeConnection(peerMultiaddr: string) {
     const stream = this.streams.get(peerMultiaddr);
     if (stream) {
       stream.end();
       this.streams.delete(peerMultiaddr);
     }
   }
-  // Subscribes to a topic
+
   public async subscribeTopic(topic: string) {
     console.log("P2P: Attempting to subscribe to topic:", topic);
     try {
       await this.libp2p.services.pubsub.subscribe(topic);
       console.log(`P2P: Successfully subscribed to topic: ${topic}`);
 
-      // Log current topics to verify subscription
       const currentTopics = await this.libp2p.services.pubsub.getTopics();
       console.log("P2P: Current topics:", currentTopics);
 
@@ -322,20 +399,45 @@ export class PeerToPeer extends EventEmitter {
     }
   }
 
-  // Sends a message to a topic
   public async messageTopic(topic: string, message: string) {
     console.log("P2P: Message topic:", topic, message);
     try {
-        // Check if there are subscribers before publishing
-        const subscribers = await this.libp2p.services.pubsub.getSubscribers(topic);
-        if (!subscribers || subscribers.length === 0) {
-            console.log("P2P: No subscribers found for topic:", topic);
-            return;
-        }
+      const subscribers = await this.libp2p.services.pubsub.getSubscribers(topic);
+      if (!subscribers || subscribers.length === 0) {
+        console.log("P2P: No subscribers found for topic:", topic);
+        return;
+      }
 
-        await this.libp2p.services.pubsub.publish(topic, fromString(message));
+      await this.libp2p.services.pubsub.publish(topic, fromString(message));
     } catch (error) {
-        console.log("P2P: Error publishing message:", error);
+      console.log("P2P: Error publishing message:", error);
+    }
+  }
+
+  public getPeerId() {
+    return this.peerId;
+  }
+
+  public getMultiaddrs() {
+    return this.ma;
+  }
+
+  public getDiscoveryTopic() {
+    return this.discoveryTopic;
+  }
+
+  async getPeerAddresses(peerId: string): Promise<string[]> {
+    if (!this.libp2p) throw new Error("Libp2p instance not initialized");
+
+    try {
+      const peerInfo = await this.libp2p.peerStore.get(peerId);
+      if (!peerInfo || !peerInfo.addresses) {
+        return [];
+      }
+      return peerInfo.addresses.map((addr) => addr.multiaddr.toString());
+    } catch (err) {
+      console.error(`Failed to get addresses for peer ${peerId}:`, err);
+      return [];
     }
   }
 }
