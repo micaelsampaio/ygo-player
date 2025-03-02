@@ -10,6 +10,7 @@ import { ScaleTransition } from '../duel-events/utils/scale-transition';
 import { MaterialOpacityTransition } from '../duel-events/utils/material-opacity';
 import { MultipleTasks } from '../duel-events/utils/multiple-tasks';
 import { YGOTaskSequence } from '../core/components/tasks/YGOTaskSequence';
+import { getCardRotation } from '../scripts/ygo-utils';
 
 export class Banish extends YGOEntity implements YGOUiElement {
 
@@ -97,6 +98,49 @@ export class Banish extends YGOEntity implements YGOUiElement {
                 scale: new THREE.Vector3(0.2, 0.2, 0.2),
                 duration: 0.15
             }),
+            new CallbackTransition(() => {
+                card.remove(cardEffect);
+            })
+        )
+    }
+    createMoveFromBanishCardEffect({ card, sequence }: { card: THREE.Object3D, sequence: YGOTaskSequence }) {
+        const cardEffect = CardEmptyMesh({
+            transparent: true,
+            color: 0xFFFFFF
+        });
+        card.add(cardEffect);
+        cardEffect.position.set(0, 0, 0);
+        cardEffect.rotation.set(0, 0, 0);
+        cardEffect.scale.set(1.01, 1.01, 1.01);
+        cardEffect.material.opacity = 1;
+
+        const rotation: THREE.Euler = new THREE.Euler(0, 0, THREE.MathUtils.degToRad(90) + (this.player === 0 ? 0 : 180));
+
+        sequence.addMultiple(
+            new CallbackTransition(() => {
+                card.visible = true;
+                card.scale.set(0, 0, 0);
+                card.position.copy(this.cardPosition);
+                card.rotation.copy(rotation);
+            }),
+            new ScaleTransition({
+                gameObject: card,
+                scale: new THREE.Vector3(1.35, 1.35, 1.35),
+                duration: 0.25
+            }),
+            new MultipleTasks(
+                new ScaleTransition({
+                    gameObject: card,
+                    scale: new THREE.Vector3(1, 1, 1),
+                    duration: 0.2
+                }),
+                new MaterialOpacityTransition({
+                    material: cardEffect.material,
+                    opacity: 0,
+                    duration: 0.2
+                })
+            ),
+            new WaitForSeconds(0.15),
             new CallbackTransition(() => {
                 card.remove(cardEffect);
             })

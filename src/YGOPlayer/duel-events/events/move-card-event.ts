@@ -31,6 +31,7 @@ export class MoveCardEventHandler extends YGOCommandHandler {
 
     public start(): void {
         const { event, duel } = this.props;
+        const sequence = new YGOTaskSequence();
         const originZoneData = YGOGameUtils.getZoneData(event.originZone)!;
         const zoneData = YGOGameUtils.getZoneData(event.zone)!;
 
@@ -90,13 +91,19 @@ export class MoveCardEventHandler extends YGOCommandHandler {
             duel.renderField();
         }
 
+        if (originZoneData.zone === "GY") {
+            const gy = duel.fields[this.cardReference.originalOwner].graveyard;
+            gy.createMoveFromGraveyardEffect({ card: card.gameObject, sequence });
+        }
+
+        if (originZoneData.zone === "B") {
+            const banish = duel.fields[this.cardReference.originalOwner].banishedZone;
+            banish.createMoveFromBanishCardEffect({ card: card.gameObject, sequence });
+        }
+
         if (cardZone) {
             cardZone.setGameCard(card);
         }
-
-        let durationScale = 1;
-
-        const sequence = new YGOTaskSequence();
 
         // if (originZoneData.zone === "GY" || originZoneData.zone === "B") {
         //     // const aboveZonePos = startPosition.clone();
@@ -126,7 +133,7 @@ export class MoveCardEventHandler extends YGOCommandHandler {
                     new PositionTransition({
                         gameObject: card.gameObject,
                         position: endPosition,
-                        duration: 0.4 * durationScale
+                        duration: 0.4
                     }),
                     new RotationTransition({
                         gameObject: card.gameObject,
@@ -156,7 +163,7 @@ export class MoveCardEventHandler extends YGOCommandHandler {
                     new PositionTransition({
                         gameObject: card.gameObject,
                         position: endPosition,
-                        duration: 0.5 * durationScale
+                        duration: 0.5
                     }),
                     new RotationTransition({
                         gameObject: card.gameObject,

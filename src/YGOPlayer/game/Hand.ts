@@ -61,26 +61,37 @@ export class GameHand extends YGOEntity {
     render() {
         const gameField = this.duel.fields[this.player];
         const camera = this.duel.camera;
-
         const cardWidth = 10;
         const cardSpacing = 2.5;
         const totalCards = gameField.hand.cards.length;
-        const handWidth = (totalCards - 1) * cardSpacing + cardWidth;
-
         const fov = (camera as any).fov * Math.PI / 180;
         const distance = camera.position.z;
-
-        const handZ = 7;
-        const visibleHeightAtZ = 2 * Math.tan(fov / 2) * Math.abs(distance - handZ);
-
-        const screenEdgeOffset = 0.15;//untis from bottom of the screen
+        const handDistribution = 22;
+        const baseHandZ = 7;
+        const visibleHeightAtZ = 2 * Math.tan(fov / 2) * Math.abs(distance - baseHandZ);
+        const screenEdgeOffset = 0.15;
         const handY = (this.player === 0)
             ? -visibleHeightAtZ / 2 + screenEdgeOffset
             : visibleHeightAtZ / 2 - screenEdgeOffset;
 
+        const normalHandWidth = (totalCards - 1) * cardSpacing + cardWidth;
+        const needsCompression = normalHandWidth > handDistribution;
+
+        let actualSpacing = cardSpacing;
+        let zIncrement = 0.1;
+        let actualWidth = normalHandWidth;
+
+        if (needsCompression) {
+            actualSpacing = (handDistribution - cardWidth) / (totalCards - 1);
+            actualWidth = handDistribution;
+        }
+
         for (let i = 0; i < totalCards; ++i) {
-            const xOffset = -handWidth / 2 + cardWidth / 2 + i * cardSpacing;
             const handCard = gameField.hand.getCard(i)!;
+            const xOffset = -actualWidth / 2 + cardWidth / 2 + i * actualSpacing;
+            const handZ = needsCompression ?
+                baseHandZ + Math.max(0, i - (totalCards / 2)) * zIncrement :
+                baseHandZ;
 
             handCard.gameObject.position.set(xOffset, handY, handZ);
             handCard.position = handCard.gameObject.position.clone();
@@ -90,7 +101,6 @@ export class GameHand extends YGOEntity {
             } else {
                 handCard.gameObject.rotation.set(0, 0, THREE.MathUtils.degToRad(180));
             }
-
             handCard.gameObject.visible = true;
         }
     }

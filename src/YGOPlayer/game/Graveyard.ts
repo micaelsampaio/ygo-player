@@ -115,4 +115,49 @@ export class Graveyard extends YGOEntity implements YGOUiElement {
             })
         )
     }
+
+    createMoveFromGraveyardEffect({ card, sequence }: { card: THREE.Object3D, sequence: YGOTaskSequence }) {
+        const cardEffect = CardEmptyMesh({
+            transparent: true,
+            color: 0xFFFFFF
+        });
+        card.add(cardEffect);
+        cardEffect.position.set(0, 0, 0);
+        cardEffect.rotation.set(0, 0, 0);
+        cardEffect.scale.set(1.01, 1.01, 1.01);
+        cardEffect.material.opacity = 1;
+
+        let cardScale: THREE.Vector3;
+
+        sequence.addMultiple(
+            new CallbackTransition(() => {
+                cardScale = card.scale.clone();
+                card.visible = true;
+                card.scale.set(0, 0, 0);
+                card.position.copy(this.cardPosition);
+                card.rotation.copy(this.rotation);
+            }),
+            new ScaleTransition({
+                gameObject: card,
+                scale: new THREE.Vector3(1.35, 1.35, 1.35),
+                duration: 0.25
+            }),
+            new MultipleTasks(
+                new ScaleTransition({
+                    gameObject: card,
+                    scale: new THREE.Vector3(1, 1, 1),
+                    duration: 0.2
+                }),
+                new MaterialOpacityTransition({
+                    material: cardEffect.material,
+                    opacity: 0,
+                    duration: 0.2
+                })
+            ),
+            new WaitForSeconds(0.15),
+            new CallbackTransition(() => {
+                card.remove(cardEffect);
+            })
+        )
+    }
 }

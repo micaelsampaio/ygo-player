@@ -3,6 +3,7 @@ import * as THREE from "three";
 
 export class YGODuelScene {
     public selectedCardPlaceholder!: THREE.Object3D;
+    public handPlaceholder!: THREE.Object3D;
 
     constructor(private duel: YGODuel) {
 
@@ -37,5 +38,11 @@ export class YGODuelScene {
         this.selectedCardPlaceholder = new THREE.Mesh(selectedCardGeometry, selectedCardMaterial);
         this.selectedCardPlaceholder.position.set(-16.5, 0, 0.1);
         this.duel.core.scene.add(this.selectedCardPlaceholder);
+
+        const handObjectGeometry = new THREE.PlaneGeometry(22, 4);
+        const handObjectMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000, wireframe: true });
+        const handObject = new THREE.Mesh(handObjectGeometry, handObjectMaterial);
+        this.duel.core.scene.add(handObject);
+        this.handPlaceholder = handObject;
     }
 }

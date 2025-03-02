@@ -381,11 +381,7 @@ function parseFieldZoneChildren(child: THREE.Mesh, player: number, zones: any) {
         // });
 
         const zoneData = YGOGameUtils.getZoneData(child.name as any);
-        console.log(child.name, zoneData);
         const zoneName = YGOGameUtils.createZone(zoneData.zone, player, zoneData.zoneIndex)
-        console.log(zoneName);
         zones[zoneName] = child;
-
-        console.log(child.name);
     }
 }
