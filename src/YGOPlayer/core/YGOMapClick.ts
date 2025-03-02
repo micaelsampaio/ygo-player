@@ -21,7 +21,7 @@ export class YGOMapClick extends YGOComponent implements YGOUiElement {
         const mapMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000, wireframe: true });
 
         this.gameObject = new THREE.Mesh(mapGeometry, mapMaterial);
-        this.gameObject.position.set(0, 0, 1);
+        this.gameObject.position.set(0, 0, -1);
         this.gameObject.visible = false;
 
         this.duel.core.scene.add(this.gameObject);
