@@ -38,9 +38,6 @@ COPY __tests__/src/bootstrap-node.js ./src/bootstrap-node.js
 # Install dependencies
 RUN npm install --frozen-lockfile
 
-# Expose ports
-EXPOSE 5001 5002 5003 5004 5005
-
 # Set environment variables
 ENV SSL_KEY_PATH=/app/certs/private.key
 ENV SSL_CERT_PATH=/app/certs/certificate.crt
