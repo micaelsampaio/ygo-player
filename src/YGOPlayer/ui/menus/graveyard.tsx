@@ -16,10 +16,16 @@ export function Graveyard({ duel, graveyard, visible = true }: { duel: YGODuel, 
     const field = duel.ygo.state.fields[graveyard.player];
     const gy = field.graveyard;
 
-    return <div className="float-right-menu" onMouseMove={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-    }}>
+    return <div className="float-right-menu"
+        onMouseMove={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+        }}
+        onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+        }}
+    >
         <h2>GY</h2>
         <hr />
         {gy.map(card => <div>

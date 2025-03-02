@@ -8,6 +8,7 @@ export function CardMenu({ menuRef, children, x, y }: any) {
         onClick={(e) => {
             e.stopPropagation();
             e.preventDefault();
+            alert("HERE");
         }}
         onMouseMove={(e) => {
             e.stopPropagation();

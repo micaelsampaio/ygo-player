@@ -1,0 +1,400 @@
+.ygo-player-core {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.ygo-player-core .ygo-card-menu {
+    background-color: var(--ygo-background-color);
+    color: var(--ygo-text-color);
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    z-index: 110;
+    height: auto;
+    padding: 10px;
+    border-radius: var(--ygo-border-radius-medium);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 150px;
+}
+
+.ygo-player-core {
+    border-radius: 100%;
+}
+
+.ygo-player-core .ygo-card-menu>.ygo-card-menu-items {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.ygo-player-core .ygo-card-menu .ygo-card-item {
+    padding: 5px 10px;
+    text-align: center;
+    background-color: var(--ygo-border-color);
+    border: none;
+    color: white;
+    display: inline-block;
+    width: 100%;
+    font-size: 14px;
+    font-weight: bold;
+    border-radius: var(--ygo-border-radius-small);
+    text-overflow: ellipsis;
+}
+
+.ygo-player-core .ygo-card-menu .ygo-card-item:not(:disabled):hover {
+    background-color: var(--ygo-hover-color);
+    color: var(--ygo-text-color);
+}
+
+.ygo-player-core .ygo-card-menu .ygo-card-item:disabled {
+    opacity: 0.2;
+    cursor: not-allowed;
+}
+
+.ygo-player-core .ygo-click-overlay {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    height: 100%;
+    z-index: 10;
+}
+
+#ygo-canvas {
+    z-index: 0;
+}
+
+.ygo-hidden {
+    display: none;
+}
+
+.ygo-player-core .float-right-menu {
+    position: absolute;
+    top: 20px;
+    right: 0px;
+    padding: 10px;
+    max-height: calc(100% - var(--ygo-footer-margin) - 20px);
+    background: var(--ygo-background-color-70);
+    border: 1px solid var(--ygo-border-color);
+    color: #FFF;
+    overflow-y: auto;
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.ygo-player-core .float-right-menu .ygo-card {
+    /* aspect: 1.44 */
+    width: 80px;
+    height: 115px;
+    cursor: pointer;
+    border: 2px solid transparent;
+    border-radius: 4px;
+}
+.ygo-player-core .float-right-menu .ygo-card:hover,
+.ygo-player-core .float-right-menu .ygo-card:active {
+    border: 2px solid rgba(255, 255, 0, 0.6);
+}
+
+.ygo-player-core .game-popup {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    z-index: 100;
+    top: 0px;
+    left: 0px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--ygo-overlay-background-color);
+}
+
+.ygo-player-core .game-popup .game-popup-dialog {
+    background-color: var(--ygo-background-color);
+    border: 2px solid var(--ygo-border-color);
+    border-radius: var(--ygo-border-radius-medium);
+    color: white;
+    width: 800px;
+    height: 500px;
+    display: flex;
+    flex-direction: column;
+}
+
+.ygo-player-core .game-popup .game-popup-header {
+    padding: var(--ygo-border-radius-large);
+    font-size: var(--ygo-font-lg);
+    display: flex;
+}
+
+.ygo-player-core .game-popup .game-popup-header .game-popup-header-title {
+    flex: 1;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.ygo-player-core .ygo-close {
+    flex-shrink: 1;
+    width: 20px;
+    height: 20px;
+    border-radius: 20px;
+    position: relative;
+    border: none;
+    background-color: transparent;
+    cursor: pointer;
+    opacity: 0.8;
+}
+
+.ygo-player-core .ygo-close:hover {
+    opacity: 1;
+}
+
+.ygo-player-core .ygo-close::after {
+    content: '\00D7';
+    font-size: 30px;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    color: #FFF;
+    transform: translate(-50%, -50%);
+}
+
+.ygo-player-core .game-popup .game-popup-content {
+    padding: var(--ygo-border-radius-large);
+    flex-grow: 1;
+    overflow-y: auto;
+}
+
+.ygo-player-core .game-popup .game-popup-content-no-scroll {
+    padding: var(--ygo-border-radius-large);
+}
+
+.ygo-player-core .ygo-menu-view-main-deck-cards {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    padding: 10px;
+    gap: var(--ygo-gap-md);
+    color: white;
+}
+
+.ygo-player-core .ygo-menu-view-main-deck-search {
+    width: 340px;
+    max-width: 100%;
+}
+
+.ygo-player-core .ygo-menu-view-main-deck-cards .ygo-card {
+    width: 100px;
+    /* 1.44 ratio */
+    height: 144px;
+    cursor: pointer;
+    border: 2px solid transparent;
+    border-radius: 4px;
+}
+
+.ygo-player-core .ygo-menu-view-main-deck-cards .ygo-card.selected {
+    border: 2px solid yellow;
+}
+
+.ygo-player-core .timeline {
+    position: fixed;
+    width: 100%;
+    height: 10px;
+    left: 0px;
+    bottom: 0px;
+    background-color: white;
+    display: flex;
+}
+
+.ygo-player-core .timeline:hover {
+    height: 30px;
+}
+
+.ygo-player-core .timeline>* {
+    flex-grow: 1;
+}
+
+.ygo-player-core .timeline .command {
+    position: relative;
+    border: none;
+    font-size: 16px;
+}
+
+.ygo-player-core .timeline .command-tooltip {
+    position: absolute;
+    padding: 5px 10px;
+    top: -40px;
+    color: white;
+    border-radius: 5px;
+    background: rgba(0, 0, 0, 0.7);
+    display: none;
+    left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap;
+    z-index: 10;
+}
+
+.ygo-player-core .timeline .command-tooltip::after {
+    content: '';
+    position: absolute;
+    bottom: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-top: 6px solid rgba(0, 0, 0, 0.7);
+}
+
+.ygo-player-core .timeline .command:hover>.command-tooltip {
+    display: flex;
+}
+
+.ygo-player-core .timeline .command.current {
+    background: yellow;
+}
+
+.ygo-player-core .timeline .command.prev {
+    background: red;
+}
+
+.ygo-player-core .timeline .command.next {
+    background: gray;
+}
+
+.ygo-player-core .timeline .command:hover {
+    background-color: blue;
+}
+
+.ygo-player-core .selected-card-menu {
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 16px;
+    width: 240px;
+    border-radius: var(--ygo-border-radius-medium);
+    border: 1px solid var(--ygo-border-color);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.ygo-player-core .ygo-card {
+    width: 200px;
+    height: 288px;
+}
+
+/* TODO FIX THIS  */
+.ygo-player-core .ygo-card.selected {
+    border: 2px solid yellow;
+}
+
+.ygo-player-core .ygo-player-overlay {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    border-radius: 100%;
+    width: 80px;
+    height: 80px;
+    overflow: hidden;
+    background-color: blue;
+}
+
+.ygo-player-overlay .ygo-player-1,
+.ygo-player-overlay .ygo-player-2 {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    color: #FFF;
+    font-size: 40px;
+    cursor: pointer;
+    font-weight: bold;
+    display: grid;
+    align-items: center;
+    text-align: center;
+    transition: top 0.25s ease-in-out;
+    border-radius: 100%;
+}
+
+.ygo-player-overlay .ygo-player-1 {
+    top: -100%;
+    background-color: blue;
+    transition: top 0.25s ease-in-out;
+}
+
+.ygo-player-overlay .ygo-player-2 {
+    top: 100%;
+    background-color: red;
+    transition: top 0.25s ease-in-out;
+}
+
+.ygo-player-overlay .ygo-player-1.active {
+    top: 0;
+}
+
+.ygo-player-overlay .ygo-player-2.active {
+    top: 0;
+}
+
+.ygo-player-core input {
+    background-color: var(--ygo-background-color);
+    padding: 10px 10px;
+    border: 1px solid var(--ygo-border-color);
+    border-radius: var(--ygo-border-radius-small);
+    color: var(--ygo-form--input-text-color);
+    font-size: var(--ygo-font-sm);
+}
+
+.ygo-player-core input:focus {
+    outline: none;
+    border: 1px solid var(--ygo-primary-color);
+    box-shadow: var(--ygo-primary-color) 0px 0px 6px;
+}
+
+.ygo-player-core input::placeholder {
+    color: var(--ygo-form-input-placeholder-text-color);
+}
+
+.ygo-player-core .card-icon {
+    width: 18px;
+    height: 27px;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 2px;
+    position: relative;
+    opacity: 1;
+}
+
+.ygo-player-core .card-icon.not-selected {
+    opacity: 0.35;
+}
+
+.ygo-player-core .card-icon.ygo-monster {
+    background-color: #FF8B53;
+}
+
+.ygo-player-core .card-icon.ygo-trap {
+    background-color: #BC5A84;
+}
+
+.ygo-player-core .card-icon.ygo-spell {
+    background-color: #1D9E74;
+}
+
+.ygo-player-core .card-icon::after {
+    content: "";
+    position: absolute;
+    top: 20%;
+    left: 10%;
+    width: 80%;
+    height: 50%;
+    background-color: rgba(0, 0, 0, 0.4);
+    border-radius: 2px;
+}

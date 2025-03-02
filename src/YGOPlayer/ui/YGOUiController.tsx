@@ -5,6 +5,7 @@ import { DuelLogMenu } from "./menus/duel-log/duel-log";
 import { MENUS } from "./menus";
 import { TimeLine } from "./menus/timeline";
 import { ChangeGamePlayer } from "./components/ChangeGamePlayer";
+import { BottomRightActions } from "./menus/bottom-right-actions";
 
 export interface UiGameConfig {
     actions: boolean
@@ -130,13 +131,15 @@ export function YGOUiController({ duel }: { duel: YGODuel }) {
     if (!duel) return null;
 
     return <>
-        <DuelLogMenu duel={duel} />
+        <DuelLogMenu duel={duel} menus={menus} />
         <TimeLine duel={duel} />
         <ChangeGamePlayer duel={duel} />
+        <BottomRightActions duel={duel} />
 
         {
             menus.map(menu => {
                 const Menu = (MENUS as any)[menu.type] as any;
+                if (!Menu) return null;
                 return <Menu
                     config={gameConfig}
                     key={menu.type}

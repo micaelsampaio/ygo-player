@@ -1,0 +1,32 @@
+.ygo-player-core .game-actions-bottom-right {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    display: flex;
+    align-items: end;
+    gap: 20px;
+}
+
+.ygo-player-core .ygo-floating-button {
+    border: 1px solid var(--ygo-border-color);
+    background-color: var(--ygo-float-button-bg-color);
+    border-radius: 100%;
+    width: 60px;
+    height: 60px;
+    outline: 2px solid transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ygo-player-core .ygo-floating-button .ygo-floating-button-icon {
+    width: 32px;
+    height: 32px;
+}
+
+.ygo-player-core .ygo-floating-button:hover {
+    background-color: var(--ygo-float-button-bg-color-hover);
+    border-color: var(--ygo-primary-color);
+    outline-color: var(--ygo-primary-color);
+    cursor: pointer;
+}

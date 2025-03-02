@@ -1,18 +1,18 @@
 import { useEffect, useState } from "react"
 import { YGODuel } from "../../../core/YGODuel";
-import "./duel-log.css";
 import { YGODuelEvents } from "../../../../YGOCore";
 import { DefaultLogRow } from "./default-log";
-import { SimpleLogRow } from "./log-simple";
 import { StartHandLogRow } from "./start-hand";
+import "./duel-log.css";
 
 const COMPONENTS = {
     [YGODuelEvents.LogType.StartHand]: StartHandLogRow,
     default: DefaultLogRow
 }
 
-export function DuelLogMenu({ duel }: { duel: YGODuel }) {
-    const [logs, setLogs] = useState<YGODuelEvents.DuelLog[]>([])
+export function DuelLogMenu({ duel, menus }: { duel: YGODuel, menus: any[] }) {
+    const [logs, setLogs] = useState<YGODuelEvents.DuelLog[]>([]);
+    const [isVisible, setVisible] = useState(false);
 
     useEffect(() => {
         if (!duel) return;
@@ -21,6 +21,10 @@ export function DuelLogMenu({ duel }: { duel: YGODuel }) {
             setLogs([...logs]);
         });
     }, [duel]);
+
+    useEffect(() => {
+        setVisible(menus.some(menu => menu.type === "duel-log"));
+    }, [menus]);
 
     const undo = () => {
         duel.commands.startRecover();
@@ -38,7 +42,7 @@ export function DuelLogMenu({ duel }: { duel: YGODuel }) {
         duel.commands.endRecover();
     }
 
-    return <div className="ygo-duel-log-container">
+    return <div className={`ygo-duel-log-container ${isVisible ? '' : 'ygo-hidden'}`}>
         <div className="ygo-logs">
             {logs.map((log, index) => {
                 const Component = (COMPONENTS as any)[log.type] || COMPONENTS.default;
