@@ -26,6 +26,7 @@ import { createCardSelectionGeometry } from '../game/meshes/CardSelectionMesh';
 import { YGODuelScene } from './YGODuelScene';
 import { YGOConfig } from './YGOConfig';
 import { Command } from '../../YGOCore/types/commands';
+import { YGOMapClick } from './YGOMapClick';
 
 export class YGODuel {
     public state: YGODuelState;
@@ -74,20 +75,20 @@ export class YGODuel {
         this.gameController.addComponent("tasks", this.tasks);
         this.gameController.addComponent("commands", this.commands);
         this.gameController.addComponent("action_card_selection", new ActionCardSelection({ duel: this }));
-
+        this.gameController.addComponent("map-click-zone", new YGOMapClick(this));
         this.actionManager.actions.set("card-hand-menu", new ActionCardHandMenu(this));
         this.actionManager.actions.set("card-zone-menu", new ActionCardZoneMenu(this));
 
         this.gameActions = new YGOGameActions(this);
 
-        this.config.options = {
-            ...this.config.options || {},
-            fieldState: [
-                { id: 72270339, zone: "M-1" },
-                { id: 9674034, zone: "M-2" },
-                { id: 33854624, zone: "GY" },
-            ]
-        }
+        // this.config.options = {
+        //     ...this.config.options || {},
+        //     fieldState: [
+        //         { id: 72270339, zone: "M-1" },
+        //         { id: 9674034, zone: "M-2" },
+        //         { id: 33854624, zone: "GY" },
+        //     ]
+        // }
 
         this.ygo = new YGOCore(this.config);
 

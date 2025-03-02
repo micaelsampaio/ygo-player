@@ -43,6 +43,7 @@ export class YGOActionManager {
 
 export interface YGOAction {
     name: string
+    uncancellable?: boolean
     onActionStart?: () => void
     onActionEnd?: () => void
     onActionResume?: () => void

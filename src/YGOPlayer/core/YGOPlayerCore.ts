@@ -40,6 +40,7 @@ export class YGOPlayerCore {
         const mapGeometry = new THREE.PlaneGeometry(40, 25);
         const mapMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000, wireframe: true });
         this.mapBounds = new THREE.Mesh(mapGeometry, mapMaterial);
+
         this.scene.add(this.mapBounds);
     }
 
