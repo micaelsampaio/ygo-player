@@ -4,6 +4,8 @@ import { YGOTaskSequence } from '../../core/components/tasks/YGOTaskSequence';
 import { ScaleTransition } from '../../duel-events/utils/scale-transition';
 import { MultipleTasks } from '../../duel-events/utils/multiple-tasks';
 import { MaterialOpacityTransition } from '../../duel-events/utils/material-opacity';
+import { YGOTask } from '../../core/components/tasks/YGOTask';
+import { WaitForSeconds } from '../../duel-events/utils/wait-for-seconds';
 
 export function CardEmptyMesh({ material, card, color, depth = 0.02, transparent }: { material?: THREE.Material, color?: THREE.ColorRepresentation, depth?: number, card?: THREE.Object3D, transparent?: boolean } | undefined = {}) {
     const CARD_RATIO = 1.45;
@@ -83,4 +85,47 @@ export function CardActivationEffect({ duel, startTask, create = true, card }: {
 
 function randomIntFromInterval(min: number, max: number): number { // min and max included 
     return Math.floor(Math.random() * (max - min + 1) + min);
+}
+
+export function createCardPopSummonEffectSequence({ duel, card, startTask, cardId }: any) {
+    const CARD_RATIO = 1.45;
+    const height = 3.5, width = height / CARD_RATIO;
+    const cardTexture = duel.assets.getTexture(`${duel.config.cdnUrl}/images/cards_small/${cardId}.jpg`);
+    const geometry = new THREE.PlaneGeometry(width, height);
+    const material = new THREE.MeshBasicMaterial({
+        map: cardTexture,
+        transparent: true,
+        opacity: 0.35,
+    });
+
+    const cardPlane = new THREE.Mesh(geometry, material);
+    
+    duel.core.sceneOverlay.add(cardPlane);
+
+    cardPlane.position.copy(card.position);
+    cardPlane.rotation.copy(card.rotation);
+    cardPlane.scale.copy(card.scale);
+    cardPlane.visible = true;
+
+    const targetScale = cardPlane.scale.clone();
+    targetScale.addScalar(2);
+
+    cardPlane.position.z -= 0.1;
+
+    startTask(new YGOTaskSequence(
+        new ScaleTransition({
+            gameObject: cardPlane,
+            scale: targetScale,
+            duration: 0.25
+        })
+    ));
+
+    startTask(new YGOTaskSequence(
+        new WaitForSeconds(0.1),
+        new MaterialOpacityTransition({
+            material: cardPlane.material,
+            opacity: 0,
+            duration: 0.15
+        })
+    ));
 }

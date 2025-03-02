@@ -12,7 +12,7 @@ import { CallbackTransition } from '../utils/callback';
 import { YGOCommandHandler } from '../../core/components/YGOCommandHandler';
 import { MultipleTasks } from '../utils/multiple-tasks';
 import { ScaleTransition } from '../utils/scale-transition';
-import { CardEmptyMesh, GameModalOverlayMesh } from '../../game/meshes/mesh-utils';
+import { CardEmptyMesh, createCardPopSummonEffectSequence, GameModalOverlayMesh } from '../../game/meshes/mesh-utils';
 import { MaterialOpacityTransition } from '../utils/material-opacity';
 
 interface LinkSummonEventHandlerProps extends DuelEventHandlerProps {
@@ -126,6 +126,7 @@ export class LinkSummonEventHandler extends YGOCommandHandler {
             cardOverlay.visible = true;
             duel.core.enableRenderOverlay();
             duel.fields[originZoneData.player].extraDeck.updateExtraDeck();
+            createCardPopSummonEffectSequence({ duel, card: cardOverlay, cardId: event.id, startTask: this.props.startTask });
         }))
             .add(new WaitForSeconds(1))
             .add(
