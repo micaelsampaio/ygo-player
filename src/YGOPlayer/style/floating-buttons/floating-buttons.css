@@ -17,6 +17,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    font-weight: bold;
+    color: #FFF;
 }
 
 .ygo-player-core .ygo-floating-button .ygo-floating-button-icon {
@@ -29,4 +31,16 @@
     border-color: var(--ygo-primary-color);
     outline-color: var(--ygo-primary-color);
     cursor: pointer;
+}
+
+.ygo-player-core .ygo-floating-button.ygo-floating-button-confirm {
+    border: 1px solid var(--ygo-confirm-color);
+    width: 80px;
+    height: 80px;
+}
+
+.ygo-player-core .ygo-floating-button.ygo-floating-button-confirm:hover {
+    background-color: var(--ygo-float-button-bg-color-hover);
+    border-color: var(--ygo-confirm-color);
+    outline-color: var(--ygo-confirm-color);
 }

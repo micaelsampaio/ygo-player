@@ -5,7 +5,11 @@
     --ygo-background-color-60: rgba(24, 24, 24, 0.6);
     --ygo-background-color-70: rgba(24, 24, 24, 0.7);
     --ygo-background-color-80: rgba(24, 24, 24, 0.8);
-    
+
+    --ygo-confirm-color: rgba(1, 255, 98, 0.8);
+    --ygo-action-color: #444444;
+    --ygo-action-color-dark: #2e2e2e;
+
     --ygo-text-color: #e0e0e0;
     --ygo-heading-color: #ffffff;
     --ygo-border-color: #444444;

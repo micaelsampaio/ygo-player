@@ -1,0 +1,25 @@
+.ygo-player-core .ygo-btn {
+    background: var(--ygo-background-color);
+    border: none;
+    font-weight: bold;
+    border-radius: var(--ygo-border-radius-small);
+    color: #FFF;
+    font-size: 16px;
+    padding: 5px 10px;
+    cursor: pointer;
+}
+
+.ygo-player-core .ygo-btn-primary {
+    background: var(--ygo-primary-color);
+    border: none;
+    font-weight: bold;
+    border-radius: var(--ygo-border-radius-small);
+}
+
+.ygo-player-core .ygo-btn-action {
+    background: var(--ygo-border-color);
+}
+
+.ygo-player-core .ygo-btn-action:hover {
+    background: var(--ygo-action-color-dark);
+}

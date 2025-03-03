@@ -68,7 +68,9 @@ export function ViewDeckPopup({ duel, deck, visible = true }: { deck: Deck, duel
                 <div className="game-popup-header-title">
                     View Deck
                 </div>
-                <button className="ygo-close" onClick={close}></button>
+                <div>
+                    <button className="ygo-close" onClick={close}></button>
+                </div>
             </div>
             <div className="game-popup-content-no-scroll ygo-flex ygo-gap-2 ygo-items-center ygo-pt-0">
                 <div>

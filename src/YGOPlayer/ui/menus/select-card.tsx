@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { YGODuel } from "../../core/YGODuel";
 import { Card, FieldZone, FieldZoneId } from "../../../YGOCore/types/types";
 import { YGOGameUtils } from "../../../YGOCore";
@@ -130,17 +130,19 @@ export function SelectCardPopup({ duel, visible = true, filter, onSelectCards: o
         return cards;
     }, [field, filter]);
 
+    const close = useCallback((e: any) => {
+        e.preventDefault();
+        e.stopPropagation();
+        duel.events.dispatch("close-ui-menu", { group: "game-popup" });
+    }, []);
+
 
     return <div className="game-popup" onMouseMove={(e) => {
         e.preventDefault();
         e.stopPropagation();
     }}
 
-        onClick={e => {
-            e.preventDefault();
-            e.stopPropagation();
-            duel.events.dispatch("close-ui-menu", { group: "game-popup" });
-        }}
+        onClick={close}
     >
 
         <div className="game-popup-dialog" onClick={e => {
@@ -153,10 +155,10 @@ export function SelectCardPopup({ duel, visible = true, filter, onSelectCards: o
                     Select Card
                 </div>
                 <div>
-                    <button onClick={onSelectCardsCallback}>Decide</button>
+                    <button className="ygo-btn ygo-btn-action" onClick={onSelectCardsCallback}>Decide</button>
                 </div>
-                <div>
-                    <button className="ygo-close"></button>
+                <div style={{ marginLeft: "20px" }}>
+                    <button onClick={close} className="ygo-close"></button>
                 </div>
             </div>
             <div className="game-popup-content">

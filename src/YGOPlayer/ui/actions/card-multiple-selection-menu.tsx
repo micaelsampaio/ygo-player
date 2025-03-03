@@ -1,5 +1,5 @@
 import { YGODuel } from "../../core/YGODuel";
-import { CardMenu } from "../components/CardMenu";
+import { ActionsFloatingMenu } from "../components/ActionsFloatingMenu";
 
 export function CardMultipleSelectionMenu({ duel, onCompleted }: { duel: YGODuel, onCompleted: () => void }) {
     const x = window.innerWidth / 2 + 200; //  mouseEvent.clientX; // Horizontal mouse position in px
@@ -12,9 +12,11 @@ export function CardMultipleSelectionMenu({ duel, onCompleted }: { duel: YGODuel
     }
 
     return <>
-        <CardMenu x={x} y={y}>
-            <button type="button" className="ygo-card-item" style={{ fontSize: "20px" }} onClick={onCompletedClick}>Decide</button>
-        </CardMenu>
+        <ActionsFloatingMenu x={x} y={y}>
+            <div className="ygo-floating-button ygo-floating-button-confirm" onClick={onCompletedClick}>
+                Confirm
+            </div>
+        </ActionsFloatingMenu>
     </>
 
 }

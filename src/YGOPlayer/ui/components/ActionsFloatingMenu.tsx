@@ -1,8 +1,8 @@
 
-export function CardMenu({ menuRef, children, x, y }: any) {
+export function ActionsFloatingMenu({ menuRef, children, x, y }: any) {
     const style: any = { left: x ? `${x}px` : undefined, top: y ? `${y}px` : undefined }
 
-    return <div className="ygo-card-menu"
+    return <div className="ygo-floating-actions-menu"
         ref={menuRef}
         style={style}
         onClick={(e) => {
