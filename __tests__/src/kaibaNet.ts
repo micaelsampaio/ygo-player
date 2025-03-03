@@ -260,8 +260,9 @@ export class KaibaNet extends EventEmitter {
 
     // Proceed with room subscription and setup
     try {
+      await new Promise((resolve) => setTimeout(resolve, 5000))
       await this.peerToPeer?.subscribeTopic(roomId);
-      await new Promise((resolve) => setTimeout(resolve, 300));
+      await new Promise((resolve) => setTimeout(resolve, 5000));
       // Set up room topic listener
       this.peerToPeer.on(
         "topic:" + this.roomId + ":message",

@@ -18,6 +18,8 @@ import { gossipsub } from "@chainsafe/libp2p-gossipsub";
 import { pubsubPeerDiscovery } from "@libp2p/pubsub-peer-discovery";
 import { toString as uint8ArrayToString } from "uint8arrays/to-string";
 import { peerIdFromString } from '@libp2p/peer-id';
+import { dcutr } from '@libp2p/dcutr'
+import { peerIdFromString } from '@libp2p/peer-id'
 
 import EventEmitter from "events";
 
@@ -29,11 +31,14 @@ export class PeerToPeer extends EventEmitter {
   private discoveryTopic = null;
 
   private bootstrapNode: string;
+  private bootstrapNodePeerId: string;
   private streams: Map<string, Pushable<Uint8Array>>;
 
   constructor(bootstrapNode: string, discoveryTopic: string) {
     super();
     this.bootstrapNode = bootstrapNode;
+    const bootstrapNodePeerId = bootstrapNode.split("/p2p/")[1];
+    this.bootstrapNodePeerId = peerIdFromString(bootstrapNodePeerId);
     this.discoveryTopic = discoveryTopic;
     this.streams = new Map();
     this.setupDebugLogs();
@@ -51,7 +56,7 @@ export class PeerToPeer extends EventEmitter {
     console.log("P2P: Bootstrap Node:", this.bootstrapNode);
     this.libp2p = await createLibp2p({
       addresses: {
-        listen: ["/p2p-circuit", "/webrtc"],
+        listen: ["/p2p-circuit"],
       },
       transports: [
         webSockets({ filter: filters.all }),
@@ -79,12 +84,18 @@ export class PeerToPeer extends EventEmitter {
         identify: identify(),
         identifyPush: identifyPush(),
         ping: ping(),
+        dcutr: dcutr(),
         pubsub: gossipsub({
           allowPublishToZeroPeers: true,
-          emitSelf: true,
+          emitSelf: false,
           gossipIncoming: true,
           fallbackToFloodsub: true,
-          directPeers: [],
+          directPeers: [
+            {
+              id: this.bootstrapNodePeerId,
+              addrs: [multiaddr(this.bootstrapNode)]
+            }
+          ],
           scoreThresholds: {
             publishThreshold: -1000,
             graylistThreshold: -1000,
@@ -293,6 +304,50 @@ export class PeerToPeer extends EventEmitter {
     }
   }
 
+  private async connectToPeerById(peerId: string): Promise<boolean> {
+    console.log("P2P: Attempting to connect to peer by ID:", peerId);
+    if (!this.libp2p) throw new Error("Libp2p instance not initialized");
+
+    try {
+        let peerInfo;
+        try {
+            const validPeerId = peerIdFromString(peerId);
+            console.log("Valid PeerId created:", validPeerId.toString());
+            
+            const peers = await this.libp2p.peerStore.all();
+            const peerExists = peers.some(p => p.id.toString() === validPeerId.toString());
+            
+            if (!peerExists) {
+                console.log(`Peer ${peerId} not found in peer store`);
+                return false;
+            }
+
+            peerInfo = await this.libp2p.peerStore.get(validPeerId);
+            
+            if (!peerInfo || !peerInfo.addresses || peerInfo.addresses.length === 0) {
+                console.log(`No known addresses for peer ${peerId}`);
+                return false;
+            }
+
+            // Modify addresses to include target peer ID for circuit addresses
+            const addresses = peerInfo.addresses.map(addr => { 
+              const addrStr = addr.multiaddr.toString();
+              return addrStr;
+              }
+            ).slice(2)
+
+            console.log("Attempting to connect with addresses:", addresses);
+            return await this.tryAddresses(addresses);
+        } catch (peerIdErr) {
+            console.log(`Invalid PeerId format: ${peerId}`, peerIdErr);
+            return false;
+        }
+    } catch (err) {
+        console.error(`Unexpected error connecting to peer ${peerId}:`, err);
+        return false;
+    }
+  }
+
   public async sendMsgToPeer(peerMultiaddr: string, msg: string) {
     console.log("P2P: Sending message to peer:", peerMultiaddr, msg);
     if (!this.libp2p) throw new Error("Libp2p instance not initialized");
@@ -406,54 +461,5 @@ export class PeerToPeer extends EventEmitter {
     }
   }
 
-  private async connectToPeerById(peerId: string): Promise<boolean> {
-    console.log("P2P: Attempting to connect to peer by ID:", peerId);
-    if (!this.libp2p) throw new Error("Libp2p instance not initialized");
 
-    try {
-        let peerInfo;
-        try {
-            const validPeerId = peerIdFromString(peerId);
-            console.log("Valid PeerId created:", validPeerId.toString());
-            
-            const peers = await this.libp2p.peerStore.all();
-            const peerExists = peers.some(p => p.id.toString() === validPeerId.toString());
-            
-            if (!peerExists) {
-                console.log(`Peer ${peerId} not found in peer store`);
-                return false;
-            }
-
-            peerInfo = await this.libp2p.peerStore.get(validPeerId);
-            
-            if (!peerInfo || !peerInfo.addresses || peerInfo.addresses.length === 0) {
-                console.log(`No known addresses for peer ${peerId}`);
-                return false;
-            }
-
-            // Modify addresses to include target peer ID for circuit addresses
-            const addresses = peerInfo.addresses
-                .map(addr => {
-                    const addrStr = addr.multiaddr.toString();
-                    if (addrStr.includes('/p2p-circuit')) {
-                        // Only append peer ID if it's not already there
-                        if (!addrStr.endsWith(peerId)) {
-                            return `${addrStr}/p2p/${peerId}`;
-                        }
-                    }
-                    return addrStr;
-                })
-                .slice(1); // Skip the first address
-
-            console.log("Attempting to connect with addresses:", addresses);
-            return await this.tryAddresses(addresses);
-        } catch (peerIdErr) {
-            console.log(`Invalid PeerId format: ${peerId}`, peerIdErr);
-            return false;
-        }
-    } catch (err) {
-        console.error(`Unexpected error connecting to peer ${peerId}:`, err);
-        return false;
-    }
-  }
 }

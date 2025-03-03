@@ -28,11 +28,7 @@ if (enableWSS) {
 
 const listenAddresses = [
   "/ip4/0.0.0.0/tcp/3002/ws", // WebSocket (WS)
-  "/ip4/0.0.0.0/tcp/3003", // TCP
-  "/ip4/0.0.0.0/udp/3004/webrtc", // WebRTC
-  "/ip4/0.0.0.0/udp/3005/quic-v1/webtransport", // WebTransport
-  "/ip4/127.0.0.1/tcp/3001/ws", // Local WS
-  "/p2p-circuit", // Circuit relay
+  "/ip4/0.0.0.0/tcp/3003", // WebRTC
 ];
 
 // Add WSS addresses only if enabled
@@ -78,6 +74,10 @@ if (enableWSS) {
 const server = await createLibp2p({
   addresses: { listen: listenAddresses },
   transports,
+  connectionGater: {
+    // Allow private addresses for local testing
+    denyDialMultiaddr: async () => false,
+  },
   connectionEncrypters: [noise()],
   streamMuxers: [yamux()],
   services: {
@@ -86,9 +86,14 @@ const server = await createLibp2p({
     identifyPush: identifyPush(),
     pubsub: gossipsub({
       allowPublishToZeroPeers: true,
-      emitSelf: true,
+      emitSelf: false,
       gossipIncoming: true,
-      fallbackToFloodsub: true
+      fallbackToFloodsub: true,
+      scoreThresholds: {
+        publishThreshold: -1000,
+        graylistThreshold: -1000,
+        acceptPXThreshold: -1000,
+      }
     }),
     relay: circuitRelayServer({
       reservations: {
