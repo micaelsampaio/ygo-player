@@ -24,7 +24,6 @@ import { ToDeckCommand } from "./ToDeckCommand";
 import { ToExtraDeckCommand } from "./ToExtraDeckCommand";
 import { ToHandCommand } from "./ToHandCommand";
 import { ToSTCommand } from "./ToSTCommand";
-import { TributeSetCommand } from "./TributeSetCommand";
 import { TributeSummonCommand } from "./TributeSummonCommand";
 import { XYZAttachMaterialCommand } from "./XYZAttachMaterialCommand";
 import { XYZDetachMaterialCommand } from "./XYZDetachMaterialCommand";
@@ -41,7 +40,6 @@ export interface YGOCommandsList {
     ActivateCardCommand: typeof ActivateCardCommand;
     SpecialSummonCommand: typeof SpecialSummonCommand;
     TributeSummonCommand: typeof TributeSummonCommand;
-    TributeSetCommand: typeof TributeSetCommand;
     LinkSummonCommand: typeof LinkSummonCommand;
     FusionSummonCommand: typeof FusionSummonCommand;
     SynchroSummonCommand: typeof SynchroSummonCommand;

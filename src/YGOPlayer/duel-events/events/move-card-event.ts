@@ -12,9 +12,11 @@ import { Card } from "../../../YGOCore/types/types";
 import * as THREE from 'three';
 import { MultipleTasks } from "../utils/multiple-tasks";
 import { YGOCommandHandler } from "../../core/components/YGOCommandHandler";
+import { WaitForSeconds } from "../utils/wait-for-seconds";
 
 interface MoveCardEventHandlerProps extends DuelEventHandlerProps {
     event: MoveCardCommandData
+    startCommandDelay?: number
 }
 
 export class MoveCardEventHandler extends YGOCommandHandler {
@@ -30,13 +32,15 @@ export class MoveCardEventHandler extends YGOCommandHandler {
     }
 
     public start(): void {
-        const { event, duel } = this.props;
+        const { event, startCommandDelay: delay = 0, duel } = this.props;
         const sequence = new YGOTaskSequence();
         const originZoneData = YGOGameUtils.getZoneData(event.originZone)!;
         const zoneData = YGOGameUtils.getZoneData(event.zone)!;
 
         const originCardZone = getGameZone(duel, originZoneData);
         const cardZone = getGameZone(duel, zoneData);
+
+        if (delay > 0) sequence.add(new WaitForSeconds(delay));
 
         duel.events.dispatch("set-selected-card", {
             player: zoneData.player,

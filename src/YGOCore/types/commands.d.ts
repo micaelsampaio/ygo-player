@@ -145,7 +145,7 @@ export interface SendCardToGYCommandData {
     id: number;
     originZone: FieldZone;
     zone?: FieldZone;
-    reason?: "Fusion Summon" | "Synchro Summon" | "Link Summon" | "XYZ Material" | undefined;
+    reason?: "Tribute Summon" | "Fusion Summon" | "Synchro Summon" | "Link Summon" | "XYZ Material" | undefined;
 }
 export interface DestroyCardCommandData {
     player: number;

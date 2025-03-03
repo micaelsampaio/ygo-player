@@ -48,6 +48,19 @@ export declare namespace YGODuelEvents {
         zone: FieldZone;
         position: CardPosition;
     }
+    interface TributeSummon extends DuelLog {
+        id: number;
+        originZone: FieldZone;
+        zone: FieldZone;
+        position: CardPosition;
+        tributes: {
+            id: number;
+            zone: FieldZone;
+            owner: number;
+        }[];
+    }
+    interface TributeSummonSet extends TributeSummon {
+    }
     interface MoveCard extends DuelLog {
         id: number;
         originZone: FieldZone;
