@@ -29,9 +29,6 @@ if (enableWSS) {
 const listenAddresses = [
   "/ip4/0.0.0.0/tcp/3002/ws", // WebSocket (WS)
   "/ip4/0.0.0.0/tcp/3003", // TCP
-  "/ip4/0.0.0.0/udp/3004/webrtc", // WebRTC
-  "/ip4/0.0.0.0/udp/3005/quic-v1/webtransport", // WebTransport
-  "/ip4/127.0.0.1/tcp/3001/ws", // Local WS
   "/p2p-circuit", // Circuit relay
 ];
 
@@ -86,9 +83,14 @@ const server = await createLibp2p({
     identifyPush: identifyPush(),
     pubsub: gossipsub({
       allowPublishToZeroPeers: true,
-      emitSelf: true,
+      emitSelf: false,
       gossipIncoming: true,
-      fallbackToFloodsub: true
+      fallbackToFloodsub: true,
+      scoreThresholds: {
+        publishThreshold: -1000,
+        graylistThreshold: -1000,
+        acceptPXThreshold: -1000,
+      },
     }),
     relay: circuitRelayServer({
       reservations: {
@@ -156,7 +158,7 @@ server.addEventListener("connection:close", async (event) => {
   const peerId = event.detail.remotePeer.toString();
   console.log(peerId);
   const message = "remove:peer:" + peerId;
-  
+
   try {
     // Check if there are subscribers before publishing
     const subscribers = await pubsub.getSubscribers(PUBSUB_PEER_DISCOVERY);
@@ -165,7 +167,10 @@ server.addEventListener("connection:close", async (event) => {
       return;
     }
 
-    await pubsub.publish(PUBSUB_PEER_DISCOVERY, new TextEncoder().encode(message));
+    await pubsub.publish(
+      PUBSUB_PEER_DISCOVERY,
+      new TextEncoder().encode(message)
+    );
   } catch (error) {
     console.log("Error publishing disconnect message:", error);
   }
