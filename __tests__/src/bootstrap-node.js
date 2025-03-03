@@ -84,7 +84,12 @@ const server = await createLibp2p({
     autoNat: autoNAT(),
     identify: identify(),
     identifyPush: identifyPush(),
-    pubsub: gossipsub(),
+    pubsub: gossipsub({
+      allowPublishToZeroPeers: true,
+      emitSelf: true,
+      gossipIncoming: true,
+      fallbackToFloodsub: true
+    }),
     relay: circuitRelayServer({
       reservations: {
         maxReservations: Infinity, // No strict limit

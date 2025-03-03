@@ -262,6 +262,11 @@ export class KaibaNet extends EventEmitter {
     try {
       await this.peerToPeer?.subscribeTopic(roomId);
       await new Promise((resolve) => setTimeout(resolve, 300));
+      // Set up room topic listener
+      this.peerToPeer.on(
+        "topic:" + this.roomId + ":message",
+        this.roomTopicMessageHandler
+      );
       await this.peerToPeer?.messageTopic(
         roomId,
         "duel:player:join:" + this.playerId
@@ -282,13 +287,8 @@ export class KaibaNet extends EventEmitter {
   async refreshGameState(roomId: string, gameState: string) {
     console.log("KaibaNet: Refreshing game state", roomId, gameState);
     // Encode the room decks data
-    const jsonString = JSON.stringify(gameState);
-    const base64Encoded = btoa(
-      new TextEncoder()
-        .encode(jsonString)
-        .reduce((acc, byte) => acc + String.fromCharCode(byte), "")
-    );
-    // Send message after delay
+    const base64Encoded = objectToB64(gameState)
+    await new Promise((resolve) => setTimeout(resolve, 3000));
     await this.peerToPeer.messageTopic(
       roomId,
       "duel:refresh:state:" + base64Encoded

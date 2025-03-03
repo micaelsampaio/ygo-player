@@ -79,7 +79,18 @@ export class PeerToPeer extends EventEmitter {
         identify: identify(),
         identifyPush: identifyPush(),
         ping: ping(),
-        pubsub: gossipsub(),
+        pubsub: gossipsub({
+          allowPublishToZeroPeers: true,
+          emitSelf: true,
+          gossipIncoming: true,
+          fallbackToFloodsub: true,
+          directPeers: [],
+          scoreThresholds: {
+            publishThreshold: -1000,
+            graylistThreshold: -1000,
+            acceptPXThreshold: -1000,
+          }
+        }),
       },
     });
 
@@ -335,31 +346,21 @@ export class PeerToPeer extends EventEmitter {
   }
 
   public async subscribeTopic(topic: string) {
-    console.log("P2P: Attempting to subscribe to topic:", topic);
     try {
       await this.libp2p.services.pubsub.subscribe(topic);
-      console.log(`P2P: Successfully subscribed to topic: ${topic}`);
-
-      const currentTopics = await this.libp2p.services.pubsub.getTopics();
-      console.log("P2P: Current topics:", currentTopics);
-
-      const subs = await this.libp2p.services.pubsub.getSubscribers(topic);
-      console.log(`P2P: Subscribers for topic ${topic}:`, subs);
-      console.log("Gossipsub mesh:", this.libp2p.services.pubsub);
-      console.log("Connected Peers:", this.libp2p.services.pubsub.getPeers());
-      const { topics, subscriptions, mesh } = await this.libp2p.services.pubsub;
-      console.log(
-        "P2P: Current mesh:",
-        "topics:",
-        topics,
-        "subscriptions:",
-        subscriptions,
-        "mesh:",
-        mesh
-      );
+      console.log(`P2P: Subscribed to topic: ${topic}`);
+      
+      // Debug logs
+      console.log("Pubsub peers:", this.libp2p.services.pubsub.getPeers());
+      console.log("Pubsub mesh for topic:", this.libp2p.services.pubsub.mesh.get(topic));
+      console.log("All topics:", this.libp2p.services.pubsub.getTopics());
+      
+      // Check if we're actually connected to the relay
+      const relayPeers = this.libp2p.getConnections()
+        .filter(conn => conn.remoteAddr.toString().includes('p2p-circuit'));
+      console.log("Relay connections:", relayPeers);
     } catch (error) {
       console.error("P2P: Subscription failed:", error);
-      throw error;
     }
   }
 
