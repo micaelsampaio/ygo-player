@@ -66,6 +66,7 @@ export class FusionSummonEventHandler extends YGOCommandHandler {
 
             const startRadius = radius * 2;
             const angle = (i / materialsCount) * Math.PI * 2;
+            cardOverlay.rotation.set(0, 0, 0);
             cardOverlay.position.copy(pivotPosition).add(
                 new THREE.Vector3(
                     Math.cos(angle) * startRadius,
@@ -79,7 +80,7 @@ export class FusionSummonEventHandler extends YGOCommandHandler {
             return cardOverlay;
         });
 
-        duel.fields[event.player].hand.render();
+        duel.updateHand(event.player);
         duel.fields[event.player].mainDeck.updateDeck();
         duel.fields[event.player].extraDeck.updateExtraDeck();
 
@@ -101,7 +102,7 @@ export class FusionSummonEventHandler extends YGOCommandHandler {
             opacity: 0.8,
         });
         const fusionPlane2Mat = new THREE.MeshBasicMaterial({
-            color: 0x00ffa5,
+            color: 0x0000ff,
             map: fusionImage,
             transparent: true,
             opacity: 0.8,
@@ -264,54 +265,12 @@ export class FusionSummonEventHandler extends YGOCommandHandler {
             ),
             new CallbackTransition(() => {
                 cardZone?.setGameCard(fusionCard);
+                cardZone?.getGameCard().showCardStats();
                 duel.core.clearSceneOverlay();
                 this.props.onCompleted();
             })
         )
 
-        // const originZoneData = YGOGameUtils.getZoneData(event.originZone)!;
-        // const zoneData = YGOGameUtils.getZoneData(event.zone)!;
-
-        // const camera = duel.camera;
-        // const cardZone = getGameZone(duel, zoneData);
-        // const endPosition = getZonePositionFromZoneData(duel, zoneData);
-        // const endRotation = getCardRotationFromFieldZoneData(duel, this.cardReference, zoneData);
-
-        // const direction = new THREE.Vector3();
-        // camera.getWorldDirection(direction);
-
-        // const startPosition = camera.position.clone().add(direction.multiplyScalar(4));
-        // const card = new GameCard({ duel, card: this.cardReference });
-        // card.hideCardStats();
-        // card.gameObject.position.copy(startPosition);
-        // card.gameObject.visible = false;
-        // card.gameObject.lookAt(camera.position);
-
-        // sequence.add(new CallbackTransition(() => {
-        //     card.gameObject.visible = true;
-        //     duel.fields[originZoneData.player].extraDeck.updateExtraDeck();
-        // }))
-        //     .add(new WaitForSeconds(1))
-        //     .add(
-        //         new MultipleTasks(
-        //             new PositionTransition({
-        //                 gameObject: card.gameObject,
-        //                 position: endPosition,
-        //                 duration: 0.5
-        //             }),
-        //             new RotationTransition({
-        //                 gameObject: card.gameObject,
-        //                 rotation: endRotation,
-        //                 duration: 0.5
-        //             })
-        //         )
-        //     )
-        //     .add(new CallbackTransition(() => {
-        //         this.props.onCompleted();
-        //     }));
-
         startTask(sequence);
-
-        // cardZone?.setGameCard(card);
     }
 }
