@@ -1,4 +1,12 @@
 // @ts-nocheck
+import type {
+  Connection,
+  Message,
+  SignedMessage,
+  PeerId,
+  Libp2p,
+  PeerInfo,
+} from "@libp2p/interface";
 import * as filters from "@libp2p/websockets/filters";
 import { identify, identifyPush } from "@libp2p/identify";
 import { ping } from "@libp2p/ping";
@@ -8,7 +16,7 @@ import { bootstrap } from "@libp2p/bootstrap";
 import { createLibp2p } from "libp2p";
 import { noise } from "@chainsafe/libp2p-noise";
 import { yamux } from "@chainsafe/libp2p-yamux";
-import { webRTC } from "@libp2p/webrtc";
+import { webRTC, webRTCDirect } from "@libp2p/webrtc";
 import { circuitRelayTransport } from "@libp2p/circuit-relay-v2";
 import { webTransport } from "@libp2p/webtransport";
 import { pipe } from "it-pipe";
@@ -19,7 +27,11 @@ import { pubsubPeerDiscovery } from "@libp2p/pubsub-peer-discovery";
 import { toString as uint8ArrayToString } from "uint8arrays/to-string";
 import { peerIdFromString } from "@libp2p/peer-id";
 import { dcutr } from "@libp2p/dcutr";
-
+import first from "it-first";
+import {
+  createDelegatedRoutingV1HttpApiClient,
+  DelegatedRoutingV1HttpApiClient,
+} from "@helia/delegated-routing-v1-http-api-client";
 import EventEmitter from "events";
 
 export class PeerToPeer extends EventEmitter {
@@ -50,8 +62,40 @@ export class PeerToPeer extends EventEmitter {
     );
   }
 
+  private async getRelayListenAddrs(): Promise<string[]> {
+    const peers: PeerInfo = [
+      { id: this.bootstrapNodePeerId, Addrs: [multiaddr(this.bootstrapNode)] },
+    ];
+    const relayListenAddrs = [];
+    for (const p of peers) {
+      if (p && p.Addrs.length > 0) {
+        for (const maddr of p.Addrs) {
+          const protos = maddr.protoNames();
+          // Note: narrowing to Secure WebSockets and IP4 addresses to avoid potential issues with ipv6
+          // https://github.com/libp2p/js-libp2p/issues/2977
+          if (protos.includes("ws")) {
+            if (maddr.nodeAddress().address === "127.0.0.1") continue; // skip loopback
+            relayListenAddrs.push(this.getRelayListenAddr(maddr, p.id));
+          }
+        }
+      }
+    }
+    return relayListenAddrs;
+  }
+
+  // Constructs a multiaddr string representing the circuit relay v2 listen address for a relayed connection to the given peer.
+  private getRelayListenAddr = (maddr: Multiaddr, peer: PeerId): string =>
+    `${maddr.toString()}/p2p/${peer.toString()}/p2p-circuit`;
+
   public async startP2P() {
     console.log("P2P: Bootstrap Node:", this.bootstrapNode);
+    const delegatedClient = createDelegatedRoutingV1HttpApiClient(
+      "https://delegated-ipfs.dev"
+    );
+
+    const relayListenAddrs = await this.getRelayListenAddrs(delegatedClient);
+    console.log("starting libp2p with relayListenAddrs: %o", relayListenAddrs);
+
     this.libp2p = await createLibp2p({
       addresses: {
         listen: ["/p2p-circuit", "/webrtc"],
@@ -60,6 +104,7 @@ export class PeerToPeer extends EventEmitter {
         webSockets({ filter: filters.all }),
         webTransport(),
         webRTC(),
+        webRTCDirect(),
         circuitRelayTransport({
           discoverRelays: 1,
         }),
@@ -68,6 +113,7 @@ export class PeerToPeer extends EventEmitter {
         pubsubPeerDiscovery({
           interval: 5000,
           topics: [this.discoveryTopic],
+          listenOnly: false,
         }),
         bootstrap({
           list: [this.bootstrapNode],
@@ -83,11 +129,13 @@ export class PeerToPeer extends EventEmitter {
         identifyPush: identifyPush(),
         ping: ping(),
         dcutr: dcutr(),
+        //delegatedRouting: () => delegatedClient,
         pubsub: gossipsub({
           allowPublishToZeroPeers: true,
           emitSelf: false,
           gossipIncoming: true,
           fallbackToFloodsub: true,
+          ignoreDuplicatePublishError: true,
           directPeers: [
             {
               id: this.bootstrapNodePeerId,
@@ -216,32 +264,50 @@ export class PeerToPeer extends EventEmitter {
     }
   }
 
+  // Function to check invalid addresses (synchronous)
+  private isnotValidAddress(address: string): boolean {
+    return (
+      address.includes("127.0.0.1") ||
+      address.includes("localhost") ||
+      address.includes("/p2p-circuit/p2p/")
+    );
+  }
+
+  // Function to try multiple addresses and connect to the first valid one
   private async tryAddresses(addresses: string[]): Promise<boolean> {
     console.log("P2P: Trying multiple addresses:", addresses);
 
-    let bestConnection = null;
+    // Filter out invalid addresses
+    const filteredAddresses = addresses.filter(
+      (addr) => !this.isnotValidAddress(addr) // Remove invalid addresses
+    );
 
-    for (const addr of addresses) {
+    console.log(
+      "Filtered addresses (should exclude invalid):",
+      filteredAddresses
+    );
+
+    if (filteredAddresses.length === 0) {
+      console.log("No valid addresses found.");
+      return false;
+    }
+
+    // Try each filtered address
+    for (const addr of filteredAddresses) {
       try {
+        console.log("Trying address:", addr);
         const connected = await this.tryAddress(addr);
         if (connected) {
           console.log(`Successfully connected to ${addr}`);
-          bestConnection = addr;
-          break; // Found a working connection, no need to try others
+          return true; // Return early on success
         }
       } catch (err) {
         console.log(`Failed to connect to ${addr}:`, err.message);
-        continue;
       }
     }
 
-    if (bestConnection) {
-      console.log(`Selected connection: ${bestConnection}`);
-      return true;
-    }
-
-    console.log("Failed to connect to any address");
-    return false;
+    console.log("No valid connection could be established.");
+    return false; // Return false if no connection succeeded
   }
 
   public async connectToPeerWithFallback(
@@ -474,18 +540,17 @@ export class PeerToPeer extends EventEmitter {
         }
 
         // Modify addresses to include target peer ID for circuit addresses
-        const addresses = peerInfo.addresses
-          .map((addr) => {
-            const addrStr = addr.multiaddr.toString();
-            if (addrStr.includes("/p2p-circuit")) {
-              // Only append peer ID if it's not already there
-              if (!addrStr.endsWith(peerId)) {
-                return `${addrStr}/p2p/${peerId}`;
-              }
-            }
-            return addrStr;
-          })
-          .slice(1); // Skip the first address
+        const addresses = peerInfo.addresses.map((addr) => {
+          const addrStr = addr.multiaddr.toString();
+          //if (addrStr.includes("/p2p-circuit")) {
+          // Only append peer ID if it's not already there
+          //if (!addrStr.endsWith(peerId)) {
+          //  return `${addrStr}/p2p/${peerId}`;
+          //}
+          //}
+          return addrStr;
+        });
+        //.slice(7); // Skip the first address
 
         console.log("Attempting to connect with addresses:", addresses);
         return await this.tryAddresses(addresses);

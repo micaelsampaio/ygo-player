@@ -28,7 +28,8 @@ if (enableWSS) {
 
 const listenAddresses = [
   "/ip4/0.0.0.0/tcp/3002/ws", // WebSocket (WS)
-  "/ip4/0.0.0.0/tcp/3003", // TCP
+  "/ip4/0.0.0.0/udp/3004/quic-v1/webtransport", // WebTransport
+  "/webrtc", // WebRTC
   "/p2p-circuit", // Circuit relay
 ];
 
@@ -86,6 +87,7 @@ const server = await createLibp2p({
       emitSelf: false,
       gossipIncoming: true,
       fallbackToFloodsub: true,
+      ignoreDuplicatePublishError: true,
       scoreThresholds: {
         publishThreshold: -1000,
         graylistThreshold: -1000,
