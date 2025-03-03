@@ -81,7 +81,7 @@ export class PeerToPeer extends EventEmitter {
         ping: ping(),
         pubsub: gossipsub({
           allowPublishToZeroPeers: true,
-          emitSelf: true,
+          emitSelf: false,
           gossipIncoming: true,
           fallbackToFloodsub: true,
           directPeers: [],
