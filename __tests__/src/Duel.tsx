@@ -28,7 +28,7 @@ export default function Duel() {
 
       // If we came from URL parameter and don't have data, join the room
       if (urlRoomId && !location.state?.duelDataProp) {
-        kaibaNet.joinRoom(newRoomId);
+        //kaibaNet.joinRoom(newRoomId);
       }
     }
   }, [location, urlRoomId, kaibaNet]);
@@ -38,7 +38,9 @@ export default function Duel() {
     if (!duelData) return;
     console.log("TCL: Duel: Setting up YGO player with data:", duelData);
 
-    const ygo: YGOPlayerComponent = document.querySelector("ygo-player")! as any;
+    const ygo: YGOPlayerComponent = document.querySelector(
+      "ygo-player"
+    )! as any;
     console.log("duelData", duelData);
     console.log("roomId", roomId);
 
@@ -69,18 +71,23 @@ export default function Duel() {
       return;
     }
     let SEND_COMMAND_ALLOWED = true;
-    const ygo: YGOPlayerComponent = document.querySelector("ygo-player")! as any;
+    const ygo: YGOPlayerComponent = document.querySelector(
+      "ygo-player"
+    )! as any;
 
     ygo.on("start", () => {
       const handleCommandExecuted = (data: any) => {
-        console.log("TCL: SEND COMMAND ", JSON.stringify(data.command.toJSON()));
-        if(SEND_COMMAND_ALLOWED){
+        console.log(
+          "TCL: SEND COMMAND ",
+          JSON.stringify(data.command.toJSON())
+        );
+        if (SEND_COMMAND_ALLOWED) {
           kaibaNet.execYGOCommand(roomId, data.command.toCommandData());
         }
-      }
+      };
       setTimeout(() => {
         ygo.on("command-executed", handleCommandExecuted);
-      }, 1000)
+      }, 1000);
     });
 
     console.log("Setting up game state refresh listener. RoomId:", roomId);
@@ -103,20 +110,22 @@ export default function Duel() {
       const commands = ygoCore.commands;
 
       if (commands.length > 0) {
-        const currentCommand = commands.find((c: any) => c.commandId === command.commandId);
+        const currentCommand = commands.find(
+          (c: any) => c.commandId === command.commandId
+        );
         if (currentCommand) return;
       }
       console.log("TCL: WILL EXEC ", command);
       SEND_COMMAND_ALLOWED = false;
       ygo.duel.execCommand(JSON.stringify(command));
       SEND_COMMAND_ALLOWED = true;
-    }
+    };
 
     // Add this log to verify the event is being subscribed
     console.log("Subscribing to duel:refresh:state: event");
     kaibaNet.on("duel:refresh:state:", handleGameStateRefresh);
 
-    kaibaNet.on("duel:command:exec", handleCommandExec)
+    kaibaNet.on("duel:command:exec", handleCommandExec);
 
     return () => {
       console.log("Cleaning up game state refresh listener");
@@ -132,9 +141,11 @@ export default function Duel() {
     const handlePlayerJoin = (playerJoinedId: string) => {
       console.log("Player joined:", playerJoinedId);
       if (kaibaNet.getPlayerId() === roomId) {
-        const ygo: YGOPlayerComponent = document.querySelector("ygo-player")! as any;
+        const ygo: YGOPlayerComponent = document.querySelector(
+          "ygo-player"
+        )! as any;
         const currentDuelState = ygo.duel.ygo.getCurrentStateProps();
-        console.log("Duel data: ", currentDuelState)
+        console.log("Duel data: ", currentDuelState);
 
         kaibaNet.refreshGameState(roomId, currentDuelState);
       }
@@ -176,7 +187,6 @@ export default function Duel() {
         position: "relative",
       }}
     >
-
       {/* @ts-ignore */}
       <ygo-player />
 

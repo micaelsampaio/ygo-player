@@ -138,7 +138,7 @@ export class KaibaNet extends EventEmitter {
     // Handle player join messages in room topic
     if (messageStr.includes("duel:command:exec:")) {
       const command = b64ToObject(messageStr.split(":")[3]);
-      console.log("TCL:: EXEC COMMAND ", command)
+      console.log("TCL:: EXEC COMMAND ", command);
       this.emit("duel:command:exec", command);
     }
   };
@@ -223,61 +223,63 @@ export class KaibaNet extends EventEmitter {
     this.emit("rooms:updated", this.rooms);
   }
 
-  async joinRoom(roomId: string, retryAttempts = 5, retryDelay = 5000) {
-    this.roomId = roomId;
-await new Promise((resolve) => setTimeout(resolve, 5000));
-    // First check if we're already connected
-//    if (this.peerToPeer && await this.peerToPeer.isPeerConnected(roomId)) {
-//      console.log(`Already connected to room ${roomId}, proceeding with subscription`);
-//    } else {
-      // Try to connect to the peer with retries
-      for (let attempt = 1; attempt <= retryAttempts; attempt++) {
-        try {
-          const player = this.players.get(roomId);
+  private waitForPlayer = async (roomId, retryAttempts, retryDelay) => {
+    for (let attempt = 1; attempt <= retryAttempts; attempt++) {
+      const player = this.players.get(roomId);
+      if (player) return player; // Return the player immediately when found
 
-          if (!player) {
-            console.log(`Attempt ${attempt}: Waiting for player discovery...`);
-            await new Promise(resolve => setTimeout(resolve, retryDelay));
-            continue;
-          }
-
-          console.log(`Attempt ${attempt}: Connecting to peer...`);
-await new Promise((resolve) => setTimeout(resolve, 5000));
-          const connected = await this.peerToPeer?.connectToPeerWithFallback(roomId, player.addresses);
-          await new Promise((resolve) => setTimeout(resolve, 5000));  
-          if (!connected) {
-            throw new Error("Failed to connect using any method");
-          }
-          break; // Successfully connected, exit retry loop
-        } catch (error) {
-          console.log(`Attempt ${attempt} failed:`, error);
-          if (attempt === retryAttempts) {
-            throw new Error(`Failed to join room after ${retryAttempts} attempts`);
-          }
-          await new Promise(resolve => setTimeout(resolve, retryDelay));
-        }
-      }
-  //  }
-
-    // Proceed with room subscription and setup
-    try {
-      // Set up room topic listener
-      this.peerToPeer.on(
-        "topic:" + this.roomId + ":message",
-        this.roomTopicMessageHandler
-      );
-await new Promise((resolve) => setTimeout(resolve, 10000));
-await this.peerToPeer?.subscribeTopic(roomId);
-await new Promise((resolve) => setTimeout(resolve, 10000));
-      await this.peerToPeer?.messageTopic(
-        roomId,
-        "duel:player:join:" + this.playerId
-      );
-await new Promise((resolve) => setTimeout(resolve, 5000));
-    } catch (error) {
-      console.error("Failed to setup room subscription:", error);
-      throw error;
+      console.log(`Attempt ${attempt}: Waiting for player discovery...`);
+      await new Promise((resolve) => setTimeout(resolve, retryDelay));
     }
+    return null; // Return null if no player is found after all attempts
+  };
+
+  async joinRoom(roomId: string, retryAttempts = 5, retryDelay = 5000) {
+    console.log(`Attempting to join room ${roomId}...`);
+    this.roomId = roomId;
+    const player = await this.waitForPlayer(roomId, retryAttempts, retryDelay);
+
+    if (!player) {
+      throw new Error("End of attempts to wait for player discovery");
+    }
+
+    console.log(`Connecting to peer...`);
+    const connected = await this.peerToPeer?.connectToPeerWithFallback(
+      roomId,
+      player.addresses
+    );
+
+    if (!connected) {
+      throw new Error("Failed to connect to peer using any method");
+    }
+
+    console.log(
+      `Connected to peer ${roomId}. Waiting 10s before subscribing to topic...`
+    );
+    // Subscribe to room topic
+    this.peerToPeer.on(
+      `topic:${this.roomId}:message`,
+      this.roomTopicMessageHandler
+    );
+
+    await new Promise((resolve) => setTimeout(resolve, 10000));
+
+    // First check if we are connected
+    if (!(await this.peerToPeer.isPeerConnected(roomId))) {
+      throw new Error("Peer not connected");
+    }
+    const subscribed = await this.peerToPeer?.subscribeTopic(roomId);
+    if (!subscribed) {
+      throw new Error("Failed to subscribe to room topic");
+    }
+    console.log(
+      `Subscribed to room topic ${roomId}. Waiting 10 before sending join message...`
+    );
+    await new Promise((resolve) => setTimeout(resolve, 10000));
+    await this.peerToPeer?.messageTopic(
+      roomId,
+      `duel:player:join:${this.playerId}`
+    );
   }
 
   public cleanupRoomListener(roomId: string) {
@@ -290,7 +292,7 @@ await new Promise((resolve) => setTimeout(resolve, 5000));
   async refreshGameState(roomId: string, gameState: string) {
     console.log("KaibaNet: Refreshing game state", roomId, gameState);
     // Encode the room decks data
-    const base64Encoded = objectToB64(gameState)
+    const base64Encoded = objectToB64(gameState);
     await new Promise((resolve) => setTimeout(resolve, 3000));
     await this.peerToPeer.messageTopic(
       roomId,
@@ -311,6 +313,7 @@ function objectToB64(json: any) {
   const jsonStr = JSON.stringify(json);
   return stringToB64(jsonStr);
 }
+
 function stringToB64(str: string) {
   const base64Encoded = btoa(
     new TextEncoder()
@@ -319,11 +322,13 @@ function stringToB64(str: string) {
   );
   return base64Encoded;
 }
+
 function b64ToString(str: any) {
   return new TextDecoder().decode(
     Uint8Array.from(atob(str), (c) => c.charCodeAt(0))
-  )
+  );
 }
+
 function b64ToObject(data: any) {
   return JSON.parse(b64ToString(data));
 }

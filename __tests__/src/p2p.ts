@@ -126,12 +126,12 @@ export class PeerToPeer extends EventEmitter {
         webRTC({
           rtcConfiguration: {
             iceServers: [
-             // {
+              // {
               //  urls: [
-                //  "stun:stun.l.google.com:19302",
-                //  "stun:stun.l.google.com:5349",
-                //  "stun:stun1.l.google.com:3478",
-               // ],
+              //  "stun:stun.l.google.com:19302",
+              //  "stun:stun.l.google.com:5349",
+              //  "stun:stun1.l.google.com:3478",
+              // ],
               //},
               {
                 urls: "turn:master-duel-turn.baseira.casa:3478?transport=tcp",
@@ -508,8 +508,10 @@ export class PeerToPeer extends EventEmitter {
         .getConnections()
         .filter((conn) => conn.remoteAddr.toString().includes("p2p-circuit"));
       console.log("Relay connections:", relayPeers);
+      return true;
     } catch (error) {
       console.error("P2P: Subscription failed:", error);
+      return false;
     }
   }
 
