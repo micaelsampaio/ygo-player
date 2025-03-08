@@ -8,7 +8,7 @@ import { webSockets } from "@libp2p/websockets";
 import { tcp } from "@libp2p/tcp";
 import * as filters from "@libp2p/websockets/filters";
 import { createLibp2p } from "libp2p";
-import { webRTC } from "@libp2p/webrtc";
+import { webRTC, webRTCDirect } from "@libp2p/webrtc";
 import { webTransport } from "@libp2p/webtransport";
 import fs from "fs";
 import { identify, identifyPush } from "@libp2p/identify";
@@ -28,7 +28,7 @@ if (enableWSS) {
 
 const listenAddresses = [
   "/ip4/0.0.0.0/tcp/3002/ws", // WebSocket (WS)
-  "/ip4/0.0.0.0/udp/3004/quic-v1/webtransport", // WebTransport
+  "/ip4/0.0.0.0/udp/9090/webrtc-direct",
   "/webrtc", // WebRTC
   "/p2p-circuit", // Circuit relay
 ];
@@ -44,17 +44,26 @@ const transports = [
   webRTC({
     rtcConfiguration: {
       iceServers: [
+        { urls: "stun:stun.l.google.com:19302" },
         {
-          urls: [
-            "stun:stun.l.google.com:19302",
-            "stun:global.stun.twilio.com:3478",
-          ],
+          urls: "turn:master-duel-turn.baseira.casa:3478",
+          username: "kaiba",
+          credential: "downfall",
         },
       ],
     },
+    debugWebRTC: true,
+  }),
+  webRTCDirect({
+    // Optional config for direct connections
+    maxInboundStreams: 1000,
+    maxOutboundStreams: 1000,
+    listenerOptions: {
+      port: 9090, // Specific port for WebRTC-Direct
+    },
   }),
   webTransport(),
-  circuitRelayTransport({ discoverRelays: 1 }),
+  circuitRelayTransport({ discoverRelays: 2 }),
 ];
 
 // Add WSS transport only if enabled
@@ -78,6 +87,9 @@ const server = await createLibp2p({
   transports,
   connectionEncrypters: [noise()],
   streamMuxers: [yamux()],
+  connectionGater: {
+    denyDialMultiaddr: () => false,
+  },
   services: {
     autoNat: autoNAT(),
     identify: identify(),

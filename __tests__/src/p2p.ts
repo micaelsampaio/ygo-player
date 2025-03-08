@@ -135,7 +135,14 @@ export class PeerToPeer extends EventEmitter {
           },
           debugWebRTC: true,
         }),
-        webRTCDirect(),
+        webRTCDirect({
+          // Optional config for direct connections
+          maxInboundStreams: 1000,
+          maxOutboundStreams: 1000,
+          listenerOptions: {
+            port: 9090, // Specific port for WebRTC-Direct
+          },
+        }),
         circuitRelayTransport({
           discoverRelays: 2,
         }),
