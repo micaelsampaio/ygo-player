@@ -119,7 +119,7 @@ export class PeerToPeer extends EventEmitter {
             iceServers: [
               { urls: "stun:stun.l.google.com:19302" },
               {
-                urls: "turn:master-duel-node.baseira.casa:3478",
+                urls: "turn:master-duel-turn.baseira.casa:3478",
                 username: "kaiba",
                 credential: "downfall",
               },
