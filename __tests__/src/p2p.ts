@@ -126,21 +126,21 @@ export class PeerToPeer extends EventEmitter {
         webRTC({
           rtcConfiguration: {
             iceServers: [
+             // {
+              //  urls: [
+                //  "stun:stun.l.google.com:19302",
+                //  "stun:stun.l.google.com:5349",
+                //  "stun:stun1.l.google.com:3478",
+               // ],
+              //},
               {
-                urls: [
-                  "stun:stun.l.google.com:19302",
-                  "stun:stun.l.google.com:5349",
-                  "stun:stun1.l.google.com:3478",
-                ],
-              },
-              {
-                urls: "turn:master-duel-turn.baseira.casa:3478",
+                urls: "turn:master-duel-turn.baseira.casa:3478?transport=tcp",
                 username: "kaiba",
                 credential: "downfall",
                 //                credentialType: "password",
               },
             ],
-            iceCandidatePoolSize: 10,
+            //iceCandidatePoolSize: 10,
             iceTransportPolicy: "relay",
             rtcpMuxPolicy: "require",
           },

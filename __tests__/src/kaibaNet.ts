@@ -223,13 +223,13 @@ export class KaibaNet extends EventEmitter {
     this.emit("rooms:updated", this.rooms);
   }
 
-  async joinRoom(roomId: string, retryAttempts = 5, retryDelay = 1000) {
+  async joinRoom(roomId: string, retryAttempts = 5, retryDelay = 5000) {
     this.roomId = roomId;
-
+await new Promise((resolve) => setTimeout(resolve, 5000));
     // First check if we're already connected
-    if (this.peerToPeer && await this.peerToPeer.isPeerConnected(roomId)) {
-      console.log(`Already connected to room ${roomId}, proceeding with subscription`);
-    } else {
+//    if (this.peerToPeer && await this.peerToPeer.isPeerConnected(roomId)) {
+//      console.log(`Already connected to room ${roomId}, proceeding with subscription`);
+//    } else {
       // Try to connect to the peer with retries
       for (let attempt = 1; attempt <= retryAttempts; attempt++) {
         try {
@@ -242,8 +242,9 @@ export class KaibaNet extends EventEmitter {
           }
 
           console.log(`Attempt ${attempt}: Connecting to peer...`);
+await new Promise((resolve) => setTimeout(resolve, 5000));
           const connected = await this.peerToPeer?.connectToPeerWithFallback(roomId, player.addresses);
-            
+          await new Promise((resolve) => setTimeout(resolve, 5000));  
           if (!connected) {
             throw new Error("Failed to connect using any method");
           }
@@ -256,21 +257,23 @@ export class KaibaNet extends EventEmitter {
           await new Promise(resolve => setTimeout(resolve, retryDelay));
         }
       }
-    }
+  //  }
 
     // Proceed with room subscription and setup
     try {
-      await this.peerToPeer?.subscribeTopic(roomId);
-      await new Promise((resolve) => setTimeout(resolve, 300));
       // Set up room topic listener
       this.peerToPeer.on(
         "topic:" + this.roomId + ":message",
         this.roomTopicMessageHandler
       );
+await new Promise((resolve) => setTimeout(resolve, 10000));
+await this.peerToPeer?.subscribeTopic(roomId);
+await new Promise((resolve) => setTimeout(resolve, 10000));
       await this.peerToPeer?.messageTopic(
         roomId,
         "duel:player:join:" + this.playerId
       );
+await new Promise((resolve) => setTimeout(resolve, 5000));
     } catch (error) {
       console.error("Failed to setup room subscription:", error);
       throw error;
