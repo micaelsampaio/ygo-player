@@ -135,9 +135,9 @@ export class PeerToPeer extends EventEmitter {
               },
               {
                 urls: "turn:master-duel-turn.baseira.casa:3478",
-                username: "kaiba",
-                credential: "downfall",
-                credentialType: "password",
+                //                username: "kaiba",
+                //                credential: "downfall",
+                //                credentialType: "password",
               },
             ],
             iceCandidatePoolSize: 10,
