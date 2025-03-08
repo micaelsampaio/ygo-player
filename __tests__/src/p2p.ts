@@ -99,14 +99,36 @@ export class PeerToPeer extends EventEmitter {
     this.libp2p = await createLibp2p({
       addresses: {
         listen: ["/p2p-circuit", "/webrtc"],
+        announce: [
+          "/dns4/master-duel-node.baseira.casa/tcp/443/wss",
+          "/dns4/master-duel-node.baseira.casa/udp/443/webtransport",
+        ],
+        announceFilter: (multiaddrs) => {
+          // Filter out local addresses when announcing
+          return multiaddrs.filter((ma) => {
+            const addr = ma.nodeAddress().address;
+            return !addr.match(/^(127\.|172\.|::1|fe80:)/);
+          });
+        },
       },
       transports: [
         webSockets({ filter: filters.all }),
         webTransport(),
-        webRTC(),
+        webRTC({
+          rtcConfiguration: {
+            iceServers: [
+              { urls: "stun:stun.l.google.com:19302" },
+              {
+                urls: "turn:master-duel-node.baseira.casa:3478",
+                username: "kaiba",
+                credential: "downfall",
+              },
+            ],
+          },
+        }),
         webRTCDirect(),
         circuitRelayTransport({
-          discoverRelays: 1,
+          discoverRelays: 2,
         }),
       ],
       peerDiscovery: [
