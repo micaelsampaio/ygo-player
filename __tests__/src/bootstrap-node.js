@@ -44,11 +44,18 @@ const transports = [
   webRTC({
     rtcConfiguration: {
       iceServers: [
-        { urls: "stun:stun.l.google.com:19302" },
+        {
+          urls: [
+            "stun:stun.l.google.com:19302",
+            "stun:stun.l.google.com:5349",
+            "stun:stun1.l.google.com:3478",
+          ],
+        },
         {
           urls: "turn:master-duel-turn.baseira.casa:3478",
           username: "kaiba",
           credential: "downfall",
+          credentialType: "password",
         },
       ],
     },
