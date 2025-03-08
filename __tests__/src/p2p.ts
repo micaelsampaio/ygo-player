@@ -140,6 +140,8 @@ export class PeerToPeer extends EventEmitter {
                 credentialType: "password",
               },
             ],
+            iceCandidatePoolSize: 10,
+            iceTransportPolicy: "all",
           },
           debugWebRTC: true,
         }),

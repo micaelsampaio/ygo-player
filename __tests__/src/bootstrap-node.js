@@ -58,6 +58,8 @@ const transports = [
           credentialType: "password",
         },
       ],
+      iceCandidatePoolSize: 10,
+      iceTransportPolicy: "all",
     },
     debugWebRTC: true,
   }),
