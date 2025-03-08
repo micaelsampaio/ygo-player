@@ -34,6 +34,10 @@ import {
 } from "@helia/delegated-routing-v1-http-api-client";
 import EventEmitter from "events";
 
+import { logger } from "@libp2p/logger";
+
+const log = logger("libp2p:bootstrap");
+
 export class PeerToPeer extends EventEmitter {
   PROTOCOL = "/chat/1.0.0";
   private peerId = null;
@@ -89,20 +93,24 @@ export class PeerToPeer extends EventEmitter {
 
   public async startP2P() {
     console.log("P2P: Bootstrap Node:", this.bootstrapNode);
-    const delegatedClient = createDelegatedRoutingV1HttpApiClient(
-      "https://delegated-ipfs.dev"
-    );
-
-    const relayListenAddrs = await this.getRelayListenAddrs(delegatedClient);
-    console.log("starting libp2p with relayListenAddrs: %o", relayListenAddrs);
 
     this.libp2p = await createLibp2p({
+      connectionManager: {
+        // Add event listeners
+        onConnect: (connection) => {
+          console.log("Connected to:", connection.remotePeer.toString());
+          console.log("via:", connection.remoteAddr.toString());
+        },
+        onDisconnect: (connection) => {
+          console.log("Disconnected from:", connection.remotePeer.toString());
+        },
+      },
       addresses: {
         listen: ["/p2p-circuit", "/webrtc"],
-        announce: [
-          "/dns4/master-duel-node.baseira.casa/tcp/443/wss",
-          "/dns4/master-duel-node.baseira.casa/udp/443/webtransport",
-        ],
+        // announce: [
+        //   "/dns4/master-duel-node.baseira.casa/tcp/443/wss",
+        //   "/dns4/master-duel-node.baseira.casa/udp/443/webtransport",
+        // ],
         announceFilter: (multiaddrs) => {
           // Filter out local addresses when announcing
           return multiaddrs.filter((ma) => {
@@ -125,6 +133,7 @@ export class PeerToPeer extends EventEmitter {
               },
             ],
           },
+          debugWebRTC: true,
         }),
         webRTCDirect(),
         circuitRelayTransport({
@@ -139,6 +148,10 @@ export class PeerToPeer extends EventEmitter {
         }),
         bootstrap({
           list: [this.bootstrapNode],
+          timeout: 2000, // Adjust timeout as needed
+          tagName: "bootstrap",
+          tagValue: 50,
+          tagTTL: 120000,
         }),
       ],
       connectionEncrypters: [noise()],
@@ -288,11 +301,7 @@ export class PeerToPeer extends EventEmitter {
 
   // Function to check invalid addresses (synchronous)
   private isnotValidAddress(address: string): boolean {
-    return (
-      address.includes("127.0.0.1") ||
-      address.includes("localhost") ||
-      address.includes("/p2p-circuit/p2p/")
-    );
+    return address.includes("/p2p-circuit/p2p/");
   }
 
   // Function to try multiple addresses and connect to the first valid one
