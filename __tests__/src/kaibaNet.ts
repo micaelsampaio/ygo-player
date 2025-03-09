@@ -42,7 +42,7 @@ export class KaibaNet extends EventEmitter {
     this.playerId = peerId;
 
     // Subscribe to topic
-    await this.peerToPeer.subscribeTopic(peerId);
+    //await this.peerToPeer.subscribeTopic(peerId);
 
     // Set up event listeners
     this.setupEventListeners();
@@ -67,6 +67,7 @@ export class KaibaNet extends EventEmitter {
   }
 
   private addPlayer = ({ peerId, addresses }) => {
+    console.log("xxxxxxxxxxxxxxxxxxx");
     console.log("KaibaNet: Peer discovered", peerId, addresses);
     this.players = new Map(this.players).set(peerId, {
       id: peerId,
@@ -225,6 +226,7 @@ export class KaibaNet extends EventEmitter {
 
   private waitForPlayer = async (roomId, retryAttempts, retryDelay) => {
     for (let attempt = 1; attempt <= retryAttempts; attempt++) {
+      console.log(this.players);
       const player = this.players.get(roomId);
       if (player) return player; // Return the player immediately when found
 
@@ -237,12 +239,13 @@ export class KaibaNet extends EventEmitter {
   async joinRoom(roomId: string, retryAttempts = 5, retryDelay = 5000) {
     console.log(`Attempting to join room ${roomId}...`);
     this.roomId = roomId;
-    const player = await this.waitForPlayer(roomId, retryAttempts, retryDelay);
 
+    // Wait for player discovery
+    const player = await this.waitForPlayer(roomId, retryAttempts, retryDelay);
     if (!player) {
       throw new Error("End of attempts to wait for player discovery");
     }
-
+    // Connects to the room owner they will exchange the topics they are subscribed to
     console.log(`Connecting to peer...`);
     const connected = await this.peerToPeer?.connectToPeerWithFallback(
       roomId,
@@ -253,29 +256,44 @@ export class KaibaNet extends EventEmitter {
       throw new Error("Failed to connect to peer using any method");
     }
 
-    console.log(
-      `Connected to peer ${roomId}. Waiting 10s before subscribing to topic...`
-    );
-    // Subscribe to room topic
+    // Subscribe to room message events
     this.peerToPeer.on(
       `topic:${this.roomId}:message`,
       this.roomTopicMessageHandler
     );
+    // wait for the gossipsub to update
+    await new Promise((resolve) => setTimeout(resolve, 3000));
 
-    await new Promise((resolve) => setTimeout(resolve, 10000));
+    const roomOwnerConnection = await this.peerToPeer.isPeerConnected(roomId);
+    console.log("KaibaNet: Room owner connection status", roomOwnerConnection);
 
-    // First check if we are connected
-    if (!(await this.peerToPeer.isPeerConnected(roomId))) {
-      throw new Error("Peer not connected");
-    }
+    // Pubsub protocol will send the current peers subcriptions when connects to a peer
+    // Subscribe to room topic
     const subscribed = await this.peerToPeer?.subscribeTopic(roomId);
     if (!subscribed) {
       throw new Error("Failed to subscribe to room topic");
     }
-    console.log(
-      `Subscribed to room topic ${roomId}. Waiting 10 before sending join message...`
-    );
-    await new Promise((resolve) => setTimeout(resolve, 10000));
+
+    // Force mesh refresh after subscription
+    await this.peerToPeer?.refreshMesh(roomId);
+
+    // Wait for the gossipsub to update
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    const meshPeers =
+      this.peerToPeer?.libp2p.services.pubsub.getMeshPeers(roomId);
+    console.log("Mesh peers after refresh:", meshPeers);
+
+    if (!meshPeers || meshPeers.length === 0) {
+      // Try one more refresh
+      await this.peerToPeer?.refreshMesh(roomId);
+    }
+
+    // First check if we are connected
+    if (!roomOwnerConnection) {
+      throw new Error("Peer not connected");
+    }
+
     await this.peerToPeer?.messageTopic(
       roomId,
       `duel:player:join:${this.playerId}`

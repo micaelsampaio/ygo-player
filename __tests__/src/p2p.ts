@@ -27,6 +27,7 @@ import { pubsubPeerDiscovery } from "@libp2p/pubsub-peer-discovery";
 import { toString as uint8ArrayToString } from "uint8arrays/to-string";
 import { peerIdFromString } from "@libp2p/peer-id";
 import { dcutr } from "@libp2p/dcutr";
+import { autoNAT } from "@libp2p/autonat";
 import first from "it-first";
 import {
   createDelegatedRoutingV1HttpApiClient,
@@ -55,7 +56,26 @@ export class PeerToPeer extends EventEmitter {
     const bootstrapNodePeerId = bootstrapNode.split("/p2p/")[1];
     this.bootstrapNodePeerId = peerIdFromString(bootstrapNodePeerId);
     this.streams = new Map();
-    this.setupDebugLogs();
+    this.setupKeepAlive();
+  }
+
+  private setupKeepAlive() {
+    // Send keepalive every 30 seconds
+    this.keepAliveInterval = setInterval(async () => {
+      if (!this.libp2p?.services.pubsub) return;
+
+      try {
+        const topics = this.libp2p.services.pubsub.getTopics();
+        for (const topic of topics) {
+          await this.libp2p.services.pubsub.publish(
+            topic,
+            new TextEncoder().encode(`keepalive:${Date.now()}`)
+          );
+        }
+      } catch (err) {
+        console.warn("Keepalive failed:", err);
+      }
+    }, 30000);
   }
 
   private setupDebugLogs() {
@@ -64,6 +84,13 @@ export class PeerToPeer extends EventEmitter {
       "debug",
       "libp2p:websockets,libp2p:webtransport,libp2p:kad-dht,libp2p:dialer"
     );
+    this.libp2p.services.pubsub.addEventListener("gossipsub:heartbeat", () => {
+      console.log(
+        "Gossip:Mesh peers:",
+        this.libp2p.services.pubsub.getMeshPeers(this.discoveryTopic)
+      );
+      console.log("Gossip:All peers:", this.libp2p.services.pubsub.getPeers());
+    });
   }
 
   private async getRelayListenAddrs(): Promise<string[]> {
@@ -106,7 +133,7 @@ export class PeerToPeer extends EventEmitter {
         },
       },
       addresses: {
-        listen: ["/p2p-circuit", "/webrtc"],
+        listen: ["/p2p-circuit", "/p2p-circuit/ws", "/webrtc"],
         // announce: [
         //   "/dns4/master-duel-node.baseira.casa/tcp/443/wss",
         //   "/dns4/master-duel-node.baseira.casa/udp/443/webtransport",
@@ -182,30 +209,38 @@ export class PeerToPeer extends EventEmitter {
         identifyPush: identifyPush(),
         ping: ping(),
         dcutr: dcutr(),
+        autoNat: autoNAT(),
         //delegatedRouting: () => delegatedClient,
         pubsub: gossipsub({
           allowPublishToZeroPeers: true,
-          emitSelf: false,
+          emitSelf: true,
           gossipIncoming: true,
           fallbackToFloodsub: true,
           ignoreDuplicatePublishError: true,
+          heartbeatInterval: 1000,
+          // Make mesh more permissive
+          D: 4, // Desired outbound degree
+          Dlo: 2, // Lower bound for outbound degree
+          Dhi: 8, // Upper bound for outbound degree
+          Dscore: 1, // Minimum score for peer to be included in mesh
+          scoreParams: {
+            IPColocationFactorThreshold: 1,
+            behaviorPenaltyThreshold: 0,
+            retainScore: 0,
+          },
           directPeers: [
             {
               id: this.bootstrapNodePeerId,
               addrs: [multiaddr(this.bootstrapNode)],
             },
           ],
-          scoreThresholds: {
-            publishThreshold: -1000,
-            graylistThreshold: -1000,
-            acceptPXThreshold: -1000,
-          },
         }),
       },
     });
 
     await this.setupProtocolHandler();
     await this.libp2p.start();
+    this.setupDebugLogs();
 
     this.peerId = this.libp2p.peerId.toString();
     console.log("P2P: libp2p started! Peer ID:", this.peerId);
@@ -341,8 +376,19 @@ export class PeerToPeer extends EventEmitter {
       return false;
     }
 
+    // Prioritize WebSocket addresses
+    const wsAddresses = filteredAddresses.filter((addr) =>
+      addr.includes("/ws/")
+    );
+    const otherAddresses = filteredAddresses.filter(
+      (addr) => !addr.includes("/ws/")
+    );
+
+    // Try WebSocket addresses first, then others
+    const sortedAddresses = [...wsAddresses, ...otherAddresses];
+
     // Try each filtered address
-    for (const addr of filteredAddresses) {
+    for (const addr of sortedAddresses) {
       try {
         console.log("Trying address:", addr);
         const connected = await this.tryAddress(addr);
@@ -404,7 +450,7 @@ export class PeerToPeer extends EventEmitter {
     }
   }
 
-  private async isPeerConnected(peerId: string): Promise<boolean> {
+  public async isPeerConnected(peerId: string): Promise<boolean> {
     if (!this.libp2p) throw new Error("Libp2p instance not initialized");
 
     try {
@@ -424,7 +470,7 @@ export class PeerToPeer extends EventEmitter {
         // Check if this connection is actually to our target peer
         if (addrStr.includes(`/p2p/${peerId}`)) {
           console.log(`Found valid connection to ${peerId}`);
-          return true;
+          return conn;
         }
       }
 
@@ -491,27 +537,111 @@ export class PeerToPeer extends EventEmitter {
   }
 
   public async subscribeTopic(topic: string) {
+    if (!this.libp2p) throw new Error("Libp2p instance not initialized");
+
     try {
+      // First check if we're already subscribed
+      const currentTopics = this.libp2p.services.pubsub.getTopics();
+      if (currentTopics.includes(topic)) {
+        console.log(`Already subscribed to topic ${topic}`);
+        return true;
+      }
+
+      // Subscribe to the topic
       await this.libp2p.services.pubsub.subscribe(topic);
-      console.log(`P2P: Subscribed to topic: ${topic}`);
+      console.log(`Subscribed to topic ${topic}`);
 
-      // Debug logs
-      console.log("Pubsub peers:", this.libp2p.services.pubsub.getPeers());
-      console.log(
-        "Pubsub mesh for topic:",
-        this.libp2p.services.pubsub.mesh.get(topic)
-      );
-      console.log("All topics:", this.libp2p.services.pubsub.getTopics());
+      // Wait for mesh formation with timeout and retries
+      return new Promise((resolve) => {
+        let attempts = 0;
+        const maxAttempts = 5; // Increased from 10
+        const interval = 2000; // 2 seconds between attempts
 
-      // Check if we're actually connected to the relay
-      const relayPeers = this.libp2p
-        .getConnections()
-        .filter((conn) => conn.remoteAddr.toString().includes("p2p-circuit"));
-      console.log("Relay connections:", relayPeers);
-      return true;
+        const checkMesh = async () => {
+          attempts++;
+          const peers = this.libp2p.services.pubsub.getPeers();
+          const meshPeers = this.libp2p.services.pubsub.getMeshPeers(topic);
+          const subscribers = await this.libp2p.services.pubsub.getSubscribers(
+            topic
+          );
+
+          console.log("Mesh formation status:", {
+            topic,
+            attempt: attempts,
+            totalPeers: peers.length,
+            meshPeers: meshPeers.length,
+            subscribers: subscribers.length,
+            peerIds: peers.map((p) => p.toString()),
+            meshPeerIds: meshPeers.map((p) => p.toString()),
+            subscriberIds: subscribers.map((p) => p.toString()),
+          });
+
+          // Consider mesh formed if we have any peers
+          if (meshPeers.length > 0 || subscribers.length > 0) {
+            console.log(`Mesh formed for topic ${topic}`);
+            resolve(true);
+            return;
+          }
+
+          // If we still don't have peers, try to trigger mesh formation
+          if (attempts < maxAttempts) {
+            try {
+              // Publish a message to trigger mesh formation
+              await this.libp2p.services.pubsub.publish(
+                topic,
+                new TextEncoder().encode(`mesh:heartbeat:${Date.now()}`)
+              );
+            } catch (err) {
+              console.warn("Failed to publish heartbeat:", err);
+            }
+            setTimeout(checkMesh, interval);
+          } else {
+            console.warn(`Mesh formation timeout for topic ${topic}`);
+            // Still return true as we are subscribed
+            resolve(true);
+          }
+        };
+
+        // Start checking mesh formation
+        checkMesh();
+      });
     } catch (error) {
-      console.error("P2P: Subscription failed:", error);
+      console.error("Failed to subscribe to topic:", error);
       return false;
+    }
+  }
+
+  // Add this method to force mesh refresh
+  public async refreshMesh(topic: string): Promise<void> {
+    if (!this.libp2p?.services.pubsub) return;
+
+    console.log(`Attempting mesh refresh for topic ${topic}`);
+
+    try {
+      // Get current mesh status
+      const beforePeers = this.libp2p.services.pubsub.getMeshPeers(topic);
+      console.log(
+        "Mesh peers before refresh:",
+        beforePeers.map((p) => p.toString())
+      );
+
+      // Try to trigger mesh updates by publishing a message
+      await this.libp2p.services.pubsub.publish(
+        topic,
+        new TextEncoder().encode("mesh:refresh")
+      );
+
+      // Wait briefly for mesh to update
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      // Check mesh status after refresh
+      const afterPeers = this.libp2p.services.pubsub.getMeshPeers(topic);
+      console.log(
+        "Mesh peers after refresh:",
+        afterPeers.map((p) => p.toString())
+      );
+    } catch (err) {
+      console.error(`Mesh refresh failed for topic ${topic}:`, err);
     }
   }
 
@@ -527,6 +657,7 @@ export class PeerToPeer extends EventEmitter {
       }
 
       await this.libp2p.services.pubsub.publish(topic, fromString(message));
+      await this.refreshMesh(topic);
     } catch (error) {
       console.log("P2P: Error publishing message:", error);
     }
@@ -557,6 +688,23 @@ export class PeerToPeer extends EventEmitter {
       console.error(`Failed to get addresses for peer ${peerId}:`, err);
       return [];
     }
+  }
+
+  public async getTopics() {
+    if (!this.libp2p) throw new Error("Libp2p instance not initialized");
+    const topics = this.libp2p.services.pubsub.getTopics();
+    return topics;
+  }
+
+  public async getGossipPeers() {
+    if (!this.libp2p) throw new Error("Libp2p instance not initialized");
+    const gossipPeers = this.libp2p.services.pubsub.getPeers();
+    return gossipPeers;
+  }
+
+  public async restartGossip() {
+    if (!this.libp2p) throw new Error("Libp2p instance not initialized");
+    await this.libp2p.services.pubsub.start();
   }
 
   private async connectToPeerById(peerId: string): Promise<boolean> {

@@ -105,26 +105,49 @@ const server = await createLibp2p({
     identify: identify(),
     identifyPush: identifyPush(),
     pubsub: gossipsub({
+      directPeers: [],
+      doPX: true,
       allowPublishToZeroPeers: true,
-      emitSelf: false,
+      emitSelf: true,
       gossipIncoming: true,
       fallbackToFloodsub: true,
       ignoreDuplicatePublishError: true,
-      scoreThresholds: {
-        publishThreshold: -1000,
-        graylistThreshold: -1000,
-        acceptPXThreshold: -1000,
+      scoreParams: {
+        IPColocationFactorThreshold: 1, // Allow multiple connections from same IP
+        behaviorPenaltyThreshold: 0,
+        retainScore: 0,
+        meshMessageDeliveriesThreshold: -1000, // More permissive mesh
+        meshMessageDeliveriesWindow: 2 * 60 * 1000, // 2 minutes
+        meshMessageDeliveriesActivation: 2 * 60 * 1000, // 2 minutes
+        meshMessageDeliveriesDecay: 0,
+        meshFailurePenaltyDecay: 0,
+        meshFailurePenaltyWeight: 0,
+        invalidMessageDeliveriesWeight: 0,
+        invalidMessageDeliveriesDecay: 0,
       },
+      heartbeatInterval: 1000,
+      keepAliveInterval: 5000,
+      fanoutTTL: 60000,
+      //D: 4, // Desired outbound degree
+      //Dlo: 2, // Lower bound for outbound degree
+      //Dhi: 6, // Upper bound for outbound degree
+      //Dscore: 1, // Minimum score for peer to be included in mesh
     }),
     relay: circuitRelayServer({
       reservations: {
-        maxReservations: Infinity, // No strict limit
-        maxDuration: Infinity, // No time limit for reservations
+        maxReservations: Infinity,
+        maxDuration: 24 * 60 * 60 * 1000, // 24 hours
       },
       hop: {
         enabled: true,
         timeout: 60000,
         maxReservations: Infinity,
+        applyConnectionLimits: false, // Important for relay
+      },
+      advertise: {
+        bootDelay: 0, // Start advertising immediately
+        interval: 5000, // Advertise every 5 seconds
+        maxAdvertisements: Infinity,
       },
     }),
   },
