@@ -269,7 +269,7 @@ export class KaibaNet extends EventEmitter {
 
     // Pubsub protocol will send the current peers subcriptions when connects to a peer
     // Subscribe to room topic
-    const subscribed = await this.peerToPeer?.subscribeTopic(roomId);
+    const subscribed = await this.peerToPeer?.subscribeTopic(roomId, true);
     if (!subscribed) {
       throw new Error("Failed to subscribe to room topic");
     }

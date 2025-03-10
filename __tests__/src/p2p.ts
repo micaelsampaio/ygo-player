@@ -536,7 +536,7 @@ export class PeerToPeer extends EventEmitter {
     }
   }
 
-  public async subscribeTopic(topic: string) {
+  public async subscribeTopic(topic: string, meshForming: boolean = false) {
     if (!this.libp2p) throw new Error("Libp2p instance not initialized");
 
     try {
@@ -550,6 +550,7 @@ export class PeerToPeer extends EventEmitter {
       // Subscribe to the topic
       await this.libp2p.services.pubsub.subscribe(topic);
       console.log(`Subscribed to topic ${topic}`);
+      if (!meshForming) return true;
 
       // Wait for mesh formation with timeout and retries
       return new Promise((resolve) => {

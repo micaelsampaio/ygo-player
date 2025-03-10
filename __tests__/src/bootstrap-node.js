@@ -59,7 +59,7 @@ const transports = [
         },
       ],
       iceCandidatePoolSize: 10,
-      iceTransportPolicy: "relay",
+      iceTransportPolicy: "all",
       rtcpMuxPolicy: "require",
     },
     debugWebRTC: true,
