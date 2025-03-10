@@ -153,13 +153,13 @@ export class PeerToPeer extends EventEmitter {
         webRTC({
           rtcConfiguration: {
             iceServers: [
-              // {
-              //  urls: [
-              //  "stun:stun.l.google.com:19302",
-              //  "stun:stun.l.google.com:5349",
-              //  "stun:stun1.l.google.com:3478",
-              // ],
-              //},
+              {
+                urls: [
+                  "stun:stun.l.google.com:19302",
+                  "stun:stun.l.google.com:5349",
+                  "stun:stun1.l.google.com:3478",
+                ],
+              },
               {
                 urls: "turn:master-duel-turn.baseira.casa:3478?transport=tcp",
                 username: "kaiba",
@@ -168,7 +168,7 @@ export class PeerToPeer extends EventEmitter {
               },
             ],
             //iceCandidatePoolSize: 10,
-            iceTransportPolicy: "relay",
+            iceTransportPolicy: "all",
             rtcpMuxPolicy: "require",
           },
           debugWebRTC: true,
@@ -219,10 +219,10 @@ export class PeerToPeer extends EventEmitter {
           ignoreDuplicatePublishError: true,
           heartbeatInterval: 1000,
           // Make mesh more permissive
-          D: 4, // Desired outbound degree
-          Dlo: 2, // Lower bound for outbound degree
-          Dhi: 8, // Upper bound for outbound degree
-          Dscore: 1, // Minimum score for peer to be included in mesh
+          //         D: 4, // Desired outbound degree
+          //         Dlo: 2, // Lower bound for outbound degree
+          //         Dhi: 8, // Upper bound for outbound degree
+          //         Dscore: 1, // Minimum score for peer to be included in mesh
           scoreParams: {
             IPColocationFactorThreshold: 1,
             behaviorPenaltyThreshold: 0,
@@ -378,10 +378,10 @@ export class PeerToPeer extends EventEmitter {
 
     // Prioritize WebSocket addresses
     const wsAddresses = filteredAddresses.filter((addr) =>
-      addr.includes("/ws/")
+      addr.includes("/webrtc-direct/")
     );
     const otherAddresses = filteredAddresses.filter(
-      (addr) => !addr.includes("/ws/")
+      (addr) => !addr.includes("/webrtc-direct/")
     );
 
     // Try WebSocket addresses first, then others
