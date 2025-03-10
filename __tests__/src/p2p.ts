@@ -209,7 +209,7 @@ export class PeerToPeer extends EventEmitter {
         identifyPush: identifyPush(),
         ping: ping(),
         dcutr: dcutr(),
-        autoNat: autoNAT(),
+        //autoNat: autoNAT(),
         //delegatedRouting: () => delegatedClient,
         pubsub: gossipsub({
           allowPublishToZeroPeers: true,
