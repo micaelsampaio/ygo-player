@@ -29,6 +29,7 @@ import { peerIdFromString } from "@libp2p/peer-id";
 import { dcutr } from "@libp2p/dcutr";
 import { autoNAT } from "@libp2p/autonat";
 import first from "it-first";
+import { AudioStream } from './AudioStream';
 import {
   createDelegatedRoutingV1HttpApiClient,
   DelegatedRoutingV1HttpApiClient,
@@ -213,7 +214,7 @@ export class PeerToPeer extends EventEmitter {
         //delegatedRouting: () => delegatedClient,
         pubsub: gossipsub({
           allowPublishToZeroPeers: true,
-          emitSelf: true,
+          emitSelf: false,
           gossipIncoming: true,
           fallbackToFloodsub: true,
           ignoreDuplicatePublishError: true,
@@ -647,22 +648,21 @@ export class PeerToPeer extends EventEmitter {
   }
 
   public async messageTopic(topic: string, message: string) {
-    console.log("P2P: Message topic:", topic, message);
-    try {
-      const subscribers = await this.libp2p.services.pubsub.getSubscribers(
-        topic
-      );
-      if (!subscribers || subscribers.length === 0) {
-        console.log("P2P: No subscribers found for topic:", topic);
+    if (!this.libp2p?.services.pubsub) {
+        console.warn('P2P: Cannot send message - pubsub not initialized');
         return;
-      }
+    }
 
-      await this.libp2p.services.pubsub.publish(topic, fromString(message));
+    try {
+        // Ensure message is properly encoded
+      const encodedMessage = new TextEncoder().encode(message);
+      await this.libp2p.services.pubsub.publish(topic, encodedMessage);
       await this.refreshMesh(topic);
     } catch (error) {
-      console.log("P2P: Error publishing message:", error);
+        console.error('P2P: Failed to publish message:', error);
+        throw error;
     }
-  }
+}
 
   public getPeerId() {
     return this.peerId;

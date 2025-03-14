@@ -1,7 +1,14 @@
 import { useEffect, useState } from "react";
 import styled from "styled-components";
+import { AudioVisualizer } from './AudioVisualizer';
 
-const ChatContainer = styled.div<{ isOpen: boolean }>`
+interface StyledProps {
+  isOpen?: boolean;
+  isActive?: boolean;
+  isMuted?: boolean;
+}
+
+const ChatContainer = styled.div<StyledProps>`
   position: fixed;
   bottom: ${({ isOpen }) => (isOpen ? "20px" : "-600px")};
   left: 20px;  // Changed from right to left
@@ -87,8 +94,6 @@ const ChatToggleButton = styled.button`
   }
 `;
 
-// ... existing imports and ChatContainer, ChatHeader, HeaderInfo, CloseButton, ChatToggleButton components ...
-
 const Messages = styled.div`
   flex-grow: 1;
   overflow-y: auto;
@@ -173,25 +178,84 @@ interface ChatProps {
   playerId: string;
   messages: string[];
   sendMessageCallback: (message: string) => void;
+  onVoiceChatToggle: (enabled: boolean) => void;
+  onMicMuteToggle: (muted: boolean) => void;  // Add this line
+  onAudioMuteToggle: (muted: boolean) => void;
+  analyser: AnalyserNode | null;
 }
+
+const AudioControls = styled.div`
+  display: flex;
+  gap: 8px;
+  margin-right: 8px;
+`;
+
+const ControlButton = styled.button<StyledProps>`
+  background: none;
+  border: none;
+  color: ${({ isMuted }) => (isMuted ? '#ff4444' : 'white')};
+  cursor: pointer;
+  font-size: 20px;
+  padding: 0;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.7;
+  transition: all 0.2s;
+  background-color: ${({ isActive }) => (isActive ? '#0078d4' : 'transparent')};
+
+  &:hover {
+    opacity: 1;
+  }
+`;
+
+const MessagesContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  overflow: hidden;
+`;
 
 export default function Chat({ 
   roomId, 
   playerId, 
   messages, 
-  sendMessageCallback 
+  sendMessageCallback,
+  onVoiceChatToggle,
+  onMicMuteToggle,  // Add this prop
+  onAudioMuteToggle,
+  analyser
 }: ChatProps) {
   const [isOpen, setIsOpen] = useState(true);
-  const [inputMessage, setInputMessage] = useState("");
-
-  // Remove messages state since it's now handled by parent
-  // const [messages, setMessages] = useState<string[]>([]);
+  const [isVoiceEnabled, setIsVoiceEnabled] = useState(false);
+  const [isMicMuted, setIsMicMuted] = useState(false);
+  const [isAudioMuted, setIsAudioMuted] = useState(false);
+  const [inputMessage, setInputMessage] = useState(""); // Add this line
 
   const handleSendMessage = () => {
     if (inputMessage.trim()) {
       sendMessageCallback(inputMessage);
       setInputMessage("");
     }
+  };
+
+  const toggleVoice = () => {
+    const newState = !isVoiceEnabled;
+    setIsVoiceEnabled(newState);
+    onVoiceChatToggle?.(newState);
+  };
+
+  const toggleMic = () => {
+    const newState = !isMicMuted;
+    setIsMicMuted(newState);
+    onMicMuteToggle?.(newState);  // Use the new prop
+  };
+
+  const toggleAudio = () => {
+    setIsAudioMuted(!isAudioMuted);
+    onAudioMuteToggle?.(!isAudioMuted);
   };
 
   return (
@@ -203,16 +267,53 @@ export default function Chat({
             <HeaderText>ID: {roomId.slice(0, 8)}...</HeaderText>
             <HeaderText>Player: {playerId.slice(0, 8)}...</HeaderText>
           </HeaderInfo>
+          
+          <AudioControls>
+            <ControlButton 
+              isActive={isVoiceEnabled}
+              onClick={toggleVoice}
+              title={isVoiceEnabled ? "Disable voice chat" : "Enable voice chat"}
+            >
+              {isVoiceEnabled ? '🎧' : '📞'}
+            </ControlButton>
+            
+            {isVoiceEnabled && (
+              <>
+                <ControlButton 
+                  isMuted={isMicMuted}
+                  onClick={toggleMic}
+                  title={isMicMuted ? "Unmute microphone" : "Mute microphone"}
+                >
+                  {isMicMuted ? '🚫' : '🎤'}
+                </ControlButton>
+                
+                <ControlButton 
+                  isMuted={isAudioMuted}
+                  onClick={toggleAudio}
+                  title={isAudioMuted ? "Unmute audio" : "Mute audio"}
+                >
+                  {isAudioMuted ? '🔇' : '🔊'}
+                </ControlButton>
+              </>
+            )}
+          </AudioControls>
+
           <CloseButton onClick={() => setIsOpen(false)}>×</CloseButton>
         </ChatHeader>
 
-        <Messages>
-          {messages.map((msg, index) => (
-            <MessageBubble key={index} isSelf={msg.startsWith(playerId)}>
-              {msg}
-            </MessageBubble>
-          ))}
-        </Messages>
+        <MessagesContainer>
+          {isVoiceEnabled && analyser && (
+            <AudioVisualizer analyser={analyser} />
+          )}
+          
+          <Messages>
+            {messages.map((msg, index) => (
+              <MessageBubble key={index} isSelf={msg.startsWith(playerId)}>
+                {msg}
+              </MessageBubble>
+            ))}
+          </Messages>
+        </MessagesContainer>
 
         <InputContainer>
           <InputField

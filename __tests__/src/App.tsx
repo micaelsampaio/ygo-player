@@ -1,7 +1,7 @@
 import YUBEL from "./decks/YUBEL_FS.json";
 import CHIMERA from "./decks/CHIMERA.json";
 import { useNavigate, Link } from "react-router-dom";
-import RoomLobby from "./RoomLobby";
+import RoomLobby from "./components/RoomLobby.js";
 import { useKaibaNet } from "./useKaibaNet";
 import { memo, useEffect, useState } from "react";
 import { YGOGameUtils } from "../../dist/index.js";
