@@ -190,7 +190,7 @@ export interface ChangeCardPositionCommandData {
 export interface ChangeCardAtkDefCommandData {
     player: number;
     id: number;
-    zone: FieldZone;
+    originZone: FieldZone;
     atk?: number;
     def?: number;
 }

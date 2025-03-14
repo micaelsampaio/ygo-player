@@ -37,7 +37,7 @@ export function GameModalOverlayMesh() {
     return modalPlane;
 }
 
-export function CardActivationEffect({ duel, startTask, create = true, card }: { duel: YGODuel, create?: boolean, card: THREE.Object3D, startTask: any }) {
+export function CardActivationEffect({ duel, card, startTask }: { duel: YGODuel, card: THREE.Object3D, startTask: any }) {
 
     const modalGeometry = new THREE.PlaneGeometry(1, 1);
 
@@ -99,7 +99,7 @@ export function createCardPopSummonEffectSequence({ duel, card, startTask, cardI
     });
 
     const cardPlane = new THREE.Mesh(geometry, material);
-    
+
     duel.core.sceneOverlay.add(cardPlane);
 
     cardPlane.position.copy(card.position);
@@ -128,4 +128,12 @@ export function createCardPopSummonEffectSequence({ duel, card, startTask, cardI
             duration: 0.15
         })
     ));
+}
+
+export function createSquareWithTopMiddlePivot(width:number, height:number, material: THREE.Material) {
+  const geometry = new THREE.PlaneGeometry(width, height);
+  geometry.translate(0, -height/2, 0);
+  const mesh = new THREE.Mesh(geometry, material);
+  
+  return mesh;
 }

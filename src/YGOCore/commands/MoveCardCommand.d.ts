@@ -5,6 +5,8 @@ export declare class MoveCardCommand extends BaseCommand {
     data: MoveCardCommandData;
     private prevPosition;
     private prevOwner;
+    private prevAtk;
+    private prevDef;
     private commands;
     constructor(data: MoveCardCommandData);
     exec(): void;

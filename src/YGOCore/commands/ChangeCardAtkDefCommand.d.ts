@@ -1,9 +1,10 @@
 import { BaseCommand } from './BaseCommand';
 import { ChangeCardAtkDefCommandData } from '../types/commands';
 export declare class ChangeCardAtkDefCommand extends BaseCommand {
+    baseType: string;
     private data;
-    private prevAtk;
-    private prevDef;
+    private oldAtk;
+    private oldDef;
     constructor(data: ChangeCardAtkDefCommandData);
     exec(): void;
     undo(): void;

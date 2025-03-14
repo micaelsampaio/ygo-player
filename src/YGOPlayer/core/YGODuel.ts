@@ -98,8 +98,9 @@ export class YGODuel {
     async load() {
         try {
             const [fieldModel, gameFieldScene] = await Promise.all([
-                this.core.loadGLTFAsync(`${this.config.cdnUrl}/models/field.glb`),
-                this.core.loadGLTFAsync(`${this.config.cdnUrl}/models/game_field.glb`),
+                this.assets.loadGLTF(`${this.config.cdnUrl}/models/field.glb`),
+                this.assets.loadGLTF(`${this.config.cdnUrl}/models/game_field.glb`),
+                this.assets.loadGLTF(`${this.config.cdnUrl}/models/destroy_effect.glb`),
                 this.core.loadFontAsync("GameFont", "https://threejs.org/examples/fonts/helvetiker_regular.typeface.json"),
                 this.assets.loadImages(
                     `${this.config.cdnUrl}/images/ui/ic_stars128.png`,
@@ -307,7 +308,9 @@ export class YGODuel {
         this.deltaTime = this.core.deltaTime;
 
         for (const entity of this.entities) {
-            entity.update(this.deltaTime);
+            if (entity.enabled) {
+                entity.update(this.deltaTime);
+            }
         }
     }
 
@@ -315,6 +318,8 @@ export class YGODuel {
         if (entity.gameObject) {
             this.core.scene.add(entity.gameObject)
         }
+
+        this.entities.push(entity);
     }
 
     public destroy(entity: YGOEntity) {
@@ -326,6 +331,11 @@ export class YGODuel {
 
         if (entity.gameObject) {
             this.core.scene.remove(entity.gameObject);
+        }
+
+        const index = this.entities.findIndex(e => e === entity);
+        if (index >= 0) {
+            this.entities.splice(index, 1);
         }
     }
 
@@ -340,6 +350,12 @@ export class YGODuel {
     public test() {
 
         return;
+        const destroyEffect = this.assets.getPool("destroyEffect").get<any>();
+        this.add(destroyEffect);
+
+        destroyEffect.gameObject.position.set(0, 0, 1);
+        destroyEffect.gameObject.visible = true;
+        destroyEffect.enable();
 
         const modalGeometry = new THREE.PlaneGeometry(1, 1);
         const modalMaterial = new THREE.MeshBasicMaterial({

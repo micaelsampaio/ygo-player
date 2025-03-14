@@ -70,6 +70,10 @@ export function CardZoneMenu({ duel, card, zone, gameCard, clearAction, mouseEve
         duel.gameActions.moveCard({ card, originZone: zone });
     }, [card, zone]);
 
+    const changeAtkDef = useCallback(() => {
+        duel.gameActions.changeAtkDef({ card, originZone: zone, prompt: true });
+    }, [card, zone]);
+
     const destroyCard = useCallback(() => {
         duel.gameActions.destroyCard({ card, originZone: zone });
     }, [card, zone]);
@@ -85,12 +89,12 @@ export function CardZoneMenu({ duel, card, zone, gameCard, clearAction, mouseEve
         container.style.top = Math.max(0, (y - size.height)) + "px";
         container.style.left = (x - (size.width / 2) + (width / 2)) + "px";
     }, [card]);
-
+    const zoneData = YGOGameUtils.getZoneData(zone);
     const field = duel.ygo.state.fields[player];
     const isXYZ = YGOGameUtils.isXYZMonster(card);
     const isFaceUp = YGOGameUtils.isFaceUp(card);
     const isLink = YGOGameUtils.isLinkMonster(card);
-    const isMonsterZone = zone.includes("M");
+    const isMonsterZone = zoneData.zone === "M" || zoneData.zone === "EMZ";
     const isMonster = YGOGameUtils.isMonster(card);
     const isMainDeckCard = card.isMainDeckCard;
     const isAttack = YGOGameUtils.isAttack(card);
@@ -101,6 +105,10 @@ export function CardZoneMenu({ duel, card, zone, gameCard, clearAction, mouseEve
     return <CardMenu menuRef={menuRef}>
         {isXYZ && <>
             <button type="button" className="ygo-card-item" onClick={viewMaterials}>View Materials</button>
+        </>}
+
+        {isMonsterZone && <>
+            <button type="button" className="ygo-card-item" onClick={changeAtkDef}>Change Atk Def</button>
         </>}
 
         <button type="button" className="ygo-card-item" onClick={moveCard}>Move</button>

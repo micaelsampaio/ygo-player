@@ -66,8 +66,8 @@ export class GameCardStats {
     }
 
     needsUpdate(): boolean {
-        const atk = this.card.currentAtk || this.card.atk;
-        const def = this.card.currentAtk || this.card.def;
+        const atk = this.card.currentAtk;
+        const def = this.card.currentDef;
         const level = this.card.level || this.card.linkval;
         const owner = this.card.owner;
         const materials = this.card.materials.length;
@@ -114,8 +114,8 @@ export class GameCardStats {
 
     renderAtkDef() {
         const isPlayer1 = this.card.owner === 0;
-        const atk = this.card.currentAtk || this.card.atk;
-        const def = this.card.currentAtk || this.card.def;
+        const atk = this.card.currentAtk;
+        const def = this.card.currentDef;
 
         const y = isPlayer1 ? this.canvas.height - 20 : 35;
         this.atk = atk;

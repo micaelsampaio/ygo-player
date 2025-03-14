@@ -11,6 +11,7 @@ import { GameCard } from "../../game/GameCard";
 import { Graveyard } from "../../game/Graveyard";
 import { MultipleTasks } from "../utils/multiple-tasks";
 import { ScaleTransition } from "../utils/scale-transition";
+import { createSquareWithTopMiddlePivot } from "../../game/meshes/mesh-utils";
 
 interface DestroyEventHandlerProps extends DuelEventHandlerProps {
     event: YGODuelEvents.Destroy
@@ -64,6 +65,30 @@ export class DestroyCardEventHandler extends YGOCommandHandler {
         mesh.position.copy(startPosition);
         duel.core.scene.add(mesh);
 
+        const trailTexture = duel.assets.getTexture(`${duel.config.cdnUrl}/images/particles/flame_07.png`);
+        const trailMat = new THREE.MeshBasicMaterial({ map: trailTexture, transparent: true, color: 0xffff00 });
+        const trailMesh = createSquareWithTopMiddlePivot(3, 3, trailMat);
+        duel.core.scene.add(trailMesh);
+
+        mesh.add(trailMesh);
+        trailMesh.position.set(0, 0, 0);
+        trailMesh.rotation.set(0, 0, 0);
+        trailMesh.scale.set(1, 0, 1);
+        trailMesh.rotateZ(THREE.MathUtils.degToRad(-90));
+
+        this.props.startTask(new YGOTaskSequence(
+            new ScaleTransition({
+                gameObject: trailMesh,
+                scale: new THREE.Vector3(1, 2, 1),
+                duration: 0.35
+            }),
+            new ScaleTransition({
+                gameObject: trailMesh,
+                scale: new THREE.Vector3(1, 0, 1),
+                duration: 0.1
+            }),
+        ));
+
         sequence.addMultiple(
             new MultipleTasks(
                 new PositionTransition({
@@ -92,4 +117,11 @@ export class DestroyCardEventHandler extends YGOCommandHandler {
 
         this.props.startTask(sequence);
     }
+}
+
+function calculateZRotationToLookAt(pos1: THREE.Vector3, pos2: THREE.Vector3): number {
+    const deltaX = pos2.x - pos1.x;
+    const deltaY = pos2.y - pos1.y;
+    const angle = Math.atan2(deltaY, deltaX);
+    return angle;
 }

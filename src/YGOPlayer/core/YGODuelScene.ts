@@ -1,3 +1,5 @@
+import { YGOAnimationObject } from "../game/YGOAnimationObject";
+import { PoolObjects } from "./PoolObjects";
 import { YGODuel } from "./YGODuel";
 import * as THREE from "three";
 
@@ -44,5 +46,24 @@ export class YGODuelScene {
         const handObject = new THREE.Mesh(handObjectGeometry, handObjectMaterial);
         this.duel.core.scene.add(handObject);
         this.handPlaceholder = handObject;
+
+        this.createEffects();
+    }
+
+    private createEffects() {
+        const destroyModel = this.duel.assets.models.get(`${this.duel.config.cdnUrl}/models/destroy_effect.glb`)!;
+        const destroyPool = new PoolObjects({
+            name: "destroyEffect",
+            amount: 10,
+            create: () => {
+                const gameObject = destroyModel.scene.clone();
+                const animations = gameObject.animations;
+                return new YGOAnimationObject({
+                    gameObject,
+                    animations
+                })
+            }
+        });
+        this.duel.assets.createPoool(destroyPool);
     }
 }

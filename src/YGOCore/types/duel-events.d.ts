@@ -195,12 +195,6 @@ export declare namespace YGODuelEvents {
         previousPosition: CardPosition;
         position: CardPosition;
     }
-    interface ChangeCardAtkDef extends DuelLog {
-        id: number;
-        zone: FieldZone;
-        atk: number | null;
-        def: number | null;
-    }
     interface Flip extends DuelLog {
         id: number;
         originZone: FieldZone;
@@ -214,5 +208,14 @@ export declare namespace YGODuelEvents {
     interface MillCardFromDeck extends DuelLog {
     }
     interface Destroy extends MoveCard {
+    }
+    interface ChangeCardAtkDef extends DuelLog {
+        player: number;
+        id: number;
+        originZone: FieldZone;
+        oldAtk: number;
+        oldDef: number;
+        atk: number;
+        def: number;
     }
 }

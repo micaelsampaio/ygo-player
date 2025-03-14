@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { Card, CardData, FieldZone, FileldStateEntry, YGOProps, YGOPropsOptions, YGOReplayData } from '../YGOCore/types/types';
+import { Card, CardData, FieldZone, YGOPropsOptions, YGOReplayData } from '../YGOCore/types/types';
 
 export enum YGODuelState {
     REPLAY = "replay",

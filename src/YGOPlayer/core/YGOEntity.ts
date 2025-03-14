@@ -5,6 +5,7 @@ export abstract class YGOEntity {
     public name: string = ""
     private components: Record<string, YGOComponent> = {};
     public gameObject!: THREE.Object3D;
+    public enabled: boolean = true;
 
     constructor() {
 
@@ -41,6 +42,18 @@ export abstract class YGOEntity {
         delete this.components[key];
 
         return comp || null;
+    }
+
+    enable() {
+        this.enabled = true;
+    }
+
+    disable() {
+        this.enabled = false;
+    }
+
+    setActive(enabled: boolean) {
+        this.enabled = enabled;
     }
 
     update(dt: number) {

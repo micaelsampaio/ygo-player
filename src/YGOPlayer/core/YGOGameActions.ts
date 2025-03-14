@@ -7,7 +7,6 @@ import { CardZoneKV } from "../types";
 import { YGODuel } from "./YGODuel";
 
 export class YGOGameActions {
-
     private duel: YGODuel;
     private cardSelection: ActionCardSelection;
 
@@ -633,6 +632,36 @@ export class YGOGameActions {
             player,
             id: card.id,
             originZone
+        }));
+    }
+
+    public changeAtkDef({ card, originZone, prompt: usePrompt = false }: { card: Card; originZone: FieldZone; prompt?: boolean; }) {
+        const player = this.duel.getActivePlayer();
+        const atkInput = window.prompt("Please enter atk:");
+        let defInput: string | null = null;
+
+        if (!YGOGameUtils.isLinkMonster(card)) {
+            defInput = window.prompt("Please enter def:");
+        }
+
+        const atk = atkInput && !isNaN(atkInput as any) ? Number(atkInput) : undefined;
+        const def = defInput && !isNaN(defInput as any) ? Number(defInput) : undefined;
+        console.log("EVENT DATA", {
+            atkInput,
+            isNane: !isNaN(atkInput as any),
+            value: Number(atkInput),
+            player,
+            id: card.id,
+            originZone,
+            atk,
+            def,
+        })
+        this.duel.execCommand(new YGOCommands.ChangeCardAtkDefCommand({
+            player,
+            id: card.id,
+            originZone,
+            atk,
+            def,
         }));
     }
 }

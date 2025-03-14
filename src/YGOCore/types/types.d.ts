@@ -25,7 +25,7 @@ export interface YGOPropsOptions {
     lp?: number;
     draw?: number;
     shuffleDecks?: boolean;
-    fieldState?: FileldStateEntry[];
+    fieldState?: FieldStateEntry[];
     startCommand?: number;
     execCommands?: boolean;
     currentGameTime?: number;
@@ -43,7 +43,7 @@ export interface YGOProps {
     }[];
     options?: YGOPropsOptions;
 }
-export interface FileldStateEntry {
+export interface FieldStateEntry {
     id: number;
     zone: FieldZone;
     atk?: number;
@@ -122,8 +122,8 @@ export interface YGOReplayData {
         mainDeck: number[];
         extraDeck: number[];
     }[];
-    initialField: FileldStateEntry[];
-    endField: FileldStateEntry[];
+    initialField: FieldStateEntry[];
+    endField: FieldStateEntry[];
     commands: any[];
 }
 export type YGOCoreEvents = {
