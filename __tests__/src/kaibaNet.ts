@@ -117,6 +117,13 @@ export class KaibaNet extends EventEmitter {
   private roomTopicMessageHandler = ({ messageStr }) => {
     console.log("KaibaNet: Message on Room Topic:", messageStr);
 
+    // Add handler for chat messages
+    if (messageStr.includes("duel:chat:message:")) {
+      const messageBase64 = messageStr.split(":")[3];
+      const decodedMessage = b64ToString(messageBase64);
+      this.emit("duel:chat:message", decodedMessage);
+    }
+
     // When we receive a message with the game state, emit an event with the decoded gameState
     if (messageStr.includes("duel:refresh:state:")) {
       console.log("KaibaNet: Game state refresh message received", messageStr);
@@ -323,6 +330,20 @@ export class KaibaNet extends EventEmitter {
     await this.peerToPeer.messageTopic(
       roomId,
       "duel:command:exec:" + commandB64
+    );
+  }
+
+  // Add new method for sending chat messages
+  async sendMessage(roomId: string, message: string) {
+    if (!this.peerToPeer) {
+      console.error("KaibaNet: Cannot send message - P2P not initialized");
+      return;
+    }
+
+    const messageB64 = stringToB64(message);
+    await this.peerToPeer.messageTopic(
+      roomId,
+      "duel:chat:message:" + messageB64
     );
   }
 }

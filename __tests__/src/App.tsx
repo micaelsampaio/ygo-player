@@ -85,7 +85,7 @@ export default function App() {
     // duel owner starts the room and enters the duel
     const roomId = kaibaNet.getPlayerId() ? kaibaNet.getPlayerId() : ""
     navigate(`/duel/${roomId}`, {
-      state: { roomIdProp: roomId, duelDataProp: roomJson },
+      state: { roomId, duelData: roomJson, playerId: kaibaNet.getPlayerId() },
     });
   };
 
@@ -105,7 +105,7 @@ export default function App() {
   const handleRoomJoin = async (roomId: any) => {
     console.log("App:handleRoomJoin:roomDecks", roomDecks);
     await kaibaNet.joinRoom(roomId);
-    navigate(`/duel/${roomId}`, { state: { roomIdProp: roomId } });
+    navigate(`/duel/${roomId}`, { state: { roomId, playerId: kaibaNet.getPlayerId() } });
   };
 
   const deleteDeck = (deckId: string) => {

@@ -1,37 +1,68 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { YGOPlayerComponent, YGODuel } from "../../dist";
 import { useLocation, useParams } from "react-router-dom";
 import { useKaibaNet } from "./useKaibaNet";
+import Chat from "./Chat";
 
-export default function Duel() {
-  const [duelData, setDuelData] = useState<any>(null);
-  const [roomId, setRoomId] = useState<string>("");
-  const [isLoading, setIsLoading] = useState(true);
+interface DuelProps {
+  roomId?: string;
+  playerId?: string;
+}
+
+export default function Duel({ roomId: roomIdProp, playerId: playerIdProp }: DuelProps) {
   const kaibaNet = useKaibaNet();
+  const [isLoading, setIsLoading] = useState(true);
+  const [duelData, setDuelData] = useState<any>(null);
+  const [messages, setMessages] = useState<string[]>([]);
+  
   const location = useLocation();
   const { roomId: urlRoomId } = useParams();
 
-  // Initialize duel data and room ID
+  // Derive room and player IDs using a single source of truth
+  const roomId = useMemo(() => {
+    // Priority: prop > location state > URL param > empty string
+    return roomIdProp ?? location.state?.roomId ?? urlRoomId ?? "";
+  }, [roomIdProp, location.state?.roomId, urlRoomId]);
+
+  const playerId = useMemo(() => {
+    // Priority: prop > location state > empty string
+    return playerIdProp ?? location.state?.playerId ?? "";
+  }, [playerIdProp, location.state?.playerId]);
+
+  // Log changes to IDs
   useEffect(() => {
-    const newDuelData =
-      location.state?.duelDataProp ||
+    console.log('Duel:Room ID changed:', roomId);
+  }, [roomId]);
+
+  useEffect(() => {
+    console.log('Duel:Player ID changed:', playerId);
+  }, [playerId]);
+
+  // Log changes to final values
+  useEffect(() => {
+    console.log('Duel:Room ID changed:', roomId);
+  }, [roomId]);
+
+  useEffect(() => {
+    console.log('Duel:Player ID changed:', playerId);
+  }, [playerId]);
+
+  // Initialize duel data
+  useEffect(() => {
+    // Initialize duel data
+    const newDuelData = location.state?.duelData ?? 
       JSON.parse(localStorage.getItem("duel-data") || "null");
-    const newRoomId = location.state?.roomIdProp || urlRoomId || "";
 
     if (newDuelData) {
       setDuelData(newDuelData);
       setIsLoading(false);
     }
-    if (newRoomId) {
-      console.log("newRoomId:", newRoomId);
-      setRoomId(newRoomId);
 
-      // If we came from URL parameter and don't have data, join the room
-      if (urlRoomId && !location.state?.duelDataProp) {
-        //kaibaNet.joinRoom(newRoomId);
-      }
+    // If we came from URL parameter and don't have data, join the room
+    if (urlRoomId && !newDuelData) {
+      //kaibaNet.joinRoom(urlRoomId);
     }
-  }, [location, urlRoomId, kaibaNet]);
+  }, [location.state?.duelData, urlRoomId, kaibaNet])
 
   // Setup YGO player after duel data is available
   useEffect(() => {
@@ -158,6 +189,21 @@ export default function Duel() {
     };
   }, [duelData, roomId, kaibaNet]);
 
+  // Add chat message listener
+  useEffect(() => {
+    if (!kaibaNet) return;
+
+    const handleChatMessage = (message: string) => {
+      setMessages(prev => [...prev, message]);
+    };
+
+    kaibaNet.on("duel:chat:message", handleChatMessage);
+
+    return () => {
+      kaibaNet.off("duel:chat:message", handleChatMessage);
+    };
+  }, [kaibaNet]);
+
   const saveReplay = () => {
     const duel = (window as any).YGODuel;
     if (!duel) return alert("no duel");
@@ -176,6 +222,14 @@ export default function Duel() {
       `replay_${replayName}_${Date.now()}`,
       JSON.stringify(replayData)
     );
+  };
+
+  const handleSendMessage = (message: string) => {
+    if (!roomId) {
+      console.warn('Cannot send message: No room ID');
+      return;
+    }
+    kaibaNet.sendMessage(roomId, `${playerId}: ${message}`);
   };
 
   return (
@@ -209,6 +263,14 @@ export default function Duel() {
           <div>Waiting for duel data...</div>
         </div>
       )}
+
+      {console.log('Duel rendering Chat with:', { roomId, playerId })}
+      <Chat 
+        roomId={roomId} 
+        playerId={playerId} 
+        messages={messages}
+        sendMessageCallback={handleSendMessage}
+      />
 
       <div
         style={{ position: "fixed", top: "10px", right: "10px", zIndex: 9999 }}
