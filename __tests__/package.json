@@ -8,7 +8,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "bootstrap-node": "node src/bootstrap-node.js"
+    "bootstrap-node": "node src/network/bootstrap-node.js"
   },
   "dependencies": {
     "@chainsafe/libp2p-gossipsub": "^14.1.0",
