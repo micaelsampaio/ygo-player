@@ -654,13 +654,22 @@ export class PeerToPeer extends EventEmitter {
     }
 
     try {
-        // Ensure message is properly encoded
-      const encodedMessage = new TextEncoder().encode(message);
-      await this.libp2p.services.pubsub.publish(topic, encodedMessage);
-      await this.refreshMesh(topic);
+        // Don't check for peers or try to refresh mesh
+        const encodedMessage = new TextEncoder().encode(message);
+        
+        // Force publish even with no subscribers
+        await this.libp2p.services.pubsub.publish(topic, encodedMessage, {
+            allowPublishToZeroPeers: true,
+            ignoreDuplicatePublishError: true
+        });
+        
+        // Log subscription status but don't fail if no peers
+        const subscribers = await this.libp2p.services.pubsub.getSubscribers(topic);
+        console.log(`Message sent to topic ${topic}, subscribers: ${subscribers.length}`);
+        
     } catch (error) {
-        console.error('P2P: Failed to publish message:', error);
-        throw error;
+        // Only log error but don't throw
+        console.warn('P2P: Message publish issue:', error);
     }
 }
 

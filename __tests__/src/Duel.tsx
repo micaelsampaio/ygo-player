@@ -108,6 +108,19 @@ export default function Duel({ roomId: roomIdProp, playerId: playerIdProp }: Due
       "ygo-player"
     )! as any;
 
+    const formatCommandToCliStyle = (command: any): string => {
+      const { type, data } = command;
+      // Convert type from CamelCase to lowercase
+      const commandType = type.replace('Command', '').toLowerCase();
+      
+      // Convert data object to CLI options
+      const options = Object.entries(data)
+          .map(([key, value]) => `--${key} ${value}`)
+          .join(' ');
+  
+      return `/cmd/${commandType} ${options}`;
+    };
+
     ygo.on("start", () => {
       const handleCommandExecuted = (data: any) => {
         console.log(
@@ -116,6 +129,8 @@ export default function Duel({ roomId: roomIdProp, playerId: playerIdProp }: Due
         );
         if (SEND_COMMAND_ALLOWED) {
           kaibaNet.execYGOCommand(roomId, data.command.toCommandData());
+          const messageTemplate = formatCommandToCliStyle(data.command.toJSON());
+          handleSendMessage(messageTemplate)
         }
       };
       setTimeout(() => {
@@ -191,16 +206,14 @@ export default function Duel({ roomId: roomIdProp, playerId: playerIdProp }: Due
     };
   }, [duelData, roomId, kaibaNet]);
 
+  const handleChatMessage = (message: string) => {
+    setMessages(prev => [...prev, message]);
+  };
+
   // Add chat message listener
   useEffect(() => {
     if (!kaibaNet) return;
-
-    const handleChatMessage = (message: string) => {
-      setMessages(prev => [...prev, message]);
-    };
-
     kaibaNet.on("duel:chat:message", handleChatMessage);
-
     return () => {
       kaibaNet.off("duel:chat:message", handleChatMessage);
     };
@@ -228,11 +241,39 @@ export default function Duel({ roomId: roomIdProp, playerId: playerIdProp }: Due
 
   const handleSendMessage = (message: string) => {
     if (!roomId) {
-      console.warn('Cannot send message: No room ID');
-      return;
+        console.warn('Cannot send message: No room ID');
+        return;
     }
-    kaibaNet.sendMessage(roomId, `${playerId}: ${message}`);
-  };
+
+    // Check if message is a command
+    if (message.startsWith('/cmd/')) {
+        // Parse command and options
+        const [command, ...args] = message.slice(1).split(' ');
+        const options: Record<string, string> = {};
+        
+        // Parse options (--key value format)
+        for (let i = 0; i < args.length; i++) {
+            if (args[i].startsWith('--')) {
+                const key = args[i].slice(2);
+                const value = args[i + 1];
+                if (value && !value.startsWith('--')) {
+                    options[key] = value;
+                    i++; // Skip next argument as it's the value
+                }
+            }
+        }
+
+        const commandMessage = `${playerId}:/cmd/${command} ${JSON.stringify(options)}`;
+        handleChatMessage(commandMessage);
+        // TODO: @mica call handleCommandExec here
+        return;
+    }
+
+    // Regular message
+    const messageTemplate = `${playerId}: ${message}`;
+    handleChatMessage(messageTemplate);
+    kaibaNet.sendMessage(roomId, messageTemplate);
+};
 
   const handleVoiceChatToggle = async (enabled: boolean) => {
     if (!roomId || !kaibaNet) return;
@@ -305,7 +346,7 @@ export default function Duel({ roomId: roomIdProp, playerId: playerIdProp }: Due
         roomId={roomId} 
         playerId={playerId} 
         messages={messages}
-        sendMessageCallback={handleSendMessage}
+        onSendMessage={handleSendMessage}
         onVoiceChatToggle={handleVoiceChatToggle}
         onMicMuteToggle={handleMicMuteToggle}
         onAudioMuteToggle={handleAudioMuteToggle}

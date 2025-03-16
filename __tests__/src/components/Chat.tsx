@@ -2,6 +2,28 @@ import { useEffect, useState } from "react";
 import styled from "styled-components";
 import { AudioVisualizer } from './AudioVisualizer';
 
+// Update the truncateId helper function
+const truncateId = (id: string, type: 'room' | 'player' = 'player') => {
+    if (!id || id.length <= 6) return id;
+    const firstPart = id.slice(0, 4);
+    const lastPart = id.slice(-2);
+    return `${type === 'room' ? '🔑' : '👤'} ${firstPart}..${lastPart}`;
+};
+
+// Add this helper function
+const formatCommandOptions = (commandStr: string) => {
+    const [cmdType, jsonStr] = commandStr.split(' ');
+    try {
+        const options = JSON.parse(jsonStr);
+        const formattedOptions = Object.entries(options)
+            .map(([key, value]) => `<span class="param-key">--${key}</span> <span class="param-value">${value}</span>`)
+            .join(' ');
+        return `<span class="command-type">${cmdType}</span> ${formattedOptions}`;
+    } catch (e) {
+        return commandStr;
+    }
+};
+
 interface StyledProps {
   isOpen?: boolean;
   isActive?: boolean;
@@ -42,12 +64,22 @@ const HeaderInfo = styled.div`
   max-width: calc(100% - 40px); // Leave space for close button
 `;
 
+// Update the styled components
 const HeaderText = styled.div`
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  font-size: 12px;
-  opacity: 0.7;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 12px;
+    opacity: 0.8;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+
+    span.id {
+        font-weight: bold;
+        color: #0078d4;
+        font-family: monospace;
+    }
 `;
 
 const CloseButton = styled.button`
@@ -118,14 +150,19 @@ const Messages = styled.div`
   }
 `;
 
-const MessageBubble = styled.div<{ isSelf: boolean }>`
-  max-width: 80%;
-  padding: 8px 12px;
-  border-radius: 12px;
-  background-color: ${({ isSelf }) => (isSelf ? '#0078d4' : '#444')};
-  align-self: ${({ isSelf }) => (isSelf ? 'flex-end' : 'flex-start')};
-  word-break: break-word;
-  font-size: 14px;
+const MessageBubble = styled.div<{ isSelf: boolean; isCommand?: boolean }>`
+    max-width: 85%;
+    padding: ${({ isCommand }) => isCommand ? '8px 10px' : '8px 12px'};
+    border-radius: 12px;
+    background-color: ${({ isSelf, isCommand }) => {
+        if (isCommand) return '#1e2837';
+        return isSelf ? '#0078d4' : '#444';
+    }};
+    align-self: ${({ isSelf }) => (isSelf ? 'flex-end' : 'flex-start')};
+    word-break: break-word;
+    font-size: 14px;
+    border: ${({ isCommand }) => isCommand ? '1px solid #2a3343' : 'none'};
+    box-shadow: ${({ isCommand }) => isCommand ? '0 2px 4px rgba(0,0,0,0.2)' : 'none'};
 `;
 
 const InputContainer = styled.div`
@@ -177,9 +214,9 @@ interface ChatProps {
   roomId: string;
   playerId: string;
   messages: string[];
-  sendMessageCallback: (message: string) => void;
+  onSendMessage: (message: string) => void;
   onVoiceChatToggle: (enabled: boolean) => void;
-  onMicMuteToggle: (muted: boolean) => void;  // Add this line
+  onMicMuteToggle: (muted: boolean) => void;
   onAudioMuteToggle: (muted: boolean) => void;
   analyser: AnalyserNode | null;
 }
@@ -218,13 +255,37 @@ const MessagesContainer = styled.div`
   overflow: hidden;
 `;
 
+// Add new styled component for command text
+const CommandText = styled.code`
+    background-color: rgba(0, 0, 0, 0.3);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+    font-size: 13px;
+    color: #a8ff60;
+    white-space: pre-wrap;
+    word-break: break-all;
+
+    .command-type {
+        color: #ff79c6;
+    }
+    
+    .param-key {
+        color: #8be9fd;
+    }
+    
+    .param-value {
+        color: #f1fa8c;
+    }
+`;
+
 export default function Chat({ 
   roomId, 
   playerId, 
   messages, 
-  sendMessageCallback,
+  onSendMessage,
   onVoiceChatToggle,
-  onMicMuteToggle,  // Add this prop
+  onMicMuteToggle,
   onAudioMuteToggle,
   analyser
 }: ChatProps) {
@@ -232,11 +293,11 @@ export default function Chat({
   const [isVoiceEnabled, setIsVoiceEnabled] = useState(false);
   const [isMicMuted, setIsMicMuted] = useState(false);
   const [isAudioMuted, setIsAudioMuted] = useState(false);
-  const [inputMessage, setInputMessage] = useState(""); // Add this line
+  const [inputMessage, setInputMessage] = useState("");
 
   const handleSendMessage = () => {
     if (inputMessage.trim()) {
-      sendMessageCallback(inputMessage);
+      onSendMessage(inputMessage);
       setInputMessage("");
     }
   };
@@ -250,7 +311,7 @@ export default function Chat({
   const toggleMic = () => {
     const newState = !isMicMuted;
     setIsMicMuted(newState);
-    onMicMuteToggle?.(newState);  // Use the new prop
+    onMicMuteToggle?.(newState);
   };
 
   const toggleAudio = () => {
@@ -264,8 +325,12 @@ export default function Chat({
         <ChatHeader>
           <HeaderInfo>
             <h2 style={{ margin: 0, fontSize: '16px' }}>Chat</h2>
-            <HeaderText>ID: {roomId.slice(0, 8)}...</HeaderText>
-            <HeaderText>Player: {playerId.slice(0, 8)}...</HeaderText>
+            <HeaderText>
+                <span className="id">{truncateId(roomId, 'room')}</span>
+            </HeaderText>
+            <HeaderText>
+                <span className="id">{truncateId(playerId, 'player')}</span>
+            </HeaderText>
           </HeaderInfo>
           
           <AudioControls>
@@ -307,11 +372,46 @@ export default function Chat({
           )}
           
           <Messages>
-            {messages.map((msg, index) => (
-              <MessageBubble key={index} isSelf={msg.startsWith(playerId)}>
-                {msg}
-              </MessageBubble>
-            ))}
+            {messages.map((msg, index) => {
+              const isCommand = msg.includes(':/cmd/');
+              const isSelf = msg.startsWith(playerId);
+              
+              let displayMessage = msg;
+              // Update the message rendering section to format commands
+              if (isCommand) {
+                const [playerId, command] = msg.split(':/cmd/');              
+                displayMessage = (
+                    <>
+                        <span className="id">{truncateId(playerId, 'player')}</span>
+                        {' executed: '}
+                        <CommandText 
+                            dangerouslySetInnerHTML={{ 
+                                __html: `$ ${formatCommandOptions(command)}` 
+                            }} 
+                        />
+                    </>
+                );
+              } else {
+                const [id, ...rest] = msg.split(':');
+                displayMessage = (
+                    <>
+                        <span className="id">{truncateId(id, 'player')}</span>
+                        {':'}
+                        {rest.join(':')}
+                    </>
+                );
+              }
+
+              return (
+                <MessageBubble 
+                  key={index} 
+                  isSelf={isSelf} 
+                  isCommand={isCommand}
+                >
+                  {displayMessage}
+                </MessageBubble>
+              );
+            })}
           </Messages>
         </MessagesContainer>
 
