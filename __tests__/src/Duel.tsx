@@ -255,14 +255,14 @@ export default function Duel({
 
     if (message.startsWith("/cmd/")) {
       const [commandType, ...args] = message.split(" ");
-      const options: Record<string, string> = {};
+      const options: Record<string, any> = {};
 
       for (let i = 0; i < args.length; i++) {
         if (args[i].startsWith("--")) {
           const key = args[i].slice(2);
           const value = args[i + 1];
           if (value && !value.startsWith("--")) {
-            options[key] = value;
+            options[key] = !isNaN(Number(value)) ? Number(value) : value;
             i++;
           }
         }
