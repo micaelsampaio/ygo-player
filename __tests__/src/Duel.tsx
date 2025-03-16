@@ -9,7 +9,13 @@ interface DuelProps {
   playerId?: string;
 }
 
-export default function Duel({ roomId: roomIdProp, playerId: playerIdProp }: DuelProps) {
+// Move SEND_COMMAND_ALLOWED to module scope
+let SEND_COMMAND_ALLOWED = true;
+
+export default function Duel({
+  roomId: roomIdProp,
+  playerId: playerIdProp,
+}: DuelProps) {
   const kaibaNet = useKaibaNet();
   const [isLoading, setIsLoading] = useState(true);
   const [duelData, setDuelData] = useState<any>(null);
@@ -33,26 +39,27 @@ export default function Duel({ roomId: roomIdProp, playerId: playerIdProp }: Due
 
   // Log changes to IDs
   useEffect(() => {
-    console.log('Duel:Room ID changed:', roomId);
+    console.log("Duel:Room ID changed:", roomId);
   }, [roomId]);
 
   useEffect(() => {
-    console.log('Duel:Player ID changed:', playerId);
+    console.log("Duel:Player ID changed:", playerId);
   }, [playerId]);
 
   // Log changes to final values
   useEffect(() => {
-    console.log('Duel:Room ID changed:', roomId);
+    console.log("Duel:Room ID changed:", roomId);
   }, [roomId]);
 
   useEffect(() => {
-    console.log('Duel:Player ID changed:', playerId);
+    console.log("Duel:Player ID changed:", playerId);
   }, [playerId]);
 
   // Initialize duel data
   useEffect(() => {
     // Initialize duel data
-    const newDuelData = location.state?.duelData ??
+    const newDuelData =
+      location.state?.duelData ??
       JSON.parse(localStorage.getItem("duel-data") || "null");
 
     if (newDuelData) {
@@ -64,7 +71,7 @@ export default function Duel({ roomId: roomIdProp, playerId: playerIdProp }: Due
     if (urlRoomId && !newDuelData) {
       //kaibaNet.joinRoom(urlRoomId);
     }
-  }, [location.state?.duelData, urlRoomId, kaibaNet])
+  }, [location.state?.duelData, urlRoomId, kaibaNet]);
 
   // Setup YGO player after duel data is available
   useEffect(() => {
@@ -103,7 +110,7 @@ export default function Duel({ roomId: roomIdProp, playerId: playerIdProp }: Due
       console.log("No roomId yet, skipping game state refresh listener setup");
       return;
     }
-    let SEND_COMMAND_ALLOWED = true;
+
     const ygo: YGOPlayerComponent = document.querySelector(
       "ygo-player"
     )! as any;
@@ -111,28 +118,26 @@ export default function Duel({ roomId: roomIdProp, playerId: playerIdProp }: Due
     const formatCommandToCliStyle = (command: any): string => {
       const { type, data } = command;
       // Convert type from CamelCase to lowercase
-      const commandType = type.replace('Command', '').toLowerCase();
-      
+      const commandType = type.replace("Command", "").toLowerCase();
+
       // Convert data object to CLI options
       const options = Object.entries(data)
-          .map(([key, value]) => `--${key} ${value}`)
-          .join(' ');
-  
+        .map(([key, value]) => `--${key} ${value}`)
+        .join(" ");
+
       return `/cmd/${commandType} ${options}`;
     };
 
+    const handleCommandExecuted = (data: any) => {
+      console.log("TCL: SEND COMMAND ", JSON.stringify(data.command.toJSON()));
+      if (SEND_COMMAND_ALLOWED) {
+        kaibaNet.execYGOCommand(roomId, data.command.toCommandData());
+        const messageTemplate = formatCommandToCliStyle(data.command.toJSON());
+        handleSendMessage(messageTemplate);
+      }
+    };
+
     ygo.on("start", () => {
-      const handleCommandExecuted = (data: any) => {
-        console.log(
-          "TCL: SEND COMMAND ",
-          JSON.stringify(data.command.toJSON())
-        );
-        if (SEND_COMMAND_ALLOWED) {
-          kaibaNet.execYGOCommand(roomId, data.command.toCommandData());
-          const messageTemplate = formatCommandToCliStyle(data.command.toJSON());
-          handleSendMessage(messageTemplate)
-        }
-      };
       setTimeout(() => {
         ygo.on("command-executed", handleCommandExecuted);
       }, 1000);
@@ -150,23 +155,6 @@ export default function Duel({ roomId: roomIdProp, playerId: playerIdProp }: Due
         };
       });
       setIsLoading(false);
-    };
-
-    const handleCommandExec = (command: any) => {
-      console.log("TCL: Received a command to EXEC ", command);
-      const ygoCore = ygo.duel.ygo;
-      const commands = ygoCore.commands;
-
-      if (commands.length > 0) {
-        const currentCommand = commands.find(
-          (c: any) => c.commandId === command.commandId
-        );
-        if (currentCommand) return;
-      }
-      console.log("TCL: WILL EXEC ", command);
-      SEND_COMMAND_ALLOWED = false;
-      ygo.duel.execCommand(JSON.stringify(command));
-      SEND_COMMAND_ALLOWED = true;
     };
 
     // Add this log to verify the event is being subscribed
@@ -207,7 +195,7 @@ export default function Duel({ roomId: roomIdProp, playerId: playerIdProp }: Due
   }, [duelData, roomId, kaibaNet]);
 
   const handleChatMessage = (message: string) => {
-    setMessages(prev => [...prev, message]);
+    setMessages((prev) => [...prev, message]);
   };
 
   // Add chat message listener
@@ -239,61 +227,86 @@ export default function Duel({ roomId: roomIdProp, playerId: playerIdProp }: Due
     );
   };
 
-  const handleSendMessage = (message: string) => {
-    if (!roomId) {
-        console.warn('Cannot send message: No room ID');
-        return;
+  const handleCommandExec = (command: any) => {
+    const ygo: YGOPlayerComponent = document.querySelector(
+      "ygo-player"
+    )! as any;
+    const ygoCore = ygo.duel.ygo;
+    const commands = ygoCore.commands;
+
+    if (commands.length > 0) {
+      const currentCommand = commands.find(
+        (c: any) => c.commandId === command.commandId
+      );
+      if (currentCommand) return;
     }
 
-    // Check if message is a command
-    if (message.startsWith('/cmd/')) {
-        // Parse command and options
-        const [command, ...args] = message.slice(1).split(' ');
-        const options: Record<string, string> = {};
-        
-        // Parse options (--key value format)
-        for (let i = 0; i < args.length; i++) {
-            if (args[i].startsWith('--')) {
-                const key = args[i].slice(2);
-                const value = args[i + 1];
-                if (value && !value.startsWith('--')) {
-                    options[key] = value;
-                    i++; // Skip next argument as it's the value
-                }
-            }
-        }
+    console.log("TCL: WILL EXEC ", command);
+    SEND_COMMAND_ALLOWED = false;
+    ygo.duel.execCommand(JSON.stringify(command));
+    SEND_COMMAND_ALLOWED = true;
+  };
 
-        const commandMessage = `${playerId}:/cmd/${command} ${JSON.stringify(options)}`;
-        handleChatMessage(commandMessage);
-        // TODO: @mica call handleCommandExec here
-        return;
+  const handleSendMessage = (message: string) => {
+    if (!roomId) {
+      console.warn("Cannot send message: No room ID");
+      return;
+    }
+
+    if (message.startsWith("/cmd/")) {
+      const [commandType, ...args] = message.split(" ");
+      const options: Record<string, string> = {};
+
+      for (let i = 0; i < args.length; i++) {
+        if (args[i].startsWith("--")) {
+          const key = args[i].slice(2);
+          const value = args[i + 1];
+          if (value && !value.startsWith("--")) {
+            options[key] = value;
+            i++;
+          }
+        }
+      }
+      const command = {
+        type: `${commandType.split("/cmd/")[1]}Command`,
+        data: options,
+      };
+
+      console.log("TCL: handleSendMessage -> options", command);
+
+      const commandMessage = `${playerId}:${commandType} ${JSON.stringify(
+        options
+      )}`;
+      handleChatMessage(commandMessage);
+      handleCommandExec(command);
+      return;
     }
 
     // Regular message
     const messageTemplate = `${playerId}: ${message}`;
     handleChatMessage(messageTemplate);
     kaibaNet.sendMessage(roomId, messageTemplate);
-};
+  };
 
   const handleVoiceChatToggle = async (enabled: boolean) => {
     if (!roomId || !kaibaNet) return;
 
     try {
       if (enabled) {
-        console.log('Starting voice chat...'); // Debug log
+        console.log("Starting voice chat..."); // Debug log
         await kaibaNet.startVoiceChat(roomId);
         const audioAnalyser = kaibaNet.getAudioAnalyser();
-        console.log('Voice chat started, analyser:', !!audioAnalyser); // Debug log
+        console.log("Voice chat started, analyser:", !!audioAnalyser); // Debug log
         setAnalyser(audioAnalyser);
         setIsVoiceEnabled(enabled);
       } else {
-        console.log('Stopping voice chat...'); // Debug log
+        console.log("Stopping voice chat..."); // Debug log
         await kaibaNet.stopVoiceChat(roomId);
         setAnalyser(null);
         setIsVoiceEnabled(false);
       }
     } catch (error) {
-      console.error('Voice chat error:', error);
+      console.error("Voice chat error:", error);
       setIsVoiceEnabled(false);
       setAnalyser(null);
     }
