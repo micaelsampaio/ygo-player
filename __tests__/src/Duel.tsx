@@ -341,16 +341,16 @@ export default function Duel({ roomId: roomIdProp, playerId: playerIdProp }: Due
         </div>
       )}
 
-      {/*<Chat 
-        roomId={roomId} 
-        playerId={playerId} 
+      <Chat
+        roomId={roomId}
+        playerId={playerId}
         messages={messages}
         onSendMessage={handleSendMessage}
         onVoiceChatToggle={handleVoiceChatToggle}
         onMicMuteToggle={handleMicMuteToggle}
         onAudioMuteToggle={handleAudioMuteToggle}
         analyser={analyser}
-      />*/}
+      />
 
       <div
         style={{ position: "fixed", top: "10px", right: "10px", zIndex: 9999 }}
