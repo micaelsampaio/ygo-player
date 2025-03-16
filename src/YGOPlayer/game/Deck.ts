@@ -23,7 +23,7 @@ export class Deck extends YGOEntity implements YGOUiElement {
         this.player = player;
         this.action = new ActionUiMenu(duel, { eventType: "deck-menu" });
 
-        this.normalMaterial = new THREE.MeshBasicMaterial({ color: 0x00555 });
+        this.normalMaterial = new THREE.MeshBasicMaterial({ color: 0x00555, transparent: true, opacity: 0 });
         this.hoverMaterial = new THREE.MeshBasicMaterial({ color: 0x00ffff });
 
         const geometry = new THREE.BoxGeometry(4, 4, 0.1);

@@ -14,16 +14,24 @@ export class YGODuelScene {
 
     public createFields({ gameField }: { gameField: THREE.Scene }) {
 
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 1); // white light with intensity 1
-        directionalLight.position.set(10, 10, 10); // You can adjust these values
-        directionalLight.target.position.set(0, 0, 0); // points to the center of the scene
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 5);
+        directionalLight.position.set(20, 40, 25);
+        directionalLight.target.position.set(0, 0, 0);
         directionalLight.castShadow = true;
-        directionalLight.shadow.mapSize.width = 1024;  // Higher value for better quality shadows
+        directionalLight.shadow.mapSize.width = 1024;
         directionalLight.shadow.mapSize.height = 1024;
         directionalLight.shadow.camera.near = 0.5;
-        directionalLight.shadow.camera.far = 50;
+        directionalLight.shadow.camera.far = 100;
+        directionalLight.shadow.camera.left = -15;
+        directionalLight.shadow.camera.right = 15;
+        directionalLight.shadow.camera.top = 15;
+        directionalLight.shadow.camera.bottom = -15;
+        directionalLight.shadow.bias = -0.0005;
+        directionalLight.shadow.normalBias = 0.04;
 
+        this.duel.core.scene.add(new THREE.AmbientLight('white', 1));
         this.duel.core.scene.add(directionalLight);
+        this.duel.core.scene.add(directionalLight.target);
 
         gameField.position.set(0, 0, 0);
 

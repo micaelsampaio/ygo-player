@@ -16,7 +16,7 @@ export default function Duel({ roomId: roomIdProp, playerId: playerIdProp }: Due
   const [messages, setMessages] = useState<string[]>([]);
   const [isVoiceEnabled, setIsVoiceEnabled] = useState(false);
   const [analyser, setAnalyser] = useState<AnalyserNode | null>(null);
-  
+
   const location = useLocation();
   const { roomId: urlRoomId } = useParams();
 
@@ -52,7 +52,7 @@ export default function Duel({ roomId: roomIdProp, playerId: playerIdProp }: Due
   // Initialize duel data
   useEffect(() => {
     // Initialize duel data
-    const newDuelData = location.state?.duelData ?? 
+    const newDuelData = location.state?.duelData ??
       JSON.parse(localStorage.getItem("duel-data") || "null");
 
     if (newDuelData) {
@@ -279,25 +279,25 @@ export default function Duel({ roomId: roomIdProp, playerId: playerIdProp }: Due
     if (!roomId || !kaibaNet) return;
 
     try {
-        if (enabled) {
-            console.log('Starting voice chat...'); // Debug log
-            await kaibaNet.startVoiceChat(roomId);
-            const audioAnalyser = kaibaNet.getAudioAnalyser();
-            console.log('Voice chat started, analyser:', !!audioAnalyser); // Debug log
-            setAnalyser(audioAnalyser);
-            setIsVoiceEnabled(enabled);
-        } else {
-            console.log('Stopping voice chat...'); // Debug log
-            await kaibaNet.stopVoiceChat(roomId);
-            setAnalyser(null);
-            setIsVoiceEnabled(false);
-        }
-    } catch (error) {
-        console.error('Voice chat error:', error);
-        setIsVoiceEnabled(false);
+      if (enabled) {
+        console.log('Starting voice chat...'); // Debug log
+        await kaibaNet.startVoiceChat(roomId);
+        const audioAnalyser = kaibaNet.getAudioAnalyser();
+        console.log('Voice chat started, analyser:', !!audioAnalyser); // Debug log
+        setAnalyser(audioAnalyser);
+        setIsVoiceEnabled(enabled);
+      } else {
+        console.log('Stopping voice chat...'); // Debug log
+        await kaibaNet.stopVoiceChat(roomId);
         setAnalyser(null);
+        setIsVoiceEnabled(false);
+      }
+    } catch (error) {
+      console.error('Voice chat error:', error);
+      setIsVoiceEnabled(false);
+      setAnalyser(null);
     }
-};
+  };
 
   const handleMicMuteToggle = (muted: boolean) => {
     if (!kaibaNet) return;
@@ -341,8 +341,7 @@ export default function Duel({ roomId: roomIdProp, playerId: playerIdProp }: Due
         </div>
       )}
 
-      {console.log('Duel rendering Chat with:', { roomId, playerId })}
-      <Chat 
+      {/*<Chat 
         roomId={roomId} 
         playerId={playerId} 
         messages={messages}
@@ -351,7 +350,7 @@ export default function Duel({ roomId: roomIdProp, playerId: playerIdProp }: Due
         onMicMuteToggle={handleMicMuteToggle}
         onAudioMuteToggle={handleAudioMuteToggle}
         analyser={analyser}
-      />
+      />*/}
 
       <div
         style={{ position: "fixed", top: "10px", right: "10px", zIndex: 9999 }}
