@@ -127,6 +127,20 @@ export class GameCardStats {
             atkDef += `/${this.def}`;
         }
 
+        this.ctx.beginPath();
+
+        const gradient = this.ctx.createLinearGradient(0, 0, this.canvas.width, 0);
+        gradient.addColorStop(0, "rgba(0, 0, 0, 0)");
+        gradient.addColorStop(0.25, "rgba(0, 0, 0, 0.5)");
+        gradient.addColorStop(0.75, "rgba(0, 0, 0, 0.5)");
+        gradient.addColorStop(1, "rgba(0, 0, 0, 0)");
+
+        this.ctx.fillStyle = gradient;
+
+        this.ctx.rect(this.canvas.width * 0.1, y - 20, this.canvas.width * 0.8, 25);
+        this.ctx.fill();
+
+
         this.ctx.font = "Bold 20px Arial";
         this.ctx.fillStyle = "#FFFFFF";
         this.ctx.textAlign = "center";
