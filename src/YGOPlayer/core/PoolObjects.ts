@@ -1,6 +1,7 @@
 export class PoolObjects {
     public name: string;
-    private objects: any[]
+    private objects: any[];
+
     constructor(private props: { name: string, amount: any, create: () => any }) {
         this.objects = [];
         this.name = this.props.name;
@@ -8,7 +9,8 @@ export class PoolObjects {
 
     create() {
         for (let i = 0; i < this.props.amount; ++i) {
-
+            const clone = this.createObject();
+            this.objects.push(clone);
         }
     }
 
@@ -33,9 +35,9 @@ export class PoolObjects {
 
     get<T = any>() {
         if (this.objects.length > 0) {
-            return this.objects.pop();
+            return this.objects.pop() as T;
         }
-        return this.createObject();
+        return this.createObject() as T;
     }
 
     enquene(clone: any) {

@@ -12,6 +12,7 @@ import { Graveyard } from "../../game/Graveyard";
 import { MultipleTasks } from "../utils/multiple-tasks";
 import { ScaleTransition } from "../utils/scale-transition";
 import { createSquareWithTopMiddlePivot } from "../../game/meshes/mesh-utils";
+import { YGOAnimationObject } from "../../game/YGOAnimationObject";
 
 interface DestroyEventHandlerProps extends DuelEventHandlerProps {
     event: YGODuelEvents.Destroy
@@ -76,6 +77,19 @@ export class DestroyCardEventHandler extends YGOCommandHandler {
         trailMesh.scale.set(1, 0, 1);
         trailMesh.rotateZ(THREE.MathUtils.degToRad(-90));
 
+        const pool = this.props.duel.assets.getPool("destroyEffect");
+        const destroyEffect = pool.get<YGOAnimationObject>();
+
+        destroyEffect.gameObject.position.copy(card.gameObject.position);
+        destroyEffect.gameObject.rotation.copy(card.gameObject.rotation);
+        destroyEffect.gameObject.visible = true;
+        destroyEffect.playAll();
+        destroyEffect.enable();
+
+        this.props.duel.core.scene.add(destroyEffect.gameObject);
+
+        console.log("DESTRIY EFFECT");
+
         this.props.startTask(new YGOTaskSequence(
             new ScaleTransition({
                 gameObject: trailMesh,
@@ -113,7 +127,8 @@ export class DestroyCardEventHandler extends YGOCommandHandler {
             duel.core.scene.remove(mesh);
             cardZone?.setCard(null);
             this.props.onCompleted();
-        }))
+            pool.enquene(destroyEffect);
+        }));
 
         this.props.startTask(sequence);
     }

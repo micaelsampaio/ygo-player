@@ -73,6 +73,7 @@ export class YGOAssets {
 
     createPoool(pool: PoolObjects) {
         this.poolObjects.set(pool.name, pool);
+        pool.create();
     }
 
     getPool(key: string): PoolObjects {

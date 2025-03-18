@@ -1,4 +1,3 @@
-import { YGOEntity } from "./YGOEntity";
 
 export abstract class YGOComponent {
     public name: string;

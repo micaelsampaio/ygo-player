@@ -57,10 +57,10 @@ export class GameCardHand extends YGOEntity implements YGOUiElement {
             card: this.card
         });
 
-        if(this.duel.config.autoChangePlayer){
+        if (this.duel.config.autoChangePlayer) {
             this.duel.setActivePlayer(this.player);
         }
-        
+
         const action = this.duel.actionManager.getAction<ActionCardHandMenu>("card-hand-menu");
         action.setData({
             duel: this.duel,

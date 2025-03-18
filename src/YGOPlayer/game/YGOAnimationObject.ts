@@ -18,6 +18,7 @@ export class YGOAnimationObject extends YGOEntity {
         this.animator = new THREE.AnimationMixer(gameObject);
 
         this.animations = animations;
+
         this.setupActions();
     }
 
@@ -57,6 +58,41 @@ export class YGOAnimationObject extends YGOEntity {
 
         this.actions.forEach(a => a.stop());
         action.reset().play();
+    }
+
+    playAll(options: {
+        loop?: THREE.AnimationActionLoopStyles;
+        clampWhenFinished?: boolean;
+        timeScale?: number;
+    } = {}): void {
+        if (this.animations.length === 0) {
+            console.warn("No animations found to play");
+            return;
+        }
+
+        this.actions.forEach(a => a.stop());
+
+        this.actions.forEach(action => {
+            if (options.loop !== undefined) {
+                action.loop = options.loop;
+            } else {
+                action.loop = THREE.LoopOnce;
+            }
+
+            if (options.clampWhenFinished !== undefined) {
+                action.clampWhenFinished = options.clampWhenFinished;
+            } else {
+                action.clampWhenFinished = true;
+            }
+
+            if (options.timeScale !== undefined) {
+                action.timeScale = options.timeScale;
+            } else {
+                action.timeScale = 1;
+            }
+
+            action.reset().play();
+        });
     }
 
     stop(name?: string): void {

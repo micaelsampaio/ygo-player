@@ -37,11 +37,10 @@ export class YGOPlayerCore {
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.shadowMap.enabled = true;
         this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-        this.renderer.outputColorSpace  = THREE.LinearSRGBColorSpace;
-
+        this.renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
 
         const mapGeometry = new THREE.PlaneGeometry(40, 25);
-        const mapMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000, wireframe: true });
+        const mapMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000, transparent: true, opacity: 0, wireframe: false });
         this.mapBounds = new THREE.Mesh(mapGeometry, mapMaterial);
 
         this.scene.add(this.mapBounds);

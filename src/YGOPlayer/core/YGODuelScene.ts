@@ -44,13 +44,13 @@ export class YGODuelScene {
         this.duel.core.scene.add(clonedGameField);
 
         const selectedCardGeometry = new THREE.PlaneGeometry(7, 15);
-        const selectedCardMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000, wireframe: true });
+        const selectedCardMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000, transparent: true, opacity: 0, wireframe: false });
         this.selectedCardPlaceholder = new THREE.Mesh(selectedCardGeometry, selectedCardMaterial);
         this.selectedCardPlaceholder.position.set(-16.5, 0, 0.1);
         this.duel.core.scene.add(this.selectedCardPlaceholder);
 
         const handObjectGeometry = new THREE.PlaneGeometry(22, 4);
-        const handObjectMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000, wireframe: true });
+        const handObjectMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000, transparent: true, opacity: 0, wireframe: false });
         const handObject = new THREE.Mesh(handObjectGeometry, handObjectMaterial);
         this.duel.core.scene.add(handObject);
         this.handPlaceholder = handObject;
@@ -62,14 +62,17 @@ export class YGODuelScene {
         const destroyModel = this.duel.assets.models.get(`${this.duel.config.cdnUrl}/models/destroy_effect.glb`)!;
         const destroyPool = new PoolObjects({
             name: "destroyEffect",
-            amount: 10,
+            amount: 1,
             create: () => {
                 const gameObject = destroyModel.scene.clone();
-                const animations = gameObject.animations;
-                return new YGOAnimationObject({
+                const animations = destroyModel.animations;
+                const clone = new YGOAnimationObject({
                     gameObject,
                     animations
-                })
+                });
+                clone.playAll();
+                this.duel.add(clone);
+                return clone;
             }
         });
         this.duel.assets.createPoool(destroyPool);

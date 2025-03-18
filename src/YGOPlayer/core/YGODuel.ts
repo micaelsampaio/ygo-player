@@ -27,6 +27,7 @@ import { YGODuelScene } from './YGODuelScene';
 import { YGOConfig } from './YGOConfig';
 import { Command } from '../../YGOCore/types/commands';
 import { YGOMapClick } from './YGOMapClick';
+import { TrailRenderer } from '../game/YgoTrailRender';
 
 export class YGODuel {
     public state: YGODuelState;
@@ -349,13 +350,92 @@ export class YGODuel {
 
     public test() {
 
-        return;
-        const destroyEffect = this.assets.getPool("destroyEffect").get<any>();
-        this.add(destroyEffect);
+    
+        // const trailRenderer = new TrailRenderer();
 
-        destroyEffect.gameObject.position.set(0, 0, 1);
-        destroyEffect.gameObject.visible = true;
-        destroyEffect.enable();
+        // // Configure the trail
+        // trailRenderer.setWidth(0.2);
+        // trailRenderer.setMaxPoints(100);
+        // trailRenderer.setFadeTime(0.25);
+        // trailRenderer.setCamera(this.core.camera);
+        // trailRenderer.setColor(0xff0000); // Red color
+
+        // this.add(trailRenderer);
+
+        // this.tasks.startTask(new YGOTaskSequence(
+        //     new PositionTransition({
+        //         gameObject: trailRenderer.gameObject,
+        //         position: new THREE.Vector3(5, 5, 5),
+        //         duration: 1
+        //     }),
+        //     new PositionTransition({
+        //         gameObject: trailRenderer.gameObject,
+        //         position: new THREE.Vector3(-5, 5, 5),
+        //         duration: 1
+        //     }),
+        //     new PositionTransition({
+        //         gameObject: trailRenderer.gameObject,
+        //         position: new THREE.Vector3(-5, 0, 5),
+        //         duration: 1
+        //     }),
+        //     new PositionTransition({
+        //         gameObject: trailRenderer.gameObject,
+        //         position: new THREE.Vector3(5, 0, 5),
+        //         duration: 1
+        //     }),
+        //     new PositionTransition({
+        //         gameObject: trailRenderer.gameObject,
+        //         position: new THREE.Vector3(5, 5, 5),
+        //         duration: 1
+        //     }),
+        //     new PositionTransition({
+        //         gameObject: trailRenderer.gameObject,
+        //         position: new THREE.Vector3(-5, 5, 5),
+        //         duration: 1
+        //     }),
+        //     new PositionTransition({
+        //         gameObject: trailRenderer.gameObject,
+        //         position: new THREE.Vector3(-5, 0, 5),
+        //         duration: 1
+        //     }),
+        //     new PositionTransition({
+        //         gameObject: trailRenderer.gameObject,
+        //         position: new THREE.Vector3(5, 0, 5),
+        //         duration: 1
+        //     }),
+        //     new PositionTransition({
+        //         gameObject: trailRenderer.gameObject,
+        //         position: new THREE.Vector3(5, 5, 5),
+        //         duration: 1
+        //     }),
+        //     new PositionTransition({
+        //         gameObject: trailRenderer.gameObject,
+        //         position: new THREE.Vector3(-5, 5, 5),
+        //         duration: 1
+        //     }),
+        //     new PositionTransition({
+        //         gameObject: trailRenderer.gameObject,
+        //         position: new THREE.Vector3(-5, 0, 5),
+        //         duration: 1
+        //     }),
+        //     new PositionTransition({
+        //         gameObject: trailRenderer.gameObject,
+        //         position: new THREE.Vector3(5, 0, 5),
+        //         duration: 1
+        //     }),
+
+
+        // ))
+
+        // const destroyEffect = this.assets.getPool("destroyEffect").get<YGOAnimationObject>();
+        // this.add(destroyEffect);
+
+        // destroyEffect.gameObject.position.set(0, 0, 1);
+        // destroyEffect.gameObject.visible = true;
+        // destroyEffect.playAll();
+        // destroyEffect.enable();
+
+        return;
 
         const modalGeometry = new THREE.PlaneGeometry(1, 1);
         const modalMaterial = new THREE.MeshBasicMaterial({
