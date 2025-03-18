@@ -44,4 +44,12 @@
     --ygo-border-radius-small: 4px;
     --ygo-border-radius-medium: 8px;
     --ygo-border-radius-large: 16px;
+
+    --ygo-card-effect-monster-color: #ff7f00;
+    --ygo-card-normal-monster-color: #f1c232;
+    --ygo-card-trap-color: #9b4d96;
+    --ygo-card-spell-color: #00e284;
+    --ygo-card-link-color: #2a74ff;
+    --ygo-card-xyz-color: #1c1c1c;
+    --ygo-card-fusion-color: #d17bff;
 }
