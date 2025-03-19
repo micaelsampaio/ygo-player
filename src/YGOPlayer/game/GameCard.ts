@@ -5,6 +5,7 @@ import { Card, FieldZoneData } from '../../YGOCore/types/types';
 import { YGOGameUtils } from '../../YGOCore';
 import { GameCardStats } from './GameCardStats';
 import { CARD_DEPTH, CARD_HEIGHT_SIZE, CARD_RATIO } from '../constants';
+import { CardMaterial } from './materials/game-card-material';
 
 export class GameCard extends YGOEntity {
     private duel: YGODuel;
@@ -48,7 +49,7 @@ export class GameCard extends YGOEntity {
 
         const frontTexture = this.duel.assets.getTexture(`${this.duel.config.cdnUrl}/images/cards_small/${card.id}.jpg`);
         const backTexture = this.duel.assets.getTexture(`${this.duel.config.cdnUrl}/images/card_back.png`);
-        const frontMaterial = new THREE.MeshBasicMaterial({ map: frontTexture }); // Front with texture
+        const frontMaterial = new CardMaterial({ map: frontTexture }); // Front with texture
         const backMaterial = new THREE.MeshBasicMaterial({ map: backTexture });  // Back
         const depthMaterial = new THREE.MeshBasicMaterial({ color: 0xb5b5b5 }); // Depth
 

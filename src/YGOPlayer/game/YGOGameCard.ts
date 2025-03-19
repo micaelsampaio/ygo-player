@@ -4,6 +4,7 @@ import { YGODuel } from '../core/YGODuel';
 import { GameFieldLocation } from '../types';
 import { YGOMath } from '../core/YGOMath';
 import { CARD_DEPTH, CARD_HEIGHT_SIZE, CARD_RATIO } from '../constants';
+import { CardMaterial } from './materials/game-card-material';
 
 export class YGOGameCard {
     public gameObject: THREE.Mesh | null
@@ -36,7 +37,7 @@ export class YGOGameCard {
 
         const frontTexture = textureLoader.load(`${this.duel.config.cdnUrl}/images/cards_small/${card.id}.jpg`);
         const backTexture = textureLoader.load(`${this.duel.config.cdnUrl}/images/card_back.png`);
-        const frontMaterial = new THREE.MeshBasicMaterial({ map: frontTexture }); // Front with texture
+        const frontMaterial = new CardMaterial({ map: frontTexture }); // Front with texture
         const backMaterial = new THREE.MeshBasicMaterial({ map: backTexture });  // Back
         const depthMaterial = new THREE.MeshBasicMaterial({ color: 0xb5b5b5 }); // Depth
 
@@ -66,7 +67,7 @@ export class YGOGameCard {
             }
         }
     }
-    destroy() {        
+    destroy() {
         if (this.gameObject) this.duel.core.scene.remove(this.gameObject);
         this.gameObject = null;
         this.cardReference = null;

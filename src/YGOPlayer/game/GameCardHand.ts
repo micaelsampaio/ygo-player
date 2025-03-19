@@ -6,6 +6,7 @@ import { YGOUiElement } from '../types';
 import { YGOMouseEvents } from '../core/components/YGOMouseEvents';
 import { ActionCardHandMenu } from '../actions/ActionCardHandMenu';
 import { CARD_DEPTH, CARD_HEIGHT_SIZE, CARD_RATIO } from '../constants';
+import { CardMaterial } from './materials/game-card-material';
 
 export class GameCardHand extends YGOEntity implements YGOUiElement {
     private duel: YGODuel;
@@ -97,7 +98,7 @@ export class GameCardHand extends YGOEntity implements YGOUiElement {
 
         const frontTexture = this.duel.assets.getTexture(`${this.duel.config.cdnUrl}/images/cards_small/${card.id}.jpg`);
         const backTexture = this.duel.assets.getTexture(`${this.duel.config.cdnUrl}/images/card_back.png`);
-        const frontMaterial = new THREE.MeshBasicMaterial({ map: frontTexture }); // Front with texture
+        const frontMaterial = new CardMaterial({ map: frontTexture }); // Front with texture
         const backMaterial = new THREE.MeshBasicMaterial({ map: backTexture });  // Back
         const depthMaterial = new THREE.MeshBasicMaterial({ color: 0xb5b5b5 }); // Depth
 
