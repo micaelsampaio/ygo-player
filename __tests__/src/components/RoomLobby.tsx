@@ -3,20 +3,14 @@ import styled from "styled-components";
 import { User, Users, Link } from "lucide-react";
 
 const LobbyContainer = styled.div`
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 100%;
-  max-width: 1200px;
-  padding: 2rem;
+  min-height: 100dvh;
 `;
 
 const LobbyCard = styled.div`
   background-color: #1a1a1a;
-  border-radius: 1rem;
   padding: 1.5rem;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.24);
+  min-height: 100dvh;
 `;
 
 const Header = styled.div`

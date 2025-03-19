@@ -5,8 +5,18 @@ import RoomLobby from "./components/RoomLobby.js";
 import { useKaibaNet } from "./useKaibaNet";
 import { memo, useEffect, useState } from "react";
 import { YGOGameUtils } from "../../dist/index.js";
+import styled from "styled-components";
 
 const cdnUrl = String(import.meta.env.VITE_YGO_CDN_URL);
+
+const AppContainer = styled.div`
+  display: flex;
+`;
+
+const LeftContent = styled.div`
+  flex-grow:1;
+`
+
 
 export default function App() {
   const kaibaNet = useKaibaNet();
@@ -182,76 +192,82 @@ export default function App() {
 
   return (
     <div>
-      <h1># Decks</h1>
-      <ul>
-        <li>
-          <Link onClick={(e) => duelAs(e, YUBEL, CHIMERA)} to="#">
-            Duel as Yubel
-          </Link>
-        </li>
-        <li>
-          <Link onClick={(e) => duelAs(e, CHIMERA, YUBEL)} to="#">
-            Duel as Chimera
-          </Link>
-        </li>
+      <AppContainer>
+        <LeftContent>
 
-        {decks.map((deckId) => {
-          return (
-            <li>
-              <Link to="#" onClick={(e) => duelWithDeckFromStore(e, deckId)}>
-                Duel as {deckId}
-              </Link>{" "}
-              <button onClick={() => deleteDeck(deckId)}>delete</button>
-            </li>
-          );
-        })}
-        <li>
-          <Link to={"/deck"}>Download deck</Link>
-        </li>
-      </ul>
-
-      {replays.length > 0 && (
-        <div>
-          <h1># Replays </h1>
-          Play As{" "}
-          <select
-            value={selectedDeck}
-            onChange={(e) => {
-              window.localStorage.setItem("selected-deck", e.target.value);
-              setSelectedDeck(e.target.value);
-            }}
-          >
-            <option>Select a Deck</option>
-            {decks.map((deck) => (
-              <option key={deck} value={deck}>
-                {deck}
-              </option>
-            ))}
-          </select>
+          <h1># Decks</h1>
           <ul>
-            {replays.map((replay) => {
+            <li>
+              <Link onClick={(e) => duelAs(e, YUBEL, CHIMERA)} to="#">
+                Duel as Yubel
+              </Link>
+            </li>
+            <li>
+              <Link onClick={(e) => duelAs(e, CHIMERA, YUBEL)} to="#">
+                Duel as Chimera
+              </Link>
+            </li>
+
+            {decks.map((deckId) => {
               return (
                 <li>
-                  <Link onClick={(e) => openRelay(e, replay.name)} to="#">
-                    {replay.name}
+                  <Link to="#" onClick={(e) => duelWithDeckFromStore(e, deckId)}>
+                    Duel as {deckId}
                   </Link>{" "}
-                  <button onClick={() => deleteReplay(replay.name)}>
-                    delete
-                  </button>
-                  <br />
-                  <EndGameBoard play={playFromAReplay} data={replay.data} />
+                  <button onClick={() => deleteDeck(deckId)}>delete</button>
                 </li>
               );
             })}
+            <li>
+              <Link to={"/deck"}>Download deck</Link>
+            </li>
           </ul>
-        </div>
-      )}
 
-      <RoomLobby
-        playerId={kaibaNet.getPlayerId()}
-        rooms={rooms}
-        onRoomJoin={handleRoomJoin}
-      />
+          {replays.length > 0 && (
+            <div>
+              <h1># Replays </h1>
+              Play As{" "}
+              <select
+                value={selectedDeck}
+                onChange={(e) => {
+                  window.localStorage.setItem("selected-deck", e.target.value);
+                  setSelectedDeck(e.target.value);
+                }}
+              >
+                <option>Select a Deck</option>
+                {decks.map((deck) => (
+                  <option key={deck} value={deck}>
+                    {deck}
+                  </option>
+                ))}
+              </select>
+              <ul>
+                {replays.map((replay) => {
+                  return (
+                    <li>
+                      <Link onClick={(e) => openRelay(e, replay.name)} to="#">
+                        {replay.name}
+                      </Link>{" "}
+                      <button onClick={() => deleteReplay(replay.name)}>
+                        delete
+                      </button>
+                      <br />
+                      <EndGameBoard play={playFromAReplay} data={replay.data} />
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          )}
+        </LeftContent>
+        <div>
+          <RoomLobby
+            playerId={kaibaNet.getPlayerId()}
+            rooms={rooms}
+            onRoomJoin={handleRoomJoin}
+          />
+        </div>
+      </AppContainer>
     </div>
   );
 }
