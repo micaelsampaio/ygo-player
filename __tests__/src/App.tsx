@@ -137,15 +137,26 @@ export default function App() {
     const otherDeckData = replayData.players[playerIndex];
     const { endField = [] } = replayData.replay;
 
+    const getCardFromDeck = (player, id) => {
+      const card = player.mainDeck.find(c => c.id === id);
+      if (card) {
+        return card;
+      }
+      const ecard = player.extraDeck.find(c => c.id === id);
+      if (ecard) {
+        return ecard;
+      }
+
+      throw new Error("no card " + id);
+    }
+
     const fieldState = endField
       .map((card: any) => {
         const zoneData = YGOGameUtils.getZoneData(card.zone);
-        console.log("ZONE --> ", card.zone, zoneData);
-
         if (zoneData.player === playerIndex) {
           return {
             ...card,
-            zone: YGOGameUtils.invertPlayerInZone(card.zone),
+            zone: YGOGameUtils.transformZoneToPlayerZone(card.zone),
           };
         }
         return undefined;
@@ -175,7 +186,9 @@ export default function App() {
         },
       })
     );
-    console.log(JSON.parse(localStorage.getItem("duel-data")!));
+
+    console.log("DUEL DATA", JSON.parse(localStorage.getItem("duel-data")!));
+
     navigate("/duel");
   };
 
@@ -348,7 +361,7 @@ const EndGameBoard = memo(function EndGameBoard({ data, play }: any) {
         fields[zoneData.player].spellTrapZones[zoneData.zoneIndex - 1] =
           cardData;
       }
-      if (zoneData.zone === "EMZ") {
+      if (zoneData.zone === "EMZ" && zoneData.player === zoneData.player) {
         fields[zoneData.player].extraMonsterZones[zoneData.zoneIndex - 1] =
           cardData;
       }
@@ -420,7 +433,7 @@ const EndGameBoard = memo(function EndGameBoard({ data, play }: any) {
                         style={{
                           height: size,
                           transform:
-                            extraMonsterZone1 === 1
+                            extraMonsterZone1 === 0
                               ? "rotate(180deg)"
                               : undefined,
                         }}
@@ -438,7 +451,7 @@ const EndGameBoard = memo(function EndGameBoard({ data, play }: any) {
                         style={{
                           height: size,
                           transform:
-                            extraMonsterZone2 === 1
+                            extraMonsterZone2 === 0
                               ? "rotate(180deg)"
                               : undefined,
                         }}

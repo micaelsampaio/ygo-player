@@ -86,11 +86,11 @@ export class PeerToPeer extends EventEmitter {
       "libp2p:websockets,libp2p:webtransport,libp2p:kad-dht,libp2p:dialer"
     );
     this.libp2p.services.pubsub.addEventListener("gossipsub:heartbeat", () => {
-      console.log(
-        "Gossip:Mesh peers:",
-        this.libp2p.services.pubsub.getMeshPeers(this.discoveryTopic)
-      );
-      console.log("Gossip:All peers:", this.libp2p.services.pubsub.getPeers());
+      // console.log(
+      //   "Gossip:Mesh peers:",
+      //   this.libp2p.services.pubsub.getMeshPeers(this.discoveryTopic)
+      // );
+      // console.log("Gossip:All peers:", this.libp2p.services.pubsub.getPeers());
     });
   }
 
@@ -649,29 +649,29 @@ export class PeerToPeer extends EventEmitter {
 
   public async messageTopic(topic: string, message: string) {
     if (!this.libp2p?.services.pubsub) {
-        console.warn('P2P: Cannot send message - pubsub not initialized');
-        return;
+      console.warn('P2P: Cannot send message - pubsub not initialized');
+      return;
     }
 
     try {
-        // Don't check for peers or try to refresh mesh
-        const encodedMessage = new TextEncoder().encode(message);
-        
-        // Force publish even with no subscribers
-        await this.libp2p.services.pubsub.publish(topic, encodedMessage, {
-            allowPublishToZeroPeers: true,
-            ignoreDuplicatePublishError: true
-        });
-        
-        // Log subscription status but don't fail if no peers
-        const subscribers = await this.libp2p.services.pubsub.getSubscribers(topic);
-        console.log(`Message sent to topic ${topic}, subscribers: ${subscribers.length}`);
-        
+      // Don't check for peers or try to refresh mesh
+      const encodedMessage = new TextEncoder().encode(message);
+
+      // Force publish even with no subscribers
+      await this.libp2p.services.pubsub.publish(topic, encodedMessage, {
+        allowPublishToZeroPeers: true,
+        ignoreDuplicatePublishError: true
+      });
+
+      // Log subscription status but don't fail if no peers
+      const subscribers = await this.libp2p.services.pubsub.getSubscribers(topic);
+      console.log(`Message sent to topic ${topic}, subscribers: ${subscribers.length}`);
+
     } catch (error) {
-        // Only log error but don't throw
-        console.warn('P2P: Message publish issue:', error);
+      // Only log error but don't throw
+      console.warn('P2P: Message publish issue:', error);
     }
-}
+  }
 
   public getPeerId() {
     return this.peerId;

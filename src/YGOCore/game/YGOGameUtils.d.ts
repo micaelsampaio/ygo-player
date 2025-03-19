@@ -29,4 +29,5 @@ export declare class YGOGameUtils {
     static sortCards(cardsToSort: Card[]): Card[];
     static shuffleCards(cards: Card[]): Array<number>;
     static invertPlayerInZone(zone: FieldZone): FieldZone;
+    static transformZoneToPlayerZone(zone: FieldZone, playerIndex: number): FieldZone;
 }

@@ -3,7 +3,13 @@ import { DeckData } from "./ydk-parser";
 async function getCard(id: number) {
     const response = await fetch(`https://db.ygoprodeck.com/api/v7/cardinfo.php?id=${id}`)
     if (!response.ok) throw new Error("failed to fetch");
-    const cardsResult = await response.json();
+    const cardsResult: any = await response.json();
+
+    if (Array.isArray(cardsResult.cards) && cardsResult.cards.length > 0) {
+        delete cardsResult.cards[0].card_sets;
+        delete cardsResult.cards[0].card_prices;
+    }
+
     return cardsResult.data[0];
 }
 
