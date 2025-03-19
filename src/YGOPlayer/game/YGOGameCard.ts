@@ -3,6 +3,7 @@ import { Card } from '../../YGOCore/types/types';
 import { YGODuel } from '../core/YGODuel';
 import { GameFieldLocation } from '../types';
 import { YGOMath } from '../core/YGOMath';
+import { CARD_DEPTH, CARD_HEIGHT_SIZE, CARD_RATIO } from '../constants';
 
 export class YGOGameCard {
     public gameObject: THREE.Mesh | null
@@ -30,8 +31,7 @@ export class YGOGameCard {
         // TODO CREATE CARD
 
         const textureLoader = this.duel.core.textureLoader;
-        const CARD_RATIO = 1.45;
-        const height = 3.5, width = height / CARD_RATIO, depth = 0.02;
+        const height = CARD_HEIGHT_SIZE, width = height / CARD_RATIO, depth = CARD_DEPTH;
         const geometry = new THREE.BoxGeometry(width, height, depth);
 
         const frontTexture = textureLoader.load(`${this.duel.config.cdnUrl}/images/cards_small/${card.id}.jpg`);

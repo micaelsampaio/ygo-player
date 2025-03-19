@@ -1,9 +1,7 @@
 import * as THREE from 'three';
 import { YGOEntity } from "../core/YGOEntity";
 import { YGODuel } from '../core/YGODuel';
-import { Card, FieldZoneData } from '../../YGOCore/types/types';
-import { YGOGameUtils } from '../../YGOCore';
-import { GameCardStats } from './GameCardStats';
+import { CARD_DEPTH, CARD_HEIGHT_SIZE, CARD_RATIO } from '../constants';
 
 export class GameBackCard extends YGOEntity {
     private duel: YGODuel;
@@ -13,8 +11,7 @@ export class GameBackCard extends YGOEntity {
 
         this.duel = duel;
 
-        const CARD_RATIO = 1.45;
-        const height = 3.5, width = height / CARD_RATIO, depth = 0.02;
+        const height = CARD_HEIGHT_SIZE, width = height / CARD_RATIO, depth = CARD_DEPTH;
         const geometry = new THREE.BoxGeometry(width, height, depth);
         const backTexture = this.duel.assets.getTexture(`${this.duel.config.cdnUrl}/images/card_back.png`);
         const backMaterial = new THREE.MeshBasicMaterial({ map: backTexture });  // Back

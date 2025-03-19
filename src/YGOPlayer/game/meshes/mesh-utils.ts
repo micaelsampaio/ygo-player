@@ -4,12 +4,11 @@ import { YGOTaskSequence } from '../../core/components/tasks/YGOTaskSequence';
 import { ScaleTransition } from '../../duel-events/utils/scale-transition';
 import { MultipleTasks } from '../../duel-events/utils/multiple-tasks';
 import { MaterialOpacityTransition } from '../../duel-events/utils/material-opacity';
-import { YGOTask } from '../../core/components/tasks/YGOTask';
 import { WaitForSeconds } from '../../duel-events/utils/wait-for-seconds';
+import { CARD_DEPTH, CARD_HEIGHT_SIZE, CARD_RATIO } from '../../constants';
 
-export function CardEmptyMesh({ material, card, color, depth = 0.02, transparent }: { material?: THREE.Material, color?: THREE.ColorRepresentation, depth?: number, card?: THREE.Object3D, transparent?: boolean } | undefined = {}) {
-    const CARD_RATIO = 1.45;
-    const height = 3.5, width = height / CARD_RATIO;
+export function CardEmptyMesh({ material, card, color, depth = CARD_DEPTH, transparent }: { material?: THREE.Material, color?: THREE.ColorRepresentation, depth?: number, card?: THREE.Object3D, transparent?: boolean } | undefined = {}) {
+    const height = CARD_HEIGHT_SIZE, width = height / CARD_RATIO;
     const geometry = new THREE.BoxGeometry(width, height, depth);
     const meshMaterial = material || new THREE.MeshBasicMaterial({ color, transparent });
     const mesh = new THREE.Mesh(geometry, meshMaterial);
@@ -88,8 +87,7 @@ function randomIntFromInterval(min: number, max: number): number { // min and ma
 }
 
 export function createCardPopSummonEffectSequence({ duel, card, startTask, cardId }: any) {
-    const CARD_RATIO = 1.45;
-    const height = 3.5, width = height / CARD_RATIO;
+    const height = CARD_HEIGHT_SIZE, width = height / CARD_RATIO;
     const cardTexture = duel.assets.getTexture(`${duel.config.cdnUrl}/images/cards_small/${cardId}.jpg`);
     const geometry = new THREE.PlaneGeometry(width, height);
     const material = new THREE.MeshBasicMaterial({
@@ -130,10 +128,10 @@ export function createCardPopSummonEffectSequence({ duel, card, startTask, cardI
     ));
 }
 
-export function createSquareWithTopMiddlePivot(width:number, height:number, material: THREE.Material) {
-  const geometry = new THREE.PlaneGeometry(width, height);
-  geometry.translate(0, -height/2, 0);
-  const mesh = new THREE.Mesh(geometry, material);
-  
-  return mesh;
+export function createSquareWithTopMiddlePivot(width: number, height: number, material: THREE.Material) {
+    const geometry = new THREE.PlaneGeometry(width, height);
+    geometry.translate(0, -height / 2, 0);
+    const mesh = new THREE.Mesh(geometry, material);
+
+    return mesh;
 }

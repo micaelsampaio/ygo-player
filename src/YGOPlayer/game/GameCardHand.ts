@@ -5,6 +5,7 @@ import { Card } from '../../YGOCore/types/types';
 import { YGOUiElement } from '../types';
 import { YGOMouseEvents } from '../core/components/YGOMouseEvents';
 import { ActionCardHandMenu } from '../actions/ActionCardHandMenu';
+import { CARD_DEPTH, CARD_HEIGHT_SIZE, CARD_RATIO } from '../constants';
 
 export class GameCardHand extends YGOEntity implements YGOUiElement {
     private duel: YGODuel;
@@ -22,8 +23,7 @@ export class GameCardHand extends YGOEntity implements YGOUiElement {
 
         this.duel = duel;
 
-        const CARD_RATIO = 1.45;
-        const height = 3.5, width = height / CARD_RATIO, depth = 0.02;
+        const height = CARD_HEIGHT_SIZE, width = height / CARD_RATIO, depth = CARD_DEPTH;
         const geometry = new THREE.BoxGeometry(width, height, depth);
 
         const frontMaterial = new THREE.MeshBasicMaterial({ color: 0x0000ff }); // Depth

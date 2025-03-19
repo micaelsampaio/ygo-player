@@ -4,6 +4,7 @@ import { YGODuel } from '../core/YGODuel';
 import { Card, FieldZoneData } from '../../YGOCore/types/types';
 import { YGOGameUtils } from '../../YGOCore';
 import { GameCardStats } from './GameCardStats';
+import { CARD_DEPTH, CARD_HEIGHT_SIZE, CARD_RATIO } from '../constants';
 
 export class GameCard extends YGOEntity {
     private duel: YGODuel;
@@ -19,8 +20,7 @@ export class GameCard extends YGOEntity {
         this.duel = duel;
         this.hasStats = stats;
 
-        const CARD_RATIO = 1.45;
-        const height = 3.5, width = height / CARD_RATIO, depth = 0.02;
+        const height = CARD_HEIGHT_SIZE, width = height / CARD_RATIO, depth = CARD_DEPTH;
         const geometry = new THREE.BoxGeometry(width, height, depth);
 
         const frontMaterial = new THREE.MeshBasicMaterial({ color: 0xff00ff }); // Depth

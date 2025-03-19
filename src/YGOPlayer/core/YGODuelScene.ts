@@ -14,7 +14,7 @@ export class YGODuelScene {
 
     public createFields({ gameField }: { gameField: THREE.Scene }) {
 
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 5);
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 3);
         directionalLight.position.set(20, 40, 25);
         directionalLight.target.position.set(0, 0, 0);
         directionalLight.castShadow = true;

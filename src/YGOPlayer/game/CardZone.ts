@@ -40,7 +40,7 @@ export class CardZone extends YGOEntity implements YGOUiElement {
 
         if (this.zone.startsWith("S") || this.zone.startsWith("F")) {
             this.size = new THREE.Vector2(4, 3.5);
-            this.scale = new THREE.Vector3(1, 1, 1).multiplyScalar(0.88);
+            this.scale = new THREE.Vector3(1, 1, 1).multiplyScalar(0.85);
         } else {
             this.size = new THREE.Vector2(4, 4);
             this.scale = new THREE.Vector3(1, 1, 1);
@@ -60,7 +60,7 @@ export class CardZone extends YGOEntity implements YGOUiElement {
         this.mesh = cube;
 
         this.position = cube.position.clone();
-        this.position.z += 0.1;
+        this.position.z += 0.02;
         this.onClickCb = null;
 
         this.duel.gameController.getComponent<YGOMouseEvents>("mouse_events")?.registerElement(this);
