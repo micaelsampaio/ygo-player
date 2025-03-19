@@ -137,19 +137,6 @@ export default function App() {
     const otherDeckData = replayData.players[playerIndex];
     const { endField = [] } = replayData.replay;
 
-    const getCardFromDeck = (player, id) => {
-      const card = player.mainDeck.find(c => c.id === id);
-      if (card) {
-        return card;
-      }
-      const ecard = player.extraDeck.find(c => c.id === id);
-      if (ecard) {
-        return ecard;
-      }
-
-      throw new Error("no card " + id);
-    }
-
     const fieldState = endField
       .map((card: any) => {
         const zoneData = YGOGameUtils.getZoneData(card.zone);
