@@ -296,7 +296,7 @@ export default function Chat({
   onAudioMuteToggle,
   analyser,
 }: ChatProps) {
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
   const [isVoiceEnabled, setIsVoiceEnabled] = useState(false);
   const [isMicMuted, setIsMicMuted] = useState(false);
   const [isAudioMuted, setIsAudioMuted] = useState(false);
