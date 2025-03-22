@@ -1,11 +1,31 @@
 import { useEffect, useState, useRef } from "react";
-import styled from "styled-components";
 import { AudioVisualizer } from "./AudioVisualizer";
 import { Logger } from "../utils/logger";
+import {
+  ChatContainer,
+  ChatHeader,
+  HeaderLeft,
+  HeaderRight,
+  HeaderText,
+  CloseButton,
+  ChatToggleButton,
+  Messages,
+  MessageBubble,
+  InputContainer,
+  InputField,
+  SendButton,
+  AudioControls,
+  ControlButton,
+  MessagesContainer,
+  CommandText,
+  TabContainer,
+  Tab,
+  TabBadge,
+} from "./Chat.styles";
 
 const logger = Logger.createLogger("Chat");
 
-// Update the truncateId helper function
+// Keep helper functions in the component file
 const truncateId = (id: string, type: "room" | "player" = "player") => {
   if (!id || id.length <= 6) return id;
   const firstPart = id.slice(0, 4);
@@ -13,7 +33,6 @@ const truncateId = (id: string, type: "room" | "player" = "player") => {
   return `${type === "room" ? "🔑" : "👤"} ${firstPart}..${lastPart}`;
 };
 
-// Add this helper function
 const formatCommandOptions = (commandStr: string) => {
   const [cmdType, jsonStr] = commandStr.split(" ");
   try {
@@ -30,208 +49,7 @@ const formatCommandOptions = (commandStr: string) => {
   }
 };
 
-interface StyledProps {
-  isOpen?: boolean;
-  isActive?: boolean;
-  isMuted?: boolean;
-}
-
-const ChatContainer = styled.div<StyledProps>`
-  position: fixed;
-  bottom: ${({ isOpen }) => (isOpen ? "20px" : "-600px")};
-  left: 20px; // Changed from right to left
-  background-color: #222;
-  color: #fff;
-  border-radius: 8px;
-  padding: 15px;
-  width: 22em;
-  height: 400px;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-  transition: bottom 0.3s ease-in-out;
-`;
-
-// Update the ChatHeader styled component
-const ChatHeader = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 8px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid #444;
-  min-height: 32px;
-`;
-
-const HeaderLeft = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex: 1;
-  min-width: 0; // For text truncation to work
-`;
-
-const HeaderRight = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-`;
-
-const HeaderInfo = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  max-width: calc(100% - 120px); // Space for controls
-`;
-
-const HeaderText = styled.div`
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  font-size: 12px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-
-  &.room {
-    color: #0078d4;
-  }
-
-  &.player {
-    color: #888;
-  }
-`;
-
-const CloseButton = styled.button`
-  background: none;
-  border: none;
-  color: #fff;
-  cursor: pointer;
-  font-size: 20px; // Slightly reduced
-  padding: 0;
-  width: 28px; // Slightly reduced
-  height: 28px; // Slightly reduced
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0.7;
-  transition: opacity 0.2s;
-  flex-shrink: 0; // Prevent button from shrinking
-
-  &:hover {
-    opacity: 1;
-  }
-`;
-
-const ChatToggleButton = styled.button`
-  position: fixed;
-  bottom: 20px;
-  left: 20px; // Changed from right to left
-  background-color: #0078d4;
-  color: white;
-  border: none;
-  border-radius: 50%;
-  width: 50px;
-  height: 50px;
-  cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 24px;
-  transition: transform 0.2s;
-
-  &:hover {
-    transform: scale(1.1);
-  }
-`;
-
-const Messages = styled.div`
-  flex-grow: 1;
-  overflow-y: auto;
-  margin: 10px -15px;
-  padding: 0 15px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-
-  /* Scrollbar styling */
-  &::-webkit-scrollbar {
-    width: 6px;
-  }
-
-  &::-webkit-scrollbar-track {
-    background: #333;
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background: #666;
-    border-radius: 3px;
-  }
-`;
-
-const MessageBubble = styled.div<{ isSelf: boolean; isCommand?: boolean }>`
-  max-width: 85%;
-  padding: ${({ isCommand }) => (isCommand ? "8px 10px" : "8px 12px")};
-  border-radius: 12px;
-  background-color: ${({ isSelf, isCommand }) => {
-    if (isCommand) return "#1e2837";
-    return isSelf ? "#0078d4" : "#444";
-  }};
-  align-self: ${({ isSelf }) => (isSelf ? "flex-end" : "flex-start")};
-  word-break: break-word;
-  font-size: 14px;
-  border: ${({ isCommand }) => (isCommand ? "1px solid #2a3343" : "none")};
-  box-shadow: ${({ isCommand }) =>
-    isCommand ? "0 2px 4px rgba(0,0,0,0.2)" : "none"};
-`;
-
-const InputContainer = styled.div`
-  display: flex;
-  gap: 8px;
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px solid #444;
-`;
-
-const InputField = styled.input`
-  flex-grow: 1;
-  background-color: #333;
-  border: none;
-  border-radius: 4px;
-  padding: 8px 12px;
-  color: white;
-  font-size: 14px;
-
-  &:focus {
-    outline: none;
-    box-shadow: 0 0 0 2px rgba(0, 120, 212, 0.5);
-  }
-
-  &::placeholder {
-    color: #888;
-  }
-`;
-
-const SendButton = styled.button`
-  background-color: #0078d4;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  padding: 8px 16px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-
-  &:hover {
-    background-color: #0086ef;
-  }
-
-  &:active {
-    background-color: #006cbd;
-  }
-`;
-
+// Keep the interfaces in the component file
 interface ChatProps {
   roomId: string;
   playerId: string;
@@ -243,100 +61,8 @@ interface ChatProps {
   analyser: AnalyserNode | null;
 }
 
-const AudioControls = styled.div`
-  display: flex;
-  gap: 8px;
-  margin-right: 8px;
-`;
-
-const ControlButton = styled.button<StyledProps>`
-  background: none;
-  border: none;
-  color: ${({ isMuted }) => (isMuted ? "#ff4444" : "white")};
-  cursor: pointer;
-  font-size: 20px;
-  padding: 0;
-  width: 28px;
-  height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0.7;
-  transition: all 0.2s;
-  background-color: ${({ isActive }) => (isActive ? "#0078d4" : "transparent")};
-
-  &:hover {
-    opacity: 1;
-  }
-`;
-
-const MessagesContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  flex-grow: 1;
-  overflow: hidden;
-`;
-
-// Add new styled component for command text
-const CommandText = styled.code`
-  background-color: rgba(0, 0, 0, 0.3);
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-family: "JetBrains Mono", "Fira Code", "Consolas", monospace;
-  font-size: 13px;
-  color: #a8ff60;
-  white-space: pre-wrap;
-  word-break: break-all;
-
-  .command-type {
-    color: #ff79c6;
-  }
-
-  .param-key {
-    color: #8be9fd;
-  }
-
-  .param-value {
-    color: #f1fa8c;
-  }
-`;
-
-// Add these new styled components after your existing styled components
-const TabContainer = styled.div`
-  display: flex;
-  gap: 2px;
-  margin-bottom: 10px;
-`;
-
-const Tab = styled.button<{ isActive: boolean }>`
-  background-color: ${({ isActive }) => (isActive ? "#0078d4" : "#333")};
-  color: white;
-  border: none;
-  border-radius: 4px;
-  padding: 6px 12px;
-  cursor: pointer;
-  font-size: 13px;
-  transition: background-color 0.2s;
-
-  &:hover {
-    background-color: ${({ isActive }) => (isActive ? "#0086ef" : "#444")};
-  }
-`;
-
-// Add this type after your existing interfaces
 type TabType = "chat" | "commands";
 
-// Add this styled component
-const TabBadge = styled.span`
-  background-color: #ff4444;
-  color: white;
-  border-radius: 10px;
-  padding: 2px 6px;
-  font-size: 11px;
-  margin-left: 6px;
-`;
-
-// Update the Chat component to include tab functionality
 export default function Chat({
   roomId,
   playerId,
