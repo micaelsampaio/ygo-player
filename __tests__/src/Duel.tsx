@@ -4,14 +4,16 @@ import { useLocation, useParams } from "react-router-dom";
 import { useKaibaNet } from "./hooks/useKaibaNet";
 import Chat from "./components/Chat";
 import { LoadingOverlay } from "./components/LoadingOverlay";
+import { Logger } from "./utils/logger";
 
 interface DuelProps {
   roomId?: string;
   playerId?: string;
 }
 
-// Move SEND_COMMAND_ALLOWED to module scope
 let SEND_COMMAND_ALLOWED = true;
+
+const logger = Logger.createLogger("Duel");
 
 export default function Duel({
   roomId: roomIdProp,
@@ -40,20 +42,20 @@ export default function Duel({
 
   // Log changes to IDs
   useEffect(() => {
-    console.log("Duel:Room ID changed:", roomId);
+    logger.info("Room ID changed:", roomId);
   }, [roomId]);
 
   useEffect(() => {
-    console.log("Duel:Player ID changed:", playerId);
+    logger.info("Player ID changed:", playerId);
   }, [playerId]);
 
   // Log changes to final values
   useEffect(() => {
-    console.log("Duel:Room ID changed:", roomId);
+    logger.info("Room ID changed:", roomId);
   }, [roomId]);
 
   useEffect(() => {
-    console.log("Duel:Player ID changed:", playerId);
+    logger.info("Player ID changed:", playerId);
   }, [playerId]);
 
   // Initialize duel data
@@ -77,13 +79,13 @@ export default function Duel({
   // Setup YGO player after duel data is available
   useEffect(() => {
     if (!duelData) return;
-    console.log("TCL: Duel: Setting up YGO player with data:", duelData);
+    logger.debug("Setting up YGO player with data:", duelData);
 
     const ygo: YGOPlayerComponent = document.querySelector(
       "ygo-player"
     )! as any;
-    console.log("duelData", duelData);
-    console.log("roomId", roomId);
+    logger.debug("duelData", duelData);
+    logger.debug("roomId", roomId);
 
     if (duelData.replay) {
       const config: any = {
@@ -108,7 +110,7 @@ export default function Duel({
   // Handle game state refresh events
   useEffect(() => {
     if (!roomId) {
-      console.log("No roomId yet, skipping game state refresh listener setup");
+      logger.debug("No roomId yet, skipping game state refresh listener setup");
       return;
     }
 
@@ -130,7 +132,7 @@ export default function Duel({
     };
 
     const handleCommandExecuted = (data: any) => {
-      console.log("TCL: SEND COMMAND ", JSON.stringify(data.command.toJSON()));
+      logger.debug("SEND COMMAND ", JSON.stringify(data.command.toJSON()));
       if (SEND_COMMAND_ALLOWED) {
         kaibaNet.execYGOCommand(roomId, data.command.toCommandData());
         const messageTemplate = formatCommandToCliStyle(data.command.toJSON());
@@ -146,12 +148,12 @@ export default function Duel({
       }, 1000);
     });
 
-    console.log("Setting up game state refresh listener. RoomId:", roomId);
+    logger.debug("Setting up game state refresh listener. RoomId:", roomId);
 
     const handleGameStateRefresh = (gameState: any) => {
-      console.log("Duel: Received game state refresh:", gameState);
+      logger.debug("Received game state refresh:", gameState);
       setDuelData((prevData: any) => {
-        console.log("Duel: Updating duel data", { prevData, gameState });
+        logger.debug("Updating duel data", { prevData, gameState });
         return {
           ...prevData,
           ...gameState,
@@ -161,13 +163,13 @@ export default function Duel({
     };
 
     // Add this log to verify the event is being subscribed
-    console.log("Subscribing to duel:refresh:state: event");
+    logger.debug("Subscribing to duel:refresh:state: event");
     kaibaNet.on("duel:refresh:state:", handleGameStateRefresh);
 
     kaibaNet.on("duel:command:exec", handleCommandExec);
 
     return () => {
-      console.log("Cleaning up game state refresh listener");
+      logger.debug("Cleaning up game state refresh listener");
       kaibaNet.off("duel:refresh:state:", handleGameStateRefresh);
       kaibaNet.off("duel:command:exec", handleCommandExec);
     };
@@ -178,13 +180,13 @@ export default function Duel({
     if (!duelData || !roomId) return;
 
     const handlePlayerJoin = (playerJoinedId: string) => {
-      console.log("Player joined:", playerJoinedId);
+      logger.debug("Player joined:", playerJoinedId);
       if (kaibaNet.getPlayerId() === roomId) {
         const ygo: YGOPlayerComponent = document.querySelector(
           "ygo-player"
         )! as any;
         const currentDuelState = ygo.duel.ygo.getCurrentStateProps();
-        console.log("Duel data: ", currentDuelState);
+        logger.debug("Duel data: ", currentDuelState);
 
         kaibaNet.refreshGameState(roomId, currentDuelState);
       }
@@ -232,7 +234,7 @@ export default function Duel({
 
   const commandMessageToCommand = (message: string) => {
     if (!message.startsWith("/cmd/")) {
-      console.warn("Invalid command message format");
+      logger.warn("Invalid command message format");
       return;
     }
     const [commandType, ...args] = message.split(" ");
@@ -273,7 +275,7 @@ export default function Duel({
       if (currentCommand) return;
     }
 
-    console.log("TCL: WILL EXEC ", command);
+    logger.debug("WILL EXEC ", command);
     SEND_COMMAND_ALLOWED = false;
     ygo.duel.execCommand(JSON.stringify(command));
     SEND_COMMAND_ALLOWED = true;
@@ -281,7 +283,7 @@ export default function Duel({
 
   const handleSendMessage = (message: string) => {
     if (!roomId) {
-      console.warn("Cannot send message: No room ID");
+      logger.warn("Cannot send message: No room ID");
       return;
     }
 
@@ -305,20 +307,20 @@ export default function Duel({
 
     try {
       if (enabled) {
-        console.log("Starting voice chat..."); // Debug log
+        logger.debug("Starting voice chat...");
         await kaibaNet.startVoiceChat(roomId);
         const audioAnalyser = kaibaNet.getAudioAnalyser();
-        console.log("Voice chat started, analyser:", !!audioAnalyser); // Debug log
+        logger.debug("Voice chat started, analyser:", !!audioAnalyser);
         setAnalyser(audioAnalyser);
         setIsVoiceEnabled(enabled);
       } else {
-        console.log("Stopping voice chat..."); // Debug log
+        logger.debug("Stopping voice chat...");
         await kaibaNet.stopVoiceChat(roomId);
         setAnalyser(null);
         setIsVoiceEnabled(false);
       }
     } catch (error) {
-      console.error("Voice chat error:", error);
+      logger.error("Voice chat error:", error);
       setIsVoiceEnabled(false);
       setAnalyser(null);
     }

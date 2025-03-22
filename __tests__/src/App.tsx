@@ -6,6 +6,7 @@ import { useKaibaNet } from "./hooks/useKaibaNet";
 import { memo, useEffect, useState } from "react";
 import { YGOGameUtils } from "../../dist/index.js";
 import styled from "styled-components";
+import { Logger } from "./utils/logger";
 
 const cdnUrl = String(import.meta.env.VITE_YGO_CDN_URL);
 
@@ -16,6 +17,8 @@ const AppContainer = styled.div`
 const LeftContent = styled.div`
   flex-grow: 1;
 `;
+
+const logger = Logger.createLogger("App");
 
 export default function App() {
   const kaibaNet = useKaibaNet();
@@ -36,6 +39,13 @@ export default function App() {
       kaibaNet.off("rooms:updated", onRoomsUpdated);
     };
   }, [kaibaNet]);
+
+  useEffect(() => {
+    logger.info("App component mounted");
+    return () => {
+      logger.debug("App component unmounting");
+    };
+  }, []);
 
   const [replays, setReplays] = useState(() => {
     const allKeys = Object.keys(localStorage);

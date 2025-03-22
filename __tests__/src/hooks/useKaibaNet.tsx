@@ -1,13 +1,16 @@
-// useKaibaNet.tsx
 import { createContext, useContext, useEffect, useState } from "react";
 import { KaibaNet } from "../network/kaibaNet";
+import { Logger } from "../utils/logger";
 
+const logger = Logger.createLogger("KaibaNetProvider");
 const KaibaNetContext = createContext<KaibaNet | null>(null);
 
 export function useKaibaNet() {
   const context = useContext(KaibaNetContext);
-  if (!context)
+  if (!context) {
+    logger.error("useKaibaNet called outside of KaibaNetProvider");
     throw new Error("useKaibaNet must be used within a KaibaNetProvider");
+  }
   return context;
 }
 
@@ -17,19 +20,29 @@ export function KaibaNetProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const init = async () => {
-      await instance.initialize();
-      setIsInitialized(true);
+      logger.debug("Initializing KaibaNet...");
+      try {
+        await instance.initialize();
+        logger.info("KaibaNet initialized successfully");
+        setIsInitialized(true);
+      } catch (error) {
+        logger.error("Failed to initialize KaibaNet:", error);
+        throw error;
+      }
     };
 
     init();
 
     return () => {
+      logger.debug("Cleaning up KaibaNet...");
       instance.cleanup();
+      logger.info("KaibaNet cleanup completed");
     };
   }, []);
 
   if (!isInitialized) {
-    return null; // or a loading spinner
+    logger.debug("Waiting for KaibaNet initialization...");
+    return null;
   }
 
   return (

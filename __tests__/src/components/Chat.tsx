@@ -1,27 +1,33 @@
 import { useEffect, useState } from "react";
 import styled from "styled-components";
-import { AudioVisualizer } from './AudioVisualizer';
+import { AudioVisualizer } from "./AudioVisualizer";
+import { Logger } from "../utils/logger";
+
+const logger = Logger.createLogger("Chat");
 
 // Update the truncateId helper function
-const truncateId = (id: string, type: 'room' | 'player' = 'player') => {
-    if (!id || id.length <= 6) return id;
-    const firstPart = id.slice(0, 4);
-    const lastPart = id.slice(-2);
-    return `${type === 'room' ? '🔑' : '👤'} ${firstPart}..${lastPart}`;
+const truncateId = (id: string, type: "room" | "player" = "player") => {
+  if (!id || id.length <= 6) return id;
+  const firstPart = id.slice(0, 4);
+  const lastPart = id.slice(-2);
+  return `${type === "room" ? "🔑" : "👤"} ${firstPart}..${lastPart}`;
 };
 
 // Add this helper function
 const formatCommandOptions = (commandStr: string) => {
-    const [cmdType, jsonStr] = commandStr.split(' ');
-    try {
-        const options = JSON.parse(jsonStr);
-        const formattedOptions = Object.entries(options)
-            .map(([key, value]) => `<span class="param-key">--${key}</span> <span class="param-value">${value}</span>`)
-            .join(' ');
-        return `<span class="command-type">${cmdType}</span> ${formattedOptions}`;
-    } catch (e) {
-        return commandStr;
-    }
+  const [cmdType, jsonStr] = commandStr.split(" ");
+  try {
+    const options = JSON.parse(jsonStr);
+    const formattedOptions = Object.entries(options)
+      .map(
+        ([key, value]) =>
+          `<span class="param-key">--${key}</span> <span class="param-value">${value}</span>`
+      )
+      .join(" ");
+    return `<span class="command-type">${cmdType}</span> ${formattedOptions}`;
+  } catch (e) {
+    return commandStr;
+  }
 };
 
 interface StyledProps {
@@ -33,7 +39,7 @@ interface StyledProps {
 const ChatContainer = styled.div<StyledProps>`
   position: fixed;
   bottom: ${({ isOpen }) => (isOpen ? "20px" : "-600px")};
-  left: 20px;  // Changed from right to left
+  left: 20px; // Changed from right to left
   background-color: #222;
   color: #fff;
   border-radius: 8px;
@@ -60,26 +66,26 @@ const HeaderInfo = styled.div`
   flex-grow: 1;
   display: flex;
   flex-direction: column;
-  gap: 2px;  // Reduced gap
+  gap: 2px; // Reduced gap
   max-width: calc(100% - 40px); // Leave space for close button
 `;
 
 // Update the styled components
 const HeaderText = styled.div`
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    font-size: 12px;
-    opacity: 0.8;
-    display: flex;
-    align-items: center;
-    gap: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 12px;
+  opacity: 0.8;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 
-    span.id {
-        font-weight: bold;
-        color: #0078d4;
-        font-family: monospace;
-    }
+  span.id {
+    font-weight: bold;
+    color: #0078d4;
+    font-family: monospace;
+  }
 `;
 
 const CloseButton = styled.button`
@@ -89,14 +95,14 @@ const CloseButton = styled.button`
   cursor: pointer;
   font-size: 20px; // Slightly reduced
   padding: 0;
-  width: 28px;     // Slightly reduced
-  height: 28px;    // Slightly reduced
+  width: 28px; // Slightly reduced
+  height: 28px; // Slightly reduced
   display: flex;
   align-items: center;
   justify-content: center;
   opacity: 0.7;
   transition: opacity 0.2s;
-  flex-shrink: 0;  // Prevent button from shrinking
+  flex-shrink: 0; // Prevent button from shrinking
 
   &:hover {
     opacity: 1;
@@ -106,7 +112,7 @@ const CloseButton = styled.button`
 const ChatToggleButton = styled.button`
   position: fixed;
   bottom: 20px;
-  left: 20px;  // Changed from right to left
+  left: 20px; // Changed from right to left
   background-color: #0078d4;
   color: white;
   border: none;
@@ -151,18 +157,19 @@ const Messages = styled.div`
 `;
 
 const MessageBubble = styled.div<{ isSelf: boolean; isCommand?: boolean }>`
-    max-width: 85%;
-    padding: ${({ isCommand }) => isCommand ? '8px 10px' : '8px 12px'};
-    border-radius: 12px;
-    background-color: ${({ isSelf, isCommand }) => {
-        if (isCommand) return '#1e2837';
-        return isSelf ? '#0078d4' : '#444';
-    }};
-    align-self: ${({ isSelf }) => (isSelf ? 'flex-end' : 'flex-start')};
-    word-break: break-word;
-    font-size: 14px;
-    border: ${({ isCommand }) => isCommand ? '1px solid #2a3343' : 'none'};
-    box-shadow: ${({ isCommand }) => isCommand ? '0 2px 4px rgba(0,0,0,0.2)' : 'none'};
+  max-width: 85%;
+  padding: ${({ isCommand }) => (isCommand ? "8px 10px" : "8px 12px")};
+  border-radius: 12px;
+  background-color: ${({ isSelf, isCommand }) => {
+    if (isCommand) return "#1e2837";
+    return isSelf ? "#0078d4" : "#444";
+  }};
+  align-self: ${({ isSelf }) => (isSelf ? "flex-end" : "flex-start")};
+  word-break: break-word;
+  font-size: 14px;
+  border: ${({ isCommand }) => (isCommand ? "1px solid #2a3343" : "none")};
+  box-shadow: ${({ isCommand }) =>
+    isCommand ? "0 2px 4px rgba(0,0,0,0.2)" : "none"};
 `;
 
 const InputContainer = styled.div`
@@ -230,7 +237,7 @@ const AudioControls = styled.div`
 const ControlButton = styled.button<StyledProps>`
   background: none;
   border: none;
-  color: ${({ isMuted }) => (isMuted ? '#ff4444' : 'white')};
+  color: ${({ isMuted }) => (isMuted ? "#ff4444" : "white")};
   cursor: pointer;
   font-size: 20px;
   padding: 0;
@@ -241,7 +248,7 @@ const ControlButton = styled.button<StyledProps>`
   justify-content: center;
   opacity: 0.7;
   transition: all 0.2s;
-  background-color: ${({ isActive }) => (isActive ? '#0078d4' : 'transparent')};
+  background-color: ${({ isActive }) => (isActive ? "#0078d4" : "transparent")};
 
   &:hover {
     opacity: 1;
@@ -257,37 +264,37 @@ const MessagesContainer = styled.div`
 
 // Add new styled component for command text
 const CommandText = styled.code`
-    background-color: rgba(0, 0, 0, 0.3);
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
-    font-size: 13px;
-    color: #a8ff60;
-    white-space: pre-wrap;
-    word-break: break-all;
+  background-color: rgba(0, 0, 0, 0.3);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: "JetBrains Mono", "Fira Code", "Consolas", monospace;
+  font-size: 13px;
+  color: #a8ff60;
+  white-space: pre-wrap;
+  word-break: break-all;
 
-    .command-type {
-        color: #ff79c6;
-    }
-    
-    .param-key {
-        color: #8be9fd;
-    }
-    
-    .param-value {
-        color: #f1fa8c;
-    }
+  .command-type {
+    color: #ff79c6;
+  }
+
+  .param-key {
+    color: #8be9fd;
+  }
+
+  .param-value {
+    color: #f1fa8c;
+  }
 `;
 
-export default function Chat({ 
-  roomId, 
-  playerId, 
-  messages, 
+export default function Chat({
+  roomId,
+  playerId,
+  messages,
   onSendMessage,
   onVoiceChatToggle,
   onMicMuteToggle,
   onAudioMuteToggle,
-  analyser
+  analyser,
 }: ChatProps) {
   const [isOpen, setIsOpen] = useState(true);
   const [isVoiceEnabled, setIsVoiceEnabled] = useState(false);
@@ -319,45 +326,59 @@ export default function Chat({
     onAudioMuteToggle?.(!isAudioMuted);
   };
 
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    if (!inputMessage.trim()) {
+      logger.debug("Preventing empty message submission");
+      return;
+    }
+
+    logger.debug("Sending chat message:", { roomId, playerId, inputMessage });
+    onSendMessage(inputMessage);
+    setInputMessage("");
+  };
+
   return (
     <>
       <ChatContainer isOpen={isOpen}>
         <ChatHeader>
           <HeaderInfo>
-            <h2 style={{ margin: 0, fontSize: '16px' }}>Chat</h2>
+            <h2 style={{ margin: 0, fontSize: "16px" }}>Chat</h2>
             <HeaderText>
-                <span className="id">{truncateId(roomId, 'room')}</span>
+              <span className="id">{truncateId(roomId, "room")}</span>
             </HeaderText>
             <HeaderText>
-                <span className="id">{truncateId(playerId, 'player')}</span>
+              <span className="id">{truncateId(playerId, "player")}</span>
             </HeaderText>
           </HeaderInfo>
-          
+
           <AudioControls>
-            <ControlButton 
+            <ControlButton
               isActive={isVoiceEnabled}
               onClick={toggleVoice}
-              title={isVoiceEnabled ? "Disable voice chat" : "Enable voice chat"}
+              title={
+                isVoiceEnabled ? "Disable voice chat" : "Enable voice chat"
+              }
             >
-              {isVoiceEnabled ? '🎧' : '📞'}
+              {isVoiceEnabled ? "🎧" : "📞"}
             </ControlButton>
-            
+
             {isVoiceEnabled && (
               <>
-                <ControlButton 
+                <ControlButton
                   isMuted={isMicMuted}
                   onClick={toggleMic}
                   title={isMicMuted ? "Unmute microphone" : "Mute microphone"}
                 >
-                  {isMicMuted ? '🚫' : '🎤'}
+                  {isMicMuted ? "🚫" : "🎤"}
                 </ControlButton>
-                
-                <ControlButton 
+
+                <ControlButton
                   isMuted={isAudioMuted}
                   onClick={toggleAudio}
                   title={isAudioMuted ? "Unmute audio" : "Mute audio"}
                 >
-                  {isAudioMuted ? '🔇' : '🔊'}
+                  {isAudioMuted ? "🔇" : "🔊"}
                 </ControlButton>
               </>
             )}
@@ -370,42 +391,42 @@ export default function Chat({
           {isVoiceEnabled && analyser && (
             <AudioVisualizer analyser={analyser} />
           )}
-          
+
           <Messages>
             {messages.map((msg, index) => {
-              const isCommand = msg.includes(':/cmd/');
+              const isCommand = msg.includes(":/cmd/");
               const isSelf = msg.startsWith(playerId);
-              
+
               let displayMessage = msg;
               // Update the message rendering section to format commands
               if (isCommand) {
-                const [playerId, command] = msg.split(':/cmd/');              
+                const [playerId, command] = msg.split(":/cmd/");
                 displayMessage = (
-                    <>
-                        <span className="id">{truncateId(playerId, 'player')}</span>
-                        {' executed: '}
-                        <CommandText 
-                            dangerouslySetInnerHTML={{ 
-                                __html: `$ ${formatCommandOptions(command)}` 
-                            }} 
-                        />
-                    </>
+                  <>
+                    <span className="id">{truncateId(playerId, "player")}</span>
+                    {" executed: "}
+                    <CommandText
+                      dangerouslySetInnerHTML={{
+                        __html: `$ ${formatCommandOptions(command)}`,
+                      }}
+                    />
+                  </>
                 );
               } else {
-                const [id, ...rest] = msg.split(':');
+                const [id, ...rest] = msg.split(":");
                 displayMessage = (
-                    <>
-                        <span className="id">{truncateId(id, 'player')}</span>
-                        {':'}
-                        {rest.join(':')}
-                    </>
+                  <>
+                    <span className="id">{truncateId(id, "player")}</span>
+                    {":"}
+                    {rest.join(":")}
+                  </>
                 );
               }
 
               return (
-                <MessageBubble 
-                  key={index} 
-                  isSelf={isSelf} 
+                <MessageBubble
+                  key={index}
+                  isSelf={isSelf}
                   isCommand={isCommand}
                 >
                   {displayMessage}
@@ -422,7 +443,7 @@ export default function Chat({
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
             onKeyPress={(e) => {
-              if (e.key === 'Enter') {
+              if (e.key === "Enter") {
                 handleSendMessage();
               }
             }}
@@ -432,9 +453,7 @@ export default function Chat({
       </ChatContainer>
 
       {!isOpen && (
-        <ChatToggleButton onClick={() => setIsOpen(true)}>
-          💬
-        </ChatToggleButton>
+        <ChatToggleButton onClick={() => setIsOpen(true)}>💬</ChatToggleButton>
       )}
     </>
   );

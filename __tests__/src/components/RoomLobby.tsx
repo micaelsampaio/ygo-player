@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import styled from "styled-components";
 import { User, Users, Link } from "lucide-react";
+import { Logger } from "../utils/logger";
+
+const logger = Logger.createLogger("RoomLobby");
 
 const LobbyContainer = styled.div`
   min-height: 100dvh;

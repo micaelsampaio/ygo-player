@@ -29,16 +29,21 @@ import { peerIdFromString } from "@libp2p/peer-id";
 import { dcutr } from "@libp2p/dcutr";
 import { autoNAT } from "@libp2p/autonat";
 import first from "it-first";
-import { AudioStream } from './AudioStream';
+import { AudioStream } from "./AudioStream";
 import {
   createDelegatedRoutingV1HttpApiClient,
   DelegatedRoutingV1HttpApiClient,
 } from "@helia/delegated-routing-v1-http-api-client";
 import EventEmitter from "events";
 
-import { logger } from "@libp2p/logger";
+import { logger as libp2pLogger } from "@libp2p/logger";
+import { Logger } from "../utils/logger";
 
-const log = logger("libp2p:bootstrap");
+// Create your custom logger
+const logger = Logger.createLogger("P2P");
+
+// Use libp2pLogger for bootstrap
+const bootstrapLog = libp2pLogger("libp2p:bootstrap");
 
 export class PeerToPeer extends EventEmitter {
   PROTOCOL = "/chat/1.0.0";
@@ -61,12 +66,16 @@ export class PeerToPeer extends EventEmitter {
   }
 
   private setupKeepAlive() {
-    // Send keepalive every 30 seconds
+    logger.debug("Setting up keepalive with 30s interval");
     this.keepAliveInterval = setInterval(async () => {
-      if (!this.libp2p?.services.pubsub) return;
+      if (!this.libp2p?.services.pubsub) {
+        logger.warn("No pubsub service available for keepalive");
+        return;
+      }
 
       try {
         const topics = this.libp2p.services.pubsub.getTopics();
+        logger.debug("Sending keepalive to topics:", topics);
         for (const topic of topics) {
           await this.libp2p.services.pubsub.publish(
             topic,
@@ -74,7 +83,7 @@ export class PeerToPeer extends EventEmitter {
           );
         }
       } catch (err) {
-        console.warn("Keepalive failed:", err);
+        logger.error("Keepalive failed:", err);
       }
     }, 30000);
   }
@@ -86,11 +95,11 @@ export class PeerToPeer extends EventEmitter {
       "libp2p:websockets,libp2p:webtransport,libp2p:kad-dht,libp2p:dialer"
     );
     this.libp2p.services.pubsub.addEventListener("gossipsub:heartbeat", () => {
-      // console.log(
+      // logger.debug(
       //   "Gossip:Mesh peers:",
       //   this.libp2p.services.pubsub.getMeshPeers(this.discoveryTopic)
       // );
-      // console.log("Gossip:All peers:", this.libp2p.services.pubsub.getPeers());
+      // logger.debug("Gossip:All peers:", this.libp2p.services.pubsub.getPeers());
     });
   }
 
@@ -120,17 +129,17 @@ export class PeerToPeer extends EventEmitter {
     `${maddr.toString()}/p2p/${peer.toString()}/p2p-circuit`;
 
   public async startP2P() {
-    console.log("P2P: Bootstrap Node:", this.bootstrapNode);
+    logger.debug("P2P: Bootstrap Node:", this.bootstrapNode);
 
     this.libp2p = await createLibp2p({
       connectionManager: {
         // Add event listeners
         onConnect: (connection) => {
-          console.log("Connected to:", connection.remotePeer.toString());
-          console.log("via:", connection.remoteAddr.toString());
+          logger.debug("Connected to:", connection.remotePeer.toString());
+          logger.debug("via:", connection.remoteAddr.toString());
         },
         onDisconnect: (connection) => {
-          console.log("Disconnected from:", connection.remotePeer.toString());
+          logger.debug("Disconnected from:", connection.remotePeer.toString());
         },
       },
       addresses: {
@@ -244,8 +253,8 @@ export class PeerToPeer extends EventEmitter {
     this.setupDebugLogs();
 
     this.peerId = this.libp2p.peerId.toString();
-    console.log("P2P: libp2p started! Peer ID:", this.peerId);
-    console.log(
+    logger.debug("P2P: libp2p started! Peer ID:", this.peerId);
+    logger.debug(
       "P2P: Initial multiaddrs:",
       this.libp2p.getMultiaddrs().map((ma) => ma.toString())
     );
@@ -254,19 +263,19 @@ export class PeerToPeer extends EventEmitter {
   }
 
   private async setupProtocolHandler() {
-    console.log("P2P: Setting up protocol handler");
+    logger.debug("P2P: Setting up protocol handler");
     if (!this.libp2p) throw new Error("Libp2p instance not initialized");
 
     await this.libp2p.handle(this.PROTOCOL, ({ connection, stream }) => {
       const peerId = connection.remotePeer.toString();
-      console.log(`Setting up protocol handler for peer: ${peerId}`);
+      logger.debug(`Setting up protocol handler for peer: ${peerId}`);
 
       pipe(
         stream.source,
         async function* (source) {
           for await (const msg of source) {
             const decodedMsg = toString(msg.subarray());
-            console.log(`Received from ${peerId}:`, decodedMsg);
+            logger.debug(`Received from ${peerId}:`, decodedMsg);
             yield msg;
           }
         },
@@ -281,7 +290,7 @@ export class PeerToPeer extends EventEmitter {
     this.libp2p.addEventListener("peer:discovery", (evt) => {
       const peerId = evt.detail.id.toString();
       const addrs = evt.detail.multiaddrs.map((ma) => ma.toString());
-      console.log("P2P: Peer Discovery:", peerId, addrs);
+      logger.debug("P2P: Peer Discovery:", peerId, addrs);
       this.emit("peer:discovery", {
         peerId,
         addresses: addrs,
@@ -291,18 +300,18 @@ export class PeerToPeer extends EventEmitter {
 
     this.libp2p.addEventListener("connection:open", (evt) => {
       const peerId = evt.detail.remotePeer.toString();
-      console.log("P2P: Connection Open:", peerId);
+      logger.debug("P2P: Connection Open:", peerId);
       this.emit("connection:open", { peerId });
     });
 
     this.libp2p.addEventListener("connection:close", (evt) => {
       const peerId = evt.detail.remotePeer.toString();
-      console.log("P2P: Connection Close:", peerId);
+      logger.debug("P2P: Connection Close:", peerId);
       this.emit("connection:close", { peerId });
     });
 
     this.libp2p.addEventListener("self:peer:update", () => {
-      console.log(
+      logger.debug(
         "P2P: Self peer update event",
         this.libp2p.getMultiaddrs().map((ma) => ma.toString())
       );
@@ -315,7 +324,7 @@ export class PeerToPeer extends EventEmitter {
     this.libp2p.services.pubsub.addEventListener(
       "subscription-change",
       (data) => {
-        console.log("P2p: Subscription Change", data);
+        logger.debug("P2p: Subscription Change", data);
       }
     );
 
@@ -323,7 +332,7 @@ export class PeerToPeer extends EventEmitter {
       const messageStr = new TextDecoder().decode(message.detail.data);
       this.emit("topic:" + message.detail.topic + ":message", { messageStr });
       if (messageStr.includes("remove:peer:")) {
-        console.log("Peer Remove Message");
+        logger.debug("Peer Remove Message");
         const peerId = messageStr.toString().split(":")[2];
         this.emit("remove:peer", { peerId });
       }
@@ -331,7 +340,7 @@ export class PeerToPeer extends EventEmitter {
   }
 
   private async tryAddress(ma: string) {
-    console.log("P2P: Connecting to peer:", ma);
+    logger.debug("P2P: Connecting to peer:", ma);
     if (!this.libp2p) throw new Error("Libp2p instance not initialized");
 
     const castedMultiAddress = multiaddr(ma);
@@ -339,13 +348,13 @@ export class PeerToPeer extends EventEmitter {
 
     try {
       await this.libp2p.dial(castedMultiAddress, { signal });
-      console.log(`Connected to '${castedMultiAddress}'`);
+      logger.debug(`Connected to '${castedMultiAddress}'`);
       return true;
     } catch (err) {
       if (signal.aborted) {
-        console.log(`Timed out connecting to '${castedMultiAddress}'`);
+        logger.debug(`Timed out connecting to '${castedMultiAddress}'`);
       } else {
-        console.log(
+        logger.debug(
           `Connecting to '${castedMultiAddress}' failed - ${err.message}`
         );
       }
@@ -360,20 +369,20 @@ export class PeerToPeer extends EventEmitter {
 
   // Function to try multiple addresses and connect to the first valid one
   private async tryAddresses(addresses: string[]): Promise<boolean> {
-    console.log("P2P: Trying multiple addresses:", addresses);
+    logger.debug("P2P: Trying multiple addresses:", addresses);
 
     // Filter out invalid addresses
     const filteredAddresses = addresses.filter(
       (addr) => !this.isnotValidAddress(addr) // Remove invalid addresses
     );
 
-    console.log(
+    logger.debug(
       "Filtered addresses (should exclude invalid):",
       filteredAddresses
     );
 
     if (filteredAddresses.length === 0) {
-      console.log("No valid addresses found.");
+      logger.debug("No valid addresses found.");
       return false;
     }
 
@@ -391,18 +400,18 @@ export class PeerToPeer extends EventEmitter {
     // Try each filtered address
     for (const addr of sortedAddresses) {
       try {
-        console.log("Trying address:", addr);
+        logger.debug("Trying address:", addr);
         const connected = await this.tryAddress(addr);
         if (connected) {
-          console.log(`Successfully connected to ${addr}`);
+          logger.debug(`Successfully connected to ${addr}`);
           return true; // Return early on success
         }
       } catch (err) {
-        console.log(`Failed to connect to ${addr}:`, err.message);
+        logger.debug(`Failed to connect to ${addr}:`, err.message);
       }
     }
 
-    console.log("No valid connection could be established.");
+    logger.debug("No valid connection could be established.");
     return false; // Return false if no connection succeeded
   }
 
@@ -410,7 +419,7 @@ export class PeerToPeer extends EventEmitter {
     peerId: string,
     addresses: string[]
   ): Promise<boolean> {
-    console.log(
+    logger.debug(
       "P2P: Attempting to connect to peer",
       peerId,
       "with fallback addresses:",
@@ -420,7 +429,7 @@ export class PeerToPeer extends EventEmitter {
     try {
       // Check if already connected first
       if (await this.isPeerConnected(peerId)) {
-        console.log(
+        logger.debug(
           `Already connected to peer ${peerId}, skipping connection attempt`
         );
         return true;
@@ -428,22 +437,22 @@ export class PeerToPeer extends EventEmitter {
 
       const connectedById = await this.connectToPeerById(peerId);
       if (connectedById) {
-        console.log(`Successfully connected to peer ${peerId} using PeerID`);
+        logger.debug(`Successfully connected to peer ${peerId} using PeerID`);
         return true;
       }
 
-      console.log(
+      logger.debug(
         `Failed to connect using PeerID ${peerId}, trying provided addresses`
       );
       const connectedByAddr = await this.tryAddresses(addresses);
       if (connectedByAddr) {
-        console.log(
+        logger.debug(
           `Successfully connected to peer ${peerId} using provided addresses`
         );
         return true;
       }
 
-      console.log(`Failed to connect to peer ${peerId} using any method`);
+      logger.debug(`Failed to connect to peer ${peerId} using any method`);
       return false;
     } catch (err) {
       console.error(`Error connecting to peer ${peerId}:`, err);
@@ -458,24 +467,24 @@ export class PeerToPeer extends EventEmitter {
       const connections = this.libp2p.getConnections(peerId);
       if (connections.length === 0) return false;
 
-      console.log(`P2p: Checking connection to ${peerId}`);
-      console.log(`P2p: Connections: ${connections}`);
+      logger.debug(`P2p: Checking connection to ${peerId}`);
+      logger.debug(`P2p: Connections: ${connections}`);
       // Check if any of the connections are direct or through a circuit to our target
       for (const conn of connections) {
         const remoteAddr = conn.remoteAddr;
         if (!remoteAddr) continue;
 
         const addrStr = remoteAddr.toString();
-        console.log(`P2p: Checking connection to ${peerId}: ${addrStr}`);
+        logger.debug(`P2p: Checking connection to ${peerId}: ${addrStr}`);
 
         // Check if this connection is actually to our target peer
         if (addrStr.includes(`/p2p/${peerId}`)) {
-          console.log(`Found valid connection to ${peerId}`);
+          logger.debug(`Found valid connection to ${peerId}`);
           return conn;
         }
       }
 
-      console.log(
+      logger.debug(
         `No valid connection found to ${peerId} (connections were to other peers)`
       );
       return false;
@@ -486,22 +495,24 @@ export class PeerToPeer extends EventEmitter {
   }
 
   public async sendMsgToPeer(peerMultiaddr: string, msg: string) {
-    console.log("P2P: Sending message to peer:", peerMultiaddr, msg);
+    logger.debug("P2P: Sending message to peer:", peerMultiaddr, msg);
     if (!this.libp2p) throw new Error("Libp2p instance not initialized");
 
     try {
       const targetPeer = multiaddr(peerMultiaddr);
-      console.log(
+      logger.debug(
         `Attempting to send message to ${targetPeer.toString()}: ${msg}`
       );
 
       let stream = this.streams.get(peerMultiaddr);
 
       if (!stream) {
-        console.log("Creating new stream for peer");
+        logger.debug("Creating new stream for peer");
 
         const connection = await this.libp2p.dial(targetPeer);
-        console.log(`Connected to ${targetPeer.toString()}, opening stream...`);
+        logger.debug(
+          `Connected to ${targetPeer.toString()}, opening stream...`
+        );
 
         const newStream = await connection.newStream(this.PROTOCOL);
 
@@ -519,7 +530,7 @@ export class PeerToPeer extends EventEmitter {
       }
 
       stream.push(fromString(msg));
-      console.log(
+      logger.debug(
         `Successfully sent message to ${targetPeer.toString()}: ${msg}`
       );
     } catch (err) {
@@ -544,13 +555,13 @@ export class PeerToPeer extends EventEmitter {
       // First check if we're already subscribed
       const currentTopics = this.libp2p.services.pubsub.getTopics();
       if (currentTopics.includes(topic)) {
-        console.log(`Already subscribed to topic ${topic}`);
+        logger.debug(`Already subscribed to topic ${topic}`);
         return true;
       }
 
       // Subscribe to the topic
       await this.libp2p.services.pubsub.subscribe(topic);
-      console.log(`Subscribed to topic ${topic}`);
+      logger.debug(`Subscribed to topic ${topic}`);
       if (!meshForming) return true;
 
       // Wait for mesh formation with timeout and retries
@@ -567,7 +578,7 @@ export class PeerToPeer extends EventEmitter {
             topic
           );
 
-          console.log("Mesh formation status:", {
+          logger.debug("Mesh formation status:", {
             topic,
             attempt: attempts,
             totalPeers: peers.length,
@@ -580,7 +591,7 @@ export class PeerToPeer extends EventEmitter {
 
           // Consider mesh formed if we have any peers
           if (meshPeers.length > 0 || subscribers.length > 0) {
-            console.log(`Mesh formed for topic ${topic}`);
+            logger.debug(`Mesh formed for topic ${topic}`);
             resolve(true);
             return;
           }
@@ -617,12 +628,12 @@ export class PeerToPeer extends EventEmitter {
   public async refreshMesh(topic: string): Promise<void> {
     if (!this.libp2p?.services.pubsub) return;
 
-    console.log(`Attempting mesh refresh for topic ${topic}`);
+    logger.debug(`Attempting mesh refresh for topic ${topic}`);
 
     try {
       // Get current mesh status
       const beforePeers = this.libp2p.services.pubsub.getMeshPeers(topic);
-      console.log(
+      logger.debug(
         "Mesh peers before refresh:",
         beforePeers.map((p) => p.toString())
       );
@@ -638,7 +649,7 @@ export class PeerToPeer extends EventEmitter {
 
       // Check mesh status after refresh
       const afterPeers = this.libp2p.services.pubsub.getMeshPeers(topic);
-      console.log(
+      logger.debug(
         "Mesh peers after refresh:",
         afterPeers.map((p) => p.toString())
       );
@@ -649,7 +660,7 @@ export class PeerToPeer extends EventEmitter {
 
   public async messageTopic(topic: string, message: string) {
     if (!this.libp2p?.services.pubsub) {
-      console.warn('P2P: Cannot send message - pubsub not initialized');
+      console.warn("P2P: Cannot send message - pubsub not initialized");
       return;
     }
 
@@ -660,16 +671,19 @@ export class PeerToPeer extends EventEmitter {
       // Force publish even with no subscribers
       await this.libp2p.services.pubsub.publish(topic, encodedMessage, {
         allowPublishToZeroPeers: true,
-        ignoreDuplicatePublishError: true
+        ignoreDuplicatePublishError: true,
       });
 
       // Log subscription status but don't fail if no peers
-      const subscribers = await this.libp2p.services.pubsub.getSubscribers(topic);
-      console.log(`Message sent to topic ${topic}, subscribers: ${subscribers.length}`);
-
+      const subscribers = await this.libp2p.services.pubsub.getSubscribers(
+        topic
+      );
+      logger.debug(
+        `Message sent to topic ${topic}, subscribers: ${subscribers.length}`
+      );
     } catch (error) {
       // Only log error but don't throw
-      console.warn('P2P: Message publish issue:', error);
+      console.warn("P2P: Message publish issue:", error);
     }
   }
 
@@ -718,14 +732,14 @@ export class PeerToPeer extends EventEmitter {
   }
 
   private async connectToPeerById(peerId: string): Promise<boolean> {
-    console.log("P2P: Attempting to connect to peer by ID:", peerId);
+    logger.debug("P2P: Attempting to connect to peer by ID:", peerId);
     if (!this.libp2p) throw new Error("Libp2p instance not initialized");
 
     try {
       let peerInfo;
       try {
         const validPeerId = peerIdFromString(peerId);
-        console.log("Valid PeerId created:", validPeerId.toString());
+        logger.debug("Valid PeerId created:", validPeerId.toString());
 
         const peers = await this.libp2p.peerStore.all();
         const peerExists = peers.some(
@@ -733,7 +747,7 @@ export class PeerToPeer extends EventEmitter {
         );
 
         if (!peerExists) {
-          console.log(`Peer ${peerId} not found in peer store`);
+          logger.debug(`Peer ${peerId} not found in peer store`);
           return false;
         }
 
@@ -744,7 +758,7 @@ export class PeerToPeer extends EventEmitter {
           !peerInfo.addresses ||
           peerInfo.addresses.length === 0
         ) {
-          console.log(`No known addresses for peer ${peerId}`);
+          logger.debug(`No known addresses for peer ${peerId}`);
           return false;
         }
 
@@ -761,10 +775,10 @@ export class PeerToPeer extends EventEmitter {
         });
         //.slice(7); // Skip the first address
 
-        console.log("Attempting to connect with addresses:", addresses);
+        logger.debug("Attempting to connect with addresses:", addresses);
         return await this.tryAddresses(addresses);
       } catch (peerIdErr) {
-        console.log(`Invalid PeerId format: ${peerId}`, peerIdErr);
+        logger.debug(`Invalid PeerId format: ${peerId}`, peerIdErr);
         return false;
       }
     } catch (err) {

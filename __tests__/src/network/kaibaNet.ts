@@ -2,6 +2,9 @@ import { PeerToPeer } from "./p2p.js";
 import { AudioManager } from "../audio/AudioManager";
 import EventEmitter from "events";
 import { isValidVoiceMessage, VoiceMessage } from "./types/voice";
+import { Logger } from "../utils/logger";
+
+const logger = Logger.createLogger("KaibaNet");
 
 export class KaibaNet extends EventEmitter {
   private static instance: KaibaNet | null = null;
@@ -84,7 +87,7 @@ export class KaibaNet extends EventEmitter {
   }
 
   private addPlayer = ({ peerId, addresses }) => {
-    console.log("KaibaNet: Peer discovered", peerId, addresses);
+    logger.debug("KaibaNet: Peer discovered", peerId, addresses);
     this.players = new Map(this.players).set(peerId, {
       id: peerId,
       addresses,
@@ -95,7 +98,7 @@ export class KaibaNet extends EventEmitter {
   };
 
   private connectPlayer = ({ peerId }) => {
-    console.log("KaibaNet: Connection opened", peerId);
+    logger.debug("KaibaNet: Connection opened", peerId);
     const player = this.players.get(peerId) || { id: peerId, addresses: [] };
     if (player.connected !== true) {
       this.players = new Map(this.players).set(peerId, {
@@ -108,7 +111,7 @@ export class KaibaNet extends EventEmitter {
   };
 
   private disconnectPlayer = ({ peerId }) => {
-    console.log("KaibaNet: Connection closed", peerId);
+    logger.debug("KaibaNet: Connection closed", peerId);
     const player = this.players.get(peerId);
     if (player && player.connected !== false) {
       this.players = new Map(this.players).set(peerId, {
@@ -121,7 +124,7 @@ export class KaibaNet extends EventEmitter {
   };
 
   private removePlayer = ({ peerId }) => {
-    console.log("KaibaNet: Peer removed", peerId);
+    logger.debug("KaibaNet: Peer removed", peerId);
     if (this.players.has(peerId)) {
       this.players = new Map(this.players);
       this.players.delete(peerId);
@@ -131,7 +134,7 @@ export class KaibaNet extends EventEmitter {
   };
 
   private roomTopicMessageHandler = ({ messageStr }) => {
-    console.log("KaibaNet: Message on Room Topic:", messageStr);
+    logger.debug("KaibaNet: Message on Room Topic:", messageStr);
 
     // Add handler for chat messages
     if (messageStr.includes("duel:chat:message:")) {
@@ -142,7 +145,7 @@ export class KaibaNet extends EventEmitter {
 
     // When we receive a message with the game state, emit an event with the decoded gameState
     if (messageStr.includes("duel:refresh:state:")) {
-      console.log("KaibaNet: Game state refresh message received", messageStr);
+      logger.debug("KaibaNet: Game state refresh message received", messageStr);
       const gameStateBase64 = messageStr.toString().split(":")[3];
       const decodedGameState = JSON.parse(
         new TextDecoder().decode(
@@ -155,14 +158,14 @@ export class KaibaNet extends EventEmitter {
     // Handle player join messages in room topic
     if (messageStr.includes("duel:player:join:")) {
       const playerJoinedId = messageStr.split(":")[3];
-      console.log("KaibaNet: Player joined room", playerJoinedId);
+      logger.debug("KaibaNet: Player joined room", playerJoinedId);
       this.emit("duel:player:join:", playerJoinedId);
     }
 
     // Handle player join messages in room topic
     if (messageStr.includes("duel:command:exec:")) {
       const command = b64ToObject(messageStr.split(":")[3]);
-      console.log("TCL:: EXEC COMMAND ", command);
+      logger.debug("TCL:: EXEC COMMAND ", command);
       this.emit("duel:command:exec", command);
     }
   };
@@ -175,7 +178,7 @@ export class KaibaNet extends EventEmitter {
         connected: false,
       });
       this.emit("rooms:updated", this.rooms);
-      console.log("KaibaNet: Emitted rooms:updated event");
+      logger.debug("KaibaNet: Emitted rooms:updated event");
     }
   };
 
@@ -246,18 +249,18 @@ export class KaibaNet extends EventEmitter {
 
   private waitForPlayer = async (roomId, retryAttempts, retryDelay) => {
     for (let attempt = 1; attempt <= retryAttempts; attempt++) {
-      console.log(this.players);
+      logger.debug(this.players);
       const player = this.players.get(roomId);
       if (player) return player; // Return the player immediately when found
 
-      console.log(`Attempt ${attempt}: Waiting for player discovery...`);
+      logger.debug(`Attempt ${attempt}: Waiting for player discovery...`);
       await new Promise((resolve) => setTimeout(resolve, retryDelay));
     }
     return null; // Return null if no player is found after all attempts
   };
 
   async joinRoom(roomId: string, retryAttempts = 5, retryDelay = 5000) {
-    console.log(`Attempting to join room ${roomId}...`);
+    logger.debug(`Attempting to join room ${roomId}...`);
     this.roomId = roomId;
 
     // Wait for player discovery
@@ -266,7 +269,7 @@ export class KaibaNet extends EventEmitter {
       throw new Error("End of attempts to wait for player discovery");
     }
     // Connects to the room owner they will exchange the topics they are subscribed to
-    console.log(`Connecting to peer...`);
+    logger.debug(`Connecting to peer...`);
     const connected = await this.peerToPeer?.connectToPeerWithFallback(
       roomId,
       player.addresses
@@ -285,7 +288,7 @@ export class KaibaNet extends EventEmitter {
     await new Promise((resolve) => setTimeout(resolve, 3000));
 
     const roomOwnerConnection = await this.peerToPeer.isPeerConnected(roomId);
-    console.log("KaibaNet: Room owner connection status", roomOwnerConnection);
+    logger.debug("KaibaNet: Room owner connection status", roomOwnerConnection);
 
     // Pubsub protocol will send the current peers subcriptions when connects to a peer
     // Subscribe to room topic
@@ -302,7 +305,7 @@ export class KaibaNet extends EventEmitter {
 
     const meshPeers =
       this.peerToPeer?.libp2p.services.pubsub.getMeshPeers(roomId);
-    console.log("Mesh peers after refresh:", meshPeers);
+    logger.debug("Mesh peers after refresh:", meshPeers);
 
     if (!meshPeers || meshPeers.length === 0) {
       // Try one more refresh
@@ -328,7 +331,7 @@ export class KaibaNet extends EventEmitter {
   }
 
   async refreshGameState(roomId: string, gameState: string) {
-    console.log("KaibaNet: Refreshing game state", roomId, gameState);
+    logger.debug("KaibaNet: Refreshing game state", roomId, gameState);
     // Encode the room decks data
     const base64Encoded = objectToB64(gameState);
     await new Promise((resolve) => setTimeout(resolve, 3000));
@@ -374,7 +377,7 @@ export class KaibaNet extends EventEmitter {
         timestamp: Date.now(),
       };
 
-      console.log(
+      logger.debug(
         `Sending voice data to ${this.currentVoiceTopic}, size: ${data.length}`
       );
       await this.peerToPeer.messageTopic(
@@ -391,22 +394,22 @@ export class KaibaNet extends EventEmitter {
       this.currentVoiceTopic = `${roomId}/voice`;
 
       // Debug state before any changes
-      console.log("=== Initial State ===");
+      logger.debug("=== Initial State ===");
       this.debugEventListeners();
 
       // Clean up both audio and voice topic listeners
-      console.log("Cleaning up existing listeners...");
+      logger.debug("Cleaning up existing listeners...");
       this.audioManager.removeAllListeners("audioData");
       this.peerToPeer?.removeAllListeners(
         `topic:${this.currentVoiceTopic}:message`
       );
 
       // Initialize the AudioManager
-      console.log("Initializing audio manager...");
+      logger.debug("Initializing audio manager...");
       await this.audioManager.initialize();
 
       // Set up voice message receiver
-      console.log("Setting up voice message receiver...");
+      logger.debug("Setting up voice message receiver...");
       this.peerToPeer?.on(
         `topic:${this.currentVoiceTopic}:message`,
         (message: any) => {
@@ -440,7 +443,7 @@ export class KaibaNet extends EventEmitter {
               parsedMessage.type === "voice" &&
               parsedMessage.senderId !== this.playerId
             ) {
-              console.log("Received voice data from:", parsedMessage.senderId);
+              logger.debug("Received voice data from:", parsedMessage.senderId);
               const audioData = new Uint8Array(parsedMessage.data);
               this.audioManager.playRemoteAudio(audioData);
             }
@@ -457,15 +460,15 @@ export class KaibaNet extends EventEmitter {
       );
 
       // Add the audio data sender handler
-      console.log("Setting up audio data handler...");
+      logger.debug("Setting up audio data handler...");
       this.audioManager.on("audioData", this.audioDataHandler);
 
       // Subscribe to voice topic
-      console.log("Subscribing to voice topic:", this.currentVoiceTopic);
+      logger.debug("Subscribing to voice topic:", this.currentVoiceTopic);
       await this.peerToPeer?.subscribeTopic(this.currentVoiceTopic);
 
       // Final debug check
-      console.log("=== Final Setup State ===");
+      logger.debug("=== Final Setup State ===");
       this.debugEventListeners();
 
       return true;
@@ -492,7 +495,7 @@ export class KaibaNet extends EventEmitter {
     this.audioManager.stop();
     this.currentVoiceTopic = null;
 
-    console.log("Voice chat stopped and cleaned up");
+    logger.debug("Voice chat stopped and cleaned up");
   }
 
   setMicMuted(muted: boolean): void {
@@ -519,14 +522,14 @@ export class KaibaNet extends EventEmitter {
   }
 
   private debugEventListeners() {
-    console.log("=== Event Listeners Debug ===");
-    console.log("AudioManager events:", this.audioManager.eventNames());
-    console.log(
+    logger.debug("=== Event Listeners Debug ===");
+    logger.debug("AudioManager events:", this.audioManager.eventNames());
+    logger.debug(
       "AudioManager audioData listeners:",
       this.audioManager.listenerCount("audioData")
     );
-    console.log("P2P events:", this.peerToPeer?.eventNames());
-    console.log("==========================");
+    logger.debug("P2P events:", this.peerToPeer?.eventNames());
+    logger.debug("==========================");
   }
 }
 
