@@ -118,7 +118,7 @@ export default function Duel({
     const formatCommandToCliStyle = (command: any): string => {
       const { type, data } = command;
       // Convert type from CamelCase to lowercase
-      const commandType = type.replace("Command", "").toLowerCase();
+      const commandType = type.replace("Command", "");
 
       // Convert data object to CLI options
       const options = Object.entries(data)
@@ -133,7 +133,9 @@ export default function Duel({
       if (SEND_COMMAND_ALLOWED) {
         kaibaNet.execYGOCommand(roomId, data.command.toCommandData());
         const messageTemplate = formatCommandToCliStyle(data.command.toJSON());
-        handleSendMessage(messageTemplate);
+        const { commandMessage } = commandMessageToCommand(messageTemplate);
+        // Show command message in chat
+        handleChatMessage(commandMessage);
       }
     };
 
@@ -227,6 +229,35 @@ export default function Duel({
     );
   };
 
+  const commandMessageToCommand = (message: string) => {
+    if (!message.startsWith("/cmd/")) {
+      console.warn("Invalid command message format");
+      return;
+    }
+    const [commandType, ...args] = message.split(" ");
+    const options: Record<string, any> = {};
+
+    for (let i = 0; i < args.length; i++) {
+      if (args[i].startsWith("--")) {
+        const key = args[i].slice(2);
+        const value = args[i + 1];
+        if (value && !value.startsWith("--")) {
+          options[key] = !isNaN(Number(value)) ? Number(value) : value;
+          i++;
+        }
+      }
+    }
+    const command = {
+      type: `${commandType.split("/cmd/")[1]}Command`,
+      data: options,
+    };
+
+    const commandMessage = `${playerId}:${commandType} ${JSON.stringify(
+      options
+    )}`;
+    return { commandMessage, command };
+  };
+
   const handleCommandExec = (command: any) => {
     const ygo: YGOPlayerComponent = document.querySelector(
       "ygo-player"
@@ -254,30 +285,10 @@ export default function Duel({
     }
 
     if (message.startsWith("/cmd/")) {
-      const [commandType, ...args] = message.split(" ");
-      const options: Record<string, any> = {};
-
-      for (let i = 0; i < args.length; i++) {
-        if (args[i].startsWith("--")) {
-          const key = args[i].slice(2);
-          const value = args[i + 1];
-          if (value && !value.startsWith("--")) {
-            options[key] = !isNaN(Number(value)) ? Number(value) : value;
-            i++;
-          }
-        }
-      }
-      const command = {
-        type: `${commandType.split("/cmd/")[1]}Command`,
-        data: options,
-      };
-
-      console.log("TCL: handleSendMessage -> options", command);
-
-      const commandMessage = `${playerId}:${commandType} ${JSON.stringify(
-        options
-      )}`;
+      const { command, commandMessage } = commandMessageToCommand(message);
+      // Show command message in chat
       handleChatMessage(commandMessage);
+      // Execute the command
       handleCommandExec(command);
       return;
     }
