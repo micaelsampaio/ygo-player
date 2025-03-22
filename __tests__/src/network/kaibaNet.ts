@@ -1,7 +1,7 @@
-import { PeerToPeer } from "./network/p2p.js";
-import { AudioManager } from "./audio/AudioManager";
+import { PeerToPeer } from "./p2p.js";
+import { AudioManager } from "../audio/AudioManager";
 import EventEmitter from "events";
-import { isValidVoiceMessage, VoiceMessage } from './types/voice';
+import { isValidVoiceMessage, VoiceMessage } from "./types/voice";
 
 export class KaibaNet extends EventEmitter {
   private static instance: KaibaNet | null = null;
@@ -14,7 +14,7 @@ export class KaibaNet extends EventEmitter {
   private roomId: string | null = null;
   private initialized = false;
   private peerToPeer: PeerToPeer | null = null; // Store the PeerToPeer instance
-  private readonly VOICE_PROTOCOL = '/ygo/voice/1.0.0';
+  private readonly VOICE_PROTOCOL = "/ygo/voice/1.0.0";
   private audioManager: AudioManager;
   private currentVoiceTopic: string | null = null;
 
@@ -23,12 +23,15 @@ export class KaibaNet extends EventEmitter {
     if (KaibaNet.instance) {
       throw new Error("Use KaibaNet.getInstance() instead of new KaibaNet()");
     }
-    this.peerToPeer = new PeerToPeer(import.meta.env.VITE_BOOTSTRAP_NODE, 'ygo-discovery');
+    this.peerToPeer = new PeerToPeer(
+      import.meta.env.VITE_BOOTSTRAP_NODE,
+      "ygo-discovery"
+    );
     this.audioManager = new AudioManager({
       fftSize: 2048,
       minDecibels: -90,
       maxDecibels: -10,
-      smoothingTimeConstant: 0.85
+      smoothingTimeConstant: 0.85,
     });
 
     this.setupAudioEventListeners();
@@ -359,116 +362,138 @@ export class KaibaNet extends EventEmitter {
 
   private audioDataHandler = async (data: Uint8Array) => {
     if (!this.currentVoiceTopic || !this.peerToPeer?.libp2p?.services.pubsub) {
-        console.warn('Voice chat not properly initialized');
-        return;
+      console.warn("Voice chat not properly initialized");
+      return;
     }
 
     try {
-        const message = {
-            type: 'voice',
-            data: Array.from(data),
-            senderId: this.playerId,
-            timestamp: Date.now()
-        };
+      const message = {
+        type: "voice",
+        data: Array.from(data),
+        senderId: this.playerId,
+        timestamp: Date.now(),
+      };
 
-        console.log(`Sending voice data to ${this.currentVoiceTopic}, size: ${data.length}`);
-        await this.peerToPeer.messageTopic(this.currentVoiceTopic, JSON.stringify(message));
+      console.log(
+        `Sending voice data to ${this.currentVoiceTopic}, size: ${data.length}`
+      );
+      await this.peerToPeer.messageTopic(
+        this.currentVoiceTopic,
+        JSON.stringify(message)
+      );
     } catch (error) {
-        console.error('Failed to send audio data:', error);
+      console.error("Failed to send audio data:", error);
     }
   };
 
   async startVoiceChat(roomId: string) {
     try {
-        this.currentVoiceTopic = `${roomId}/voice`;
-        
-        // Debug state before any changes
-        console.log('=== Initial State ===');
-        this.debugEventListeners();
+      this.currentVoiceTopic = `${roomId}/voice`;
 
-        // Clean up both audio and voice topic listeners
-        console.log('Cleaning up existing listeners...');
-        this.audioManager.removeAllListeners('audioData');
-        this.peerToPeer?.removeAllListeners(`topic:${this.currentVoiceTopic}:message`);
-        
-        // Initialize the AudioManager
-        console.log('Initializing audio manager...');
-        await this.audioManager.initialize();
+      // Debug state before any changes
+      console.log("=== Initial State ===");
+      this.debugEventListeners();
 
-        // Set up voice message receiver
-        console.log('Setting up voice message receiver...');
-        this.peerToPeer?.on(`topic:${this.currentVoiceTopic}:message`, (message: any) => {
-            try {
-                // Skip non-voice messages
-                if (typeof message === 'object') {
-                    if (message.messageStr?.startsWith('keepalive:') || 
-                        message.messageStr?.startsWith('mesh:')) {
-                        return;
-                    }
-                }
+      // Clean up both audio and voice topic listeners
+      console.log("Cleaning up existing listeners...");
+      this.audioManager.removeAllListeners("audioData");
+      this.peerToPeer?.removeAllListeners(
+        `topic:${this.currentVoiceTopic}:message`
+      );
 
-                // Try to parse the message
-                let parsedMessage;
-                try {
-                    parsedMessage = typeof message === 'string' 
-                        ? JSON.parse(message) 
-                        : message.messageStr ? JSON.parse(message.messageStr) : message;
-                } catch (parseError) {
-                    // If it's not JSON, it's probably a system message - ignore it
-                    return;
-                }
+      // Initialize the AudioManager
+      console.log("Initializing audio manager...");
+      await this.audioManager.initialize();
 
-                // Process only valid voice messages
-                if (parsedMessage.type === 'voice' && parsedMessage.senderId !== this.playerId) {
-                    console.log('Received voice data from:', parsedMessage.senderId);
-                    const audioData = new Uint8Array(parsedMessage.data);
-                    this.audioManager.playRemoteAudio(audioData);
-                }
-            } catch (error) {
-                // Only log errors for actual voice messages
-                if (!message.messageStr?.startsWith('keepalive:') && 
-                    !message.messageStr?.startsWith('mesh:')) {
-                    console.error('Failed to process voice message:', error);
-                }
+      // Set up voice message receiver
+      console.log("Setting up voice message receiver...");
+      this.peerToPeer?.on(
+        `topic:${this.currentVoiceTopic}:message`,
+        (message: any) => {
+          try {
+            // Skip non-voice messages
+            if (typeof message === "object") {
+              if (
+                message.messageStr?.startsWith("keepalive:") ||
+                message.messageStr?.startsWith("mesh:")
+              ) {
+                return;
+              }
             }
-        });
 
-        // Add the audio data sender handler
-        console.log('Setting up audio data handler...');
-        this.audioManager.on('audioData', this.audioDataHandler);
+            // Try to parse the message
+            let parsedMessage;
+            try {
+              parsedMessage =
+                typeof message === "string"
+                  ? JSON.parse(message)
+                  : message.messageStr
+                  ? JSON.parse(message.messageStr)
+                  : message;
+            } catch (parseError) {
+              // If it's not JSON, it's probably a system message - ignore it
+              return;
+            }
 
-        // Subscribe to voice topic
-        console.log('Subscribing to voice topic:', this.currentVoiceTopic);
-        await this.peerToPeer?.subscribeTopic(this.currentVoiceTopic);
+            // Process only valid voice messages
+            if (
+              parsedMessage.type === "voice" &&
+              parsedMessage.senderId !== this.playerId
+            ) {
+              console.log("Received voice data from:", parsedMessage.senderId);
+              const audioData = new Uint8Array(parsedMessage.data);
+              this.audioManager.playRemoteAudio(audioData);
+            }
+          } catch (error) {
+            // Only log errors for actual voice messages
+            if (
+              !message.messageStr?.startsWith("keepalive:") &&
+              !message.messageStr?.startsWith("mesh:")
+            ) {
+              console.error("Failed to process voice message:", error);
+            }
+          }
+        }
+      );
 
-        // Final debug check
-        console.log('=== Final Setup State ===');
-        this.debugEventListeners();
+      // Add the audio data sender handler
+      console.log("Setting up audio data handler...");
+      this.audioManager.on("audioData", this.audioDataHandler);
 
-        return true;
+      // Subscribe to voice topic
+      console.log("Subscribing to voice topic:", this.currentVoiceTopic);
+      await this.peerToPeer?.subscribeTopic(this.currentVoiceTopic);
+
+      // Final debug check
+      console.log("=== Final Setup State ===");
+      this.debugEventListeners();
+
+      return true;
     } catch (error) {
-        console.error('Failed to start voice chat:', error);
-        throw error;
+      console.error("Failed to start voice chat:", error);
+      throw error;
     }
-}
+  }
 
-stopVoiceChat(roomId: string) {
+  stopVoiceChat(roomId: string) {
     if (!this.peerToPeer) {
-        throw new Error("KaibaNet: Cannot stop voice chat - P2P not initialized");
+      throw new Error("KaibaNet: Cannot stop voice chat - P2P not initialized");
     }
-    
-    this.audioManager.removeListener('audioData', this.audioDataHandler);
-    
+
+    this.audioManager.removeListener("audioData", this.audioDataHandler);
+
     if (this.currentVoiceTopic) {
-        this.peerToPeer?.removeAllListeners(`topic:${this.currentVoiceTopic}:message`);
-        this.peerToPeer.unsubscribeTopic(this.currentVoiceTopic);
+      this.peerToPeer?.removeAllListeners(
+        `topic:${this.currentVoiceTopic}:message`
+      );
+      this.peerToPeer.unsubscribeTopic(this.currentVoiceTopic);
     }
-    
+
     this.audioManager.stop();
     this.currentVoiceTopic = null;
-    
-    console.log('Voice chat stopped and cleaned up');
-}
+
+    console.log("Voice chat stopped and cleaned up");
+  }
 
   setMicMuted(muted: boolean): void {
     this.audioManager.setMicrophoneMuted(muted);
@@ -483,22 +508,25 @@ stopVoiceChat(roomId: string) {
   }
 
   private setupAudioEventListeners() {
-    this.audioManager.on('error', (error) => {
-      console.error('Audio error:', error);
-      this.emit('audio:error', error);
+    this.audioManager.on("error", (error) => {
+      console.error("Audio error:", error);
+      this.emit("audio:error", error);
     });
 
-    this.audioManager.on('stateChange', (state) => {
-      this.emit('audio:stateChange', state);
+    this.audioManager.on("stateChange", (state) => {
+      this.emit("audio:stateChange", state);
     });
   }
 
   private debugEventListeners() {
-    console.log('=== Event Listeners Debug ===');
-    console.log('AudioManager events:', this.audioManager.eventNames());
-    console.log('AudioManager audioData listeners:', this.audioManager.listenerCount('audioData'));
-    console.log('P2P events:', this.peerToPeer?.eventNames());
-    console.log('==========================');
+    console.log("=== Event Listeners Debug ===");
+    console.log("AudioManager events:", this.audioManager.eventNames());
+    console.log(
+      "AudioManager audioData listeners:",
+      this.audioManager.listenerCount("audioData")
+    );
+    console.log("P2P events:", this.peerToPeer?.eventNames());
+    console.log("==========================");
   }
 }
 

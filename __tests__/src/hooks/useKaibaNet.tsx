@@ -1,6 +1,6 @@
 // useKaibaNet.tsx
 import { createContext, useContext, useEffect, useState } from "react";
-import { KaibaNet } from "./kaibaNet";
+import { KaibaNet } from "../network/kaibaNet";
 
 const KaibaNetContext = createContext<KaibaNet | null>(null);
 

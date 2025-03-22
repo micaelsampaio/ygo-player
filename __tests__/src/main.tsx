@@ -5,7 +5,7 @@ import "../../dist";
 import App from "./App.tsx";
 import Duel from "./Duel.tsx";
 import { DownloadDeck } from "./DownloadDeck.tsx";
-import { KaibaNetProvider } from "./useKaibaNet";
+import { KaibaNetProvider } from "./hooks/useKaibaNet";
 
 createRoot(document.getElementById("root")!).render(
   <KaibaNetProvider>

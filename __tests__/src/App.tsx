@@ -2,7 +2,7 @@ import YUBEL from "./decks/YUBEL_FS.json";
 import CHIMERA from "./decks/CHIMERA.json";
 import { useNavigate, Link } from "react-router-dom";
 import RoomLobby from "./components/RoomLobby.js";
-import { useKaibaNet } from "./useKaibaNet";
+import { useKaibaNet } from "./hooks/useKaibaNet";
 import { memo, useEffect, useState } from "react";
 import { YGOGameUtils } from "../../dist/index.js";
 import styled from "styled-components";
@@ -14,9 +14,8 @@ const AppContainer = styled.div`
 `;
 
 const LeftContent = styled.div`
-  flex-grow:1;
-`
-
+  flex-grow: 1;
+`;
 
 export default function App() {
   const kaibaNet = useKaibaNet();
@@ -76,14 +75,17 @@ export default function App() {
         },
       ],
       options: {
-        shuffleDecks: false
-      }
+        shuffleDecks: false,
+      },
     };
 
-    roomJson.players.forEach(player => {
+    roomJson.players.forEach((player) => {
       for (let i = player.mainDeck.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
-        [player.mainDeck[i], player.mainDeck[j]] = [player.mainDeck[j], player.mainDeck[i]];
+        [player.mainDeck[i], player.mainDeck[j]] = [
+          player.mainDeck[j],
+          player.mainDeck[i],
+        ];
       }
     });
 
@@ -93,7 +95,7 @@ export default function App() {
     kaibaNet.createRoom();
 
     // duel owner starts the room and enters the duel
-    const roomId = kaibaNet.getPlayerId() ? kaibaNet.getPlayerId() : ""
+    const roomId = kaibaNet.getPlayerId() ? kaibaNet.getPlayerId() : "";
     navigate(`/duel/${roomId}`, {
       state: { roomId, duelData: roomJson, playerId: kaibaNet.getPlayerId() },
     });
@@ -115,7 +117,9 @@ export default function App() {
   const handleRoomJoin = async (roomId: any) => {
     console.log("App:handleRoomJoin:roomDecks", roomDecks);
     await kaibaNet.joinRoom(roomId);
-    navigate(`/duel/${roomId}`, { state: { roomId, playerId: kaibaNet.getPlayerId() } });
+    navigate(`/duel/${roomId}`, {
+      state: { roomId, playerId: kaibaNet.getPlayerId() },
+    });
   };
 
   const deleteDeck = (deckId: string) => {
@@ -194,7 +198,6 @@ export default function App() {
     <div>
       <AppContainer>
         <LeftContent>
-
           <h1># Decks</h1>
           <ul>
             <li>
@@ -211,7 +214,10 @@ export default function App() {
             {decks.map((deckId) => {
               return (
                 <li>
-                  <Link to="#" onClick={(e) => duelWithDeckFromStore(e, deckId)}>
+                  <Link
+                    to="#"
+                    onClick={(e) => duelWithDeckFromStore(e, deckId)}
+                  >
                     Duel as {deckId}
                   </Link>{" "}
                   <button onClick={() => deleteDeck(deckId)}>delete</button>
@@ -397,13 +403,13 @@ const EndGameBoard = memo(function EndGameBoard({ data, play }: any) {
         const extraMonsterZone1 = fields[0].extraMonsterZones[0]
           ? 0
           : fields[1].extraMonsterZones[0]
-            ? 1
-            : -1;
+          ? 1
+          : -1;
         const extraMonsterZone2 = fields[0].extraMonsterZones[1]
           ? 0
           : fields[1].extraMonsterZones[1]
-            ? 1
-            : -1;
+          ? 1
+          : -1;
 
         const extraMonsterZones = (
           <>

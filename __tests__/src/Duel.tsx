@@ -1,8 +1,9 @@
 import { useEffect, useState, useMemo } from "react";
 import { YGOPlayerComponent, YGODuel } from "../../dist";
 import { useLocation, useParams } from "react-router-dom";
-import { useKaibaNet } from "./useKaibaNet";
+import { useKaibaNet } from "./hooks/useKaibaNet";
 import Chat from "./components/Chat";
+import { LoadingOverlay } from "./components/LoadingOverlay";
 
 interface DuelProps {
   roomId?: string;
@@ -342,29 +343,8 @@ export default function Duel({
         position: "relative",
       }}
     >
-      {/* @ts-ignore */}
       <ygo-player />
-
-      {/* Show loading state when no data */}
-      {isLoading && !duelData && (
-        <div
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            width: "100%",
-            height: "100%",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            backgroundColor: "rgba(0, 0, 0, 0.5)", // semi-transparent overlay
-            zIndex: 1000,
-          }}
-        >
-          <div>Waiting for duel data...</div>
-        </div>
-      )}
-
+      {isLoading && !duelData && <LoadingOverlay />}
       <Chat
         roomId={roomId}
         playerId={playerId}
@@ -375,7 +355,6 @@ export default function Duel({
         onAudioMuteToggle={handleAudioMuteToggle}
         analyser={analyser}
       />
-
       <div
         style={{ position: "fixed", top: "10px", right: "10px", zIndex: 9999 }}
       >
