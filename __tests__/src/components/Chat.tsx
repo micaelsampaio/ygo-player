@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import styled from "styled-components";
 import { AudioVisualizer } from "./AudioVisualizer";
 import { Logger } from "../utils/logger";
@@ -52,39 +52,54 @@ const ChatContainer = styled.div<StyledProps>`
   transition: bottom 0.3s ease-in-out;
 `;
 
+// Update the ChatHeader styled component
 const ChatHeader = styled.div`
-  font-size: 15px;
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 10px;
-  padding-bottom: 10px;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  padding-bottom: 8px;
   border-bottom: 1px solid #444;
+  min-height: 32px;
+`;
+
+const HeaderLeft = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0; // For text truncation to work
+`;
+
+const HeaderRight = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
 `;
 
 const HeaderInfo = styled.div`
-  flex-grow: 1;
   display: flex;
-  flex-direction: column;
-  gap: 2px; // Reduced gap
-  max-width: calc(100% - 40px); // Leave space for close button
+  align-items: center;
+  gap: 8px;
+  max-width: calc(100% - 120px); // Space for controls
 `;
 
-// Update the styled components
 const HeaderText = styled.div`
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   font-size: 12px;
-  opacity: 0.8;
   display: flex;
   align-items: center;
   gap: 4px;
 
-  span.id {
-    font-weight: bold;
+  &.room {
     color: #0078d4;
-    font-family: monospace;
+  }
+
+  &.player {
+    color: #888;
   }
 `;
 
@@ -286,6 +301,42 @@ const CommandText = styled.code`
   }
 `;
 
+// Add these new styled components after your existing styled components
+const TabContainer = styled.div`
+  display: flex;
+  gap: 2px;
+  margin-bottom: 10px;
+`;
+
+const Tab = styled.button<{ isActive: boolean }>`
+  background-color: ${({ isActive }) => (isActive ? "#0078d4" : "#333")};
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: ${({ isActive }) => (isActive ? "#0086ef" : "#444")};
+  }
+`;
+
+// Add this type after your existing interfaces
+type TabType = "chat" | "commands";
+
+// Add this styled component
+const TabBadge = styled.span`
+  background-color: #ff4444;
+  color: white;
+  border-radius: 10px;
+  padding: 2px 6px;
+  font-size: 11px;
+  margin-left: 6px;
+`;
+
+// Update the Chat component to include tab functionality
 export default function Chat({
   roomId,
   playerId,
@@ -301,6 +352,16 @@ export default function Chat({
   const [isMicMuted, setIsMicMuted] = useState(false);
   const [isAudioMuted, setIsAudioMuted] = useState(false);
   const [inputMessage, setInputMessage] = useState("");
+  const [activeTab, setActiveTab] = useState<TabType>("chat");
+  const [unreadChat, setUnreadChat] = useState(0);
+  const [unreadCommands, setUnreadCommands] = useState(0);
+  const [globalUnread, setGlobalUnread] = useState(0);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const prevMessagesLength = useRef(messages.length);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
   const handleSendMessage = () => {
     if (inputMessage.trim()) {
@@ -338,21 +399,69 @@ export default function Chat({
     setInputMessage("");
   };
 
+  // Add this helper function to filter messages
+  const filteredMessages = messages.filter((msg) => {
+    const isCommand = msg.includes(":/cmd/");
+    return activeTab === "commands" ? isCommand : !isCommand;
+  });
+
+  // Single effect to handle new messages
+  useEffect(() => {
+    if (messages.length > prevMessagesLength.current) {
+      const lastMessage = messages[messages.length - 1];
+      const isCommand = lastMessage.includes(":/cmd/");
+
+      // Update global counter
+      setGlobalUnread((prev) => prev + 1);
+
+      // Update tab-specific counters only if message belongs to other tab
+      if (isCommand && activeTab === "chat") {
+        setUnreadCommands((prev) => prev + 1);
+      } else if (!isCommand && activeTab === "commands") {
+        setUnreadChat((prev) => prev + 1);
+      }
+
+      prevMessagesLength.current = messages.length;
+    }
+  }, [messages, activeTab]);
+
+  // Reset counters only when switching tabs
+  const handleTabClick = (tab: TabType) => {
+    setActiveTab(tab);
+    if (tab === "chat") {
+      setUnreadChat(0);
+      setGlobalUnread((prev) => prev - unreadChat);
+    } else {
+      setUnreadCommands(0);
+      setGlobalUnread((prev) => prev - unreadCommands);
+    }
+  };
+
+  // Chat toggle should not affect counters
+  const handleChatToggle = () => {
+    setIsOpen((prev) => !prev);
+  };
+
+  // Add scroll effect when messages change or tab changes
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, activeTab]);
+
+  // Update the return statement to include tabs
   return (
     <>
       <ChatContainer isOpen={isOpen}>
         <ChatHeader>
-          <HeaderInfo>
-            <h2 style={{ margin: 0, fontSize: "16px" }}>Chat</h2>
-            <HeaderText>
-              <span className="id">{truncateId(roomId, "room")}</span>
+          <HeaderLeft>
+            <HeaderText className="room">
+              {truncateId(roomId, "room")}
             </HeaderText>
-            <HeaderText>
-              <span className="id">{truncateId(playerId, "player")}</span>
+            <HeaderText className="player">
+              {truncateId(playerId, "player")}
             </HeaderText>
-          </HeaderInfo>
+          </HeaderLeft>
 
-          <AudioControls>
+          <HeaderRight>
             <ControlButton
               isActive={isVoiceEnabled}
               onClick={toggleVoice}
@@ -372,7 +481,6 @@ export default function Chat({
                 >
                   {isMicMuted ? "🚫" : "🎤"}
                 </ControlButton>
-
                 <ControlButton
                   isMuted={isAudioMuted}
                   onClick={toggleAudio}
@@ -382,10 +490,25 @@ export default function Chat({
                 </ControlButton>
               </>
             )}
-          </AudioControls>
-
-          <CloseButton onClick={() => setIsOpen(false)}>×</CloseButton>
+            <CloseButton onClick={() => setIsOpen(false)}>×</CloseButton>
+          </HeaderRight>
         </ChatHeader>
+
+        <TabContainer>
+          <Tab
+            isActive={activeTab === "chat"}
+            onClick={() => handleTabClick("chat")}
+          >
+            💬 Chat {unreadChat > 0 && <TabBadge>{unreadChat}</TabBadge>}
+          </Tab>
+          <Tab
+            isActive={activeTab === "commands"}
+            onClick={() => handleTabClick("commands")}
+          >
+            ⌘ Commands{" "}
+            {unreadCommands > 0 && <TabBadge>{unreadCommands}</TabBadge>}
+          </Tab>
+        </TabContainer>
 
         <MessagesContainer>
           {isVoiceEnabled && analyser && (
@@ -393,12 +516,11 @@ export default function Chat({
           )}
 
           <Messages>
-            {messages.map((msg, index) => {
+            {filteredMessages.map((msg, index) => {
               const isCommand = msg.includes(":/cmd/");
               const isSelf = msg.startsWith(playerId);
 
               let displayMessage = msg;
-              // Update the message rendering section to format commands
               if (isCommand) {
                 const [playerId, command] = msg.split(":/cmd/");
                 displayMessage = (
@@ -433,6 +555,7 @@ export default function Chat({
                 </MessageBubble>
               );
             })}
+            <div ref={messagesEndRef} /> {/* Add this div at the end */}
           </Messages>
         </MessagesContainer>
 
@@ -453,7 +576,10 @@ export default function Chat({
       </ChatContainer>
 
       {!isOpen && (
-        <ChatToggleButton onClick={() => setIsOpen(true)}>💬</ChatToggleButton>
+        <ChatToggleButton onClick={handleChatToggle}>
+          💬
+          {globalUnread > 0 && <TabBadge>{globalUnread}</TabBadge>}
+        </ChatToggleButton>
       )}
     </>
   );
