@@ -11,6 +11,7 @@
     "bootstrap-node": "node src/network/bootstrap-node.js"
   },
   "dependencies": {
+    "ygo-player": "file:../",
     "@chainsafe/libp2p-gossipsub": "^14.1.0",
     "@chainsafe/libp2p-noise": "^16.0.1",
     "@chainsafe/libp2p-yamux": "^7.0.1",
