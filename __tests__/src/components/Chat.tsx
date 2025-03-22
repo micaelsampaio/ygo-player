@@ -81,9 +81,11 @@ export default function Chat({
   const [activeTab, setActiveTab] = useState<TabType>("chat");
   const [unreadChat, setUnreadChat] = useState(0);
   const [unreadCommands, setUnreadCommands] = useState(0);
-  const [globalUnread, setGlobalUnread] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const prevMessagesLength = useRef(messages.length);
+
+  // Compute global unread from tab counters
+  const globalUnread = unreadChat + unreadCommands;
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -133,39 +135,58 @@ export default function Chat({
 
   // Single effect to handle new messages
   useEffect(() => {
-    if (messages.length > prevMessagesLength.current) {
-      const lastMessage = messages[messages.length - 1];
-      const isCommand = lastMessage.includes(":/cmd/");
+    const hasNewMessage = messages.length > prevMessagesLength.current;
+    if (!hasNewMessage) return;
 
-      // Update global counter
-      setGlobalUnread((prev) => prev + 1);
+    const lastMessage = messages[messages.length - 1];
+    const isCommand = lastMessage.includes(":/cmd/");
 
-      // Update tab-specific counters only if message belongs to other tab
-      if (isCommand && activeTab === "chat") {
-        setUnreadCommands((prev) => prev + 1);
-      } else if (!isCommand && activeTab === "commands") {
-        setUnreadChat((prev) => prev + 1);
-      }
+    logger.debug("New message received", {
+      isCommand,
+      activeTab,
+      currentCounters: {
+        chat: unreadChat,
+        commands: unreadCommands,
+        global: unreadChat + unreadCommands,
+      },
+    });
 
-      prevMessagesLength.current = messages.length;
+    // Only increment tab counters when message belongs to inactive tab
+    if (isCommand && activeTab === "chat") {
+      setUnreadCommands((prev) => prev + 1);
+    } else if (!isCommand && activeTab === "commands") {
+      setUnreadChat((prev) => prev + 1);
     }
+
+    prevMessagesLength.current = messages.length;
   }, [messages, activeTab]);
 
-  // Reset counters only when switching tabs
   const handleTabClick = (tab: TabType) => {
-    setActiveTab(tab);
+    if (tab === activeTab) return;
+
+    logger.debug("Tab switch", {
+      from: activeTab,
+      to: tab,
+      counters: {
+        chat: unreadChat,
+        commands: unreadCommands,
+        global: unreadChat + unreadCommands,
+      },
+    });
+
+    // Only reset the counter for the tab we're switching to
     if (tab === "chat") {
       setUnreadChat(0);
-      setGlobalUnread((prev) => prev - unreadChat);
     } else {
       setUnreadCommands(0);
-      setGlobalUnread((prev) => prev - unreadCommands);
     }
+
+    setActiveTab(tab);
   };
 
-  // Chat toggle should not affect counters
   const handleChatToggle = () => {
     setIsOpen((prev) => !prev);
+    // No counter resets when toggling chat
   };
 
   // Add scroll effect when messages change or tab changes
