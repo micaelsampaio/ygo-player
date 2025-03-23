@@ -9,3 +9,10 @@
 .ygo-scroll-y {
     overflow-y: auto;
 }
+
+.ygo-player-core {
+
+    .ygo-p-1 {
+        padding: 5px;
+    }
+}

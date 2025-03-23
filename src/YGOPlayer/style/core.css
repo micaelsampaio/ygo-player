@@ -292,33 +292,172 @@
     flex-direction: column;
 }
 
-.ygo-player-core .selected-card-menu .ygo-normal-monster-card-bg {
-    background-color: var(--ygo-card-normal-monster-color);
+.ygo-player-core {
+    & .selected-card-menu {
+
+        & .ygo-selected-card-header-content {
+            position: relative;
+            z-index: 2;
+
+            /* &::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0%;
+                width: 100%;
+                height: 100%;
+                background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.25) 50%, rgba(0, 0, 0, 0) 100%);
+                z-index: -1;
+            } */
+
+            & .ygo-card-name {
+                padding-top: 5px;
+                padding-bottom: 5px;
+                padding-left: 10px;
+                font-size: 18px;
+                white-space: nowrap;
+                text-overflow: ellipsis;
+                overflow: hidden;
+                font-weight: bold;
+            }
+
+            & .ygo-card-id {
+                font-size: 10px;
+            }
+        }
+
+        .ygo-card-data-container {
+            gap: 10px;
+            padding: 10px;
+        }
+
+        .ygo-card-image {
+            width: 250px;
+            aspect-ratio: 5/7;
+            background-position: top center;
+            background-size: contain;
+            background-repeat: no-repeat;
+        }
+
+        .ygo-card-stats-container {
+            margin-top: 10px;
+            min-width: 100px;
+        }
+
+        .ygo-card-stats {
+            display: flex;
+            gap: 5px;
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 5px;
+
+            .ygo-card-stats-icon {
+                width: 24px;
+                height: 24px;
+                min-width: 24px;
+                min-height: 24px;
+                background-image: url("http://localhost:8080/images/ui/card_icons.png");
+                background-size: 800% 800%;
+                background-repeat: no-repeat;
+            }
+
+            .ygo-card-stats-icon-atk {
+                background-position: 0% 0%;
+            }
+
+            .ygo-card-stats-icon-def {
+                background-position: 14% 0%;
+            }
+
+            .ygo-card-stats-icon-level {
+                background-position: 0% 14%;
+            }
+
+            .ygo-card-stats-icon-link-monster {
+                background-position: 14% 14%;
+            }
+
+            .ygo-card-stats-icon-rank {
+                background-position: 28% 14%;
+            }
+
+            .ygo-card-stats-icon-field {
+                background-position: 0% 28%;
+            }
+
+            .ygo-card-stats-icon-counter {
+                background-position: 14% 28%;
+            }
+
+            .ygo-card-stats-icon-continuous {
+                background-position: 28% 28%;
+            }
+
+            .ygo-card-stats-icon-equip {
+                background-position: 42% 28%;
+            }
+
+            .ygo-card-stats-icon-quick {
+                background-position: 56% 28%;
+            }
+
+            .ygo-card-stats-icon-ritual {
+                background-position: 70% 28%;
+            }
+
+
+        }
+
+        .ygo-card-description {
+            padding: 10px;
+
+            &>div {
+                margin-bottom: 10px;
+            }
+        }
+
+    }
 }
 
-.ygo-player-core .selected-card-menu .ygo-effect-monster-card-bg {
-    background-color: var(--ygo-card-effect-monster-color);
+.ygo-player-core {
+    .ygo-normal-monster-card-bg {
+        background-color: var(--ygo-card-normal-monster-color);
+    }
+
+    .ygo-effect-monster-card-bg {
+        background-color: var(--ygo-card-effect-monster-color);
+    }
+
+    .ygo-trap-card-bg {
+        background-color: var(--ygo-card-trap-color);
+    }
+
+    .ygo-spell-card-bg {
+        background-color: var(--ygo-card-spell-color);
+    }
+
+    .ygo-link-card-bg {
+        background-color: var(--ygo-card-link-color);
+    }
+
+    .ygo-synchro-card-bg {
+        background-color: var(--ygo-card-synchron-color);
+    }
+
+    .ygo-xyz-card-bg {
+        background-color: var(--ygo-card-xyz-color);
+    }
+
+    .ygo-xyz-card-bg {
+        background-color: var(--ygo-card-xyz-color);
+    }
+
+    .ygo-fusion-card-bg {
+        background-color: var(--ygo-card-fusion-color);
+    }
+
 }
 
-.ygo-player-core .selected-card-menu .ygo-trap-card-bg {
-    background-color: var(--ygo-card-trap-color);
-}
-
-.ygo-player-core .selected-card-menu .ygo-spell-card-bg {
-    background-color: var(--ygo-card-spell-color);
-}
-
-.ygo-player-core .selected-card-menu .ygo-link-card-bg {
-    background-color: var(--ygo-card-link-color);
-}
-
-.ygo-player-core .selected-card-menu .ygo-xyz-card-bg {
-    background-color: var(--ygo-card-xyz-color);
-}
-
-.ygo-player-core .selected-card-menu .ygo-fusion-card-bg {
-    background-color: var(--ygo-card-fusion-color);
-}
 
 .ygo-player-core .ygo-card {
     width: 200px;
