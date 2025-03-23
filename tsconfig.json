@@ -1,10 +1,7 @@
 {
   "compilerOptions": {
     "moduleResolution": "node",
-    "lib": [
-      "ESNext",
-      "DOM"
-    ],
+    "lib": ["ESNext", "DOM"],
     "outDir": "./dist",
     "noImplicitAny": true,
     "target": "ES2020",
@@ -18,14 +15,8 @@
     "skipLibCheck": true,
     "strict": true,
     "incremental": true,
-    "isolatedModules": true,
+    "isolatedModules": true
   },
-  "include": [
-    "src/**/*"
-  ],
-  "exclude": [
-    "__tests__",
-    "node_modules",
-    "**/*.test.ts"
-  ]
+  "include": ["src/**/*"],
+  "exclude": ["__tests__", "node_modules", "**/*.test.ts"]
 }

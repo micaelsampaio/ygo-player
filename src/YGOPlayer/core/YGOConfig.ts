@@ -1,6 +1,6 @@
-import { YGOProps } from "../../YGOCore/types/types";
+import { YGOProps } from "ygo-core";
 
 export interface YGOConfig extends YGOProps {
-    cdnUrl: string
-    autoChangePlayer?: boolean
+  cdnUrl: string;
+  autoChangePlayer?: boolean;
 }

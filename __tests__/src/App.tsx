@@ -4,7 +4,7 @@ import { useNavigate, Link } from "react-router-dom";
 import RoomLobby from "./components/RoomLobby.js";
 import { useKaibaNet } from "./hooks/useKaibaNet";
 import { memo, useEffect, useState } from "react";
-import { YGOGameUtils } from "../../dist/index.js";
+import { YGOGameUtils } from "ygo-player";
 import styled from "styled-components";
 import { Logger } from "./utils/logger";
 

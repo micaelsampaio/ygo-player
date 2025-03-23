@@ -2,9 +2,13 @@
 import "./YGOPlayer/style/style.css";
 
 /// TS
-export * from './YGOCore';
-export * from './YGOPlayer/web';
-export * from './YGOPlayer/core/YGODuel';
+export * from "ygo-core";
+export * from "./YGOPlayer/web";
+export * from "./YGOPlayer/core/YGODuel";
+
+import { YGOGameUtils } from "ygo-core";
+
+export { YGOGameUtils };
 
 export const sum = (a: number, b: number): number => a + b;
 

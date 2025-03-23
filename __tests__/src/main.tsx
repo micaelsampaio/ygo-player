@@ -2,7 +2,7 @@ import { createRoot } from "react-dom/client";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import debug from "debug";
 import "./index.css";
-import "../../dist";
+import "ygo-player";
 import App from "./App.tsx";
 import Duel from "./Duel.tsx";
 import { DownloadDeck } from "./DownloadDeck.tsx";
