@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
-import { YGOPlayerComponent, YGODuel } from "../../dist";
+import { YGOPlayerComponent } from "../../dist";
 import { useLocation, useParams } from "react-router-dom";
 import { useKaibaNet } from "./hooks/useKaibaNet";
 import Chat from "./components/Chat";
@@ -136,7 +136,7 @@ export default function Duel({
       if (SEND_COMMAND_ALLOWED) {
         kaibaNet.execYGOCommand(roomId, data.command.toCommandData());
         const messageTemplate = formatCommandToCliStyle(data.command.toJSON());
-        const { commandMessage } = commandMessageToCommand(messageTemplate);
+        const { commandMessage } = commandMessageToCommand(messageTemplate) as any;
         // Show command message in chat
         handleChatMessage(commandMessage);
       }
@@ -288,7 +288,7 @@ export default function Duel({
     }
 
     if (message.startsWith("/cmd/")) {
-      const { command, commandMessage } = commandMessageToCommand(message);
+      const { command, commandMessage } = commandMessageToCommand(message) as any;
       // Show command message in chat
       handleChatMessage(commandMessage);
       // Execute the command
@@ -345,7 +345,9 @@ export default function Duel({
         position: "relative",
       }}
     >
+      {/* @ts-ignore */}
       <ygo-player />
+
       {isLoading && !duelData && <LoadingOverlay />}
       <Chat
         roomId={roomId}
