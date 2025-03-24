@@ -1,7 +1,12 @@
 import { memo } from "react"
+import { DuelLogContainer, DuelLogRow } from "./duel-log-components"
 
 export const SimpleLogRow = memo(function SimpleLogRowComponent({ log }: { log: any }) {
-    return <div className="ygo-duel-log-default-row">
-        {log.type}
-    </div>
+    return <DuelLogRow log={log}>
+        <DuelLogContainer>
+            <div className="ygo-text-4 ygo-text-bold">
+                {log.type}
+            </div>
+        </DuelLogContainer>
+    </DuelLogRow>
 })

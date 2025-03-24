@@ -15,4 +15,12 @@
     .ygo-p-1 {
         padding: 5px;
     }
+
+    .ygo-m-1 {
+        margin: 5px;
+    }
+
+    .ygo-mb-1 {
+        margin-bottom: 5px;
+    }
 }

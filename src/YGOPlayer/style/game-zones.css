@@ -1,0 +1,85 @@
+.ygo-player-core {
+    .ygo-icon-game-zone {
+        width: 24px;
+        height: 24px;
+        min-width: 24px;
+        min-height: 24px;
+        background-image: url("http://localhost:8080/images/ui/ic_game_zones.png");
+        background-size: 500% 500%;
+        background-repeat: no-repeat;
+    }
+
+    .ygo-icon-game-zone-d {
+        background-position: 25% 0%;
+    }
+
+    .ygo-icon-game-zone-h {
+        background-position: 50% 0%;
+    }
+
+    .ygo-icon-game-zone-gy {
+        background-position: 75% 0%;
+    }
+
+    .ygo-icon-game-zone-b {
+        background-position: 100% 0%;
+    }
+
+    .ygo-icon-game-zone-ed {
+        background-position: 0% 25%;
+    }
+
+    .ygo-icon-game-zone-m-1 {
+        background-position: 0% 50%;
+    }
+
+    .ygo-icon-game-zone-m-2 {
+        background-position: 25% 50%;
+    }
+
+    .ygo-icon-game-zone-m-3 {
+        background-position: 50% 50%;
+    }
+
+    .ygo-icon-game-zone-m-4 {
+        background-position: 75% 50%;
+    }
+
+    .ygo-icon-game-zone-m-5 {
+        background-position: 100% 50%;
+    }
+
+    .ygo-icon-game-zone-s-1 {
+        background-position: 0% 75%;
+    }
+
+    .ygo-icon-game-zone-s-2 {
+        background-position: 25% 75%;
+    }
+
+    .ygo-icon-game-zone-s-3 {
+        background-position: 50% 75%;
+    }
+
+    .ygo-icon-game-zone-s-4 {
+        background-position: 75% 75%;
+    }
+
+    .ygo-icon-game-zone-s-5 {
+        background-position: 100% 75%;
+    }
+
+    .ygo-icon-game-zone-emz-1 {
+        background-position: 0% 100%;
+    }
+
+    .ygo-icon-game-zone-emz-2 {
+        background-position: 25% 100%;
+    }
+
+    .ygo-icon-game-zone-arrow {
+        background-position: 100% 100%;
+        width: 40px;
+        height: 40px;
+    }
+}

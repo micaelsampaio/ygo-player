@@ -49,24 +49,14 @@ export function DuelLogMenu({ duel, menus }: { duel: YGODuel; menus: any[] }) {
           const Component = (COMPONENTS as any)[log.type] || COMPONENTS.default;
 
           return (
-            <div className="ygo-flex">
-              <div
-                style={{
-                  width: "5px",
-                  background: log.player === 0 ? "red" : "blue",
-                }}
-              ></div>
-              <div className="ygo-flex-grow-1">
-                <Component
-                  key={index + log.type}
-                  duel={duel}
-                  ygo={duel.ygo}
-                  index={index}
-                  undoByCommandIndex={undoByCommand}
-                  log={log}
-                />
-              </div>
-            </div>
+            <Component
+              key={index + log.type}
+              duel={duel}
+              ygo={duel.ygo}
+              index={index}
+              undoByCommandIndex={undoByCommand}
+              log={log}
+            />
           );
         })}
 

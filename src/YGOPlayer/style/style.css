@@ -4,6 +4,9 @@
 @import "./cursor.css";
 @import "./core.css";
 
+/* GAME */
+@import "./game-zones.css";
+
 /* components */
 @import "./buttons.css";
 @import "./floating-buttons/floating-buttons.css";

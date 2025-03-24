@@ -3,7 +3,7 @@
     right: 0px;
     top: 20px;
     height: 100%;
-    width: 150px;
+    width: 250px;
     color: #FFF;
     background-color: var(--ygo-overlay-background-color);
     border: 1px solid var(--ygo-border-color);
@@ -11,6 +11,43 @@
     overflow-y: auto;
     border-radius: 10px;
     max-height: calc(100% - var(--ygo-footer-margin) - 20px);
+}
+
+.ygo-player-core {
+    .ygo-duel-log-row {
+
+        &.ygo-player-0 {
+            background: linear-gradient(90deg, hsla(240, 100%, 50%, 0.5) 0%, hsla(240, 100%, 22%, 0.5) 10%, hsla(0, 0%, 0%, 0.5) 40%, hsla(0, 0%, 0%, 0.5) 100%);
+        }
+
+        &.ygo-player-1 {
+            background: linear-gradient(90deg, rgba(255, 0, 0, 0.5) 0%, rgba(112, 0, 0, 0.5) 10%, hsla(0, 0%, 0%, 0.5) 40%, hsla(0, 0%, 0%, 0.5) 100%);
+        }
+    }
+
+    .ygo-duel-log-content {
+        display: flex;
+        padding: 10px;
+    }
+
+    .ygo-icon-game-zone-container {
+        border: 2px solid #FFF;
+        padding: 5px;
+        border-radius: 5px;
+
+        &.ygo-icon-game-zone-container-rounded {
+            border-radius: 100%;
+        }
+
+        &.ygo-player-0 {
+            background-color: blue;
+        }
+
+        &.ygo-player-1 {
+            background-color: red;
+        }
+    }
+
 }
 
 .ygo-player-core .ygo-duel-log-container .ygo-logs>* {

@@ -580,3 +580,19 @@
 .ygo-player-core .ygo-player-1-bg-bottom {
     background: linear-gradient(0deg, hsla(0, 100%, 50%, 0.5) 0%, hsla(0, 0%, 0%, 0.5) 50%, hsla(0, 0%, 0%, 0.5) 100%);
 }
+
+.ygo-text-3 {
+    font-size: 14px;
+}
+
+.ygo-text-4 {
+    font-size: 16px;
+}
+
+.ygo-text-bold {
+    font-weight: bold;
+}
+
+.ygo-text-center {
+    text-align: center;
+}

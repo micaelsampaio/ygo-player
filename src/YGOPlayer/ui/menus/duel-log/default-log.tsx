@@ -1,5 +1,6 @@
-import { YGOCore } from "ygo-core";
+import { YGOCore, YGOGameUtils } from "ygo-core";
 import { YGODuel } from "../../../core/YGODuel";
+import { DuelLogContainer, DuelLogRow } from "./duel-log-components";
 
 export function DefaultLogRow({
   log,
@@ -16,29 +17,60 @@ export function DefaultLogRow({
     return <div className="ygo-duel-log-default-row">{log.type}</div>;
   }
 
+  const orginZone = log.originZone || log.zone;
+  const zone = log.originZone && log.zone ? log.zone : undefined;
+  const originZoneClassName = getZoneData(orginZone)!;
+  const zoneClassName = getZoneData(zone)!;
+
   return (
-    <div className="ygo-duel-log-default-row">
-      <div className="ygo-text-4">{card.name}</div>
-      <div className="ygo-flex ygo-gap-2">
-        <div>
-          <img
-            src={`${duel.config.cdnUrl}/images/cards_small/${card.id}.jpg`}
-            style={{ width: "40px" }}
-          />
-        </div>
-        <div className="ygo-flex-grow-1">
-          <div>{log.type}</div>
+    <DuelLogRow log={log}>
+      <DuelLogContainer>
+        <div className="ygo-duel-log-default-row">
+          <div className="ygo-text-4 ygo-mb-1 ygo-text-bold">{card.name}</div>
           <div className="ygo-flex ygo-gap-2">
-            <div>{log.originZone || log.zone}</div>
-            {log.originZone && log.zone && (
-              <>
-                <div className="flex-grow-1">{"->"}</div>
-                <div>{log.zone}</div>
-              </>
-            )}
+            <div>
+              <img
+                src={`${duel.config.cdnUrl}/images/cards_small/${card.id}.jpg`}
+                style={{ width: "45px" }}
+              />
+            </div>
+            <div className="ygo-flex-grow-1">
+              <div className="ygo-text-4 ygo-mb-1 ygo-text-bold ygo-text-center">
+                {log.type}
+              </div>
+              <div className="ygo-flex ygo-gap-2">
+                <div>
+                  <div className={originZoneClassName}></div>
+                </div>
+                {log.originZone && log.zone && <>
+                  <div>
+                    <div className="ygo-icon-game-zone ygo-icon-game-zone-arrow"></div>
+                  </div>
+                  <div>
+                    <div className={zoneClassName}></div>
+                  </div>
+                </>}
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
+      </DuelLogContainer>
+    </DuelLogRow>
   );
+}
+
+function getZoneData(zone: string | undefined) {
+  if (!zone) return null;
+
+  const zoneData = YGOGameUtils.getZoneData(zone as any);
+  const zoneId = YGOGameUtils.createZone(zoneData.zone, 0, zoneData.zoneIndex).toLowerCase();
+  let zoneStr = `ygo-icon-game-zone ygo-player-${zoneData.player} ygo-icon-game-zone-container`;
+
+  if (zoneData.zone === "M" || zoneData.zone === "S" || zoneData.zone === "EMZ") {
+    zoneStr += ` ygo-icon-game-zone-${zoneId}`;
+  } else {
+    zoneStr += ` ygo-icon-game-zone-${zoneData.zone.toLowerCase()} ygo-icon-game-zone-container-rounded`;
+  }
+
+  return zoneStr
 }
