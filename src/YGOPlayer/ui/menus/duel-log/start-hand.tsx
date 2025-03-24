@@ -19,7 +19,7 @@ export const StartHandLogRow = memo(function ({
           <div className="ygo-text-4 ygo-text-bold">
             {log.type}
           </div>
-          <div>
+          <div className="ygo-flex ygo-gap-1" style={{ flexWrap: "wrap" }}>
             {log.cards.map((cardData: any) => {
               const card = ygo.state.getCardData(cardData.id)!;
               if (!card) return null;
