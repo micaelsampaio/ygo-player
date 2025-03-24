@@ -8,6 +8,7 @@ import { YGOTask } from "./YGOTask";
 export enum YGOCommandsControllerState {
   IDLE,
   PLAYING,
+  PLAYING_COMMAND,
   RECOVER,
 }
 
@@ -27,7 +28,7 @@ export class YGOCommandsController extends YGOComponent {
     this.currentCommand = undefined;
   }
 
-  start(): void {}
+  start(): void { }
 
   getState() {
     return this.state;
@@ -41,6 +42,10 @@ export class YGOCommandsController extends YGOComponent {
     this.setState(YGOCommandsControllerState.PLAYING);
   }
 
+  playNextCommand() {
+    this.setState(YGOCommandsControllerState.PLAYING_COMMAND);
+  }
+
   pause() {
     this.setState(YGOCommandsControllerState.IDLE);
   }
@@ -50,12 +55,14 @@ export class YGOCommandsController extends YGOComponent {
   }
 
   isPlaying() {
-    return this.state === YGOCommandsControllerState.PLAYING;
+    return this.state === YGOCommandsControllerState.PLAYING
+      || this.state === YGOCommandsControllerState.PLAYING_COMMAND;
   }
 
   isLocked() {
     return (
       this.state === YGOCommandsControllerState.PLAYING ||
+      this.state === YGOCommandsControllerState.PLAYING_COMMAND ||
       this.state === YGOCommandsControllerState.RECOVER
     );
   }
@@ -88,10 +95,15 @@ export class YGOCommandsController extends YGOComponent {
   }
 
   private processNextCommand() {
-    if (this.currentCommand) return;
+    if (this.currentCommand) {
+      this.setState(YGOCommandsControllerState.IDLE);
+      return;
+    };
 
     if (this.commands.length === 0) {
       if (!this.isPlaying()) this.setState(YGOCommandsControllerState.IDLE);
+      if (this.state === YGOCommandsControllerState.PLAYING_COMMAND) this.setState(YGOCommandsControllerState.IDLE);
+
       this.duel.updateField();
       this.duel.events.dispatch("enable-game-actions");
       this.duel.events.dispatch("commands-process-completed");

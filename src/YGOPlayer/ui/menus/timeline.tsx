@@ -34,7 +34,7 @@ export function TimeLine({ duel }: { duel: YGODuel }) {
     if (duel.commands.isLocked()) return;
 
     if (duel.ygo.hasNextCommand()) {
-      duel.commands.play();
+      duel.commands.playNextCommand();
       duel.ygo.redo();
     }
   };
