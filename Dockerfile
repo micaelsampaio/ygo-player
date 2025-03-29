@@ -1,40 +1,21 @@
-# --- Stage 1: Build player component ---
-    FROM node:22-alpine AS player
+# --- Stage 1: Use ygo-core image to get the dist folder ---
+    FROM ygo-core AS core
+
+    # --- Stage 2: Build ygo-player ---
+    FROM node:18-alpine AS player
     WORKDIR /app
     
-    COPY package.json .
-    RUN npm install --frozen-lockfile
+    # Copy package.json and package-lock.json
+    COPY package.json package-lock.json ./
     
-    # Copy the rest of the project
-    COPY  . .
-
+    # Install dependencies
+    RUN npm install
+    
+    # Copy the ygo-core dist folder from the ygo-core image
+    COPY --from=core /app/dist ./node_modules/ygo-core
+    
+    # Copy the rest of the player project
+    COPY . .
+    
+    # Build the player application
     RUN npm run build
-
-# --- Stage 2: Build __tests__ ---
-    FROM node:22-alpine AS builder
-
-    WORKDIR /app
-
-    COPY --from=player /app/dist ./dist
-
-    RUN mkdir __tests__
-
-    COPY __tests__/package.json ./__tests__/
-
-    RUN cd __tests__ && npm install --frozen-lockfile
-
-    COPY __tests__ __tests__/
-
-    RUN cd __tests__ && npm run build
-
-# --- Stage 3: Serve with Nginx ---
-    FROM nginx:alpine AS server
-
-    # Copy the custom Nginx config
-    COPY nginx.conf /etc/nginx/conf.d/default.conf
-    
-    # Copy built files
-    COPY --from=builder /app/__tests__/dist/ /usr/share/nginx/html/
-    
-    EXPOSE 80
-    CMD ["nginx", "-g", "daemon off;"]
