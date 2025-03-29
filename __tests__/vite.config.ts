@@ -13,7 +13,7 @@ export default defineConfig({
       path: "path-browserify",
       // Use different paths for local and Docker builds
       "ygo-player": isDocker
-        ? resolve(__dirname, "./node_modules/ygo-player")
+        ? resolve(__dirname, "./node_modules/ygo-player/index.js") // Explicitly point to index.js
         : resolve(__dirname, "../src"),
     },
   },
