@@ -2,7 +2,7 @@
     FROM ygo-core AS core
 
     # --- Stage 2: Build ygo-player ---
-    FROM node:18-alpine AS player
+    FROM node:22-alpine AS player
     WORKDIR /app
     
     # Copy package.json and package-lock.json

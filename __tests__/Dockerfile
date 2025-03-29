@@ -2,7 +2,7 @@
 FROM ygo-player AS player
 
 # --- Stage 2: Build the tests project ---
-FROM node:18-alpine AS tests
+FROM node:22-alpine AS tests
 WORKDIR /app
 
 # Copy package.json and package-lock.json for the tests project
