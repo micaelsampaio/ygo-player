@@ -5,6 +5,9 @@ FROM ygo-player AS player
 FROM node:22-alpine AS tests
 WORKDIR /app
 
+# Set the DOCKER environment variable
+ENV DOCKER=true
+
 # Copy package.json and package-lock.json for the tests project
 COPY package.json package-lock.json ./
 
