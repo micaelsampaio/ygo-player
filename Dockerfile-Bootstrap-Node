@@ -1,45 +1,12 @@
 # Stage 1: Generate SSL certificates
-FROM alpine:latest as certs
-
-# Install OpenSSL
-RUN apk add --no-cache openssl
-
-# Create directory for certificates
-WORKDIR /certs
-
-# Generate self-signed certificate
-RUN openssl req -x509 \
-    -newkey rsa:4096 \
-    -keyout private.key \
-    -out certificate.crt \
-    -days 365 \
-    -nodes \
-    -subj "/C=US/ST=State/L=City/O=Organization/CN=localhost"
-
-# Stage 2: Node application
 FROM node:22-alpine
-
-# Install required system dependencies
-RUN apk add --no-cache openssl
 
 WORKDIR /app
 
-# Copy certificates from the first stage
-COPY --from=certs /certs/private.key /app/certs/private.key
-COPY --from=certs /certs/certificate.crt /app/certs/certificate.crt
-
-# Set appropriate permissions for the certificate files
-RUN chmod 600 /app/certs/private.key
-
-# Copy application files
 COPY __tests__/package.json ./
-COPY __tests__/src/bootstrap-node.js ./src/bootstrap-node.js
+COPY __tests__/src/network/bootstrap-node.js ./src/bootstrap-node.js
 
 # Install dependencies
 RUN npm install --frozen-lockfile
-
-# Set environment variables
-ENV SSL_KEY_PATH=/app/certs/private.key
-ENV SSL_CERT_PATH=/app/certs/certificate.crt
 
 CMD ["npm", "run", "bootstrap-node"]
