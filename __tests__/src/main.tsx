@@ -6,6 +6,7 @@ import "ygo-player";
 import App from "./App.tsx";
 import Duel from "./Duel.tsx";
 import { DownloadDeck } from "./DownloadDeck.tsx";
+import { DeckBuilder } from "./DeckBuilder.tsx"; // Add this import
 import { KaibaNetProvider } from "./hooks/useKaibaNet";
 import { Logger } from "./utils/logger";
 
@@ -23,6 +24,8 @@ createRoot(document.getElementById("root")!).render(
         <Route path="/duel" element={<Duel />} />
         <Route path="/duel/:roomId" element={<Duel />} />
         <Route path="/deck" element={<DownloadDeck />} />
+        <Route path="/deckbuilder" element={<DeckBuilder />} />{" "}
+        {/* Add this route */}
       </Routes>
     </BrowserRouter>
   </KaibaNetProvider>
