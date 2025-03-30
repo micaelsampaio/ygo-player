@@ -6,6 +6,7 @@
 
 /* GAME */
 @import "./game-zones.css";
+@import "./timeline.css";
 
 /* components */
 @import "./buttons.css";

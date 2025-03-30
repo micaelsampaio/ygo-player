@@ -1,0 +1,116 @@
+.ygo-player-core .timeline {
+    position: fixed;
+    width: 100%;
+    height: 10px;
+    left: 0px;
+    bottom: 0px;
+    background-color: white;
+    display: flex;
+    background: gray;
+
+    &>* {
+        flex-grow: 1;
+    }
+
+    .command {
+        position: relative;
+        border: none;
+        font-size: 16px;
+    }
+
+    .command-tooltip {
+        position: absolute;
+        padding: 5px 10px;
+        bottom: 40px;
+        color: white;
+        border-radius: 5px;
+        background: rgba(0, 0, 0, 0.7);
+        display: none;
+        left: 50%;
+        transform: translateX(-50%);
+        white-space: nowrap;
+        z-index: 10;
+    }
+
+    .command-tooltip::after {
+        content: '';
+        position: absolute;
+        bottom: -6px;
+        left: 50%;
+        transform: translateX(-50%);
+        border-left: 10px solid transparent;
+        border-right: 10px solid transparent;
+        border-top: 6px solid rgba(0, 0, 0, 0.7);
+    }
+
+    .command:hover>.command-tooltip {
+        display: flex;
+    }
+
+    .command.current {
+        background: red;
+        border-top-right-radius: 20px;
+        border-bottom-right-radius: 20px;
+    }
+
+    .command.prev {
+        background: red;
+    }
+
+    .command.next {
+        background: gray;
+    }
+
+    .command:hover {
+        background-color: rgb(122, 1, 1);
+    }
+
+    .command.next:hover {
+        background: rgb(82, 82, 82);
+        border-radius: 20px;
+    }
+
+    .command.current~.command:has(:hover) {
+        background: pink;
+    }
+
+    .command-timeline-icon {
+        width: 12px;
+        height: 12px;
+        min-width: 12px;
+        min-height: 12px;
+        background-image: url("http://localhost:8080/images/ui/card_icons.png");
+        background-size: 800% 800%;
+        background-repeat: no-repeat;
+        margin: auto;
+    }
+
+    .command-timeline-icon-link-summon {
+        background-position: 0% 43%;
+    }
+
+    .command-timeline-icon-fusion-summon {
+        background-position: 14% 43%;
+    }
+
+    .command-timeline-icon-xyz-summon {
+        background-position: 28% 43%;
+    }
+
+    .command-timeline-icon-synchro-summon {
+        background-position: 43% 43%;
+    }
+
+    &:hover {
+        .command-timeline-icon {
+            width: 24px;
+            height: 24px;
+            min-width: 24px;
+            min-height: 24px;
+        }
+    }
+}
+
+.ygo-player-core .timeline:hover {
+    height: 30px;
+}
