@@ -11,10 +11,14 @@ export default defineConfig({
   resolve: {
     alias: {
       path: "path-browserify",
-      // Use different paths for local and Docker builds
+      // Resolve JavaScript (bundle.js) for ygo-player
       "ygo-player": isDocker
-        ? resolve(__dirname, "./node_modules/ygo-player/bundle.js") // Explicitly point to index.js
-        : resolve(__dirname, "../src"),
+        ? resolve(__dirname, "./node_modules/ygo-player/bundle.js") // Point to bundle.js in Docker
+        : resolve(__dirname, "../src"), // Point to src for local development
+      // Resolve CSS for ygo-player
+      "ygo-player/style.css": isDocker
+        ? resolve(__dirname, "./node_modules/ygo-player/style.css") // Point to style.css in Docker
+        : resolve(__dirname, "../src/style.css"), // Point to style.css for local development
     },
   },
   build: {
