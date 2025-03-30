@@ -233,8 +233,8 @@ export default function App() {
                     Duel as {deckId}
                   </Link>{" "}
                   <button onClick={() => deleteDeck(deckId)}>delete</button>
-                  <button onClick={() => printDeck(deckId)}>download as image</button>
-                  <button onClick={() => printDeck(deckId)}>download YDK</button>
+                  <button onClick={() => downloadDeckAsPng(deckId)}>download as image</button>
+                  <button onClick={() => downloadDeckAsYdk(deckId)}>download YDK</button>
                 </li>
               );
             })}
@@ -499,7 +499,7 @@ const EndGameBoard = memo(function EndGameBoard({ data, play }: any) {
   );
 });
 
-async function printDeck(deckId: string) {
+async function downloadDeckAsPng(deckId: string) {
   const fileName = deckId + ".png";
   const deck = JSON.parse(window.localStorage.getItem(deckId)!);
 
@@ -510,3 +510,16 @@ async function printDeck(deckId: string) {
 
   await deckBuilder.toImage({ fileName, download: true });
 }
+
+async function downloadDeckAsYdk(deckId: string) {
+  const fileName = deckId + ".png";
+  const deck = JSON.parse(window.localStorage.getItem(deckId)!);
+
+  const deckBuilder = new YGODeckToImage({
+    mainDeck: deck.mainDeck as any,
+    extraDeck: deck.extraDeck as any,
+  });
+  deckBuilder.downloadYdk();
+}
+
+
