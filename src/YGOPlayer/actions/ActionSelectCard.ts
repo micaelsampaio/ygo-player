@@ -5,11 +5,13 @@ import { YGODuel } from "../core/YGODuel";
 import { YGOAction } from '../core/components/YGOAction';
 import { CardZone } from '../game/CardZone';
 import { createCardSelectionGeometry } from '../game/meshes/CardSelectionMesh';
-import { YGOTaskSequence } from '../core/components/tasks/YGOTaskSequence';
 import { MultipleTasks } from '../duel-events/utils/multiple-tasks';
 import { PositionTransition } from '../duel-events/utils/position-transition';
 import { ScaleTransition } from '../duel-events/utils/scale-transition';
 import { MaterialOpacityTransition } from '../duel-events/utils/material-opacity';
+import { clamp, lerp } from 'three/src/math/MathUtils';
+import { Easing } from '../scripts/easing';
+import { YGOGameUtils } from 'ygo-core';
 
 type CardSelectionType = "card" | "zone";
 
@@ -21,6 +23,8 @@ export class ActionCardSelection extends YGOComponent implements YGOAction {
     private isMultipleSelection: boolean;
     private selectionType: CardSelectionType;
     private selectedZones: CardZone[];
+    private opacityValue: number;
+    private time: number;
     private onSelectionCompleted!: ((cardZone: CardZone) => void);
     private onMultipleSelectionCompleted!: ((cardZone: CardZone[]) => void);
     private onCancelled: (() => void) | null;
@@ -32,6 +36,8 @@ export class ActionCardSelection extends YGOComponent implements YGOAction {
         this.selectedZones = [];
         this.selectionType = "zone";
         this.isMultipleSelection = false;
+        this.opacityValue = 1;
+        this.time = 0;
         this.onCancelled = null;
         this.mouseEvents = duel.gameController.getComponent<YGOMouseEvents>("mouse_events")!;
     }
@@ -46,6 +52,16 @@ export class ActionCardSelection extends YGOComponent implements YGOAction {
             if (this.selectionType === "zone") {
                 cardZoneData.zone.visible = true;
             } else {
+                const card = cardzone.getCardReference();
+                if (card) {
+                    if (YGOGameUtils.isAttack(card)) {
+                        cardZoneData.card.rotation.z = 0;
+                    } else {
+                        cardZoneData.card.rotation.z = THREE.MathUtils.degToRad(90);
+                    }
+                } else {
+                    cardZoneData.card.rotation.z = 0;
+                }
                 cardZoneData.card.visible = true;
             }
             cardzone.onClickCb = () => this.onCardZoneClick(cardzone);
@@ -94,6 +110,7 @@ export class ActionCardSelection extends YGOComponent implements YGOAction {
     }
 
     public startSelection({ zones, selectionType, onSelectionCompleted }: { zones: CardZone[], selectionType: CardSelectionType, onSelectionCompleted: (cardZone: CardZone) => void }): void {
+        this.time = 0;
         this.selectionType = selectionType;
         this.isMultipleSelection = false;
         this.zones = zones;
@@ -103,6 +120,7 @@ export class ActionCardSelection extends YGOComponent implements YGOAction {
     }
 
     public startMultipleSelection({ zones, selectionType, onSelectionCompleted, onCancelled = null }: { zones: CardZone[], selectionType: CardSelectionType, onSelectionCompleted: (cardZones: CardZone[]) => void, onCancelled?: (() => void) | null }): void {
+        this.time = 0;
         this.selectionType = selectionType;
         this.isMultipleSelection = true;
         this.zones = zones;
@@ -158,8 +176,8 @@ export class ActionCardSelection extends YGOComponent implements YGOAction {
     //////////
 
     private createCardSelection(position: THREE.Vector3, rotation: THREE.Euler) {
-        const cardSelection = createCardSelectionGeometry(2.65, 3.7, 0.1);
-        const material = new THREE.MeshBasicMaterial({ color: 0xff0000, opacity: 1, transparent: true });
+        const cardSelection = createCardSelectionGeometry(2.65, 3.7, 0.12);
+        const material = new THREE.MeshBasicMaterial({ color: 0xffff00, opacity: 1, transparent: true });
         const cardSelectionMesh = new THREE.Mesh(cardSelection, material);
 
         cardSelectionMesh.position.copy(position);
@@ -173,8 +191,8 @@ export class ActionCardSelection extends YGOComponent implements YGOAction {
 
     private createCardZoneSelection(position: THREE.Vector3, rotation: THREE.Euler) {
 
-        const cardSelection = createCardSelectionGeometry(3.9, 3.9, 0.08);
-        const material = new THREE.MeshBasicMaterial({ color: 0xff0000, opacity: 1, transparent: true });
+        const cardSelection = createCardSelectionGeometry(3.9, 3.9, 0.125);
+        const material = new THREE.MeshBasicMaterial({ color: 0xffff00, opacity: 1, transparent: true });
         const cardSelectionMesh = new THREE.Mesh(cardSelection, material);
 
         cardSelectionMesh.position.copy(position);
@@ -192,11 +210,12 @@ export class ActionCardSelection extends YGOComponent implements YGOAction {
                 const card = this.createCardSelection(cardZone.position, cardZone.rotation);
                 const zone = this.createCardZoneSelection(cardZone.position, cardZone.rotation);
                 this.cardSelectionZones.set(cardZone.zone, { card, zone });
-
             }
+
             for (const cardZone of field.spellTrapZone) {
                 const card = this.createCardSelection(cardZone.position, cardZone.rotation);
                 const zone = this.createCardZoneSelection(cardZone.position, cardZone.rotation);
+                zone.scale.y = 0.9;
                 this.cardSelectionZones.set(cardZone.zone, { card, zone });
             }
         }
@@ -248,4 +267,18 @@ export class ActionCardSelection extends YGOComponent implements YGOAction {
         });
     }
 
+    public updateAction(dt: number): void {
+
+        this.time += dt * 10;
+        const oscillator = (Math.sin(this.time) + 1) / 2;
+        const easedValue = Easing.linear(oscillator);
+        this.opacityValue = lerp(0.3, 1, easedValue);
+
+        for (const [, zoneData] of this.cardSelectionZones) {
+            const cardMaterial = zoneData.card.material as THREE.Material;
+            const zoneMaterial = zoneData.zone.material as THREE.Material;
+            cardMaterial.opacity = this.opacityValue;
+            zoneMaterial.opacity = this.opacityValue;
+        }
+    }
 }

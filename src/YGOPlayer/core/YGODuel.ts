@@ -81,19 +81,11 @@ export class YGODuel {
     this.gameController.addComponent("mouse_events", this.mouseEvents);
     this.gameController.addComponent("tasks", this.tasks);
     this.gameController.addComponent("commands", this.commands);
-    this.gameController.addComponent(
-      "action_card_selection",
-      new ActionCardSelection({ duel: this })
-    );
+    this.gameController.addComponent("actions_manager", this.actionManager);
+    this.gameController.addComponent("action_card_selection", new ActionCardSelection({ duel: this }));
     this.gameController.addComponent("map-click-zone", new YGOMapClick(this));
-    this.actionManager.actions.set(
-      "card-hand-menu",
-      new ActionCardHandMenu(this)
-    );
-    this.actionManager.actions.set(
-      "card-zone-menu",
-      new ActionCardZoneMenu(this)
-    );
+    this.actionManager.actions.set("card-hand-menu", new ActionCardHandMenu(this));
+    this.actionManager.actions.set("card-zone-menu", new ActionCardZoneMenu(this));
 
     this.gameActions = new YGOGameActions(this);
 
@@ -178,12 +170,12 @@ export class YGODuel {
     });
 
     this.events.on("enable-game-actions", () => {
-      this.actionManager.enabled = true;
+      this.actionManager.actionsEnabled = true;
     });
 
     this.events.on("disable-game-actions", () => {
       this.actionManager.clearAction();
-      this.actionManager.enabled = false;
+      this.actionManager.actionsEnabled = false;
     });
   }
 
@@ -216,8 +208,8 @@ export class YGODuel {
       const player = this.ygo.state.fields[0].extraMonsterZone[i]
         ? 0
         : this.ygo.state.fields[1].extraMonsterZone[i]
-        ? 1
-        : 0;
+          ? 1
+          : 0;
       const cardFromPlayer =
         this.ygo.state.fields[0].extraMonsterZone[i] ??
         this.ygo.state.fields[1].extraMonsterZone[i];

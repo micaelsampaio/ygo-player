@@ -1,6 +1,7 @@
+import { YGOComponent } from "../YGOComponent";
 
-export class YGOActionManager {
-    public enabled: boolean;
+export class YGOActionManager extends YGOComponent {
+    public actionsEnabled: boolean;
     public action: YGOAction;
     public actions: Map<string, YGOAction>;
     private defaultAction = new IdleAction();
@@ -8,7 +9,9 @@ export class YGOActionManager {
     public onChangeAction: ((action: YGOAction) => void) | null;
 
     constructor() {
-        this.enabled = true;
+        super("actions_manager");
+        
+        this.actionsEnabled = true;
         this.action = this.defaultAction;
         this.actions = new Map();
         this.onChangeAction = null;
@@ -16,7 +19,7 @@ export class YGOActionManager {
     }
 
     setAction(action: YGOAction = this.defaultAction) {
-        if (!this.enabled) return;
+        if (!this.actionsEnabled) return;
 
         const prevAction = this.action;
         this.action = action;
@@ -39,6 +42,10 @@ export class YGOActionManager {
     getAction<T = YGOAction>(name: string) {
         return this.actions.get(name) as T;
     }
+
+    update(dt: number) {
+        if (this.action?.updateAction) this.action.updateAction(dt);
+    }
 }
 
 export interface YGOAction {
@@ -47,6 +54,7 @@ export interface YGOAction {
     onActionStart?: () => void
     onActionEnd?: () => void
     onActionResume?: () => void
+    updateAction?: (dt: number) => void
 }
 
 class IdleAction implements YGOAction {
