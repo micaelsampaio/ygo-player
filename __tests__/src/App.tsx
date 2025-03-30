@@ -503,6 +503,7 @@ async function downloadDeckAsPng(deckId: string) {
   const deck = JSON.parse(window.localStorage.getItem(deckId)!);
 
   const deckBuilder = new YGODeckToImage({
+    name: deckId,
     mainDeck: deck.mainDeck as any,
     extraDeck: deck.extraDeck as any,
   });
