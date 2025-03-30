@@ -95,12 +95,21 @@ export function SelectedCardMenu({
     } else {
       colorClassName = "ygo-effect-monster-card";
     }
+
+    let typeLine = "";
+
+    if (isSpell || isTrap) {
+      typeLine = `[${cardTypeName}]`;
+    } else {
+      typeLine = `[${card.typeline && card.typeline.join("/")}]`;
+    }
+
     const cardDescription = String(card.desc || "").split('\n').map((line, index) => (
       <div key={index}>{line}</div>
     ));
 
     return {
-      type: `[${card.typeline && card.typeline.join("/")}]`,
+      type: typeLine,
       cardDescription,
       colorClassName,
       isMonster,
