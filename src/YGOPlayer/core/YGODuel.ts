@@ -89,6 +89,8 @@ export class YGODuel {
 
     this.gameActions = new YGOGameActions(this);
 
+    this.setupVars();
+
     // this.config.options = {
     //     ...this.config.options || {},
     //     fieldState: [
@@ -589,13 +591,15 @@ export class YGODuel {
   }
 
   execCommand(command: Command | string) {
-    console.log("TCL: YGO DUEL WILL EXEC ", command);
     if (typeof command === "string") {
-      console.log("TCL: EXEC STRING");
       this.ygo.exec(new JSONCommand(JSON.parse(command)));
     } else {
-      console.log("TCL: EXEC DATA");
       this.ygo.exec(command);
     }
+  }
+
+  private setupVars() {
+    document.documentElement.style.setProperty('--ygo-player-asset-ui-card-icons', `url('${this.config.cdnUrl}/images/ui/card_icons.png')`);
+    document.documentElement.style.setProperty('--ygo-player-asset-ui-game-zones', `url('${this.config.cdnUrl}/images/ui/ic_game_zones.png')`);
   }
 }

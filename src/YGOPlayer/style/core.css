@@ -287,7 +287,7 @@
                 height: 24px;
                 min-width: 24px;
                 min-height: 24px;
-                background-image: url("http://localhost:8080/images/ui/card_icons.png");
+                background-image: var(--ygo-player-asset-ui-card-icons);
                 background-size: 800% 800%;
                 background-repeat: no-repeat;
             }

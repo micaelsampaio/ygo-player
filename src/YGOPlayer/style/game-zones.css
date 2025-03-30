@@ -4,7 +4,7 @@
         height: 24px;
         min-width: 24px;
         min-height: 24px;
-        background-image: url("http://localhost:8080/images/ui/ic_game_zones.png");
+        background-image: var(--ygo-player-asset-ui-game-zones);
         background-size: 500% 500%;
         background-repeat: no-repeat;
     }
