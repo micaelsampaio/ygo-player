@@ -5,8 +5,10 @@ import RoomLobby from "./components/RoomLobby.js";
 import { useKaibaNet } from "./hooks/useKaibaNet";
 import { memo, useEffect, useState } from "react";
 import { YGOGameUtils } from "ygo-player";
+import { YGODeckToImage } from "ygo-core-images-utils";
 import styled from "styled-components";
 import { Logger } from "./utils/logger";
+// import "ygo-core-images-utils/style.css";
 
 const cdnUrl = String(import.meta.env.VITE_YGO_CDN_URL);
 
@@ -231,6 +233,8 @@ export default function App() {
                     Duel as {deckId}
                   </Link>{" "}
                   <button onClick={() => deleteDeck(deckId)}>delete</button>
+                  <button onClick={() => printDeck(deckId)}>download as image</button>
+                  <button onClick={() => printDeck(deckId)}>download YDK</button>
                 </li>
               );
             })}
@@ -413,13 +417,13 @@ const EndGameBoard = memo(function EndGameBoard({ data, play }: any) {
         const extraMonsterZone1 = fields[0].extraMonsterZones[0]
           ? 0
           : fields[1].extraMonsterZones[0]
-          ? 1
-          : -1;
+            ? 1
+            : -1;
         const extraMonsterZone2 = fields[0].extraMonsterZones[1]
           ? 0
           : fields[1].extraMonsterZones[1]
-          ? 1
-          : -1;
+            ? 1
+            : -1;
 
         const extraMonsterZones = (
           <>
@@ -494,3 +498,15 @@ const EndGameBoard = memo(function EndGameBoard({ data, play }: any) {
     </div>
   );
 });
+
+async function printDeck(deckId: string) {
+  const fileName = deckId + ".png";
+  const deck = JSON.parse(window.localStorage.getItem(deckId)!);
+
+  const deckBuilder = new YGODeckToImage({
+    mainDeck: deck.mainDeck as any,
+    extraDeck: deck.extraDeck as any,
+  });
+
+  await deckBuilder.toImage({ fileName, download: true });
+}
