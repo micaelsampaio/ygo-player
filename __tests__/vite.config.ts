@@ -19,12 +19,12 @@ export default defineConfig({
       "ygo-player": isDocker
         ? resolve(__dirname, "./node_modules/ygo-player/bundle.js") // Point to bundle.js in Docker
         : resolve(__dirname, "../dist/bundle.js"), // Point to src for local development
-      "ygo-core-images-utils": isDocker
-        ? resolve(__dirname, "./node_modules/ygo-core-images-utils/index.js")
-        : resolve(__dirname, "../../ygo-core-images-utils/dist/index.js"),
       "ygo-core-images-utils/style.css": isDocker
         ? resolve(__dirname, "./node_modules/ygo-core-images-utils/style.css")
         : resolve(__dirname, "../../ygo-core-images-utils/dist/style.css"),
+      "ygo-core-images-utils": isDocker
+        ? resolve(__dirname, "./node_modules/ygo-core-images-utils/index.js")
+        : resolve(__dirname, "../../ygo-core-images-utils/dist/index.js"),
     },
   },
   build: {

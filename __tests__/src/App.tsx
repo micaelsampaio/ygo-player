@@ -8,7 +8,6 @@ import { YGOGameUtils } from "ygo-player";
 import { YGODeckToImage } from "ygo-core-images-utils";
 import styled from "styled-components";
 import { Logger } from "./utils/logger";
-// import "ygo-core-images-utils/style.css";
 
 const cdnUrl = String(import.meta.env.VITE_YGO_CDN_URL);
 
