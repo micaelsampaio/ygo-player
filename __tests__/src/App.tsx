@@ -512,14 +512,14 @@ async function downloadDeckAsPng(deckId: string) {
 }
 
 async function downloadDeckAsYdk(deckId: string) {
-  const fileName = deckId + ".png";
+  const fileName = deckId + ".ydk";
   const deck = JSON.parse(window.localStorage.getItem(deckId)!);
 
   const deckBuilder = new YGODeckToImage({
     mainDeck: deck.mainDeck as any,
     extraDeck: deck.extraDeck as any,
   });
-  deckBuilder.downloadYdk();
+  deckBuilder.downloadYdk({ fileName });
 }
 
 
