@@ -99,7 +99,6 @@ export class YGODuel {
     //         { id: 33854624, zone: "GY" },
     //     ]
     // }
-
     this.ygo = new YGOCore(this.config);
 
     (window as any).YGODuel = this;
@@ -238,7 +237,6 @@ export class YGODuel {
 
     gameField.hand.cards.forEach((card) => {
       if (card && !hand.includes(card)) {
-        console.log("DESTROY CARD IN HAND: ", card.card.name);
         card.destroy();
       }
     });
