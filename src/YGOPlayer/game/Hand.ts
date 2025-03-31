@@ -22,11 +22,11 @@ export class GameHand extends YGOEntity {
     this.selectedCard = undefined;
   }
 
-  public disableHand() {}
+  public disableHand() { }
 
-  public enableHand() {}
+  public enableHand() { }
 
-  public onCardHover() {}
+  public onCardHover() { }
 
   getCard(index: number): GameCardHand {
     return this.cards[index];
@@ -60,13 +60,9 @@ export class GameHand extends YGOEntity {
     const distance = camera.position.z;
     const handDistribution = 22;
     const baseHandZ = 6;
-    const visibleHeightAtZ =
-      2 * Math.tan(fov / 2) * Math.abs(distance - baseHandZ);
+    const visibleHeightAtZ = 2 * Math.tan(fov / 2) * Math.abs(distance - baseHandZ);
     const screenEdgeOffset = 0.15;
-    const handY =
-      this.player === 0
-        ? -visibleHeightAtZ / 2 + screenEdgeOffset
-        : visibleHeightAtZ / 2 - screenEdgeOffset;
+    const handY = this.player === 0 ? -visibleHeightAtZ / 2 + screenEdgeOffset : visibleHeightAtZ / 2 - screenEdgeOffset;
 
     const normalHandWidth = (totalCards - 1) * cardSpacing + cardWidth;
     const needsCompression = normalHandWidth > handDistribution;
@@ -81,11 +77,10 @@ export class GameHand extends YGOEntity {
     }
 
     for (let i = 0; i < totalCards; ++i) {
-      const handCard = gameField.hand.getCard(i)!;
+      const index = this.player === 0 ? i : totalCards - 1 - i;
+      const handCard = gameField.hand.getCard(index)!;
       const xOffset = -actualWidth / 2 + cardWidth / 2 + i * actualSpacing;
-      const handZ = needsCompression
-        ? baseHandZ + Math.max(0, i - totalCards / 2) * zIncrement
-        : baseHandZ;
+      const handZ = needsCompression ? baseHandZ + Math.max(0, i - totalCards / 2) * zIncrement : baseHandZ;
 
       handCard.gameObject.position.set(xOffset, handY, handZ);
       handCard.position = handCard.gameObject.position.clone();
