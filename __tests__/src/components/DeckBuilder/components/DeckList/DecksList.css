@@ -1,0 +1,226 @@
+.decks-list-container {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 1rem;
+}
+
+.decks-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #f0f0f0;
+}
+
+.decks-header h2 {
+  margin: 0;
+  color: #333;
+  font-size: 1.25rem;
+}
+
+.new-deck-button {
+  background: #4caf50;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.new-deck-button:hover {
+  background: #45a049;
+}
+
+.decks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.deck-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  border-radius: 4px;
+  background: #f8f9fa;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.deck-item:hover {
+  background: #e9ecef;
+}
+
+.deck-item.selected {
+  background: #e3f2fd;
+  border-left: 3px solid #2196f3;
+}
+
+.deck-name {
+  font-weight: 500;
+  color: #333;
+}
+
+.deck-name:hover {
+  color: #2196f3;
+}
+
+.deck-name-input {
+  background: transparent;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: inherit;
+  font-weight: 500;
+  color: #333;
+  width: 100%;
+}
+
+.deck-name-input:focus {
+  outline: none;
+  border-color: #2196f3;
+  background: white;
+}
+
+.deck-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.deck-count {
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.delete-deck {
+  background: none;
+  border: none;
+  color: #dc3545;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.deck-item:hover .delete-deck {
+  opacity: 1;
+}
+
+.delete-deck:hover {
+  background: #ffebee;
+}
+
+.no-decks {
+  text-align: center;
+  color: #666;
+  padding: 2rem;
+  background: #f8f9fa;
+  border-radius: 4px;
+}
+
+.deck-edit {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.deck-edit input {
+  flex: 1;
+  padding: 4px 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+.deck-edit-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.edit-action,
+.confirm-action {
+  padding: 4px 8px;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.edit-action.save,
+.confirm-action.delete {
+  background: #dc3545;
+  color: white;
+}
+
+.edit-action.cancel,
+.confirm-action.cancel {
+  background: #6c757d;
+  color: white;
+}
+
+.delete-confirm {
+  display: flex;
+  gap: 4px;
+}
+
+.deck-main-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.deck-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.copy-deck {
+  background: none;
+  border: none;
+  color: #2196f3;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.deck-item:hover .copy-deck {
+  opacity: 1;
+}
+
+.copy-deck:hover {
+  background: #e3f2fd;
+}
+
+.deck-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.clear-deck-button {
+  background: #dc3545;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.clear-deck-button:hover {
+  background: #c82333;
+}
