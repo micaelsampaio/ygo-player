@@ -92,9 +92,20 @@
 
 .card-description {
   font-size: 0.95rem;
-  line-height: 1.5;
+  line-height: 1.6;
   margin-bottom: 15px;
   flex: 1;
+  overflow-y: auto;
+  max-height: 300px;
+  padding-right: 10px;
+}
+
+.card-description p {
+  margin-bottom: 10px;
+}
+
+.card-description span[class^="keyword-"]:hover {
+  cursor: default;
 }
 
 .card-archetype {
@@ -117,6 +128,60 @@
 
 .add-card-button:hover {
   background-color: #1976d2;
+}
+
+.keyword-summon {
+  color: #7e57c2; /* Purple */
+  font-weight: bold;
+}
+
+.keyword-limitation {
+  color: #e91e63; /* Pink-Red */
+  font-weight: bold;
+}
+
+.keyword-effect-type {
+  color: #0288d1; /* Blue */
+  font-weight: bold;
+}
+
+.keyword-action {
+  color: #f57c00; /* Orange */
+  font-weight: 500;
+}
+
+.keyword-phase {
+  color: #388e3c; /* Green */
+  font-weight: 500;
+}
+
+.keyword-location {
+  color: #0097a7; /* Teal */
+  font-weight: 500;
+}
+
+.keyword-stat {
+  color: #5d4037; /* Brown */
+  font-weight: 500;
+}
+
+.keyword-attribute {
+  color: #c2185b; /* Darker Pink */
+  font-weight: bold;
+}
+
+.keyword-card-name {
+  color: #303f9f; /* Indigo */
+  font-style: italic;
+}
+
+/* Add this new style for usage restrictions */
+.keyword-restriction {
+  color: #d32f2f; /* Red */
+  font-weight: bold;
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-decoration-thickness: 1px;
 }
 
 @keyframes modalFadeIn {
