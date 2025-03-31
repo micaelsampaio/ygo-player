@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { Card, Deck } from "../types";
+import { getCardImageUrl } from "../../../utils/cardImages";
 import "./DeckEditor.css";
 
 type SortOption = "name" | "cardType" | "monsterType" | "level" | "atk" | "def";
@@ -147,10 +148,15 @@ const DeckEditor: React.FC<DeckEditorProps> = ({
               key={`${card.id}-${originalIndex}`}
             >
               <img
-                src={card.card_images[0].image_url}
+                src={getCardImageUrl(card, "small")}
                 alt={card.name}
                 className="deck-card"
-                title={card.name}
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.src = `${
+                    import.meta.env.VITE_YGO_CDN_URL
+                  }/images/cards/card_back.jpg`;
+                }}
                 onClick={() => onCardSelect(card)}
               />
               <button
@@ -174,10 +180,15 @@ const DeckEditor: React.FC<DeckEditorProps> = ({
               key={`${card.id}-${originalIndex}`}
             >
               <img
-                src={card.card_images[0].image_url}
+                src={getCardImageUrl(card, "small")}
                 alt={card.name}
                 className="deck-card"
-                title={card.name}
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.src = `${
+                    import.meta.env.VITE_YGO_CDN_URL
+                  }/images/cards/card_back.jpg`;
+                }}
                 onClick={() => onCardSelect(card)}
               />
               <button

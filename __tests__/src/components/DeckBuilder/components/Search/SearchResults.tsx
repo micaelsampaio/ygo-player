@@ -1,5 +1,6 @@
 import React from "react";
 import { Card } from "../../types";
+import { getCardImageUrl } from "../../../../utils/cardImages";
 
 interface SearchResultsProps {
   results: Card[];
@@ -61,9 +62,9 @@ const SearchResults: React.FC<SearchResultsProps> = ({
             >
               <div className="card-image-wrapper">
                 <img
-                  src={card.card_images[0].image_url}
+                  src={getCardImageUrl(card, "small")}
                   alt={card.name}
-                  className="card-image"
+                  className="search-result-image"
                   onError={(e) => {
                     e.currentTarget.src =
                       "https://via.placeholder.com/44x64?text=No+Image";

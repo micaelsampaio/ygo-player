@@ -1,6 +1,7 @@
 import React from "react";
 import { Card } from "../types";
 import { determineCardArchetypes, getCardPlayStyle } from "../utils";
+import { getCardImageUrl } from "../../../utils/cardImages";
 
 interface CardPreviewProps {
   card: Card;
@@ -32,7 +33,11 @@ const CardPreview: React.FC<CardPreviewProps> = ({
         <div className="modal-body">
           <div className="card-preview-container">
             <div className="preview-image-large">
-              <img src={card.card_images[0].image_url} alt={card.name} />
+              <img
+                src={getCardImageUrl(card)}
+                alt={card.name}
+                className="preview-image"
+              />
             </div>
 
             <div className="preview-details-large">

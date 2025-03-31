@@ -1,6 +1,7 @@
 import React from "react";
 import { Card } from "../types";
 import "./CardModal.css";
+import { getCardImageUrl } from "../../../utils/cardImages";
 
 interface CardModalProps {
   card: Card;
@@ -128,9 +129,17 @@ const CardModal: React.FC<CardModalProps> = ({
         <div className="card-modal-content">
           <div className="card-modal-image">
             <img
-              src={card.card_images[0].image_url}
+              src={getCardImageUrl(card)}
               alt={card.name}
               className="card-full-image"
+              onError={(e) => {
+                // Fallback to card back if image fails to load
+                const target = e.target as HTMLImageElement;
+                target.src = `${
+                  import.meta.env.VITE_YGO_CDN_URL
+                }/images/cards/card_back.jpg`;
+                target.classList.add("card-image-fallback");
+              }}
             />
           </div>
 
