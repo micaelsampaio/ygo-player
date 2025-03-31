@@ -10,6 +10,7 @@ import { DownloadDeck } from "./DownloadDeck.tsx";
 import DeckBuilder from "./components/DeckBuilder";
 import { KaibaNetProvider } from "./hooks/useKaibaNet";
 import { Logger } from "./utils/logger";
+import { SpreadsheetBuilder } from "./spreadsheet/SpreadsheetBuilder.tsx";
 
 debug.enable("ygo:*");
 localStorage.setItem("debug", "ygo:*");
@@ -26,6 +27,7 @@ createRoot(document.getElementById("root")!).render(
         <Route path="/duel/:roomId" element={<Duel />} />
         <Route path="/deck" element={<DownloadDeck />} />
         <Route path="/deckbuilder" element={<DeckBuilder />} />
+        <Route path="/spreadsheet" element={<SpreadsheetBuilder />} />
       </Routes>
     </BrowserRouter>
   </KaibaNetProvider>

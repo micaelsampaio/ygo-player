@@ -1,0 +1,89 @@
+import { useState } from 'react';
+import { YgoReplayToImage } from 'ygo-core-images-utils';
+import { useAppContext } from '../context';
+
+export function Logs({ replayUtils }: { replayUtils: YgoReplayToImage }) {
+    const { comboMaker } = useAppContext();
+    const [, render] = useState(Date.now());
+
+    const removeLog = (log: any) => {
+        replayUtils.removeLog(log);
+        render(Date.now());
+    }
+
+    const addCol = (log: any) => {
+        replayUtils.removeLog(log);
+        comboMaker.addCol({ log, rowIndex: comboMaker.rows.length - 1 });
+    }
+
+    const addRow = (log: any) => {
+        replayUtils.removeLog(log);
+        comboMaker.addRow({ log });
+    }
+
+    const logs = replayUtils.logs
+    const currentLog = logs[0];
+    const card = currentLog && replayUtils.getCardData(currentLog.id);
+    const minLog = logs.length > 1 ? 1 : 0;
+    const maxLog = Math.min(3, logs.length - 1);
+    const nextLogs = [];
+
+    for (let i = minLog; i <= maxLog; ++i) {
+        const log = logs[i];
+        if (!log.id) return null;
+        const card = replayUtils.getCardData(log.id);
+        nextLogs.push(<>
+            <div className='next-log-row'>
+                <div className="log-type">
+                    {log.type}
+                </div>
+                <img className='s-card-image' src={`http://localhost:8080/images/cards_small/${card.id}.jpg`} />
+            </div>
+        </>)
+    }
+
+    return <div>
+        <div className='log-rows'>
+
+            {currentLog && currentLog.id && card && <>
+                <div className='current-log'>
+                    <div className="log-type">
+                        {currentLog.type}
+                    </div>
+
+                    <img className='s-card-image' src={`http://localhost:8080/images/cards_small/${card.id}.jpg`} />
+
+                    <br />
+                </div>
+            </>}
+
+            <div className="next-logs">
+                {nextLogs}
+            </div>
+
+            <div className='log-actions'>
+                <button disabled={comboMaker.rows.length === 0} onClick={() => addCol(currentLog)}>Add to Column</button>
+                <button onClick={() => addRow(currentLog)}>Add new Row</button>
+                <button onClick={() => removeLog(currentLog)}>Delete</button>
+            </div>
+
+
+
+            {/* {replayUtils.logs && replayUtils.logs.map(log => {
+                if (!log.id) return null;
+                const card = replayUtils.getCardData(log.id);
+                return <div className='log-row'>
+                    {log.type} - {card.name}
+                    <br />
+                    <img src={`http://localhost:8080/images/cards_small/${card.id}.jpg`} style={{ width: '100px' }} />
+                    <br />
+
+                    <div>
+                        <button onClick={() => removeLog(log)}>delete</button>
+                    </div>
+                </div>
+            })} */}
+
+        </div>
+    </div>
+}

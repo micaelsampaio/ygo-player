@@ -147,6 +147,11 @@ export default function App() {
     }
   };
 
+  const openSpreadsheetBuilder = (replayData: any) => {
+    localStorage.setItem("duel-data", JSON.stringify(replayData));
+    navigate(`/spreadsheet`);
+  }
+
   const playFromAReplay = (playerIndex: number, replayData: any) => {
     const deckData = JSON.parse(window.localStorage.getItem(selectedDeck)!);
     const otherDeckData = replayData.players[playerIndex];
@@ -274,7 +279,7 @@ export default function App() {
                         delete
                       </button>
                       <br />
-                      <EndGameBoard play={playFromAReplay} data={replay.data} />
+                      <EndGameBoard play={playFromAReplay} openSpreadsheetBuilder={openSpreadsheetBuilder} data={replay.data} />
                     </li>
                   );
                 })}
@@ -327,7 +332,7 @@ function useLazyReplay({ replays, setReplays }: any) {
 
 /// TODO
 
-const EndGameBoard = memo(function EndGameBoard({ data, play }: any) {
+const EndGameBoard = memo(function EndGameBoard({ data, play, openSpreadsheetBuilder }: any) {
   const [fields, setFields] = useState<any>(null);
   useEffect(() => {
     if (!data) return;
@@ -479,6 +484,9 @@ const EndGameBoard = memo(function EndGameBoard({ data, play }: any) {
           <div>
             <button onClick={() => play(1 - playerIndex, data)}>
               Play vs field
+            </button>
+            <button onClick={() => openSpreadsheetBuilder(data)}>
+              make a spreedsheet
             </button>
           </div>
         );
