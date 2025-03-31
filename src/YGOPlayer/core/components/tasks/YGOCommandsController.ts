@@ -1,4 +1,4 @@
-import { YGODuelEvents } from "ygo-core";
+import { Command, YGODuelEvents } from "ygo-core";
 import { getDuelEventHandler } from "../../../duel-events";
 import { YGOComponent } from "../../YGOComponent";
 import { YGODuel } from "../../YGODuel";
@@ -6,10 +6,10 @@ import { YGOCommandHandler } from "../YGOCommandHandler";
 import { YGOTask } from "./YGOTask";
 
 export enum YGOCommandsControllerState {
-  IDLE,
-  PLAYING,
-  PLAYING_COMMAND,
-  RECOVER,
+  IDLE = "idle",
+  PLAYING = "playing",
+  PLAYING_COMMAND = "playing_command",
+  RECOVER = "recover",
 }
 
 export class YGOCommandsController extends YGOComponent {
@@ -18,6 +18,8 @@ export class YGOCommandsController extends YGOComponent {
   private commands: YGOCommandHandler[];
   private currentCommand: YGOCommandHandler | undefined;
   private tasks: YGOTask[];
+  private timerOnCompleteEvent: number;
+  private pauseRequested = false;
 
   constructor(duel: YGODuel) {
     super("duel_events_controller");
@@ -26,6 +28,8 @@ export class YGOCommandsController extends YGOComponent {
     this.tasks = [];
     this.state = YGOCommandsControllerState.IDLE;
     this.currentCommand = undefined;
+
+    this.timerOnCompleteEvent = -1;
   }
 
   start(): void { }
@@ -39,15 +43,44 @@ export class YGOCommandsController extends YGOComponent {
   }
 
   play() {
+    if (this.isLocked()) return;
+    if (!this.duel.ygo.hasNextCommand()) return;
+
     this.setState(YGOCommandsControllerState.PLAYING);
+    this.pauseRequested = false;
+    this.duel.ygo.redo();
   }
 
-  playNextCommand() {
+  nextCommand() {
+    if (this.isLocked()) return;
+    if (!this.duel.ygo.hasNextCommand()) return;
     this.setState(YGOCommandsControllerState.PLAYING_COMMAND);
+    this.pauseRequested = false;
+    this.duel.ygo.redo();
+  }
+
+  previousCommand() {
+    if (this.isLocked()) return;
+
+    this.startRecover();
+
+    if (this.duel.ygo.hasPrevCommand()) {
+      this.duel.ygo.undo();
+    }
+
+    this.duel.updateField();
+    this.endRecover();
+  }
+
+  goToCommand(command: Command) {
+    this.startRecover();
+    this.duel.ygo.goToCommand(command);
+    this.duel.updateField();
+    this.endRecover();
   }
 
   pause() {
-    this.setState(YGOCommandsControllerState.IDLE);
+    this.pauseRequested = true;
   }
 
   isRecovering() {
@@ -68,18 +101,26 @@ export class YGOCommandsController extends YGOComponent {
   }
 
   add(command: YGODuelEvents.DuelLog) {
+    clearTimeout(this.timerOnCompleteEvent);
     const handler = getDuelEventHandler(command);
-
     this.duel.events.dispatch("disable-game-actions");
 
     const onCompleted = () => {
-      this.currentCommand = undefined;
-      this.processNextCommand();
+      clearTimeout(this.timerOnCompleteEvent);
+      this.timerOnCompleteEvent = setTimeout(() => {
+        this.currentCommand?.finish();
+        this.currentCommand = undefined;
+        this.processNextCommand();
+      }, 10) as any as number;
     };
 
     const startTask = (task: YGOTask) => {
       this.tasks.push(task);
-      this.duel.tasks.startTask(task);
+      this.duel.tasks.startTask(task, {
+        onCompleted: () => {
+          this.tasks = this.tasks.filter(t => t !== task);
+        }
+      });
     };
 
     const props = {
@@ -95,19 +136,15 @@ export class YGOCommandsController extends YGOComponent {
   }
 
   private processNextCommand() {
-    if (this.currentCommand) {
-      this.setState(YGOCommandsControllerState.IDLE);
-      return;
-    };
+    if (this.currentCommand) return; // there is already a command to be executed
 
-    if (this.commands.length === 0) {
-      if (!this.isPlaying()) this.setState(YGOCommandsControllerState.IDLE);
-      if (this.state === YGOCommandsControllerState.PLAYING_COMMAND) this.setState(YGOCommandsControllerState.IDLE);
-
-      this.duel.updateField();
-      this.duel.events.dispatch("enable-game-actions");
-      this.duel.events.dispatch("commands-process-completed");
-      return;
+    if (this.commands.length === 0) { // will try to play next command
+      if (this.state === YGOCommandsControllerState.PLAYING && !this.pauseRequested) {
+        if (this.duel.ygo.hasNextCommand()) {
+          return this.duel.ygo.redo();
+        }
+      }
+      return this.onAllCommandsProcessed();
     }
 
     this.currentCommand = this.commands.shift();
@@ -115,25 +152,36 @@ export class YGOCommandsController extends YGOComponent {
     this.duel.events.dispatch("commands-process-start");
   }
 
+  private onAllCommandsProcessed() {
+    this.setState(YGOCommandsControllerState.IDLE);
+    this.duel.updateField();
+    this.duel.events.dispatch("enable-game-actions");
+    this.duel.events.dispatch("commands-process-completed");
+  }
+
   update(dt?: number): void {
     this.currentCommand?.update(dt);
   }
 
-  private completeCommands() {
+  private clearCommandsState() { // complete pending commands
+
     if (this.tasks.length > 0) {
       this.tasks.forEach((task) => this.duel.tasks.completeTask(task));
       this.tasks = [];
     }
+
     this.currentCommand?.finish();
     this.currentCommand = undefined;
   }
 
   startRecover() {
-    this.completeCommands();
+    this.clearCommandsState();
+    this.pauseRequested = false;
     this.setState(YGOCommandsControllerState.RECOVER);
   }
 
   endRecover() {
     this.setState(YGOCommandsControllerState.IDLE);
+    this.pauseRequested = false;
   }
 }

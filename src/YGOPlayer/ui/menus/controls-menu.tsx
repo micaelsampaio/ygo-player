@@ -2,62 +2,25 @@ import { useRef } from "react";
 import { YGODuel } from "../../core/YGODuel";
 
 export function ControlsMenu({ duel }: { duel: YGODuel }) {
-    const pauseCommandRef = useRef(false);
-
     const isPlaying = duel.commands.isPlaying();
     const hasPrevCommand = duel.ygo.hasPrevCommand();
     const hasNextCommand = duel.ygo.hasNextCommand();
 
     const prev = () => {
-        if (duel.commands.isLocked()) return;
-        duel.commands.startRecover();
 
-        if (duel.ygo.hasPrevCommand()) {
-            duel.ygo.undo();
-        }
-
-        duel.updateField();
-        duel.commands.endRecover();
+        duel.commands.previousCommand();
     };
 
     const next = () => {
-        if (duel.commands.isLocked()) return;
-
-        if (duel.ygo.hasNextCommand()) {
-            duel.commands.playNextCommand();
-            duel.ygo.redo();
-        }
+        duel.commands.nextCommand();
     };
 
     const play = () => {
-        if (duel.commands.isPlaying()) return;
-
         duel.commands.play();
-
-        const nextEvent = () => {
-            if (!duel.commands.isPlaying()) return;
-
-            if (pauseCommandRef.current) {
-                pauseCommandRef.current = false;
-                duel.commands.pause();
-                return;
-            }
-
-            if (duel.ygo.hasNextCommand()) {
-                setTimeout(() => duel.ygo.redo(), 500);
-            } else {
-                duel.commands.pause();
-                duel.events.off("commands-process-completed", nextEvent);
-            }
-        };
-
-        duel.events.on("commands-process-completed", nextEvent);
-
-        nextEvent();
     };
 
     const pause = () => {
-        if (duel.commands.isPlaying()) pauseCommandRef.current = true;
+        duel.commands.pause();
     };
 
     return <div className="ygo-card-menu ygo-controls-menu">

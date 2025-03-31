@@ -18,10 +18,7 @@ export function TimeLine({ duel }: { duel: YGODuel }) {
   const currentCommand = duel.ygo.commandIndex;
 
   const onCommandClick = (command: Command) => {
-    duel.commands.startRecover();
-    duel.ygo.goToCommand(command);
-    duel.updateField();
-    duel.commands.endRecover();
+    duel.commands.goToCommand(command);
   };
 
   return (

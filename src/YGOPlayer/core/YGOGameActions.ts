@@ -438,7 +438,6 @@ export class YGOGameActions {
           const materials = cards.map((cardData) => {
             return { id: cardData.card.id, zone: cardData.zone };
           });
-          console.log("TCL: ", materials);
 
           const zonesToSummon = getCardZones(
             this.duel,
