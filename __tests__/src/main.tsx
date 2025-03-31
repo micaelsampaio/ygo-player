@@ -6,6 +6,8 @@ import "ygo-player";
 import App from "./App.tsx";
 import Duel from "./Duel.tsx";
 import { DownloadDeck } from "./DownloadDeck.tsx";
+// Update this import to use the index.tsx file (or just the folder)
+import DeckBuilder from "./components/DeckBuilder";
 import { KaibaNetProvider } from "./hooks/useKaibaNet";
 import { Logger } from "./utils/logger";
 
@@ -23,6 +25,7 @@ createRoot(document.getElementById("root")!).render(
         <Route path="/duel" element={<Duel />} />
         <Route path="/duel/:roomId" element={<Duel />} />
         <Route path="/deck" element={<DownloadDeck />} />
+        <Route path="/deckbuilder" element={<DeckBuilder />} />
       </Routes>
     </BrowserRouter>
   </KaibaNetProvider>

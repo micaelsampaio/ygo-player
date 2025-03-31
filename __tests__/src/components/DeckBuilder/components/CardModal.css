@@ -1,0 +1,213 @@
+.card-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(3px);
+}
+
+.card-modal {
+  background-color: white;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+  animation: modalFadeIn 0.3s ease-out;
+}
+
+.close-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.8);
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.close-button:hover {
+  background-color: rgba(255, 255, 255, 1);
+}
+
+.card-modal-content {
+  display: flex;
+  padding: 20px;
+}
+
+.card-modal-image {
+  flex: 0 0 auto;
+  margin-right: 20px;
+}
+
+.card-full-image {
+  width: 250px;
+  border-radius: 8px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+}
+
+.card-modal-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.card-name {
+  font-size: 1.4rem;
+  margin: 0 0 5px 0;
+  color: #333;
+}
+
+.card-type {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 15px;
+}
+
+.card-level,
+.card-stats {
+  margin-bottom: 10px;
+  font-size: 0.95rem;
+}
+
+.card-stats {
+  display: flex;
+  gap: 15px;
+}
+
+.card-description {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin-bottom: 15px;
+  flex: 1;
+  overflow-y: auto;
+  max-height: 300px;
+  padding-right: 10px;
+}
+
+.card-description p {
+  margin-bottom: 10px;
+}
+
+.card-description span[class^="keyword-"]:hover {
+  cursor: default;
+}
+
+.card-archetype {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 15px;
+}
+
+.add-card-button {
+  padding: 10px 15px;
+  background-color: #2196f3;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  margin-top: 10px;
+  transition: background-color 0.2s;
+}
+
+.add-card-button:hover {
+  background-color: #1976d2;
+}
+
+.keyword-summon {
+  color: #7e57c2; /* Purple */
+  font-weight: bold;
+}
+
+.keyword-limitation {
+  color: #e91e63; /* Pink-Red */
+  font-weight: bold;
+}
+
+.keyword-effect-type {
+  color: #0288d1; /* Blue */
+  font-weight: bold;
+}
+
+.keyword-action {
+  color: #f57c00; /* Orange */
+  font-weight: 500;
+}
+
+.keyword-phase {
+  color: #388e3c; /* Green */
+  font-weight: 500;
+}
+
+.keyword-location {
+  color: #0097a7; /* Teal */
+  font-weight: 500;
+}
+
+.keyword-stat {
+  color: #5d4037; /* Brown */
+  font-weight: 500;
+}
+
+.keyword-attribute {
+  color: #c2185b; /* Darker Pink */
+  font-weight: bold;
+}
+
+.keyword-card-name {
+  color: #303f9f; /* Indigo */
+  font-style: italic;
+}
+
+/* Add this new style for usage restrictions */
+.keyword-restriction {
+  color: #d32f2f; /* Red */
+  font-weight: bold;
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-decoration-thickness: 1px;
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 768px) {
+  .card-modal-content {
+    flex-direction: column;
+  }
+
+  .card-modal-image {
+    margin-right: 0;
+    margin-bottom: 15px;
+    display: flex;
+    justify-content: center;
+  }
+
+  .card-full-image {
+    width: 200px;
+  }
+}
