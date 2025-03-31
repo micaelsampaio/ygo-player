@@ -240,6 +240,9 @@ export default function App() {
             <li>
               <Link to={"/deck"}>Download deck</Link>
             </li>
+            <li>
+              <Link to={"/deckbuilder"}>Deck Builder</Link>
+            </li>
           </ul>
 
           {replays.length > 0 && (
