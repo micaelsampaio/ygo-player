@@ -226,6 +226,13 @@ const DeckAnalytics: React.FC<DeckAnalyticsProps> = ({ analytics }) => {
     const singleCardProb = probability / totalCopies; // Rough approximation per copy
     const mostLikely = Math.round((singleCardProb * 5) / 100); // For 5 card opening hand
 
+    // For very low probabilities (under 20%), we expect to see 0 most often
+    if (probability < 20) {
+      return `${basicFrequency} (Most likely to open with 0 copies, ${(
+        100 - probability
+      ).toFixed(1)}% chance to not draw any)`;
+    }
+
     return `${basicFrequency} (Most likely to open with ${mostLikely} ${
       mostLikely === 1 ? "copy" : "copies"
     })`;
