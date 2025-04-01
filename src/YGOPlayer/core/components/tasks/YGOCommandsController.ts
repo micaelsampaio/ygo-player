@@ -19,6 +19,7 @@ export class YGOCommandsController extends YGOComponent {
   private currentCommand: YGOCommandHandler | undefined;
   private tasks: YGOTask[];
   private timerOnCompleteEvent: number;
+  private timerOnNextCommand: number;
   private pauseRequested = false;
 
   constructor(duel: YGODuel) {
@@ -30,6 +31,7 @@ export class YGOCommandsController extends YGOComponent {
     this.currentCommand = undefined;
 
     this.timerOnCompleteEvent = -1;
+    this.timerOnNextCommand = -1;
   }
 
   start(): void { }
@@ -79,6 +81,7 @@ export class YGOCommandsController extends YGOComponent {
 
   pause() {
     this.pauseRequested = true;
+    clearTimeout(this.timerOnNextCommand);
   }
 
   isRecovering() {
@@ -100,6 +103,7 @@ export class YGOCommandsController extends YGOComponent {
 
   add(command: YGODuelEvents.DuelLog) {
     clearTimeout(this.timerOnCompleteEvent);
+    clearTimeout(this.timerOnNextCommand);
     const handler = getDuelEventHandler(command);
     this.duel.events.dispatch("disable-game-actions");
 
@@ -139,7 +143,11 @@ export class YGOCommandsController extends YGOComponent {
     if (this.commands.length === 0) { // will try to play next command
       if (this.state === YGOCommandsControllerState.PLAYING && !this.pauseRequested) {
         if (this.duel.ygo.hasNextCommand()) {
-          return this.duel.ygo.redo();
+          clearTimeout(this.timerOnNextCommand);
+          this.timerOnNextCommand = setTimeout(() => {
+            this.duel.ygo.redo();
+          }, 250) as any as number;
+          return;
         }
       }
       return this.onAllCommandsProcessed();
@@ -181,5 +189,10 @@ export class YGOCommandsController extends YGOComponent {
   endRecover() {
     this.setState(YGOCommandsControllerState.IDLE);
     this.pauseRequested = false;
+  }
+
+  public onDestroy(): void {
+    clearTimeout(this.timerOnCompleteEvent);
+    clearTimeout(this.timerOnNextCommand);
   }
 }
