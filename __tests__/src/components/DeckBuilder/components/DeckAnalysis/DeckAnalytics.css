@@ -906,3 +906,60 @@
 .export-btn:hover {
   background-color: #2d3748;
 }
+
+/* Probability Categories */
+.category-probabilities {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  margin-bottom: 20px;
+}
+
+.probability-category {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 16px;
+  border-left: 4px solid #2196f3;
+}
+
+.probability-category h4 {
+  margin: 0 0 12px 0;
+  color: #1976d2;
+}
+
+.probability-category.danger {
+  border-left-color: #f44336;
+}
+
+.probability-category.danger h4 {
+  color: #d32f2f;
+}
+
+.probability-cell.warning {
+  font-weight: bold;
+}
+
+/* Global Probability */
+.global-probability {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #eee;
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.global-probability.warning {
+  color: #d32f2f;
+}
+
+.global-probability .frequency-text {
+  color: #666;
+  font-size: 0.85rem;
+  margin-top: 4px;
+  font-style: italic;
+}
+
+.global-probability.warning .frequency-text {
+  color: #d32f2f;
+  opacity: 0.8;
+}

@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { Deck, DeckAnalytics } from "../types";
+import { Deck, DeckAnalytics, CardRole } from "../types";
 import {
   calculateDrawProbability,
   calculateComboHandProbability,
@@ -288,6 +288,41 @@ export function useDeckAnalytics() {
       };
     })();
 
+    // Add role-based probabilities with grouping
+    const roleGroups = deck.mainDeck.reduce((groups, card) => {
+      if (!card.roleInfo) return groups;
+
+      const key = `${card.name}`; // Group just by name
+      if (!groups[key]) {
+        groups[key] = {
+          id: card.id,
+          name: card.name,
+          copies: 1,
+          roleInfo: card.roleInfo,
+        };
+      } else {
+        groups[key].copies++;
+      }
+      return groups;
+    }, {} as Record<string, any>);
+
+    const mainDeckWithRoles = Object.values(roleGroups).map((group) => {
+      // Use the hypergeometric probability calculation instead of simple percentage
+      const probability = calculateDrawProbability(
+        deck.mainDeck.length, // total cards in deck
+        group.copies, // number of copies
+        5 // opening hand size
+      );
+
+      return {
+        ...group,
+        roleInfo: {
+          ...group.roleInfo,
+          probability,
+        },
+      };
+    });
+
     // Return the enhanced analytics object with ALL calculated metrics
     const result = {
       typeDistribution,
@@ -308,6 +343,7 @@ export function useDeckAnalytics() {
       powerUtilityRatio,
       comboProbability,
       resourceGeneration,
+      mainDeck: mainDeckWithRoles,
     };
 
     logger.info("Deck analysis complete");

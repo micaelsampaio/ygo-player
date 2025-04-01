@@ -39,6 +39,14 @@ export type DeckAnalyticsType = {
     score: number;
     explanation: string;
   };
+  mainDeck?: Array<{
+    id: string;
+    name: string;
+    roleInfo?: {
+      role: string;
+      probability?: number;
+    };
+  }>;
 };
 
 interface CardEfficiency {
@@ -192,6 +200,35 @@ const DeckAnalytics: React.FC<DeckAnalyticsProps> = ({ analytics }) => {
 
   const closeModal = () => {
     setModalContent((prev) => ({ ...prev, isOpen: false }));
+  };
+
+  const calculateGlobalProbability = (cards: any[]) => {
+    // Placeholder function for calculating global probability
+    return cards.reduce(
+      (acc, card) => acc + (card.roleInfo?.probability || 0),
+      0
+    );
+  };
+
+  const calculateFrequencyText = (
+    probability: number,
+    totalCopies: number
+  ): string => {
+    const basicFrequency =
+      probability >= 100
+        ? "Guaranteed to open at least 1"
+        : `Opening at least 1 in every ${Math.max(
+            1,
+            Math.round(100 / probability)
+          )} games`;
+
+    // Calculate most likely number to open with
+    const singleCardProb = probability / totalCopies; // Rough approximation per copy
+    const mostLikely = Math.round((singleCardProb * 5) / 100); // For 5 card opening hand
+
+    return `${basicFrequency} (Most likely to open with ${mostLikely} ${
+      mostLikely === 1 ? "copy" : "copies"
+    })`;
   };
 
   const renderOverviewTab = () => (
@@ -570,213 +607,376 @@ const DeckAnalytics: React.FC<DeckAnalyticsProps> = ({ analytics }) => {
     </div>
   );
 
-  const renderProbabilityContent = () => (
-    <div className="full-probability-analysis">
-      <section className="analysis-section">
-        <h3>Probability Formula</h3>
-        <div className="formula-container">
-          <div className="formula">P(success) = 1 - C(40-k, n) / C(40, n)</div>
-          <div className="formula-key">
-            <ul>
-              <li>
-                <strong>k</strong>: Number of copies of a card
-              </li>
-              <li>
-                <strong>n</strong>: Number of cards drawn (usually 5 for opening
-                hand)
-              </li>
-              <li>
-                <strong>C(a,b)</strong>: Combinations of a choose b
-              </li>
-            </ul>
-          </div>
-          <p>
-            Using hypergeometric distribution to calculate exact probabilities
-            in a 40-card deck:
-          </p>
-          <ul className="probability-examples">
-            <li>
-              <strong>3 copies</strong>: 33.76% chance to open with at least 1
-            </li>
-            <li>
-              <strong>2 copies</strong>: 23.71% chance to open with at least 1
-            </li>
-            <li>
-              <strong>1 copy</strong>: 12.50% chance to open with it
-            </li>
-          </ul>
-        </div>
-      </section>
+  const renderProbabilityContent = () => {
+    // Group cards only by name, keeping role info
+    const groupedCards = processedAnalytics?.mainDeck;
 
-      <section className="analysis-section">
-        <h3>Opening Hand Probabilities</h3>
-        {deckMetrics.drawProbabilities &&
-        deckMetrics.drawProbabilities.length > 0 ? (
-          <div className="probability-table">
-            <div className="table-header">
-              <div>Scenario</div>
-              <div>Cards</div>
-              <div>Probability</div>
-            </div>
-            {deckMetrics.drawProbabilities.map((item, index) => (
-              <div key={index} className="table-row">
-                <div>{item.scenario || "Unknown scenario"}</div>
-                <div>{item.copies !== undefined ? item.copies : 0} copies</div>
-                <div
-                  className="probability-cell"
-                  style={{
-                    color: getProbabilityColor(item.probability || 0),
-                  }}
-                >
-                  {(item.probability !== undefined
-                    ? item.probability
-                    : 0
-                  ).toFixed(1)}
-                  %
+    const calculateRoleProbability = (role: string) => {
+      const roleCards = Object.values(groupedCards).filter(
+        (card: any) => card.roleInfo?.role === role
+      );
+      return calculateGlobalProbability(roleCards);
+    };
+
+    return (
+      <div className="full-probability-analysis">
+        <section className="analysis-section">
+          <h3>Opening Hand Categories</h3>
+          <div className="category-probabilities">
+            {Object.values(groupedCards).some(
+              (card: any) => card.roleInfo?.role === "Starter"
+            ) && (
+              <div className="probability-category">
+                <h4>Starter Cards</h4>
+                <div className="probability-table">
+                  <div className="table-header">
+                    <div>Card</div>
+                    <div>Copies</div>
+                    <div>Probability</div>
+                  </div>
+                  {Object.values(groupedCards)
+                    .filter((card: any) => card.roleInfo?.role === "Starter")
+                    .map((card: any, index) => (
+                      <div key={index} className="table-row">
+                        <div>{card.name}</div>
+                        <div>{card.copies}</div>
+                        <div
+                          className="probability-cell"
+                          style={{
+                            color: getProbabilityColor(
+                              card.roleInfo?.probability || 0
+                            ),
+                          }}
+                        >
+                          {(card.roleInfo?.probability || 0).toFixed(1)}%
+                        </div>
+                      </div>
+                    ))}
+                </div>
+                <div className="global-probability">
+                  <strong>Global Probability: </strong>
+                  {(() => {
+                    const probability = calculateRoleProbability("Starter");
+                    return (
+                      <>
+                        {probability.toFixed(1)}% chance to open with at least 1
+                        Starter
+                        <div className="frequency-text">
+                          (
+                          {calculateFrequencyText(
+                            probability,
+                            Object.values(groupedCards)
+                              .filter(
+                                (card: any) => card.roleInfo?.role === "Starter"
+                              )
+                              .reduce(
+                                (sum, card) => sum + (card.copies || 0),
+                                0
+                              )
+                          )}
+                          )
+                        </div>
+                      </>
+                    );
+                  })()}
                 </div>
               </div>
-            ))}
+            )}
+
+            {Object.values(groupedCards).some(
+              (card: any) => card.roleInfo?.role === "Handtrap"
+            ) && (
+              <div className="probability-category">
+                <h4>Hand Traps</h4>
+                <div className="probability-table">
+                  <div className="table-header">
+                    <div>Card</div>
+                    <div>Copies</div>
+                    <div>Probability</div>
+                  </div>
+                  {Object.values(groupedCards)
+                    .filter((card: any) => card.roleInfo?.role === "Handtrap")
+                    .map((card: any, index) => (
+                      <div key={index} className="table-row">
+                        <div>{card.name}</div>
+                        <div>{card.copies}</div>
+                        <div
+                          className="probability-cell"
+                          style={{
+                            color: getProbabilityColor(
+                              card.roleInfo?.probability || 0
+                            ),
+                          }}
+                        >
+                          {(card.roleInfo?.probability || 0).toFixed(1)}%
+                        </div>
+                      </div>
+                    ))}
+                </div>
+                <div className="global-probability">
+                  <strong>Global Probability: </strong>
+                  {(() => {
+                    const probability = calculateRoleProbability("Handtrap");
+                    return (
+                      <>
+                        {probability.toFixed(1)}% chance to open with at least 1
+                        Hand Trap
+                        <div className="frequency-text">
+                          (
+                          {calculateFrequencyText(
+                            probability,
+                            Object.values(groupedCards)
+                              .filter(
+                                (card: any) =>
+                                  card.roleInfo?.role === "Handtrap"
+                              )
+                              .reduce(
+                                (sum, card) => sum + (card.copies || 0),
+                                0
+                              )
+                          )}
+                          )
+                        </div>
+                      </>
+                    );
+                  })()}
+                </div>
+              </div>
+            )}
+
+            {Object.values(groupedCards).some(
+              (card: any) => card.roleInfo?.role === "Garnets"
+            ) && (
+              <div className="probability-category danger">
+                <h4>Garnets (Undesirable Draws)</h4>
+                <div className="probability-table">
+                  <div className="table-header">
+                    <div>Card</div>
+                    <div>Copies</div>
+                    <div>Draw Risk</div>
+                  </div>
+                  {Object.values(groupedCards)
+                    .filter((card: any) => card.roleInfo?.role === "Garnets")
+                    .map((card: any, index) => (
+                      <div key={index} className="table-row">
+                        <div>{card.name}</div>
+                        <div>{card.copies}</div>
+                        <div
+                          className="probability-cell warning"
+                          style={{
+                            color: getProbabilityColor(
+                              100 - (card.roleInfo?.probability || 0)
+                            ),
+                          }}
+                        >
+                          {(card.roleInfo?.probability || 0).toFixed(1)}%
+                        </div>
+                      </div>
+                    ))}
+                </div>
+                <div className="global-probability warning">
+                  <strong>Global Draw Risk: </strong>
+                  {(() => {
+                    const probability = calculateRoleProbability("Garnets");
+                    return (
+                      <>
+                        {probability.toFixed(1)}% chance to open with at least 1
+                        Garnet
+                        <div className="frequency-text">
+                          (
+                          {calculateFrequencyText(
+                            probability,
+                            Object.values(groupedCards)
+                              .filter(
+                                (card: any) => card.roleInfo?.role === "Garnets"
+                              )
+                              .reduce(
+                                (sum, card) => sum + (card.copies || 0),
+                                0
+                              )
+                          )}
+                          )
+                        </div>
+                      </>
+                    );
+                  })()}
+                </div>
+              </div>
+            )}
           </div>
-        ) : (
-          <p>No probability data available for this deck.</p>
-        )}
-      </section>
-
-      <section className="analysis-section">
-        <h3>Key Card Efficiency</h3>
-        <div className="efficiency-explanation">
-          Card efficiency measures how effectively each card contributes to your
-          strategy based on multiple factors.
-        </div>
-
-        {deckMetrics.cardEfficiencies &&
-        deckMetrics.cardEfficiencies.length > 0 ? (
-          <div className="efficiency-cards">
-            {deckMetrics.cardEfficiencies.map((item, index) => (
-              <div key={index} className="efficiency-card">
-                <div className="efficiency-card-header">
-                  <div className="card-name">
-                    {item.card?.name || "Unknown card"} ({item.card?.copies}x)
+        </section>
+        <section className="analysis-section">
+          <h3>Opening Hand Probabilities</h3>
+          {deckMetrics.drawProbabilities &&
+          deckMetrics.drawProbabilities.length > 0 ? (
+            <div className="probability-table">
+              <div className="table-header">
+                <div>Scenario</div>
+                <div>Cards</div>
+                <div>Probability</div>
+              </div>
+              {deckMetrics.drawProbabilities.map((item, index) => (
+                <div key={index} className="table-row">
+                  <div>{item.scenario || "Unknown scenario"}</div>
+                  <div>
+                    {item.copies !== undefined ? item.copies : 0} copies
                   </div>
                   <div
-                    className="efficiency-score"
-                    title="Overall efficiency score based on consistency, versatility, and economy"
+                    className="probability-cell"
+                    style={{
+                      color: getProbabilityColor(item.probability || 0),
+                    }}
                   >
-                    Score:{" "}
-                    {(item.metrics?.overallScore !== undefined
-                      ? item.metrics.overallScore
+                    {(item.probability !== undefined
+                      ? item.probability
                       : 0
                     ).toFixed(1)}
-                    /10
+                    %
                   </div>
                 </div>
-                <div className="efficiency-metrics">
-                  <div className="metric">
-                    <div
-                      className="metric-label"
-                      title="Drawing and accessing the card in your opening hand and throughout the duel"
-                    >
-                      Consistency
-                    </div>
-                    <div className="metric-bar-container">
-                      <div
-                        className="metric-bar"
-                        style={{
-                          width: `${item.metrics?.consistency || 0}%`,
-                          backgroundColor: "#2196F3",
-                        }}
-                      >
-                        <span className="metric-percentage">
-                          {(item.metrics?.consistency || 0).toFixed(1)}%
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="metric">
-                    <div
-                      className="metric-label"
-                      title="Usefulness in different situations and stages of the game"
-                    >
-                      Versatility
-                    </div>
-                    <div className="metric-bar-container">
-                      <div
-                        className="metric-bar"
-                        style={{
-                          width: `${item.metrics?.versatility || 0}%`,
-                          backgroundColor: "#4CAF50",
-                        }}
-                      >
-                        <span className="metric-percentage">
-                          {(item.metrics?.versatility || 0).toFixed(1)}%
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="metric">
-                    <div
-                      className="metric-label"
-                      title="How efficiently the card uses deck space relative to its impact"
-                    >
-                      Economy
-                    </div>
-                    <div className="metric-bar-container">
-                      <div
-                        className="metric-bar"
-                        style={{
-                          width: `${item.metrics?.economy || 0}%`,
-                          backgroundColor: "#FF9800",
-                        }}
-                      >
-                        <span className="metric-percentage">
-                          {(item.metrics?.economy || 0).toFixed(1)}%
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p>No card efficiency data available for this deck.</p>
-        )}
-      </section>
+              ))}
+            </div>
+          ) : (
+            <p>No probability data available for this deck.</p>
+          )}
+        </section>
 
-      <section className="analysis-section">
-        <h3>Consistency Simulation</h3>
-        <p>
-          The consistency score is based on 1000 simulated opening hands,
-          measuring how often your deck can establish a playable game state on
-          the first turn.
-        </p>
-        <div className="consistency-score-display">
-          <div
-            className="score-circle"
-            style={{
-              background: `conic-gradient(${getConsistencyColor(
-                processedAnalytics.consistencyScore
-              )} ${processedAnalytics.consistencyScore * 3.6}deg, #f0f0f0 ${
-                processedAnalytics.consistencyScore * 3.6
-              }deg)`,
-            }}
-          >
-            <div className="score-inner">
-              <span>{processedAnalytics.consistencyScore.toFixed(0)}</span>
-              <small>/100</small>
+        <section className="analysis-section">
+          <h3>Key Card Efficiency</h3>
+          <div className="efficiency-explanation">
+            Card efficiency measures how effectively each card contributes to
+            your strategy based on multiple factors.
+          </div>
+
+          {deckMetrics.cardEfficiencies &&
+          deckMetrics.cardEfficiencies.length > 0 ? (
+            <div className="efficiency-cards">
+              {deckMetrics.cardEfficiencies.map((item, index) => (
+                <div key={index} className="efficiency-card">
+                  <div className="efficiency-card-header">
+                    <div className="card-name">
+                      {item.card?.name || "Unknown card"} ({item.card?.copies}x)
+                    </div>
+                    <div
+                      className="efficiency-score"
+                      title="Overall efficiency score based on consistency, versatility, and economy"
+                    >
+                      Score:{" "}
+                      {(item.metrics?.overallScore !== undefined
+                        ? item.metrics.overallScore
+                        : 0
+                      ).toFixed(1)}
+                      /10
+                    </div>
+                  </div>
+                  <div className="efficiency-metrics">
+                    <div className="metric">
+                      <div
+                        className="metric-label"
+                        title="Drawing and accessing the card in your opening hand and throughout the duel"
+                      >
+                        Consistency
+                      </div>
+                      <div className="metric-bar-container">
+                        <div
+                          className="metric-bar"
+                          style={{
+                            width: `${item.metrics?.consistency || 0}%`,
+                            backgroundColor: "#2196F3",
+                          }}
+                        >
+                          <span className="metric-percentage">
+                            {(item.metrics?.consistency || 0).toFixed(1)}%
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="metric">
+                      <div
+                        className="metric-label"
+                        title="Usefulness in different situations and stages of the game"
+                      >
+                        Versatility
+                      </div>
+                      <div className="metric-bar-container">
+                        <div
+                          className="metric-bar"
+                          style={{
+                            width: `${item.metrics?.versatility || 0}%`,
+                            backgroundColor: "#4CAF50",
+                          }}
+                        >
+                          <span className="metric-percentage">
+                            {(item.metrics?.versatility || 0).toFixed(1)}%
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="metric">
+                      <div
+                        className="metric-label"
+                        title="How efficiently the card uses deck space relative to its impact"
+                      >
+                        Economy
+                      </div>
+                      <div className="metric-bar-container">
+                        <div
+                          className="metric-bar"
+                          style={{
+                            width: `${item.metrics?.economy || 0}%`,
+                            backgroundColor: "#FF9800",
+                          }}
+                        >
+                          <span className="metric-percentage">
+                            {(item.metrics?.economy || 0).toFixed(1)}%
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p>No card efficiency data available for this deck.</p>
+          )}
+        </section>
+
+        <section className="analysis-section">
+          <h3>Consistency Simulation</h3>
+          <p>
+            The consistency score is based on 1000 simulated opening hands,
+            measuring how often your deck can establish a playable game state on
+            the first turn.
+          </p>
+          <div className="consistency-score-display">
+            <div
+              className="score-circle"
+              style={{
+                background: `conic-gradient(${getConsistencyColor(
+                  processedAnalytics.consistencyScore
+                )} ${processedAnalytics.consistencyScore * 3.6}deg, #f0f0f0 ${
+                  processedAnalytics.consistencyScore * 3.6
+                }deg)`,
+              }}
+            >
+              <div className="score-inner">
+                <span>{processedAnalytics.consistencyScore.toFixed(0)}</span>
+                <small>/100</small>
+              </div>
             </div>
           </div>
-        </div>
-        <div className="consistency-tip">
-          {processedAnalytics.consistencyScore >= 85
-            ? "Excellent consistency! This deck should perform reliably in tournament play."
-            : processedAnalytics.consistencyScore >= 70
-            ? "Good consistency. This deck will perform well in most games."
-            : "Consider improving consistency by adding more copies of key cards."}
-        </div>
-      </section>
-    </div>
-  );
+          <div className="consistency-tip">
+            {processedAnalytics.consistencyScore >= 85
+              ? "Excellent consistency! This deck should perform reliably in tournament play."
+              : processedAnalytics.consistencyScore >= 70
+              ? "Good consistency. This deck will perform well in most games."
+              : "Consider improving consistency by adding more copies of key cards."}
+          </div>
+        </section>
+      </div>
+    );
+  };
 
   return (
     <div className="deck-analytics">

@@ -157,6 +157,14 @@ export interface DeckAnalytics {
   monsterCount: number;
   spellCount: number;
   trapCount: number;
+  mainDeck: Array<{
+    id: number;
+    name: string;
+    roleInfo?: {
+      role: CardRole;
+      probability: number;
+    };
+  }>;
 }
 
 // Deck metrics calculated from analytics
