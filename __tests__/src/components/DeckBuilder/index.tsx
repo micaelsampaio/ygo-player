@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Card, Deck, DeckBuilderProps } from "./types";
 import DeckList from "./components/DeckList";
 import DeckEditor from "./components/DeckEditor/DeckEditor.tsx";
@@ -18,6 +18,7 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [deckAnalytics, setDeckAnalytics] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const timeoutRef = useRef<NodeJS.Timeout>();
 
   // Custom hooks
   const {
@@ -37,14 +38,27 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
   useEffect(() => {
     if (selectedDeck && !isAnalyzing) {
       setIsAnalyzing(true);
-      // Use regular setTimeout to delay analytics
-      setTimeout(() => {
+
+      // Clear any pending timeout
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+
+      // Set new timeout and store reference
+      timeoutRef.current = setTimeout(() => {
         const analytics = analyzeDeck(selectedDeck);
         setDeckAnalytics(analytics);
         setIsAnalyzing(false);
       }, 300);
     }
-  }, [selectedDeck, analyzeDeck, isAnalyzing]);
+
+    // Cleanup function to prevent memory leaks
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, [selectedDeck, analyzeDeck]);
 
   // Load initial decks
   useEffect(() => {
