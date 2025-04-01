@@ -420,6 +420,7 @@ export class YGOGameActions {
       group: "game-popup",
       type: "select-card-menu",
       data: {
+        player,
         filter: {
           monsters: true,
           field: true,

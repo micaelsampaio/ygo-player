@@ -7,11 +7,13 @@ import { CardZoneKV } from "../../types";
 type OnSelectCard = (cards: CardZoneKV[]) => void;
 
 export function SelectCardPopup({
+  player,
   duel,
   visible = true,
   filter,
   onSelectCards: onSelectedCardsCb,
 }: {
+  player: number,
   duel: YGODuel;
   filter: {
     monsters?: boolean;
@@ -101,7 +103,7 @@ export function SelectCardPopup({
     onSelectedCardsCb(cards);
   };
 
-  const field = duel.ygo.state.fields[0];
+  const field = duel.ygo.state.fields[player];
 
   const fieldCards = useMemo(() => {
     if (!filter.field) return [];
@@ -119,6 +121,21 @@ export function SelectCardPopup({
       cards.push({
         card,
         zone: YGOGameUtils.createZone("M", card.owner, index + 1),
+      });
+    });
+
+    field.extraMonsterZone.forEach((card: any, index: any) => {
+      if (!card) return false;
+
+      let showCard = false;
+
+      if (filter.monsters && YGOGameUtils.isMonster(card) && card.owner === player) showCard = true;
+
+      if (!showCard) return false;
+
+      cards.push({
+        card,
+        zone: YGOGameUtils.createZone("EMZ", card.owner, index + 1),
       });
     });
     return cards;
@@ -194,11 +211,10 @@ export function SelectCardPopup({
                       <img
                         key={cardData.card.index}
                         src={`${duel.config.cdnUrl}/images/cards_small/${cardData.card.id}.jpg`}
-                        className={`ygo-card ${
-                          selectedCards.current.has(cardData.card)
-                            ? "selected"
-                            : ""
-                        }`}
+                        className={`ygo-card ${selectedCards.current.has(cardData.card)
+                          ? "selected"
+                          : ""
+                          }`}
                         onClick={() =>
                           onSelectCard(cardData.card, cardData.zone)
                         }
@@ -220,11 +236,10 @@ export function SelectCardPopup({
                       <img
                         key={cardData.card.index}
                         src={`${duel.config.cdnUrl}/images/cards_small/${cardData.card.id}.jpg`}
-                        className={`ygo-card ${
-                          selectedCards.current.has(cardData.card)
-                            ? "selected"
-                            : ""
-                        }`}
+                        className={`ygo-card ${selectedCards.current.has(cardData.card)
+                          ? "selected"
+                          : ""
+                          }`}
                         onClick={() =>
                           onSelectCard(cardData.card, cardData.zone)
                         }
