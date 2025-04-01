@@ -8,6 +8,8 @@ export class UpdateFieldEvent extends YGOCommandHandler {
     }
 
     public start(): void {
+        this.props.duel.updateField();
+
         setTimeout(() => {
             this.props.onCompleted();
         }, 0);

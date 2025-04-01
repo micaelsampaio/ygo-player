@@ -211,6 +211,13 @@ export class MoveCardEventHandler extends YGOCommandHandler {
           cardZone.setGameCard(card);
         }
 
+        if (zoneData.zone === "H") {
+          duel.updateHand(event.player);
+          duel.renderHand(event.player);
+        }
+
+        duel.updateHand(event.player);
+
         this.props.onCompleted();
       })
     );
