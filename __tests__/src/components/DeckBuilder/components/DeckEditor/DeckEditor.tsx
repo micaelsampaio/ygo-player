@@ -32,7 +32,7 @@ const DeckEditor: React.FC<DeckEditorProps> = ({
 }) => {
   const [isEditingName, setIsEditingName] = useState(false); // Controls edit mode
   const [editedName, setEditedName] = useState(deck?.name || ""); // Stores the edited name
-  const [showRoleSelector, setShowRoleSelector] = useState<number | null>(null);
+  const [showRoleSelector, setShowRoleSelector] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const roleColors: Record<CardRole, string> = {
@@ -133,13 +133,15 @@ const DeckEditor: React.FC<DeckEditorProps> = ({
     updateDeck(updatedDeck);
   };
 
-  const handleRoleIconClick = (e: React.MouseEvent, cardId: number) => {
+  const handleRoleIconClick = (
+    e: React.MouseEvent,
+    cardId: number,
+    index: number
+  ) => {
     e.preventDefault();
     e.stopPropagation();
-    // Always close current selector before opening a new one
-    setShowRoleSelector(null);
-    // Use setTimeout to ensure state is updated before opening new selector
-    setTimeout(() => setShowRoleSelector(cardId), 0);
+    const uniqueId = `${cardId}-${index}`;
+    setShowRoleSelector(showRoleSelector === uniqueId ? null : uniqueId);
   };
 
   const mainDeckCards =
@@ -210,13 +212,15 @@ const DeckEditor: React.FC<DeckEditorProps> = ({
               onDragStart={(e) => handleDragStart(e, index, false)}
               onDragOver={(e) => e.preventDefault()}
               onDrop={(e) => handleDrop(e, index, false)}
+              onContextMenu={(e) =>
+                handleRoleIconClick(e, card.id, originalIndex)
+              }
             >
               <img
                 src={getCardImageUrl(card, "small")}
                 alt={card.name}
                 className="deck-card"
                 onClick={() => onCardSelect(card)}
-                onContextMenu={(e) => handleRoleIconClick(e, card.id)}
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
                   target.src = `${
@@ -232,7 +236,7 @@ const DeckEditor: React.FC<DeckEditorProps> = ({
                   {card.roleInfo.role}
                 </div>
               )}
-              {showRoleSelector === card.id && (
+              {showRoleSelector === `${card.id}-${originalIndex}` && (
                 <div
                   className="role-selector-popup"
                   onClick={(e) => {
@@ -287,13 +291,15 @@ const DeckEditor: React.FC<DeckEditorProps> = ({
               onDragStart={(e) => handleDragStart(e, index, true)}
               onDragOver={(e) => e.preventDefault()}
               onDrop={(e) => handleDrop(e, index, true)}
+              onContextMenu={(e) =>
+                handleRoleIconClick(e, card.id, originalIndex)
+              }
             >
               <img
                 src={getCardImageUrl(card, "small")}
                 alt={card.name}
                 className="deck-card"
                 onClick={() => onCardSelect(card)}
-                onContextMenu={(e) => handleRoleIconClick(e, card.id)}
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
                   target.src = `${
@@ -309,7 +315,7 @@ const DeckEditor: React.FC<DeckEditorProps> = ({
                   {card.roleInfo.role}
                 </div>
               )}
-              {showRoleSelector === card.id && (
+              {showRoleSelector === `${card.id}-${originalIndex}` && (
                 <div
                   className="role-selector-popup"
                   onClick={(e) => {
