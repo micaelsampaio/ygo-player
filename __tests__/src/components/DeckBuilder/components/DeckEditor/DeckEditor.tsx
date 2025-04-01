@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Card, Deck } from "../../types";
 import { getCardImageUrl } from "../../../../utils/cardImages";
+import { YGOGameUtils } from "ygo-player";
 import "./DeckEditor.css";
 
 type SortOption = "name" | "cardType" | "monsterType" | "level" | "atk" | "def";
@@ -63,30 +64,13 @@ const DeckEditor: React.FC<DeckEditorProps> = ({
     }
   };
 
-  const sortByCardType = (cards: Card[]) => {
-    return [...cards].sort((a, b) => {
-      const getTypeOrder = (type: string) => {
-        if (type.includes("Monster")) return 1;
-        if (type.includes("Spell")) return 2;
-        if (type.includes("Trap")) return 3;
-        return 4;
-      };
-      const typeCompare = getTypeOrder(a.type) - getTypeOrder(b.type);
-      // If same type, sort by name
-      return typeCompare === 0 ? a.name.localeCompare(b.name) : typeCompare;
-    });
-  };
-
   const handleSort = () => {
     if (!deck || !updateDeck) return;
 
-    const sortedMain = sortByCardType(deck.mainDeck);
-    const sortedExtra = sortByCardType(deck.extraDeck);
-
     updateDeck({
       ...deck,
-      mainDeck: sortedMain,
-      extraDeck: sortedExtra,
+      mainDeck: YGOGameUtils.sortCards(deck.mainDeck),
+      extraDeck: YGOGameUtils.sortCards(deck.extraDeck),
     });
   };
 
