@@ -20,6 +20,10 @@
   grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
   gap: 0.75rem;
   padding: 0.5rem;
+  min-height: 150px;
+  padding: 10px;
+  border-radius: 4px;
+  background-color: rgba(255, 255, 255, 0.05);
 }
 
 .deck-card-container {
@@ -28,6 +32,46 @@
   padding-top: 146%; /* Yu-Gi-Oh! card ratio */
   background-color: #f5f5f5;
   border-radius: 4px;
+  transition: transform 0.2s;
+}
+
+.deck-card-container:hover {
+  transform: translateY(-2px);
+}
+
+[draggable="true"] {
+  cursor: move;
+}
+
+.deck-card-container.drag-over {
+  position: relative;
+  border: 2px dashed #2196f3;
+  transform: scale(1.02);
+}
+
+.deck-card-container.drag-over::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(33, 150, 243, 0.1);
+  pointer-events: none;
+  border-radius: 4px;
+}
+
+.deck-card-container.dragging {
+  opacity: 0.4;
+  background: #e3f2fd;
+  transform: scale(1.05);
+  z-index: 1000;
+}
+
+.deck-card-container[draggable="true"] {
+  cursor: grab;
+}
+
+.deck-card-container[draggable="true"]:active {
+  cursor: grabbing;
+  opacity: 0.6;
 }
 
 .deck-card {
@@ -87,6 +131,30 @@
 
 .sort-select:hover {
   border-color: #999;
+}
+
+.sort-button {
+  padding: 8px 12px;
+  background-color: #2196f3;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+
+.sort-button:hover {
+  background-color: #1976d2;
+  transform: translateY(-1px);
+}
+
+.sort-icon {
+  font-size: 1.1em;
+  font-weight: bold;
 }
 
 .deck-editor-header {

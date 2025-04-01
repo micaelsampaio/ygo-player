@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import { Card, Deck } from "../../types";
 import { getCardImageUrl } from "../../../../utils/cardImages";
 import "./DeckEditor.css";
@@ -11,6 +11,12 @@ interface DeckEditorProps {
   onCardRemove: (card: Card, index: number, isExtraDeck: boolean) => void;
   onRenameDeck: (newName: string) => void; // This prop is for renaming
   onClearDeck: () => void;
+  onReorderCards: (
+    sourceIndex: number,
+    destinationIndex: number,
+    isExtraDeck: boolean
+  ) => void;
+  updateDeck?: (deck: Deck) => void; // Add this prop
 }
 
 const DeckEditor: React.FC<DeckEditorProps> = ({
@@ -19,8 +25,9 @@ const DeckEditor: React.FC<DeckEditorProps> = ({
   onCardRemove,
   onRenameDeck,
   onClearDeck,
+  onReorderCards,
+  updateDeck,
 }) => {
-  const [sortBy, setSortBy] = useState<SortOption>("cardType"); // Changed default sort
   const [isEditingName, setIsEditingName] = useState(false); // Controls edit mode
   const [editedName, setEditedName] = useState(deck?.name || ""); // Stores the edited name
 
@@ -31,54 +38,63 @@ const DeckEditor: React.FC<DeckEditorProps> = ({
     setIsEditingName(false);
   };
 
-  const sortCards = (cards: Card[]) => {
-    return [...cards]
-      .map((card, originalIndex) => ({ card, originalIndex }))
-      .sort((a, b) => {
-        switch (sortBy) {
-          case "name":
-            return a.card.name.localeCompare(b.card.name);
-          case "cardType":
-            const getMainType = (type: string) => {
-              if (type.includes("Monster")) return "1-Monster";
-              if (type.includes("Spell")) return "2-Spell";
-              if (type.includes("Trap")) return "3-Trap";
-              return type;
-            };
-            // First compare by main type
-            const typeComparison = getMainType(a.card.type).localeCompare(
-              getMainType(b.card.type)
-            );
-            // If same type, sort by name to keep playsets together
-            return typeComparison === 0
-              ? a.card.name.localeCompare(b.card.name)
-              : typeComparison;
-          case "monsterType":
-            if (!a.card.race && !b.card.race) return 0;
-            if (!a.card.race) return 1;
-            if (!b.card.race) return -1;
-            return a.card.race.localeCompare(b.card.race);
-          case "level":
-            return (b.card.level || 0) - (a.card.level || 0);
-          case "atk":
-            return (b.card.atk || 0) - (a.card.atk || 0);
-          case "def":
-            return (b.card.def || 0) - (a.card.def || 0);
-          default:
-            return 0;
-        }
-      });
+  const handleDragStart = (
+    e: React.DragEvent,
+    index: number,
+    isExtra: boolean
+  ) => {
+    const dragData = { index, isExtra };
+    e.dataTransfer.setData("application/json", JSON.stringify(dragData));
   };
 
-  const sortedMainDeck = useMemo(
-    () => (deck ? sortCards(deck.mainDeck) : []),
-    [deck?.mainDeck, sortBy]
-  );
+  const handleDrop = (
+    e: React.DragEvent,
+    dropIndex: number,
+    isExtraDeck: boolean
+  ) => {
+    e.preventDefault();
+    try {
+      const dragData = JSON.parse(e.dataTransfer.getData("application/json"));
+      if (dragData.isExtra === isExtraDeck) {
+        onReorderCards(dragData.index, dropIndex, isExtraDeck);
+      }
+    } catch (err) {
+      console.error("Drop error:", err);
+    }
+  };
 
-  const sortedExtraDeck = useMemo(
-    () => (deck ? sortCards(deck.extraDeck) : []),
-    [deck?.extraDeck, sortBy]
-  );
+  const sortByCardType = (cards: Card[]) => {
+    return [...cards].sort((a, b) => {
+      const getTypeOrder = (type: string) => {
+        if (type.includes("Monster")) return 1;
+        if (type.includes("Spell")) return 2;
+        if (type.includes("Trap")) return 3;
+        return 4;
+      };
+      const typeCompare = getTypeOrder(a.type) - getTypeOrder(b.type);
+      // If same type, sort by name
+      return typeCompare === 0 ? a.name.localeCompare(b.name) : typeCompare;
+    });
+  };
+
+  const handleSort = () => {
+    if (!deck || !updateDeck) return;
+
+    const sortedMain = sortByCardType(deck.mainDeck);
+    const sortedExtra = sortByCardType(deck.extraDeck);
+
+    updateDeck({
+      ...deck,
+      mainDeck: sortedMain,
+      extraDeck: sortedExtra,
+    });
+  };
+
+  const mainDeckCards =
+    deck?.mainDeck.map((card, index) => ({ card, originalIndex: index })) || [];
+  const extraDeckCards =
+    deck?.extraDeck.map((card, index) => ({ card, originalIndex: index })) ||
+    [];
 
   if (!deck) {
     return (
@@ -127,37 +143,33 @@ const DeckEditor: React.FC<DeckEditorProps> = ({
       <div className="current-deck">
         <div className="deck-controls">
           <h4>Main Deck ({deck.mainDeck.length})</h4>
-          <select
-            className="sort-select"
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as SortOption)}
-          >
-            <option value="cardType">Card Type (Monster/Spell/Trap)</option>
-            <option value="monsterType">Monster Type</option>
-            <option value="name">Name</option>
-            <option value="level">Level</option>
-            <option value="atk">ATK</option>
-            <option value="def">DEF</option>
-          </select>
+          <button className="sort-button" onClick={handleSort}>
+            <span className="sort-icon">⇅</span>
+            Sort
+          </button>
         </div>
 
         <div className="card-grid">
-          {sortedMainDeck.map(({ card, originalIndex }) => (
+          {mainDeckCards.map(({ card, originalIndex }, index) => (
             <div
-              className="deck-card-container"
               key={`${card.id}-${originalIndex}`}
+              className="deck-card-container"
+              draggable="true"
+              onDragStart={(e) => handleDragStart(e, index, false)}
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={(e) => handleDrop(e, index, false)}
             >
               <img
                 src={getCardImageUrl(card, "small")}
                 alt={card.name}
                 className="deck-card"
+                onClick={() => onCardSelect(card)}
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
                   target.src = `${
                     import.meta.env.VITE_YGO_CDN_URL
                   }/images/cards/card_back.jpg`;
                 }}
-                onClick={() => onCardSelect(card)}
               />
               <button
                 className="remove-card"
@@ -172,24 +184,28 @@ const DeckEditor: React.FC<DeckEditorProps> = ({
           ))}
         </div>
 
-        <h4>Extra Deck ({deck.extraDeck.length})</h4>
+        <h4>Extra Deck ({deck?.extraDeck.length || 0})</h4>
         <div className="card-grid">
-          {sortedExtraDeck.map(({ card, originalIndex }) => (
+          {extraDeckCards.map(({ card, originalIndex }, index) => (
             <div
-              className="deck-card-container"
               key={`${card.id}-${originalIndex}`}
+              className="deck-card-container"
+              draggable="true"
+              onDragStart={(e) => handleDragStart(e, index, true)}
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={(e) => handleDrop(e, index, true)}
             >
               <img
                 src={getCardImageUrl(card, "small")}
                 alt={card.name}
                 className="deck-card"
+                onClick={() => onCardSelect(card)}
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
                   target.src = `${
                     import.meta.env.VITE_YGO_CDN_URL
                   }/images/cards/card_back.jpg`;
                 }}
-                onClick={() => onCardSelect(card)}
               />
               <button
                 className="remove-card"

@@ -131,6 +131,28 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
     deleteDeck(deckToDelete.name);
   };
 
+  const handleReorderCards = (
+    sourceIndex: number,
+    destinationIndex: number,
+    isExtraDeck: boolean
+  ) => {
+    if (!selectedDeck) return;
+
+    const deckSection = isExtraDeck
+      ? selectedDeck.extraDeck
+      : selectedDeck.mainDeck;
+    const reorderedCards = Array.from(deckSection);
+    const [removed] = reorderedCards.splice(sourceIndex, 1);
+    reorderedCards.splice(destinationIndex, 0, removed);
+
+    const updatedDeck = {
+      ...selectedDeck,
+      [isExtraDeck ? "extraDeck" : "mainDeck"]: reorderedCards,
+    };
+
+    updateDeck(updatedDeck);
+  };
+
   return (
     <div className="deck-builder">
       <div className="builder-container">
@@ -175,6 +197,8 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
               onCardRemove={removeCardFromDeck}
               onRenameDeck={handleRenameDeck} // Pass the handler here
               onClearDeck={handleClearDeck}
+              onReorderCards={handleReorderCards}
+              updateDeck={updateDeck} // Add this prop
             />
           )}
         </div>
