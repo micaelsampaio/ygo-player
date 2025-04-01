@@ -222,16 +222,16 @@ const DeckAnalytics: React.FC<DeckAnalyticsProps> = ({ analytics }) => {
             Math.round(100 / probability)
           )} games`;
 
-    // Calculate most likely number to open with
-    const singleCardProb = probability / totalCopies; // Rough approximation per copy
-    const mostLikely = Math.round((singleCardProb * 5) / 100); // For 5 card opening hand
-
-    // For very low probabilities (under 20%), we expect to see 0 most often
+    // For very low probabilities (under 20%), highlight the chance of not drawing
     if (probability < 20) {
       return `${basicFrequency} (Most likely to open with 0 copies, ${(
         100 - probability
       ).toFixed(1)}% chance to not draw any)`;
     }
+
+    // Calculate the most likely number to open with (only for higher probabilities)
+    const singleCardProb = probability / totalCopies;
+    const mostLikely = Math.round((singleCardProb * 5) / 100);
 
     return `${basicFrequency} (Most likely to open with ${mostLikely} ${
       mostLikely === 1 ? "copy" : "copies"
@@ -628,6 +628,44 @@ const DeckAnalytics: React.FC<DeckAnalyticsProps> = ({ analytics }) => {
     return (
       <div className="full-probability-analysis">
         <section className="analysis-section">
+          <h3>Probability Formula</h3>
+          <div className="formula-container">
+            <div className="formula">
+              P(success) = 1 - C(40-k, n) / C(40, n)
+            </div>
+            <div className="formula-key">
+              <ul>
+                <li>
+                  <strong>k</strong>: Number of copies of a card
+                </li>
+                <li>
+                  <strong>n</strong>: Number of cards drawn (usually 5 for
+                  opening hand)
+                </li>
+                <li>
+                  <strong>C(a,b)</strong>: Combinations of a choose b
+                </li>
+              </ul>
+            </div>
+            <p>
+              Using hypergeometric distribution to calculate exact probabilities
+              in a 40-card deck:
+            </p>
+            <ul className="probability-examples">
+              <li>
+                <strong>3 copies</strong>: 33.76% chance to open with at least 1
+              </li>
+              <li>
+                <strong>2 copies</strong>: 23.71% chance to open with at least 1
+              </li>
+              <li>
+                <strong>1 copy</strong>: 12.50% chance to open with it
+              </li>
+            </ul>
+          </div>
+        </section>
+
+        <section className="analysis-section">
           <h3>Opening Hand Categories</h3>
           <div className="category-probabilities">
             {Object.values(groupedCards).some(
@@ -812,6 +850,7 @@ const DeckAnalytics: React.FC<DeckAnalyticsProps> = ({ analytics }) => {
             )}
           </div>
         </section>
+
         <section className="analysis-section">
           <h3>Opening Hand Probabilities</h3>
           {deckMetrics.drawProbabilities &&
