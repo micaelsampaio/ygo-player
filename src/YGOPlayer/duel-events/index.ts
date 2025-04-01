@@ -71,32 +71,3 @@ export function getDuelEventHandler(event: YGODuelEvents.DuelLog): any {
   const eventHandler = events[event.type] || events.DEFAULT;
   return eventHandler;
 }
-
-export function handleDuelEvent(duel: YGODuel, event: YGODuelEvents.DuelLog) {
-  const taskManager = duel.tasks;
-  const handler = getDuelEventHandler(event);
-
-  if (!handler) {
-    if (taskManager.isProcessing()) taskManager.complete();
-    duel.updateField();
-    return;
-  }
-
-  if (taskManager.isProcessing()) taskManager.complete();
-
-  duel.events.dispatch("disable-game-actions");
-
-  const onCompleted = () => {
-    duel.updateField();
-    duel.events.dispatch("enable-game-actions");
-  };
-
-  const props = {
-    duel,
-    ygo: duel.ygo,
-    event,
-    onCompleted,
-  };
-
-  handler(props);
-}
