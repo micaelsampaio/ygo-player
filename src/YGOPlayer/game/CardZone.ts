@@ -160,7 +160,7 @@ export class CardZone extends YGOEntity implements YGOUiElement {
 
     this.card = card;
 
-    this.updateZoneData();
+    this.updateCard();
   }
 
   getGameCard(): GameCard {
@@ -201,7 +201,7 @@ export class CardZone extends YGOEntity implements YGOUiElement {
     this.card.gameObject.position.copy(this.position);
     this.card.gameObject.rotation.copy(rotation);
     this.card.gameObject.scale.copy(this.scale);
-
+    this.card.showCardStats();
     this.card.updateCardStats(this.zoneData);
     this.card.gameObject.visible = true;
   }
@@ -214,9 +214,8 @@ export class CardZone extends YGOEntity implements YGOUiElement {
       this.zoneData.player !== this.card.cardReference.originalOwner
     ) {
       this.zoneData.player = this.card.cardReference.originalOwner;
-      this.zone = `EMZ${this.zoneData.player === 0 ? "" : "2"}-${
-        this.zoneData.zoneIndex + 1
-      }` as any;
+      this.zone = `EMZ${this.zoneData.player === 0 ? "" : "2"}-${this.zoneData.zoneIndex + 1
+        }` as any;
     }
   }
 

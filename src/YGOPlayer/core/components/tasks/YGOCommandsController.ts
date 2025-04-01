@@ -60,8 +60,6 @@ export class YGOCommandsController extends YGOComponent {
   }
 
   previousCommand() {
-    if (this.isLocked()) return;
-
     this.startRecover();
 
     if (this.duel.ygo.hasPrevCommand()) {

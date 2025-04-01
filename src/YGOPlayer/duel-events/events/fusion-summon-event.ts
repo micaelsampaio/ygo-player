@@ -1,17 +1,12 @@
 import * as THREE from "three";
 import { DuelEventHandlerProps } from "..";
-import { YGODuelEvents, YGOGameUtils } from "ygo-core";
+import { YGODuelEvents, YGOGameUtils, Card } from "ygo-core";
 import { YGOTaskSequence } from "../../core/components/tasks/YGOTaskSequence";
 import { GameCard } from "../../game/GameCard";
-import {
-  getCardRotationFromFieldZoneData,
-  getGameZone,
-  getZonePositionFromZoneData,
-} from "../../scripts/ygo-utils";
+import { getCardRotationFromFieldZoneData, getGameZone, getZonePositionFromZoneData, } from "../../scripts/ygo-utils";
 import { PositionTransition } from "../utils/position-transition";
 import { RotationTransition } from "../utils/rotation-transition";
 import { WaitForSeconds } from "../utils/wait-for-seconds";
-import { Card } from "ygo-core";
 import { CallbackTransition } from "../utils/callback";
 import { YGOCommandHandler } from "../../core/components/YGOCommandHandler";
 import { MultipleTasks } from "../utils/multiple-tasks";
@@ -49,10 +44,9 @@ export class FusionSummonEventHandler extends YGOCommandHandler {
     const direction = new THREE.Vector3();
 
     camera.getWorldDirection(direction);
-    const pivotPosition = camera.position
-      .clone()
-      .add(direction.multiplyScalar(8));
+    const pivotPosition = camera.position.clone().add(direction.multiplyScalar(8));
     const materialsCount = event.materials.length;
+    const hasMaterials = event.materials.length > 0;
 
     // Initial setup of cards in a circle
     this.cards = event.materials.map((material: any, i: any) => {
@@ -164,28 +158,29 @@ export class FusionSummonEventHandler extends YGOCommandHandler {
     }
 
     let time = 0;
+    const maxRotationTime = hasMaterials ? 1.25 : 0.5;
+    const showCardTime = hasMaterials ? 1.0 : 0.4;
+    const rotationSpeed = hasMaterials ? 2 : 4;
+
     const updateTask = new UpdateTask({
       onUpdate: function (dt) {
         time += dt;
-        fusionPlane1.rotateZ(THREE.MathUtils.degToRad(360) * dt * 2);
-        fusionPlane2.rotateZ(THREE.MathUtils.degToRad(360) * dt * 2);
+        fusionPlane1.rotateZ(THREE.MathUtils.degToRad(360) * dt * rotationSpeed);
+        fusionPlane2.rotateZ(THREE.MathUtils.degToRad(360) * dt * rotationSpeed);
 
-        if (time > 1.25) {
+        if (time > maxRotationTime) {
           updateTask.setTaskCompleted();
         }
       },
     });
+
+    // rotate fusion effect
     startTask(updateTask);
 
-    // startTask(new RotationTransition({
-    //     gameObject: fusionPlane1,
-    //     rotation: new THREE.Euler(1.74533, 1.74533, 1.74533),
-    //     duration: 1
-    // }));
-
+    // show white card
     startTask(
       new YGOTaskSequence(
-        new WaitForSeconds(1.25 - 0.2),
+        new WaitForSeconds(maxRotationTime - 0.2),
         new MaterialOpacityTransition({
           material: cardEffect.material,
           opacity: 1,
@@ -212,7 +207,7 @@ export class FusionSummonEventHandler extends YGOCommandHandler {
         updateCardPositionsTime += dt;
         const animationProgress = Math.min(
           updateCardPositionsTime / maxTime,
-          1.0
+          showCardTime
         );
         const easeOutCubic = 1 - Math.pow(1 - animationProgress, 3);
 
@@ -234,7 +229,7 @@ export class FusionSummonEventHandler extends YGOCommandHandler {
           card.position.lerp(targetPos, lerpFactor);
         });
 
-        if (animationProgress >= 1.0) {
+        if (animationProgress >= showCardTime) {
           // this.cards.forEach(card => { card.destroy() });
           this.cards.forEach((card) => {
             card.position.copy(pivotPosition);
@@ -263,8 +258,9 @@ export class FusionSummonEventHandler extends YGOCommandHandler {
     const fusionCardEffect = fusionCard.gameObject.clone();
     duel.core.sceneOverlay.add(fusionCardEffect);
 
+    // rotate materials and show card
     sequence.addMultiple(
-      new WaitForSeconds(0.5),
+      new WaitForSeconds(hasMaterials ? 0.5 : 0),
       updateCardPositions,
       new MultipleTasks(
         new WaitForSeconds(1),
@@ -294,7 +290,7 @@ export class FusionSummonEventHandler extends YGOCommandHandler {
       ),
       new CallbackTransition(() => {
         cardZone?.setGameCard(fusionCard);
-        cardZone?.getGameCard().showCardStats();
+        cardZone?.updateCard();
         duel.core.clearSceneOverlay();
         this.props.onCompleted();
       })

@@ -133,12 +133,12 @@ export class SynchroSummonEventHandler extends YGOCommandHandler {
       )
       .add(
         new CallbackTransition(() => {
+          cardZone?.setGameCard(card);
           this.props.onCompleted();
         })
       );
 
     startTask(sequence);
 
-    cardZone?.setGameCard(card);
   }
 }

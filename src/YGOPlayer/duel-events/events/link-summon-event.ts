@@ -175,6 +175,7 @@ export class LinkSummonEventHandler extends YGOCommandHandler {
           card.gameObject.rotation.copy(cardOverlay.rotation);
           card.gameObject.scale.copy(cardOverlay.scale);
           card.gameObject.visible = true;
+          cardZone?.setGameCard(card);
           duel.core.disableRenderOverlay();
           duel.core.scene.remove(modal);
           this.props.onCompleted();
@@ -183,6 +184,5 @@ export class LinkSummonEventHandler extends YGOCommandHandler {
 
     startTask(sequence);
 
-    cardZone?.setGameCard(card);
   }
 }

@@ -125,10 +125,6 @@ export class MoveCardEventHandler extends YGOCommandHandler {
       });
     }
 
-    if (cardZone) {
-      cardZone.setGameCard(card);
-    }
-
     // if (originZoneData.zone === "GY" || originZoneData.zone === "B") {
     //     // const aboveZonePos = startPosition.clone();
     //     // aboveZonePos.z += 1;
@@ -212,7 +208,7 @@ export class MoveCardEventHandler extends YGOCommandHandler {
         if (!cardZone) {
           card.destroy();
         } else {
-          card.showCardStats();
+          cardZone.setGameCard(card);
         }
 
         this.props.onCompleted();
