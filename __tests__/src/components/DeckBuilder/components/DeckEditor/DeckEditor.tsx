@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
-import { Card, Deck } from "../types";
-import { getCardImageUrl } from "../../../utils/cardImages";
+import { Card, Deck } from "../../types";
+import { getCardImageUrl } from "../../../../utils/cardImages";
 import "./DeckEditor.css";
 
 type SortOption = "name" | "cardType" | "monsterType" | "level" | "atk" | "def";

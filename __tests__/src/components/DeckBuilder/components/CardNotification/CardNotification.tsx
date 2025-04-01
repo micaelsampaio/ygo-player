@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Card } from "../types";
+import { Card } from "../../types";
 import "./CardNotification.css";
 
 interface CardNotificationProps {

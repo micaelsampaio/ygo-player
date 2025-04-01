@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Card, Deck } from "../types";
+import { Card, Deck } from "../../types";
 import "./CardSuggestions.css";
 
 interface CardSuggestionsProps {

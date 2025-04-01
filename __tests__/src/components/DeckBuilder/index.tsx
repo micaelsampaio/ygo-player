@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { Card, Deck, DeckBuilderProps } from "./types";
 import DeckList from "./components/DeckList";
-import DeckEditor from "./components/DeckEditor";
+import DeckEditor from "./components/DeckEditor/DeckEditor.tsx";
 import SearchPanel from "./components/Search/SearchPanel";
 import DeckAnalytics from "./components/DeckAnalysis";
-import CardModal from "./components/CardModal.tsx";
-import CardNotification from "./components/CardNotification.tsx";
+import CardModal from "./components/CardModal/CardModal.tsx";
+import CardNotification from "./components/CardNotification/CardNotification.tsx";
+import CardSuggestions from "./components/CardSuggestion/CardSuggestions.tsx";
 import { useDeckStorage } from "./hooks/useDeckStorage";
 import { useDeckAnalytics } from "./hooks/useDeckAnalytics";
 import "./DeckBuilder.css";
@@ -180,6 +181,12 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
 
         <div className="analytics-panel">
           <DeckAnalytics analytics={deckAnalytics} />
+          {selectedDeck && (
+            <CardSuggestions
+              deck={selectedDeck}
+              onAddCardToDeck={handleAddCard}
+            />
+          )}
         </div>
       </div>
 

@@ -1,7 +1,7 @@
 import React from "react";
-import { Card } from "../types";
+import { Card } from "../../types";
 import "./CardModal.css";
-import { getCardImageUrl } from "../../../utils/cardImages";
+import { getCardImageUrl } from "../../../../utils/cardImages";
 
 interface CardModalProps {
   card: Card;
