@@ -103,6 +103,8 @@ export default function Duel({
         options: duelData.options || {},
       };
 
+      console.log("TCL:: OPTIONS", config);
+
       ygo.editor(config);
     }
   }, [duelData]);

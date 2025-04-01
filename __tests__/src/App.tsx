@@ -8,6 +8,7 @@ import { YGOGameUtils } from "ygo-player";
 import { YGODeckToImage } from "ygo-core-images-utils";
 import styled from "styled-components";
 import { Logger } from "./utils/logger";
+import { ComboChooseDeck } from "./components/ComboChooseDeck.js";
 
 const cdnUrl = String(import.meta.env.VITE_YGO_CDN_URL);
 
@@ -24,6 +25,7 @@ const logger = Logger.createLogger("App");
 export default function App() {
   const kaibaNet = useKaibaNet();
   const [rooms, setRooms] = useState(() => kaibaNet.getRooms());
+  const [deckToPlay, setDeckToPlay] = useState("");
 
   const onRoomsUpdated = (updatedRooms) => {
     console.log("App: Updated rooms", updatedRooms);
@@ -71,7 +73,7 @@ export default function App() {
 
   let navigate = useNavigate();
 
-  const duel = (deck1: any, deck2: any) => {
+  const duel = (deck1: any, deck2: any, options: any = undefined) => {
     const roomJson = {
       players: [
         {
@@ -87,6 +89,7 @@ export default function App() {
       ],
       options: {
         shuffleDecks: false,
+        ...options || {}
       },
     };
 
@@ -111,6 +114,10 @@ export default function App() {
       state: { roomId, duelData: roomJson, playerId: kaibaNet.getPlayerId() },
     });
   };
+
+  const duelFromInitialField = ({ deck, fieldState }: any) => {
+    duel(deck, YUBEL, { fieldState })
+  }
 
   const duelAs = (e: any, deck1: any, deck2: any) => {
     e.preventDefault();
@@ -268,6 +275,8 @@ export default function App() {
                   </option>
                 ))}
               </select>
+
+              {selectedDeck && <button onClick={() => setDeckToPlay(selectedDeck)}>Create a combo</button>}
               <ul>
                 {replays.map((replay) => {
                   return (
@@ -286,6 +295,9 @@ export default function App() {
               </ul>
             </div>
           )}
+
+          {deckToPlay && <ComboChooseDeck deckId={deckToPlay} onChoose={duelFromInitialField} />}
+
         </LeftContent>
         <div>
           <RoomLobby
