@@ -81,6 +81,18 @@ const DeckEditor: React.FC<DeckEditorProps> = ({
   ) => {
     const dragData = { index, isExtra };
     e.dataTransfer.setData("application/json", JSON.stringify(dragData));
+    // Add a small delay to ensure the drag is actually starting
+    requestAnimationFrame(() => {
+      if (containerRef.current) {
+        containerRef.current.style.cursor = "grabbing";
+      }
+    });
+  };
+
+  const handleDragEnd = () => {
+    if (containerRef.current) {
+      containerRef.current.style.cursor = "default";
+    }
   };
 
   const handleDrop = (
@@ -210,6 +222,7 @@ const DeckEditor: React.FC<DeckEditorProps> = ({
               className="deck-card-container"
               draggable="true"
               onDragStart={(e) => handleDragStart(e, index, false)}
+              onDragEnd={handleDragEnd}
               onDragOver={(e) => e.preventDefault()}
               onDrop={(e) => handleDrop(e, index, false)}
               onContextMenu={(e) =>
@@ -289,6 +302,7 @@ const DeckEditor: React.FC<DeckEditorProps> = ({
               className="deck-card-container"
               draggable="true"
               onDragStart={(e) => handleDragStart(e, index, true)}
+              onDragEnd={handleDragEnd}
               onDragOver={(e) => e.preventDefault()}
               onDrop={(e) => handleDrop(e, index, true)}
               onContextMenu={(e) =>

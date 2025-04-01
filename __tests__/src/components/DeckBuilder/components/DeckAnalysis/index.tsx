@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import AnalyticsModal from "./AnalyticsModal";
 import "./DeckAnalytics.css";
 import { Logger } from "../../../../utils/logger";
@@ -71,9 +71,26 @@ const DeckAnalytics: React.FC<DeckAnalyticsProps> = ({ analytics }) => {
   });
 
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
+  const [processedAnalytics, setProcessedAnalytics] =
+    useState<DeckAnalyticsType | null>(null);
+
+  useEffect(() => {
+    if (!analytics) {
+      setProcessedAnalytics(null);
+      return;
+    }
+
+    const processAnalytics = () => {
+      requestAnimationFrame(() => {
+        setProcessedAnalytics(analytics);
+      });
+    };
+
+    processAnalytics();
+  }, [analytics]);
 
   const deckMetrics = useMemo(() => {
-    if (!analytics) {
+    if (!processedAnalytics) {
       logger.debug("No analytics data available, using defaults");
       return {
         powerUtility: {
@@ -92,36 +109,35 @@ const DeckAnalytics: React.FC<DeckAnalyticsProps> = ({ analytics }) => {
 
     logger.debug("Processing analytics data for UI");
 
-    // Log key card probabilities received from props
-    if (analytics.keyCards && analytics.keyCards.length > 0) {
-      logger.info("Key card probabilities:", analytics.keyCards);
+    if (processedAnalytics.keyCards && processedAnalytics.keyCards.length > 0) {
+      logger.info("Key card probabilities:", processedAnalytics.keyCards);
     }
 
     return {
-      powerUtility: analytics.powerUtilityRatio,
-      comboProbability: analytics.comboProbability,
-      resourceGeneration: analytics.resourceGeneration,
-      drawProbabilities: analytics.drawProbabilities || [],
-      cardEfficiencies: analytics.cardEfficiencies || [],
+      powerUtility: processedAnalytics.powerUtilityRatio,
+      comboProbability: processedAnalytics.comboProbability,
+      resourceGeneration: processedAnalytics.resourceGeneration,
+      drawProbabilities: processedAnalytics.drawProbabilities || [],
+      cardEfficiencies: processedAnalytics.cardEfficiencies || [],
     };
-  }, [analytics]);
+  }, [processedAnalytics]);
 
   const exportAnalytics = () => {
-    if (!analytics) return;
+    if (!processedAnalytics) return;
 
     const data = {
       deckName: "Deck Analysis",
       timestamp: new Date().toISOString(),
       metrics: {
-        consistency: analytics.consistencyScore,
-        deckSize: analytics.deckSize,
+        consistency: processedAnalytics.consistencyScore,
+        deckSize: processedAnalytics.deckSize,
         cardDistribution: {
-          monsters: analytics.monsterCount,
-          spells: analytics.spellCount,
-          traps: analytics.trapCount,
+          monsters: processedAnalytics.monsterCount,
+          spells: processedAnalytics.spellCount,
+          traps: processedAnalytics.trapCount,
         },
-        keyCards: analytics.keyCards,
-        archetypes: analytics.potentialArchetypes,
+        keyCards: processedAnalytics.keyCards,
+        archetypes: processedAnalytics.potentialArchetypes,
       },
     };
 
@@ -138,11 +154,10 @@ const DeckAnalytics: React.FC<DeckAnalyticsProps> = ({ analytics }) => {
     URL.revokeObjectURL(url);
   };
 
-  if (!analytics) {
+  if (!processedAnalytics) {
     return (
-      <div className="deck-analytics">
-        <h2>Deck Analysis</h2>
-        <p>Select a deck to see analysis</p>
+      <div className="deck-analytics loading">
+        <h2>Analyzing Deck...</h2>
       </div>
     );
   }
@@ -188,24 +203,32 @@ const DeckAnalytics: React.FC<DeckAnalyticsProps> = ({ analytics }) => {
         <div className="composition-stats">
           <div className="stat-item">
             <span>Monsters</span>
-            <span className="stat-value">{analytics.monsterCount} cards</span>
+            <span className="stat-value">
+              {processedAnalytics.monsterCount} cards
+            </span>
           </div>
           <div className="stat-item">
             <span>Spells</span>
-            <span className="stat-value">{analytics.spellCount} cards</span>
+            <span className="stat-value">
+              {processedAnalytics.spellCount} cards
+            </span>
           </div>
           <div className="stat-item">
             <span>Traps</span>
-            <span className="stat-value">{analytics.trapCount} cards</span>
+            <span className="stat-value">
+              {processedAnalytics.trapCount} cards
+            </span>
           </div>
           <div className="stat-item">
             <span>Main Deck</span>
-            <span className="stat-value">{analytics.deckSize} cards</span>
+            <span className="stat-value">
+              {processedAnalytics.deckSize} cards
+            </span>
           </div>
           <div className="stat-item">
             <span>Extra Deck</span>
             <span className="stat-value">
-              {analytics.extraDeckSize}/15 cards
+              {processedAnalytics.extraDeckSize}/15 cards
             </span>
           </div>
         </div>
@@ -214,7 +237,7 @@ const DeckAnalytics: React.FC<DeckAnalyticsProps> = ({ analytics }) => {
       <div className="analytics-section">
         <h3>Key Cards</h3>
         <div className="key-cards">
-          {analytics.keyCards.slice(0, 3).map((card, index) => {
+          {processedAnalytics.keyCards.slice(0, 3).map((card, index) => {
             const probability = card.openingProbability;
 
             return (
@@ -248,9 +271,9 @@ const DeckAnalytics: React.FC<DeckAnalyticsProps> = ({ analytics }) => {
               </div>
             );
           })}
-          {analytics.keyCards.length > 3 && (
+          {processedAnalytics.keyCards.length > 3 && (
             <div className="more-cards-note">
-              + {analytics.keyCards.length - 3} more key cards
+              + {processedAnalytics.keyCards.length - 3} more key cards
             </div>
           )}
         </div>
@@ -349,14 +372,14 @@ const DeckAnalytics: React.FC<DeckAnalyticsProps> = ({ analytics }) => {
       <section className="analysis-section">
         <h3>Deck Archetype Analysis</h3>
         <div className="archetype-tags">
-          {analytics.potentialArchetypes.map((archetype, index) => (
+          {processedAnalytics.potentialArchetypes.map((archetype, index) => (
             <div key={index} className="archetype-tag">
               {archetype.name}
               <span className="archetype-count">{archetype.count}</span>
             </div>
           ))}
         </div>
-        {analytics.potentialArchetypes.length === 0 && (
+        {processedAnalytics.potentialArchetypes.length === 0 && (
           <p>
             No clear archetype detected. This appears to be a custom strategy or
             mixed deck.
@@ -367,7 +390,7 @@ const DeckAnalytics: React.FC<DeckAnalyticsProps> = ({ analytics }) => {
       <section className="analysis-section">
         <h3>Attribute Distribution</h3>
         <div className="attribute-bubbles">
-          {Object.entries(analytics.attributeDistribution).map(
+          {Object.entries(processedAnalytics.attributeDistribution).map(
             ([attribute, count], index) => {
               const attributeColors: Record<string, string> = {
                 DARK: "#673AB7",
@@ -399,7 +422,7 @@ const DeckAnalytics: React.FC<DeckAnalyticsProps> = ({ analytics }) => {
       <section className="analysis-section">
         <h3>Monster Level Distribution</h3>
         <div className="distribution-chart">
-          {Object.entries(analytics.levelDistribution)
+          {Object.entries(processedAnalytics.levelDistribution)
             .sort(([a], [b]) => parseInt(a) - parseInt(b))
             .map(([level, count], index) => (
               <div key={index} className="distribution-bar-container">
@@ -413,7 +436,9 @@ const DeckAnalytics: React.FC<DeckAnalyticsProps> = ({ analytics }) => {
                   <div
                     className="distribution-bar"
                     style={{
-                      width: `${(count / analytics.monsterCount) * 100}%`,
+                      width: `${
+                        (count / processedAnalytics.monsterCount) * 100
+                      }%`,
                       backgroundColor: "#FF9800",
                     }}
                   />
@@ -436,15 +461,15 @@ const DeckAnalytics: React.FC<DeckAnalyticsProps> = ({ analytics }) => {
                 <div
                   className="gauge-fill"
                   style={{
-                    width: `${analytics.consistencyScore}%`,
+                    width: `${processedAnalytics.consistencyScore}%`,
                     backgroundColor: getConsistencyColor(
-                      analytics.consistencyScore
+                      processedAnalytics.consistencyScore
                     ),
                   }}
                 ></div>
               </div>
               <div className="metric-value">
-                {analytics.consistencyScore.toFixed(0)}/100
+                {processedAnalytics.consistencyScore.toFixed(0)}/100
               </div>
             </div>
             <div className="metric-explanation">
@@ -512,27 +537,27 @@ const DeckAnalytics: React.FC<DeckAnalyticsProps> = ({ analytics }) => {
       <section className="analysis-section tips-section">
         <h3>Improvement Tips</h3>
         <ul className="tips-list">
-          {analytics.monsterCount < 14 && (
+          {processedAnalytics.monsterCount < 14 && (
             <li>
               Consider adding more monster cards for better field presence.
             </li>
           )}
-          {analytics.spellCount < 10 && (
+          {processedAnalytics.spellCount < 10 && (
             <li>
               Adding more spell cards could improve your resource generation.
             </li>
           )}
-          {analytics.trapCount < 5 && (
+          {processedAnalytics.trapCount < 5 && (
             <li>
               Including trap cards would provide better disruption options.
             </li>
           )}
-          {analytics.consistencyScore < 70 && (
+          {processedAnalytics.consistencyScore < 70 && (
             <li>
               Increase consistency by adding more copies of your key cards.
             </li>
           )}
-          {!Object.entries(analytics.attributeDistribution).some(
+          {!Object.entries(processedAnalytics.attributeDistribution).some(
             ([_, count]) => count > 7
           ) && (
             <li>
@@ -730,22 +755,22 @@ const DeckAnalytics: React.FC<DeckAnalyticsProps> = ({ analytics }) => {
             className="score-circle"
             style={{
               background: `conic-gradient(${getConsistencyColor(
-                analytics.consistencyScore
-              )} ${analytics.consistencyScore * 3.6}deg, #f0f0f0 ${
-                analytics.consistencyScore * 3.6
+                processedAnalytics.consistencyScore
+              )} ${processedAnalytics.consistencyScore * 3.6}deg, #f0f0f0 ${
+                processedAnalytics.consistencyScore * 3.6
               }deg)`,
             }}
           >
             <div className="score-inner">
-              <span>{analytics.consistencyScore.toFixed(0)}</span>
+              <span>{processedAnalytics.consistencyScore.toFixed(0)}</span>
               <small>/100</small>
             </div>
           </div>
         </div>
         <div className="consistency-tip">
-          {analytics.consistencyScore >= 85
+          {processedAnalytics.consistencyScore >= 85
             ? "Excellent consistency! This deck should perform reliably in tournament play."
-            : analytics.consistencyScore >= 70
+            : processedAnalytics.consistencyScore >= 70
             ? "Good consistency. This deck will perform well in most games."
             : "Consider improving consistency by adding more copies of key cards."}
         </div>

@@ -16,14 +16,8 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
   const [isSearchVisible, setIsSearchVisible] = useState(false);
   const [previewCard, setPreviewCard] = useState<Card | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [deckAnalytics, setDeckAnalytics] =
-    useState<
-      ReturnType<typeof useDeckAnalytics>["analyzeDeck"] extends (
-        deck: Deck
-      ) => infer R
-        ? R
-        : never | null
-    >(null);
+  const [deckAnalytics, setDeckAnalytics] = useState(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   // Custom hooks
   const {
@@ -40,6 +34,18 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
 
   const { analyzeDeck } = useDeckAnalytics();
 
+  useEffect(() => {
+    if (selectedDeck && !isAnalyzing) {
+      setIsAnalyzing(true);
+      // Use regular setTimeout to delay analytics
+      setTimeout(() => {
+        const analytics = analyzeDeck(selectedDeck);
+        setDeckAnalytics(analytics);
+        setIsAnalyzing(false);
+      }, 300);
+    }
+  }, [selectedDeck, analyzeDeck, isAnalyzing]);
+
   // Load initial decks
   useEffect(() => {
     if (initialDecks.length > 0) {
@@ -52,16 +58,6 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
       });
     }
   }, [initialDecks, decks, createDeck, updateDeck]);
-
-  // Update analytics whenever the selected deck changes
-  useEffect(() => {
-    if (selectedDeck) {
-      const analytics = analyzeDeck(selectedDeck);
-      setDeckAnalytics(analytics);
-    } else {
-      setDeckAnalytics(null);
-    }
-  }, [selectedDeck, analyzeDeck]);
 
   // Event handlers
   const toggleCardPreview = (card: Card) => {

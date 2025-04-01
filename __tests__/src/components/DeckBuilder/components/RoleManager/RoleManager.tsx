@@ -19,7 +19,23 @@ const RoleManager: React.FC<RoleManagerProps> = ({ deck, updateCardRole }) => {
   );
 
   useEffect(() => {
-    setAnalytics(analyzeDeckRoles(deck));
+    let mounted = true;
+
+    const analyze = async () => {
+      // Process analytics in the next tick
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      const results = analyzeDeckRoles(deck);
+
+      if (mounted) {
+        setAnalytics(results);
+      }
+    };
+
+    analyze();
+
+    return () => {
+      mounted = false;
+    };
   }, [deck]);
 
   if (!analytics) return null;
