@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Card, Deck } from "../../types";
 import { getCardImageUrl } from "../../../../utils/cardImages";
 import { YGOGameUtils } from "ygo-player";
+import RoleManager from "../RoleManager/RoleManager";
 import "./DeckEditor.css";
 
 type SortOption = "name" | "cardType" | "monsterType" | "level" | "atk" | "def";
@@ -31,6 +32,40 @@ const DeckEditor: React.FC<DeckEditorProps> = ({
 }) => {
   const [isEditingName, setIsEditingName] = useState(false); // Controls edit mode
   const [editedName, setEditedName] = useState(deck?.name || ""); // Stores the edited name
+  const [showRoleSelector, setShowRoleSelector] = useState<number | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const roleColors: Record<CardRole, string> = {
+    Starter: "#4CAF50",
+    Extender: "#2196F3",
+    Handtrap: "#9C27B0",
+    BoardBreaker: "#F44336",
+    Engine: "#FF9800",
+    NonEngine: "#607D8B",
+    Garnets: "#795548",
+    Flexible: "#9E9E9E",
+  };
+
+  const availableRoles: CardRole[] = [
+    "Starter",
+    "Extender",
+    "Handtrap",
+    "BoardBreaker",
+    "Engine",
+    "NonEngine",
+    "Garnets",
+    "Flexible",
+  ];
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (!(e.target as Element).closest(".role-selector-popup")) {
+        setShowRoleSelector(null);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const handleNameSubmit = () => {
     if (editedName.trim() && editedName !== deck?.name) {
@@ -74,6 +109,39 @@ const DeckEditor: React.FC<DeckEditorProps> = ({
     });
   };
 
+  const handleUpdateCardRole = (
+    cardId: number,
+    role: CardRole,
+    isAutoDetected: boolean
+  ) => {
+    if (!deck || !updateDeck) return;
+
+    const updatedDeck = {
+      ...deck,
+      mainDeck: deck.mainDeck.map((card) =>
+        card.id === cardId
+          ? { ...card, roleInfo: { role, isAutoDetected } }
+          : card
+      ),
+      extraDeck: deck.extraDeck.map((card) =>
+        card.id === cardId
+          ? { ...card, roleInfo: { role, isAutoDetected } }
+          : card
+      ),
+    };
+
+    updateDeck(updatedDeck);
+  };
+
+  const handleRoleIconClick = (e: React.MouseEvent, cardId: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+    // Always close current selector before opening a new one
+    setShowRoleSelector(null);
+    // Use setTimeout to ensure state is updated before opening new selector
+    setTimeout(() => setShowRoleSelector(cardId), 0);
+  };
+
   const mainDeckCards =
     deck?.mainDeck.map((card, index) => ({ card, originalIndex: index })) || [];
   const extraDeckCards =
@@ -89,7 +157,7 @@ const DeckEditor: React.FC<DeckEditorProps> = ({
   }
 
   return (
-    <div className="deck-editor">
+    <div className="deck-editor" ref={containerRef}>
       <div className="deck-editor-header">
         {isEditingName ? (
           <div className="deck-name-edit">
@@ -148,6 +216,7 @@ const DeckEditor: React.FC<DeckEditorProps> = ({
                 alt={card.name}
                 className="deck-card"
                 onClick={() => onCardSelect(card)}
+                onContextMenu={(e) => handleRoleIconClick(e, card.id)}
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
                   target.src = `${
@@ -155,6 +224,46 @@ const DeckEditor: React.FC<DeckEditorProps> = ({
                   }/images/cards/card_back.jpg`;
                 }}
               />
+              {card.roleInfo && (
+                <div
+                  className="card-role-indicator"
+                  style={{ backgroundColor: roleColors[card.roleInfo.role] }}
+                >
+                  {card.roleInfo.role}
+                </div>
+              )}
+              {showRoleSelector === card.id && (
+                <div
+                  className="role-selector-popup"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }}
+                >
+                  {availableRoles.map((role) => (
+                    <button
+                      key={role}
+                      className={`role-option ${
+                        card.roleInfo?.role === role ? "active" : ""
+                      }`}
+                      style={{
+                        borderColor: roleColors[role],
+                        backgroundColor:
+                          card.roleInfo?.role === role
+                            ? roleColors[role]
+                            : "white",
+                        color: card.roleInfo?.role === role ? "white" : "black",
+                      }}
+                      onClick={() => {
+                        handleUpdateCardRole(card.id, role, false);
+                        setShowRoleSelector(null);
+                      }}
+                    >
+                      {role}
+                    </button>
+                  ))}
+                </div>
+              )}
               <button
                 className="remove-card"
                 onClick={(e) => {
@@ -184,6 +293,7 @@ const DeckEditor: React.FC<DeckEditorProps> = ({
                 alt={card.name}
                 className="deck-card"
                 onClick={() => onCardSelect(card)}
+                onContextMenu={(e) => handleRoleIconClick(e, card.id)}
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
                   target.src = `${
@@ -191,6 +301,46 @@ const DeckEditor: React.FC<DeckEditorProps> = ({
                   }/images/cards/card_back.jpg`;
                 }}
               />
+              {card.roleInfo && (
+                <div
+                  className="card-role-indicator"
+                  style={{ backgroundColor: roleColors[card.roleInfo.role] }}
+                >
+                  {card.roleInfo.role}
+                </div>
+              )}
+              {showRoleSelector === card.id && (
+                <div
+                  className="role-selector-popup"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }}
+                >
+                  {availableRoles.map((role) => (
+                    <button
+                      key={role}
+                      className={`role-option ${
+                        card.roleInfo?.role === role ? "active" : ""
+                      }`}
+                      style={{
+                        borderColor: roleColors[role],
+                        backgroundColor:
+                          card.roleInfo?.role === role
+                            ? roleColors[role]
+                            : "white",
+                        color: card.roleInfo?.role === role ? "white" : "black",
+                      }}
+                      onClick={() => {
+                        handleUpdateCardRole(card.id, role, false);
+                        setShowRoleSelector(null);
+                      }}
+                    >
+                      {role}
+                    </button>
+                  ))}
+                </div>
+              )}
               <button
                 className="remove-card"
                 onClick={(e) => {
@@ -203,6 +353,14 @@ const DeckEditor: React.FC<DeckEditorProps> = ({
             </div>
           ))}
         </div>
+      </div>
+
+      <div className="deck-analysis">
+        <h4>Card Roles Analysis</h4>
+        <RoleManager
+          deck={[...deck.mainDeck, ...deck.extraDeck]}
+          updateCardRole={handleUpdateCardRole}
+        />
       </div>
     </div>
   );

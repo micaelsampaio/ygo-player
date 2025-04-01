@@ -1,0 +1,117 @@
+.role-manager {
+  background: white;
+  border-radius: 8px;
+  padding: 15px;
+  margin-top: 20px;
+}
+
+.role-tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.role-tabs button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  background: #f5f5f5;
+  cursor: pointer;
+}
+
+.role-tabs button.active {
+  background: #2196f3;
+  color: white;
+}
+
+.role-distribution {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.role-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.role-label {
+  width: 100px;
+  font-size: 0.9em;
+}
+
+.role-bar-container {
+  flex-grow: 1;
+  height: 8px;
+  background: #f5f5f5;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.role-bar-fill {
+  height: 100%;
+  transition: width 0.3s ease;
+}
+
+.role-count {
+  width: 30px;
+  text-align: right;
+  font-size: 0.9em;
+}
+
+.role-suggestions {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.suggestion-item {
+  background: #f8f9fa;
+  border-radius: 6px;
+  padding: 12px;
+}
+
+.suggestion-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.confidence {
+  color: #2196f3;
+  font-weight: bold;
+}
+
+.suggestion-content {
+  font-size: 0.9em;
+}
+
+.reason {
+  color: #666;
+  font-style: italic;
+  margin: 8px 0;
+}
+
+.suggestion-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.suggestion-actions button {
+  padding: 4px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.accept-suggestion {
+  background: #4caf50;
+  color: white;
+}
+
+.reject-suggestion {
+  background: #f5f5f5;
+}

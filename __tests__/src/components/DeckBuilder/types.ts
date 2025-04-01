@@ -63,6 +63,22 @@ export type SpellCategory =
 
 export type TrapCategory = "Normal" | "Continuous" | "Counter";
 
+export type CardRole =
+  | "Starter" // Cards that can start your combos
+  | "Extender" // Cards that extend your plays
+  | "Handtrap" // Interruption from hand
+  | "BoardBreaker" // Cards that break established boards
+  | "Engine" // Part of main deck engine
+  | "NonEngine" // Generic good cards
+  | "Garnets" // Cards you don't want to draw
+  | "Flexible"; // Multiple roles
+
+export interface CardRoleInfo {
+  role: CardRole;
+  isAutoDetected: boolean; // Whether role was auto-detected or user-assigned
+  notes?: string; // Optional user notes about why this role
+}
+
 // Card image type from YGOPRODeck API
 export interface CardImage {
   id: number;
@@ -104,6 +120,7 @@ export interface Card {
   linkval?: number;
   linkmarkers?: string[];
   scale?: number;
+  roleInfo?: CardRoleInfo;
 }
 
 // Deck structure
@@ -190,4 +207,17 @@ export interface SearchPanelProps {
 // Props for DeckAnalytics component
 export interface DeckAnalyticsProps {
   analytics: DeckAnalytics | null;
+}
+
+// Add analytics interface for role distribution
+export interface DeckRoleAnalytics {
+  roleDistribution: Record<CardRole, number>;
+  autoDetectedRoles: number;
+  userAssignedRoles: number;
+  suggestions: Array<{
+    cardId: number;
+    suggestedRole: CardRole;
+    confidence: number;
+    reason: string;
+  }>;
 }
