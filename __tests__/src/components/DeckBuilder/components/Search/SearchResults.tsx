@@ -60,17 +60,15 @@ const SearchResults: React.FC<SearchResultsProps> = ({
               className="card-content"
               onClick={() => onCardSelect(card)} // This will trigger the card modal
             >
-              <div className="card-image-wrapper">
-                <img
-                  src={getCardImageUrl(card, "small")}
-                  alt={card.name}
-                  className="search-result-image"
-                  onError={(e) => {
-                    e.currentTarget.src =
-                      "https://via.placeholder.com/44x64?text=No+Image";
-                  }}
-                />
-              </div>
+              <img
+                src={getCardImageUrl(card, "small")}
+                alt={card.name}
+                className="card-image"
+                onError={(e) => {
+                  e.currentTarget.src =
+                    "https://via.placeholder.com/44x64?text=No+Image";
+                }}
+              />
 
               <div className="card-info">
                 <div className="card-primary">
