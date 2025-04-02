@@ -18,6 +18,9 @@
   padding: 15px;
   background: #f5f5f5;
   border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
 }
 
 .control-group {
@@ -42,6 +45,7 @@
 }
 
 .simulate-button {
+  width: fit-content;
   padding: 8px 16px;
   background-color: #2196f3;
   color: white;
@@ -49,6 +53,7 @@
   border-radius: 4px;
   cursor: pointer;
   transition: background-color 0.2s;
+  margin-top: 10px;
   align-self: flex-end;
 }
 
@@ -59,6 +64,38 @@
 .simulate-button:disabled {
   background-color: #ccc;
   cursor: not-allowed;
+}
+
+.simulation-mode-toggle {
+  display: flex;
+  gap: 1px;
+  margin-bottom: 15px;
+  background: #ddd;
+  padding: 2px;
+  border-radius: 6px;
+}
+
+.simulation-mode-toggle button {
+  flex: 1;
+  padding: 8px 16px;
+  border: none;
+  background: #fff;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.9rem;
+}
+
+.simulation-mode-toggle button:first-child {
+  border-radius: 4px 0 0 4px;
+}
+
+.simulation-mode-toggle button:last-child {
+  border-radius: 0 4px 4px 0;
+}
+
+.simulation-mode-toggle button.active {
+  background: #2196f3;
+  color: white;
 }
 
 .statistics-section {
@@ -162,6 +199,128 @@
   margin: 4px 0;
   color: #666;
   font-size: 0.9rem;
+}
+
+.wanted-cards-section {
+  margin-top: 20px;
+  padding: 15px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.wanted-cards-input {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+  align-items: flex-start;
+}
+
+.wanted-cards-input select {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+.wanted-cards-input input {
+  width: 80px;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+.add-card-btn {
+  padding: 10px 20px;
+  background: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  font-weight: 500;
+}
+
+.add-card-btn:hover {
+  background: #45a049;
+}
+
+.add-card-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.wanted-cards-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 15px;
+}
+
+.wanted-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #eee;
+  transition: transform 0.2s;
+}
+
+.wanted-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.wanted-card-image {
+  width: 40px;
+  height: 58px;
+  object-fit: contain;
+  border-radius: 3px;
+}
+
+.wanted-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.wanted-card-name {
+  font-weight: 500;
+  color: #333;
+}
+
+.wanted-card-copies {
+  font-size: 0.8rem;
+  color: #666;
+}
+
+.remove-card-btn {
+  background: none;
+  border: none;
+  color: #999;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 4px 8px;
+  margin-left: auto;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.remove-card-btn:hover {
+  background: #fee;
+  color: #f44336;
+}
+
+.wanted-cards-stats {
+  margin-bottom: 20px;
+  padding: 15px;
+  background: #f5f5f5;
+  border-radius: 8px;
+  border-left: 4px solid #2196f3;
 }
 
 @media (max-width: 768px) {

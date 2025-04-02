@@ -42,6 +42,13 @@ interface ExtendedStatistics {
       averagePerHand: number;
     };
   };
+  wantedCardsSuccessRate: number;
+  wantedCardsSuccessCount: number;
+}
+
+interface WantedCards {
+  card: Card;
+  copies: number;
 }
 
 const DrawSimulator: React.FC<DrawSimulatorProps> = ({
@@ -52,10 +59,52 @@ const DrawSimulator: React.FC<DrawSimulatorProps> = ({
   const [simulations, setSimulations] = useState(1);
   const [results, setResults] = useState<SimulationResult[]>([]);
   const [isSimulating, setIsSimulating] = useState(false);
+  const [wantedCards, setWantedCards] = useState<WantedCards[]>([]);
+  const [selectedCard, setSelectedCard] = useState<Card | null>(null);
+  const [wantedCopies, setWantedCopies] = useState(1);
+  const [simulationMode, setSimulationMode] = useState<"random" | "specific">(
+    "random"
+  );
+
+  const uniqueCards = useMemo(() => {
+    if (!deck) return [];
+    const cardMap = new Map();
+    deck.mainDeck.forEach((card) => {
+      if (!cardMap.has(card.id)) {
+        const copies = deck.mainDeck.filter((c) => c.id === card.id).length;
+        cardMap.set(card.id, { ...card, totalCopies: copies });
+      }
+    });
+    return Array.from(cardMap.values());
+  }, [deck]);
 
   const drawHand = (deckList: Card[], size: number): Card[] => {
     const shuffled = [...deckList].sort(() => Math.random() - 0.5);
     return shuffled.slice(0, size);
+  };
+
+  const addWantedCard = () => {
+    if (!selectedCard) return;
+
+    const existing = wantedCards.find((w) => w.card.id === selectedCard.id);
+    if (existing) {
+      setWantedCards(
+        wantedCards.map((w) =>
+          w.card.id === selectedCard.id ? { ...w, copies: wantedCopies } : w
+        )
+      );
+    } else {
+      setWantedCards([
+        ...wantedCards,
+        { card: selectedCard, copies: wantedCopies },
+      ]);
+    }
+    setSelectedCard(null);
+    setWantedCopies(1);
+  };
+
+  const removeWantedCard = (cardId: number) => {
+    setWantedCards(wantedCards.filter((w) => w.card.id !== cardId));
   };
 
   const simulateDraws = () => {
@@ -63,11 +112,21 @@ const DrawSimulator: React.FC<DrawSimulatorProps> = ({
     setIsSimulating(true);
 
     const newResults: SimulationResult[] = [];
+    let successCount = 0;
+
     for (let i = 0; i < simulations; i++) {
+      const hand = drawHand(deck.mainDeck, handSize);
       newResults.push({
-        hand: drawHand(deck.mainDeck, handSize),
+        hand,
         timestamp: Date.now(),
       });
+
+      const isSuccessful = wantedCards.every((wanted) => {
+        const drawnCopies = hand.filter((c) => c.id === wanted.card.id).length;
+        return drawnCopies >= wanted.copies;
+      });
+
+      if (isSuccessful) successCount++;
     }
 
     setResults(newResults);
@@ -84,6 +143,7 @@ const DrawSimulator: React.FC<DrawSimulatorProps> = ({
       string,
       { atLeastOne: number; total: number }
     > = {};
+    let wantedCardsSuccessCount = 0;
 
     simResults.forEach((result) => {
       const handKey = result.hand
@@ -115,6 +175,15 @@ const DrawSimulator: React.FC<DrawSimulatorProps> = ({
       rolesInHand.forEach((role) => {
         if (role) roleAppearances[role].atLeastOne++;
       });
+
+      const isSuccessful = wantedCards.every((wanted) => {
+        const drawnCopies = result.hand.filter(
+          (c) => c.id === wanted.card.id
+        ).length;
+        return drawnCopies >= wanted.copies;
+      });
+
+      if (isSuccessful) wantedCardsSuccessCount++;
     });
 
     const sortedHands = Object.values(handFrequency).sort(
@@ -164,6 +233,8 @@ const DrawSimulator: React.FC<DrawSimulatorProps> = ({
         percentage: (leastSeenCard.count / totalSims) * 100,
       },
       roleStatistics: roleStats,
+      wantedCardsSuccessRate: (wantedCardsSuccessCount / totalSims) * 100,
+      wantedCardsSuccessCount,
     };
   };
 
@@ -179,13 +250,28 @@ const DrawSimulator: React.FC<DrawSimulatorProps> = ({
   return (
     <div className="draw-simulator">
       <div className="simulator-controls">
+        <div className="simulation-mode-toggle">
+          <button
+            className={simulationMode === "random" ? "active" : ""}
+            onClick={() => setSimulationMode("random")}
+          >
+            Random Draw
+          </button>
+          <button
+            className={simulationMode === "specific" ? "active" : ""}
+            onClick={() => setSimulationMode("specific")}
+          >
+            Specific Cards
+          </button>
+        </div>
+
         <div className="control-group">
           <label>
             Hand Size:
             <input
               type="number"
               min="1"
-              max={deck.mainDeck.length}
+              max={deck?.mainDeck.length || 40}
               value={handSize}
               onChange={(e) => setHandSize(Number(e.target.value))}
             />
@@ -200,14 +286,84 @@ const DrawSimulator: React.FC<DrawSimulatorProps> = ({
               onChange={(e) => setSimulations(Number(e.target.value))}
             />
           </label>
-          <button
-            onClick={simulateDraws}
-            disabled={isSimulating}
-            className="simulate-button"
-          >
-            {isSimulating ? "Simulating..." : "Simulate Draws"}
-          </button>
         </div>
+
+        {simulationMode === "specific" && (
+          <div className="wanted-cards-section">
+            <h4>Select Cards to Draw</h4>
+            <div className="wanted-cards-input">
+              <select
+                value={selectedCard?.id || ""}
+                onChange={(e) => {
+                  const card = uniqueCards.find(
+                    (c) => c.id.toString() === e.target.value
+                  );
+                  setSelectedCard(card || null);
+                }}
+              >
+                <option value="">Select a card...</option>
+                {uniqueCards.map((card) => (
+                  <option key={card.id} value={card.id}>
+                    {card.name} ({card.totalCopies}x)
+                  </option>
+                ))}
+              </select>
+              <input
+                type="number"
+                min="1"
+                max={
+                  selectedCard
+                    ? uniqueCards.find((c) => c.id === selectedCard.id)
+                        ?.totalCopies || 3
+                    : 3
+                }
+                value={wantedCopies}
+                onChange={(e) => setWantedCopies(Number(e.target.value))}
+              />
+              <button
+                className="add-card-btn"
+                onClick={addWantedCard}
+                disabled={!selectedCard}
+              >
+                Add Card
+              </button>
+            </div>
+
+            <div className="wanted-cards-list">
+              {wantedCards.map(({ card, copies }) => (
+                <div key={card.id} className="wanted-card">
+                  <img
+                    src={getCardImageUrl(card, "small")}
+                    alt={card.name}
+                    className="wanted-card-image"
+                  />
+                  <div className="wanted-card-info">
+                    <span className="wanted-card-name">{card.name}</span>
+                    <span className="wanted-card-copies">Want {copies}x</span>
+                  </div>
+                  <button
+                    className="remove-card-btn"
+                    onClick={() => removeWantedCard(card.id)}
+                    title="Remove card"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <button
+          onClick={simulateDraws}
+          disabled={
+            isSimulating ||
+            (simulationMode === "specific" && wantedCards.length === 0)
+          }
+          className="simulate-button"
+        >
+          {isSimulating ? "Simulating..." : "Simulate Draws"}
+        </button>
       </div>
 
       <div className="simulation-results">
@@ -215,8 +371,8 @@ const DrawSimulator: React.FC<DrawSimulatorProps> = ({
           <>
             <div className="statistics-section">
               <h3>
-                Most Common Opening Hand (
-                {statistics.mostCommonHand.percentage.toFixed(1)}%)
+                Most Common Opening Hand ({statistics.mostCommonHand.frequency}{" "}
+                times - {statistics.mostCommonHand.percentage.toFixed(1)}%)
               </h3>
               <div className="hand-preview">
                 {statistics.mostCommonHand.cards.map((card, index) => (
@@ -233,6 +389,17 @@ const DrawSimulator: React.FC<DrawSimulatorProps> = ({
 
             <div className="statistics-section">
               <h3>Draw Statistics</h3>
+              {wantedCards.length > 0 && (
+                <div className="wanted-cards-stats">
+                  <h4>Wanted Cards</h4>
+                  <p>
+                    Probability of drawing all wanted cards:{" "}
+                    {statistics.wantedCardsSuccessRate.toFixed(1)}% (
+                    {statistics.wantedCardsSuccessCount} in{" "}
+                    {statistics.totalSimulations} hands)
+                  </p>
+                </div>
+              )}
               <div className="stat-grid">
                 <div className="stat-box">
                   <h4>Most Seen Card</h4>
