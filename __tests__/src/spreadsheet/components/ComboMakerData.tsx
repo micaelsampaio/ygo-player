@@ -17,7 +17,7 @@ export function ComboMakerData() {
 
     const createImage = async () => {
         const logs = comboMaker.createMatrix();
-        await replayUtils.createImage({logs, download: true});
+        await replayUtils.createImage({ logs, download: true });
     }
 
     const lastRow = comboMaker.rows.length - 1;

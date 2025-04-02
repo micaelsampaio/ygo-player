@@ -61,7 +61,7 @@ export function CardExtraDeckMenu({
   }, [card]);
 
   const fusionSummonATK = useCallback(() => {
-    duel.gameActions.fusionSummon({ card, position: "faceup-defense" });
+    duel.gameActions.fusionSummon({ card, position: "faceup-attack" });
   }, [card]);
 
   const fusionSummonDEF = useCallback(() => {

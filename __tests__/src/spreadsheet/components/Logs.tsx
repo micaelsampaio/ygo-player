@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { YgoReplayToImage } from 'ygo-core-images-utils';
 import { useAppContext } from '../context';
+import { HistoryCommand } from '../hooks/use-history';
 
 export function Logs({ replayUtils }: { replayUtils: YgoReplayToImage }) {
-    const { comboMaker } = useAppContext();
+    const { history, comboMaker } = useAppContext();
     const [, render] = useState(Date.now());
 
     const removeLog = (log: any) => {
@@ -12,13 +13,19 @@ export function Logs({ replayUtils }: { replayUtils: YgoReplayToImage }) {
     }
 
     const addCol = (log: any) => {
-        replayUtils.removeLog(log);
-        comboMaker.addCol({ log, rowIndex: comboMaker.rows.length - 1 });
+        const historyCommand = new HistoryCommand({
+            exec: () => replayUtils.removeLog(log),
+            undo: () => replayUtils.insertLogAtHead(log),
+        });
+        comboMaker.addCol({ log, rowIndex: comboMaker.rows.length - 1, cmd: historyCommand });
     }
 
     const addRow = (log: any) => {
-        replayUtils.removeLog(log);
-        comboMaker.addRow({ log });
+        const historyCommand = new HistoryCommand({
+            exec: () => replayUtils.removeLog(log),
+            undo: () => replayUtils.insertLogAtHead(log),
+        });
+        comboMaker.addRow({ log, cmd: historyCommand });
     }
 
     const logs = replayUtils.logs
@@ -44,6 +51,11 @@ export function Logs({ replayUtils }: { replayUtils: YgoReplayToImage }) {
 
     return <div>
         <div className='log-rows'>
+
+            <div>
+                <button disabled={!history.hasUndo} onClick={history.undo}>Undo</button>
+                <button disabled={!history.hasRedo} onClick={history.redo}>Redo</button>
+            </div>
 
             {currentLog && currentLog.id && card && <>
                 <div className='current-log'>

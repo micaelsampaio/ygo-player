@@ -4,15 +4,16 @@ import { Context } from './context';
 import { useComboMaker } from './hooks/use-combo';
 import { ComboMakerData } from './components/ComboMakerData';
 import styled from 'styled-components';
+import { useActionsHistory } from './hooks/use-history';
 
 export function SpreadsheetBuilder() {
-
+    const history = useActionsHistory();
     const replayUtils = useReplayUtils();
-    const comboMaker = useComboMaker();
+    const comboMaker = useComboMaker({ history });
 
     return (
         <Page>
-            <Context.Provider value={{ replayUtils, comboMaker }}>
+            <Context.Provider value={{ replayUtils, comboMaker, history }}>
                 <Container>
                     <LogsContainer>
                         <Logs replayUtils={replayUtils} />
