@@ -37,16 +37,27 @@ export function Logs({ replayUtils }: { replayUtils: YgoReplayToImage }) {
 
     for (let i = minLog; i <= maxLog; ++i) {
         const log = logs[i];
-        if (!log.id) return null;
-        const card = replayUtils.getCardData(log.id);
-        nextLogs.push(<>
-            <div className='next-log-row'>
-                <div className="log-type">
-                    {log.type}
+
+        if (log.id) {
+            const card = replayUtils.getCardData(log.id);
+            nextLogs.push(<>
+                <div className='next-log-row'>
+                    <div className="log-type">
+                        {log.type}
+                    </div>
+                    <img className='s-card-image' src={`http://localhost:8080/images/cards_small/${card.id}.jpg`} />
                 </div>
-                <img className='s-card-image' src={`http://localhost:8080/images/cards_small/${card.id}.jpg`} />
-            </div>
-        </>)
+            </>)
+        } else {
+            nextLogs.push(<>
+                <div className='next-log-row'>
+                    <div className="log-type">
+                        {log.type}
+                    </div>
+                    <img className='s-card-image' />
+                </div>
+            </>)
+        }
     }
 
     return <div>
@@ -64,6 +75,18 @@ export function Logs({ replayUtils }: { replayUtils: YgoReplayToImage }) {
                     </div>
 
                     <img className='s-card-image' src={`http://localhost:8080/images/cards_small/${card.id}.jpg`} />
+
+                    <br />
+                </div>
+            </>}
+
+            {currentLog && !card && <>
+                <div className='current-log'>
+                    <div className="log-type">
+                        {currentLog.type}
+                    </div>
+
+                    <img className='s-card-image' />
 
                     <br />
                 </div>

@@ -14,7 +14,7 @@ export function useReplayUtils(): YgoReplayToImage {
       players: replayData.players as any,
       commands: replayData.replay.commands,
       options: {
-        //fieldState: replay.initialField ? replay.initialField : undefined,
+        fieldState: replayData.replay.initialField ? replayData.replay.initialField : undefined,
         execCommands: true,
         shuffleDecks: false,
       },

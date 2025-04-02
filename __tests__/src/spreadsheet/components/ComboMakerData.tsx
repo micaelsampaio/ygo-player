@@ -67,6 +67,12 @@ function Row({ row, rowIndex, canAddElements }: { row: ComboRow, rowIndex: numbe
 function Col({ col }: { col: ComboCol }) {
     const { replayUtils } = useAppContext();
 
+    if (!col.log.id) {
+        return <div className="combo-maker-col">
+            {col.log.type}
+        </div>
+    }
+
     const card = replayUtils.getCardData(col.log.id);
 
     return <div className="combo-maker-col">
