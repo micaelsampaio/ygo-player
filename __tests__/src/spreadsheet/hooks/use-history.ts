@@ -51,9 +51,9 @@ export function useActionsHistory(): UseActionsHistory {
     const redo = () => {
         setCommands((prev) => {
             if (prev.index < prev.commands.length) {
-                const newIndex = prev.index + 1;
+                const newIndex = prev.index;
                 prev.commands[newIndex].exec();
-                return { ...prev, index: newIndex };
+                return { ...prev, index: newIndex + 1 };
             }
             return prev;
         });
@@ -61,8 +61,6 @@ export function useActionsHistory(): UseActionsHistory {
 
     const hasUndo = commands.index > 0;
     const hasRedo = commands.index < commands.commands.length;
-
-    console.log("TCL: undo: ", hasUndo, " has redo:", hasRedo)
 
     return {
         hasRedo,
