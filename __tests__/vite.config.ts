@@ -25,6 +25,9 @@ export default defineConfig({
       "ygo-core-images-utils": isDocker
         ? resolve(__dirname, "./node_modules/ygo-core-images-utils/index.js")
         : resolve(__dirname, "../../ygo-core-images-utils/dist/index.js"),
+      "ygo-core": isDocker
+        ? resolve(__dirname, "./node_modules/ygo-core/index.js")
+        : resolve(__dirname, "../../ygo-core/dist/index.js"),
     },
   },
   build: {

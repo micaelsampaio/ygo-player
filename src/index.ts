@@ -6,9 +6,9 @@ export * from "ygo-core";
 export * from "./YGOPlayer/web";
 export * from "./YGOPlayer/core/YGODuel";
 
-import { YGOGameUtils } from "ygo-core";
+import { YGOGameUtils, YGOCore } from "ygo-core";
 
-export { YGOGameUtils };
+export { YGOGameUtils, YGOCore };
 
 export const sum = (a: number, b: number): number => a + b;
 

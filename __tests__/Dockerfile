@@ -1,6 +1,10 @@
 # --- Stage 1: Use ygo-player image to get the built player application ---
 FROM ygo-player AS player
 
+FROM ygo-core AS core
+
+FROM ygo-core-images-utils AS images-utils
+
 # --- Stage 2: Build the tests project ---
 FROM node:22-alpine AS tests
 WORKDIR /app
@@ -14,8 +18,13 @@ COPY package.json package-lock.json ./
 # Install dependencies for the tests project
 RUN npm install
 
+COPY --from=core /app/dist ./node_modules/ygo-core
+
 # Copy the ygo-player dist folder from the player image
 COPY --from=player /app/dist ./node_modules/ygo-player
+
+# Copy the ygo-player dist folder from the player image
+COPY --from=images-utils /app/dist ./node_modules/ygo-core-images-utils
 
 # Copy the rest of the tests project
 COPY . .
