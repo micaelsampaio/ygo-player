@@ -9,4 +9,4 @@ COPY src/network/bootstrap-node.js ./src/bootstrap-node.js
 # Install dependencies
 RUN npm install --frozen-lockfile
 
-CMD ["npm", "run", "bootstrap-node"]
+CMD ["node", "src/network/bootstrap-node.js"]
