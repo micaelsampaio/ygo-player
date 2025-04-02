@@ -7,6 +7,7 @@ import DeckAnalytics from "./components/DeckAnalysis";
 import CardModal from "./components/CardModal/CardModal.tsx";
 import CardNotification from "./components/CardNotification/CardNotification.tsx";
 import CardSuggestions from "./components/CardSuggestion/CardSuggestions.tsx";
+import DrawSimulator from "./components/DrawSimulator"; // Fix import path
 import { useDeckStorage } from "./hooks/useDeckStorage";
 import { useDeckAnalytics } from "./hooks/useDeckAnalytics";
 import "./DeckBuilder.css";
@@ -18,6 +19,9 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [deckAnalytics, setDeckAnalytics] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [activeTab, setActiveTab] = useState<"editor" | "search" | "simulator">(
+    "editor"
+  );
   const timeoutRef = useRef<NodeJS.Timeout>();
 
   // Custom hooks
@@ -181,34 +185,45 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
           <div className="search-controls">
             <div className="search-toggle">
               <button
-                className={!isSearchVisible ? "active-search" : ""}
-                onClick={() => setIsSearchVisible(false)}
+                className={activeTab === "editor" ? "active-tab" : ""}
+                onClick={() => setActiveTab("editor")}
               >
                 Deck Editor
               </button>
               <button
-                className={isSearchVisible ? "active-search" : ""}
-                onClick={() => setIsSearchVisible(true)}
+                className={activeTab === "search" ? "active-tab" : ""}
+                onClick={() => setActiveTab("search")}
               >
                 Card Search
+              </button>
+              <button
+                className={activeTab === "simulator" ? "active-tab" : ""}
+                onClick={() => setActiveTab("simulator")}
+              >
+                Draw Simulator
               </button>
             </div>
           </div>
 
-          {isSearchVisible ? (
+          {activeTab === "search" ? (
             <SearchPanel
               onCardSelect={toggleCardPreview}
               onCardAdd={handleAddCard}
+            />
+          ) : activeTab === "simulator" ? (
+            <DrawSimulator
+              deck={selectedDeck}
+              onCardSelect={toggleCardPreview}
             />
           ) : (
             <DeckEditor
               deck={selectedDeck}
               onCardSelect={toggleCardPreview}
               onCardRemove={removeCardFromDeck}
-              onRenameDeck={handleRenameDeck} // Pass the handler here
+              onRenameDeck={handleRenameDeck}
               onClearDeck={handleClearDeck}
               onReorderCards={handleReorderCards}
-              updateDeck={updateDeck} // Add this prop
+              updateDeck={updateDeck}
             />
           )}
         </div>
