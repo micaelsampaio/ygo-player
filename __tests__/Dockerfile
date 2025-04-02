@@ -13,7 +13,7 @@ WORKDIR /app
 ENV DOCKER=true
 
 # Copy package.json and package-lock.json for the tests project
-COPY package.json package-lock.json ./
+COPY package.json ./
 
 # Install dependencies for the tests project
 RUN npm install
