@@ -35,6 +35,7 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
     deleteDeck,
     addCardToDeck,
     removeCardFromDeck,
+    copyDeck, // Add this hook
   } = useDeckStorage();
 
   const { analyzeDeck } = useDeckAnalytics();
@@ -175,9 +176,8 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
             decks={decks}
             selectedDeck={selectedDeck}
             onSelectDeck={selectDeck}
-            onCreateDeck={createDeck}
-            onImportDeck={handleImportDeck}
-            onDeleteDeck={handleDeleteDeck} // Pass the new handler
+            onDeleteDeck={handleDeleteDeck}
+            copyDeck={copyDeck} // Add this prop
           />
         </div>
 

@@ -6,18 +6,16 @@ interface DeckListProps {
   decks: Deck[];
   selectedDeck: Deck | null;
   onSelectDeck: (deck: Deck | null) => void;
-  onCreateDeck: (name: string) => void;
-  onImportDeck?: () => void;
   onDeleteDeck: (deck: Deck) => void;
+  copyDeck: (deck: Deck) => void; // Add this prop
 }
 
 const DeckList: React.FC<DeckListProps> = ({
   decks,
   selectedDeck,
   onSelectDeck,
-  onCreateDeck,
-  onImportDeck,
   onDeleteDeck,
+  copyDeck,
 }) => {
   const [editingDeck, setEditingDeck] = useState<string | null>(null);
   const [deletingDeck, setDeletingDeck] = useState<string | null>(null);
@@ -38,11 +36,7 @@ const DeckList: React.FC<DeckListProps> = ({
   };
 
   const handleCopy = (deck: Deck) => {
-    const copyDeck = {
-      ...deck,
-      name: `${deck.name} (Copy)`,
-    };
-    onCreateDeck(copyDeck.name);
+    copyDeck(deck); // Much simpler now
   };
 
   const handleKeyPress = (e: React.KeyboardEvent, deck: Deck) => {

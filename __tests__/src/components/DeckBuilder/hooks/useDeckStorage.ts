@@ -148,9 +148,9 @@ export function useDeckStorage() {
     }
 
     const newDeck: Deck = {
-      name,
-      mainDeck: [],
-      extraDeck: [],
+      name, // The new deck name
+      mainDeck: [], // Initialize empty main deck
+      extraDeck: [], // Initialize empty extra deck
     };
 
     // Save to localStorage
@@ -249,6 +249,39 @@ export function useDeckStorage() {
     }
   };
 
+  /**
+   * Creates a copy of an existing deck
+   */
+  const copyDeck = (deckToCopy: Deck) => {
+    const copyName = `${deckToCopy.name} (Copy)`;
+
+    // Check if name exists and generate unique name if needed
+    let finalName = copyName;
+    let counter = 1;
+    while (decks.some((deck) => deck.name === finalName)) {
+      finalName = `${copyName} ${counter}`;
+      counter++;
+    }
+
+    const newDeck: Deck = {
+      name: finalName,
+      mainDeck: [...deckToCopy.mainDeck],
+      extraDeck: [...deckToCopy.extraDeck],
+    };
+
+    // Save to localStorage and update state
+    try {
+      localStorage.setItem(`deck_${finalName}`, JSON.stringify(newDeck));
+      setDecks((prevDecks) => [...prevDecks, newDeck]);
+      setSelectedDeck(newDeck);
+      return newDeck;
+    } catch (error) {
+      console.error("Error copying deck:", error);
+      alert("Failed to copy deck. Please try again.");
+      return null;
+    }
+  };
+
   return {
     decks,
     selectedDeck,
@@ -260,5 +293,6 @@ export function useDeckStorage() {
     updateDeck,
     deleteDeck,
     importDeck,
+    copyDeck,
   };
 }
