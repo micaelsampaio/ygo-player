@@ -177,8 +177,27 @@ export function useDeckStorage() {
   const updateDeck = (updatedDeck: Deck) => {
     if (!updatedDeck?.name) return;
 
+    // If name changed, we need to remove the old entry
+    if (selectedDeck && selectedDeck.name !== updatedDeck.name) {
+      localStorage.removeItem(`deck_${selectedDeck.name}`);
+    }
+
+    // Update localStorage with new name
+    localStorage.setItem(
+      `deck_${updatedDeck.name}`,
+      JSON.stringify(updatedDeck)
+    );
+
+    // Update decks list
+    setDecks((prevDecks) => {
+      const newDecks = prevDecks.filter(
+        (deck) => deck.name !== selectedDeck?.name
+      );
+      return [...newDecks, updatedDeck];
+    });
+
+    // Update selected deck
     setSelectedDeck(updatedDeck);
-    updateDeckStorage(updatedDeck);
   };
 
   /**
