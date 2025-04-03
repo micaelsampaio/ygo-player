@@ -1,7 +1,10 @@
 import React, { useState, useRef } from "react";
 import { Deck } from "../types";
 import "./DeckActions.css";
-import { YGODeckToImage } from "ygo-core-images-utils"; // Import the utility
+import { YGODeckToImage } from "ygo-core-images-utils";
+import { ydkToJson } from "../../../../scripts/ydk-parser";
+//TODO @mica maybe move this to a utils file
+import { downloadDeck } from "../../../../scripts/download-deck";
 
 interface DeckActionsProps {
   deck: Deck | null;
@@ -23,6 +26,12 @@ const DeckActions: React.FC<DeckActionsProps> = ({
   const [isActionsOpen, setIsActionsOpen] = useState(false);
   const [isRenaming, setIsRenaming] = useState(false);
   const [newName, setNewName] = useState("");
+  const [importProgress, setImportProgress] = useState<{
+    isImporting: boolean;
+    progress: number;
+    total: number;
+  }>({ isImporting: false, progress: 0, total: 0 });
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const actionsRef = useRef<HTMLDivElement>(null);
 
@@ -47,7 +56,6 @@ const DeckActions: React.FC<DeckActionsProps> = ({
   if (!deck) return null;
 
   const exportDeckAsYDK = () => {
-    // Use the YGODeckToImage utility instead of implementing export manually
     const deckExporter = new YGODeckToImage({
       name: deck.name,
       mainDeck: deck.mainDeck,
@@ -59,7 +67,6 @@ const DeckActions: React.FC<DeckActionsProps> = ({
   };
 
   const exportDeckAsImage = () => {
-    // Use YGODeckToImage to export as an image
     const deckExporter = new YGODeckToImage({
       name: deck.name,
       mainDeck: deck.mainDeck,
@@ -95,38 +102,84 @@ const DeckActions: React.FC<DeckActionsProps> = ({
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = (event) => {
+
+    reader.onload = async (event) => {
       try {
         const content = event.target?.result as string;
 
-        // Check if it's a YDK file
         if (file.name.endsWith(".ydk")) {
-          alert("YDK import not implemented yet");
-          // You'd need to implement parsing YDK format
-          // and fetching card data by IDs
+          try {
+            setImportProgress({
+              isImporting: true,
+              progress: 0,
+              total: 0,
+            });
+
+            const deckData = ydkToJson(content);
+
+            const importedDeckData = await downloadDeck(deckData, {
+              events: {
+                onProgess: (args) => {
+                  setImportProgress({
+                    isImporting: true,
+                    progress: args.cardDownloaded,
+                    total: args.totalCards,
+                  });
+                },
+              },
+            });
+
+            const importedDeck: Deck = {
+              name: file.name.replace(".ydk", "") + " (Imported)",
+              mainDeck: importedDeckData.mainDeck || [],
+              extraDeck: importedDeckData.extraDeck || [],
+            };
+
+            onImportDeck(importedDeck);
+            setImportProgress({
+              isImporting: false,
+              progress: 0,
+              total: 0,
+            });
+          } catch (error) {
+            console.error("YDK import error:", error);
+            alert(
+              `Failed to import YDK deck: ${
+                error instanceof Error ? error.message : "Unknown error"
+              }`
+            );
+            setImportProgress({
+              isImporting: false,
+              progress: 0,
+              total: 0,
+            });
+          }
         } else {
-          // Assume JSON
           const importedDeck = JSON.parse(content) as Deck;
           onImportDeck(importedDeck);
         }
       } catch (error) {
         console.error("Import error:", error);
-        alert("Failed to import deck. Make sure the file is valid.");
+        alert(
+          `Failed to import deck. Make sure the file is valid: ${
+            error instanceof Error ? error.message : "Unknown error"
+          }`
+        );
+        setImportProgress({
+          isImporting: false,
+          progress: 0,
+          total: 0,
+        });
       }
     };
 
-    if (file.name.endsWith(".ydk")) {
-      reader.readAsText(file);
-    } else {
-      reader.readAsText(file);
-    }
+    reader.readAsText(file);
 
-    // Reset the input
     e.target.value = "";
     setIsActionsOpen(false);
   };
@@ -288,6 +341,31 @@ const DeckActions: React.FC<DeckActionsProps> = ({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {importProgress.isImporting && (
+        <div className="import-progress-modal">
+          <div className="modal-overlay"></div>
+          <div className="modal-content">
+            <h3>Importing Deck</h3>
+            <p>Downloading card data...</p>
+            <div className="progress-container">
+              <div
+                className="progress-bar"
+                style={{
+                  width: `${
+                    importProgress.total
+                      ? (importProgress.progress / importProgress.total) * 100
+                      : 0
+                  }%`,
+                }}
+              ></div>
+            </div>
+            <p>
+              {importProgress.progress} / {importProgress.total} cards
+            </p>
           </div>
         </div>
       )}
