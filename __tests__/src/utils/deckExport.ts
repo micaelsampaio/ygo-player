@@ -32,3 +32,19 @@ export function downloadDeckAsYdk(deckId: string, deck: any) {
   });
   deckBuilder.downloadYdk({ fileName });
 }
+
+export async function exportDeckToClipboard(deckId: string, deck: any) {
+  const deckExporter = new YGODeckToImage({
+    name: deckId,
+    mainDeck: deck.mainDeck,
+    extraDeck: deck.extraDeck,
+  });
+
+  try {
+    const ydkContent = deckExporter.toYdkString();
+    await navigator.clipboard.writeText(ydkContent);
+  } catch (error) {
+    console.error("Failed to export deck to clipboard:", error);
+    throw new Error("Failed to copy deck to clipboard");
+  }
+}

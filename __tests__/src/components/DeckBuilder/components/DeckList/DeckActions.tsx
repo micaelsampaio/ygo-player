@@ -1,10 +1,13 @@
 import React, { useState, useRef } from "react";
 import { Deck } from "../types";
 import "./DeckActions.css";
-import { YGODeckToImage } from "ygo-core-images-utils";
 import { ydkToJson } from "../../../../scripts/ydk-parser";
-//TODO @mica maybe move this to a utils file
 import { downloadDeck } from "../../../../scripts/download-deck";
+import {
+  downloadDeckAsYdk,
+  downloadDeckAsPng,
+  exportDeckToClipboard,
+} from "../../../../utils/deckExport";
 
 interface DeckActionsProps {
   deck: Deck | null;
@@ -56,29 +59,23 @@ const DeckActions: React.FC<DeckActionsProps> = ({
   if (!deck) return null;
 
   const exportDeckAsYDK = () => {
-    const deckExporter = new YGODeckToImage({
-      name: deck.name,
-      mainDeck: deck.mainDeck,
-      extraDeck: deck.extraDeck,
-    });
+    downloadDeckAsYdk(deck.name, deck);
+    setIsActionsOpen(false);
+  };
 
-    deckExporter.downloadYdk({ fileName: `${deck.name}.ydk` });
+  const handleExportToClipboard = async () => {
+    try {
+      await exportDeckToClipboard(deck.name, deck);
+      alert("Deck copied to clipboard in YDK format");
+    } catch (err) {
+      console.error("Failed to copy to clipboard:", err);
+      alert("Failed to copy deck to clipboard");
+    }
     setIsActionsOpen(false);
   };
 
   const exportDeckAsImage = () => {
-    const deckExporter = new YGODeckToImage({
-      name: deck.name,
-      mainDeck: deck.mainDeck,
-      extraDeck: deck.extraDeck,
-      cdnUrl: process.env.REACT_APP_CARD_IMAGE_CDN,
-    });
-
-    deckExporter.toImage({
-      fileName: `${deck.name}.png`,
-      download: true,
-    });
-
+    downloadDeckAsPng(deck.name, deck);
     setIsActionsOpen(false);
   };
 
@@ -99,6 +96,61 @@ const DeckActions: React.FC<DeckActionsProps> = ({
   const importDeck = () => {
     if (fileInputRef.current) {
       fileInputRef.current.click();
+    }
+  };
+
+  const importFromClipboard = async () => {
+    try {
+      const clipboardText = await navigator.clipboard.readText();
+
+      if (
+        clipboardText.includes("#ydk") ||
+        clipboardText.includes("#created by")
+      ) {
+        // Handle YDK format
+        setImportProgress({
+          isImporting: true,
+          progress: 0,
+          total: 0,
+        });
+
+        const deckData = ydkToJson(clipboardText);
+        const importedDeckData = await downloadDeck(deckData, {
+          events: {
+            onProgess: (args) => {
+              setImportProgress({
+                isImporting: true,
+                progress: args.cardDownloaded,
+                total: args.totalCards,
+              });
+            },
+          },
+        });
+
+        const importedDeck: Deck = {
+          name: "Clipboard Deck",
+          mainDeck: importedDeckData.mainDeck || [],
+          extraDeck: importedDeckData.extraDeck || [],
+        };
+
+        onImportDeck(importedDeck);
+      } else {
+        // Try parsing as JSON
+        const importedDeck = JSON.parse(clipboardText) as Deck;
+        onImportDeck(importedDeck);
+      }
+    } catch (error) {
+      console.error("Clipboard import error:", error);
+      alert(
+        "Failed to import deck from clipboard. Make sure the content is a valid YDK or JSON deck format."
+      );
+    } finally {
+      setImportProgress({
+        isImporting: false,
+        progress: 0,
+        total: 0,
+      });
+      setIsActionsOpen(false);
     }
   };
 
@@ -246,7 +298,16 @@ const DeckActions: React.FC<DeckActionsProps> = ({
               className="action-button"
             >
               <span className="action-icon">💾</span>
-              <span className="action-text">Export as YDK</span>
+              <span className="action-text">Export YDK to file</span>
+            </button>
+
+            <button
+              onClick={handleExportToClipboard}
+              title="Copy deck in YDK format to clipboard"
+              className="action-button"
+            >
+              <span className="action-icon">💾</span>
+              <span className="action-text">Export YDK to Clipboard</span>
             </button>
 
             <button
@@ -277,6 +338,15 @@ const DeckActions: React.FC<DeckActionsProps> = ({
             >
               <span className="action-icon">📥</span>
               <span className="action-text">Import Deck</span>
+            </button>
+
+            <button
+              onClick={importFromClipboard}
+              title="Import a deck from clipboard (YDK or JSON format)"
+              className="action-button"
+            >
+              <span className="action-icon">📥</span>
+              <span className="action-text">Import from Clipboard</span>
             </button>
 
             <button
