@@ -12,8 +12,8 @@
   },
   "dependencies": {
     "ygo-player": "file:../",
-    "ygo-core": "file:../ygo-core",
-    "ygo-core-images-utils": "file:../ygo-core-images-utils",
+    "ygo-core": "file:../../ygo-core",
+    "ygo-core-images-utils": "file:../../ygo-core-images-utils",
     "@chainsafe/libp2p-gossipsub": "^14.1.0",
     "@chainsafe/libp2p-noise": "^16.0.1",
     "@chainsafe/libp2p-yamux": "^7.0.1",

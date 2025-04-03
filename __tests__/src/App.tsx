@@ -4,7 +4,7 @@ import { useNavigate, Link } from "react-router-dom";
 import RoomLobby from "./components/RoomLobby.js";
 import { useKaibaNet } from "./hooks/useKaibaNet";
 import { memo, useEffect, useState } from "react";
-import { YGOGameUtils } from "ygo-player";
+import { YGOGameUtils } from "ygo-core";
 import { YGODeckToImage } from "ygo-core-images-utils";
 import styled from "styled-components";
 import { Logger } from "./utils/logger";
@@ -27,7 +27,7 @@ export default function App() {
   const [rooms, setRooms] = useState(() => kaibaNet.getRooms());
   const [deckToPlay, setDeckToPlay] = useState("");
 
-  const onRoomsUpdated = (updatedRooms) => {
+  const onRoomsUpdated = (updatedRooms: any) => {
     console.log("App: Updated rooms", updatedRooms);
     setRooms(new Map(updatedRooms));
   };
@@ -170,7 +170,7 @@ export default function App() {
         if (zoneData.player === playerIndex) {
           return {
             ...card,
-            zone: YGOGameUtils.transformZoneToPlayerZone(card.zone),
+            zone: YGOGameUtils.transformZoneToPlayerZone(card.zone, 0),
           };
         }
         return undefined;
