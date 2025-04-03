@@ -1,12 +1,15 @@
 import React, { useState, useRef } from "react";
 import { Deck } from "../types";
 import "./DeckActions.css";
+import { YGODeckToImage } from "ygo-core-images-utils"; // Import the utility
 
 interface DeckActionsProps {
   deck: Deck | null;
   onImportDeck: (deck: Deck) => void;
   onRenameDeck: (name: string) => void;
   onClearDeck: () => void;
+  onCopyDeck: (deck: Deck) => void;
+  onDeleteDeck: (deck: Deck) => void;
 }
 
 const DeckActions: React.FC<DeckActionsProps> = ({
@@ -14,37 +17,60 @@ const DeckActions: React.FC<DeckActionsProps> = ({
   onImportDeck,
   onRenameDeck,
   onClearDeck,
+  onCopyDeck,
+  onDeleteDeck,
 }) => {
   const [isActionsOpen, setIsActionsOpen] = useState(false);
   const [isRenaming, setIsRenaming] = useState(false);
   const [newName, setNewName] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const actionsRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        actionsRef.current &&
+        !actionsRef.current.contains(event.target as Node) &&
+        isActionsOpen
+      ) {
+        setIsActionsOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isActionsOpen]);
 
   if (!deck) return null;
 
   const exportDeckAsYDK = () => {
-    let content = "#created by Yu-Gi-Oh Deck Builder\n";
-    content += "#main\n";
-
-    deck.mainDeck.forEach((card) => {
-      content += `${card.id}\n`;
+    // Use the YGODeckToImage utility instead of implementing export manually
+    const deckExporter = new YGODeckToImage({
+      name: deck.name,
+      mainDeck: deck.mainDeck,
+      extraDeck: deck.extraDeck,
     });
 
-    content += "#extra\n";
-    deck.extraDeck.forEach((card) => {
-      content += `${card.id}\n`;
+    deckExporter.downloadYdk({ fileName: `${deck.name}.ydk` });
+    setIsActionsOpen(false);
+  };
+
+  const exportDeckAsImage = () => {
+    // Use YGODeckToImage to export as an image
+    const deckExporter = new YGODeckToImage({
+      name: deck.name,
+      mainDeck: deck.mainDeck,
+      extraDeck: deck.extraDeck,
+      cdnUrl: process.env.REACT_APP_CARD_IMAGE_CDN,
     });
 
-    content += "!side\n";
-
-    // Create download link
-    const element = document.createElement("a");
-    const file = new Blob([content], { type: "text/plain" });
-    element.href = URL.createObjectURL(file);
-    element.download = `${deck.name}.ydk`;
-    document.body.appendChild(element);
-    element.click();
-    document.body.removeChild(element);
+    deckExporter.toImage({
+      fileName: `${deck.name}.png`,
+      download: true,
+    });
 
     setIsActionsOpen(false);
   };
@@ -122,7 +148,7 @@ const DeckActions: React.FC<DeckActionsProps> = ({
   const confirmClearDeck = () => {
     if (
       window.confirm(
-        "Are you sure you want to clear this deck? This cannot be undone."
+        "Are you sure you want to clear this deck? This action will remove all cards but keep the deck itself."
       )
     ) {
       onClearDeck();
@@ -130,24 +156,112 @@ const DeckActions: React.FC<DeckActionsProps> = ({
     }
   };
 
+  const copyThisDeck = () => {
+    onCopyDeck(deck);
+    setIsActionsOpen(false);
+  };
+
+  const deleteThisDeck = () => {
+    if (
+      window.confirm(
+        "Are you sure you want to delete this deck? This cannot be undone."
+      )
+    ) {
+      onDeleteDeck(deck);
+      setIsActionsOpen(false);
+    }
+  };
+
   return (
-    <div className="deck-actions">
+    <div className="deck-actions" ref={actionsRef}>
       <button
         className="actions-toggle"
         onClick={() => setIsActionsOpen(!isActionsOpen)}
+        title="Click to open deck options"
       >
-        Deck Options
+        <span>Deck Options</span>
+        <span className="toggle-icon">{isActionsOpen ? "▲" : "▼"}</span>
       </button>
 
       {isActionsOpen && (
         <div className="actions-dropdown">
-          <button onClick={exportDeckAsYDK}>Export as YDK</button>
-          <button onClick={exportDeckAsJSON}>Export as JSON</button>
-          <button onClick={importDeck}>Import Deck</button>
-          <button onClick={startRenaming}>Rename Deck</button>
-          <button onClick={confirmClearDeck} className="danger">
-            Clear Deck
-          </button>
+          <div className="actions-group">
+            <div className="group-header">Export</div>
+            <button
+              onClick={exportDeckAsYDK}
+              title="Export deck in YDK format for use in other YGO applications"
+              className="action-button"
+            >
+              <span className="action-icon">💾</span>
+              <span className="action-text">Export as YDK</span>
+            </button>
+
+            <button
+              onClick={exportDeckAsImage}
+              title="Create a visual image of your deck"
+              className="action-button"
+            >
+              <span className="action-icon">🖼️</span>
+              <span className="action-text">Export as Image</span>
+            </button>
+
+            <button
+              onClick={exportDeckAsJSON}
+              title="Export deck as JSON for backup or sharing"
+              className="action-button"
+            >
+              <span className="action-icon">📋</span>
+              <span className="action-text">Export as JSON</span>
+            </button>
+          </div>
+
+          <div className="actions-group">
+            <div className="group-header">Manage</div>
+            <button
+              onClick={importDeck}
+              title="Import a deck from YDK or JSON file"
+              className="action-button"
+            >
+              <span className="action-icon">📥</span>
+              <span className="action-text">Import Deck</span>
+            </button>
+
+            <button
+              onClick={copyThisDeck}
+              title="Create a copy of this deck"
+              className="action-button"
+            >
+              <span className="action-icon">📋</span>
+              <span className="action-text">Copy Deck</span>
+            </button>
+
+            <button
+              onClick={startRenaming}
+              title="Change the name of your deck"
+              className="action-button"
+            >
+              <span className="action-icon">✏️</span>
+              <span className="action-text">Rename Deck</span>
+            </button>
+
+            <button
+              onClick={confirmClearDeck}
+              title="Remove all cards from this deck"
+              className="action-button danger"
+            >
+              <span className="action-icon">🗑️</span>
+              <span className="action-text">Clear Deck</span>
+            </button>
+
+            <button
+              onClick={deleteThisDeck}
+              title="Delete this deck completely"
+              className="action-button danger"
+            >
+              <span className="action-icon">❌</span>
+              <span className="action-text">Delete Deck</span>
+            </button>
+          </div>
         </div>
       )}
 

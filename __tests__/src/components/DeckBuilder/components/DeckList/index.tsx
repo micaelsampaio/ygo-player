@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Deck } from "../types";
 import "./DecksList.css";
+import DeckActions from "./DeckActions"; // Import the DeckActions component
 
 interface DeckListProps {
   decks: Deck[];
@@ -9,6 +10,9 @@ interface DeckListProps {
   onDeleteDeck: (deck: Deck) => void;
   copyDeck: (deck: Deck) => void;
   onCreateDeck: (name: string) => void;
+  onRenameDeck: (deck: Deck, newName: string) => void;
+  onClearDeck: (deck: Deck) => void;
+  onImportDeck: (deck: Deck) => void;
 }
 
 const DeckList: React.FC<DeckListProps> = ({
@@ -18,27 +22,19 @@ const DeckList: React.FC<DeckListProps> = ({
   onDeleteDeck,
   copyDeck,
   onCreateDeck,
+  onRenameDeck,
+  onClearDeck,
+  onImportDeck,
 }) => {
   const [editingDeck, setEditingDeck] = useState<string | null>(null);
-  const [deletingDeck, setDeletingDeck] = useState<string | null>(null);
   const [newDeckName, setNewDeckName] = useState("");
 
   const handleRename = (deck: Deck, newName: string) => {
     if (newName.trim() && newName !== deck.name) {
-      const updatedDeck = { ...deck, name: newName.trim() };
-      onSelectDeck(updatedDeck);
+      onRenameDeck(deck, newName.trim());
     }
     setEditingDeck(null);
     setNewDeckName("");
-  };
-
-  const handleDelete = (deck: Deck) => {
-    onDeleteDeck(deck);
-    setDeletingDeck(null);
-  };
-
-  const handleCopy = (deck: Deck) => {
-    copyDeck(deck);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent, deck: Deck) => {
@@ -55,6 +51,20 @@ const DeckList: React.FC<DeckListProps> = ({
     onCreateDeck(newDeckName);
   };
 
+  // Handler for when a deck's name is changed via DeckActions
+  const handleDeckRename = (name: string) => {
+    if (selectedDeck) {
+      onRenameDeck(selectedDeck, name);
+    }
+  };
+
+  // Handler for when a deck is cleared via DeckActions
+  const handleDeckClear = () => {
+    if (selectedDeck) {
+      onClearDeck(selectedDeck);
+    }
+  };
+
   return (
     <div className="decks-list-container">
       <div className="decks-header">
@@ -63,6 +73,31 @@ const DeckList: React.FC<DeckListProps> = ({
           New Deck
         </button>
       </div>
+
+      {selectedDeck && (
+        <div className="selected-deck-panel">
+          <div className="selected-deck-info">
+            <span className="selected-label">Currently Selected:</span>
+            <span className="selected-deck-name">{selectedDeck.name}</span>
+            <span className="deck-stats">
+              <span className="stat-chip main">
+                Main: {selectedDeck.mainDeck.length}
+              </span>
+              <span className="stat-chip extra">
+                Extra: {selectedDeck.extraDeck.length}
+              </span>
+            </span>
+          </div>
+          <DeckActions
+            deck={selectedDeck}
+            onRenameDeck={handleDeckRename}
+            onClearDeck={handleDeckClear}
+            onImportDeck={onImportDeck}
+            onCopyDeck={copyDeck}
+            onDeleteDeck={onDeleteDeck}
+          />
+        </div>
+      )}
 
       <div className="decks-list">
         {decks.length === 0 ? (
@@ -109,57 +144,6 @@ const DeckList: React.FC<DeckListProps> = ({
                   </>
                 )}
               </div>
-
-              {deletingDeck === deck.name ? (
-                <div
-                  className="delete-confirm"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <button
-                    className="confirm-action delete"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      handleDelete(deck);
-                    }}
-                  >
-                    Delete
-                  </button>
-                  <button
-                    className="confirm-action cancel"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      setDeletingDeck(null);
-                    }}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              ) : (
-                <div className="deck-actions">
-                  <button
-                    className="copy-deck"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      handleCopy(deck);
-                    }}
-                  >
-                    📋
-                  </button>
-                  <button
-                    className="delete-deck"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      setDeletingDeck(deck.name);
-                    }}
-                  >
-                    ×
-                  </button>
-                </div>
-              )}
             </div>
           ))
         )}

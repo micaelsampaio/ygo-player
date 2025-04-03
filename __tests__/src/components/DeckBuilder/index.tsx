@@ -35,7 +35,7 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
     deleteDeck,
     addCardToDeck,
     removeCardFromDeck,
-    copyDeck, // Add this hook
+    copyDeck,
   } = useDeckStorage();
 
   const { analyzeDeck } = useDeckAnalytics();
@@ -111,29 +111,38 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
     selectDeck(newDeck);
   };
 
-  const handleRenameDeck = (newName: string) => {
-    if (!selectedDeck) return;
+  const handleRenameDeck = (deck: Deck, newName: string) => {
+    if (!deck) return;
 
     const updatedDeck = {
-      ...selectedDeck,
+      ...deck,
       name: newName,
     };
 
     // This will update both storage and state
     updateDeck(updatedDeck);
+
+    // If this was the selected deck, update the selection
+    if (selectedDeck && selectedDeck.name === deck.name) {
+      selectDeck(updatedDeck);
+    }
   };
 
-  const handleClearDeck = () => {
-    if (!selectedDeck) return;
+  const handleClearDeck = (deck: Deck) => {
+    if (!deck) return;
 
     const clearedDeck = {
-      ...selectedDeck,
+      ...deck,
       mainDeck: [],
       extraDeck: [],
     };
 
     updateDeck(clearedDeck);
-    selectDeck(clearedDeck);
+
+    // If this was the selected deck, update the selection
+    if (selectedDeck && selectedDeck.name === deck.name) {
+      selectDeck(clearedDeck);
+    }
   };
 
   const handleAddCard = (card: Card) => {
@@ -144,6 +153,11 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
 
   const handleDeleteDeck = (deckToDelete: Deck) => {
     deleteDeck(deckToDelete.name);
+
+    // If this was the selected deck, clear the selection
+    if (selectedDeck && selectedDeck.name === deckToDelete.name) {
+      selectDeck(null);
+    }
   };
 
   const handleReorderCards = (
@@ -178,7 +192,10 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
             onSelectDeck={selectDeck}
             onDeleteDeck={handleDeleteDeck}
             copyDeck={copyDeck}
-            onCreateDeck={createDeck} // Make sure this is properly connected
+            onCreateDeck={createDeck}
+            onRenameDeck={handleRenameDeck}
+            onClearDeck={handleClearDeck}
+            onImportDeck={handleImportDeck}
           />
         </div>
 
@@ -221,8 +238,10 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
               deck={selectedDeck}
               onCardSelect={toggleCardPreview}
               onCardRemove={removeCardFromDeck}
-              onRenameDeck={handleRenameDeck}
-              onClearDeck={handleClearDeck}
+              onRenameDeck={(newName) =>
+                selectedDeck && handleRenameDeck(selectedDeck, newName)
+              }
+              onClearDeck={() => selectedDeck && handleClearDeck(selectedDeck)}
               onReorderCards={handleReorderCards}
               updateDeck={updateDeck}
             />
