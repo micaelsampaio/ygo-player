@@ -18,4 +18,4 @@
     COPY . .
     
     # Build the player application
-    RUN npm run build
+    RUN npm run build:docker

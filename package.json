@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "NODE_ENV=production webpack --mode production",
+    "build:docker": "DOCKER=true NODE_ENV=production webpack --mode production",
     "dev": "NODE_ENV=development webpack --mode development --watch"
   },
   "dependencies": {

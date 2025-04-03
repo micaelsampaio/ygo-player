@@ -20,10 +20,11 @@ export default {
     extensions: [".ts", ".tsx", ".js", ".jsx", ".css"],
     fullySpecified: false,
     alias: {
-      "ygo-core":
-        process.env.NODE_ENV === "development"
-          ? path.resolve(__dirname, "../ygo-core/src")
-          : path.resolve(__dirname, "../ygo-core/dist"),
+      "ygo-core": process.env.DOCKER
+        ? path.resolve("/node_modules/ygo-core")
+        : process.env.NODE_ENV === "development"
+        ? path.resolve(__dirname, "../ygo-core/src")
+        : path.resolve(__dirname, "../ygo-core/dist"),
     },
   },
   module: {
