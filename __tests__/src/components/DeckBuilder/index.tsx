@@ -177,7 +177,8 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
             selectedDeck={selectedDeck}
             onSelectDeck={selectDeck}
             onDeleteDeck={handleDeleteDeck}
-            copyDeck={copyDeck} // Add this prop
+            copyDeck={copyDeck}
+            onCreateDeck={createDeck} // Make sure this is properly connected
           />
         </div>
 

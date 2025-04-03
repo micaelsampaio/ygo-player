@@ -7,7 +7,8 @@ interface DeckListProps {
   selectedDeck: Deck | null;
   onSelectDeck: (deck: Deck | null) => void;
   onDeleteDeck: (deck: Deck) => void;
-  copyDeck: (deck: Deck) => void; // Add this prop
+  copyDeck: (deck: Deck) => void;
+  onCreateDeck: (name: string) => void;
 }
 
 const DeckList: React.FC<DeckListProps> = ({
@@ -16,6 +17,7 @@ const DeckList: React.FC<DeckListProps> = ({
   onSelectDeck,
   onDeleteDeck,
   copyDeck,
+  onCreateDeck,
 }) => {
   const [editingDeck, setEditingDeck] = useState<string | null>(null);
   const [deletingDeck, setDeletingDeck] = useState<string | null>(null);
@@ -31,12 +33,12 @@ const DeckList: React.FC<DeckListProps> = ({
   };
 
   const handleDelete = (deck: Deck) => {
-    onDeleteDeck(deck); // Let parent component handle the deletion
+    onDeleteDeck(deck);
     setDeletingDeck(null);
   };
 
   const handleCopy = (deck: Deck) => {
-    copyDeck(deck); // Much simpler now
+    copyDeck(deck);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent, deck: Deck) => {
@@ -48,10 +50,18 @@ const DeckList: React.FC<DeckListProps> = ({
     }
   };
 
+  const handleNewDeck = () => {
+    const newDeckName = `New Deck ${decks.length + 1}`;
+    onCreateDeck(newDeckName);
+  };
+
   return (
     <div className="decks-list-container">
       <div className="decks-header">
         <h2>Your Decks</h2>
+        <button className="new-deck-button" onClick={handleNewDeck}>
+          New Deck
+        </button>
       </div>
 
       <div className="decks-list">
