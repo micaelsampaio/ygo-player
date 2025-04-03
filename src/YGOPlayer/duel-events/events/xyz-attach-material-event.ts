@@ -3,15 +3,12 @@ import { DuelEventHandlerProps } from "..";
 import { YGODuelEvents, YGOGameUtils } from "ygo-core";
 import { YGOTaskSequence } from "../../core/components/tasks/YGOTaskSequence";
 import { YGOCommandHandler } from "../../core/components/YGOCommandHandler";
-import { CardEmptyMesh } from "../../game/meshes/mesh-utils";
-import { MaterialOpacityTransition } from "../utils/material-opacity";
 import { CallbackTransition } from "../utils/callback";
 import { MultipleTasks } from "../utils/multiple-tasks";
 import { PositionTransition } from "../utils/position-transition";
 import { GameCard } from "../../game/GameCard";
 import { RotationTransition } from "../utils/rotation-transition";
-import { WaitForSeconds } from "../utils/wait-for-seconds";
-import { getCardZones, getGameZone } from "../../scripts/ygo-utils";
+import { getGameZone } from "../../scripts/ygo-utils";
 import { CardZone } from "../../game/CardZone";
 
 interface XYZAttachMaterialHandlerProps extends DuelEventHandlerProps {
@@ -28,15 +25,12 @@ export class XYZAttachMaterialHandler extends YGOCommandHandler {
 
   public start(): void {
     const { event, duel, startTask } = this.props;
-    console.log(event);
 
     const sequence = new YGOTaskSequence();
     const originZoneData = YGOGameUtils.getZoneData(event.originZone);
-    const targetZone = YGOGameUtils.getZoneData(event.overlayZone);
+    const targetZone = YGOGameUtils.getZoneData(event.zone);
 
     const targetCardZone = getGameZone(duel, targetZone)!;
-
-    console.log(targetZone, targetCardZone);
 
     const endPosition = targetCardZone.position.clone();
     const endRotation = targetCardZone.rotation.clone();

@@ -65,8 +65,9 @@ function getZoneData(zone: string | undefined) {
   const zoneData = YGOGameUtils.getZoneData(zone as any);
   const zoneId = YGOGameUtils.createZone(zoneData.zone, 0, zoneData.zoneIndex).toLowerCase();
   let zoneStr = `ygo-icon-game-zone ygo-player-${zoneData.player} ygo-icon-game-zone-container`;
-
-  if (zoneData.zone === "M" || zoneData.zone === "S" || zoneData.zone === "EMZ") {
+  if (zoneData.zone === "ORU" || zoneData.zone === "ORUEMZ") {
+    zoneStr += ` ygo-icon-game-zone-oru ygo-icon-game-zone-container-rounded`;
+  } else if (zoneData.zone === "M" || zoneData.zone === "S" || zoneData.zone === "EMZ") {
     zoneStr += ` ygo-icon-game-zone-${zoneId}`;
   } else {
     zoneStr += ` ygo-icon-game-zone-${zoneData.zone.toLowerCase()} ygo-icon-game-zone-container-rounded`;

@@ -847,11 +847,11 @@ export class YGOGameActions {
   }) {
     this.clearAction();
     const player = this.duel.getActivePlayer();
-
+    const material = card.materials[materialIndex];
     this.duel.execCommand(
       new YGOCommands.XYZDetachMaterialCommand({
         player,
-        id: card.id,
+        id: material.id,
         originZone,
         materialIndex,
       })

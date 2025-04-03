@@ -29,8 +29,8 @@ export class XYZDetachMaterialHandler extends YGOCommandHandler {
   public start(): void {
     const { event, duel, startTask } = this.props;
 
-    const zoneData = YGOGameUtils.getZoneData(event.overlayZone);
-    const cardReference = duel.ygo.state.getCardData(event.materialId)!;
+    const zoneData = YGOGameUtils.getZoneData(event.originZone);
+    const cardReference = duel.ygo.state.getCardData(event.id)!;
     const gy = duel.fields[event.owner].graveyard;
 
     const endPosition: THREE.Vector3 = gy.cardPosition.clone();
@@ -40,13 +40,11 @@ export class XYZDetachMaterialHandler extends YGOCommandHandler {
     let startRotation: THREE.Euler;
 
     if (zoneData.zone === "ORUEMZ") {
-      const extraMonsterZone =
-        duel.fields[zoneData.player].extraMonsterZone[zoneData.zoneIndex - 1]!;
+      const extraMonsterZone = duel.fields[zoneData.player].extraMonsterZone[zoneData.zoneIndex - 1]!;
       startPosition = extraMonsterZone.position.clone();
       startRotation = extraMonsterZone.rotation.clone();
     } else {
-      const monsterZone =
-        duel.fields[zoneData.player].monsterZone[zoneData.zoneIndex - 1]!;
+      const monsterZone = duel.fields[zoneData.player].monsterZone[zoneData.zoneIndex - 1]!;
       startPosition = monsterZone.position.clone();
       startRotation = monsterZone.rotation.clone();
     }
