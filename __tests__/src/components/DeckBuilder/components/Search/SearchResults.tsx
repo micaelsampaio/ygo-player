@@ -74,7 +74,15 @@ const SearchResults: React.FC<SearchResultsProps> = ({
 
               <div className="card-info">
                 <div className="card-primary">
-                  <div className="card-name" title={card.name}>
+                  <div
+                    className="card-name"
+                    title={card.name}
+                    style={{
+                      fontSize: "0.85rem",
+                      lineHeight: "1.2",
+                      fontWeight: 500,
+                    }}
+                  >
                     {card.name}
                   </div>
                   <div className="card-badges">
