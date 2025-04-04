@@ -15,6 +15,8 @@ import { Card } from "ygo-core";
 import { CallbackTransition } from "../utils/callback";
 import { YGOCommandHandler } from "../../core/components/YGOCommandHandler";
 import { MultipleTasks } from "../utils/multiple-tasks";
+import { createCardPopSummonEffectSequence, GameModalOverlayMesh } from "../../game/meshes/mesh-utils";
+import { MaterialOpacityTransition } from "../utils/material-opacity";
 
 interface XYZSummonEventHandlerProps extends DuelEventHandlerProps {
   event: YGODuelEvents.XYZSummon;
@@ -53,29 +55,63 @@ export class XYZSummonEventHandler extends YGOCommandHandler {
     const startPosition = camera.position
       .clone()
       .add(direction.multiplyScalar(4));
+
     const card = new GameCard({ duel, card: this.cardReference });
     card.hideCardStats();
     card.gameObject.position.copy(startPosition);
     card.gameObject.visible = false;
     card.gameObject.lookAt(camera.position);
 
+    const modal = GameModalOverlayMesh();
+    duel.core.scene.add(modal);
+
+    const cardOverlay = card.gameObject.clone();
+    duel.core.sceneOverlay.add(cardOverlay);
+    card.gameObject.visible = false;
+    cardOverlay.visible = false;
+
+    modal.material.opacity = 0;
+
+    startTask(
+      new YGOTaskSequence(
+        new MaterialOpacityTransition({
+          material: modal.material,
+          opacity: 0.7,
+          duration: 0.15,
+        }),
+        new WaitForSeconds(0.75),
+        new MaterialOpacityTransition({
+          material: modal.material,
+          opacity: 0,
+          duration: 0.15,
+        })
+      )
+    );
+
     sequence
       .add(
         new CallbackTransition(() => {
-          card.gameObject.visible = true;
+          cardOverlay.visible = true;
+          duel.core.enableRenderOverlay();
           duel.fields[originZoneData.player].extraDeck.updateExtraDeck();
+          createCardPopSummonEffectSequence({
+            duel,
+            card: cardOverlay,
+            cardId: event.id,
+            startTask: this.props.startTask,
+          });
         })
       )
       .add(new WaitForSeconds(1))
       .add(
         new MultipleTasks(
           new PositionTransition({
-            gameObject: card.gameObject,
+            gameObject: cardOverlay,
             position: endPosition,
             duration: 0.5,
           }),
           new RotationTransition({
-            gameObject: card.gameObject,
+            gameObject: cardOverlay,
             rotation: endRotation,
             duration: 0.5,
           })
@@ -83,6 +119,11 @@ export class XYZSummonEventHandler extends YGOCommandHandler {
       )
       .add(
         new CallbackTransition(() => {
+          card.gameObject.position.copy(cardOverlay.position);
+          card.gameObject.rotation.copy(cardOverlay.rotation);
+          card.gameObject.scale.copy(cardOverlay.scale);
+          card.gameObject.visible = true;
+          duel.core.disableRenderOverlay();
           cardZone?.setGameCard(card);
           this.props.onCompleted();
         })
