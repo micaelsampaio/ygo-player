@@ -66,25 +66,22 @@ const CardSuggestions: React.FC<CardSuggestionsProps> = ({
   };
 
   const identifyArchetypes = (deck: Deck): string[] => {
-    // Simplified archetype detection - look for common terms in card names
-    const cardNames = deck.mainDeck.map((card) => card.name);
-    const nameWords = cardNames
-      .join(" ")
-      .split(/[\s-]+/)
-      .filter((word) => word.length > 3)
-      .map((word) => word.toLowerCase());
+    // Count archetype occurrences from card.archetype
+    const archetypeCounts: Record<string, number> = {};
 
-    // Count word frequency
-    const wordCounts: Record<string, number> = {};
-    nameWords.forEach((word) => {
-      wordCounts[word] = (wordCounts[word] || 0) + 1;
+    deck.mainDeck.forEach((card) => {
+      if (card.archetype) {
+        archetypeCounts[card.archetype] =
+          (archetypeCounts[card.archetype] || 0) + 1;
+      }
     });
 
-    // Find potential archetypes (terms that appear multiple times)
-    return Object.entries(wordCounts)
+    // Sort archetypes by frequency and take top 3
+    return Object.entries(archetypeCounts)
       .filter(([_, count]) => count >= 2)
-      .map(([word]) => word)
-      .slice(0, 3); // Limit to top 3 archetypes
+      .sort(([_, countA], [__, countB]) => countB - countA)
+      .map(([archetype]) => archetype)
+      .slice(0, 3);
   };
 
   const searchCardsForArchetype = async (
