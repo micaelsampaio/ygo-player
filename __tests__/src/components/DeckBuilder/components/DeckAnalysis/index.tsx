@@ -416,19 +416,19 @@ const DeckAnalytics: React.FC<DeckAnalyticsProps> = ({ analytics }) => {
       <section className="analysis-section">
         <h3>Deck Archetype Analysis</h3>
         <div className="archetype-tags">
-          {processedAnalytics.potentialArchetypes.map((archetype, index) => (
-            <div key={index} className="archetype-tag">
-              {archetype.name}
-              <span className="archetype-count">{archetype.count}</span>
-            </div>
-          ))}
+          {processedAnalytics.potentialArchetypes.length > 0 ? (
+            processedAnalytics.potentialArchetypes.map((archetype, index) => (
+              <div key={index} className="archetype-tag">
+                {archetype.name}
+                <span className="archetype-count">{archetype.count}</span>
+              </div>
+            ))
+          ) : (
+            <p>
+              No archetype detected. This appears to be a custom strategy deck.
+            </p>
+          )}
         </div>
-        {processedAnalytics.potentialArchetypes.length === 0 && (
-          <p>
-            No clear archetype detected. This appears to be a custom strategy or
-            mixed deck.
-          </p>
-        )}
       </section>
 
       <section className="analysis-section">

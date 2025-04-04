@@ -61,9 +61,8 @@ export function useDeckAnalytics() {
 
     // Find potential archetypes by analyzing card names and descriptions
     const potentialArchetypes: Record<string, number> = {};
-    const archetypeThreshold = 3; // Minimum cards to define an archetype
 
-    // Check explicit archetypes from API
+    // Only use explicit archetypes from API
     deck.mainDeck.concat(deck.extraDeck).forEach((card) => {
       if (card.archetype) {
         potentialArchetypes[card.archetype] =
@@ -71,29 +70,7 @@ export function useDeckAnalytics() {
       }
     });
 
-    // Check card names for patterns (simple heuristic)
-    const cardNames = deck.mainDeck
-      .concat(deck.extraDeck)
-      .map((card) => card.name);
-    const nameWords = cardNames
-      .join(" ")
-      .split(/[\s-]+/)
-      .filter((word) => word.length > 3)
-      .map((word) => word.toLowerCase());
-
-    // Count word frequency
-    const wordCounts: Record<string, number> = {};
-    nameWords.forEach((word) => {
-      wordCounts[word] = (wordCounts[word] || 0) + 1;
-    });
-
-    // Add potential name-based archetypes
-    Object.entries(wordCounts)
-      .filter(([_, count]) => count >= archetypeThreshold)
-      .forEach(([word, count]) => {
-        const capitalizedWord = word.charAt(0).toUpperCase() + word.slice(1);
-        potentialArchetypes[capitalizedWord] = count;
-      });
+    logger.info("Found archetypes:", Object.keys(potentialArchetypes));
 
     // Calculate key cards and their opening probabilities
     logger.info(
