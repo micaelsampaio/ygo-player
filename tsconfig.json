@@ -15,8 +15,11 @@
     "skipLibCheck": true,
     "strict": true,
     "incremental": true,
-    "isolatedModules": true
+    "isolatedModules": true,
+    "paths": {
+      "ygo-core": ["../ygo-core/src"]
+    }
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "../ygo-core/src/**/*"],
   "exclude": ["__tests__", "node_modules", "**/*.test.ts"]
 }

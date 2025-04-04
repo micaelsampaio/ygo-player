@@ -1,11 +1,15 @@
-import path, { resolve } from "path";
+import path from "path";
+import { fileURLToPath } from "url";
 import MiniCssExtractPlugin from "mini-css-extract-plugin";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export default {
   mode: "development",
   entry: "./src/index.ts",
   output: {
-    path: resolve("dist"),
+    path: path.resolve(__dirname, "dist"),
     filename: "bundle.js",
     library: {
       type: "module",
@@ -15,6 +19,13 @@ export default {
   resolve: {
     extensions: [".ts", ".tsx", ".js", ".jsx", ".css"],
     fullySpecified: false,
+    alias: {
+      "ygo-core": process.env.DOCKER
+        ? path.resolve("/node_modules/ygo-core")
+        : process.env.NODE_ENV === "development"
+        ? path.resolve(__dirname, "../ygo-core/src")
+        : path.resolve(__dirname, "../ygo-core/dist"),
+    },
   },
   module: {
     rules: [
