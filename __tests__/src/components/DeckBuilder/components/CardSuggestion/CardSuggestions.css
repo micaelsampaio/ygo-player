@@ -10,8 +10,9 @@
 
 .suggestions-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 15px;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 10px;
+  padding: 10px 0;
 }
 
 .suggestion-card {
@@ -19,6 +20,8 @@
   border-radius: 8px;
   overflow: hidden;
   transition: transform 0.2s, box-shadow 0.2s;
+  display: flex;
+  flex-direction: column;
 }
 
 .suggestion-card:hover {
@@ -28,19 +31,20 @@
 
 .suggestion-image {
   width: 100%;
+  aspect-ratio: 421/614; /* Standard YGO card ratio */
+  object-fit: contain;
+  background-color: #f0f0f0;
   display: block;
-  aspect-ratio: 3/4;
-  object-fit: cover;
 }
 
 .suggestion-details {
-  padding: 10px;
+  padding: 8px;
 }
 
 .suggestion-name {
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   font-weight: bold;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -48,13 +52,13 @@
 
 .add-suggestion {
   width: 100%;
-  padding: 5px;
+  padding: 4px;
   background-color: #2196f3;
   color: white;
   border: none;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   transition: background-color 0.2s;
 }
 

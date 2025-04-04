@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Card } from "../../types";
 import "./CardModal.css";
 import { getCardImageUrl } from "../../../../utils/cardImages";
@@ -16,6 +16,8 @@ const CardModal: React.FC<CardModalProps> = ({
   onClose,
   onAddCard,
 }) => {
+  const [hasImageFallback, setHasImageFallback] = useState(false);
+
   if (!isOpen) return null;
 
   // Function to highlight keywords in card description
@@ -129,16 +131,21 @@ const CardModal: React.FC<CardModalProps> = ({
         <div className="card-modal-content">
           <div className="card-modal-image">
             <img
-              src={getCardImageUrl(card)}
+              src={
+                hasImageFallback
+                  ? `${
+                      import.meta.env.VITE_YGO_CDN_URL
+                    }/images/cards_small/card_back.jpg`
+                  : getCardImageUrl(card, "normal")
+              }
               alt={card.name}
-              className="card-full-image"
+              className={`card-full-image ${
+                hasImageFallback ? "card-image-fallback" : ""
+              }`}
               onError={(e) => {
-                // Fallback to card back if image fails to load
-                const target = e.target as HTMLImageElement;
-                target.src = `${
-                  import.meta.env.VITE_YGO_CDN_URL
-                }/images/cards/card_back.jpg`;
-                target.classList.add("card-image-fallback");
+                if (!hasImageFallback) {
+                  setHasImageFallback(true);
+                }
               }}
             />
           </div>

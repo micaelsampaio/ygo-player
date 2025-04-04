@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Card, Deck } from "../../types";
+import { getCardImageUrl } from "../../../../utils/cardImages";
 import "./CardSuggestions.css";
 
 interface CardSuggestionsProps {
@@ -130,9 +131,16 @@ const CardSuggestions: React.FC<CardSuggestionsProps> = ({
         {suggestions.map((card) => (
           <div key={card.id} className="suggestion-card">
             <img
-              src={card.card_images[0].image_url}
+              src={getCardImageUrl(card, "small")}
               alt={card.name}
               className="suggestion-image"
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                target.src = `${
+                  import.meta.env.VITE_YGO_CDN_URL
+                }/images/cards_small/card_back.jpg`;
+                target.classList.add("card-image-fallback");
+              }}
             />
             <div className="suggestion-details">
               <div className="suggestion-name">{card.name}</div>
