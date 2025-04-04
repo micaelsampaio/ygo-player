@@ -197,3 +197,27 @@ export function estimateCardEfficiency(
 
   return { overallScore, consistency, versatility, economy };
 }
+
+/**
+ * Calculate the probability of drawing at least one card with a specific role
+ */
+export const calculateRoleProbability = (
+  analytics: any,
+  role: string
+): number => {
+  const roleCards = (analytics.mainDeck || []).filter(
+    (card: any) => card.roleInfo?.role === role
+  );
+  const totalCopies = roleCards.reduce(
+    (sum: number, card: any) => sum + (card.copies || 0),
+    0
+  );
+
+  if (totalCopies === 0) return 0;
+
+  return calculateDrawProbability(
+    analytics.deckSize || 40,
+    totalCopies,
+    5 // Standard opening hand size
+  );
+};
