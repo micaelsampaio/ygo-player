@@ -54,7 +54,7 @@ export function Logs({ replayUtils }: { replayUtils: YgoReplayToImage }) {
                     <div className="log-type">
                         {log.type}
                     </div>
-                    <img className='s-card-image' />
+                    <img className='s-card-image no-image' />
                 </div>
             </>)
         }
@@ -86,7 +86,7 @@ export function Logs({ replayUtils }: { replayUtils: YgoReplayToImage }) {
                         {currentLog.type}
                     </div>
 
-                    <img className='s-card-image' />
+                    <img className='s-card-image no-image' />
 
                     <br />
                 </div>

@@ -51,6 +51,11 @@ const Page = styled.div`
     height: 200px;
     border-radius: 5px;
     }
+    .current-log .s-card-image.no-image {
+    background-color: black;
+    width: 150px;
+    border:1px solid #444;
+    }
 
     .next-logs {
     display: grid;

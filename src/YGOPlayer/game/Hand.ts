@@ -63,12 +63,9 @@ export class GameHand extends YGOEntity {
     const visibleHeightAtZ = 2 * Math.tan(fov / 2) * Math.abs(distance - baseHandZ);
     const screenEdgeOffset = 0.15;
     const handY = this.player === 0 ? -visibleHeightAtZ / 2 + screenEdgeOffset : visibleHeightAtZ / 2 - screenEdgeOffset;
-
     const normalHandWidth = (totalCards - 1) * cardSpacing + cardWidth;
     const needsCompression = normalHandWidth > handDistribution;
-
     let actualSpacing = cardSpacing;
-    let zIncrement = 0.1;
     let actualWidth = normalHandWidth;
 
     if (needsCompression) {
@@ -80,9 +77,16 @@ export class GameHand extends YGOEntity {
       const index = this.player === 0 ? i : totalCards - 1 - i;
       const handCard = gameField.hand.getCard(index)!;
       const xOffset = -actualWidth / 2 + cardWidth / 2 + i * actualSpacing;
-      const handZ = needsCompression ? baseHandZ + Math.max(0, i - totalCards / 2) * zIncrement : baseHandZ;
-
+      const handZ = baseHandZ;
       handCard.gameObject.position.set(xOffset, handY, handZ);
+
+      if (needsCompression) {
+        const scaleMultiplier = 1 - 0.02 * Math.abs(i - totalCards / 2) / (totalCards / 2);
+        handCard.gameObject.scale.set(scaleMultiplier, scaleMultiplier, 1);
+      } else {
+        handCard.gameObject.scale.set(1, 1, 1);
+      }
+
       handCard.position = handCard.gameObject.position.clone();
 
       if (handCard.card.originalOwner === 0) {
@@ -90,6 +94,7 @@ export class GameHand extends YGOEntity {
       } else {
         handCard.gameObject.rotation.set(0, 0, THREE.MathUtils.degToRad(180));
       }
+
       handCard.gameObject.visible = true;
     }
   }
