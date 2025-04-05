@@ -6,11 +6,11 @@ import * as THREE from "three";
 export class YGODuelScene {
     public selectedCardPlaceholder!: THREE.Object3D;
     public handPlaceholder!: THREE.Object3D;
+    public gameFields: THREE.Scene[];
 
     constructor(private duel: YGODuel) {
-
+        this.gameFields = [];
     }
-
 
     public createFields({ gameField }: { gameField: THREE.Scene }) {
 
@@ -43,6 +43,9 @@ export class YGODuelScene {
         this.duel.core.scene.add(gameField);
         this.duel.core.scene.add(clonedGameField);
 
+        this.gameFields.push(gameField);
+        this.gameFields.push(clonedGameField);
+
         const selectedCardGeometry = new THREE.PlaneGeometry(7, 15);
         const selectedCardMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000, transparent: true, opacity: 0, wireframe: false });
         this.selectedCardPlaceholder = new THREE.Mesh(selectedCardGeometry, selectedCardMaterial);
@@ -54,6 +57,20 @@ export class YGODuelScene {
         const handObject = new THREE.Mesh(handObjectGeometry, handObjectMaterial);
         this.duel.core.scene.add(handObject);
         this.handPlaceholder = handObject;
+
+
+        this.duel.fields.forEach((field, playerIndex) => {
+            field.graveyard.hoverObject = this.duel.duelScene.gameFields[playerIndex].children.find(obj => obj.name === "GY_SELECTION_MESH");
+            field.banishedZone.hoverObject = this.duel.duelScene.gameFields[playerIndex].children.find(obj => obj.name === "B_SELECTION_MESH");
+
+            if (field.graveyard.hoverObject) {
+                field.graveyard.hoverObject.visible = false;
+            }
+            if (field.banishedZone.hoverObject) {
+                field.banishedZone.hoverObject.visible = false;
+            }
+        });
+
 
         this.createEffects();
     }

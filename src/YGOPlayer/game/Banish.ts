@@ -17,9 +17,7 @@ export class Banish extends YGOEntity implements YGOUiElement {
     public isUiElement: boolean = true;
     private duel: YGODuel;
     public player: number;
-    private normalMaterial: THREE.MeshBasicMaterial;
-    private hoverMaterial: THREE.MeshBasicMaterial;
-    private mesh: THREE.Mesh;
+    public hoverObject: THREE.Object3D | undefined;
     public position: THREE.Vector3;
     public rotation: THREE.Euler;
     public cardPosition: THREE.Vector3;
@@ -30,11 +28,9 @@ export class Banish extends YGOEntity implements YGOUiElement {
         this.duel = duel;
         this.player = player;
 
-        this.normalMaterial = new THREE.MeshBasicMaterial({ color: 0x00555, transparent: true, opacity: 0 });
-        this.hoverMaterial = new THREE.MeshBasicMaterial({ color: 0x00ffff });
-
+        const normalMaterial = new THREE.MeshBasicMaterial({ color: 0x00555, transparent: true, opacity: 0 });
         const geometry = new THREE.BoxGeometry(2.8, 2.8, 0.1);
-        const cube = new THREE.Mesh(geometry, this.normalMaterial);
+        const cube = new THREE.Mesh(geometry, normalMaterial);
         cube.position.copy(position)
 
         this.cardPosition = position.clone();
@@ -42,7 +38,6 @@ export class Banish extends YGOEntity implements YGOUiElement {
 
         this.duel.core.scene.add(cube);
         this.gameObject = cube;
-        this.mesh = cube;
 
         this.position = this.gameObject.position.clone();
         this.rotation = this.gameObject.rotation.clone();
@@ -56,11 +51,15 @@ export class Banish extends YGOEntity implements YGOUiElement {
     }
 
     onMouseEnter(): void {
-        this.mesh.material = this.hoverMaterial;
+        if (this.hoverObject) {
+            this.hoverObject.visible = true;
+        }
     }
 
     onMouseLeave(): void {
-        this.mesh.material = this.normalMaterial;
+        if (this.hoverObject) {
+            this.hoverObject.visible = false;
+        }
     }
 
     createBanishCardEffect({ card, sequence }: { card: THREE.Object3D, sequence: YGOTaskSequence }) {

@@ -141,7 +141,7 @@ export class YGODuel {
       }, 500);
     } catch (error) {
       console.error("ERROR:");
-      console.error(error);
+      console.error("TCL:", error);
       alert("ERROR");
     }
   }

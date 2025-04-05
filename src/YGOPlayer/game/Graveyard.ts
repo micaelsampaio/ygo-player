@@ -3,7 +3,6 @@ import { YGODuel } from "../core/YGODuel";
 import { YGOEntity } from "../core/YGOEntity";
 import { YGOUiElement } from "../types";
 import { YGOMouseEvents } from '../core/components/YGOMouseEvents';
-import { YGOTask } from '../core/components/tasks/YGOTask';
 import { YGOTaskSequence } from '../core/components/tasks/YGOTaskSequence';
 import { CallbackTransition } from '../duel-events/utils/callback';
 import { ScaleTransition } from '../duel-events/utils/scale-transition';
@@ -18,9 +17,7 @@ export class Graveyard extends YGOEntity implements YGOUiElement {
     public isUiElement: boolean = true;
     private duel: YGODuel;
     public player: number;
-    private normalMaterial: THREE.MeshBasicMaterial;
-    private hoverMaterial: THREE.MeshBasicMaterial;
-    private mesh: THREE.Mesh;
+    public hoverObject: THREE.Object3D | undefined;
     public position: THREE.Vector3;
     public cardPosition: THREE.Vector3;
     public rotation: THREE.Euler;
@@ -30,11 +27,9 @@ export class Graveyard extends YGOEntity implements YGOUiElement {
         this.duel = duel;
         this.player = player;
 
-        this.normalMaterial = new THREE.MeshBasicMaterial({ color: 0x00555, transparent: true, opacity: 0 });
-        this.hoverMaterial = new THREE.MeshBasicMaterial({ color: 0x00ffff });
-
+        const normalMaterial = new THREE.MeshBasicMaterial({ color: 0x00555, transparent: true, opacity: 0 });
         const geometry = new THREE.BoxGeometry(3, 3, 0.1);
-        const cube = new THREE.Mesh(geometry, this.normalMaterial);
+        const cube = new THREE.Mesh(geometry, normalMaterial);
         cube.position.copy(position);
 
         this.cardPosition = position.clone();
@@ -42,7 +37,6 @@ export class Graveyard extends YGOEntity implements YGOUiElement {
 
         this.duel.core.scene.add(cube);
         this.gameObject = cube;
-        this.mesh = cube;
 
         if (player === 1) {
             this.gameObject.rotateZ(THREE.MathUtils.degToRad(180));
@@ -53,6 +47,10 @@ export class Graveyard extends YGOEntity implements YGOUiElement {
         this.rotation = this.gameObject.rotation.clone();
 
         this.duel.gameController.getComponent<YGOMouseEvents>("mouse_events")?.registerElement(this);
+
+        if (this.hoverObject) {
+            this.hoverObject.visible = false;
+        }
     }
 
     onMouseClick(event: MouseEvent): void {
@@ -60,11 +58,15 @@ export class Graveyard extends YGOEntity implements YGOUiElement {
     }
 
     onMouseEnter(): void {
-        this.mesh.material = this.hoverMaterial;
+        if (this.hoverObject) {
+            this.hoverObject.visible = true;
+        }
     }
 
     onMouseLeave(): void {
-        this.mesh.material = this.normalMaterial;
+        if (this.hoverObject) {
+            this.hoverObject.visible = false;
+        }
     }
 
     createSendToGraveyardEffect({ card, sequence }: { card: THREE.Object3D, sequence: YGOTaskSequence }) {
