@@ -81,9 +81,25 @@
         background-position: 25% 100%;
     }
 
+
     .ygo-icon-game-zone-arrow {
-        background-position: 100% 100%;
         width: 40px;
         height: 40px;
+        -webkit-mask-image: var(--ygo-player-asset-ui-game-zones);
+        mask-image: var(--ygo-player-asset-ui-game-zones);
+        -webkit-mask-position: 100% 100%;
+        mask-position: 100% 100%;
+        -webkit-mask-size: 500% 500%;
+        mask-size: 500% 500%;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+    }
+
+    .ygo-icon-game-zone-arrow.ygo-player-0 {
+        background-color: blue;
+    }
+
+    .ygo-icon-game-zone-arrow.ygo-player-1 {
+        background-color: red;
     }
 }

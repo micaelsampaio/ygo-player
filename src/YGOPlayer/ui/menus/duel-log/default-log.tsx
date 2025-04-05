@@ -44,7 +44,7 @@ export function DefaultLogRow({
                 </div>
                 {log.originZone && log.zone && <>
                   <div>
-                    <div className="ygo-icon-game-zone ygo-icon-game-zone-arrow"></div>
+                    <div className={`ygo-icon-game-zone-arrow ygo-player-${log.player}`}></div>
                   </div>
                   <div>
                     <div className={zoneClassName}></div>
