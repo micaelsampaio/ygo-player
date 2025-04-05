@@ -1,4 +1,4 @@
-import { Card } from "./types";
+import { Card, Deck } from "./types";
 
 // Helper function to determine potential archetypes for a card
 export const determineCardArchetypes = (card: Card) => {
@@ -137,4 +137,20 @@ export const isExtraDeckCard = (card: Card): boolean => {
   return ["XYZ", "Synchro", "Fusion", "Link"].some((type) =>
     card.type.includes(type)
   );
+};
+
+// Utility function to count card copies in both main and extra deck
+export const getCardCopiesInDeck = (deck: Deck, cardId: number): number => {
+  const mainDeckCopies = deck.mainDeck.filter(
+    (card) => card.id === cardId
+  ).length;
+  const extraDeckCopies = deck.extraDeck.filter(
+    (card) => card.id === cardId
+  ).length;
+  return mainDeckCopies + extraDeckCopies;
+};
+
+// Utility function to validate if a card can be added to the deck
+export const canAddCardToDeck = (deck: Deck, cardId: number): boolean => {
+  return getCardCopiesInDeck(deck, cardId) < 3;
 };

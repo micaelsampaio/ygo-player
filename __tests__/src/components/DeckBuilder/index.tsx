@@ -10,6 +10,7 @@ import CardSuggestions from "./components/CardSuggestion/CardSuggestions.tsx";
 import DrawSimulator from "./components/DrawSimulator"; // Fix import path
 import { useDeckStorage } from "./hooks/useDeckStorage";
 import { useDeckAnalytics } from "./hooks/useDeckAnalytics";
+import { canAddCardToDeck } from "./utils";
 import "./DeckBuilder.css";
 
 const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
@@ -147,6 +148,10 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
 
   const handleAddCard = (card: Card) => {
     if (selectedDeck) {
+      if (!canAddCardToDeck(selectedDeck, card.id)) {
+        alert("Cannot add more than 3 copies of the same card");
+        return;
+      }
       addCardToDeck(card);
     }
   };
