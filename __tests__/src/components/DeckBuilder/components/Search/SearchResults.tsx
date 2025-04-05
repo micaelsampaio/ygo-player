@@ -8,6 +8,7 @@ interface SearchResultsProps {
   results: Card[];
   onCardSelect: (card: Card) => void; // This should show the card modal
   onCardAdd: (card: Card) => void;
+  onToggleFavorite: (card: Card) => void;
   isEmptySearch: boolean;
   isLoading?: boolean;
 }
@@ -16,6 +17,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
   results,
   onCardSelect,
   onCardAdd,
+  onToggleFavorite,
   isEmptySearch,
   isLoading = false,
 }) => {
@@ -30,6 +32,11 @@ const SearchResults: React.FC<SearchResultsProps> = ({
     if (typeLC.includes("effect")) return "monster effect";
     if (typeLC.includes("monster")) return "monster effect";
     return "";
+  };
+
+  const handleToggleFavorite = (card: Card, event: React.MouseEvent) => {
+    event.stopPropagation(); // Prevent card selection when clicking favorite button
+    onToggleFavorite(card);
   };
 
   if (isLoading) {

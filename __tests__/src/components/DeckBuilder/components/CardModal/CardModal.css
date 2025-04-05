@@ -45,6 +45,35 @@
   background-color: rgba(255, 255, 255, 1);
 }
 
+.favorite-button {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.8);
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  color: #666;
+  transition: all 0.2s ease;
+}
+
+.favorite-button:hover {
+  background-color: rgba(255, 255, 255, 1);
+  transform: scale(1.1);
+}
+
+.favorite-button.active {
+  color: #ffd700;
+  text-shadow: 0 0 2px rgba(0, 0, 0, 0.3);
+}
+
 .card-modal-content {
   display: flex;
   padding: 20px;

@@ -464,3 +464,38 @@
     grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
   }
 }
+
+/* Favorites Tab Styles */
+.search-tabs {
+  display: flex;
+  gap: 0;
+  background: #f0f2f5;
+  padding: 4px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+}
+
+.search-tabs button {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-weight: 500;
+  color: #666;
+  transition: all 0.2s;
+  border-radius: 6px;
+}
+
+.search-tabs button.active {
+  background: #2196f3;
+  color: white;
+}
+
+.search-tabs button:hover:not(.active) {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.favorites-content {
+  min-height: 200px;
+}

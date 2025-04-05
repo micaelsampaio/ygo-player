@@ -187,6 +187,35 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
     updateDeck(updatedDeck);
   };
 
+  const handleToggleFavorite = (card: Card) => {
+    const updatedCard = { ...card, isFavorite: !card.isFavorite };
+
+    // Update preview card if modal is open
+    if (previewCard && previewCard.id === card.id) {
+      setPreviewCard(updatedCard);
+    }
+
+    // Update localStorage
+    const storedFavorites = JSON.parse(
+      localStorage.getItem("favoriteCards") || "[]"
+    );
+
+    let newFavorites;
+    if (updatedCard.isFavorite) {
+      // Add to favorites
+      newFavorites = storedFavorites.filter((f: Card) => f.id !== card.id);
+      newFavorites.push(updatedCard);
+    } else {
+      // Remove from favorites
+      newFavorites = storedFavorites.filter((f: Card) => f.id !== card.id);
+    }
+
+    localStorage.setItem("favoriteCards", JSON.stringify(newFavorites));
+
+    // Dispatch event to notify SearchPanel
+    window.dispatchEvent(new Event("favoritesUpdated"));
+  };
+
   return (
     <div className="deck-builder">
       <div className="builder-container">
@@ -254,6 +283,7 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
           <SearchPanel
             onCardSelect={toggleCardPreview}
             onCardAdd={handleAddCard}
+            onToggleFavorite={handleToggleFavorite}
           />
           {selectedDeck && (
             <CardSuggestions
@@ -270,6 +300,7 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
           isOpen={isModalOpen}
           onClose={closeModal}
           onAddCard={selectedDeck ? handleAddCard : undefined}
+          onToggleFavorite={handleToggleFavorite}
         />
       )}
 

@@ -8,6 +8,7 @@ interface CardModalProps {
   isOpen: boolean;
   onClose: () => void;
   onAddCard?: (card: Card) => void;
+  onToggleFavorite?: (card: Card) => void;
 }
 
 const CardModal: React.FC<CardModalProps> = ({
@@ -15,10 +16,16 @@ const CardModal: React.FC<CardModalProps> = ({
   isOpen,
   onClose,
   onAddCard,
+  onToggleFavorite,
 }) => {
   const [hasImageFallback, setHasImageFallback] = useState(false);
 
   if (!isOpen) return null;
+
+  const handleToggleFavorite = (event: React.MouseEvent) => {
+    event.stopPropagation();
+    onToggleFavorite?.(card);
+  };
 
   // Function to highlight keywords in card description
   const highlightKeywords = (text: string) => {
@@ -126,6 +133,13 @@ const CardModal: React.FC<CardModalProps> = ({
       <div className="card-modal" onClick={(e) => e.stopPropagation()}>
         <button className="close-button" onClick={onClose}>
           ×
+        </button>
+        <button
+          className={`favorite-button ${card.isFavorite ? "active" : ""}`}
+          onClick={handleToggleFavorite}
+          title={card.isFavorite ? "Remove from favorites" : "Add to favorites"}
+        >
+          {card.isFavorite ? "★" : "☆"}
         </button>
 
         <div className="card-modal-content">

@@ -9,12 +9,47 @@ import "./SearchPanel.css";
 interface SearchPanelProps {
   onCardSelect: (card: Card) => void;
   onCardAdd: (card: Card) => void;
+  onToggleFavorite: (card: Card) => void;
 }
 
 const SearchPanel: React.FC<SearchPanelProps> = ({
   onCardSelect,
   onCardAdd,
+  onToggleFavorite,
 }) => {
+  const [activeTab, setActiveTab] = useState<"search" | "favorites">("search");
+  const [favoriteCards, setFavoriteCards] = useState<Card[]>([]);
+
+  useEffect(() => {
+    // Load favorites from localStorage
+    const stored = localStorage.getItem("favoriteCards");
+    if (stored) {
+      setFavoriteCards(JSON.parse(stored));
+    }
+  }, []);
+
+  // Add event listener for favorites updates
+  useEffect(() => {
+    const handleFavoritesUpdate = () => {
+      const stored = localStorage.getItem("favoriteCards");
+      if (stored) {
+        setFavoriteCards(JSON.parse(stored));
+      }
+    };
+
+    window.addEventListener("favoritesUpdated", handleFavoritesUpdate);
+    return () => {
+      window.removeEventListener("favoritesUpdated", handleFavoritesUpdate);
+    };
+  }, []);
+
+  const handleToggleFavorite = useCallback(
+    (card: Card) => {
+      onToggleFavorite(card);
+    },
+    [onToggleFavorite]
+  );
+
   const [isAdvancedSearch, setIsAdvancedSearch] = useState(false);
   const {
     searchTerm,
@@ -85,66 +120,109 @@ const SearchPanel: React.FC<SearchPanelProps> = ({
 
   return (
     <div className="search-panel">
-      <div className="search-toggle">
+      <div className="search-tabs">
         <button
-          className={!isAdvancedSearch ? "active" : ""}
-          onClick={() => setIsAdvancedSearch(false)}
+          className={activeTab === "search" ? "active" : ""}
+          onClick={() => setActiveTab("search")}
         >
-          Basic Search
+          Search
         </button>
         <button
-          className={isAdvancedSearch ? "active" : ""}
-          onClick={() => setIsAdvancedSearch(true)}
+          className={activeTab === "favorites" ? "active" : ""}
+          onClick={() => setActiveTab("favorites")}
         >
-          Advanced Search
+          Favorites ({favoriteCards.length})
         </button>
       </div>
 
-      <form onSubmit={handleManualSearch}>
-        {!isAdvancedSearch ? (
-          <BasicSearch
-            searchTerm={searchTerm}
-            onSearchTermChange={setSearchTerm}
+      {activeTab === "search" ? (
+        <>
+          <div className="search-toggle">
+            <button
+              className={!isAdvancedSearch ? "active" : ""}
+              onClick={() => setIsAdvancedSearch(false)}
+            >
+              Basic Search
+            </button>
+            <button
+              className={isAdvancedSearch ? "active" : ""}
+              onClick={() => setIsAdvancedSearch(true)}
+            >
+              Advanced Search
+            </button>
+          </div>
+
+          <form onSubmit={handleManualSearch}>
+            {!isAdvancedSearch ? (
+              <BasicSearch
+                searchTerm={searchTerm}
+                onSearchTermChange={setSearchTerm}
+              />
+            ) : (
+              <AdvancedSearch
+                searchFilters={searchFilters}
+                onFilterChange={handleFilterChange}
+              />
+            )}
+
+            <button
+              type="submit"
+              className="search-button"
+              disabled={
+                isSearching ||
+                (!isAdvancedSearch && (!searchTerm || searchTerm.length < 3))
+              }
+            >
+              {isSearching ? "Searching..." : "Search Cards"}
+            </button>
+          </form>
+
+          <div className="search-status">
+            {isSearching && (
+              <span className="searching-indicator">Searching...</span>
+            )}
+            {!isSearching && results.length > 0 && (
+              <span className="results-count">
+                Found {results.length} cards
+              </span>
+            )}
+            {!isSearching && isEmptySearch && (
+              <span className="results-count">No cards found</span>
+            )}
+            {!isSearching && error && (
+              <span className="search-error">{error}</span>
+            )}
+          </div>
+
+          <SearchResults
+            results={results.map((card) => ({
+              ...card,
+              isFavorite: favoriteCards.some((f) => f.id === card.id),
+            }))}
+            onCardSelect={(card) =>
+              onCardSelect({
+                ...card,
+                isFavorite: favoriteCards.some((f) => f.id === card.id),
+              })
+            }
+            onCardAdd={onCardAdd}
+            onToggleFavorite={handleToggleFavorite}
+            isEmptySearch={isEmptySearch}
+            isLoading={isSearching}
           />
-        ) : (
-          <AdvancedSearch
-            searchFilters={searchFilters}
-            onFilterChange={handleFilterChange}
+        </>
+      ) : (
+        <div className="favorites-content">
+          <SearchResults
+            results={favoriteCards}
+            onCardSelect={onCardSelect}
+            onCardAdd={onCardAdd}
+            onToggleFavorite={handleToggleFavorite}
+            isEmptySearch={false}
+            isLoading={false}
           />
-        )}
-
-        <button
-          type="submit"
-          className="search-button"
-          disabled={
-            isSearching ||
-            (!isAdvancedSearch && (!searchTerm || searchTerm.length < 3))
-          }
-        >
-          {isSearching ? "Searching..." : "Search Cards"}
-        </button>
-      </form>
-
-      <div className="search-status">
-        {isSearching && (
-          <span className="searching-indicator">Searching...</span>
-        )}
-        {!isSearching && results.length > 0 && (
-          <span className="results-count">Found {results.length} cards</span>
-        )}
-        {!isSearching && isEmptySearch && (
-          <span className="results-count">No cards found</span>
-        )}
-        {!isSearching && error && <span className="search-error">{error}</span>}
-      </div>
-
-      <SearchResults
-        results={results}
-        onCardSelect={onCardSelect}
-        onCardAdd={onCardAdd}
-        isEmptySearch={isEmptySearch}
-        isLoading={isSearching}
-      />
+        </div>
+      )}
     </div>
   );
 };

@@ -121,6 +121,7 @@ export interface Card {
   linkmarkers?: string[];
   scale?: number;
   roleInfo?: CardRoleInfo;
+  isFavorite?: boolean;
 }
 
 // Deck structure
@@ -210,6 +211,7 @@ export interface DeckBuilderProps {
 export interface SearchPanelProps {
   onCardSelect: (card: Card) => void;
   onCardAdd: (card: Card) => void;
+  onToggleFavorite: (card: Card) => void;
 }
 
 // Props for DeckAnalytics component
