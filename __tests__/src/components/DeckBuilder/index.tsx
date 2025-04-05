@@ -19,9 +19,9 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [deckAnalytics, setDeckAnalytics] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [activeTab, setActiveTab] = useState<"editor" | "search" | "simulator">(
-    "editor"
-  );
+  const [activeTab, setActiveTab] = useState<
+    "editor" | "simulator" | "analytics"
+  >("editor");
   const timeoutRef = useRef<NodeJS.Timeout>();
 
   // Custom hooks
@@ -200,40 +200,28 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
         </div>
 
         <div className="editor-panel">
-          <div className="search-controls">
-            <div className="search-toggle">
-              <button
-                className={activeTab === "editor" ? "active-tab" : ""}
-                onClick={() => setActiveTab("editor")}
-              >
-                Deck Editor
-              </button>
-              <button
-                className={activeTab === "search" ? "active-tab" : ""}
-                onClick={() => setActiveTab("search")}
-              >
-                Card Search
-              </button>
-              <button
-                className={activeTab === "simulator" ? "active-tab" : ""}
-                onClick={() => setActiveTab("simulator")}
-              >
-                Draw Simulator
-              </button>
-            </div>
+          <div className="editor-tabs">
+            <button
+              className={activeTab === "editor" ? "active-tab" : ""}
+              onClick={() => setActiveTab("editor")}
+            >
+              Deck Editor
+            </button>
+            <button
+              className={activeTab === "analytics" ? "active-tab" : ""}
+              onClick={() => setActiveTab("analytics")}
+            >
+              Deck Analytics
+            </button>
+            <button
+              className={activeTab === "simulator" ? "active-tab" : ""}
+              onClick={() => setActiveTab("simulator")}
+            >
+              Draw Simulator
+            </button>
           </div>
 
-          {activeTab === "search" ? (
-            <SearchPanel
-              onCardSelect={toggleCardPreview}
-              onCardAdd={handleAddCard}
-            />
-          ) : activeTab === "simulator" ? (
-            <DrawSimulator
-              deck={selectedDeck}
-              onCardSelect={toggleCardPreview}
-            />
-          ) : (
+          {activeTab === "editor" && (
             <DeckEditor
               deck={selectedDeck}
               onCardSelect={toggleCardPreview}
@@ -246,10 +234,22 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
               updateDeck={updateDeck}
             />
           )}
+          {activeTab === "simulator" && (
+            <DrawSimulator
+              deck={selectedDeck}
+              onCardSelect={toggleCardPreview}
+            />
+          )}
+          {activeTab === "analytics" && (
+            <DeckAnalytics analytics={deckAnalytics} />
+          )}
         </div>
 
-        <div className="analytics-panel">
-          <DeckAnalytics analytics={deckAnalytics} />
+        <div className="search-panel">
+          <SearchPanel
+            onCardSelect={toggleCardPreview}
+            onCardAdd={handleAddCard}
+          />
           {selectedDeck && (
             <CardSuggestions
               deck={selectedDeck}
