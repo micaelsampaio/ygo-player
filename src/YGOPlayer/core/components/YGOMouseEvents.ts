@@ -71,11 +71,10 @@ export class YGOMouseEvents extends YGOComponent {
 
     private event_OnMouseDown(event: MouseEvent) {
         const elements = this.getIntersectsElements(event);
+        const elementCardInHand = this.getCardInHandFromInterseptions(elements);
 
         if (elements.length > 0) {
-            const element: any = elements[0].object;
-            const mouseDownElement: YGOUiElement = element.uiElementRef;
-
+            const element: any = elementCardInHand?.object || elements[0].object;
             this.mouseDownElement = element;
         } else {
             this.mouseDownElement = null;
@@ -88,10 +87,12 @@ export class YGOMouseEvents extends YGOComponent {
 
     private event_OnMouseClick(event: MouseEvent) {
         const elements = this.getIntersectsElements(event);
+        const elementCardInHand = this.getCardInHandFromInterseptions(elements);
+
         let clickElement: YGOUiElement | null = null;
 
         if (elements.length > 0) {
-            const element: any = elements[0].object;
+            const element: any = elementCardInHand?.object || elements[0].object;
 
             if (element === this.mouseDownElement) {
                 clickElement = element.uiElementRef as YGOUiElement;
@@ -113,9 +114,10 @@ export class YGOMouseEvents extends YGOComponent {
 
     private event_OnMouseMove(event: MouseEvent) {
         const elements = this.getIntersectsElements(event);
+        const elementCardInHand = this.getCardInHandFromInterseptions(elements);
 
         if (elements.length > 0) {
-            const element: any = elements[0].object;
+            const element: any = elementCardInHand?.object || elements[0].object;
             const hoverElement: YGOUiElement = element.uiElementRef;
 
             if (hoverElement !== this.hoverElement) {
@@ -138,5 +140,19 @@ export class YGOMouseEvents extends YGOComponent {
 
             this.hoverElement = null;
         }
+    }
+
+    private getCardInHandFromInterseptions(elements: any[]) {
+        const cardsInHand = elements.filter((element) => element.object.uiElementRef?.isUiCardElement);
+
+        if (cardsInHand.length > 0) {
+            cardsInHand.sort((a: any, b: any) => {
+                return b.object.uiElementRef.handIndex - a.object.uiElementRef.handIndex;
+            });
+
+            return cardsInHand[0];
+        }
+
+        return undefined;
     }
 }

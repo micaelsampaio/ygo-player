@@ -17,6 +17,7 @@ export class GameCardHand extends YGOEntity implements YGOUiElement {
   public isUiElement: boolean = true;
   public isUiElementClick: boolean = true;
   public isUiElementHover: boolean = true;
+  public isUiCardElement: boolean = true;
   public player: number;
 
   constructor({ duel, player }: { duel: YGODuel; player: number }) {
@@ -24,9 +25,7 @@ export class GameCardHand extends YGOEntity implements YGOUiElement {
 
     this.duel = duel;
 
-    const height = CARD_HEIGHT_SIZE,
-      width = height / CARD_RATIO,
-      depth = CARD_DEPTH;
+    const height = CARD_HEIGHT_SIZE, width = height / CARD_RATIO, depth = CARD_DEPTH;
     const geometry = new THREE.BoxGeometry(width, height, depth);
 
     const frontMaterial = new THREE.MeshBasicMaterial({ color: 0x0000ff }); // Depth
@@ -45,11 +44,10 @@ export class GameCardHand extends YGOEntity implements YGOUiElement {
     this.gameObject = new THREE.Mesh(geometry, materials);
     this.position = this.gameObject.position;
     this.duel.core.scene.add(this.gameObject);
-    this.duel.gameController
-      .getComponent<YGOMouseEvents>("mouse_events")
-      ?.registerElement(this);
+    this.duel.gameController.getComponent<YGOMouseEvents>("mouse_events")?.registerElement(this);
     this.isActive = false;
     this.player = player;
+    (this.gameObject as any).isUiCardElement = true;
   }
 
   onMouseClick?(event: MouseEvent): void {
@@ -101,12 +99,10 @@ export class GameCardHand extends YGOEntity implements YGOUiElement {
 
     if (prevCard && prevCard.id === this.card.id) return;
 
-    const frontTexture = this.duel.assets.getTexture(
-      `${this.duel.config.cdnUrl}/images/cards_small/${card.id}.jpg`
-    );
-    const backTexture = this.duel.assets.getTexture(
-      `${this.duel.config.cdnUrl}/images/card_back.png`
-    );
+    this.gameObject.name = `HAND_CARD_${this.card.name}`;
+
+    const frontTexture = this.duel.assets.getTexture(`${this.duel.config.cdnUrl}/images/cards_small/${card.id}.jpg`);
+    const backTexture = this.duel.assets.getTexture(`${this.duel.config.cdnUrl}/images/card_back.png`);
     const frontMaterial = new CardMaterial({ map: frontTexture }); // Front with texture
     const backMaterial = new THREE.MeshBasicMaterial({ map: backTexture }); // Back
     const depthMaterial = new THREE.MeshBasicMaterial({ color: 0xb5b5b5 }); // Depth
