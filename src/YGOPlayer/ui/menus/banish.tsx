@@ -30,6 +30,10 @@ export function Banish({
         e.preventDefault();
         e.stopPropagation();
       }}
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+      }}
     >
       <h2>Banish</h2>
       <hr />
@@ -45,7 +49,7 @@ export function Banish({
                   htmlCardElement: e.target,
                 };
                 duel.actionManager.setAction(action);
-                duel.events.dispatch("set-selected-card", { player: 0, card });
+                duel.events.dispatch("set-selected-card", { player: card.owner, card });
               }}
               src={`${duel.config.cdnUrl}/images/cards_small/${card.id}.jpg`}
               key={card.index}

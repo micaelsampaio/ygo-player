@@ -29,9 +29,7 @@ export class GameCard extends YGOEntity {
     this.duel = duel;
     this.hasStats = stats;
 
-    const height = CARD_HEIGHT_SIZE,
-      width = height / CARD_RATIO,
-      depth = CARD_DEPTH;
+    const height = CARD_HEIGHT_SIZE, width = height / CARD_RATIO, depth = CARD_DEPTH;
     const geometry = new THREE.BoxGeometry(width, height, depth);
 
     const frontMaterial = new THREE.MeshBasicMaterial({ color: 0xff00ff }); // Depth
@@ -57,12 +55,8 @@ export class GameCard extends YGOEntity {
   setCard(card: Card) {
     this.cardReference = card;
 
-    const frontTexture = this.duel.assets.getTexture(
-      `${this.duel.config.cdnUrl}/images/cards_small/${card.id}.jpg`
-    );
-    const backTexture = this.duel.assets.getTexture(
-      `${this.duel.config.cdnUrl}/images/card_back.png`
-    );
+    const frontTexture = this.duel.assets.getTexture(`${this.duel.config.cdnUrl}/images/cards_small/${card.id}.jpg`);
+    const backTexture = this.duel.assets.getTexture(`${this.duel.config.cdnUrl}/images/card_back.png`);
     const frontMaterial = new CardMaterial({ map: frontTexture }); // Front with texture
     const backMaterial = new THREE.MeshBasicMaterial({ map: backTexture }); // Back
     const depthMaterial = new THREE.MeshBasicMaterial({ color: 0xb5b5b5 }); // Depth
@@ -79,7 +73,7 @@ export class GameCard extends YGOEntity {
     const mesh = this.gameObject as THREE.Mesh;
     mesh.material = materials;
 
-    this.gameObject.name = card.name;
+    this.gameObject.name = "FIELD_CARD" + card.name;
   }
 
   public updateCardStats(zoneData: FieldZoneData) {

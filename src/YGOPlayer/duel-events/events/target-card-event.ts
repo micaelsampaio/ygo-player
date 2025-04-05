@@ -1,7 +1,7 @@
 import { DuelEventHandlerProps } from "..";
 import { YGODuelEvents, YGOGameUtils } from "ygo-core";
 import { YGOTaskSequence } from "../../core/components/tasks/YGOTaskSequence";
-import { getGameZone } from "../../scripts/ygo-utils";
+import { getCardRotationFromFieldZoneData, getCardRotationFromPlayerIndex, getGameZone, getZonePositionFromZoneData } from "../../scripts/ygo-utils";
 import { CallbackTransition } from "../utils/callback";
 import { PositionTransition } from "../utils/position-transition";
 import { ScaleTransition } from "../utils/scale-transition";
@@ -11,6 +11,7 @@ import { YGOCommandHandler } from "../../core/components/YGOCommandHandler";
 import { createCardSelectionGeometry } from "../../game/meshes/CardSelectionMesh";
 import { MaterialOpacityTransition } from "../utils/material-opacity";
 import { WaitForSeconds } from "../utils/wait-for-seconds";
+import { GameCard } from "../../game/GameCard";
 
 interface TargetCardEventHandlerProps extends DuelEventHandlerProps {
   event: YGODuelEvents.Target;
@@ -20,65 +21,118 @@ export class TargetCardEventHandler extends YGOCommandHandler {
   private props: TargetCardEventHandlerProps;
 
   constructor(props: TargetCardEventHandlerProps) {
-    super("move_card_command");
+    super("target_card_command");
     this.props = props;
-    const event = this.props.event;
   }
 
   public start(): void {
     const { event, duel } = this.props;
     const originZoneData = YGOGameUtils.getZoneData(event.originZone)!;
     const cardZone = getGameZone(duel, originZoneData);
-    const card = cardZone?.getGameCard();
+    let card = cardZone?.getGameCard();
+    let destroyCard = false;
 
-    if (card) {
-      const cardSelection = createCardSelectionGeometry(2.65, 3.7, 0.1);
-      const material = new THREE.MeshBasicMaterial({
-        color: 0xffff00,
-        opacity: 1,
-        transparent: true,
-      });
-      const cardSelectionMesh = new THREE.Mesh(cardSelection, material);
-      const targetPosition = card.gameObject.position.clone();
-      targetPosition.z += 0.05;
+    if (!card) {
+      const cardRef = duel.ygo.state.getCardData(event.id)!;
+      card = new GameCard({ card: cardRef, duel, stats: false });
+      destroyCard = true;
 
-      material.opacity = 1;
-      cardSelectionMesh.position.copy(card.gameObject.position);
-      cardSelectionMesh.rotation.copy(card.gameObject.rotation);
+      const position = getZonePositionFromZoneData(duel, originZoneData);
+      const rotation = getCardRotationFromPlayerIndex(originZoneData.player);
 
-      duel.core.scene.add(cardSelectionMesh);
+      card.gameObject.position.copy(position);
+      card.gameObject.rotation.copy(rotation);
+    }
 
-      const sequence = new YGOTaskSequence(
+    const cardSelection = createCardSelectionGeometry(2.65, 3.7, 0.1);
+    const material = new THREE.MeshBasicMaterial({
+      color: 0xffff00,
+      opacity: 1,
+      transparent: true,
+    });
+    const material2 = new THREE.MeshBasicMaterial({
+      color: 0xffff00,
+      opacity: 0,
+      transparent: true,
+    });
+
+    const targetPosition = card.gameObject.position.clone();
+    targetPosition.z += 0.05;
+
+    const cardSelectionMesh = new THREE.Mesh(cardSelection, material);
+    cardSelectionMesh.position.copy(card.gameObject.position);
+    cardSelectionMesh.rotation.copy(card.gameObject.rotation);
+
+    const cardSelectionMesh2 = new THREE.Mesh(cardSelection, material2);
+    cardSelectionMesh2.position.copy(card.gameObject.position);
+    cardSelectionMesh2.rotation.copy(card.gameObject.rotation);
+
+    duel.core.scene.add(cardSelectionMesh);
+    duel.core.scene.add(cardSelectionMesh2);
+
+    this.props.startTask(
+      new YGOTaskSequence(
+        new WaitForSeconds(0.25),
+        new CallbackTransition(() => {
+          cardSelectionMesh2.material.opacity = 1;
+        }),
         new MultipleTasks(
           new ScaleTransition({
-            gameObject: cardSelectionMesh,
-            scale: cardSelectionMesh.scale.clone().addScalar(0.2),
+            gameObject: cardSelectionMesh2,
+            scale: cardSelectionMesh2.scale.clone().addScalar(0.4),
             duration: 0.25,
           }),
           new PositionTransition({
-            gameObject: cardSelectionMesh,
+            gameObject: cardSelectionMesh2,
             position: targetPosition,
             duration: 0.15,
           }),
           new YGOTaskSequence(
             new WaitForSeconds(0.1),
             new MaterialOpacityTransition({
-              material,
+              material: material2,
               opacity: 0,
               duration: 0.15,
             })
           )
         ),
-        new CallbackTransition(() => {
-          duel.core.scene.remove(cardSelectionMesh);
-          this.props.onCompleted();
-        })
-      );
+      )
+    );
 
-      this.props.startTask(sequence);
-    } else {
-      // TODO IMPLEMENT OTHER CARD POSITIONS
-      this.props.onCompleted();
-    }
+    const sequence = new YGOTaskSequence(
+      new MultipleTasks(
+        new ScaleTransition({
+          gameObject: cardSelectionMesh,
+          scale: cardSelectionMesh.scale.clone().addScalar(0.4),
+          duration: 0.25,
+        }),
+        new PositionTransition({
+          gameObject: cardSelectionMesh,
+          position: targetPosition,
+          duration: 0.15,
+        }),
+        new YGOTaskSequence(
+          new WaitForSeconds(0.1),
+          new MaterialOpacityTransition({
+            material,
+            opacity: 0,
+            duration: 0.15,
+          })
+        )
+      ),
+      new WaitForSeconds(0.5),
+      new CallbackTransition(() => {
+        if (destroyCard) {
+          card.destroy();
+        }
+
+        duel.core.scene.remove(cardSelectionMesh);
+        duel.core.scene.remove(cardSelectionMesh2);
+        this.props.onCompleted();
+      })
+    );
+
+    this.props.startTask(sequence);
+
   }
 }

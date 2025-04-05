@@ -220,9 +220,8 @@ export function getCardZones(
               zone.getCardReference()?.originalOwner === player
           );
           zonesToFind.forEach((zone) => {
-            zone.zone = `EMZ${player === 0 ? "" : "2"}-${
-              zone.zoneData.zoneIndex
-            }` as any;
+            zone.zone = `EMZ${player === 0 ? "" : "2"}-${zone.zoneData.zoneIndex
+              }` as any;
             zone.zoneData.player = player;
           });
           break;
@@ -312,6 +311,19 @@ export function getCardRotationFromFieldZoneData(
 
   return rotation;
 }
+
+export function getCardRotationFromPlayerIndex(
+  player: number
+) {
+  let rotation: THREE.Euler = new THREE.Euler(0, 0, 0);
+
+  if (player === 1) {
+    rotation.z += THREE.MathUtils.degToRad(180);
+  }
+
+  return rotation;
+}
+
 export function getZonePosition(duel: YGODuel, zone: FieldZone) {
   const zoneData = YGOGameUtils.getZoneData(zone);
   return getZonePositionFromZoneData(duel, zoneData);

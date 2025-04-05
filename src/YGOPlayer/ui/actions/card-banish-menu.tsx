@@ -78,6 +78,10 @@ export function CardBanishMenu({
     duel.gameActions.toExtraDeck({ card, originZone });
   }, [card, originZone]);
 
+  const targetCard = useCallback(() => {
+    duel.gameActions.targetCard({ card, originZone });
+  }, [card, originZone]);
+
   useLayoutEffect(() => {
     const container = menuRef.current!;
     const cardRect = htmlCardElement.getBoundingClientRect();
@@ -97,16 +101,19 @@ export function CardBanishMenu({
   return (
     <>
       <CardMenu menuRef={menuRef}>
-        <button type="button" className="ygo-card-item" onClick={toST}>
-          TO ST
-        </button>
+
         <button
           type="button"
           className="ygo-card-item"
-          onClick={() => alert("TODO")}
+          onClick={targetCard}
         >
           Target
         </button>
+
+        <button type="button" className="ygo-card-item" onClick={toST}>
+          TO ST
+        </button>
+
         {card.isMainDeckCard && (
           <>
             <button

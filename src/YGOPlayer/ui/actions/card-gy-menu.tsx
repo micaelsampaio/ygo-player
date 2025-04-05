@@ -82,6 +82,10 @@ export function CardGraveyardMenu({
     duel.gameActions.toExtraDeck({ card, originZone });
   }, [card, originZone]);
 
+  const targetCard = useCallback(() => {
+    duel.gameActions.targetCard({ card, originZone });
+  }, [card, originZone]);
+
   useLayoutEffect(() => {
     const container = menuRef.current!;
     const cardRect = htmlCardElement.getBoundingClientRect();
@@ -106,7 +110,7 @@ export function CardGraveyardMenu({
         <button
           type="button"
           className="ygo-card-item"
-          onClick={() => alert("TODO")}
+          onClick={targetCard}
         >
           Target
         </button>
