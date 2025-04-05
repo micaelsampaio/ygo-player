@@ -140,6 +140,8 @@ export class YGOCommandsController extends YGOComponent {
   private processNextCommand() {
     if (this.currentCommand) return; // there is already a command to be executed
 
+    this.duel.actionManager.clearAction();
+
     if (this.commands.length === 0) { // will try to play next command
       if (this.state === YGOCommandsControllerState.PLAYING && !this.pauseRequested) {
         if (this.duel.ygo.hasNextCommand()) {
