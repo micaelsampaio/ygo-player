@@ -33,100 +33,50 @@ const SearchResults: React.FC<SearchResultsProps> = ({
   };
 
   if (isLoading) {
-    return <div className="search-loading">Searching for cards...</div>;
+    return <div className="search-results loading">Searching cards...</div>;
   }
 
-  if (!results || results.length === 0) {
+  if (isEmptySearch) {
     return (
-      <div className="no-results">
-        {isEmptySearch
-          ? "Enter a search term to find cards."
-          : "No cards found. Try adjusting your search."}
-      </div>
+      <div className="search-results empty">Start typing to search cards</div>
     );
+  }
+
+  if (results.length === 0) {
+    return <div className="search-results no-results">No cards found</div>;
   }
 
   return (
     <div className="search-results">
-      {results.map((card) => {
-        if (
-          !card?.id ||
-          !card?.name ||
-          !card?.type ||
-          !card?.card_images?.[0]
-        ) {
-          return null;
-        }
-
-        return (
-          <div key={card.id} className="card-result">
-            <div
-              className="card-content"
-              onClick={() => onCardSelect(card)} // This will trigger the card modal
-            >
-              <div className="card-thumbnail">
-                <img
-                  src={getCardImageUrl(card, "small")}
-                  alt={card.name}
-                  loading="lazy"
-                  crossOrigin="anonymous"
-                  onError={(e) => {
-                    e.currentTarget.src = CARD_BACK_IMAGE;
-                    e.currentTarget.classList.add("placeholder");
-                  }}
-                />
-              </div>
-
-              <div className="card-info">
-                <div className="card-primary">
-                  <div className="card-name" title={card.name}>
-                    {card.name}
-                  </div>
-                  <div className="card-badges">
-                    {card.type.includes("Monster") && (
-                      <span
-                        className={`badge ${getMonsterBadgeClass(card.type)}`}
-                      >
-                        {card.race || "Monster"}
-                      </span>
-                    )}
-                    {card.attribute && (
-                      <span className="badge attribute">{card.attribute}</span>
-                    )}
-                    {card.type.includes("Spell") && (
-                      <span className="badge spell">Spell</span>
-                    )}
-                    {card.type.includes("Trap") && (
-                      <span className="badge trap">Trap</span>
-                    )}
-                  </div>
-                </div>
-                <div className="card-secondary">
-                  {card.level && (
-                    <span className="level">Level {card.level}</span>
-                  )}
-                  {card.atk !== undefined && (
-                    <span className="stats">
-                      ATK: {card.atk} / DEF: {card.def}
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            <button
-              className="quick-add-search"
-              onClick={(e) => {
-                e.stopPropagation();
-                onCardAdd(card);
+      <div className="search-results-grid">
+        {results.map((card) => (
+          <div key={card.id} className="suggestion-card">
+            <img
+              src={getCardImageUrl(card, "small")}
+              alt={card.name}
+              className="suggestion-image"
+              onClick={() => onCardSelect(card)}
+              loading="lazy"
+              crossOrigin="anonymous"
+              onError={(e) => {
+                e.currentTarget.src = CARD_BACK_IMAGE;
+                e.currentTarget.classList.add("placeholder");
               }}
-              title="Add to deck"
-            >
-              +
-            </button>
+            />
+            <div className="suggestion-details">
+              <div className="suggestion-name" title={card.name}>
+                {card.name}
+              </div>
+              <button
+                className="add-suggestion"
+                onClick={() => onCardAdd(card)}
+              >
+                Add to Deck
+              </button>
+            </div>
           </div>
-        );
-      })}
+        ))}
+      </div>
     </div>
   );
 };
