@@ -49,10 +49,10 @@ export class CardZone extends YGOEntity implements YGOUiElement {
     this.card = null;
     this.zoneData = YGOGameUtils.getZoneData(this.zone);
 
-    if (this.zone.startsWith("S") || this.zone.startsWith("F")) {
+    if (this.zone.startsWith("S")) {
       this.size = new THREE.Vector2(4, 3.5);
       this.scale = new THREE.Vector3(1, 1, 1).multiplyScalar(0.85);
-    } if (this.zone.startsWith("F")) {
+    } else if (this.zone.startsWith("F")) {
       this.size = new THREE.Vector2(2.85, 3.6);
       this.scale = new THREE.Vector3(1, 1, 1).multiplyScalar(0.9);
     } else {
