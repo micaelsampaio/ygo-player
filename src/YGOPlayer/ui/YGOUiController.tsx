@@ -18,7 +18,12 @@ export function YGOUiController({ duel }: { duel: YGODuel }) {
     const [menus, setMenus] = useState<{ group: string, visible: boolean, type: string, data: any }[]>([]);
 
     const clearAction = () => {
-        setAction({ type: '', data: null });
+        setAction(prev => {
+            if (prev.type) {
+                return { type: '', data: null };
+            }
+            return prev;
+        });
     };
 
     useEffect(() => {

@@ -596,6 +596,11 @@ export class YGODuel {
     }
   }
 
+  clearActions() {
+    // clear any action open
+    this.actionManager.clearAction();
+    this.events.dispatch("clear-ui-action");
+  }
   private setupVars() {
     document.documentElement.style.setProperty('--ygo-player-asset-ui-card-icons', `url('${this.config.cdnUrl}/images/ui/card_icons.png')`);
     document.documentElement.style.setProperty('--ygo-player-asset-ui-game-zones', `url('${this.config.cdnUrl}/images/ui/ic_game_zones.png')`);

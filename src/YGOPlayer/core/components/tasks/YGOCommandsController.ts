@@ -51,6 +51,7 @@ export class YGOCommandsController extends YGOComponent {
     this.setState(YGOCommandsControllerState.PLAYING);
     this.pauseRequested = false;
     this.duel.ygo.redo();
+    this.duel.clearActions();
   }
 
   nextCommand() {
@@ -59,6 +60,7 @@ export class YGOCommandsController extends YGOComponent {
     this.setState(YGOCommandsControllerState.PLAYING_COMMAND);
     this.pauseRequested = false;
     this.duel.ygo.redo();
+    this.duel.clearActions();
   }
 
   previousCommand() {
@@ -68,6 +70,7 @@ export class YGOCommandsController extends YGOComponent {
       this.duel.ygo.undo();
     }
 
+    this.duel.clearActions();
     this.duel.updateField();
     this.endRecover();
   }
@@ -76,6 +79,7 @@ export class YGOCommandsController extends YGOComponent {
     this.startRecover();
     this.duel.ygo.goToCommand(command);
     this.duel.updateField();
+    this.duel.clearActions();
     this.endRecover();
   }
 
@@ -140,7 +144,7 @@ export class YGOCommandsController extends YGOComponent {
   private processNextCommand() {
     if (this.currentCommand) return; // there is already a command to be executed
 
-    this.duel.actionManager.clearAction();
+    this.duel.clearActions();
 
     if (this.commands.length === 0) { // will try to play next command
       if (this.state === YGOCommandsControllerState.PLAYING && !this.pauseRequested) {
