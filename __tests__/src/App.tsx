@@ -9,6 +9,7 @@ import { YGODeckToImage } from "ygo-core-images-utils";
 import styled from "styled-components";
 import { Logger } from "./utils/logger";
 import { ComboChooseDeck } from "./components/ComboChooseDeck.js";
+import { exportAllData, importAllData } from "./utils/dataExport";
 
 const cdnUrl = String(import.meta.env.VITE_YGO_CDN_URL);
 
@@ -89,7 +90,7 @@ export default function App() {
       ],
       options: {
         shuffleDecks: false,
-        ...options || {}
+        ...(options || {}),
       },
     };
 
@@ -116,8 +117,8 @@ export default function App() {
   };
 
   const duelFromInitialField = ({ deck, fieldState }: any) => {
-    duel(deck, YUBEL, { fieldState })
-  }
+    duel(deck, YUBEL, { fieldState });
+  };
 
   const duelAs = (e: any, deck1: any, deck2: any) => {
     e.preventDefault();
@@ -157,7 +158,7 @@ export default function App() {
   const openSpreadsheetBuilder = (replayData: any) => {
     localStorage.setItem("duel-data", JSON.stringify(replayData));
     navigate(`/spreadsheet`);
-  }
+  };
 
   const playFromAReplay = (playerIndex: number, replayData: any) => {
     const deckData = JSON.parse(window.localStorage.getItem(selectedDeck)!);
@@ -215,13 +216,85 @@ export default function App() {
     navigate("/duel");
   };
 
+  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const result = await importAllData(file);
+      alert(
+        `Successfully imported ${result.decksCount} decks and ${result.replaysCount} replays`
+      );
+
+      // Refresh decks and replays lists
+      setDecks(
+        Object.keys(localStorage).filter((key) => key.startsWith("deck_"))
+      );
+      setReplays(
+        Object.keys(localStorage)
+          .filter((key) => key.startsWith("replay_"))
+          .map((replay) => ({ name: replay, data: null }))
+      );
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to import data");
+    }
+
+    // Clear input
+    e.target.value = "";
+  };
+
   useLazyReplay({ replays, setReplays });
 
   return (
     <div>
       <AppContainer>
         <LeftContent>
-          <h1># Decks</h1>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              gap: "10px",
+            }}
+          >
+            <h1># Decks</h1>
+            <div style={{ display: "flex", gap: "10px" }}>
+              <input
+                type="file"
+                id="import-data"
+                accept=".json"
+                style={{ display: "none" }}
+                onChange={handleImport}
+              />
+              <button
+                onClick={() => document.getElementById("import-data")?.click()}
+                style={{
+                  padding: "8px 16px",
+                  backgroundColor: "#2196F3",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: "pointer",
+                }}
+              >
+                Import Data
+              </button>
+              <button
+                onClick={exportAllData}
+                style={{
+                  padding: "8px 16px",
+                  backgroundColor: "#4CAF50",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: "pointer",
+                }}
+              >
+                Export Data
+              </button>
+            </div>
+          </div>
+
           <ul>
             <li>
               <Link onClick={(e) => duelAs(e, YUBEL, CHIMERA)} to="#">
@@ -244,8 +317,12 @@ export default function App() {
                     Duel as {deckId}
                   </Link>{" "}
                   <button onClick={() => deleteDeck(deckId)}>delete</button>
-                  <button onClick={() => downloadDeckAsPng(deckId)}>download as image</button>
-                  <button onClick={() => downloadDeckAsYdk(deckId)}>download YDK</button>
+                  <button onClick={() => downloadDeckAsPng(deckId)}>
+                    download as image
+                  </button>
+                  <button onClick={() => downloadDeckAsYdk(deckId)}>
+                    download YDK
+                  </button>
                 </li>
               );
             })}
@@ -275,8 +352,11 @@ export default function App() {
                   </option>
                 ))}
               </select>
-
-              {selectedDeck && <button onClick={() => setDeckToPlay(selectedDeck)}>Create a combo</button>}
+              {selectedDeck && (
+                <button onClick={() => setDeckToPlay(selectedDeck)}>
+                  Create a combo
+                </button>
+              )}
               <ul>
                 {replays.map((replay) => {
                   return (
@@ -288,7 +368,11 @@ export default function App() {
                         delete
                       </button>
                       <br />
-                      <EndGameBoard play={playFromAReplay} openSpreadsheetBuilder={openSpreadsheetBuilder} data={replay.data} />
+                      <EndGameBoard
+                        play={playFromAReplay}
+                        openSpreadsheetBuilder={openSpreadsheetBuilder}
+                        data={replay.data}
+                      />
                     </li>
                   );
                 })}
@@ -296,8 +380,12 @@ export default function App() {
             </div>
           )}
 
-          {deckToPlay && <ComboChooseDeck deckId={deckToPlay} onChoose={duelFromInitialField} />}
-
+          {deckToPlay && (
+            <ComboChooseDeck
+              deckId={deckToPlay}
+              onChoose={duelFromInitialField}
+            />
+          )}
         </LeftContent>
         <div>
           <RoomLobby
@@ -344,7 +432,11 @@ function useLazyReplay({ replays, setReplays }: any) {
 
 /// TODO
 
-const EndGameBoard = memo(function EndGameBoard({ data, play, openSpreadsheetBuilder }: any) {
+const EndGameBoard = memo(function EndGameBoard({
+  data,
+  play,
+  openSpreadsheetBuilder,
+}: any) {
   const [fields, setFields] = useState<any>(null);
   useEffect(() => {
     if (!data) return;
@@ -436,13 +528,13 @@ const EndGameBoard = memo(function EndGameBoard({ data, play, openSpreadsheetBui
         const extraMonsterZone1 = fields[0].extraMonsterZones[0]
           ? 0
           : fields[1].extraMonsterZones[0]
-            ? 1
-            : -1;
+          ? 1
+          : -1;
         const extraMonsterZone2 = fields[0].extraMonsterZones[1]
           ? 0
           : fields[1].extraMonsterZones[1]
-            ? 1
-            : -1;
+          ? 1
+          : -1;
 
         const extraMonsterZones = (
           <>
@@ -544,5 +636,3 @@ async function downloadDeckAsYdk(deckId: string) {
   });
   deckBuilder.downloadYdk({ fileName });
 }
-
-
