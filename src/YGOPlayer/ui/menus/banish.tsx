@@ -56,17 +56,7 @@ export function Banish({
               className="ygo-card"
             />
             {card.position === "facedown" && (
-              <div
-                style={{
-                  position: "absolute",
-                  bottom: "5px",
-                  left: "0px",
-                  background: "red",
-                  color: "white",
-                  padding: "5px 10px",
-                }}
-              >
-                FD
+              <div className="ygo-card-banish-fd-icon">
               </div>
             )}
           </div>
