@@ -553,3 +553,44 @@
     opacity: 0;
   }
 }
+
+/* Mobile Responsiveness */
+@media (max-width: 1024px) {
+  .builder-container {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+
+  .decks-panel,
+  .editor-panel,
+  .analytics-panel {
+    max-height: none;
+    height: auto;
+  }
+
+  .editor-panel {
+    order: -1; /* Move editor panel to top on mobile */
+  }
+
+  .deck-card-container:hover .remove-card {
+    opacity: 1; /* Always show remove button on touch devices */
+  }
+}
+
+@media (max-width: 600px) {
+  .deck-builder {
+    padding: 1rem;
+  }
+
+  .card-grid {
+    grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
+  }
+
+  .search-controls {
+    flex-direction: column;
+  }
+
+  .card-search {
+    flex-direction: column;
+  }
+}

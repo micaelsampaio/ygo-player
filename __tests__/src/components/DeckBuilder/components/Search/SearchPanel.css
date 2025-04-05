@@ -333,10 +333,53 @@
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
+  .search-panel {
+    margin-bottom: 15px;
+    padding: 10px;
+  }
+
   .filter-row,
   .search-row {
     flex-direction: column;
-    gap: 8px;
+    gap: 10px;
+  }
+
+  .filter-field {
+    width: 100%;
+  }
+
+  .card-result {
+    padding: 10px;
+  }
+
+  .card-thumbnail {
+    min-width: 60px;
+    width: 60px;
+    height: 88px;
+  }
+
+  .card-info {
+    padding: 0 5px;
+  }
+
+  .card-badges {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .badge {
+    font-size: 0.7rem;
+    padding: 2px 4px;
+  }
+
+  .quick-add-search {
+    width: 28px;
+    height: 28px;
+    font-size: 1.1em;
+  }
+
+  .search-results {
+    max-height: 400px;
   }
 
   .results-grid {
