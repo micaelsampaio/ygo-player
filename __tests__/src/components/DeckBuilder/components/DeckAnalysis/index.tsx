@@ -268,12 +268,11 @@ const DeckAnalytics: React.FC<DeckAnalyticsProps> = ({ analytics }) => {
   const renderOverviewTab = () => (
     <>
       <DeckComposition analytics={processedAnalytics} />
+      <DeckStyle powerUtility={deckMetrics.powerUtility} />
       <KeyCards
         keyCards={processedAnalytics.keyCards}
         onHoverCard={setHoveredCard}
       />
-      <DeckStyle powerUtility={deckMetrics.powerUtility} />
-
       <div className="analytics-section">
         <div className="section-header-with-actions">
           <h3>Advanced Analysis</h3>
@@ -289,7 +288,7 @@ const DeckAnalytics: React.FC<DeckAnalyticsProps> = ({ analytics }) => {
 
       <div className="analytics-section">
         <div className="section-header-with-actions">
-          <h3>Probability Analysis</h3>
+          <h3>Advanced Probability Analysis</h3>
           <button className="view-more-btn" onClick={openProbabilityModal}>
             View Probabilities
           </button>

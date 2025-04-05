@@ -1,5 +1,6 @@
 import React from "react";
 import { DeckAnalyticsType } from "../types";
+import "./DeckComposition.css";
 
 interface DeckCompositionProps {
   analytics: DeckAnalyticsType;

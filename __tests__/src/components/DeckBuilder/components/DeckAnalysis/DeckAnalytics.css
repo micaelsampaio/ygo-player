@@ -103,63 +103,6 @@
   background-color: #2196f3;
 }
 
-/* Composition Stats */
-.composition-stats {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-  margin-bottom: 20px;
-}
-
-.composition-stats .stat-item:nth-child(4),
-.composition-stats .stat-item:nth-child(5) {
-  grid-column: span 1.5;
-}
-
-.stat-item {
-  padding: 5px;
-  background-color: #f5f5f5;
-  border-radius: 6px;
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  min-height: 80px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.stat-item span:first-child {
-  font-size: 0.9rem;
-  color: #666;
-  margin-bottom: 5px;
-}
-
-.stat-value {
-  font-weight: bold;
-  font-size: 1.1rem;
-  color: #333;
-}
-
-/* Make the stat items more responsive */
-@media (max-width: 768px) {
-  .composition-stats {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .composition-stats .stat-item:nth-child(4),
-  .composition-stats .stat-item:nth-child(5) {
-    grid-column: span 1;
-  }
-}
-
-@media (max-width: 480px) {
-  .composition-stats {
-    grid-template-columns: 1fr;
-  }
-}
-
 /* Consistency Score */
 .consistency-score-display {
   display: flex;
@@ -810,10 +753,6 @@
 
 /* Responsive Adjustments */
 @media (max-width: 768px) {
-  .composition-stats {
-    grid-template-columns: 1fr 1fr;
-  }
-
   .distribution-grid {
     grid-template-columns: 1fr;
   }
