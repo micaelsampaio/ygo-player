@@ -8,7 +8,7 @@
 
 .builder-container {
   display: grid;
-  grid-template-columns: 300px 1fr 350px;
+  grid-template-columns: 300px 1fr 400px; /* Increase right panel width */
   gap: 20px;
   margin-top: 20px;
 }

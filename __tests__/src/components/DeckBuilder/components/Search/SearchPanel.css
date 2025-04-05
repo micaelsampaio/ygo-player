@@ -58,39 +58,75 @@
 /* Advanced Search Styles */
 .advanced-search {
   margin-bottom: 15px;
+  padding: 12px;
+  background: #f8f9fa;
+  border-radius: 8px;
 }
 
-.filter-row,
-.search-row {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 10px;
-}
-
-.filter-field {
-  flex: 1;
+.filter-row {
   display: flex;
   flex-direction: column;
+  gap: 12px;
+  margin-bottom: 12px;
 }
 
-.filter-field label {
-  margin-bottom: 5px;
+/* Reset the name-text-row to match other rows */
+.filter-row.name-text-row {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+/* Remove the specific styling for name-text-row inputs */
+.filter-row.name-text-row .filter-field {
+  width: 100%;
+}
+
+.filter-row.name-text-row .filter-field input {
+  width: 92%;
+  height: 20px;
+  padding: 6px 8px;
   font-size: 0.85rem;
-  color: #666;
-}
-
-.filter-field input,
-.filter-field select {
-  padding: 8px 10px;
   border: 1px solid #ddd;
   border-radius: 4px;
-  font-size: 0.9rem;
 }
 
-.filter-field input:focus,
-.filter-field select:focus {
-  border-color: #2196f3;
-  outline: none;
+/* Make all filter fields consistent */
+.filter-field {
+  width: 100%;
+}
+
+/* Set consistent styling for all inputs and selects */
+.filter-field input,
+.filter-field select {
+  width: 100%;
+  height: 32px;
+  padding: 6px 8px;
+  font-size: 0.85rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: white;
+}
+
+/* Add responsive adjustments */
+@media (min-width: 1400px) {
+  .filter-row {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .filter-field {
+    width: 100%;
+  }
+}
+
+/* Adjust responsive design */
+@media (max-width: 768px) {
+  .filter-row.name-text-row {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Search Button */

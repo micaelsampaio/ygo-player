@@ -12,7 +12,7 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
 }) => {
   return (
     <div className="advanced-search">
-      <div className="filter-row">
+      <div className="filter-row name-text-row">
         <div className="filter-field">
           <label>Card Name</label>
           <input
