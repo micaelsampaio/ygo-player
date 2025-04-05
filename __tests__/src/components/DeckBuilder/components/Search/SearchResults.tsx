@@ -2,6 +2,8 @@ import React from "react";
 import { Card } from "../../types";
 import { getCardImageUrl } from "../../../../utils/cardImages";
 
+const CARD_BACK_IMAGE = "/assets/images/card-back.jpg";
+
 interface SearchResultsProps {
   results: Card[];
   onCardSelect: (card: Card) => void; // This should show the card modal
@@ -18,14 +20,16 @@ const SearchResults: React.FC<SearchResultsProps> = ({
   isLoading = false,
 }) => {
   const getMonsterBadgeClass = (type: string) => {
-    if (type.includes("Normal")) return "monster normal";
-    if (type.includes("Fusion")) return "monster fusion";
-    if (type.includes("Synchro")) return "monster synchro";
-    if (type.includes("XYZ")) return "monster xyz";
-    if (type.includes("Ritual")) return "monster ritual";
-    if (type.includes("Link")) return "monster link";
-    if (type.includes("Monster")) return "monster effect";
-    return "monster";
+    const typeLC = type.toLowerCase();
+    if (typeLC.includes("normal")) return "monster normal";
+    if (typeLC.includes("fusion")) return "monster fusion";
+    if (typeLC.includes("synchro")) return "monster synchro";
+    if (typeLC.includes("xyz")) return "monster xyz";
+    if (typeLC.includes("ritual")) return "monster ritual";
+    if (typeLC.includes("link")) return "monster link";
+    if (typeLC.includes("effect")) return "monster effect";
+    if (typeLC.includes("monster")) return "monster effect";
+    return "";
   };
 
   if (isLoading) {
@@ -60,29 +64,22 @@ const SearchResults: React.FC<SearchResultsProps> = ({
               className="card-content"
               onClick={() => onCardSelect(card)} // This will trigger the card modal
             >
-              <div className="card-container">
+              <div className="card-thumbnail">
                 <img
                   src={getCardImageUrl(card, "small")}
                   alt={card.name}
-                  className="card-image"
+                  loading="lazy"
+                  crossOrigin="anonymous"
                   onError={(e) => {
-                    e.currentTarget.src =
-                      "https://via.placeholder.com/44x64?text=No+Image";
+                    e.currentTarget.src = CARD_BACK_IMAGE;
+                    e.currentTarget.classList.add("placeholder");
                   }}
                 />
               </div>
 
               <div className="card-info">
                 <div className="card-primary">
-                  <div
-                    className="card-name"
-                    title={card.name}
-                    style={{
-                      fontSize: "0.85rem",
-                      lineHeight: "1.2",
-                      fontWeight: 500,
-                    }}
-                  >
+                  <div className="card-name" title={card.name}>
                     {card.name}
                   </div>
                   <div className="card-badges">
