@@ -23,8 +23,8 @@ export default defineConfig({
         ? resolve(__dirname, "./node_modules/ygo-core-images-utils/style.css")
         : resolve(__dirname, "../../ygo-core-images-utils/dist/style.css"),
       "ygo-core-images-utils": isDocker
-        ? resolve(__dirname, "./node_modules/ygo-core-images-utils/index.js")
-        : resolve(__dirname, "../../ygo-core-images-utils/dist/index.js"),
+        ? resolve(__dirname, "./node_modules/ygo-core-images-utils/bundle.js")
+        : resolve(__dirname, "../../ygo-core-images-utils/dist/bundle.js"),
       "ygo-core": isDocker
         ? resolve(__dirname, "./node_modules/ygo-core/index.js")
         : resolve(__dirname, "../../ygo-core/dist/index.js"),
