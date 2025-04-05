@@ -10,6 +10,7 @@ import styled from "styled-components";
 import { Logger } from "./utils/logger";
 import { ComboChooseDeck } from "./components/ComboChooseDeck.js";
 import { exportAllData, importAllData } from "./utils/dataExport";
+import { generateExportToMdCode } from "./utils/export-to-md.js";
 
 const cdnUrl = String(import.meta.env.VITE_YGO_CDN_URL);
 
@@ -323,6 +324,9 @@ export default function App() {
                   <button onClick={() => downloadDeckAsYdk(deckId)}>
                     download YDK
                   </button>
+                  <button onClick={() => exportToMd(deckId)}>
+                    export to MD
+                  </button>
                 </li>
               );
             })}
@@ -635,4 +639,10 @@ async function downloadDeckAsYdk(deckId: string) {
     extraDeck: deck.extraDeck as any,
   });
   deckBuilder.downloadYdk({ fileName });
+}
+
+const exportToMd = (deckId: string) => {
+  const deck = JSON.parse(window.localStorage.getItem(deckId)!);
+  const code = generateExportToMdCode(deck.mainDeck, deck.extraDeck);
+  navigator.clipboard.writeText(code);
 }
