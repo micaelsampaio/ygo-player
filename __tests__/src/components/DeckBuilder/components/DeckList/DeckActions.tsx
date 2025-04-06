@@ -2,12 +2,14 @@ import React, { useState, useRef } from "react";
 import { Deck } from "../types";
 import "./DeckActions.css";
 import { ydkToJson } from "../../../../scripts/ydk-parser";
+import { ydkeToJson } from "../../../../scripts/ydke-parser";
 import { downloadDeck } from "../../../../scripts/download-deck";
 import {
   downloadDeckAsYdk,
   downloadDeckAsPng,
   exportDeckToClipboard,
 } from "../../../../utils/deckExport";
+import { YGODeckToImage } from "ygo-core-images-utils";
 
 interface DeckActionsProps {
   deck: Deck | null;
@@ -63,6 +65,18 @@ const DeckActions: React.FC<DeckActionsProps> = ({
     setIsActionsOpen(false);
   };
 
+  const exportDeckAsYDKE = () => {
+    const deckExporter = new YGODeckToImage({
+      name: deck.name,
+      mainDeck: deck.mainDeck,
+      extraDeck: deck.extraDeck,
+    });
+    const ydkeUrl = deckExporter.toYDKE();
+    navigator.clipboard.writeText(ydkeUrl);
+    alert("YDKE URL copied to clipboard");
+    setIsActionsOpen(false);
+  };
+
   const handleExportToClipboard = async () => {
     try {
       await exportDeckToClipboard(deck.name, deck);
@@ -103,6 +117,36 @@ const DeckActions: React.FC<DeckActionsProps> = ({
     try {
       const clipboardText = await navigator.clipboard.readText();
 
+      if (clipboardText.startsWith("ydke://")) {
+        setImportProgress({
+          isImporting: true,
+          progress: 0,
+          total: 0,
+        });
+
+        const deckData = ydkeToJson(clipboardText);
+        const importedDeckData = await downloadDeck(deckData, {
+          events: {
+            onProgess: (args) => {
+              setImportProgress({
+                isImporting: true,
+                progress: args.cardDownloaded,
+                total: args.totalCards,
+              });
+            },
+          },
+        });
+
+        const importedDeck: Deck = {
+          name: "YDKE Imported Deck",
+          mainDeck: importedDeckData.mainDeck || [],
+          extraDeck: importedDeckData.extraDeck || [],
+        };
+
+        onImportDeck(importedDeck);
+        return;
+      }
+
       if (
         clipboardText.includes("#ydk") ||
         clipboardText.includes("#created by")
@@ -142,7 +186,7 @@ const DeckActions: React.FC<DeckActionsProps> = ({
     } catch (error) {
       console.error("Clipboard import error:", error);
       alert(
-        "Failed to import deck from clipboard. Make sure the content is a valid YDK or JSON deck format."
+        "Failed to import deck from clipboard. Make sure the content is a valid YDK, YDKE, or JSON deck format."
       );
     } finally {
       setImportProgress({
@@ -326,6 +370,15 @@ const DeckActions: React.FC<DeckActionsProps> = ({
             >
               <span className="action-icon">📋</span>
               <span className="action-text">Export as JSON</span>
+            </button>
+
+            <button
+              onClick={exportDeckAsYDKE}
+              title="Export deck as YDKE URL"
+              className="action-button"
+            >
+              <span className="action-icon">🔗</span>
+              <span className="action-text">Export YDKE URL</span>
             </button>
           </div>
 
