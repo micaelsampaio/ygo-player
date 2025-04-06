@@ -16,6 +16,7 @@ interface DeckActionsProps {
   onClearDeck: () => void;
   onCopyDeck: (deck: Deck) => void;
   onDeleteDeck: (deck: Deck) => void;
+  onCreateCollection: (deck: Deck) => void; // Remove optional modifier
 }
 
 const DeckActions: React.FC<DeckActionsProps> = ({
@@ -25,6 +26,7 @@ const DeckActions: React.FC<DeckActionsProps> = ({
   onClearDeck,
   onCopyDeck,
   onDeleteDeck,
+  onCreateCollection,
 }) => {
   const [isActionsOpen, setIsActionsOpen] = useState(false);
   const [isRenaming, setIsRenaming] = useState(false);
@@ -365,6 +367,18 @@ const DeckActions: React.FC<DeckActionsProps> = ({
             >
               <span className="action-icon">✏️</span>
               <span className="action-text">Rename Deck</span>
+            </button>
+
+            <button
+              onClick={() => {
+                onCreateCollection(deck);
+                setIsActionsOpen(false);
+              }}
+              title="Create a collection from this deck"
+              className="action-button"
+            >
+              <span className="action-icon">📚</span>
+              <span className="action-text">Create Collection</span>
             </button>
 
             <button

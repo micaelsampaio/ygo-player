@@ -1,106 +1,159 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import styled from "styled-components";
 import { Card } from "ygo-core";
+import { useSearchParams } from "react-router-dom";
 import { CollectionContext } from "./contex";
 import { CurrentCollection } from "./CurrentCollection";
-import short from 'short-uuid';
+import short from "short-uuid";
 const cdnUrl = String(import.meta.env.VITE_YGO_CDN_URL);
 
 export interface YGOCollectionDetails {
-    id: string;
-    name: string;
+  id: string;
+  name: string;
 }
 
 export interface YGOCollection {
-    id: string;
+  id: string;
+  name: string;
+  deck: {
     name: string;
-    deck: {
-        name: string;
-        mainDeck: Card[];
-        extraDeck: Card[];
-    };
-    combos: any[];
+    mainDeck: Card[];
+    extraDeck: Card[];
+  };
+  combos: any[];
 }
 
 export function CollectionsPage() {
-    const [collections, setCollections] = useState<YGOCollectionDetails[]>(() => {
-        const collections = JSON.parse(window.localStorage.getItem("collections_details")! || "[]");
-        return collections as YGOCollectionDetails[];
-    });
+  const [collections, setCollections] = useState<YGOCollectionDetails[]>(() => {
+    const collections = JSON.parse(
+      window.localStorage.getItem("collections_details")! || "[]"
+    );
+    return collections as YGOCollectionDetails[];
+  });
 
-    const [decks] = useState(() => {
-        const allKeys = Object.keys(localStorage);
-        const decks = allKeys.filter((key) => key.startsWith("deck_"));
-        return decks;
-    });
+  const [decks] = useState(() => {
+    const allKeys = Object.keys(localStorage);
+    const decks = allKeys.filter((key) => key.startsWith("deck_"));
+    return decks;
+  });
 
-    const [collection, setCollection] = useState<YGOCollection | undefined>();
+  const [collection, setCollection] = useState<YGOCollection | undefined>();
+  const [searchParams] = useSearchParams();
 
-    const changeCollection = (collectionId: string) => {
-        setCollection(JSON.parse(window.localStorage.getItem("c_" + collectionId)!));
-    };
+  const changeCollection = (collectionId: string) => {
+    setCollection(
+      JSON.parse(window.localStorage.getItem("c_" + collectionId)!)
+    );
+  };
 
-    const updateCollection = (collection: YGOCollection) => {
-        const collectionInList = collections.find(c => c.id === collection.id);
+  const updateCollection = (collection: YGOCollection) => {
+    const collectionInList = collections.find((c) => c.id === collection.id);
 
-        if (collectionInList && collection.name !== collectionInList.name) {
-            setCollections(prev => {
-                const nextCollections = prev.map(c => {
-                    if (c.id === collection.id) {
-                        c.name = collection.name;
-                    }
-                    return c;
-                });
-                window.localStorage.setItem("collections_details", JSON.stringify(nextCollections));
-                return nextCollections;
-            })
-        }
-
-        setCollection({ ...collection });
-        window.localStorage.setItem("c_" + collection.id, JSON.stringify(collection));
+    if (collectionInList && collection.name !== collectionInList.name) {
+      setCollections((prev) => {
+        const nextCollections = prev.map((c) => {
+          if (c.id === collection.id) {
+            c.name = collection.name;
+          }
+          return c;
+        });
+        window.localStorage.setItem(
+          "collections_details",
+          JSON.stringify(nextCollections)
+        );
+        return nextCollections;
+      });
     }
 
-    const createCollection = () => {
-        const collection: YGOCollection = {
-            id: short.generate(),
-            name: "New Collection",
-            deck: {
-                name: "",
-                mainDeck: [],
-                extraDeck: [],
-            },
-            combos: [],
-        };
+    setCollection({ ...collection });
+    window.localStorage.setItem(
+      "c_" + collection.id,
+      JSON.stringify(collection)
+    );
+  };
 
-        setCollections((prev) => {
-            const collections = [...prev, { id: collection.id, name: collection.name }];
-            window.localStorage.setItem("c_" + collection.id, JSON.stringify(collection));
-            window.localStorage.setItem("collections_details", JSON.stringify(collections));
-            return collections;
-        });
+  const createCollection = () => {
+    const collection: YGOCollection = {
+      id: short.generate(),
+      name: "New Collection",
+      deck: {
+        name: "",
+        mainDeck: [],
+        extraDeck: [],
+      },
+      combos: [],
     };
 
-    return (
-        <CollectionContext.Provider value={{ decks, collection, setCollection: updateCollection }}>
-            <PageContainer>
-                <LeftPane>
-                    <h2>Collections</h2>
-                    <CollectionsList>
-                        {collections.map((collection) => (
-                            <CollectionItem key={collection.id} onClick={() => changeCollection(collection.id)}>
-                                {collection.name}
-                            </CollectionItem>
-                        ))}
-                    </CollectionsList>
-                    <AddCollectionButton onClick={createCollection}>Add Collection</AddCollectionButton>
-                </LeftPane>
+    setCollections((prev) => {
+      const collections = [
+        ...prev,
+        { id: collection.id, name: collection.name },
+      ];
+      window.localStorage.setItem(
+        "c_" + collection.id,
+        JSON.stringify(collection)
+      );
+      window.localStorage.setItem(
+        "collections_details",
+        JSON.stringify(collections)
+      );
+      return collections;
+    });
+  };
 
-                <RightPane>
-                    {collection ? <CurrentCollection /> : <NoCollectionMessage>Select a collection to view details</NoCollectionMessage>}
-                </RightPane>
-            </PageContainer>
-        </CollectionContext.Provider>
-    );
+  const setCollectionById = (id: string) => {
+    const collectionData = window.localStorage.getItem("c_" + id);
+    if (collectionData) {
+      setCollection(JSON.parse(collectionData));
+    }
+  };
+
+  useEffect(() => {
+    const selectId = searchParams.get("select");
+    if (selectId) {
+      changeCollection(selectId);
+    }
+  }, [searchParams]);
+
+  return (
+    <CollectionContext.Provider
+      value={{
+        decks,
+        collection,
+        setCollection: updateCollection,
+        setCollectionById,
+      }}
+    >
+      <PageContainer>
+        <LeftPane>
+          <h2>Collections</h2>
+          <CollectionsList>
+            {collections.map((collection) => (
+              <CollectionItem
+                key={collection.id}
+                onClick={() => changeCollection(collection.id)}
+              >
+                {collection.name}
+              </CollectionItem>
+            ))}
+          </CollectionsList>
+          <AddCollectionButton onClick={createCollection}>
+            Add Collection
+          </AddCollectionButton>
+        </LeftPane>
+
+        <RightPane>
+          {collection ? (
+            <CurrentCollection />
+          ) : (
+            <NoCollectionMessage>
+              Select a collection to view details
+            </NoCollectionMessage>
+          )}
+        </RightPane>
+      </PageContainer>
+    </CollectionContext.Provider>
+  );
 }
 
 // Styled Components

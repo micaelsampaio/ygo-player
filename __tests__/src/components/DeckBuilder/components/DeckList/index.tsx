@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { Deck } from "../types";
 import "./DecksList.css";
 import DeckActions from "./DeckActions"; // Import the DeckActions component
+import { createCollectionFromDeck } from "../../../Collections/contex"; // Remove useCollectionContext since we'll handle selection via URL
+import { useNavigate } from "react-router-dom";
 
 interface DeckListProps {
   decks: Deck[];
@@ -13,6 +15,7 @@ interface DeckListProps {
   onRenameDeck: (deck: Deck, newName: string) => void;
   onClearDeck: (deck: Deck) => void;
   onImportDeck: (deck: Deck) => void;
+  onCreateCollection: (deck: Deck) => void; // Remove optional modifier
 }
 
 const DeckList: React.FC<DeckListProps> = ({
@@ -25,7 +28,9 @@ const DeckList: React.FC<DeckListProps> = ({
   onRenameDeck,
   onClearDeck,
   onImportDeck,
+  onCreateCollection,
 }) => {
+  const navigate = useNavigate();
   const [editingDeck, setEditingDeck] = useState<string | null>(null);
   const [newDeckName, setNewDeckName] = useState("");
 
@@ -65,6 +70,12 @@ const DeckList: React.FC<DeckListProps> = ({
     }
   };
 
+  const handleCreateCollection = (deck: Deck) => {
+    const collectionId = createCollectionFromDeck(deck);
+    // Navigate with the collection ID in the URL
+    navigate(`/collections?select=${collectionId}`);
+  };
+
   return (
     <div className="decks-list-container">
       <div className="decks-header">
@@ -95,6 +106,7 @@ const DeckList: React.FC<DeckListProps> = ({
             onImportDeck={onImportDeck}
             onCopyDeck={copyDeck}
             onDeleteDeck={onDeleteDeck}
+            onCreateCollection={handleCreateCollection}
           />
         </div>
       )}
