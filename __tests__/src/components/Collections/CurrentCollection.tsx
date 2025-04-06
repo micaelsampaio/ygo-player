@@ -109,7 +109,8 @@ export function CurrentCollection() {
                         <ComboCard key={index}>
                             <h4>{combo.name}</h4>
                             <ComboActions>
-                                <ActionButton onClick={() => createComboImage(collection, combo)}>Create Image</ActionButton>
+                                <ActionButton onClick={() => createComboImage(collection, combo, { viewer: true })}>View Image</ActionButton>
+                                <ActionButton onClick={() => createComboImage(collection, combo, { download: true })}>Create Image</ActionButton>
                                 <ActionDeleteButton>Delete</ActionDeleteButton>
                             </ComboActions>
                         </ComboCard>
@@ -301,7 +302,7 @@ const NewComboButton = styled.button`
     }
 `;
 
-async function createComboImage(collection: YGOCollection, combo: any) {
+async function createComboImage(collection: YGOCollection, combo: any, args: any) {
 
     const cards = new Map<number, any>();
 
@@ -342,5 +343,5 @@ async function createComboImage(collection: YGOCollection, combo: any) {
 
     const utils = new YgoReplayToImage({ translations: {} });
     utils.setYGO(YGO);
-    await utils.createImage({ logs: combo.logs, download: true });
+    await utils.createImage({ logs: combo.logs, ...args || {} });
 }
