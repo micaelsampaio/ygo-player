@@ -179,9 +179,6 @@ export default function App() {
       })
       .filter((data: any) => data);
 
-    console.log("----> ");
-    console.log("fieldState ", fieldState);
-
     localStorage.setItem(
       "duel-data",
       JSON.stringify({
@@ -335,6 +332,9 @@ export default function App() {
             </li>
             <li>
               <Link to={"/deckbuilder"}>Deck Builder</Link>
+            </li>
+            <li>
+              <Link to={"/collections"}>Collections</Link>
             </li>
           </ul>
 
@@ -532,13 +532,13 @@ const EndGameBoard = memo(function EndGameBoard({
         const extraMonsterZone1 = fields[0].extraMonsterZones[0]
           ? 0
           : fields[1].extraMonsterZones[0]
-          ? 1
-          : -1;
+            ? 1
+            : -1;
         const extraMonsterZone2 = fields[0].extraMonsterZones[1]
           ? 0
           : fields[1].extraMonsterZones[1]
-          ? 1
-          : -1;
+            ? 1
+            : -1;
 
         const extraMonsterZones = (
           <>
