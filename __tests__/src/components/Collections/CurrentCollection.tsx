@@ -4,7 +4,7 @@ import { useState } from "react";
 import { ChooseReplay } from './ChooseReplayModal';
 import styled from "styled-components";
 import short from 'short-uuid';
-import { YgoReplayToImage } from "ygo-core-images-utils";
+import { YgoReplayToImage, YGOSpreadsheetsUtils } from "ygo-core-images-utils";
 import { YGOCollection } from "./CollectionsPage";
 import { getCard } from "../../scripts/download-deck";
 import { YGOCore } from "ygo-core";
@@ -42,6 +42,12 @@ export function CurrentCollection() {
         localStorage.setItem("duel-data", JSON.stringify(replay.data));
         navigate(`/spreadsheet/collection/${collection!.id}/${short.generate()}`);
     };
+
+    const collectionToXLS = () => {
+        const utils = new YGOSpreadsheetsUtils();
+        utils.setCollection({ collection: collection as any });
+        utils.createXLS({ download: true });
+    }
 
     if (!collection) return null;
 
@@ -117,7 +123,7 @@ export function CurrentCollection() {
                     ))}
 
                     <NewComboButton onClick={() => setModal("choose_replay")}>Create New Combo</NewComboButton>
-                    <ExportButton>Export</ExportButton>
+                    <ExportButton onClick={collectionToXLS}>Export XLS</ExportButton>
                 </CombosSection>
             </CollectionDetails>
 
