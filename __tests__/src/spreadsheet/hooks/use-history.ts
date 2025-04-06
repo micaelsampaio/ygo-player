@@ -23,8 +23,6 @@ export type UseActionsHistory = {
 export function useActionsHistory(): UseActionsHistory {
     const [commands, setCommands] = useState<{ index: number, commands: HistoryCommand[] }>({ index: 0, commands: [] });
 
-    console.log("TCL:: COMMANDS ", commands)
-
     const append = (command: HistoryCommand) => {
         setCommands((prev) => {
             const newCommands = prev.commands.slice(0, prev.index + 1);

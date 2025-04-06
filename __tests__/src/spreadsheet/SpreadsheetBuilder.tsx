@@ -5,15 +5,56 @@ import { useComboMaker } from './hooks/use-combo';
 import { ComboMakerData } from './components/ComboMakerData';
 import styled from 'styled-components';
 import { useActionsHistory } from './hooks/use-history';
+import { useParams } from 'react-router-dom';
 
 export function SpreadsheetBuilder() {
+    const { collectionId, comboId } = useParams();
     const history = useActionsHistory();
     const replayUtils = useReplayUtils();
     const comboMaker = useComboMaker({ history });
 
+    const createImage = async () => {
+        const logs = comboMaker.createMatrix();
+        await replayUtils.createImage({ logs, download: true });
+    }
+
+    const addToCollection = () => {
+        const logs = comboMaker.createMatrix();
+        const collectionKey = `c_${collectionId}`;
+        const replayData = JSON.parse(localStorage.getItem("duel-data")!);
+        const deck = replayData.players[0];
+
+        const comboName = prompt("Combo name");
+
+        if (!comboName) return alert("combo name cant be empty");
+
+        const collectionCombo = {
+            id: comboId,
+            name: comboName,
+            collection: collectionId,
+            deck: {
+                mainDeck: deck.mainDeck.map((c: any) => c.id),
+                extraDeck: deck.extraDeck.map((c: any) => c.id),
+            },
+            hand: [],
+            field: [],
+            logs
+        }
+
+        const collection = JSON.parse(window.localStorage.getItem(collectionKey)!);
+        const collectionComboIndex = collection.combos.findIndex((c: any) => c.id === comboId);
+        const index = collectionComboIndex >= 0 ? collectionComboIndex : collection.combos.length;
+        collection.combos[index] = collectionCombo;
+
+        console.log("TCL: ", collection);
+        console.log("TCL: INDEX", index);
+
+        window.localStorage.setItem(collectionKey, JSON.stringify(collection));
+    }
+
     return (
         <Page>
-            <Context.Provider value={{ replayUtils, comboMaker, history }}>
+            <Context.Provider value={{ replayUtils, comboMaker, history, createImage, addToCollection, collectionId, comboId }}>
                 <Container>
                     <LogsContainer>
                         <Logs replayUtils={replayUtils} />

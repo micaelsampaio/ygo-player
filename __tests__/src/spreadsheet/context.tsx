@@ -4,9 +4,13 @@ import { ComboMaker } from './hooks/use-combo';
 import { UseActionsHistory } from './hooks/use-history';
 
 export interface AppContext {
+    collectionId: string | undefined,
+    comboId: string | undefined,
     replayUtils: YgoReplayToImage
     comboMaker: ComboMaker
     history: UseActionsHistory
+    createImage: () => Promise<void>
+    addToCollection: () => void
 }
 
 export const Context = React.createContext<AppContext>({} as any);

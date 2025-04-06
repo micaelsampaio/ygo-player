@@ -74,7 +74,7 @@ export function useComboMaker({ history }: { history: UseActionsHistory }): Comb
 
                 if (cmd) cmd.exec();
 
-                setRows(rows => {
+                setRows((rows) => {
                     return rows.map((row, i) => {
                         if (i === rowIndex) {
                             return {

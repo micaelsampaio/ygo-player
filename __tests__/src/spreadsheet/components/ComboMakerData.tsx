@@ -3,21 +3,14 @@ import { useAppContext } from "../context";
 
 export function ComboMakerData() {
 
-    const { comboMaker, replayUtils } = useAppContext();
+    const { comboMaker, replayUtils, collectionId, createImage, addToCollection } = useAppContext();
 
     const addLogItem = () => {
         const log = replayUtils.dequeueLog();
 
         if (!log) return;
 
-        comboMaker.addRow({
-            log
-        });
-    }
-
-    const createImage = async () => {
-        const logs = comboMaker.createMatrix();
-        await replayUtils.createImage({ logs, download: true });
+        comboMaker.addRow({ log });
     }
 
     const lastRow = comboMaker.rows.length - 1;
@@ -35,6 +28,7 @@ export function ComboMakerData() {
 
         <div>
             <button onClick={createImage}>Create Image</button>
+            {collectionId && <button onClick={addToCollection}>Save to Collection</button>}
         </div>
     </div>
 }

@@ -11,6 +11,7 @@ import DeckBuilder from "./components/DeckBuilder";
 import { KaibaNetProvider } from "./hooks/useKaibaNet";
 import { Logger } from "./utils/logger";
 import { SpreadsheetBuilder } from "./spreadsheet/SpreadsheetBuilder.tsx";
+import { CollectionsPage } from "./components/Collections/CollectionsPage.tsx";
 
 debug.enable("ygo:*");
 localStorage.setItem("debug", "ygo:*");
@@ -28,6 +29,9 @@ createRoot(document.getElementById("root")!).render(
         <Route path="/deck" element={<DownloadDeck />} />
         <Route path="/deckbuilder" element={<DeckBuilder />} />
         <Route path="/spreadsheet" element={<SpreadsheetBuilder />} />
+        <Route path="/spreadsheet/collection/:collectionId/:comboId" element={<SpreadsheetBuilder />} />
+        <Route path="/collections" element={<CollectionsPage />} />
+        <Route path="/collections/:collectionId" element={<CollectionsPage />} />
       </Routes>
     </BrowserRouter>
   </KaibaNetProvider>
