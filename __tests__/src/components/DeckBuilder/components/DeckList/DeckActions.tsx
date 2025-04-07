@@ -151,7 +151,8 @@ const DeckActions: React.FC<DeckActionsProps> = ({
 
       if (
         clipboardText.includes("#ydk") ||
-        clipboardText.includes("#created by")
+        clipboardText.includes("#created by") ||
+        clipboardText.includes("#Created by")
       ) {
         // Handle YDK format
         setImportProgress({
