@@ -10,8 +10,33 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
   searchFilters,
   onFilterChange,
 }) => {
+  const handleClearFilters = () => {
+    // Clear each filter using the existing onFilterChange
+    Object.keys(searchFilters).forEach((key) => {
+      onFilterChange(key as keyof SearchFilters, "");
+    });
+  };
+
+  const hasActiveFilters = Object.values(searchFilters).some(
+    (value) => value !== ""
+  );
+
   return (
     <div className="advanced-search">
+      <div className="advanced-search-header">
+        <h3>Advanced Search</h3>
+        {hasActiveFilters && (
+          <button
+            type="button"
+            onClick={handleClearFilters}
+            className="clear-filters-btn"
+          >
+            <span className="clear-icon">×</span>
+            Clear All
+          </button>
+        )}
+      </div>
+
       <div className="filter-row name-text-row">
         <div className="filter-field">
           <label>Card Name</label>
