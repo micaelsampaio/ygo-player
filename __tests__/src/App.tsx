@@ -11,6 +11,7 @@ import { Logger } from "./utils/logger";
 import { ComboChooseDeck } from "./components/ComboChooseDeck.js";
 import { exportAllData, importAllData } from "./utils/dataExport";
 import { generateExportToMdCode } from "./utils/export-to-md.js";
+import { DataExportModal } from "./components/DataExportModal";
 
 const cdnUrl = String(import.meta.env.VITE_YGO_CDN_URL);
 
@@ -28,6 +29,7 @@ export default function App() {
   const kaibaNet = useKaibaNet();
   const [rooms, setRooms] = useState(() => kaibaNet.getRooms());
   const [deckToPlay, setDeckToPlay] = useState("");
+  const [qrData, setQrData] = useState(null);
 
   const onRoomsUpdated = (updatedRooms: any) => {
     console.log("App: Updated rooms", updatedRooms);
@@ -241,6 +243,48 @@ export default function App() {
     e.target.value = "";
   };
 
+  const handleExport = async (method: "file" | "qr") => {
+    try {
+      if (method === "qr") {
+        const data = await exportAllData("qr");
+        return data; // Return the data to be used by the modal
+      } else {
+        await exportAllData("file");
+      }
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Export failed");
+    }
+  };
+
+  const handleImportQR = async (qrData: string) => {
+    try {
+      // Pass the raw QR data (base64 compressed string) directly to importAllData
+      const result = await importAllData(
+        new Blob([qrData], { type: "application/json" })
+      );
+
+      alert(
+        `Successfully imported ${result.decksCount} decks and ${result.replaysCount} replays`
+      );
+
+      // Refresh decks and replays lists
+      setDecks(
+        Object.keys(localStorage).filter((key) => key.startsWith("deck_"))
+      );
+      setReplays(
+        Object.keys(localStorage)
+          .filter((key) => key.startsWith("replay_"))
+          .map((replay) => ({ name: replay, data: null }))
+      );
+    } catch (err) {
+      alert(
+        err instanceof Error
+          ? err.message
+          : "Failed to import data from QR code"
+      );
+    }
+  };
+
   useLazyReplay({ replays, setReplays });
 
   return (
@@ -255,42 +299,7 @@ export default function App() {
               gap: "10px",
             }}
           >
-            <h1># Decks</h1>
-            <div style={{ display: "flex", gap: "10px" }}>
-              <input
-                type="file"
-                id="import-data"
-                accept=".json"
-                style={{ display: "none" }}
-                onChange={handleImport}
-              />
-              <button
-                onClick={() => document.getElementById("import-data")?.click()}
-                style={{
-                  padding: "8px 16px",
-                  backgroundColor: "#2196F3",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "4px",
-                  cursor: "pointer",
-                }}
-              >
-                Import Data
-              </button>
-              <button
-                onClick={exportAllData}
-                style={{
-                  padding: "8px 16px",
-                  backgroundColor: "#4CAF50",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "4px",
-                  cursor: "pointer",
-                }}
-              >
-                Export Data
-              </button>
-            </div>
+            <h1>Home</h1>
           </div>
 
           <ul>
@@ -399,6 +408,11 @@ export default function App() {
           />
         </div>
       </AppContainer>
+      <DataExportModal
+        onExport={handleExport}
+        onImport={handleImport}
+        onImportQR={handleImportQR}
+      />
     </div>
   );
 }
@@ -532,13 +546,13 @@ const EndGameBoard = memo(function EndGameBoard({
         const extraMonsterZone1 = fields[0].extraMonsterZones[0]
           ? 0
           : fields[1].extraMonsterZones[0]
-            ? 1
-            : -1;
+          ? 1
+          : -1;
         const extraMonsterZone2 = fields[0].extraMonsterZones[1]
           ? 0
           : fields[1].extraMonsterZones[1]
-            ? 1
-            : -1;
+          ? 1
+          : -1;
 
         const extraMonsterZones = (
           <>
@@ -645,4 +659,4 @@ const exportToMd = (deckId: string) => {
   const deck = JSON.parse(window.localStorage.getItem(deckId)!);
   const code = generateExportToMdCode(deck.mainDeck, deck.extraDeck);
   navigator.clipboard.writeText(code);
-}
+};
