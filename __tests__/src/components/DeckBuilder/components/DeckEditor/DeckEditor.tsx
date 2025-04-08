@@ -35,10 +35,6 @@ const DeckEditor: React.FC<DeckEditorProps> = ({
   const [showRoleSelector, setShowRoleSelector] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const [longPressedCard, setLongPressedCard] = useState<string | null>(null);
-  const longPressTimeoutRef = useRef<NodeJS.Timeout>();
-  const touchStartTimeRef = useRef<number>(0);
-
   const roleColors: Record<CardRole, string> = {
     Starter: "#4CAF50",
     Extender: "#2196F3",
@@ -69,14 +65,6 @@ const DeckEditor: React.FC<DeckEditorProps> = ({
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  useEffect(() => {
-    return () => {
-      if (longPressTimeoutRef.current) {
-        clearTimeout(longPressTimeoutRef.current);
-      }
-    };
   }, []);
 
   const handleNameSubmit = () => {
@@ -168,131 +156,11 @@ const DeckEditor: React.FC<DeckEditorProps> = ({
     setShowRoleSelector(showRoleSelector === uniqueId ? null : uniqueId);
   };
 
-  const handleTouchStart = (cardId: number, index: number) => {
-    touchStartTimeRef.current = Date.now();
-    longPressTimeoutRef.current = setTimeout(() => {
-      setLongPressedCard(`${cardId}-${index}`);
-    }, 500); // 500ms for long press
-  };
-
-  const handleTouchEnd = (
-    e: React.TouchEvent,
-    card: Card,
-    index: number,
-    isExtra: boolean
-  ) => {
-    if (longPressTimeoutRef.current) {
-      clearTimeout(longPressTimeoutRef.current);
-    }
-
-    const touchDuration = Date.now() - touchStartTimeRef.current;
-
-    // If it was a long press (over 500ms), prevent card modal
-    if (touchDuration >= 500) {
-      e.preventDefault();
-      return;
-    }
-
-    // If it was a short press, open card modal
-    onCardSelect(card);
-    setLongPressedCard(null);
-  };
-
-  const handleTouchMove = () => {
-    if (longPressTimeoutRef.current) {
-      clearTimeout(longPressTimeoutRef.current);
-    }
-    setLongPressedCard(null);
-  };
-
   const mainDeckCards =
     deck?.mainDeck.map((card, index) => ({ card, originalIndex: index })) || [];
   const extraDeckCards =
     deck?.extraDeck.map((card, index) => ({ card, originalIndex: index })) ||
     [];
-
-  const renderCard = (card: Card, originalIndex: number, isExtra: boolean) => (
-    <div
-      key={`${card.id}-${originalIndex}`}
-      className={`deck-card-container ${
-        longPressedCard === `${card.id}-${originalIndex}` ? "long-pressed" : ""
-      }`}
-      draggable="true"
-      onDragStart={(e) => handleDragStart(e, originalIndex, isExtra)}
-      onDragEnd={handleDragEnd}
-      onDragOver={(e) => e.preventDefault()}
-      onDrop={(e) => handleDrop(e, originalIndex, isExtra)}
-      onContextMenu={(e) => handleRoleIconClick(e, card.id, originalIndex)}
-    >
-      <img
-        src={getCardImageUrl(card, "small")}
-        alt={card.name}
-        className="deck-card"
-        onError={(e) => {
-          const target = e.target as HTMLImageElement;
-          target.src = `${
-            import.meta.env.VITE_YGO_CDN_URL
-          }/images/cards/card_back.jpg`;
-        }}
-      />
-      {/* Separate click area for card interactions */}
-      <div
-        className="card-click-area"
-        onClick={() => onCardSelect(card)}
-        onTouchStart={() => handleTouchStart(card.id, originalIndex)}
-        onTouchEnd={(e) => handleTouchEnd(e, card, originalIndex, isExtra)}
-        onTouchMove={handleTouchMove}
-      />
-      {/* Rest of card content */}
-      {card.roleInfo && (
-        <div
-          className="card-role-indicator"
-          style={{ backgroundColor: roleColors[card.roleInfo.role] }}
-        >
-          {card.roleInfo.role}
-        </div>
-      )}
-      {showRoleSelector === `${card.id}-${originalIndex}` && (
-        <div
-          className="role-selector-popup"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-          }}
-        >
-          {availableRoles.map((role) => (
-            <button
-              key={role}
-              className={`role-option ${
-                card.roleInfo?.role === role ? "active" : ""
-              }`}
-              style={{
-                borderColor: roleColors[role],
-                backgroundColor:
-                  card.roleInfo?.role === role ? roleColors[role] : "white",
-                color: card.roleInfo?.role === role ? "white" : "black",
-              }}
-              onClick={() => {
-                handleUpdateCardRole(card.id, role, false);
-                setShowRoleSelector(null);
-              }}
-            >
-              {role}
-            </button>
-          ))}
-        </div>
-      )}
-      <button
-        className="remove-card"
-        onClick={(e) => {
-          e.stopPropagation();
-          onCardRemove(card, originalIndex, isExtra);
-        }}
-      >
-        &times;
-      </button>
-    </div>
-  );
 
   if (!deck) {
     return (
@@ -348,16 +216,162 @@ const DeckEditor: React.FC<DeckEditorProps> = ({
         </div>
 
         <div className="card-grid">
-          {mainDeckCards.map(({ card, originalIndex }) =>
-            renderCard(card, originalIndex, false)
-          )}
+          {mainDeckCards.map(({ card, originalIndex }, index) => (
+            <div
+              key={`${card.id}-${originalIndex}`}
+              className="deck-card-container"
+              draggable="true"
+              onDragStart={(e) => handleDragStart(e, index, false)}
+              onDragEnd={handleDragEnd}
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={(e) => handleDrop(e, index, false)}
+              onContextMenu={(e) =>
+                handleRoleIconClick(e, card.id, originalIndex)
+              }
+            >
+              <img
+                src={getCardImageUrl(card, "small")}
+                alt={card.name}
+                className="deck-card"
+                onClick={() => onCardSelect(card)}
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.src = `${
+                    import.meta.env.VITE_YGO_CDN_URL
+                  }/images/cards/card_back.jpg`;
+                }}
+              />
+              {card.roleInfo && (
+                <div
+                  className="card-role-indicator"
+                  style={{ backgroundColor: roleColors[card.roleInfo.role] }}
+                >
+                  {card.roleInfo.role}
+                </div>
+              )}
+              {showRoleSelector === `${card.id}-${originalIndex}` && (
+                <div
+                  className="role-selector-popup"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }}
+                >
+                  {availableRoles.map((role) => (
+                    <button
+                      key={role}
+                      className={`role-option ${
+                        card.roleInfo?.role === role ? "active" : ""
+                      }`}
+                      style={{
+                        borderColor: roleColors[role],
+                        backgroundColor:
+                          card.roleInfo?.role === role
+                            ? roleColors[role]
+                            : "white",
+                        color: card.roleInfo?.role === role ? "white" : "black",
+                      }}
+                      onClick={() => {
+                        handleUpdateCardRole(card.id, role, false);
+                        setShowRoleSelector(null);
+                      }}
+                    >
+                      {role}
+                    </button>
+                  ))}
+                </div>
+              )}
+              <button
+                className="remove-card"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onCardRemove(card, originalIndex, false);
+                }}
+              >
+                &times;
+              </button>
+            </div>
+          ))}
         </div>
 
         <h4>Extra Deck ({deck?.extraDeck.length || 0})</h4>
         <div className="card-grid">
-          {extraDeckCards.map(({ card, originalIndex }) =>
-            renderCard(card, originalIndex, true)
-          )}
+          {extraDeckCards.map(({ card, originalIndex }, index) => (
+            <div
+              key={`${card.id}-${originalIndex}`}
+              className="deck-card-container"
+              draggable="true"
+              onDragStart={(e) => handleDragStart(e, index, true)}
+              onDragEnd={handleDragEnd}
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={(e) => handleDrop(e, index, true)}
+              onContextMenu={(e) =>
+                handleRoleIconClick(e, card.id, originalIndex)
+              }
+            >
+              <img
+                src={getCardImageUrl(card, "small")}
+                alt={card.name}
+                className="deck-card"
+                onClick={() => onCardSelect(card)}
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.src = `${
+                    import.meta.env.VITE_YGO_CDN_URL
+                  }/images/cards/card_back.jpg`;
+                }}
+              />
+              {card.roleInfo && (
+                <div
+                  className="card-role-indicator"
+                  style={{ backgroundColor: roleColors[card.roleInfo.role] }}
+                >
+                  {card.roleInfo.role}
+                </div>
+              )}
+              {showRoleSelector === `${card.id}-${originalIndex}` && (
+                <div
+                  className="role-selector-popup"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }}
+                >
+                  {availableRoles.map((role) => (
+                    <button
+                      key={role}
+                      className={`role-option ${
+                        card.roleInfo?.role === role ? "active" : ""
+                      }`}
+                      style={{
+                        borderColor: roleColors[role],
+                        backgroundColor:
+                          card.roleInfo?.role === role
+                            ? roleColors[role]
+                            : "white",
+                        color: card.roleInfo?.role === role ? "white" : "black",
+                      }}
+                      onClick={() => {
+                        handleUpdateCardRole(card.id, role, false);
+                        setShowRoleSelector(null);
+                      }}
+                    >
+                      {role}
+                    </button>
+                  ))}
+                </div>
+              )}
+              <button
+                className="remove-card"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onCardRemove(card, originalIndex, true);
+                }}
+              >
+                &times;
+              </button>
+            </div>
+          ))}
         </div>
       </div>
 
