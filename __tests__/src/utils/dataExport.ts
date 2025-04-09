@@ -44,10 +44,28 @@ const getReplaysData = () => {
   return replaysData;
 };
 
+const getCollectionsData = () => {
+  const allKeys = Object.keys(localStorage);
+  const collectionsData: Record<string, any> = {};
+
+  allKeys
+    .filter((key) => key.startsWith("c_"))
+    .forEach((key) => {
+      try {
+        collectionsData[key] = JSON.parse(localStorage.getItem(key) || "");
+      } catch (err) {
+        console.error(`Error parsing collection ${key}:`, err);
+      }
+    });
+
+  return collectionsData;
+}
+
 export const exportAllData = async (method: "file" | "qr") => {
   const data = {
     decks: getDecksData(),
     replays: getReplaysData(),
+    collections: getCollectionsData(),
     exportDate: new Date().toISOString(),
     version: "1.0.0",
   };
@@ -58,7 +76,7 @@ export const exportAllData = async (method: "file" | "qr") => {
     try {
       // Compress data using pako
       const compressed = pako.deflate(jsonString);
-      const base64 = btoa(String.fromCharCode.apply(null, compressed));
+      const base64 = btoa(String.fromCharCode.apply(null, compressed as any));
       console.log(base64.length);
       if (base64.length > 4296) {
         throw new Error(
@@ -133,9 +151,22 @@ export const importAllData = async (file: File | Blob) => {
       localStorage.setItem(key, JSON.stringify(value));
     });
 
+    const currentCollectionData = JSON.parse(window.localStorage.getItem("collections_details") || "[]");
+
+    Object.entries(data.collections || {}).forEach(([key, value]: any) => {
+      localStorage.setItem(key, JSON.stringify(value));
+
+      if (!currentCollectionData.find((collectionItem: any) => collectionItem.id === value.id)) {
+        currentCollectionData.push(value);
+      }
+    });
+
+    window.localStorage.setItem("collections_details", JSON.stringify(currentCollectionData));
+
     return {
       decksCount: Object.keys(data.decks).length,
       replaysCount: Object.keys(data.replays).length,
+      collectionsCount: Object.entries(data.collections || {}).length,
     };
   } catch (err) {
     console.error("Error importing data:", err);

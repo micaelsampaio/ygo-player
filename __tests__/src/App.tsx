@@ -216,8 +216,7 @@ export default function App() {
     navigate("/duel");
   };
 
-  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const handleImport = async (file: File) => {
     if (!file) return;
 
     try {
@@ -238,9 +237,6 @@ export default function App() {
     } catch (err) {
       alert(err instanceof Error ? err.message : "Failed to import data");
     }
-
-    // Clear input
-    e.target.value = "";
   };
 
   const handleExport = async (method: "file" | "qr") => {
@@ -410,7 +406,7 @@ export default function App() {
       </AppContainer>
       <DataExportModal
         onExport={handleExport}
-        onImport={handleImport as any}
+        onImport={handleImport}
         onImportQR={handleImportQR}
       />
     </div>
