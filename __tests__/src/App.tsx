@@ -410,7 +410,7 @@ export default function App() {
       </AppContainer>
       <DataExportModal
         onExport={handleExport}
-        onImport={handleImport}
+        onImport={handleImport as any}
         onImportQR={handleImportQR}
       />
     </div>
@@ -546,13 +546,13 @@ const EndGameBoard = memo(function EndGameBoard({
         const extraMonsterZone1 = fields[0].extraMonsterZones[0]
           ? 0
           : fields[1].extraMonsterZones[0]
-          ? 1
-          : -1;
+            ? 1
+            : -1;
         const extraMonsterZone2 = fields[0].extraMonsterZones[1]
           ? 0
           : fields[1].extraMonsterZones[1]
-          ? 1
-          : -1;
+            ? 1
+            : -1;
 
         const extraMonsterZones = (
           <>

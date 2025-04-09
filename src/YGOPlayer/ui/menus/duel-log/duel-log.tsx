@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { YGODuel } from "../../../core/YGODuel";
 import { YGODuelEvents } from "ygo-core";
 import { DefaultLogRow } from "./default-log";
@@ -13,18 +13,7 @@ const COMPONENTS = {
 export function DuelLogMenu({ duel, menus }: { duel: YGODuel; menus: any[] }) {
   const [logs, setLogs] = useState<YGODuelEvents.DuelLog[]>([]);
   const [isVisible, setVisible] = useState(false);
-
-  useEffect(() => {
-    if (!duel) return;
-
-    duel.events.on("logs-updated", (logs: any) => {
-      setLogs([...logs]);
-    });
-  }, [duel]);
-
-  useEffect(() => {
-    setVisible(menus.some((menu) => menu.type === "duel-log"));
-  }, [menus]);
+  const duelLogsContainer = useRef<HTMLDivElement>(null);
 
   const undo = () => {
     duel.commands.startRecover();
@@ -42,8 +31,26 @@ export function DuelLogMenu({ duel, menus }: { duel: YGODuel; menus: any[] }) {
     duel.commands.endRecover();
   };
 
+  useEffect(() => {
+    if (!duel) return;
+
+    duel.events.on("logs-updated", (logs: any) => {
+      setLogs([...logs]);
+    });
+  }, [duel]);
+
+  useEffect(() => {
+    setVisible(menus.some((menu) => menu.type === "duel-log"));
+  }, [menus]);
+
+  useEffect(() => {
+    if (isVisible && duelLogsContainer.current) {
+      duelLogsContainer.current.scrollTop = duelLogsContainer.current.scrollHeight;
+    }
+  }, [isVisible])
+
   return (
-    <div className={`ygo-duel-log-container ${isVisible ? "" : "ygo-hidden"}`}>
+    <div className={`ygo-duel-log-container ${isVisible ? "" : "ygo-hidden"}`} ref={duelLogsContainer}>
       <div className="ygo-logs">
         {logs.map((log, index) => {
           const Component = (COMPONENTS as any)[log.type] || COMPONENTS.default;

@@ -3,6 +3,8 @@ import { YgoReplayToImage } from 'ygo-core-images-utils';
 import { useAppContext } from '../context';
 import { HistoryCommand } from '../hooks/use-history';
 
+const cdnUrl = String(import.meta.env.VITE_YGO_CDN_URL);
+
 export function Logs({ replayUtils }: { replayUtils: YgoReplayToImage }) {
     const { history, comboMaker } = useAppContext();
     const [, render] = useState(Date.now());
@@ -45,7 +47,7 @@ export function Logs({ replayUtils }: { replayUtils: YgoReplayToImage }) {
                     <div className="log-type">
                         {log.type}
                     </div>
-                    <img className='s-card-image' src={`http://localhost:8080/images/cards_small/${card.id}.jpg`} />
+                    <img className='s-card-image' src={`${cdnUrl}/images/cards_small/${card.id}.jpg`} />
                 </div>
             </>)
         } else {
@@ -74,7 +76,7 @@ export function Logs({ replayUtils }: { replayUtils: YgoReplayToImage }) {
                         {currentLog.type}
                     </div>
 
-                    <img className='s-card-image' src={`http://localhost:8080/images/cards_small/${card.id}.jpg`} />
+                    <img className='s-card-image' src={`${cdnUrl}/images/cards_small/${card.id}.jpg`} />
 
                     <br />
                 </div>

@@ -16,6 +16,8 @@ const EMPTY_FIELD: Field = {
   hand: [],
 };
 
+const cdnUrl = String(import.meta.env.VITE_YGO_CDN_URL);
+
 export function ComboChooseDeck({
   deckId,
   onChoose,
@@ -63,8 +65,8 @@ export function ComboChooseDeck({
     window.localStorage.setItem("draggedCard", JSON.stringify(card));
   };
 
-  const handleDrop = (e: React.DragEvent, zoneType: string, index: number) => {
-    e.preventDefault();
+  const handleDrop = (e: React.DragEvent | null, zoneType: string, index: number) => {
+    if (e) e.preventDefault();
     const draggedCard = JSON.parse(
       window.localStorage.getItem("draggedCard") || "{}"
     );
@@ -79,6 +81,11 @@ export function ComboChooseDeck({
     setDeck((d) => ({ ...d, mainDeck, extraDeck }));
     handleCardDrop(zoneType, index, draggedCard);
   };
+
+  const onCardClick = (card: Card) => {
+    window.localStorage.setItem("draggedCard", JSON.stringify(card));
+    handleCardDrop("hand", field.hand.length, card);
+  }
 
   const startDuel = () => {
     const deck = JSON.parse(window.localStorage.getItem(selectedDeck) || "{}");
@@ -141,6 +148,7 @@ export function ComboChooseDeck({
             <DraggableCard
               key={card.index}
               onDragStart={() => handleDragStart(card)}
+              onClick={() => onCardClick(card)}
               draggable
             >
               <CardComponent card={card} />
@@ -231,7 +239,7 @@ export const CardComponent = ({ card }: { card: Card }) => {
   return (
     <CardContainer draggable>
       <CardImage
-        src={`http://localhost:8080/images/cards_small/${card.id}.jpg`}
+        src={`${cdnUrl}/images/cards_small/${card.id}.jpg`}
         alt={card.name}
       />
       <CardInfo>

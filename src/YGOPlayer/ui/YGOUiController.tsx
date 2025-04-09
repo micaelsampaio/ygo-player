@@ -6,6 +6,7 @@ import { MENUS } from "./menus";
 import { TimeLine } from "./menus/timeline";
 import { ChangeGamePlayer } from "./components/ChangeGamePlayer";
 import { BottomRightActions } from "./menus/bottom-right-actions";
+import { PlayerHUD } from "./components/player-hud/PlayerHUD";
 
 export interface UiGameConfig {
     actions: boolean
@@ -140,6 +141,8 @@ export function YGOUiController({ duel }: { duel: YGODuel }) {
         <TimeLine duel={duel} />
         <ChangeGamePlayer duel={duel} />
         <BottomRightActions duel={duel} />
+        <PlayerHUD duel={duel} player={0} />
+        <PlayerHUD duel={duel} player={1} />
 
         {
             menus.map(menu => {

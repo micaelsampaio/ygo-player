@@ -939,4 +939,14 @@ export class YGOGameActions {
       })
     );
   }
+
+  public lifePointsTransaction({
+    player,
+    value
+  }: {
+    player: number,
+    value: string,
+  }) {
+    this.duel.execCommand(new YGOCommands.LifePointsTransactionCommand({ player, value }));
+  }
 }

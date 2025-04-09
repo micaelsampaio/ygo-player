@@ -1,6 +1,8 @@
 import { ComboCol, ComboRow } from "../hooks/use-combo";
 import { useAppContext } from "../context";
 
+const cdnUrl = String(import.meta.env.VITE_YGO_CDN_URL);
+
 export function ComboMakerData() {
 
     const { comboMaker, replayUtils, collectionId, createImage, addToCollection } = useAppContext();
@@ -72,7 +74,7 @@ function Col({ col }: { col: ComboCol }) {
     return <div className="combo-maker-col">
         {col.log.type} - {card.name}
         <br />
-        <img src={`http://localhost:8080/images/cards_small/${card.id}.jpg`} style={{ width: '100px' }} />
+        <img src={`${cdnUrl}/images/cards_small/${card.id}.jpg`} style={{ width: '100px' }} />
         <br />
 
     </div>

@@ -20,7 +20,10 @@ export function useReplayUtils(): YgoReplayToImage {
 
     ygo.start();
 
-    const replayUtils = new YgoReplayToImage({ translations: {} });
+    const replayUtils = new YgoReplayToImage({
+      cdnUrl: String(import.meta.env.VITE_YGO_CDN_URL),
+      translations: {}
+    });
 
     replayUtils.setYGO(ygo);
 
