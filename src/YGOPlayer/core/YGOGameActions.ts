@@ -898,6 +898,26 @@ export class YGOGameActions {
     );
   }
 
+  public negateCard({
+    card,
+    originZone,
+  }: {
+    card: Card;
+    originZone: FieldZone;
+  }) {
+    this.clearAction();
+
+    const player = this.duel.getActivePlayer();
+
+    this.duel.execCommand(
+      new YGOCommands.NegateCommand({
+        player,
+        id: card.id,
+        originZone,
+      })
+    );
+  }
+
   public changeAtkDef({
     card,
     originZone,
