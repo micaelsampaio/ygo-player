@@ -381,7 +381,7 @@ async function createComboImage(
     },
   });
 
-  const utils = new YgoReplayToImage({ translations: {} });
+  const utils = new YgoReplayToImage({ cdnUrl, translations: {} });
   utils.setYGO(YGO);
   await utils.createImage({ logs: combo.logs, ...(args || {}) });
 }
