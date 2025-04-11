@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { YGOCore } from "ygo-player";
+import { YGOCore } from "ygo-core";
 import { YgoReplayToImage } from "ygo-core-images-utils";
 
 export function useReplayUtils(): YgoReplayToImage {

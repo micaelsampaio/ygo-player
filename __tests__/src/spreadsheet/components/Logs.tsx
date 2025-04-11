@@ -47,7 +47,13 @@ export function Logs({ replayUtils }: { replayUtils: YgoReplayToImage }) {
                     <div className="log-type">
                         {log.type}
                     </div>
-                    <img className='s-card-image' src={`${cdnUrl}/images/cards_small/${card.id}.jpg`} />
+                    {card.id > 99999900 ? <>
+                        <img className='s-card-image' src={`${cdnUrl}/images/token.jpg`} />
+                    </> : <>
+                        <img className='s-card-image' src={`${cdnUrl}/images/cards_small/${card.id}.jpg`} />
+                    </>
+                    }
+
                 </div>
             </>)
         } else {
@@ -76,7 +82,12 @@ export function Logs({ replayUtils }: { replayUtils: YgoReplayToImage }) {
                         {currentLog.type}
                     </div>
 
-                    <img className='s-card-image' src={`${cdnUrl}/images/cards_small/${card.id}.jpg`} />
+                    {card.id > 99999900 ? <>
+                        <img className='s-card-image' src={`${cdnUrl}/images/token.jpg`} />
+                    </> : <>
+                        <img className='s-card-image' src={`${cdnUrl}/images/cards_small/${card.id}.jpg`} />
+                    </>
+                    }
 
                     <br />
                 </div>

@@ -74,7 +74,12 @@ function Col({ col }: { col: ComboCol }) {
     return <div className="combo-maker-col">
         {col.log.type} - {card.name}
         <br />
-        <img src={`${cdnUrl}/images/cards_small/${card.id}.jpg`} style={{ width: '100px' }} />
+        {card.id > 99999900 ? <>
+            <img className='s-card-image' src={`${cdnUrl}/images/token.jpg`} style={{ height: "200px" }} />
+        </> : <>
+            <img className='s-card-image' src={`${cdnUrl}/images/cards_small/${card.id}.jpg`} style={{ height: "200px" }} />
+        </>
+        }
         <br />
 
     </div>
