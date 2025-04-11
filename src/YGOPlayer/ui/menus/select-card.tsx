@@ -115,6 +115,7 @@ export function SelectCardPopup({
       let showCard = false;
 
       if (filter.monsters && YGOGameUtils.isMonster(card)) showCard = true;
+      if (filter.monsters && YGOGameUtils.isToken(card)) showCard = true;
 
       if (!showCard) return false;
 

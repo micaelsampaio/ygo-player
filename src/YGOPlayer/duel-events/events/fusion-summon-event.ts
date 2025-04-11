@@ -55,7 +55,7 @@ export class FusionSummonEventHandler extends YGOCommandHandler {
       let card: GameCard;
       let cardOverlay: THREE.Object3D;
 
-      if (cardZone) {
+      if (cardZone && cardZone.getGameCard()) {
         card = cardZone.getGameCard();
         card.hideCardStats();
         cardOverlay = card.gameObject.clone();
@@ -66,6 +66,8 @@ export class FusionSummonEventHandler extends YGOCommandHandler {
         cardOverlay = card.gameObject.clone();
         card.destroy();
       }
+
+      if (!card) return null;
 
       const startRadius = radius * 2;
       const angle = (i / materialsCount) * Math.PI * 2;
@@ -83,7 +85,7 @@ export class FusionSummonEventHandler extends YGOCommandHandler {
       duel.core.sceneOverlay.add(cardOverlay);
 
       return cardOverlay;
-    });
+    }).filter(c => c) as any;
 
     duel.updateHand(event.player);
     duel.fields[event.player].mainDeck.updateDeck();
@@ -270,7 +272,7 @@ export class FusionSummonEventHandler extends YGOCommandHandler {
           createCardPopSummonEffectSequence({
             duel,
             card: fusionCardEffect,
-            cardId: event.id,
+            cardData: duel.ygo.state.getCardData(event.id)!,
             startTask: this.props.startTask,
           });
         })

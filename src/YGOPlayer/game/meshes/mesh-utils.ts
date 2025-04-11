@@ -6,6 +6,7 @@ import { MultipleTasks } from '../../duel-events/utils/multiple-tasks';
 import { MaterialOpacityTransition } from '../../duel-events/utils/material-opacity';
 import { WaitForSeconds } from '../../duel-events/utils/wait-for-seconds';
 import { CARD_DEPTH, CARD_HEIGHT_SIZE, CARD_RATIO } from '../../constants';
+import { Card } from 'ygo-core';
 
 export function CardEmptyMesh({ material, card, color, depth = CARD_DEPTH, transparent }: { material?: THREE.Material, color?: THREE.ColorRepresentation, depth?: number, card?: THREE.Object3D, transparent?: boolean } | undefined = {}) {
     const height = CARD_HEIGHT_SIZE, width = height / CARD_RATIO;
@@ -86,9 +87,12 @@ function randomIntFromInterval(min: number, max: number): number { // min and ma
     return Math.floor(Math.random() * (max - min + 1) + min);
 }
 
-export function createCardPopSummonEffectSequence({ duel, card, startTask, cardId }: any) {
+export function createCardPopSummonEffectSequence({ duel, card, startTask, cardData }: { duel: YGODuel, card: THREE.Object3D, startTask: any, cardData: Card }) {
     const height = CARD_HEIGHT_SIZE, width = height / CARD_RATIO;
-    const cardTexture = duel.assets.getTexture(card.images.small_url);
+
+    if (!cardData) return;
+
+    const cardTexture = duel.assets.getTexture(cardData.images.small_url);
     const geometry = new THREE.PlaneGeometry(width, height);
     const material = new THREE.MeshBasicMaterial({
         map: cardTexture,

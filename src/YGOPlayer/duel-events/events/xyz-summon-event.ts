@@ -97,7 +97,7 @@ export class XYZSummonEventHandler extends YGOCommandHandler {
           createCardPopSummonEffectSequence({
             duel,
             card: cardOverlay,
-            cardId: event.id,
+            cardData: duel.ygo.state.getCardData(event.id)!,
             startTask: this.props.startTask,
           });
         })

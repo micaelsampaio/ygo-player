@@ -53,6 +53,8 @@ export class LinkSummonEventHandler extends YGOCommandHandler {
         const originCardZone = getGameZone(duel, originZoneData)!;
 
         const card = originCardZone.getGameCard()!;
+
+        if (!card) continue;
         //const material = originCardZone.getCardReference()!;
 
         const cardEffect = CardEmptyMesh({
@@ -149,7 +151,7 @@ export class LinkSummonEventHandler extends YGOCommandHandler {
           createCardPopSummonEffectSequence({
             duel,
             card: cardOverlay,
-            cardId: event.id,
+            cardData: duel.ygo.state.getCardData(event.id)!,
             startTask: this.props.startTask,
           });
         })

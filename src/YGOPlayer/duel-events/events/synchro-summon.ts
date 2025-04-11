@@ -49,6 +49,8 @@ export class SynchroSummonEventHandler extends YGOCommandHandler {
 
         const card = originCardZone.getGameCard()!;
 
+        if (!card) continue;
+
         const cardEffect = CardEmptyMesh({
           color: 0xffffff,
           transparent: true,
