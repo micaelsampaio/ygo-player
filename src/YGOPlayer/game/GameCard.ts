@@ -55,7 +55,7 @@ export class GameCard extends YGOEntity {
   setCard(card: Card) {
     this.cardReference = card;
 
-    const frontTexture = this.duel.assets.getTexture(`${this.duel.config.cdnUrl}/images/cards_small/${card.id}.jpg`);
+    const frontTexture = this.duel.assets.getTexture(card.images.small_url);
     const backTexture = this.duel.assets.getTexture(`${this.duel.config.cdnUrl}/images/card_back.png`);
     const frontMaterial = new CardMaterial({ map: frontTexture }); // Front with texture
     const backMaterial = new THREE.MeshBasicMaterial({ map: backTexture }); // Back

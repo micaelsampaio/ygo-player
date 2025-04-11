@@ -132,11 +132,11 @@ export function ViewDeckPopup({
         </div>
         <div className="game-popup-content">
           <div className="ygo-menu-view-main-deck-cards">
-            {cardsToShow.map((card: any) => (
+            {cardsToShow.map((card: Card) => (
               <img
                 key={card.index}
                 onClick={(e) => onCardClick(e, card)}
-                src={`${duel.config.cdnUrl}/images/cards_small/${card.id}.jpg`}
+                src={card.images.small_url}
                 className="ygo-card"
               />
             ))}
@@ -160,14 +160,13 @@ function CardIcon({
     type === "spell"
       ? "ygo-spell"
       : type === "trap"
-      ? "ygo-trap"
-      : "ygo-monster";
+        ? "ygo-trap"
+        : "ygo-monster";
   return (
     <div onClick={onClick}>
       <div
-        className={`card-icon ygo-cursor-pointer ${className} ${
-          selected ? `` : "not-selected"
-        }`}
+        className={`card-icon ygo-cursor-pointer ${className} ${selected ? `` : "not-selected"
+          }`}
       ></div>
     </div>
   );

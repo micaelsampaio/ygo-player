@@ -122,8 +122,6 @@ export class YGODuel {
         ),
         //this.assets.loadTextures(Array.from((this.ygo.state as any).cardsIngame.values()).map(id => `http://127.0.0.1:8080/images/cards_small/${id}.jpg`)),
       ]);
-      //this.core.camera.position.set(0, 0, 20);
-      // this.core.camera.rotation.x += THREE.MathUtils.degToRad(10);
 
       this.fields = createFields({ duel: this, fieldModel: fieldModel.scene });
       this.entities.push(this.gameController);

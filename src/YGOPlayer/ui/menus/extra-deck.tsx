@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { YGODuel } from "../../core/YGODuel";
 import { ActionUiMenu } from "../../actions/ActionUiMenu";
+import { Card } from "ygo-core";
 
 export function ExtraDeck({
   duel,
@@ -47,7 +48,7 @@ export function ExtraDeck({
     >
       <h2>EX Deck</h2>
       <hr />
-      {cards.map((card: any) => (
+      {cards.map((card: Card) => (
         <div>
           <img
             onClick={(e) => {
@@ -61,7 +62,7 @@ export function ExtraDeck({
               duel.events.dispatch("set-selected-card", { player, card });
             }}
             key={card.index}
-            src={`${duel.config.cdnUrl}/images/cards_small/${card.id}.jpg`}
+            src={card.images.small_url}
             className="ygo-card"
           />
         </div>

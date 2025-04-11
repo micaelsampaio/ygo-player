@@ -26,7 +26,7 @@ export const StartHandLogRow = memo(function ({
               return (
                 <div>
                   <img
-                    src={`${duel.config.cdnUrl}/images/cards_small/${card.id}.jpg`}
+                    src={card.images.small_url}
                     style={{ width: "40px" }}
                   />
                 </div>

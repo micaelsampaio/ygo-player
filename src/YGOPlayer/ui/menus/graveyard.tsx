@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { YGODuel } from "../../core/YGODuel";
 import { ActionUiMenu } from "../../actions/ActionUiMenu";
 import { Graveyard as GameGraveyard } from "../../../YGOPlayer/game/Graveyard";
+import { Card } from "ygo-core";
 
 export function Graveyard({
   duel,
@@ -37,7 +38,7 @@ export function Graveyard({
     >
       <h2>GY</h2>
       <hr />
-      {gy.map((card: any) => (
+      {gy.map((card: Card) => (
         <div>
           <img
             onClick={(e) => {
@@ -55,7 +56,7 @@ export function Graveyard({
               });
             }}
             key={card.index}
-            src={`${duel.config.cdnUrl}/images/cards_small/${card.id}.jpg`}
+            src={card.images.small_url}
             className="ygo-card"
           />
         </div>

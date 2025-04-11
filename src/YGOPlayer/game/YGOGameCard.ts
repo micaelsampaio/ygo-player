@@ -36,9 +36,7 @@ export class YGOGameCard {
       depth = CARD_DEPTH;
     const geometry = new THREE.BoxGeometry(width, height, depth);
 
-    const frontTexture = textureLoader.load(
-      `${this.duel.config.cdnUrl}/images/cards_small/${card.id}.jpg`
-    );
+    const frontTexture = textureLoader.load(card.images.small_url);
     const backTexture = textureLoader.load(
       `${this.duel.config.cdnUrl}/images/card_back.png`
     );

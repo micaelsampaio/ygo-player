@@ -504,7 +504,9 @@ const EndGameBoard = memo(function EndGameBoard({
 
   const sizeInt = 60;
   const size = sizeInt + "px";
+
   if (!data || !fields) return null;
+
   return (
     <div>
       {fields.map((player: any, playerIndex: number) => {

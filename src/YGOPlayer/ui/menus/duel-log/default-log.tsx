@@ -30,7 +30,7 @@ export function DefaultLogRow({
           <div className="ygo-flex ygo-gap-2">
             <div>
               <img
-                src={`${duel.config.cdnUrl}/images/cards_small/${card.id}.jpg`}
+                src={card.images.small_url}
                 style={{ width: "45px" }}
               />
             </div>

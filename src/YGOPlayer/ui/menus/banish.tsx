@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { YGODuel } from "../../core/YGODuel";
 import { ActionUiMenu } from "../../actions/ActionUiMenu";
 import { Banish as GameBanish } from "../../../YGOPlayer/game/Banish";
+import { Card } from "ygo-core";
 
 export function Banish({
   duel,
@@ -37,7 +38,7 @@ export function Banish({
     >
       <h2>Banish</h2>
       <hr />
-      {cards.map((card: any) => (
+      {cards.map((card: Card) => (
         <div>
           <div style={{ position: "relative" }}>
             <img
@@ -51,7 +52,7 @@ export function Banish({
                 duel.actionManager.setAction(action);
                 duel.events.dispatch("set-selected-card", { player: card.owner, card });
               }}
-              src={`${duel.config.cdnUrl}/images/cards_small/${card.id}.jpg`}
+              src={card.images.small_url}
               key={card.index}
               className="ygo-card"
             />

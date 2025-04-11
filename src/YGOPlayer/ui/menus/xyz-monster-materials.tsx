@@ -54,7 +54,7 @@ export function XyzMonsterMaterialsMenu({
               duel.actionManager.setAction(action);
             }}
             key={material.index}
-            src={`${duel.config.cdnUrl}/images/cards_small/${material.id}.jpg`}
+            src={material.images.small_url}
             className="ygo-card"
           />
         </div>

@@ -88,7 +88,7 @@ function randomIntFromInterval(min: number, max: number): number { // min and ma
 
 export function createCardPopSummonEffectSequence({ duel, card, startTask, cardId }: any) {
     const height = CARD_HEIGHT_SIZE, width = height / CARD_RATIO;
-    const cardTexture = duel.assets.getTexture(`${duel.config.cdnUrl}/images/cards_small/${cardId}.jpg`);
+    const cardTexture = duel.assets.getTexture(card.images.small_url);
     const geometry = new THREE.PlaneGeometry(width, height);
     const material = new THREE.MeshBasicMaterial({
         map: cardTexture,

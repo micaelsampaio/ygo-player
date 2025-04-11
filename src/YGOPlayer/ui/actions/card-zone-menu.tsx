@@ -116,6 +116,10 @@ export function CardZoneMenu({
     duel.gameActions.targetCard({ card, originZone: zone });
   }, [card, zone]);
 
+  const removeToken = useCallback(() => {
+    duel.gameActions.disapear({ card, originZone: zone });
+  }, [card, zone]);
+
   useLayoutEffect(() => {
     const container = menuRef.current!;
     const size = container.getBoundingClientRect();
@@ -128,6 +132,7 @@ export function CardZoneMenu({
   }, [card]);
   const zoneData = YGOGameUtils.getZoneData(zone);
   const field = duel.ygo.state.fields[player];
+  const isToken = YGOGameUtils.isToken(card);
   const isXYZ = YGOGameUtils.isXYZMonster(card);
   const isFaceUp = YGOGameUtils.isFaceUp(card);
   const isLink = YGOGameUtils.isLinkMonster(card);
@@ -136,12 +141,52 @@ export function CardZoneMenu({
   const isMainDeckCard = card.isMainDeckCard;
   const isAttack = YGOGameUtils.isAttack(card);
   const isSpellTrap = YGOGameUtils.isSpellTrap(card);
-  const xyzMonstersInFieldCounter = YGOGameUtils.XyzMonstersInFieldsCounter(
-    duel.ygo
-  );
-  const canAttachMaterial =
-    (isXYZ && xyzMonstersInFieldCounter > 1) ||
-    (!isXYZ && xyzMonstersInFieldCounter > 0);
+  const xyzMonstersInFieldCounter = YGOGameUtils.XyzMonstersInFieldsCounter(duel.ygo);
+  const canAttachMaterial = (isXYZ && xyzMonstersInFieldCounter > 1) || (!isXYZ && xyzMonstersInFieldCounter > 0);
+
+  if (isToken) {
+    return <CardMenu menuRef={menuRef}>
+      <button
+        type="button"
+        className="ygo-card-item"
+        onClick={changeAtkDef}
+      >
+        Change Atk Def
+      </button>
+
+      {!isAttack && (
+        <button
+          type="button"
+          className="ygo-card-item"
+          onClick={changeBattleToATK}
+        >
+          TO ATK
+        </button>
+      )}
+
+      {isAttack && (
+        <button
+          type="button"
+          className="ygo-card-item"
+          onClick={changeBattleToDEF}
+        >
+          TO DEF
+        </button>
+      )}
+
+      <button type="button" className="ygo-card-item" onClick={moveCard}>
+        Move
+      </button>
+
+      <button
+        type="button"
+        className="ygo-card-item"
+        onClick={removeToken}
+      >
+        Remove
+      </button>
+    </CardMenu>
+  }
 
   return (
     <CardMenu menuRef={menuRef}>

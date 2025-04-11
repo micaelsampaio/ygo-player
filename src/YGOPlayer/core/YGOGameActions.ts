@@ -384,7 +384,7 @@ export class YGOGameActions {
         this.cardSelection.startSelection({
           zones: zonesToSummon,
           selectionType: "zone",
-          onSelectionCompleted: (cardZone: any) => {
+          onSelectionCompleted: (cardZone: CardZone) => {
             this.duel.execCommand(
               new YGOCommands.SynchroSummonCommand({
                 player,
@@ -457,7 +457,7 @@ export class YGOGameActions {
           this.cardSelection.startSelection({
             zones: zonesToSummon,
             selectionType: "zone",
-            onSelectionCompleted: (cardZone: any) => {
+            onSelectionCompleted: (cardZone: CardZone) => {
               this.duel.execCommand(
                 new YGOCommands.FusionSummonCommand({
                   player,
@@ -479,6 +479,47 @@ export class YGOGameActions {
         },
       },
     });
+  }
+
+  public createToken({ position }: { position?: CardPosition } = {}) {
+    this.clearAction();
+
+    const player = this.duel.getActivePlayer();
+    const zones = getCardZones(this.duel, [0, 1], ["M"]);
+
+    this.cardSelection.startSelection({
+      zones,
+      selectionType: "zone",
+      onSelectionCompleted: (cardZone: CardZone) => {
+        this.duel.execCommand(
+          new YGOCommands.CreateTokenCommand({
+            player,
+            originZone: cardZone.zone,
+            position,
+          })
+        );
+      },
+    });
+  }
+
+  public disapear({
+    card,
+    originZone,
+  }: {
+    card: Card,
+    originZone: FieldZone;
+  }) {
+    if (!YGOGameUtils.isToken(card)) return;
+
+    const player = this.duel.getActivePlayer();
+
+    this.duel.execCommand(
+      new YGOCommands.DisappearCommand({
+        player,
+        id: card.id,
+        originZone,
+      })
+    );
   }
 
   public setCard({

@@ -121,20 +121,15 @@ export function CardHandMenu({
 
   const player = duel.getActivePlayer();
   const field = duel.ygo.state.fields[player];
-  const freeMonsterZones = field.monsterZone.filter(
-    (zone: any) => !zone
-  ).length;
-  const freeSpellTrapZones = field.spellTrapZone.filter(
-    (zone: any) => !zone
-  ).length;
+  const freeMonsterZones = field.monsterZone.filter((zone: any) => !zone).length;
+  const freeSpellTrapZones = field.spellTrapZone.filter((zone: any) => !zone).length;
   const isFieldSpell = YGOGameUtils.isFieldSpell(card);
   const isSpell = !isFieldSpell && YGOGameUtils.isSpell(card);
   const isTrap = YGOGameUtils.isTrap(card);
   const isSpellOrTrap = YGOGameUtils.isSpellTrap(card);
   const isMonster = card.type.includes("Monster");
   const canTribute = isMonster && card.level > 4;
-  const hasXyzMonstersInField =
-    YGOGameUtils.XyzMonstersInFieldsCounter(duel.ygo) > 0;
+  const hasXyzMonstersInField = YGOGameUtils.XyzMonstersInFieldsCounter(duel.ygo) > 0;
 
   return (
     <>

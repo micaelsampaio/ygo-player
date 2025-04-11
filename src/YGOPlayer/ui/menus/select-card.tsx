@@ -210,7 +210,7 @@ export function SelectCardPopup({
                     return (
                       <img
                         key={cardData.card.index}
-                        src={`${duel.config.cdnUrl}/images/cards_small/${cardData.card.id}.jpg`}
+                        src={cardData.card.images.small_url}
                         className={`ygo-card ${selectedCards.current.has(cardData.card)
                           ? "selected"
                           : ""
@@ -235,7 +235,7 @@ export function SelectCardPopup({
                     return (
                       <img
                         key={cardData.card.index}
-                        src={`${duel.config.cdnUrl}/images/cards_small/${cardData.card.id}.jpg`}
+                        src={cardData.card.images.small_url}
                         className={`ygo-card ${selectedCards.current.has(cardData.card)
                           ? "selected"
                           : ""
@@ -249,48 +249,6 @@ export function SelectCardPopup({
                 </div>
               </div>
             )}
-
-            {/* {field.hand.length > 0 && <div>
-                    <div>
-                        <b>Hand</b>
-                    </div>
-                    <div>
-                        {field.hand.map(card => {
-                            if (!card) return null;
-                            return <img key={card.index} src={`${duel.config.cdnUrl}/images/cards_small/${card.id}.jpg`} className={`ygo-card ${selectedCards.current.has(card) ? "selected" : ""}`} onClick={() => onSelectCard("H", card)} />
-                        })}
-                    </div>
-                </div>} */}
-
-            {/* {
-                    field.graveyard.length > 0 && <div>
-                        <div>
-                            <b>GY</b>
-                        </div>
-                        <div>
-                            {field.graveyard.map(card => {
-                                if (!card) return null;
-                                return <img key={card.index} src={`http://127.0.0.1:8080/images/cards_small/${card.id}.jpg`} className={`ygo-card ${selectedCards.current.has(card) ? "selected" : ""}`} onClick={() => onSelectCard("GY", card)} />
-                            })}
-                        </div>
-                    </div>
-                } */}
-            {/* 
-                {
-                    field.mainDeck.length > 0 && <div>
-                        <div>
-                            <b>Main Deck</b>
-                        </div>
-                        <div>
-                            {field.mainDeck.map(card => {
-                                if (!card) return null;
-                                return <img key={card.index} src={`${duel.config.cdnUrl}/images/cards_small/${card.id}.jpg`} className={`ygo-card ${selectedCards.current.has(card) ? "selected" : ""}`} onClick={() => onSelectCard("D", card)} />
-                            })}
-                        </div>
-                    </div>
-                } */}
-
-            {/* {cardsToShow.map(card => <img key={card.index} onClick={(e) => onCardClick(e, card)} src={`http://127.0.0.1:8080/images/cards_small/${card.id}.jpg`} className="ygo-card" />)} */}
           </div>
         </div>
       </div>

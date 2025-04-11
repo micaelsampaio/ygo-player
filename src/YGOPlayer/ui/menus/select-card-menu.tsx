@@ -152,7 +152,7 @@ export function SelectedCardMenu({
       </div>
 
       <div className={`ygo-player-${card.owner}-bg-bottom ygo-flex ygo-card-data-container`}>
-        <div className="ygo-card-image" style={{ backgroundImage: `url(${duel.config.cdnUrl}/images/cards_small/${card.id}.jpg)` }}></div>
+        <div className="ygo-card-image" style={{ backgroundImage: `url(${card.images.small_url})` }}></div>
         <div className="ygo-card-stats-container">
           {cardData.isMonster && (
             <>
