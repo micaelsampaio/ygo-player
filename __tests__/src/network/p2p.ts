@@ -283,6 +283,7 @@ export class PeerToPeer extends EventEmitter {
       // Send a ping to important connections to keep them alive
       this.libp2p.getConnections().forEach(async (conn) => {
         try {
+          // Use remotePeer directly instead of trying to call getPeerId
           const peerId = conn.remotePeer.toString();
           const latency = await this.libp2p?.services.ping.ping(peerId);
           logger.debug(`Ping to ${peerId}: ${latency}ms`);
