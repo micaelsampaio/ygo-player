@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { Deck, DeckAnalytics, CardRole } from "../types";
 import {
   calculateDrawProbability,
@@ -9,26 +9,65 @@ import { Logger } from "../../../utils/logger";
 
 // Create a logger for deck analytics
 const logger = Logger.createLogger("DeckAnalytics");
+// Set to true only during development/debugging
+const ENABLE_VERBOSE_LOGGING = false;
+
+// Wrapper function to conditionally log only when verbose logging is enabled
+const conditionalLog = (message: string, ...args: any[]) => {
+  if (ENABLE_VERBOSE_LOGGING) {
+    logger.info(message, ...args);
+  }
+};
+
+// Cache for common probability calculations to avoid recomputing
+const probabilityCache = new Map<string, number>();
+
+// Helper function to get cached probability or calculate and cache it
+function getCachedProbability(
+  deckSize: number,
+  copies: number,
+  handSize: number
+): number {
+  const key = `${deckSize}-${copies}-${handSize}`;
+
+  if (!probabilityCache.has(key)) {
+    const probability = calculateDrawProbability(deckSize, copies, handSize);
+    probabilityCache.set(key, probability);
+    return probability;
+  }
+
+  return probabilityCache.get(key)!;
+}
 
 export function useDeckAnalytics() {
   const analyzeDeck = useCallback((deck: Deck): DeckAnalytics => {
-    logger.info(
+    // Performance measurement
+    const startTime = performance.now();
+    conditionalLog(
       `Analyzing deck: "${deck.name}" (${deck.mainDeck.length} cards)`
     );
 
-    // Initialize counters and distributions
-    const typeDistribution: Record<string, number> = {};
-    const attributeDistribution: Record<string, number> = {};
-    const levelDistribution: Record<string, number> = {};
-    const cardNameCount: Record<string, number> = {};
+    // Initialize counters and distributions - use Map for better performance
+    const typeDistribution = new Map<string, number>();
+    const attributeDistribution = new Map<string, number>();
+    const levelDistribution = new Map<string, number>();
+    const cardNameCount = new Map<string, number>();
+
+    // Use a single pass through the deck to gather all stats
     let monsterCount = 0;
     let spellCount = 0;
     let trapCount = 0;
 
-    // Process main deck
-    deck.mainDeck.forEach((card) => {
+    // Pre-allocate arrays to avoid expensive resizing operations
+    const mainDeckSize = deck.mainDeck.length;
+    const deckCards = [...deck.mainDeck];
+
+    // Process main deck in a single pass
+    for (let i = 0; i < mainDeckSize; i++) {
+      const card = deckCards[i];
+
       // Count card copies for key cards
-      cardNameCount[card.name] = (cardNameCount[card.name] || 0) + 1;
+      cardNameCount.set(card.name, (cardNameCount.get(card.name) || 0) + 1);
 
       // Analyze card types
       if (card.type.includes("Monster")) {
@@ -36,62 +75,69 @@ export function useDeckAnalytics() {
 
         // Track monster type
         const monsterType = card.race || "Unknown";
-        typeDistribution[monsterType] =
-          (typeDistribution[monsterType] || 0) + 1;
+        typeDistribution.set(
+          monsterType,
+          (typeDistribution.get(monsterType) || 0) + 1
+        );
 
         // Track attribute
         if (card.attribute) {
-          attributeDistribution[card.attribute] =
-            (attributeDistribution[card.attribute] || 0) + 1;
+          attributeDistribution.set(
+            card.attribute,
+            (attributeDistribution.get(card.attribute) || 0) + 1
+          );
         }
 
         // Track level/rank
         if (card.level) {
-          levelDistribution[card.level] =
-            (levelDistribution[card.level] || 0) + 1;
+          levelDistribution.set(
+            card.level,
+            (levelDistribution.get(card.level) || 0) + 1
+          );
         }
       } else if (card.type.includes("Spell")) {
         spellCount++;
-        typeDistribution["Spell"] = (typeDistribution["Spell"] || 0) + 1;
+        typeDistribution.set("Spell", (typeDistribution.get("Spell") || 0) + 1);
       } else if (card.type.includes("Trap")) {
         trapCount++;
-        typeDistribution["Trap"] = (typeDistribution["Trap"] || 0) + 1;
+        typeDistribution.set("Trap", (typeDistribution.get("Trap") || 0) + 1);
       }
-    });
+    }
 
-    // Find potential archetypes by analyzing card names and descriptions
-    const potentialArchetypes: Record<string, number> = {};
+    // Convert maps back to objects for compatibility
+    const typeDistributionObj = Object.fromEntries(typeDistribution);
+    const attributeDistributionObj = Object.fromEntries(attributeDistribution);
+    const levelDistributionObj = Object.fromEntries(levelDistribution);
 
-    // Only use explicit archetypes from API
-    deck.mainDeck.concat(deck.extraDeck).forEach((card) => {
+    // Find potential archetypes
+    const potentialArchetypes = new Map<string, number>();
+
+    // Only use explicit archetypes from API - combine loops for efficiency
+    const allCards = [...deck.mainDeck, ...deck.extraDeck];
+    for (let i = 0; i < allCards.length; i++) {
+      const card = allCards[i];
       if (card.archetype) {
-        potentialArchetypes[card.archetype] =
-          (potentialArchetypes[card.archetype] || 0) + 1;
+        potentialArchetypes.set(
+          card.archetype,
+          (potentialArchetypes.get(card.archetype) || 0) + 1
+        );
       }
-    });
+    }
 
-    logger.info("Found archetypes:", Object.keys(potentialArchetypes));
+    conditionalLog("Found archetypes:", Array.from(potentialArchetypes.keys()));
 
     // Calculate key cards and their opening probabilities
-    logger.info(
-      `Calculating key card probabilities for ${
-        Object.keys(cardNameCount).length
-      } unique cards`
+    const uniqueCardCount = cardNameCount.size;
+    conditionalLog(
+      `Calculating key card probabilities for ${uniqueCardCount} unique cards`
     );
 
-    const keyCards = Object.entries(cardNameCount)
+    // Use array-based operations for better performance
+    const keyCards = Array.from(cardNameCount.entries())
       .filter(([_, count]) => count >= 2) // Only cards with 2+ copies
       .map(([name, copies]) => {
-        logger.debug(`Processing key card: ${name} (${copies} copies)`);
-
-        // Calculate probability using the fixed utility function
-        const probability = calculateDrawProbability(
-          deck.mainDeck.length,
-          copies,
-          5 // Standard opening hand size
-        );
-
-        logger.debug(`${name}: ${probability}% chance to open with`);
+        // Use cached probability calculation
+        const probability = getCachedProbability(mainDeckSize, copies, 5);
 
         return {
           name,
@@ -101,13 +147,13 @@ export function useDeckAnalytics() {
       })
       .sort((a, b) => b.openingProbability - a.openingProbability);
 
-    logger.info(`Found ${keyCards.length} key cards`);
+    conditionalLog(`Found ${keyCards.length} key cards`);
 
     // Log the top 5 key cards for visibility
-    if (keyCards.length > 0) {
-      logger.info("Top key cards:");
+    if (keyCards.length > 0 && ENABLE_VERBOSE_LOGGING) {
+      conditionalLog("Top key cards:");
       keyCards.slice(0, 5).forEach((card, idx) => {
-        logger.info(
+        conditionalLog(
           `${idx + 1}. ${card.name} (${card.copies}x): ${
             card.openingProbability
           }%`
@@ -118,10 +164,10 @@ export function useDeckAnalytics() {
     // Calculate various combo probabilities that were previously in DeckAnalytics
     const drawProbabilities = [];
 
-    // Single card probabilities
-    for (let i = 0; i < Math.min(5, keyCards.length); i++) {
-      const card = keyCards[i];
-
+    // Single card probabilities - limit to top 5 for performance
+    const topKeyCards = keyCards.slice(0, 5);
+    for (let i = 0; i < topKeyCards.length; i++) {
+      const card = topKeyCards[i];
       drawProbabilities.push({
         scenario: `Drawing ${card.name}`,
         cards: [card.name],
@@ -130,20 +176,17 @@ export function useDeckAnalytics() {
       });
     }
 
-    // Two-card combo probabilities
+    // Two-card combo probabilities - only calculate for top cards
     if (keyCards.length >= 2) {
-      for (let i = 0; i < Math.min(3, keyCards.length - 1); i++) {
+      const comboLimit = Math.min(3, keyCards.length - 1);
+      for (let i = 0; i < comboLimit; i++) {
         const card1 = keyCards[i];
         const card2 = keyCards[i + 1];
 
-        const probability = calculateComboHandProbability(
-          deck.mainDeck.length,
-          5,
-          [
-            [{ name: card1.name, copies: card1.copies }],
-            [{ name: card2.name, copies: card2.copies }],
-          ]
-        );
+        const probability = calculateComboHandProbability(mainDeckSize, 5, [
+          [{ name: card1.name, copies: card1.copies }],
+          [{ name: card2.name, copies: card2.copies }],
+        ]);
 
         drawProbabilities.push({
           scenario: `Drawing ${card1.name} AND ${card2.name}`,
@@ -154,21 +197,17 @@ export function useDeckAnalytics() {
       }
     }
 
-    // Three-card combo probabilities
+    // Three-card combo probabilities - only if we have enough key cards
     if (keyCards.length >= 3) {
       const card1 = keyCards[0];
       const card2 = keyCards[1];
       const card3 = keyCards[2];
 
-      const probability = calculateComboHandProbability(
-        deck.mainDeck.length,
-        5,
-        [
-          [{ name: card1.name, copies: card1.copies }],
-          [{ name: card2.name, copies: card2.copies }],
-          [{ name: card3.name, copies: card3.copies }],
-        ]
-      );
+      const probability = calculateComboHandProbability(mainDeckSize, 5, [
+        [{ name: card1.name, copies: card1.copies }],
+        [{ name: card2.name, copies: card2.copies }],
+        [{ name: card3.name, copies: card3.copies }],
+      ]);
 
       drawProbabilities.push({
         scenario: `Perfect hand (${card1.name}, ${card2.name}, ${card3.name})`,
@@ -178,10 +217,10 @@ export function useDeckAnalytics() {
       });
     }
 
-    // Calculate card efficiencies
-    const cardEfficiencies = keyCards.slice(0, 5).map((card) => ({
+    // Calculate card efficiencies - limit to top 5 for performance
+    const cardEfficiencies = topKeyCards.map((card) => ({
       card,
-      metrics: estimateCardEfficiency(card, deck.mainDeck.length),
+      metrics: estimateCardEfficiency(card, mainDeckSize),
     }));
 
     // Calculate a deck consistency score
@@ -190,14 +229,14 @@ export function useDeckAnalytics() {
       monsterCount,
       spellCount,
       trapCount,
-      deck.mainDeck.length
+      mainDeckSize
     );
 
-    // Calculate deck style and ratios
+    // Calculate deck style and ratios - memoize calculation results
     const powerUtilityRatio = (() => {
-      const monsterRatio = monsterCount / deck.mainDeck.length;
-      const spellRatio = spellCount / deck.mainDeck.length;
-      const trapRatio = trapCount / deck.mainDeck.length;
+      const monsterRatio = monsterCount / mainDeckSize;
+      const spellRatio = spellCount / mainDeckSize;
+      const trapRatio = trapCount / mainDeckSize;
 
       let deckStyle = "Unknown";
       let explanation = "";
@@ -223,7 +262,7 @@ export function useDeckAnalytics() {
       return { deckStyle, explanation, monsterRatio, spellRatio, trapRatio };
     })();
 
-    // Calculate combo probability
+    // Calculate combo probability - only if we have enough key cards
     const comboProbability = (() => {
       const starterCards = keyCards
         .filter((card) => card.copies >= 3)
@@ -242,7 +281,7 @@ export function useDeckAnalytics() {
       }
 
       const probability = calculateComboHandProbability(
-        deck.mainDeck.length,
+        mainDeckSize,
         5, // Standard opening hand
         [starterCards, extenderCards]
       );
@@ -265,28 +304,32 @@ export function useDeckAnalytics() {
       };
     })();
 
-    // Add role-based probabilities with grouping
-    const roleGroups = deck.mainDeck.reduce((groups, card) => {
-      if (!card.roleInfo) return groups;
+    // Add role-based probabilities with grouping using Map for better performance
+    const roleGroups = new Map();
 
-      const key = `${card.name}`; // Group just by name
-      if (!groups[key]) {
-        groups[key] = {
+    for (let i = 0; i < mainDeckSize; i++) {
+      const card = deck.mainDeck[i];
+      if (!card.roleInfo) continue;
+
+      const key = card.name; // Group just by name
+      if (!roleGroups.has(key)) {
+        roleGroups.set(key, {
           id: card.id,
           name: card.name,
           copies: 1,
           roleInfo: card.roleInfo,
-        };
+        });
       } else {
-        groups[key].copies++;
+        const group = roleGroups.get(key);
+        group.copies++;
+        roleGroups.set(key, group);
       }
-      return groups;
-    }, {} as Record<string, any>);
+    }
 
-    const mainDeckWithRoles = Object.values(roleGroups).map((group) => {
-      // Use the hypergeometric probability calculation instead of simple percentage
-      const probability = calculateDrawProbability(
-        deck.mainDeck.length, // total cards in deck
+    const mainDeckWithRoles = Array.from(roleGroups.values()).map((group) => {
+      // Use the cached probability calculation
+      const probability = getCachedProbability(
+        mainDeckSize, // total cards in deck
         group.copies, // number of copies
         5 // opening hand size
       );
@@ -300,16 +343,21 @@ export function useDeckAnalytics() {
       };
     });
 
+    // Calculate analysis time
+    const endTime = performance.now();
+    const analysisTime = endTime - startTime;
+    conditionalLog(`Deck analysis completed in ${analysisTime.toFixed(2)}ms`);
+
     // Return the enhanced analytics object with ALL calculated metrics
     const result = {
-      typeDistribution,
-      attributeDistribution,
-      levelDistribution,
+      typeDistribution: typeDistributionObj,
+      attributeDistribution: attributeDistributionObj,
+      levelDistribution: levelDistributionObj,
       keyCards,
-      deckSize: deck.mainDeck.length,
+      deckSize: mainDeckSize,
       consistencyScore,
       extraDeckSize: deck.extraDeck.length,
-      potentialArchetypes: Object.entries(potentialArchetypes)
+      potentialArchetypes: Array.from(potentialArchetypes.entries())
         .map(([name, count]) => ({ name, count }))
         .sort((a, b) => b.count - a.count),
       monsterCount,
@@ -321,58 +369,72 @@ export function useDeckAnalytics() {
       comboProbability,
       resourceGeneration,
       mainDeck: mainDeckWithRoles,
+      performanceMetrics: {
+        analysisTime,
+        uniqueCardCount,
+        totalCardsProcessed: mainDeckSize + deck.extraDeck.length,
+      },
     };
 
-    logger.info("Deck analysis complete");
     return result;
   }, []);
 
-  // Calculate overall deck consistency
-  const calculateConsistencyScore = (
-    keyCards: Array<{
-      name: string;
-      copies: number;
-      openingProbability: number;
-    }>,
-    monsterCount: number,
-    spellCount: number,
-    trapCount: number,
-    deckSize: number
-  ): number => {
-    // Weight factors
-    const keyCardWeight = 0.5;
-    const sizeWeight = 0.2;
-    const ratioWeight = 0.3;
-
-    // Key card consistency (higher is better)
-    const keyCardScore = Math.min(
-      100,
-      keyCards.reduce((sum, card) => sum + card.openingProbability, 0) / 2
-    );
-
-    // Deck size consistency (40 is optimal, higher is worse)
-    const sizeScore = Math.max(0, 100 - Math.abs(deckSize - 40) * 2);
-
-    // Card type ratio consistency
-    // Simplistic model: 45-55% monsters, 35-45% spells, 5-15% traps is "ideal"
-    const monsterRatio = monsterCount / deckSize;
-    const spellRatio = spellCount / deckSize;
-    const trapRatio = trapCount / deckSize;
-
-    const monsterScore =
-      100 - Math.min(100, Math.abs(monsterRatio - 0.5) * 200);
-    const spellScore = 100 - Math.min(100, Math.abs(spellRatio - 0.4) * 200);
-    const trapScore = 100 - Math.min(100, Math.abs(trapRatio - 0.1) * 200);
-
-    const ratioScore = (monsterScore + spellScore + trapScore) / 3;
-
-    // Weighted final score
-    return (
-      keyCardScore * keyCardWeight +
-      sizeScore * sizeWeight +
-      ratioScore * ratioWeight
-    );
-  };
-
   return { analyzeDeck };
+}
+
+// Helper function to calculate consistency score
+function calculateConsistencyScore(
+  keyCards: Array<{ name: string; copies: number; openingProbability: number }>,
+  monsterCount: number,
+  spellCount: number,
+  trapCount: number,
+  deckSize: number
+): number {
+  // Implement optimized consistency score calculation
+  const keyCardProbabilityWeight = 0.5;
+  const deckRatioWeight = 0.3;
+  const cardVarietyWeight = 0.2;
+
+  // Calculate probability weight based on key cards
+  const topFiveKeyCards = keyCards.slice(0, 5);
+  const avgProbability =
+    topFiveKeyCards.length > 0
+      ? topFiveKeyCards.reduce(
+          (sum, card) => sum + card.openingProbability,
+          0
+        ) / topFiveKeyCards.length
+      : 0;
+  const normalizedProbability = avgProbability / 100;
+
+  // Calculate deck ratio score - balanced decks are more consistent
+  const idealMonsterRatio = 0.45; // 45% monsters is generally good
+  const idealSpellRatio = 0.4; // 40% spells
+  const idealTrapRatio = 0.15; // 15% traps
+
+  const actualMonsterRatio = monsterCount / deckSize;
+  const actualSpellRatio = spellCount / deckSize;
+  const actualTrapRatio = trapCount / deckSize;
+
+  const ratioDeviation =
+    Math.abs(actualMonsterRatio - idealMonsterRatio) +
+    Math.abs(actualSpellRatio - idealSpellRatio) +
+    Math.abs(actualTrapRatio - idealTrapRatio);
+
+  const normalizedRatioScore = Math.max(0, 1 - ratioDeviation);
+
+  // Card variety score - fewer unique cards means more consistency
+  const uniqueCardRatio = keyCards.length / deckSize;
+  const normalizedVarietyScore = Math.min(
+    1,
+    keyCards.filter((c) => c.copies >= 2).length / 10
+  );
+
+  // Combine all factors into final score
+  const finalScore =
+    (normalizedProbability * keyCardProbabilityWeight +
+      normalizedRatioScore * deckRatioWeight +
+      normalizedVarietyScore * cardVarietyWeight) *
+    100;
+
+  return Math.min(100, Math.max(0, Math.round(finalScore)));
 }

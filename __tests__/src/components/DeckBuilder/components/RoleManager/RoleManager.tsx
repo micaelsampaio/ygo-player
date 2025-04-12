@@ -51,6 +51,11 @@ const RoleManager: React.FC<RoleManagerProps> = ({ deck, updateCardRole }) => {
     Flexible: "#9E9E9E",
   };
 
+  // Filter out any non-CardRole keys that might have gotten into the distribution
+  const validRoleEntries = Object.entries(analytics.roleDistribution).filter(
+    ([role]) => role in roleColors
+  );
+
   return (
     <div className="role-manager">
       <div className="role-tabs">
@@ -71,14 +76,14 @@ const RoleManager: React.FC<RoleManagerProps> = ({ deck, updateCardRole }) => {
       {activeTab === "overview" && (
         <div className="role-overview">
           <div className="role-distribution">
-            {Object.entries(analytics.roleDistribution).map(([role, count]) => (
+            {validRoleEntries.map(([role, count]) => (
               <div key={role} className="role-bar">
                 <div className="role-label">{role}</div>
                 <div className="role-bar-container">
                   <div
                     className="role-bar-fill"
                     style={{
-                      width: `${(count / deck.length) * 100}%`,
+                      width: `${(count / Math.max(1, deck.length)) * 100}%`,
                       backgroundColor: roleColors[role as CardRole],
                     }}
                   />

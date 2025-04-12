@@ -3,40 +3,53 @@ import { Logger } from "../../../utils/logger";
 // Create a new logger instance for probability calculations
 const logger = Logger.createLogger("ProbabilityUtils");
 
-// Pure utility functions for probability calculations
+// Set this to false to disable verbose logging
+const ENABLE_DEBUG_LOGGING = false;
+
+// Helper function to conditionally log
+const debugLog = (message: string, ...args: any[]) => {
+  if (ENABLE_DEBUG_LOGGING) {
+    logger.debug(message, ...args);
+  }
+};
+
+// Helper function for info logging
+const infoLog = (message: string, ...args: any[]) => {
+  if (ENABLE_DEBUG_LOGGING) {
+    logger.info(message, ...args);
+  }
+};
 
 /**
  * Calculate binomial coefficient (n choose k) more accurately
  */
 function binomialCoefficient(n: number, k: number): number {
-  logger.debug(`binomialCoefficient called with n=${n}, k=${k}`);
+  debugLog(`binomialCoefficient called with n=${n}, k=${k}`);
 
   if (k < 0 || k > n) {
-    logger.debug(`Invalid inputs, returning 0`);
+    debugLog(`Invalid inputs, returning 0`);
     return 0;
   }
   if (k === 0 || k === n) {
-    logger.debug(`Edge case, returning 1`);
+    debugLog(`Edge case, returning 1`);
     return 1;
   }
   if (k > n - k) {
-    logger.debug(`Optimization: switching to C(${n},${n - k})`);
+    debugLog(`Optimization: switching to C(${n},${n - k})`);
     k = n - k; // Optimization: C(n,k) = C(n,n-k)
   }
 
-  logger.debug(`Calculating C(${n},${k})`);
+  debugLog(`Calculating C(${n},${k})`);
 
   // Use a more numerically stable algorithm
   let result = 1;
   for (let i = 0; i < k; i++) {
     const prev = result;
     result = (result * (n - i)) / (i + 1);
-    logger.debug(
-      `Step ${i + 1}: ${prev} * (${n} - ${i}) / (${i} + 1) = ${result}`
-    );
+    debugLog(`Step ${i + 1}: ${prev} * (${n} - ${i}) / (${i} + 1) = ${result}`);
   }
 
-  logger.debug(`Final result: ${result}`);
+  debugLog(`Final result: ${result}`);
   return result;
 }
 
@@ -53,24 +66,24 @@ export function calculateDrawProbability(
   copies: number,
   handSize: number
 ): number {
-  logger.info(
+  infoLog(
     `Calculating probability for ${copies} copies in ${deckSize} cards with ${handSize} hand size`
   );
 
   if (copies <= 0 || handSize <= 0 || deckSize <= 0) {
-    logger.debug(`Invalid inputs, returning 0`);
+    debugLog(`Invalid inputs, returning 0`);
     return 0;
   }
   if (copies > deckSize) {
-    logger.debug(`Copies > deckSize, returning 100%`);
+    debugLog(`Copies > deckSize, returning 100%`);
     return 100;
   }
   if (handSize > deckSize) {
-    logger.debug(`Adjusting handSize from ${handSize} to ${deckSize}`);
+    debugLog(`Adjusting handSize from ${handSize} to ${deckSize}`);
     handSize = deckSize;
   }
 
-  logger.debug(
+  debugLog(
     `Formula: 1 - C(${deckSize}-${copies}, ${handSize}) / C(${deckSize}, ${handSize})`
   );
 
@@ -78,26 +91,26 @@ export function calculateDrawProbability(
   const successNumerator = binomialCoefficient(deckSize - copies, handSize);
   const denominator = binomialCoefficient(deckSize, handSize);
 
-  logger.debug(`Numerator (ways to NOT draw the card): ${successNumerator}`);
-  logger.debug(`Denominator (total possible hands): ${denominator}`);
+  debugLog(`Numerator (ways to NOT draw the card): ${successNumerator}`);
+  debugLog(`Denominator (total possible hands): ${denominator}`);
 
   const notDrawingProbability = successNumerator / denominator;
-  logger.debug(`Probability of NOT drawing: ${notDrawingProbability}`);
+  debugLog(`Probability of NOT drawing: ${notDrawingProbability}`);
 
   const probability = Math.round((1 - notDrawingProbability) * 10000) / 100;
 
   // Expected values for common scenarios
-  if (deckSize === 40 && handSize === 5) {
+  if (ENABLE_DEBUG_LOGGING && deckSize === 40 && handSize === 5) {
     let expected = 0;
     if (copies === 3) expected = 33.76;
     else if (copies === 2) expected = 23.71;
     else if (copies === 1) expected = 12.5;
 
     if (expected > 0) {
-      logger.info(
+      infoLog(
         `Expected value for ${copies} copies in 40-card deck: ~${expected}%`
       );
-      logger.info(
+      infoLog(
         `Calculated value: ${probability}% (difference: ${(
           probability - expected
         ).toFixed(2)}%)`
@@ -105,7 +118,7 @@ export function calculateDrawProbability(
     }
   }
 
-  logger.info(`Final probability: ${probability}%`);
+  infoLog(`Final probability: ${probability}%`);
   return probability;
 }
 
@@ -205,9 +218,11 @@ export const calculateRoleProbability = (
   analytics: any,
   role: string
 ): number => {
-  const roleCards = (analytics.mainDeck || []).filter(
-    (card: any) => card.roleInfo?.role === role
+  // Filter for cards that have the specified role in their roles array
+  const roleCards = (analytics.mainDeck || []).filter((card: any) =>
+    card.roleInfo?.roles?.includes(role)
   );
+
   const totalCopies = roleCards.reduce(
     (sum: number, card: any) => sum + (card.copies || 0),
     0

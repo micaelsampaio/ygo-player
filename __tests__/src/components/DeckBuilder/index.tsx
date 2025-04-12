@@ -24,6 +24,7 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
     "editor" | "simulator" | "analytics"
   >("editor");
   const [targetDeck, setTargetDeck] = useState<"main" | "side">("main");
+  const [analyticsCalculated, setAnalyticsCalculated] = useState(false);
 
   // Custom hooks
   const {
@@ -56,9 +57,15 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
         const analytics = analyzeDeck(selectedDeck);
         setDeckAnalytics(analytics);
         setIsAnalyzing(false);
+        setAnalyticsCalculated(true);
       }, 0);
     }
   }, [selectedDeck, isAnalyzing, analyzeDeck]);
+
+  // Reset analytics calculated flag when deck changes
+  useEffect(() => {
+    setAnalyticsCalculated(false);
+  }, [selectedDeck]);
 
   // Load initial decks
   useEffect(() => {
@@ -82,6 +89,15 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
   const closeModal = () => {
     setIsModalOpen(false);
     setTimeout(() => setPreviewCard(null), 300);
+  };
+
+  const handleTabChange = (tab: "editor" | "simulator" | "analytics") => {
+    setActiveTab(tab);
+
+    // Calculate analytics only if switching to analytics tab and they haven't been calculated yet
+    if (tab === "analytics" && !analyticsCalculated && selectedDeck) {
+      calculateDeckAnalytics();
+    }
   };
 
   const handleImportDeck = (importedDeck: Deck) => {
@@ -258,22 +274,19 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
           <div className="editor-tabs">
             <button
               className={activeTab === "editor" ? "active-tab" : ""}
-              onClick={() => setActiveTab("editor")}
+              onClick={() => handleTabChange("editor")}
             >
               Deck Editor
             </button>
             <button
               className={activeTab === "analytics" ? "active-tab" : ""}
-              onClick={() => {
-                setActiveTab("analytics");
-                calculateDeckAnalytics();
-              }}
+              onClick={() => handleTabChange("analytics")}
             >
               Deck Analytics
             </button>
             <button
               className={activeTab === "simulator" ? "active-tab" : ""}
-              onClick={() => setActiveTab("simulator")}
+              onClick={() => handleTabChange("simulator")}
             >
               Draw Simulator
             </button>
@@ -304,7 +317,11 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
             />
           )}
           {activeTab === "analytics" && (
-            <DeckAnalytics analytics={deckAnalytics} deck={selectedDeck} />
+            <DeckAnalytics
+              analytics={deckAnalytics}
+              deck={selectedDeck}
+              isVisible={activeTab === "analytics"}
+            />
           )}
         </div>
 

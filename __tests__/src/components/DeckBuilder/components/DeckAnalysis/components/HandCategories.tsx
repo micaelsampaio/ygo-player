@@ -19,15 +19,19 @@ const HandCategories: React.FC<HandCategoriesProps> = ({
   calculateFrequencyText,
   calculateRoleProbability,
 }) => {
+  // Helper function to check if a card has a specific role
+  const cardHasRole = (card: any, role: string) => {
+    return card.roleInfo?.roles?.includes(role);
+  };
+
   const renderCategorySection = (
     role: string,
     title: string,
     isDanger = false
   ) => {
+    // Check if there are any cards with this role
     if (
-      !Object.values(groupedCards).some(
-        (card: any) => card.roleInfo?.role === role
-      )
+      !Object.values(groupedCards).some((card: any) => cardHasRole(card, role))
     ) {
       return null;
     }
@@ -36,14 +40,13 @@ const HandCategories: React.FC<HandCategoriesProps> = ({
       <div className={`probability-category ${isDanger ? "danger" : ""}`}>
         <h4>{title}</h4>
         <div className="probability-table">
-          {/* ...existing table structure... */}
           <div className="table-header">
             <div>Card</div>
             <div>Copies</div>
             <div>{isDanger ? "Draw Risk" : "Probability"}</div>
           </div>
           {Object.values(groupedCards)
-            .filter((card: any) => card.roleInfo?.role === role)
+            .filter((card: any) => cardHasRole(card, role))
             .map((card: any, index) => (
               <div key={index} className="table-row">
                 <div>{card.name}</div>
@@ -63,7 +66,6 @@ const HandCategories: React.FC<HandCategoriesProps> = ({
               </div>
             ))}
         </div>
-        {/* ...global probability section... */}
         <div className={`global-probability ${isDanger ? "warning" : ""}`}>
           <strong>
             {isDanger ? "Global Draw Risk: " : "Global Probability: "}
@@ -79,7 +81,7 @@ const HandCategories: React.FC<HandCategoriesProps> = ({
                   {calculateFrequencyText(
                     probability,
                     Object.values(groupedCards)
-                      .filter((card: any) => card.roleInfo?.role === role)
+                      .filter((card: any) => cardHasRole(card, role))
                       .reduce((sum, card) => sum + (card.copies || 0), 0)
                   )}
                   )

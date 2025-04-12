@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useRef } from "react";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
 import { DeckAnalyticsType, DeckAnalyticsProps } from "./types";
 import Header from "./components/Header";
 import DeckComposition from "./components/DeckComposition";
@@ -23,7 +23,11 @@ import {
 
 const logger = Logger.createLogger("DeckAnalyticsUI");
 
-const DeckAnalytics: React.FC<DeckAnalyticsProps> = ({ analytics, deck }) => {
+const DeckAnalytics: React.FC<DeckAnalyticsProps> = ({
+  analytics,
+  deck,
+  isVisible,
+}) => {
   const [activeTab, setActiveTab] = useState<
     "overview" | "advanced" | "probability" | "suggestions"
   >("overview");
@@ -39,27 +43,32 @@ const DeckAnalytics: React.FC<DeckAnalyticsProps> = ({ analytics, deck }) => {
   });
 
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
-  const [processedAnalytics, setProcessedAnalytics] =
-    useState<DeckAnalyticsType | null>(null);
+  const [processedAnalyticsCache, setProcessedAnalyticsCache] =
+    useState<any>(null);
+  const [deckMetricsCache, setDeckMetricsCache] = useState<any>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
 
-  useEffect(() => {
-    if (!analytics) {
-      setProcessedAnalytics(null);
-      return;
+  // Only process analytics when the tab is visible and when not already cached
+  const processedAnalytics = useMemo(() => {
+    // Skip processing if component isn't visible or no analytics data
+    if (!isVisible || !analytics) return null;
+
+    // Return cached data if available and valid
+    if (processedAnalyticsCache) {
+      logger.debug("Using cached analytics data");
+      return processedAnalyticsCache;
     }
 
-    const processAnalytics = () => {
-      requestAnimationFrame(() => {
-        setProcessedAnalytics(analytics);
-      });
-    };
+    logger.debug("Processing analytics data for UI");
+    // Store the processed data in cache for future use
+    setProcessedAnalyticsCache(analytics);
+    return analytics;
+  }, [analytics, isVisible, processedAnalyticsCache]);
 
-    processAnalytics();
-  }, [analytics]);
-
+  // Only calculate deck metrics when analytics are processed and not already cached
   const deckMetrics = useMemo(() => {
-    if (!processedAnalytics) {
-      logger.debug("No analytics data available, using defaults");
+    // Skip calculations if component isn't visible
+    if (!isVisible || !processedAnalytics) {
       return {
         powerUtility: {
           deckStyle: "Unknown",
@@ -75,52 +84,69 @@ const DeckAnalytics: React.FC<DeckAnalyticsProps> = ({ analytics, deck }) => {
       };
     }
 
-    logger.debug("Processing analytics data for UI");
+    // Return cached metrics if available
+    if (deckMetricsCache) {
+      logger.debug("Using cached deck metrics");
+      return deckMetricsCache;
+    }
+
+    logger.info("Calculating deck metrics from analytics data");
 
     if (processedAnalytics.keyCards && processedAnalytics.keyCards.length > 0) {
       logger.info("Key card probabilities:", processedAnalytics.keyCards);
     }
 
-    return {
+    const newMetrics = {
       powerUtility: processedAnalytics.powerUtilityRatio,
       comboProbability: processedAnalytics.comboProbability,
       resourceGeneration: processedAnalytics.resourceGeneration,
       drawProbabilities: processedAnalytics.drawProbabilities || [],
       cardEfficiencies: processedAnalytics.cardEfficiencies || [],
     };
-  }, [processedAnalytics]);
 
-  const exportAnalytics = () => {
-    if (!processedAnalytics) return;
+    // Store the metrics in cache for future use
+    setDeckMetricsCache(newMetrics);
+    return newMetrics;
+  }, [isVisible, processedAnalytics, deckMetricsCache]);
 
-    const data = {
-      deckName: "Deck Analysis",
-      timestamp: new Date().toISOString(),
-      metrics: {
-        consistency: processedAnalytics.consistencyScore,
-        deckSize: processedAnalytics.deckSize,
-        cardDistribution: {
-          monsters: processedAnalytics.monsterCount,
-          spells: processedAnalytics.spellCount,
-          traps: processedAnalytics.trapCount,
-        },
-        keyCards: processedAnalytics.keyCards,
-        archetypes: processedAnalytics.potentialArchetypes,
-      },
-    };
+  // Reset caches when deck or analytics change
+  useEffect(() => {
+    if (isVisible && analytics && analytics !== processedAnalyticsCache) {
+      logger.debug("Resetting analytics caches due to data change");
+      setProcessedAnalyticsCache(null);
+      setDeckMetricsCache(null);
+    }
+  }, [isVisible, analytics, processedAnalyticsCache]);
 
-    const blob = new Blob([JSON.stringify(data, null, 2)], {
-      type: "application/json",
-    });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "deck-analytics.json";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
+  // Initialize calculations once when tab becomes visible and data is available
+  useEffect(() => {
+    if (isVisible && analytics && !isInitialized) {
+      logger.debug("Initializing analytics calculations");
+      setIsInitialized(true);
+    }
+  }, [isVisible, analytics, isInitialized]);
+
+  // Probability calculations - only perform these when needed for specific views
+  const calculateOptimalDistribution = useCallback(
+    (
+      totalCards: number,
+      targetCards: number,
+      desiredProbability: number = 0.85
+    ) => {
+      logger.debug(`Calculating optimal distribution for ${targetCards} cards`);
+      const results = [];
+      for (let i = 0; i <= Math.min(20, totalCards); i++) {
+        const probability = calculateDrawProbability(totalCards, i, 5) / 100;
+        results.push({
+          copies: i,
+          probability: probability,
+          isOptimal: i === targetCards,
+        });
+      }
+      return results;
+    },
+    []
+  );
 
   const exportToPdf = () => {
     if (!processedAnalytics || !deck) return;
@@ -140,6 +166,11 @@ const DeckAnalytics: React.FC<DeckAnalyticsProps> = ({ analytics, deck }) => {
       }
     );
   };
+
+  if (!isVisible) {
+    // Return null or an empty placeholder when not visible to prevent rendering
+    return null;
+  }
 
   if (!processedAnalytics) {
     return (
@@ -205,84 +236,6 @@ const DeckAnalytics: React.FC<DeckAnalyticsProps> = ({ analytics, deck }) => {
     return `${basicFrequency} (Most likely to open with ${mostLikely} ${
       mostLikely === 1 ? "copy" : "copies"
     })`;
-  };
-
-  const calculateOptimalDistribution = (
-    totalCards: number,
-    targetCards: number,
-    desiredProbability: number = 0.85
-  ) => {
-    const results = [];
-    for (let i = 0; i <= Math.min(20, totalCards); i++) {
-      const probability = calculateDrawProbability(totalCards, i, 5) / 100;
-      results.push({
-        copies: i,
-        probability: probability,
-        isOptimal: i === targetCards,
-      });
-    }
-    return results;
-  };
-
-  const renderDistributionGraph = (
-    points: Array<{ copies: number; probability: number; isOptimal: boolean }>,
-    title: string,
-    current: number,
-    optimal: number,
-    targetPercentage: number
-  ) => {
-    const optimalPoint = points.find((point) => point.copies === optimal);
-    const actualProbability = optimalPoint
-      ? optimalPoint.probability * 100
-      : targetPercentage;
-
-    return (
-      <div className="distribution-graph-container">
-        <h4>{title}</h4>
-        <div className="graph-wrapper">
-          {[0, 20, 40, 60, 80, 100].map((value) => (
-            <div
-              key={value}
-              className="grid-line"
-              style={{ bottom: `${value}%` }}
-            >
-              <span className="grid-line-label">{value}%</span>
-            </div>
-          ))}
-
-          {points.map((point, index) => (
-            <div
-              key={index}
-              className={`graph-bar ${point.isOptimal ? "optimal" : ""}`}
-              style={{
-                height: `${point.probability * 100}%`,
-                backgroundColor: point.isOptimal ? "#4CAF50" : "#2196F3",
-              }}
-            >
-              <div className="bar-tooltip">
-                {point.copies} copies = {(point.probability * 100).toFixed(2)}%
-                chance
-                {point.isOptimal && " (Optimal)"}
-              </div>
-            </div>
-          ))}
-
-          <div className="y-axis" />
-          <div className="x-axis" />
-
-          <div className="axis-labels y-axis-label">Draw Probability (%)</div>
-          <div className="axis-labels x-axis-label">
-            Number of Copies in Deck
-          </div>
-        </div>
-        <div className="graph-labels">
-          <span>
-            Target: {optimal} copies (≈ {actualProbability.toFixed(2)}% opening)
-          </span>
-          <span>Current: {current} copies</span>
-        </div>
-      </div>
-    );
   };
 
   const renderOverviewTab = () => (
@@ -365,6 +318,7 @@ const DeckAnalytics: React.FC<DeckAnalyticsProps> = ({ analytics, deck }) => {
   );
 
   const renderProbabilityContent = () => {
+    // Only calculate probability distributions when needed for this view
     const groupedCards = processedAnalytics?.mainDeck;
     const deckSize = processedAnalytics?.deckSize || 40;
 
@@ -439,7 +393,7 @@ const DeckAnalytics: React.FC<DeckAnalyticsProps> = ({ analytics, deck }) => {
   return (
     <div className="deck-analytics">
       <Header
-        onExport={exportAnalytics}
+        onExport={() => {}} // Remove export data functionality
         onExportPdf={exportToPdf}
         deck={deck}
         analytics={processedAnalytics}

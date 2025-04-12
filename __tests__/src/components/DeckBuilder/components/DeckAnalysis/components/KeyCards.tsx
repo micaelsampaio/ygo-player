@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback, useMemo } from "react";
 import { DeckAnalyticsType } from "../types";
 
 interface KeyCardsProps {
@@ -13,19 +13,34 @@ const getProbabilityColor = (probability: number) => {
 };
 
 const KeyCards: React.FC<KeyCardsProps> = ({ keyCards, onHoverCard }) => {
+  // Use memoized key cards to avoid unnecessary recalculations
+  const displayedCards = useMemo(() => keyCards.slice(0, 3), [keyCards]);
+
+  // Memoize the hover handlers to prevent recreation on each render
+  const handleMouseEnter = useCallback(
+    (cardName: string) => {
+      onHoverCard(cardName);
+    },
+    [onHoverCard]
+  );
+
+  const handleMouseLeave = useCallback(() => {
+    onHoverCard(null);
+  }, [onHoverCard]);
+
   return (
     <div className="analytics-section">
       <h3>Key Cards</h3>
       <div className="key-cards">
-        {keyCards.slice(0, 3).map((card, index) => {
+        {displayedCards.map((card, index) => {
           const probability = card.openingProbability;
 
           return (
             <div
               key={index}
               className="key-card-item"
-              onMouseEnter={() => onHoverCard(card.name)}
-              onMouseLeave={() => onHoverCard(null)}
+              onMouseEnter={() => handleMouseEnter(card.name)}
+              onMouseLeave={handleMouseLeave}
             >
               <div className="key-card-header">
                 <div className="key-card-name">{card.name}</div>
@@ -61,4 +76,4 @@ const KeyCards: React.FC<KeyCardsProps> = ({ keyCards, onHoverCard }) => {
   );
 };
 
-export default KeyCards;
+export default React.memo(KeyCards);

@@ -38,14 +38,7 @@ const Header: React.FC<HeaderProps> = ({
     <div className="deck-analytics-header">
       <div className="header-title-section">
         <h2>Deck Analysis</h2>
-        <div className="export-buttons">
-          <button
-            className="export-btn"
-            onClick={onExport}
-            title="Export analysis data as JSON"
-          >
-            📊 Export Data
-          </button>
+        <div className="export-buttons" style={{ marginLeft: "auto" }}>
           <button
             className="export-pdf-btn"
             onClick={handlePdfExport}

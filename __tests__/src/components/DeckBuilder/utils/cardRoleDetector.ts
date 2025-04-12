@@ -123,8 +123,13 @@ export function analyzeDeckRoles(deck: Card[]): DeckRoleAnalytics {
   let userAssigned = 0;
 
   for (const card of deck) {
-    if (card.roleInfo) {
-      roleDistribution[card.roleInfo.role]++;
+    if (card.roleInfo && card.roleInfo.roles) {
+      // Handle multiple roles per card
+      for (const role of card.roleInfo.roles) {
+        if (role in roleDistribution) {
+          roleDistribution[role as CardRole]++;
+        }
+      }
       card.roleInfo.isAutoDetected ? autoDetected++ : userAssigned++;
     } else {
       const detection = detectCardRole(card);
