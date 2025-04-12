@@ -278,7 +278,7 @@ export class PeerToPeer extends EventEmitter {
 
     // Set up keep-alive and reconnection logic
     const keepAliveInterval = setInterval(() => {
-      if (!this.libp2p?.isStarted()) {
+      if (!this.libp2p) {
         clearInterval(keepAliveInterval);
         return;
       }
