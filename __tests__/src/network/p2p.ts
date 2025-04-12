@@ -188,9 +188,6 @@ export class PeerToPeer extends EventEmitter {
             iceCandidatePoolSize: 5,
             rtcpMuxPolicy: "require",
             bundlePolicy: "max-bundle",
-            iceServers: {
-              gatherPolicy: "relay", // Only gather relay candidates
-            },
           },
           // Enable connection keepalive for WebRTC
           keepAlive: true,
