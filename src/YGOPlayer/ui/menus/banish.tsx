@@ -40,18 +40,18 @@ export function Banish({
       <hr />
       {cards.map((card: Card) => (
         <div>
-          <div style={{ position: "relative" }}>
+          <div style={{ position: "relative" }}
+            onClick={(e) => {
+              action.eventData = {
+                duel,
+                card,
+                mouseEvent: e,
+                htmlCardElement: e.target,
+              };
+              duel.actionManager.setAction(action);
+              duel.events.dispatch("set-selected-card", { player: card.owner, card });
+            }}>
             <img
-              onClick={(e) => {
-                action.eventData = {
-                  duel,
-                  card,
-                  mouseEvent: e,
-                  htmlCardElement: e.target,
-                };
-                duel.actionManager.setAction(action);
-                duel.events.dispatch("set-selected-card", { player: card.owner, card });
-              }}
               src={card.images.small_url}
               key={card.index}
               className="ygo-card"

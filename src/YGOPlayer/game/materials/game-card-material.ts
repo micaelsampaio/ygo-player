@@ -44,3 +44,27 @@ export class CardMaterial extends THREE.MeshBasicMaterial {
         return this.linearCorrection;
     }
 }
+
+export interface CardMaterialGrayscaleParameters extends THREE.MeshBasicMaterialParameters {}
+
+export class CardMaterialGrayscale extends THREE.MeshBasicMaterial {
+    constructor(parameters: CardMaterialGrayscaleParameters = {}) {
+        super(parameters);
+
+        this.onBeforeCompile = (shader: any) => {
+            shader.fragmentShader = shader.fragmentShader.replace(
+                '#include <map_fragment>',
+                `
+        #ifdef USE_MAP
+          vec4 sampledDiffuseColor = texture2D(map, vMapUv);
+          // Convert to grayscale using luminance formula
+          float gray = dot(sampledDiffuseColor.rgb, vec3(0.299, 0.587, 0.114));
+          diffuseColor *= vec4(vec3(gray), sampledDiffuseColor.a);
+        #endif
+        `
+            );
+        };
+
+        this.needsUpdate = true;
+    }
+}

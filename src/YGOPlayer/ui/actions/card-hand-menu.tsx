@@ -102,6 +102,10 @@ export function CardHandMenu({
     duel.gameActions.attachMaterial({ card, originZone });
   }, [card, index]);
 
+  const negateCard = useCallback(() => {
+    duel.gameActions.negateCard({ card, originZone });
+  }, [card, originZone]);
+
   useLayoutEffect(() => {
     const container = menuRef.current!;
     const cardFromHand =
@@ -134,6 +138,9 @@ export function CardHandMenu({
   return (
     <>
       <CardMenu menuRef={menuRef}>
+
+        <button className="ygo-card-item" onClick={negateCard}>Negate</button>
+
         {isMonster && (
           <>
             <button

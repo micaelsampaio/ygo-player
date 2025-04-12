@@ -7,6 +7,8 @@ import { MaterialOpacityTransition } from '../../duel-events/utils/material-opac
 import { WaitForSeconds } from '../../duel-events/utils/wait-for-seconds';
 import { CARD_DEPTH, CARD_HEIGHT_SIZE, CARD_RATIO } from '../../constants';
 import { Card } from 'ygo-core';
+import { CallbackTransition } from '../../duel-events/utils/callback';
+import { CardMaterialGrayscale } from '../materials/game-card-material';
 
 export function CardEmptyMesh({ material, card, color, depth = CARD_DEPTH, transparent }: { material?: THREE.Material, color?: THREE.ColorRepresentation, depth?: number, card?: THREE.Object3D, transparent?: boolean } | undefined = {}) {
     const height = CARD_HEIGHT_SIZE, width = height / CARD_RATIO;
@@ -83,6 +85,36 @@ export function CardActivationEffect({ duel, card, startTask }: { duel: YGODuel,
     }
 }
 
+export function CardNegationEffect({ duel, card, startTask }: { duel: YGODuel, card: THREE.Object3D, startTask: any }) {
+
+    const modalGeometry = new THREE.PlaneGeometry(1, 1);
+    const delay = 0.2;
+
+    for (let i = 0; i < 3; ++i) {
+        const frontTexture = duel.assets.getTexture(`${duel.config.cdnUrl}/images/particles/spark_0${i + 1}.png`);
+        const material = new THREE.MeshBasicMaterial({ map: frontTexture, transparent: true, color: 0x007ac1, opacity: 1 }); // Front with texture
+        const mesh = new THREE.Mesh(modalGeometry, material);
+        const size = 6;
+        mesh.scale.set(size, size, size);
+        mesh.rotation.copy(card.rotation);
+        mesh.position.set(0, 0, 0.02);
+        mesh.rotateZ(THREE.MathUtils.degToRad(randomIntFromInterval(0, 360)));
+        mesh.visible = false;
+
+        startTask(new YGOTaskSequence(
+            new WaitForSeconds(0.1 + delay + (i * 0.2)),
+            new CallbackTransition(() => {
+                mesh.visible = true;
+            }),
+            new WaitForSeconds(0.1),
+            new CallbackTransition(() => {
+                mesh.visible = false;
+            })
+        ));
+        card.add(mesh);
+    }
+}
+
 function randomIntFromInterval(min: number, max: number): number { // min and max included 
     return Math.floor(Math.random() * (max - min + 1) + min);
 }
@@ -138,4 +170,31 @@ export function createSquareWithTopMiddlePivot(width: number, height: number, ma
     const mesh = new THREE.Mesh(geometry, material);
 
     return mesh;
+}
+
+export class GameCardGrayscale {
+    public gameObject: THREE.Mesh;
+
+    constructor({ duel, card }: { duel: YGODuel, card: Card }) {
+        const height = CARD_HEIGHT_SIZE, width = height / CARD_RATIO, depth = CARD_DEPTH;
+        const geometry = new THREE.BoxGeometry(width, height, depth);
+
+        const frontTexture = duel.assets.getTexture(card.images.small_url);
+        const backTexture = duel.assets.getTexture(`${duel.config.cdnUrl}/images/card_back.png`);
+        const frontMaterial = new CardMaterialGrayscale({ map: frontTexture }); // Front with texture
+        const backMaterial = new THREE.MeshBasicMaterial({ map: backTexture }); // Back
+        const depthMaterial = new THREE.MeshBasicMaterial({ color: 0xb5b5b5 }); // Depth
+
+
+        const materials = [
+            depthMaterial, // Right (depth)
+            depthMaterial, // Left (depth)
+            depthMaterial, // Top (depth)
+            depthMaterial, // Bottom (depth)
+            frontMaterial, // Front
+            backMaterial, // Back
+        ];
+
+        this.gameObject = new THREE.Mesh(geometry, materials);
+    }
 }

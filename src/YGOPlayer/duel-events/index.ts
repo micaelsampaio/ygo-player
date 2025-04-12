@@ -17,6 +17,7 @@ import { XYZAttachMaterialHandler } from "./events/xyz-attach-material-event";
 import { XYZDetachMaterialHandler } from "./events/xyz-detach-material-event";
 import { XYZOverlaySummonEventHandler } from "./events/xyz-overlay-event";
 import { XYZSummonEventHandler } from "./events/xyz-summon-event";
+import { NegateCardHandler } from "./events/negate-card-events";
 
 export interface DuelEventHandlerProps {
   duel: YGODuel;
@@ -63,6 +64,7 @@ const events: any = {
   [YGODuelEvents.LogType.Destroy]: DestroyCardEventHandler,
   [YGODuelEvents.LogType.Reveal]: RevealEventHandler,
   [YGODuelEvents.LogType.Activate]: ActivateCardHandler,
+  [YGODuelEvents.LogType.Negate]: NegateCardHandler,
   /// Default
   DEFAULT: UpdateFieldEvent,
 };

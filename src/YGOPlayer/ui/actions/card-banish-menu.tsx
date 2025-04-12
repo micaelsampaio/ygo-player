@@ -82,6 +82,10 @@ export function CardBanishMenu({
     duel.gameActions.targetCard({ card, originZone });
   }, [card, originZone]);
 
+  const negateCard = useCallback(() => {
+    duel.gameActions.negateCard({ card, originZone });
+  }, [card, originZone]);
+
   useLayoutEffect(() => {
     const container = menuRef.current!;
     const cardRect = htmlCardElement.getBoundingClientRect();
@@ -101,6 +105,7 @@ export function CardBanishMenu({
   return (
     <>
       <CardMenu menuRef={menuRef}>
+        <button className="ygo-card-item" onClick={negateCard}>Negate</button>
 
         <button
           type="button"
