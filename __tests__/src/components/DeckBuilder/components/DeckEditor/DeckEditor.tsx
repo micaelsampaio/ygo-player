@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useRef } from "react";
-import { Card, Deck } from "../../types";
+import React, { useState, useEffect, useRef, useLayoutEffect } from "react";
+import { Card, Deck, CardRole } from "../../types";
 import { getCardImageUrl } from "../../../../utils/cardImages";
 import { YGOGameUtils } from "ygo-player";
 import RoleManager from "../RoleManager/RoleManager";
+import VirtualizedCardList from "../VirtualizedCardList";
 import "./DeckEditor.css";
 
 type SortOption = "name" | "cardType" | "monsterType" | "level" | "atk" | "def";
@@ -10,15 +11,26 @@ type SortOption = "name" | "cardType" | "monsterType" | "level" | "atk" | "def";
 interface DeckEditorProps {
   deck: Deck | null;
   onCardSelect: (card: Card) => void;
-  onCardRemove: (card: Card, index: number, isExtraDeck: boolean) => void;
-  onRenameDeck: (newName: string) => void; // This prop is for renaming
+  onCardRemove: (
+    card: Card,
+    index: number,
+    isExtraDeck: boolean,
+    isSideDeck?: boolean
+  ) => void;
+  onRenameDeck: (newName: string) => void;
   onClearDeck: () => void;
   onReorderCards: (
     sourceIndex: number,
     destinationIndex: number,
-    isExtraDeck: boolean
+    isExtraDeck: boolean,
+    isSideDeck?: boolean
   ) => void;
-  updateDeck?: (deck: Deck) => void; // Add this prop
+  onMoveCardBetweenDecks?: (
+    sourceType: "main" | "extra" | "side",
+    targetType: "main" | "extra" | "side",
+    cardIndex: number
+  ) => void;
+  updateDeck?: (deck: Deck) => void;
 }
 
 const DeckEditor: React.FC<DeckEditorProps> = ({
@@ -28,12 +40,106 @@ const DeckEditor: React.FC<DeckEditorProps> = ({
   onRenameDeck,
   onClearDeck,
   onReorderCards,
+  onMoveCardBetweenDecks,
   updateDeck,
 }) => {
-  const [isEditingName, setIsEditingName] = useState(false); // Controls edit mode
-  const [editedName, setEditedName] = useState(deck?.name || ""); // Stores the edited name
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editedName, setEditedName] = useState(deck?.name || "");
   const [showRoleSelector, setShowRoleSelector] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Refs for measuring container dimensions if needed, but not actively used by default
+  const mainDeckRef = useRef<HTMLDivElement>(null);
+  const extraDeckRef = useRef<HTMLDivElement>(null);
+  const sideDeckRef = useRef<HTMLDivElement>(null);
+
+  // We'll keep these states for potential future use but won't use them by default
+  const [dimensions, setDimensions] = useState({
+    mainDeck: { width: 0, height: 0 },
+    extraDeck: { width: 0, height: 0 },
+    sideDeck: { width: 0, height: 0 },
+  });
+
+  // Set to false by default to preserve original layout
+  const [useVirtualized, setUseVirtualized] = useState({
+    mainDeck: false,
+    extraDeck: false,
+    sideDeck: false,
+  });
+
+  // Threshold for when to use virtualized rendering - set very high to effectively disable by default
+  const VIRTUALIZATION_THRESHOLD = 500; // Only activate for extremely large collections
+
+  // Disabled by default, but keeping the code for future use if needed
+  useLayoutEffect(() => {
+    // This effect is disabled by default to preserve original behavior
+    if (!deck || VIRTUALIZATION_THRESHOLD > 100) return;
+
+    // Only measure dimensions if we have cards that exceed threshold
+    const shouldMeasure = {
+      mainDeck: deck.mainDeck.length > VIRTUALIZATION_THRESHOLD,
+      extraDeck: deck.extraDeck.length > VIRTUALIZATION_THRESHOLD,
+      sideDeck: (deck.sideDeck?.length || 0) > VIRTUALIZATION_THRESHOLD,
+    };
+
+    // Update virtualization flags
+    setUseVirtualized(shouldMeasure);
+
+    // Only measure dimensions for sections that need virtualization
+    if (
+      !shouldMeasure.mainDeck &&
+      !shouldMeasure.extraDeck &&
+      !shouldMeasure.sideDeck
+    ) {
+      return;
+    }
+
+    // Create ResizeObserver to track container dimensions
+    const resizeObserver = new ResizeObserver((entries) => {
+      entries.forEach((entry) => {
+        const element = entry.target;
+        const width = entry.contentRect.width;
+        const height = Math.min(
+          500,
+          element === mainDeckRef.current
+            ? Math.ceil(deck.mainDeck.length / Math.floor(width / 90)) * 126
+            : element === extraDeckRef.current
+            ? Math.ceil(deck.extraDeck.length / Math.floor(width / 90)) * 126
+            : Math.ceil((deck.sideDeck?.length || 0) / Math.floor(width / 90)) *
+              126
+        );
+
+        // Update dimensions based on which element was observed
+        setDimensions((prev) => ({
+          ...prev,
+          mainDeck:
+            element === mainDeckRef.current ? { width, height } : prev.mainDeck,
+          extraDeck:
+            element === extraDeckRef.current
+              ? { width, height }
+              : prev.extraDeck,
+          sideDeck:
+            element === sideDeckRef.current ? { width, height } : prev.sideDeck,
+        }));
+      });
+    });
+
+    // Observe all deck container refs
+    if (shouldMeasure.mainDeck && mainDeckRef.current) {
+      resizeObserver.observe(mainDeckRef.current);
+    }
+    if (shouldMeasure.extraDeck && extraDeckRef.current) {
+      resizeObserver.observe(extraDeckRef.current);
+    }
+    if (shouldMeasure.sideDeck && sideDeckRef.current) {
+      resizeObserver.observe(sideDeckRef.current);
+    }
+
+    // Cleanup observer on unmount
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, [deck?.mainDeck.length, deck?.extraDeck.length, deck?.sideDeck?.length]);
 
   const roleColors: Record<CardRole, string> = {
     Starter: "#4CAF50",
@@ -43,6 +149,7 @@ const DeckEditor: React.FC<DeckEditorProps> = ({
     Engine: "#FF9800",
     NonEngine: "#607D8B",
     Garnets: "#795548",
+    NormalSummon: "#009688", // Color for Normal Summon
     Flexible: "#9E9E9E",
   };
 
@@ -54,6 +161,7 @@ const DeckEditor: React.FC<DeckEditorProps> = ({
     "Engine",
     "NonEngine",
     "Garnets",
+    "NormalSummon", // Added NormalSummon
     "Flexible",
   ];
 
@@ -74,12 +182,14 @@ const DeckEditor: React.FC<DeckEditorProps> = ({
     setIsEditingName(false);
   };
 
+  // Enhanced handleDragStart to better support deck transfers
   const handleDragStart = (
     e: React.DragEvent,
     index: number,
-    isExtra: boolean
+    isExtra: boolean,
+    isSide: boolean = false
   ) => {
-    const dragData = { index, isExtra };
+    const dragData = { index, isExtra, isSide };
     e.dataTransfer.setData("application/json", JSON.stringify(dragData));
     // Add a small delay to ensure the drag is actually starting
     requestAnimationFrame(() => {
@@ -95,16 +205,56 @@ const DeckEditor: React.FC<DeckEditorProps> = ({
     }
   };
 
+  // Enhanced handleDrop to support cross-deck transfers with proper restrictions
   const handleDrop = (
     e: React.DragEvent,
     dropIndex: number,
-    isExtraDeck: boolean
+    isExtraDeck: boolean,
+    isSideDeck: boolean = false
   ) => {
     e.preventDefault();
     try {
       const dragData = JSON.parse(e.dataTransfer.getData("application/json"));
-      if (dragData.isExtra === isExtraDeck) {
-        onReorderCards(dragData.index, dropIndex, isExtraDeck);
+
+      // If source and destination deck types match, reorder within the same deck
+      if (dragData.isExtra === isExtraDeck && dragData.isSide === isSideDeck) {
+        onReorderCards(dragData.index, dropIndex, isExtraDeck, isSideDeck);
+        return;
+      }
+
+      // Handle transfers between decks
+      if (onMoveCardBetweenDecks) {
+        let sourceType: "main" | "extra" | "side";
+        let targetType: "main" | "extra" | "side";
+
+        // Determine source deck type
+        if (dragData.isSide) {
+          sourceType = "side";
+        } else if (dragData.isExtra) {
+          sourceType = "extra";
+        } else {
+          sourceType = "main";
+        }
+
+        // Determine target deck type
+        if (isSideDeck) {
+          targetType = "side";
+        } else if (isExtraDeck) {
+          targetType = "extra";
+        } else {
+          targetType = "main";
+        }
+
+        // Prevent moving extra deck cards to main deck
+        if (sourceType === "extra" && targetType === "main") {
+          alert("Extra Deck cards cannot be moved to the Main Deck");
+          return;
+        }
+
+        // Call the move function if source and target are different
+        if (sourceType !== targetType) {
+          onMoveCardBetweenDecks(sourceType, targetType, dragData.index);
+        }
       }
     } catch (err) {
       console.error("Drop error:", err);
@@ -132,14 +282,54 @@ const DeckEditor: React.FC<DeckEditorProps> = ({
       ...deck,
       mainDeck: deck.mainDeck.map((card) =>
         card.id === cardId
-          ? { ...card, roleInfo: { role, isAutoDetected } }
+          ? {
+              ...card,
+              // Convert single role to array of roles or add to existing roles array
+              roleInfo: card.roleInfo?.roles
+                ? {
+                    ...card.roleInfo,
+                    roles: card.roleInfo.roles.includes(role)
+                      ? card.roleInfo.roles.filter((r) => r !== role) // Remove role if already exists (toggle)
+                      : [...card.roleInfo.roles, role], // Add role if doesn't exist
+                    isAutoDetected,
+                  }
+                : { roles: [role], isAutoDetected },
+            }
           : card
       ),
       extraDeck: deck.extraDeck.map((card) =>
         card.id === cardId
-          ? { ...card, roleInfo: { role, isAutoDetected } }
+          ? {
+              ...card,
+              roleInfo: card.roleInfo?.roles
+                ? {
+                    ...card.roleInfo,
+                    roles: card.roleInfo.roles.includes(role)
+                      ? card.roleInfo.roles.filter((r) => r !== role)
+                      : [...card.roleInfo.roles, role],
+                    isAutoDetected,
+                  }
+                : { roles: [role], isAutoDetected },
+            }
           : card
       ),
+      sideDeck:
+        deck.sideDeck?.map((card) =>
+          card.id === cardId
+            ? {
+                ...card,
+                roleInfo: card.roleInfo?.roles
+                  ? {
+                      ...card.roleInfo,
+                      roles: card.roleInfo.roles.includes(role)
+                        ? card.roleInfo.roles.filter((r) => r !== role)
+                        : [...card.roleInfo.roles, role],
+                      isAutoDetected,
+                    }
+                  : { roles: [role], isAutoDetected },
+              }
+            : card
+        ) || [],
     };
 
     updateDeck(updatedDeck);
@@ -215,7 +405,12 @@ const DeckEditor: React.FC<DeckEditorProps> = ({
           </button>
         </div>
 
-        <div className="card-grid">
+        <div
+          className="card-grid"
+          ref={mainDeckRef}
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={(e) => handleDrop(e, deck.mainDeck.length || 0, false, false)}
+        >
           {mainDeckCards.map(({ card, originalIndex }, index) => (
             <div
               key={`${card.id}-${originalIndex}`}
@@ -241,12 +436,20 @@ const DeckEditor: React.FC<DeckEditorProps> = ({
                   }/images/cards/card_back.jpg`;
                 }}
               />
-              {card.roleInfo && (
-                <div
-                  className="card-role-indicator"
-                  style={{ backgroundColor: roleColors[card.roleInfo.role] }}
-                >
-                  {card.roleInfo.role}
+              {card.roleInfo?.roles && card.roleInfo.roles.length > 0 && (
+                <div className="card-roles-container">
+                  {card.roleInfo.roles.map((role, i) => (
+                    <div
+                      key={role}
+                      className="card-role-indicator"
+                      style={{
+                        backgroundColor: roleColors[role],
+                        top: `${4 + i * 18}px`, // Stack the indicators
+                      }}
+                    >
+                      {role}
+                    </div>
+                  ))}
                 </div>
               )}
               {showRoleSelector === `${card.id}-${originalIndex}` && (
@@ -261,19 +464,19 @@ const DeckEditor: React.FC<DeckEditorProps> = ({
                     <button
                       key={role}
                       className={`role-option ${
-                        card.roleInfo?.role === role ? "active" : ""
+                        card.roleInfo?.roles?.includes(role) ? "active" : ""
                       }`}
                       style={{
                         borderColor: roleColors[role],
-                        backgroundColor:
-                          card.roleInfo?.role === role
-                            ? roleColors[role]
-                            : "white",
-                        color: card.roleInfo?.role === role ? "white" : "black",
+                        backgroundColor: card.roleInfo?.roles?.includes(role)
+                          ? roleColors[role]
+                          : "white",
+                        color: card.roleInfo?.roles?.includes(role)
+                          ? "white"
+                          : "black",
                       }}
                       onClick={() => {
                         handleUpdateCardRole(card.id, role, false);
-                        setShowRoleSelector(null);
                       }}
                     >
                       {role}
@@ -294,8 +497,13 @@ const DeckEditor: React.FC<DeckEditorProps> = ({
           ))}
         </div>
 
-        <h4>Extra Deck ({deck?.extraDeck.length || 0})</h4>
-        <div className="card-grid">
+        <h4>Extra Deck ({deck?.extraDeck.length || 0}/15)</h4>
+        <div
+          className="card-grid"
+          ref={extraDeckRef}
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={(e) => handleDrop(e, deck.extraDeck.length || 0, true, false)}
+        >
           {extraDeckCards.map(({ card, originalIndex }, index) => (
             <div
               key={`${card.id}-${originalIndex}`}
@@ -321,12 +529,20 @@ const DeckEditor: React.FC<DeckEditorProps> = ({
                   }/images/cards/card_back.jpg`;
                 }}
               />
-              {card.roleInfo && (
-                <div
-                  className="card-role-indicator"
-                  style={{ backgroundColor: roleColors[card.roleInfo.role] }}
-                >
-                  {card.roleInfo.role}
+              {card.roleInfo?.roles && card.roleInfo.roles.length > 0 && (
+                <div className="card-roles-container">
+                  {card.roleInfo.roles.map((role, i) => (
+                    <div
+                      key={role}
+                      className="card-role-indicator"
+                      style={{
+                        backgroundColor: roleColors[role],
+                        top: `${4 + i * 18}px`, // Stack the indicators
+                      }}
+                    >
+                      {role}
+                    </div>
+                  ))}
                 </div>
               )}
               {showRoleSelector === `${card.id}-${originalIndex}` && (
@@ -341,19 +557,19 @@ const DeckEditor: React.FC<DeckEditorProps> = ({
                     <button
                       key={role}
                       className={`role-option ${
-                        card.roleInfo?.role === role ? "active" : ""
+                        card.roleInfo?.roles?.includes(role) ? "active" : ""
                       }`}
                       style={{
                         borderColor: roleColors[role],
-                        backgroundColor:
-                          card.roleInfo?.role === role
-                            ? roleColors[role]
-                            : "white",
-                        color: card.roleInfo?.role === role ? "white" : "black",
+                        backgroundColor: card.roleInfo?.roles?.includes(role)
+                          ? roleColors[role]
+                          : "white",
+                        color: card.roleInfo?.roles?.includes(role)
+                          ? "white"
+                          : "black",
                       }}
                       onClick={() => {
                         handleUpdateCardRole(card.id, role, false);
-                        setShowRoleSelector(null);
                       }}
                     >
                       {role}
@@ -366,6 +582,103 @@ const DeckEditor: React.FC<DeckEditorProps> = ({
                 onClick={(e) => {
                   e.stopPropagation();
                   onCardRemove(card, originalIndex, true);
+                }}
+              >
+                &times;
+              </button>
+            </div>
+          ))}
+        </div>
+
+        <h4>Side Deck ({deck?.sideDeck?.length || 0}/15)</h4>
+        <div
+          className="card-grid"
+          ref={sideDeckRef}
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={(e) =>
+            handleDrop(e, deck?.sideDeck?.length || 0, false, true)
+          }
+        >
+          {deck?.sideDeck?.map((card, index) => (
+            <div
+              key={`side-${card.id}-${index}`}
+              className="deck-card-container"
+              draggable="true"
+              onDragStart={(e) => {
+                handleDragStart(e, index, false, true);
+              }}
+              onDragEnd={handleDragEnd}
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={(e) => {
+                handleDrop(e, index, false, true);
+              }}
+              onContextMenu={(e) => handleRoleIconClick(e, card.id, index)}
+            >
+              <img
+                src={getCardImageUrl(card, "small")}
+                alt={card.name}
+                className="deck-card"
+                onClick={() => onCardSelect(card)}
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.src = `${
+                    import.meta.env.VITE_YGO_CDN_URL
+                  }/images/cards/card_back.jpg`;
+                }}
+              />
+              {card.roleInfo?.roles && card.roleInfo.roles.length > 0 && (
+                <div className="card-roles-container">
+                  {card.roleInfo.roles.map((role, i) => (
+                    <div
+                      key={role}
+                      className="card-role-indicator"
+                      style={{
+                        backgroundColor: roleColors[role],
+                        top: `${4 + i * 18}px`, // Stack the indicators
+                      }}
+                    >
+                      {role}
+                    </div>
+                  ))}
+                </div>
+              )}
+              {showRoleSelector === `${card.id}-${index}` && (
+                <div
+                  className="role-selector-popup"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }}
+                >
+                  {availableRoles.map((role) => (
+                    <button
+                      key={role}
+                      className={`role-option ${
+                        card.roleInfo?.roles?.includes(role) ? "active" : ""
+                      }`}
+                      style={{
+                        borderColor: roleColors[role],
+                        backgroundColor: card.roleInfo?.roles?.includes(role)
+                          ? roleColors[role]
+                          : "white",
+                        color: card.roleInfo?.roles?.includes(role)
+                          ? "white"
+                          : "black",
+                      }}
+                      onClick={() => {
+                        handleUpdateCardRole(card.id, role, false);
+                      }}
+                    >
+                      {role}
+                    </button>
+                  ))}
+                </div>
+              )}
+              <button
+                className="remove-card"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onCardRemove(card, index, false, true);
                 }}
               >
                 &times;

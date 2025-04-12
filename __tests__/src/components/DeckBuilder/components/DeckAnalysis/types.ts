@@ -54,4 +54,5 @@ export type DeckAnalyticsType = {
 
 export interface DeckAnalyticsProps {
   analytics: DeckAnalyticsType | null;
+  deck?: Deck;
 }

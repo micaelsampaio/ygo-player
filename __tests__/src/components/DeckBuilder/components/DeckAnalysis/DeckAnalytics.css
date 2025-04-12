@@ -1031,3 +1031,48 @@
     padding: 20px 20px 28px 40px;
   }
 }
+
+/* Export Buttons */
+.export-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.export-btn,
+.export-pdf-btn {
+  padding: 8px 14px;
+  font-size: 14px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  line-height: 1.2;
+  display: flex;
+  align-items: center;
+}
+
+.export-btn {
+  background-color: #4a5568;
+  color: white;
+}
+
+.export-pdf-btn {
+  background-color: #e53e3e;
+  color: white;
+}
+
+.export-btn:hover {
+  background-color: #2d3748;
+  transform: translateY(-2px);
+}
+
+.export-pdf-btn:hover {
+  background-color: #c53030;
+  transform: translateY(-2px);
+}
+
+.export-pdf-btn:disabled {
+  background-color: #cbd5e0;
+  cursor: not-allowed;
+  transform: none;
+}

@@ -1,0 +1,50 @@
+.virtualized-card-grid {
+  padding: 5px;
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
+
+/* Ensure scrollbars are styled consistently across browsers */
+.virtualized-card-grid::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.virtualized-card-grid::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.virtualized-card-grid::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.virtualized-card-grid::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Ensure the container styling matches the regular card grid */
+.virtualized-card-grid .deck-card-container {
+  position: relative;
+  width: 80px; /* Match the width in the component */
+  height: 116px; /* Match the height in the component */
+  background-color: #f5f5f5;
+  border-radius: var(--card-border-radius, 4px);
+  transition: transform 0.2s;
+  overflow: visible; /* Allow role indicators to overflow */
+}
+
+.virtualized-card-grid .deck-card-container:hover {
+  transform: translateY(-2px);
+  z-index: 10; /* Ensure hovered card is above others */
+}
+
+/* Add a subtle shadow for better visual distinction */
+.virtualized-card-grid .deck-card-container {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.virtualized-card-grid .deck-card-container:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}

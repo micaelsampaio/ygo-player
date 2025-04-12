@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import { DeckAnalyticsType, DeckAnalyticsProps } from "./types";
 import Header from "./components/Header";
 import DeckComposition from "./components/DeckComposition";
@@ -15,6 +15,7 @@ import HandCategories from "./components/HandCategories";
 import AnalyticsModal from "./AnalyticsModal";
 import "./DeckAnalytics.css";
 import { Logger } from "../../../../utils/logger";
+import { exportDeckAnalysisToPdf } from "../../utils/pdfExport";
 import {
   calculateDrawProbability,
   calculateRoleProbability,
@@ -22,7 +23,7 @@ import {
 
 const logger = Logger.createLogger("DeckAnalyticsUI");
 
-const DeckAnalytics: React.FC<DeckAnalyticsProps> = ({ analytics }) => {
+const DeckAnalytics: React.FC<DeckAnalyticsProps> = ({ analytics, deck }) => {
   const [activeTab, setActiveTab] = useState<
     "overview" | "advanced" | "probability" | "suggestions"
   >("overview");
@@ -119,6 +120,25 @@ const DeckAnalytics: React.FC<DeckAnalyticsProps> = ({ analytics }) => {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+  };
+
+  const exportToPdf = () => {
+    if (!processedAnalytics || !deck) return;
+
+    // Pass the render functions to avoid opening modals
+    exportDeckAnalysisToPdf(
+      deck,
+      processedAnalytics,
+      {
+        includeAdvancedAnalysis: true,
+        includeProbabilityAnalysis: true,
+        customFileName: `${deck.name}_deck_analysis.pdf`,
+      },
+      {
+        renderAdvancedAnalysisContent: renderAdvancedAnalysisContent,
+        renderProbabilityContent: renderProbabilityContent,
+      }
+    );
   };
 
   if (!processedAnalytics) {
@@ -267,12 +287,14 @@ const DeckAnalytics: React.FC<DeckAnalyticsProps> = ({ analytics }) => {
 
   const renderOverviewTab = () => (
     <>
-      <DeckComposition analytics={processedAnalytics} />
-      <DeckStyle powerUtility={deckMetrics.powerUtility} />
-      <KeyCards
-        keyCards={processedAnalytics.keyCards}
-        onHoverCard={setHoveredCard}
-      />
+      <div id="basic-analysis-section">
+        <DeckComposition analytics={processedAnalytics} />
+        <DeckStyle powerUtility={deckMetrics.powerUtility} />
+        <KeyCards
+          keyCards={processedAnalytics.keyCards}
+          onHoverCard={setHoveredCard}
+        />
+      </div>
       <div className="analytics-section">
         <div className="section-header-with-actions">
           <h3>Advanced Analysis</h3>
@@ -302,7 +324,7 @@ const DeckAnalytics: React.FC<DeckAnalyticsProps> = ({ analytics }) => {
   );
 
   const renderAdvancedAnalysisContent = () => (
-    <div className="full-analysis">
+    <div className="full-analysis" id="advanced-analysis-section">
       <section className="analysis-section">
         <h3>Deck Archetype Analysis</h3>
         <ArchetypeAnalysis
@@ -350,7 +372,10 @@ const DeckAnalytics: React.FC<DeckAnalyticsProps> = ({ analytics }) => {
     const starterDist = calculateOptimalDistribution(deckSize, 13);
 
     return (
-      <div className="full-probability-analysis">
+      <div
+        className="full-probability-analysis"
+        id="probability-analysis-section"
+      >
         <section className="analysis-section">
           <h3>Probability Formula</h3>
           <ProbabilityFormula />
@@ -413,7 +438,12 @@ const DeckAnalytics: React.FC<DeckAnalyticsProps> = ({ analytics }) => {
 
   return (
     <div className="deck-analytics">
-      <Header onExport={exportAnalytics} />
+      <Header
+        onExport={exportAnalytics}
+        onExportPdf={exportToPdf}
+        deck={deck}
+        analytics={processedAnalytics}
+      />
       <div className="tab-content">{renderOverviewTab()}</div>
 
       <AnalyticsModal

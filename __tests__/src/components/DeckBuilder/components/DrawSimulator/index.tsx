@@ -51,6 +51,12 @@ interface WantedCards {
   copies: number;
 }
 
+interface WantedCardGroup {
+  cards: Card[];
+  copies: number;
+  relation: "AND" | "OR";
+}
+
 const DrawSimulator: React.FC<DrawSimulatorProps> = ({
   deck,
   onCardSelect,
@@ -59,9 +65,13 @@ const DrawSimulator: React.FC<DrawSimulatorProps> = ({
   const [simulations, setSimulations] = useState(1);
   const [results, setResults] = useState<SimulationResult[]>([]);
   const [isSimulating, setIsSimulating] = useState(false);
-  const [wantedCards, setWantedCards] = useState<WantedCards[]>([]);
+  const [wantedCardGroups, setWantedCardGroups] = useState<WantedCardGroup[]>(
+    []
+  );
   const [selectedCard, setSelectedCard] = useState<Card | null>(null);
   const [wantedCopies, setWantedCopies] = useState(1);
+  const [currentGroupId, setCurrentGroupId] = useState<number>(0);
+  const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
   const [simulationMode, setSimulationMode] = useState<"random" | "specific">(
     "random"
   );
@@ -84,27 +94,38 @@ const DrawSimulator: React.FC<DrawSimulatorProps> = ({
   };
 
   const addWantedCard = () => {
-    if (!selectedCard) return;
+    if (!selectedCard || selectedGroupId === null) return;
 
-    const existing = wantedCards.find((w) => w.card.id === selectedCard.id);
-    if (existing) {
-      setWantedCards(
-        wantedCards.map((w) =>
-          w.card.id === selectedCard.id ? { ...w, copies: wantedCopies } : w
-        )
-      );
+    const groupIndex = wantedCardGroups.findIndex(
+      (_, index) => index === selectedGroupId
+    );
+    if (groupIndex !== -1) {
+      const updatedGroups = [...wantedCardGroups];
+      updatedGroups[groupIndex].cards.push(selectedCard);
+      setWantedCardGroups(updatedGroups);
     } else {
-      setWantedCards([
-        ...wantedCards,
-        { card: selectedCard, copies: wantedCopies },
+      setWantedCardGroups([
+        ...wantedCardGroups,
+        { cards: [selectedCard], copies: wantedCopies, relation: "AND" },
       ]);
     }
     setSelectedCard(null);
     setWantedCopies(1);
   };
 
-  const removeWantedCard = (cardId: number) => {
-    setWantedCards(wantedCards.filter((w) => w.card.id !== cardId));
+  const removeWantedCard = (groupId: number, cardId: number) => {
+    const updatedGroups = wantedCardGroups
+      .map((group, index) => {
+        if (index === groupId) {
+          return {
+            ...group,
+            cards: group.cards.filter((card) => card.id !== cardId),
+          };
+        }
+        return group;
+      })
+      .filter((group) => group.cards.length > 0);
+    setWantedCardGroups(updatedGroups);
   };
 
   const simulateDraws = () => {
@@ -121,9 +142,19 @@ const DrawSimulator: React.FC<DrawSimulatorProps> = ({
         timestamp: Date.now(),
       });
 
-      const isSuccessful = wantedCards.every((wanted) => {
-        const drawnCopies = hand.filter((c) => c.id === wanted.card.id).length;
-        return drawnCopies >= wanted.copies;
+      const isSuccessful = wantedCardGroups.every((group) => {
+        if (group.relation === "AND") {
+          return group.cards.every((card) => {
+            const drawnCopies = hand.filter((c) => c.id === card.id).length;
+            return drawnCopies >= group.copies;
+          });
+        } else if (group.relation === "OR") {
+          return group.cards.some((card) => {
+            const drawnCopies = hand.filter((c) => c.id === card.id).length;
+            return drawnCopies >= group.copies;
+          });
+        }
+        return false;
       });
 
       if (isSuccessful) successCount++;
@@ -176,11 +207,23 @@ const DrawSimulator: React.FC<DrawSimulatorProps> = ({
         if (role) roleAppearances[role].atLeastOne++;
       });
 
-      const isSuccessful = wantedCards.every((wanted) => {
-        const drawnCopies = result.hand.filter(
-          (c) => c.id === wanted.card.id
-        ).length;
-        return drawnCopies >= wanted.copies;
+      const isSuccessful = wantedCardGroups.every((group) => {
+        if (group.relation === "AND") {
+          return group.cards.every((card) => {
+            const drawnCopies = result.hand.filter(
+              (c) => c.id === card.id
+            ).length;
+            return drawnCopies >= group.copies;
+          });
+        } else if (group.relation === "OR") {
+          return group.cards.some((card) => {
+            const drawnCopies = result.hand.filter(
+              (c) => c.id === card.id
+            ).length;
+            return drawnCopies >= group.copies;
+          });
+        }
+        return false;
       });
 
       if (isSuccessful) wantedCardsSuccessCount++;
@@ -291,6 +334,74 @@ const DrawSimulator: React.FC<DrawSimulatorProps> = ({
         {simulationMode === "specific" && (
           <div className="wanted-cards-section">
             <h4>Select Cards to Draw</h4>
+
+            <div className="group-controls">
+              <button
+                className="new-group-btn"
+                onClick={() => {
+                  setWantedCardGroups([
+                    ...wantedCardGroups,
+                    { cards: [], copies: 1, relation: "OR" },
+                  ]);
+                  setSelectedGroupId(wantedCardGroups.length);
+                  setCurrentGroupId(currentGroupId + 1);
+                }}
+              >
+                New Card Group
+              </button>
+
+              <div className="group-tabs">
+                {wantedCardGroups.map((group, idx) => (
+                  <button
+                    key={idx}
+                    className={`group-tab ${
+                      selectedGroupId === idx ? "active" : ""
+                    }`}
+                    onClick={() => setSelectedGroupId(idx)}
+                  >
+                    Group {idx + 1} ({group.relation})
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {selectedGroupId !== null && (
+              <div className="active-group-controls">
+                <div className="relation-control">
+                  <label>Relation:</label>
+                  <select
+                    value={wantedCardGroups[selectedGroupId]?.relation || "AND"}
+                    onChange={(e) => {
+                      const updatedGroups = [...wantedCardGroups];
+                      updatedGroups[selectedGroupId].relation = e.target
+                        .value as "AND" | "OR";
+                      setWantedCardGroups(updatedGroups);
+                    }}
+                  >
+                    <option value="AND">AND (need all cards)</option>
+                    <option value="OR">OR (need any card)</option>
+                  </select>
+                </div>
+
+                <div className="copies-control">
+                  <label>Copies needed:</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="3"
+                    value={wantedCardGroups[selectedGroupId]?.copies || 1}
+                    onChange={(e) => {
+                      const updatedGroups = [...wantedCardGroups];
+                      updatedGroups[selectedGroupId].copies = Number(
+                        e.target.value
+                      );
+                      setWantedCardGroups(updatedGroups);
+                    }}
+                  />
+                </div>
+              </div>
+            )}
+
             <div className="wanted-cards-input">
               <select
                 value={selectedCard?.id || ""}
@@ -300,6 +411,7 @@ const DrawSimulator: React.FC<DrawSimulatorProps> = ({
                   );
                   setSelectedCard(card || null);
                 }}
+                disabled={selectedGroupId === null}
               >
                 <option value="">Select a card...</option>
                 {uniqueCards.map((card) => (
@@ -308,48 +420,77 @@ const DrawSimulator: React.FC<DrawSimulatorProps> = ({
                   </option>
                 ))}
               </select>
-              <input
-                type="number"
-                min="1"
-                max={
-                  selectedCard
-                    ? uniqueCards.find((c) => c.id === selectedCard.id)
-                        ?.totalCopies || 3
-                    : 3
-                }
-                value={wantedCopies}
-                onChange={(e) => setWantedCopies(Number(e.target.value))}
-              />
+
               <button
                 className="add-card-btn"
                 onClick={addWantedCard}
-                disabled={!selectedCard}
+                disabled={!selectedCard || selectedGroupId === null}
               >
-                Add Card
+                Add to Group{" "}
+                {selectedGroupId !== null ? selectedGroupId + 1 : ""}
               </button>
             </div>
 
             <div className="wanted-cards-list">
-              {wantedCards.map(({ card, copies }) => (
-                <div key={card.id} className="wanted-card">
-                  <img
-                    src={getCardImageUrl(card, "small")}
-                    alt={card.name}
-                    className="wanted-card-image"
-                  />
-                  <div className="wanted-card-info">
-                    <span className="wanted-card-name">{card.name}</span>
-                    <span className="wanted-card-copies">Want {copies}x</span>
+              {wantedCardGroups.map((group, groupId) => (
+                <div
+                  key={groupId}
+                  className={`wanted-card-group ${
+                    selectedGroupId === groupId ? "active" : ""
+                  }`}
+                >
+                  <div className="group-header">
+                    <h5>
+                      Group {groupId + 1} ({group.relation})
+                    </h5>
+                    <span className="copies-label">
+                      Need {group.copies}{" "}
+                      {group.relation === "AND" ? "of each" : "of any"}
+                    </span>
+                    <button
+                      className="edit-group-btn"
+                      onClick={() => setSelectedGroupId(groupId)}
+                    >
+                      Edit
+                    </button>
                   </div>
-                  <button
-                    className="remove-card-btn"
-                    onClick={() => removeWantedCard(card.id)}
-                    title="Remove card"
-                  >
-                    ×
-                  </button>
+
+                  <div className="cards-container">
+                    {group.cards.map((card) => (
+                      <div key={card.id} className="wanted-card">
+                        <img
+                          src={getCardImageUrl(card, "small")}
+                          alt={card.name}
+                          className="wanted-card-image"
+                          onClick={() => onCardSelect(card)}
+                        />
+                        <div className="wanted-card-info">
+                          <span className="wanted-card-name">{card.name}</span>
+                        </div>
+                        <button
+                          className="remove-card-btn"
+                          onClick={() => removeWantedCard(groupId, card.id)}
+                          title="Remove card"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+
+                    {group.cards.length === 0 && (
+                      <div className="empty-group-message">
+                        No cards added to this group yet
+                      </div>
+                    )}
+                  </div>
                 </div>
               ))}
+
+              {wantedCardGroups.length === 0 && (
+                <div className="no-groups-message">
+                  Click "New Card Group" to start building your simulation
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -358,7 +499,7 @@ const DrawSimulator: React.FC<DrawSimulatorProps> = ({
           onClick={simulateDraws}
           disabled={
             isSimulating ||
-            (simulationMode === "specific" && wantedCards.length === 0)
+            (simulationMode === "specific" && wantedCardGroups.length === 0)
           }
           className="simulate-button"
         >
@@ -389,7 +530,7 @@ const DrawSimulator: React.FC<DrawSimulatorProps> = ({
 
             <div className="statistics-section">
               <h3>Draw Statistics</h3>
-              {wantedCards.length > 0 && (
+              {wantedCardGroups.length > 0 && (
                 <div className="wanted-cards-stats">
                   <h4>Wanted Cards</h4>
                   <p>

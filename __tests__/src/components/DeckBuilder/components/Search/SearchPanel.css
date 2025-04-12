@@ -580,3 +580,47 @@
 .favorites-content {
   min-height: 200px;
 }
+
+/* Target Deck Selector */
+.target-deck-selector {
+  margin: 10px 0 15px;
+  padding: 12px;
+  background: #f0f8ff;
+  border-radius: 6px;
+  border: 1px solid #d0e6ff;
+}
+
+.target-deck-selector label {
+  display: block;
+  font-weight: 500;
+  margin-bottom: 8px;
+  color: #2c3e50;
+  font-size: 0.9rem;
+}
+
+.target-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.target-buttons button {
+  flex: 1;
+  padding: 8px 12px;
+  background: #f4f7f9;
+  border: 1px solid #d6e1e8;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.target-buttons button:hover {
+  background: #e6edf2;
+}
+
+.target-buttons button.active {
+  background: #3498db;
+  color: white;
+  border-color: #3498db;
+  font-weight: 500;
+}

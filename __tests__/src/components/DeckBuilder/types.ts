@@ -71,10 +71,11 @@ export type CardRole =
   | "Engine" // Part of main deck engine
   | "NonEngine" // Generic good cards
   | "Garnets" // Cards you don't want to draw
+  | "NormalSummon" // Cards optimally used as normal summon
   | "Flexible"; // Multiple roles
 
 export interface CardRoleInfo {
-  role: CardRole;
+  roles: CardRole[]; // Changed from single role to array of roles
   isAutoDetected: boolean; // Whether role was auto-detected or user-assigned
   notes?: string; // Optional user notes about why this role
 }
@@ -129,6 +130,7 @@ export interface Deck {
   name: string;
   mainDeck: Card[];
   extraDeck: Card[];
+  sideDeck: Card[]; // Adding side deck support
 }
 
 // Advanced search filters

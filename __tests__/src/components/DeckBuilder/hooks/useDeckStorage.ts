@@ -26,6 +26,10 @@ export function useDeckStorage() {
                 Array.isArray(deck.mainDeck) &&
                 Array.isArray(deck.extraDeck)
               ) {
+                // Add sideDeck if it doesn't exist (for backward compatibility)
+                if (!Array.isArray(deck.sideDeck)) {
+                  deck.sideDeck = [];
+                }
                 availableDecks.push(deck);
               }
             }
@@ -151,6 +155,7 @@ export function useDeckStorage() {
       name, // The new deck name
       mainDeck: [], // Initialize empty main deck
       extraDeck: [], // Initialize empty extra deck
+      sideDeck: [], // Initialize empty side deck
     };
 
     // Save to localStorage
@@ -286,6 +291,7 @@ export function useDeckStorage() {
       name: finalName,
       mainDeck: [...deckToCopy.mainDeck],
       extraDeck: [...deckToCopy.extraDeck],
+      sideDeck: [...(deckToCopy.sideDeck || [])], // Include side deck with fallback
     };
 
     // Save to localStorage and update state
@@ -301,6 +307,116 @@ export function useDeckStorage() {
     }
   };
 
+  /**
+   * Adds a card to the side deck
+   */
+  const addCardToSideDeck = (card: Card) => {
+    if (!selectedDeck) return;
+
+    const updatedDeck = { ...selectedDeck };
+
+    // Side deck can only have up to 15 cards
+    if (updatedDeck.sideDeck.length < 15) {
+      updatedDeck.sideDeck = [...updatedDeck.sideDeck, card];
+      setSelectedDeck(updatedDeck);
+      updateDeckStorage(updatedDeck);
+
+      // Set last added card for notification
+      setLastAddedCard(card);
+      setTimeout(() => setLastAddedCard(null), 1500);
+    } else {
+      alert("Side deck can't have more than 15 cards");
+    }
+  };
+
+  /**
+   * Removes a card from the side deck
+   */
+  const removeCardFromSideDeck = (card: Card, index: number) => {
+    if (!selectedDeck) return;
+
+    const updatedDeck = { ...selectedDeck };
+    updatedDeck.sideDeck = updatedDeck.sideDeck.filter(
+      (_, idx) => idx !== index
+    );
+
+    setSelectedDeck(updatedDeck);
+    updateDeckStorage(updatedDeck);
+  };
+
+  /**
+   * Moves a card between main, extra, and side decks
+   */
+  const moveCardBetweenDecks = (
+    sourceType: "main" | "extra" | "side",
+    targetType: "main" | "extra" | "side",
+    cardIndex: number
+  ) => {
+    if (!selectedDeck) return;
+
+    const updatedDeck = { ...selectedDeck };
+    let card: Card | undefined;
+
+    // Remove card from source deck
+    if (sourceType === "main") {
+      card = updatedDeck.mainDeck[cardIndex];
+      updatedDeck.mainDeck = updatedDeck.mainDeck.filter(
+        (_, idx) => idx !== cardIndex
+      );
+    } else if (sourceType === "extra") {
+      card = updatedDeck.extraDeck[cardIndex];
+      updatedDeck.extraDeck = updatedDeck.extraDeck.filter(
+        (_, idx) => idx !== cardIndex
+      );
+    } else if (sourceType === "side") {
+      card = updatedDeck.sideDeck[cardIndex];
+      updatedDeck.sideDeck = updatedDeck.sideDeck.filter(
+        (_, idx) => idx !== cardIndex
+      );
+    }
+
+    if (!card) return;
+
+    // Add card to target deck
+    if (targetType === "main") {
+      if (updatedDeck.mainDeck.length < 60) {
+        updatedDeck.mainDeck.push(card);
+      } else {
+        alert("Main deck can't have more than 60 cards");
+        return;
+      }
+    } else if (targetType === "extra") {
+      // Validate if it's an extra deck card
+      const isExtraDeck = ["XYZ", "Synchro", "Fusion", "Link"].some((type) =>
+        card?.type.includes(type)
+      );
+
+      if (!isExtraDeck) {
+        alert(
+          "Only XYZ, Synchro, Fusion or Link monsters can be added to Extra Deck"
+        );
+        return;
+      }
+
+      if (updatedDeck.extraDeck.length < 15) {
+        updatedDeck.extraDeck.push(card);
+      } else {
+        alert("Extra deck can't have more than 15 cards");
+        return;
+      }
+    } else if (targetType === "side") {
+      if (updatedDeck.sideDeck.length < 15) {
+        updatedDeck.sideDeck.push(card);
+      } else {
+        alert("Side deck can't have more than 15 cards");
+        return;
+      }
+    }
+
+    setSelectedDeck(updatedDeck);
+    updateDeckStorage(updatedDeck);
+  };
+
   return {
     decks,
     selectedDeck,
@@ -313,5 +429,8 @@ export function useDeckStorage() {
     deleteDeck,
     importDeck,
     copyDeck,
+    addCardToSideDeck,
+    removeCardFromSideDeck,
+    moveCardBetweenDecks,
   };
 }

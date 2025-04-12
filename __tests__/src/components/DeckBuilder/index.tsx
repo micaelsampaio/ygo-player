@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Card, Deck, DeckBuilderProps } from "./types";
 import DeckList from "./components/DeckList";
 import DeckEditor from "./components/DeckEditor/DeckEditor.tsx";
@@ -18,12 +18,12 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
   const [isSearchVisible, setIsSearchVisible] = useState(false);
   const [previewCard, setPreviewCard] = useState<Card | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [deckAnalytics, setDeckAnalytics] = useState(null);
+  const [deckAnalytics, setDeckAnalytics] = useState<any>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [activeTab, setActiveTab] = useState<
     "editor" | "simulator" | "analytics"
   >("editor");
-  const timeoutRef = useRef<NodeJS.Timeout>();
+  const [targetDeck, setTargetDeck] = useState<"main" | "side">("main");
 
   // Custom hooks
   const {
@@ -35,36 +35,30 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
     updateDeck,
     deleteDeck,
     addCardToDeck,
+    addCardToSideDeck,
     removeCardFromDeck,
+    removeCardFromSideDeck,
+    moveCardBetweenDecks,
     copyDeck,
   } = useDeckStorage();
 
   const { analyzeDeck } = useDeckAnalytics();
 
-  useEffect(() => {
+  // Calculate analytics only when we select the analytics tab
+  // instead of on every deck change
+  const calculateDeckAnalytics = useCallback(() => {
     if (selectedDeck && !isAnalyzing) {
       setIsAnalyzing(true);
+      setDeckAnalytics(null); // Clear previous analytics while calculating
 
-      // Clear any pending timeout
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-
-      // Set new timeout and store reference
-      timeoutRef.current = setTimeout(() => {
+      // Use setTimeout to ensure UI remains responsive during calculation
+      setTimeout(() => {
         const analytics = analyzeDeck(selectedDeck);
         setDeckAnalytics(analytics);
         setIsAnalyzing(false);
-      }, 300);
+      }, 0);
     }
-
-    // Cleanup function to prevent memory leaks
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, [selectedDeck, analyzeDeck]);
+  }, [selectedDeck, isAnalyzing, analyzeDeck]);
 
   // Load initial decks
   useEffect(() => {
@@ -152,7 +146,13 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
         alert("Cannot add more than 3 copies of the same card");
         return;
       }
-      addCardToDeck(card);
+
+      // Add to main/extra or side deck based on targetDeck setting
+      if (targetDeck === "main") {
+        addCardToDeck(card);
+      } else {
+        addCardToSideDeck(card);
+      }
     }
   };
 
@@ -161,28 +161,42 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
 
     // If this was the selected deck, clear the selection
     if (selectedDeck && selectedDeck.name === deckToDelete.name) {
-      selectDeck(null);
+      setSelectedDeck(null);
     }
   };
 
   const handleReorderCards = (
     sourceIndex: number,
     destinationIndex: number,
-    isExtraDeck: boolean
+    isExtraDeck: boolean,
+    isSideDeck: boolean = false
   ) => {
     if (!selectedDeck) return;
 
-    const deckSection = isExtraDeck
-      ? selectedDeck.extraDeck
-      : selectedDeck.mainDeck;
+    let deckSection;
+    if (isExtraDeck) {
+      deckSection = selectedDeck.extraDeck;
+    } else if (isSideDeck) {
+      deckSection = selectedDeck.sideDeck;
+    } else {
+      deckSection = selectedDeck.mainDeck;
+    }
+
     const reorderedCards = Array.from(deckSection);
     const [removed] = reorderedCards.splice(sourceIndex, 1);
     reorderedCards.splice(destinationIndex, 0, removed);
 
     const updatedDeck = {
       ...selectedDeck,
-      [isExtraDeck ? "extraDeck" : "mainDeck"]: reorderedCards,
     };
+
+    if (isExtraDeck) {
+      updatedDeck.extraDeck = reorderedCards;
+    } else if (isSideDeck) {
+      updatedDeck.sideDeck = reorderedCards;
+    } else {
+      updatedDeck.mainDeck = reorderedCards;
+    }
 
     updateDeck(updatedDeck);
   };
@@ -230,6 +244,13 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
             onRenameDeck={handleRenameDeck}
             onClearDeck={handleClearDeck}
             onImportDeck={handleImportDeck}
+            onCreateCollection={(deck) => {
+              // Implement createCollection functionality
+              if (deck) {
+                console.log("Creating collection from deck:", deck.name);
+                // This would typically interact with your collection system
+              }
+            }}
           />
         </div>
 
@@ -243,7 +264,10 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
             </button>
             <button
               className={activeTab === "analytics" ? "active-tab" : ""}
-              onClick={() => setActiveTab("analytics")}
+              onClick={() => {
+                setActiveTab("analytics");
+                calculateDeckAnalytics();
+              }}
             >
               Deck Analytics
             </button>
@@ -259,12 +283,17 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
             <DeckEditor
               deck={selectedDeck}
               onCardSelect={toggleCardPreview}
-              onCardRemove={removeCardFromDeck}
+              onCardRemove={(card, index, isExtraDeck, isSideDeck) =>
+                isSideDeck
+                  ? removeCardFromSideDeck(card, index)
+                  : removeCardFromDeck(card, index, isExtraDeck)
+              }
               onRenameDeck={(newName) =>
                 selectedDeck && handleRenameDeck(selectedDeck, newName)
               }
               onClearDeck={() => selectedDeck && handleClearDeck(selectedDeck)}
               onReorderCards={handleReorderCards}
+              onMoveCardBetweenDecks={moveCardBetweenDecks}
               updateDeck={updateDeck}
             />
           )}
@@ -275,7 +304,7 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
             />
           )}
           {activeTab === "analytics" && (
-            <DeckAnalytics analytics={deckAnalytics} />
+            <DeckAnalytics analytics={deckAnalytics} deck={selectedDeck} />
           )}
         </div>
 
@@ -284,6 +313,8 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
             onCardSelect={toggleCardPreview}
             onCardAdd={handleAddCard}
             onToggleFavorite={handleToggleFavorite}
+            targetDeck={targetDeck}
+            onTargetDeckChange={setTargetDeck}
           />
           {selectedDeck && (
             <CardSuggestions

@@ -10,12 +10,16 @@ interface SearchPanelProps {
   onCardSelect: (card: Card) => void;
   onCardAdd: (card: Card) => void;
   onToggleFavorite: (card: Card) => void;
+  targetDeck?: "main" | "side";
+  onTargetDeckChange?: (target: "main" | "side") => void;
 }
 
 const SearchPanel: React.FC<SearchPanelProps> = ({
   onCardSelect,
   onCardAdd,
   onToggleFavorite,
+  targetDeck = "main",
+  onTargetDeckChange,
 }) => {
   const [activeTab, setActiveTab] = useState<"search" | "favorites">("search");
   const [favoriteCards, setFavoriteCards] = useState<Card[]>([]);
@@ -134,6 +138,28 @@ const SearchPanel: React.FC<SearchPanelProps> = ({
           Favorites ({favoriteCards.length})
         </button>
       </div>
+
+      {onTargetDeckChange && (
+        <div className="target-deck-selector">
+          <label>Add cards to:</label>
+          <div className="target-buttons">
+            <button
+              type="button"
+              className={targetDeck === "main" ? "active" : ""}
+              onClick={() => onTargetDeckChange("main")}
+            >
+              Main/Extra Deck
+            </button>
+            <button
+              type="button"
+              className={targetDeck === "side" ? "active" : ""}
+              onClick={() => onTargetDeckChange("side")}
+            >
+              Side Deck
+            </button>
+          </div>
+        </div>
+      )}
 
       {activeTab === "search" ? (
         <>
