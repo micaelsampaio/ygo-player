@@ -141,13 +141,15 @@ export class PeerToPeer extends EventEmitter {
         onDisconnect: (connection) => {
           logger.debug("Disconnected from:", connection.remotePeer.toString());
         },
+        // Add connection maintenance and reconnection
+        minConnections: 3,
+        maxConnections: 50,
+        minDialsPerPeer: 2,
+        autoDialInterval: 30000, // Try to maintain connections every 30 seconds
+        autoDial: true, // Auto reconnect to important peers
       },
       addresses: {
         listen: ["/p2p-circuit", "/p2p-circuit/ws", "/webrtc"],
-        // announce: [
-        //   "/dns4/master-duel-node.baseira.casa/tcp/443/wss",
-        //   "/dns4/master-duel-node.baseira.casa/udp/443/webtransport",
-        // ],
         announceFilter: (multiaddrs) => {
           // Filter out local addresses when announcing
           return multiaddrs.filter((ma) => {
@@ -159,38 +161,44 @@ export class PeerToPeer extends EventEmitter {
       transports: [
         webSockets({ filter: filters.all }),
         webTransport(),
-
         webRTC({
           rtcConfiguration: {
             iceServers: [
+              // Prioritize TURN servers using TCP - they're more reliable through firewalls
+              {
+                urls: ["turn:master-duel-turn.baseira.casa:3478?transport=tcp"],
+                username: "kaiba",
+                credential: "downfall",
+              },
+              // Add UDP TURN as a backup
+              {
+                urls: ["turn:master-duel-turn.baseira.casa:3478?transport=udp"],
+                username: "kaiba",
+                credential: "downfall",
+              },
+              // Use STUN servers as last resort
               {
                 urls: [
                   "stun:stun.l.google.com:19302",
-                  "stun:stun.l.google.com:5349",
                   "stun:stun1.l.google.com:3478",
                 ],
               },
-              {
-                urls: "turn:master-duel-turn.baseira.casa:3478?transport=tcp",
-                username: "kaiba",
-                credential: "downfall",
-                //                credentialType: "password",
-              },
             ],
-            //iceCandidatePoolSize: 10,
-            iceTransportPolicy: "all",
+            iceTransportPolicy: "relay", // Force use of TURN relay server
+            iceCandidatePoolSize: 5,
             rtcpMuxPolicy: "require",
+            bundlePolicy: "max-bundle",
+            iceServers: {
+              gatherPolicy: "relay", // Only gather relay candidates
+            },
           },
+          // Enable connection keepalive for WebRTC
+          keepAlive: true,
+          keepAliveInterval: 10000, // Send keepalive every 10 seconds
+          maxPingInterval: 20000, // Consider connection dead after 20 seconds
           debugWebRTC: true,
         }),
-        webRTCDirect({
-          // Optional config for direct connections
-          maxInboundStreams: 1000,
-          maxOutboundStreams: 1000,
-          listenerOptions: {
-            port: 9090, // Specific port for WebRTC-Direct
-          },
-        }),
+        webRTCDirect(),
         circuitRelayTransport({
           discoverRelays: 2,
         }),
@@ -203,7 +211,7 @@ export class PeerToPeer extends EventEmitter {
         }),
         bootstrap({
           list: [this.bootstrapNode],
-          timeout: 2000, // Adjust timeout as needed
+          timeout: 3000,
           tagName: "bootstrap",
           tagValue: 50,
           tagTTL: 120000,
@@ -217,22 +225,21 @@ export class PeerToPeer extends EventEmitter {
       services: {
         identify: identify(),
         identifyPush: identifyPush(),
-        ping: ping(),
+        ping: ping({
+          protocolPrefix: "ygo", // Use a unique prefix
+          timeout: 5000, // Shorter timeout for quicker failure detection
+          maxInboundStreams: 10, // Allow multiple ping streams
+          maxOutboundStreams: 10,
+          runOnTransientConnection: true, // Run even on temporary connections
+        }),
         dcutr: dcutr(),
-        //autoNat: autoNAT(),
-        //delegatedRouting: () => delegatedClient,
         pubsub: gossipsub({
           allowPublishToZeroPeers: true,
           emitSelf: false,
           gossipIncoming: true,
           fallbackToFloodsub: true,
           ignoreDuplicatePublishError: true,
-          heartbeatInterval: 1000,
-          // Make mesh more permissive
-          //         D: 4, // Desired outbound degree
-          //         Dlo: 2, // Lower bound for outbound degree
-          //         Dhi: 8, // Upper bound for outbound degree
-          //         Dscore: 1, // Minimum score for peer to be included in mesh
+          heartbeatInterval: 2000,
           scoreParams: {
             IPColocationFactorThreshold: 1,
             behaviorPenaltyThreshold: 0,
@@ -248,6 +255,9 @@ export class PeerToPeer extends EventEmitter {
       },
     });
 
+    // Configure connection management for stability
+    this.configureConnectionHandling();
+
     await this.setupProtocolHandler();
     await this.libp2p.start();
     this.setupDebugLogs();
@@ -260,6 +270,52 @@ export class PeerToPeer extends EventEmitter {
     );
 
     this.setupEventListeners();
+  }
+
+  // Add a new method to configure connection handling for stability
+  private configureConnectionHandling() {
+    if (!this.libp2p) return;
+
+    // Set up keep-alive and reconnection logic
+    const keepAliveInterval = setInterval(() => {
+      if (!this.libp2p?.isStarted()) {
+        clearInterval(keepAliveInterval);
+        return;
+      }
+
+      // Send a ping to important connections to keep them alive
+      this.libp2p.getConnections().forEach(async (conn) => {
+        try {
+          const peerId = conn.remotePeer.toString();
+          const latency = await this.libp2p?.services.ping.ping(peerId);
+          logger.debug(`Ping to ${peerId}: ${latency}ms`);
+        } catch (err) {
+          // If ping fails, try to reconnect
+          logger.warn(`Ping failed, connection might be stale:`, err.message);
+        }
+      });
+    }, 15000); // Every 15 seconds
+
+    // Auto-reconnect to bootstrap node if disconnect happens
+    this.libp2p.addEventListener("peer:disconnect", async (evt) => {
+      const disconnectedPeer = evt.detail.toString();
+
+      // Only try to reconnect to the bootstrap node
+      if (disconnectedPeer === this.bootstrapNodePeerId.toString()) {
+        logger.warn(
+          `Disconnected from bootstrap node, attempting to reconnect...`
+        );
+
+        try {
+          // Wait a bit before reconnecting
+          await new Promise((resolve) => setTimeout(resolve, 2000));
+          await this.libp2p?.dial(multiaddr(this.bootstrapNode));
+          logger.debug(`Successfully reconnected to bootstrap node`);
+        } catch (err) {
+          logger.error(`Failed to reconnect to bootstrap node:`, err.message);
+        }
+      }
+    });
   }
 
   private async setupProtocolHandler() {

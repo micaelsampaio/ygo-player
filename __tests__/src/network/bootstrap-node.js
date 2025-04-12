@@ -38,38 +38,32 @@ if (enableWSS) {
   listenAddresses.push("/ip4/0.0.0.0/tcp/3001/wss");
 }
 
-// Improved WebRTC configuration with better ICE candidate gathering
+// Modified WebRTC configuration to prioritize TCP connections
 const webRTCTransport = webRTC({
   rtcConfiguration: {
     iceServers: [
-      // Google STUN servers for basic NAT traversal
+      // For mobile networks and restrictive firewalls, TCP is more likely to work
       {
         urls: [
-          "stun:stun.l.google.com:19302",
-          "stun:stun1.l.google.com:19302",
-          "stun:stun2.l.google.com:19302",
-          "stun:stun3.l.google.com:19302",
-          "stun:stun4.l.google.com:19302",
-        ],
-      },
-      // TURN server for handling symmetric NAT
-      {
-        urls: [
+          // TCP TURN servers first - most reliable through firewalls
           "turn:master-duel-turn.baseira.casa:3478?transport=tcp",
+          // UDP TURN as backup
           "turn:master-duel-turn.baseira.casa:3478?transport=udp",
         ],
         username: "kaiba",
         credential: "downfall",
       },
+      // STUN servers as fallback (these generally use UDP)
+      {
+        urls: ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302"],
+      },
     ],
-    iceCandidatePoolSize: 10,
-    iceTransportPolicy: "all", // Try all candidates
+    iceCandidatePoolSize: 5,
+    iceTransportPolicy: "relay", // Force use of TURN relay, avoid direct connections
     rtcpMuxPolicy: "require",
-    bundlePolicy: "max-bundle", // Maximize bundling for better connection establishment
-    // Enable gathering of all candidates - more reliable but slightly slower
-    iceServers: {
-      gatherPolicy: "all", // Collect all candidates, not just the first viable one
-    },
+    bundlePolicy: "max-bundle",
+    // Disable trickle ICE - send all candidates at once (more reliable but slower connect)
+    iceTransports: "relay", // Only use relay candidates
   },
   // Enable debug logs for easier troubleshooting
   debugWebRTC: true,
