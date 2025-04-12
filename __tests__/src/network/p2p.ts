@@ -344,7 +344,8 @@ export class PeerToPeer extends EventEmitter {
     if (!this.libp2p) throw new Error("Libp2p instance not initialized");
 
     const castedMultiAddress = multiaddr(ma);
-    const signal = AbortSignal.timeout(10000);
+    // Increase timeout for more challenging network conditions
+    const signal = AbortSignal.timeout(15000); // Increased from 10000ms
 
     try {
       await this.libp2p.dial(castedMultiAddress, { signal });
@@ -386,28 +387,56 @@ export class PeerToPeer extends EventEmitter {
       return false;
     }
 
-    // Prioritize WebSocket addresses
-    const wsAddresses = filteredAddresses.filter((addr) =>
-      addr.includes("/webrtc-direct/")
+    // Prioritize connection types (WebRTC first, then WebSockets, then others)
+    const webRTCAddresses = filteredAddresses.filter(
+      (addr) => addr.includes("/webrtc/") || addr.includes("/webrtc-direct/")
+    );
+    const wsAddresses = filteredAddresses.filter(
+      (addr) => addr.includes("/ws/") || addr.includes("/wss/")
     );
     const otherAddresses = filteredAddresses.filter(
-      (addr) => !addr.includes("/webrtc-direct/")
+      (addr) => !addr.includes("/webrtc") && !addr.includes("/ws")
     );
 
-    // Try WebSocket addresses first, then others
-    const sortedAddresses = [...wsAddresses, ...otherAddresses];
+    // Try in priority order: WebRTC, WebSockets, then others
+    const sortedAddresses = [
+      ...webRTCAddresses,
+      ...wsAddresses,
+      ...otherAddresses,
+    ];
+    logger.debug("Trying addresses in priority order:", sortedAddresses);
 
-    // Try each filtered address
-    for (const addr of sortedAddresses) {
-      try {
-        logger.debug("Trying address:", addr);
-        const connected = await this.tryAddress(addr);
-        if (connected) {
-          logger.debug(`Successfully connected to ${addr}`);
-          return true; // Return early on success
+    // Try each filtered address with exponential backoff
+    for (let i = 0; i < sortedAddresses.length; i++) {
+      const addr = sortedAddresses[i];
+      const maxRetries = Math.min(3, sortedAddresses.length === 1 ? 3 : 1); // More retries if only one address
+
+      for (let attempt = 0; attempt < maxRetries; attempt++) {
+        try {
+          logger.debug(
+            `Trying address: ${addr} (attempt ${attempt + 1}/${maxRetries})`
+          );
+          const connected = await this.tryAddress(addr);
+          if (connected) {
+            logger.debug(`Successfully connected to ${addr}`);
+            return true; // Return early on success
+          }
+        } catch (err) {
+          logger.debug(
+            `Failed to connect to ${addr} (attempt ${
+              attempt + 1
+            }/${maxRetries}):`,
+            err.message
+          );
+          if (attempt < maxRetries - 1) {
+            // Exponential backoff with jitter
+            const delay =
+              Math.min(1000 * Math.pow(2, attempt), 5000) +
+              Math.random() * 1000;
+            logger.debug(`Retrying in ${Math.round(delay)}ms...`);
+            await new Promise((resolve) => setTimeout(resolve, delay));
+          }
         }
-      } catch (err) {
-        logger.debug(`Failed to connect to ${addr}:`, err.message);
       }
     }
 

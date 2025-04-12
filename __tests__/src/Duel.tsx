@@ -133,45 +133,151 @@ export default function Duel({
       return `/cmd/${commandType} ${options}`;
     };
 
+    // Track command execution to avoid loops
+    let isProcessingRemoteCommand = false;
+
     const handleCommandExecuted = (data: any) => {
+      // Don't send commands if we're already processing a received command
+      if (isProcessingRemoteCommand) {
+        logger.debug("Skipping command send - processing remote command");
+        return;
+      }
+
       logger.debug("SEND COMMAND ", JSON.stringify(data.command.toJSON()));
+
       if (SEND_COMMAND_ALLOWED) {
-        kaibaNet.execYGOCommand(roomId, data.command.toCommandData());
-        const messageTemplate = formatCommandToCliStyle(data.command.toJSON());
-        const { commandMessage } = commandMessageToCommand(messageTemplate) as any;
-        // Show command message in chat
-        handleChatMessage(commandMessage);
+        // Try to send command with retries
+        const sendCommandWithRetry = async (maxRetries = 3, delay = 1000) => {
+          for (let attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+              await kaibaNet.execYGOCommand(
+                roomId,
+                data.command.toCommandData()
+              );
+              logger.debug(`Command sent successfully (attempt ${attempt})`);
+
+              const messageTemplate = formatCommandToCliStyle(
+                data.command.toJSON()
+              );
+              const { commandMessage } = commandMessageToCommand(
+                messageTemplate
+              ) as any;
+
+              // Show command message in chat
+              handleChatMessage(commandMessage);
+              return true;
+            } catch (error) {
+              logger.warn(
+                `Failed to send command (attempt ${attempt}):`,
+                error
+              );
+              if (attempt < maxRetries) {
+                logger.debug(`Retrying in ${delay}ms...`);
+                await new Promise((resolve) => setTimeout(resolve, delay));
+              }
+            }
+          }
+          logger.error("All command send attempts failed");
+          return false;
+        };
+
+        sendCommandWithRetry();
       }
     };
 
-    ygo.on("start", () => {
-      setTimeout(() => {
-        ygo.on("command-executed", handleCommandExecuted);
-      }, 1000);
-    });
+    // Add a state check before registering handlers
+    let isComponentMounted = true;
 
-    logger.debug("Setting up game state refresh listener. RoomId:", roomId);
+    const startListener = () => {
+      logger.debug("Registering command execution handler");
 
+      // Don't register if not mounted anymore
+      if (!isComponentMounted) return;
+
+      // Safety check: remove any existing listeners first
+      ygo.off("command-executed", handleCommandExecuted);
+      ygo.on("command-executed", handleCommandExecuted);
+    };
+
+    // Wait a bit for YGO to initialize before adding listeners
+    const startTimeout = setTimeout(startListener, 1000);
+
+    // Game state refresh handler with error handling
     const handleGameStateRefresh = (gameState: any) => {
-      logger.debug("Received game state refresh:", gameState);
-      setDuelData((prevData: any) => {
-        logger.debug("Updating duel data", { prevData, gameState });
-        return {
-          ...prevData,
-          ...gameState,
-        };
-      });
-      setIsLoading(false);
+      try {
+        logger.debug("Received game state refresh:", gameState);
+        setDuelData((prevData: any) => {
+          if (!prevData) return gameState;
+
+          logger.debug("Updating duel data", { prevData, gameState });
+          return {
+            ...prevData,
+            ...gameState,
+          };
+        });
+        setIsLoading(false);
+      } catch (error) {
+        logger.error("Error handling game state refresh:", error);
+      }
+    };
+
+    // Command execution handler with better error protection
+    const handleCommandExec = (command: any) => {
+      try {
+        if (!ygo?.duel?.ygo) {
+          logger.warn("Cannot execute command: YGO core not initialized");
+          return;
+        }
+
+        const ygoCore = ygo.duel.ygo;
+        const commands = ygoCore.commands || [];
+
+        // Skip duplicate commands
+        if (commands.length > 0) {
+          const currentCommand = commands.find(
+            (c: any) => c.commandId === command.commandId
+          );
+          if (currentCommand) {
+            logger.debug("Skipping duplicate command:", command.commandId);
+            return;
+          }
+        }
+
+        logger.debug("WILL EXEC ", command);
+
+        // Set flag to prevent command loop
+        isProcessingRemoteCommand = true;
+        SEND_COMMAND_ALLOWED = false;
+
+        try {
+          ygo.duel.execCommand(JSON.stringify(command));
+        } finally {
+          // Ensure flags are reset even if command execution fails
+          setTimeout(() => {
+            isProcessingRemoteCommand = false;
+            SEND_COMMAND_ALLOWED = true;
+          }, 100); // Small delay to prevent race conditions
+        }
+      } catch (error) {
+        logger.error("Error executing command:", error);
+        // Reset flags in case of error
+        isProcessingRemoteCommand = false;
+        SEND_COMMAND_ALLOWED = true;
+      }
     };
 
     // Add this log to verify the event is being subscribed
-    logger.debug("Subscribing to duel:refresh:state: event");
+    logger.debug("Subscribing to duel events");
     kaibaNet.on("duel:refresh:state:", handleGameStateRefresh);
-
     kaibaNet.on("duel:command:exec", handleCommandExec);
 
     return () => {
       logger.debug("Cleaning up game state refresh listener");
+      isComponentMounted = false;
+      clearTimeout(startTimeout);
+
+      // Safety: always remove listeners when unmounting
+      ygo.off("command-executed", handleCommandExecuted);
       kaibaNet.off("duel:refresh:state:", handleGameStateRefresh);
       kaibaNet.off("duel:command:exec", handleCommandExec);
     };
@@ -290,7 +396,9 @@ export default function Duel({
     }
 
     if (message.startsWith("/cmd/")) {
-      const { command, commandMessage } = commandMessageToCommand(message) as any;
+      const { command, commandMessage } = commandMessageToCommand(
+        message
+      ) as any;
       // Show command message in chat
       handleChatMessage(commandMessage);
       // Execute the command

@@ -263,64 +263,151 @@ export class KaibaNet extends EventEmitter {
     logger.debug(`Attempting to join room ${roomId}...`);
     this.roomId = roomId;
 
-    // Wait for player discovery
-    const player = await this.waitForPlayer(roomId, retryAttempts, retryDelay);
-    if (!player) {
-      throw new Error("End of attempts to wait for player discovery");
+    // Wait for player discovery with exponential backoff
+    let player = null;
+    let currentDelay = retryDelay;
+
+    for (let attempt = 1; attempt <= retryAttempts; attempt++) {
+      logger.debug(`Discovery attempt ${attempt}/${retryAttempts}`);
+      player = this.players.get(roomId);
+
+      if (player) {
+        logger.debug("Player found:", player);
+        break;
+      }
+
+      logger.debug(`Waiting ${currentDelay}ms for player discovery...`);
+      await new Promise((resolve) => setTimeout(resolve, currentDelay));
+
+      // Apply exponential backoff with a cap
+      currentDelay = Math.min(currentDelay * 1.5, 15000);
     }
-    // Connects to the room owner they will exchange the topics they are subscribed to
-    logger.debug(`Connecting to peer...`);
-    const connected = await this.peerToPeer?.connectToPeerWithFallback(
-      roomId,
-      player.addresses
-    );
+
+    if (!player) {
+      logger.error("Failed to discover player after all attempts");
+      throw new Error("Player discovery failed after multiple attempts");
+    }
+
+    // Step 1: Connect to the room owner
+    logger.debug(`Connecting to room owner (peer)...`);
+    const connectStartTime = Date.now();
+    let connected = false;
+
+    try {
+      connected = await this.peerToPeer?.connectToPeerWithFallback(
+        roomId,
+        player.addresses
+      );
+    } catch (error) {
+      logger.error("Connection error:", error);
+    }
 
     if (!connected) {
+      logger.error("Failed to connect to room owner");
       throw new Error("Failed to connect to peer using any method");
     }
 
-    // Subscribe to room message events
+    logger.debug(
+      `Connected to room owner in ${Date.now() - connectStartTime}ms`
+    );
+
+    // Step 2: Subscribe to room message events first
     this.peerToPeer.on(
       `topic:${this.roomId}:message`,
       this.roomTopicMessageHandler
     );
-    // wait for the gossipsub to update
-    await new Promise((resolve) => setTimeout(resolve, 3000));
 
+    // Step 3: Allow time for gossipsub protocol to exchange subscriptions
+    logger.debug("Waiting for gossipsub to stabilize...");
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
+    // Step 4: Check connection to room owner
     const roomOwnerConnection = await this.peerToPeer.isPeerConnected(roomId);
-    logger.debug("KaibaNet: Room owner connection status", roomOwnerConnection);
+    logger.debug("Room owner connection status:", roomOwnerConnection);
 
-    // Pubsub protocol will send the current peers subcriptions when connects to a peer
-    // Subscribe to room topic
-    const subscribed = await this.peerToPeer?.subscribeTopic(roomId, true);
+    if (!roomOwnerConnection) {
+      logger.error("Lost connection to room owner");
+      this.peerToPeer.off(
+        `topic:${this.roomId}:message`,
+        this.roomTopicMessageHandler
+      );
+      throw new Error("Connection to room owner was lost");
+    }
+
+    // Step 5: Subscribe to room topic with mesh formation
+    logger.debug("Subscribing to room topic...");
+    let subscribed = false;
+
+    try {
+      subscribed = await this.peerToPeer?.subscribeTopic(roomId, true);
+    } catch (error) {
+      logger.error("Subscription error:", error);
+    }
+
     if (!subscribed) {
+      logger.error("Failed to subscribe to room topic");
+      this.peerToPeer.off(
+        `topic:${this.roomId}:message`,
+        this.roomTopicMessageHandler
+      );
       throw new Error("Failed to subscribe to room topic");
     }
 
-    // Force mesh refresh after subscription
+    // Step 6: Force mesh refresh to ensure we're properly connected
+    logger.debug("Refreshing mesh network...");
     await this.peerToPeer?.refreshMesh(roomId);
 
-    // Wait for the gossipsub to update
+    // Step 7: Verify mesh peers
     await new Promise((resolve) => setTimeout(resolve, 1000));
-
     const meshPeers =
       this.peerToPeer?.libp2p.services.pubsub.getMeshPeers(roomId);
-    logger.debug("Mesh peers after refresh:", meshPeers);
+    logger.debug(
+      "Mesh peers after refresh:",
+      meshPeers?.map((p) => p.toString())
+    );
 
     if (!meshPeers || meshPeers.length === 0) {
-      // Try one more refresh
+      logger.warn("No mesh peers found, trying one more refresh");
       await this.peerToPeer?.refreshMesh(roomId);
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      const retryMeshPeers =
+        this.peerToPeer?.libp2p.services.pubsub.getMeshPeers(roomId);
+      logger.debug(
+        "Mesh peers after second refresh:",
+        retryMeshPeers?.map((p) => p.toString())
+      );
+
+      if (!retryMeshPeers || retryMeshPeers.length === 0) {
+        logger.warn("Still no mesh peers, but continuing anyway");
+      }
     }
 
-    // First check if we are connected
-    if (!roomOwnerConnection) {
-      throw new Error("Peer not connected");
+    // Step 8: Announce joining the room
+    logger.debug("Announcing player join to room");
+    let joinMessageSent = false;
+
+    // Try multiple times to send the join message
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        await this.peerToPeer?.messageTopic(
+          roomId,
+          `duel:player:join:${this.playerId}`
+        );
+        joinMessageSent = true;
+        logger.debug(`Join message sent successfully (attempt ${attempt})`);
+        break;
+      } catch (error) {
+        logger.warn(`Failed to send join message (attempt ${attempt}):`, error);
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      }
     }
 
-    await this.peerToPeer?.messageTopic(
-      roomId,
-      `duel:player:join:${this.playerId}`
-    );
+    if (!joinMessageSent) {
+      logger.warn("Could not send join message, but room join was successful");
+    }
+
+    logger.debug("Room join completed successfully");
   }
 
   public cleanupRoomListener(roomId: string) {
