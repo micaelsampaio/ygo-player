@@ -503,3 +503,12 @@ function parseFieldZoneChildren(child: THREE.Mesh, player: number, zones: any) {
     zones[zoneName] = child;
   }
 }
+
+export function getCardPositionInFrontOfCamera({ camera, distance = 4 }: { camera: THREE.Camera, distance?: number }) {
+  const direction = new THREE.Vector3();
+  camera.getWorldDirection(direction);
+
+  const startPosition = camera.position.clone().add(direction.multiplyScalar(distance));
+
+  return startPosition;
+}

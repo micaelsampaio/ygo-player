@@ -84,6 +84,10 @@ export function CardExtraDeckMenu({
     });
   }, [card, originZone]);
 
+  const revealCard = useCallback(() => {
+    duel.gameActions.revealCard({ card, originZone, });
+  }, [card, originZone]);
+
   useLayoutEffect(() => {
     const container = menuRef.current!;
     const cardRect = htmlCardElement.getBoundingClientRect();
@@ -204,6 +208,8 @@ export function CardExtraDeckMenu({
                 SS DEF
               </button>
             )}
+
+            <button type="button" className="ygo-card-item" onClick={revealCard}>Reveal</button>
           </>
         )}
       </CardMenu>

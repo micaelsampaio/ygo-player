@@ -4,6 +4,7 @@ import { YGODuelEvents, YGOGameUtils } from "ygo-core";
 import { YGOTaskSequence } from "../../core/components/tasks/YGOTaskSequence";
 import { GameCard } from "../../game/GameCard";
 import {
+  getCardPositionInFrontOfCamera,
   getCardRotationFromFieldZoneData,
   getGameZone,
   getZonePositionFromZoneData,
@@ -104,13 +105,7 @@ export class LinkSummonEventHandler extends YGOCommandHandler {
       zoneData
     );
 
-    const direction = new THREE.Vector3();
-    camera.getWorldDirection(direction);
-
-    const startPosition = camera.position
-      .clone()
-      .add(direction.multiplyScalar(4));
-
+    const startPosition = getCardPositionInFrontOfCamera({ camera });
     const card = new GameCard({ duel, card: this.cardReference });
     card.hideCardStats();
     card.gameObject.position.copy(startPosition);

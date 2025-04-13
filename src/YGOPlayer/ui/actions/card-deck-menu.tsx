@@ -79,7 +79,7 @@ export function CardDeckMenu({
 
   const reveal = useCallback(() => {
     closeViewDeckMenu();
-    duel.gameActions.banish({ card, originZone, position: "faceup" });
+    duel.gameActions.revealCard({ card, originZone });
   }, [card, originZone]);
 
   const isMonster = YGOGameUtils.isMonster(card);
