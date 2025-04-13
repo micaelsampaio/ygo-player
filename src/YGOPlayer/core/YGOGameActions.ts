@@ -1001,6 +1001,23 @@ export class YGOGameActions {
     );
   }
 
+  public changeCardLevel({
+    card,
+    originZone
+  }: {
+    card: Card;
+    originZone: FieldZone;
+  }) {
+    const player = this.duel.getActivePlayer();
+    const levelInput = window.prompt("Please enter the new level:");
+
+    const level = levelInput && !isNaN(levelInput as any) ? Number(levelInput) : undefined;
+
+    if (typeof level === "undefined") return;
+
+    this.duel.execCommand(new YGOCommands.ChangeCardLevelCommand({ player, id: card.id, originZone, level }));
+  }
+
   public lifePointsTransaction({
     player,
     value

@@ -108,6 +108,10 @@ export function CardZoneMenu({
     duel.gameActions.changeAtkDef({ card, originZone: zone, prompt: true });
   }, [card, zone]);
 
+  const changeCardLevel = useCallback(() => {
+    duel.gameActions.changeCardLevel({ card, originZone: zone });
+  }, [card, zone]);
+
   const destroyCard = useCallback(() => {
     duel.gameActions.destroyCard({ card, originZone: zone });
   }, [card, zone]);
@@ -216,6 +220,14 @@ export function CardZoneMenu({
             onClick={changeAtkDef}
           >
             Change Atk Def
+          </button>
+
+          <button
+            type="button"
+            className="ygo-card-item"
+            onClick={changeCardLevel}
+          >
+            Change Level
           </button>
         </>
       )}
