@@ -24,6 +24,7 @@ export interface YGOCollection {
 }
 
 export function CollectionsPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [collections, setCollections] = useState<YGOCollectionDetails[]>(() => {
     const collections = JSON.parse(
       window.localStorage.getItem("collections_details")! || "[]"
@@ -38,12 +39,9 @@ export function CollectionsPage() {
   });
 
   const [collection, setCollection] = useState<YGOCollection | undefined>();
-  const [searchParams] = useSearchParams();
 
   const changeCollection = (collectionId: string) => {
-    setCollection(
-      JSON.parse(window.localStorage.getItem("c_" + collectionId)!)
-    );
+    setSearchParams({ select: collectionId });
   };
 
   const updateCollection = (collection: YGOCollection) => {
@@ -111,7 +109,7 @@ export function CollectionsPage() {
   useEffect(() => {
     const selectId = searchParams.get("select");
     if (selectId) {
-      changeCollection(selectId);
+      setCollection(JSON.parse(window.localStorage.getItem("c_" + selectId)!));
     }
   }, [searchParams]);
 

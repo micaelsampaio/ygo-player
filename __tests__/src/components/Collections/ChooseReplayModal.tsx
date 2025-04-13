@@ -6,7 +6,7 @@ export function ChooseReplay({ close, onChange }: { close: any, onChange: any })
     const [replays] = useState(() => {
         const allKeys = Object.keys(localStorage);
         const replayKeys = allKeys.filter((key) => key.startsWith("replay_"));
-        return replayKeys.map((replay) => ({ name: replay, data: null }));
+        return replayKeys.map((replay) => ({ key: replay, name: parseReplayName(replay), data: null }));
     });
 
     const [replay, setReplay] = useState("");
@@ -29,12 +29,12 @@ export function ChooseReplay({ close, onChange }: { close: any, onChange: any })
 
                 <ModalContent>
                     <SelectReplay
-                        onChange={(e:any) => setReplay(e.target.value)}
+                        onChange={(e: any) => setReplay(e.target.value)}
                         value={replay}
                     >
                         <option value="">Select a Replay</option>
                         {replays.map((replayItem, index) => (
-                            <option key={index} value={replayItem.name}>
+                            <option key={index} value={replayItem.key}>
                                 {replayItem.name}
                             </option>
                         ))}
@@ -141,3 +141,7 @@ const ContinueButton = styled.button`
         cursor: not-allowed;
     }
 `;
+
+function parseReplayName(name: string) {
+    return name.replace("replay_", "").replace(/[_-]/g, " ").replace(/\d{13}$/, "");
+}

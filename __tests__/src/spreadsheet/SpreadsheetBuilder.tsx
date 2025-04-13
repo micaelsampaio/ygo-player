@@ -24,7 +24,9 @@ export function SpreadsheetBuilder() {
         const replayData = JSON.parse(localStorage.getItem("duel-data")!);
         const deck = replayData.players[0];
 
-        const comboName = prompt("Combo name");
+        const searchParams = new URLSearchParams(window.location.search);
+
+        const comboName = prompt("Combo name", searchParams.get("name") || "");
 
         if (!comboName) return alert("combo name cant be empty");
 

@@ -38,9 +38,15 @@ export function CurrentCollection() {
     setCollection(collection!);
   };
 
+  const deleteCombo = (comboIndex: number) => {
+    collection!.combos = collection!.combos.filter((_: any, index: number) => index !== comboIndex);
+    setCollection(collection!);
+  }
+
   const openSpreadsheetBuilder = (replay: any) => {
+    const name = encodeURIComponent(replay.name.replace("replay_", "").replace(/[_-]/g, " ").replace(/\d{13}$/, ""));
     localStorage.setItem("duel-data", JSON.stringify(replay.data));
-    navigate(`/spreadsheet/collection/${collection!.id}/${short.generate()}`);
+    navigate(`/spreadsheet/collection/${collection!.id}/${short.generate()}?name=${name}`);
   };
 
   const collectionToXLS = () => {
@@ -142,7 +148,7 @@ export function CurrentCollection() {
                 >
                   Create Image
                 </ActionButton>
-                <ActionDeleteButton>Delete</ActionDeleteButton>
+                <ActionDeleteButton onClick={() => deleteCombo(index)}>Delete</ActionDeleteButton>
               </ComboActions>
             </ComboCard>
           ))}

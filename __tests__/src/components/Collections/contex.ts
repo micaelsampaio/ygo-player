@@ -17,8 +17,8 @@ export function createCollectionFromDeck(deck: Deck): string {
     name: deck.name,
     deck: {
       name: `deck_${deck.name}`, // Add deck_ prefix to match the format expected by CurrentCollection
-      mainDeck: deck.mainDeck,
-      extraDeck: deck.extraDeck,
+      mainDeck: deck.mainDeck as any,
+      extraDeck: deck.extraDeck as any,
     },
     combos: [],
   };
