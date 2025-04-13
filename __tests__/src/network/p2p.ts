@@ -165,9 +165,9 @@ export class PeerToPeer extends EventEmitter {
             iceServers: [
               {
                 urls: [
-                  "stun:stun.l.google.com:19302",
-                  "stun:stun.l.google.com:5349",
-                  "stun:stun1.l.google.com:3478",
+                  "stun:stun.l.google.com:19302?transport=tcp",
+                  "stun:stun.l.google.com:5349?transport=tcp",
+                  "stun:stun1.l.google.com:3478?transport=tcp",
                 ],
               },
               {
@@ -178,7 +178,7 @@ export class PeerToPeer extends EventEmitter {
               },
             ],
             //iceCandidatePoolSize: 10,
-            iceTransportPolicy: "all",
+            iceTransportPolicy: "relay", // Force using TURN relay instead of direct connections
             rtcpMuxPolicy: "require",
           },
           debugWebRTC: true,
