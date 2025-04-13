@@ -188,25 +188,32 @@ const DrawSimulator: React.FC<DrawSimulatorProps> = ({
       }
       handFrequency[handKey].count++;
 
+      // Create a set to track which roles appeared at least once in this hand
+      const rolesInHand = new Set<string>();
+
       result.hand.forEach((card) => {
         if (!cardAppearances[card.name]) {
           cardAppearances[card.name] = { count: 0, card };
         }
         cardAppearances[card.name].count++;
 
-        if (card.roleInfo?.role) {
-          if (!roleAppearances[card.roleInfo.role]) {
-            roleAppearances[card.roleInfo.role] = { atLeastOne: 0, total: 0 };
-          }
-          roleAppearances[card.roleInfo.role].total++;
+        // Update to use roleInfo.roles (plural) array instead of roleInfo.role
+        if (card.roleInfo?.roles && card.roleInfo.roles.length > 0) {
+          card.roleInfo.roles.forEach((role) => {
+            if (!roleAppearances[role]) {
+              roleAppearances[role] = { atLeastOne: 0, total: 0 };
+            }
+            roleAppearances[role].total++;
+
+            // Add to the set of roles found in this hand
+            rolesInHand.add(role);
+          });
         }
       });
 
-      const rolesInHand = new Set(
-        result.hand.map((c) => c.roleInfo?.role).filter(Boolean)
-      );
+      // Increment atLeastOne counter for each unique role found in this hand
       rolesInHand.forEach((role) => {
-        if (role) roleAppearances[role].atLeastOne++;
+        roleAppearances[role].atLeastOne++;
       });
 
       const isSuccessful = wantedCardGroups.every((group) => {
