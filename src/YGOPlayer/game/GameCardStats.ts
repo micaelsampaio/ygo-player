@@ -205,8 +205,6 @@ export class GameCardStats {
       this.ctx.fillStyle = defDiff !== 0 ? getColorDiff(defDiff) : !isAtkPosition ? "#FFFFFF" : "#AAAAAA";
       this.ctx.strokeText(defStr, x, y);
       this.ctx.fillText(defStr, x, y);
-
-      this.ctx.reset();
     }
   }
 
