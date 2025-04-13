@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { Card, Deck } from "../../types";
 import { getCardImageUrl } from "../../../../utils/cardImages";
+import { YGOGameUtils } from "ygo-core";
 import "./DrawSimulator.css";
 
 interface DrawSimulatorProps {
@@ -89,8 +90,9 @@ const DrawSimulator: React.FC<DrawSimulatorProps> = ({
   }, [deck]);
 
   const drawHand = (deckList: Card[], size: number): Card[] => {
-    const shuffled = [...deckList].sort(() => Math.random() - 0.5);
-    return shuffled.slice(0, size);
+    const deckCopy = [...deckList];
+    YGOGameUtils.shuffleCards(deckCopy);
+    return deckCopy.slice(0, size);
   };
 
   const addWantedCard = () => {
