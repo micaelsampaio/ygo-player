@@ -104,16 +104,8 @@ export function CardZoneMenu({
     duel.gameActions.moveCard({ card, originZone: zone });
   }, [card, zone]);
 
-  const changeAtkDef = useCallback(() => {
-    duel.gameActions.changeAtkDef({ card, originZone: zone, prompt: true });
-  }, [card, zone]);
-
   const changeCardStats = useCallback(() => {
     duel.events.dispatch("set-ui-action", { type: "card-stats-dialog-menu", data: { player, card, originZone: zone } });
-  }, [card, zone]);
-
-  const changeCardLevel = useCallback(() => {
-    duel.gameActions.changeCardLevel({ card, originZone: zone });
   }, [card, zone]);
 
   const destroyCard = useCallback(() => {
@@ -159,13 +151,7 @@ export function CardZoneMenu({
   // TOKEN MENU
   if (isToken) {
     return <CardMenu menuRef={menuRef}>
-      <button
-        type="button"
-        className="ygo-card-item"
-        onClick={changeAtkDef}
-      >
-        Change Atk Def
-      </button>
+      <button type="button" className="ygo-card-item" onClick={changeCardStats}>Change Card Stats</button>
 
       {!isAttack && (
         <button
@@ -204,7 +190,6 @@ export function CardZoneMenu({
   // CARD MENU
   return (
     <CardMenu menuRef={menuRef}>
-      <button onClick={changeCardStats}>Change Card Stats</button>
 
       <button className="ygo-card-item" onClick={negateCard}>Negate</button>
 
@@ -222,21 +207,7 @@ export function CardZoneMenu({
 
       {isMonsterZone && (
         <>
-          <button
-            type="button"
-            className="ygo-card-item"
-            onClick={changeAtkDef}
-          >
-            Change Atk Def
-          </button>
-
-          <button
-            type="button"
-            className="ygo-card-item"
-            onClick={changeCardLevel}
-          >
-            Change Level
-          </button>
+          <button type="button" className="ygo-card-item" onClick={changeCardStats}>Change Card Stats</button>
         </>
       )}
 
