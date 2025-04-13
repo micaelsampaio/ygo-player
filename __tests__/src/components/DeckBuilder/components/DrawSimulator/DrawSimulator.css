@@ -608,6 +608,49 @@
   transform: translateY(-50%);
 }
 
+.hand-header.clickable {
+  cursor: pointer;
+  position: relative;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #eee;
+  margin-bottom: 16px;
+  transition: color 0.2s;
+}
+
+.hand-header.clickable:hover {
+  color: #2196f3;
+}
+
+.hand-header.clickable h3 {
+  margin: 0;
+  padding-right: 24px; /* Make room for the toggle indicator */
+}
+
+.hand-header .toggle-indicator {
+  color: #888;
+  font-size: 16px;
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.hand-cards-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.card-statistics-table .hand-cards-preview .table-card-image {
+  width: 30px;
+  height: 43px;
+}
+
+.hand-cards-preview .table-card-image:hover {
+  transform: scale(3);
+  z-index: 20;
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;

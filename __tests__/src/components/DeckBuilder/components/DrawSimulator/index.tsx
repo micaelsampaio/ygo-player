@@ -2,6 +2,11 @@ import React, { useState, useMemo } from "react";
 import { Card, Deck } from "../../types";
 import { getCardImageUrl } from "../../../../utils/cardImages";
 import { YGOGameUtils } from "ygo-core";
+import {
+  calculateDrawProbability,
+  calculateDrawAtLeastXCopies,
+  calculateComboHandProbability,
+} from "../../utils/probabilityUtils";
 import "./DrawSimulator.css";
 
 interface DrawSimulatorProps {
@@ -44,6 +49,12 @@ interface ExtendedStatistics {
   leastSeenCards: Array<{
     card: Card;
     appearances: number;
+    percentage: number;
+  }>;
+  handFrequency: Array<{
+    key: string;
+    cards: Card[];
+    count: number;
     percentage: number;
   }>;
   roleStatistics: {
@@ -89,6 +100,7 @@ const DrawSimulator: React.FC<DrawSimulatorProps> = ({
   const [expandedTables, setExpandedTables] = useState({
     mostSeen: false,
     leastSeen: false,
+    commonHand: false, // Add this new state
   });
 
   const uniqueCards = useMemo(() => {
@@ -294,6 +306,17 @@ const DrawSimulator: React.FC<DrawSimulatorProps> = ({
       {} as ExtendedStatistics["roleStatistics"]
     );
 
+    // Process hand frequency data for the top 5 most common hands
+    const processedHandFrequency = Object.entries(handFrequency)
+      .map(([key, data]) => ({
+        key,
+        cards: data.cards,
+        count: data.count,
+        percentage: (data.count / totalSims) * 100,
+      }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
+
     return {
       totalSimulations: totalSims,
       mostCommonHand: {
@@ -313,11 +336,12 @@ const DrawSimulator: React.FC<DrawSimulatorProps> = ({
       },
       leastSeenCard: {
         card: leastSeenCard.card,
-        appearances: mostSeenCard.count,
+        appearances: leastSeenCard.count,
         percentage: (leastSeenCard.count / totalSims) * 100,
       },
       mostSeenCards,
       leastSeenCards,
+      handFrequency: processedHandFrequency,
       roleStatistics: roleStats,
       wantedCardsSuccessRate: (wantedCardsSuccessCount / totalSims) * 100,
       wantedCardsSuccessCount,
@@ -328,6 +352,35 @@ const DrawSimulator: React.FC<DrawSimulatorProps> = ({
     if (results.length === 0) return null;
     return calculateExtendedStatistics(results);
   }, [results]);
+
+  // Fix the self-reference issue in theoreticalProbabilities useMemo
+  const theoreticalProbabilities = useMemo(() => {
+    if (!deck) return null;
+
+    const deckSize = deck.mainDeck.length;
+
+    // Calculate card probabilities
+    const cardProbabilities = uniqueCards.map((card) => ({
+      card,
+      probability: calculateDrawProbability(
+        deckSize,
+        card.totalCopies,
+        handSize // Just use handSize directly from state
+      ),
+      exactOneProb:
+        calculateDrawAtLeastXCopies(deckSize, card.totalCopies, handSize, 1) -
+        calculateDrawAtLeastXCopies(deckSize, card.totalCopies, handSize, 2),
+      atLeastTwoProb: calculateDrawAtLeastXCopies(
+        deckSize,
+        card.totalCopies,
+        handSize,
+        2
+      ),
+    }));
+
+    // Sort by probability descending
+    return cardProbabilities.sort((a, b) => b.probability - a.probability);
+  }, [deck, handSize, uniqueCards]);
 
   if (!deck) {
     return <div className="draw-simulator empty">Select a deck first</div>;
@@ -554,10 +607,25 @@ const DrawSimulator: React.FC<DrawSimulatorProps> = ({
         {statistics && (
           <>
             <div className="statistics-section">
-              <h3>
-                Most Common Opening Hand ({statistics.mostCommonHand.frequency}{" "}
-                times - {statistics.mostCommonHand.percentage.toFixed(1)}%)
-              </h3>
+              <div
+                className="hand-header clickable"
+                onClick={() =>
+                  setExpandedTables({
+                    ...expandedTables,
+                    commonHand: !expandedTables.commonHand,
+                  })
+                }
+              >
+                <h3>
+                  Most Common Opening Hand (
+                  {statistics.mostCommonHand.frequency} times -{" "}
+                  {statistics.mostCommonHand.percentage.toFixed(1)}%)
+                  <span className="toggle-indicator">
+                    {expandedTables.commonHand ? "▲" : "▼"}
+                  </span>
+                </h3>
+              </div>
+
               <div className="hand-preview">
                 {statistics.mostCommonHand.cards.map((card, index) => (
                   <img
@@ -569,6 +637,44 @@ const DrawSimulator: React.FC<DrawSimulatorProps> = ({
                   />
                 ))}
               </div>
+
+              {/* New expanded table for most common hands */}
+              {expandedTables.commonHand && (
+                <div className="card-statistics-tables">
+                  <div className="card-statistics-table">
+                    <h4>Most Common Opening Hands</h4>
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Frequency</th>
+                          <th>Percentage</th>
+                          <th>Cards</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {statistics.handFrequency.map((data, index) => (
+                          <tr key={`hand-${index}`}>
+                            <td>{data.count} times</td>
+                            <td>{data.percentage.toFixed(1)}%</td>
+                            <td className="hand-cards-preview">
+                              {data.cards.map((card, cardIndex) => (
+                                <img
+                                  key={`${data.key}-${cardIndex}`}
+                                  src={getCardImageUrl(card, "small")}
+                                  alt={card.name}
+                                  onClick={() => onCardSelect(card)}
+                                  className="table-card-image"
+                                  title={card.name}
+                                />
+                              ))}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="statistics-section">
@@ -750,6 +856,50 @@ const DrawSimulator: React.FC<DrawSimulatorProps> = ({
               </div>
             </div>
           </>
+        )}
+
+        {statistics && theoreticalProbabilities && (
+          <div className="statistics-section">
+            <h3>Theoretical Probabilities</h3>
+            <div className="card-statistics-tables">
+              <div className="card-statistics-table">
+                <h4>Card Draw Probabilities</h4>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Card</th>
+                      <th>Image</th>
+                      <th>Copies</th>
+                      <th>Any Copy</th>
+                      <th>Exactly 1</th>
+                      <th>2+ Copies</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {theoreticalProbabilities
+                      .slice(0, 10)
+                      .map((item, index) => (
+                        <tr key={`prob-${index}`}>
+                          <td>{item.card.name}</td>
+                          <td>
+                            <img
+                              src={getCardImageUrl(item.card, "small")}
+                              alt={item.card.name}
+                              onClick={() => onCardSelect(item.card)}
+                              className="table-card-image"
+                            />
+                          </td>
+                          <td>{item.card.totalCopies}</td>
+                          <td>{item.probability.toFixed(1)}%</td>
+                          <td>{item.exactOneProb.toFixed(1)}%</td>
+                          <td>{item.atLeastTwoProb.toFixed(1)}%</td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </div>
