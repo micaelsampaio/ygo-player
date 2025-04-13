@@ -36,6 +36,16 @@ interface ExtendedStatistics {
     appearances: number;
     percentage: number;
   };
+  mostSeenCards: Array<{
+    card: Card;
+    appearances: number;
+    percentage: number;
+  }>;
+  leastSeenCards: Array<{
+    card: Card;
+    appearances: number;
+    percentage: number;
+  }>;
   roleStatistics: {
     [key: string]: {
       atLeastOne: number;
@@ -76,6 +86,10 @@ const DrawSimulator: React.FC<DrawSimulatorProps> = ({
   const [simulationMode, setSimulationMode] = useState<"random" | "specific">(
     "random"
   );
+  const [expandedTables, setExpandedTables] = useState({
+    mostSeen: false,
+    leastSeen: false,
+  });
 
   const uniqueCards = useMemo(() => {
     if (!deck) return [];
@@ -247,6 +261,24 @@ const DrawSimulator: React.FC<DrawSimulatorProps> = ({
     const sortedCards = Object.values(cardAppearances).sort(
       (a, b) => b.count - a.count
     );
+
+    // Get top 5 most seen cards
+    const mostSeenCards = sortedCards.slice(0, 5).map((item) => ({
+      card: item.card,
+      appearances: item.count,
+      percentage: (item.count / totalSims) * 100,
+    }));
+
+    // Get bottom 5 least seen cards
+    const leastSeenCards = sortedCards
+      .slice(-5)
+      .reverse()
+      .map((item) => ({
+        card: item.card,
+        appearances: item.count,
+        percentage: (item.count / totalSims) * 100,
+      }));
+
     const mostSeenCard = sortedCards[0];
     const leastSeenCard = sortedCards[sortedCards.length - 1];
 
@@ -281,9 +313,11 @@ const DrawSimulator: React.FC<DrawSimulatorProps> = ({
       },
       leastSeenCard: {
         card: leastSeenCard.card,
-        appearances: leastSeenCard.count,
+        appearances: mostSeenCard.count,
         percentage: (leastSeenCard.count / totalSims) * 100,
       },
+      mostSeenCards,
+      leastSeenCards,
       roleStatistics: roleStats,
       wantedCardsSuccessRate: (wantedCardsSuccessCount / totalSims) * 100,
       wantedCardsSuccessCount,
@@ -550,22 +584,155 @@ const DrawSimulator: React.FC<DrawSimulatorProps> = ({
                   </p>
                 </div>
               )}
+
               <div className="stat-grid">
-                <div className="stat-box">
+                <div
+                  className="stat-box clickable"
+                  onClick={() =>
+                    setExpandedTables({
+                      ...expandedTables,
+                      mostSeen: !expandedTables.mostSeen,
+                    })
+                  }
+                >
                   <h4>Most Seen Card</h4>
-                  <p>{statistics.mostSeenCard.card.name}</p>
-                  <p>
-                    {statistics.mostSeenCard.percentage.toFixed(1)}% of hands
-                  </p>
+                  <div className="stat-card-preview">
+                    <img
+                      src={getCardImageUrl(
+                        statistics.mostSeenCard.card,
+                        "small"
+                      )}
+                      alt={statistics.mostSeenCard.card.name}
+                      className="stat-card-image"
+                      onClick={(e) => {
+                        e.stopPropagation(); // Prevent toggle when clicking directly on image
+                        onCardSelect(statistics.mostSeenCard.card);
+                      }}
+                    />
+                    <div className="stat-card-info">
+                      <p className="stat-card-name">
+                        {statistics.mostSeenCard.card.name}
+                      </p>
+                      <p className="stat-card-frequency">
+                        {statistics.mostSeenCard.appearances} times (
+                        {statistics.mostSeenCard.percentage.toFixed(1)}%)
+                      </p>
+                    </div>
+                    <span className="toggle-indicator">
+                      {expandedTables.mostSeen ? "▲" : "▼"}
+                    </span>
+                  </div>
                 </div>
-                <div className="stat-box">
+
+                <div
+                  className="stat-box clickable"
+                  onClick={() =>
+                    setExpandedTables({
+                      ...expandedTables,
+                      leastSeen: !expandedTables.leastSeen,
+                    })
+                  }
+                >
                   <h4>Least Seen Card</h4>
-                  <p>{statistics.leastSeenCard.card.name}</p>
-                  <p>
-                    {statistics.leastSeenCard.percentage.toFixed(1)}% of hands
-                  </p>
+                  <div className="stat-card-preview">
+                    <img
+                      src={getCardImageUrl(
+                        statistics.leastSeenCard.card,
+                        "small"
+                      )}
+                      alt={statistics.leastSeenCard.card.name}
+                      className="stat-card-image"
+                      onClick={(e) => {
+                        e.stopPropagation(); // Prevent toggle when clicking directly on image
+                        onCardSelect(statistics.leastSeenCard.card);
+                      }}
+                    />
+                    <div className="stat-card-info">
+                      <p className="stat-card-name">
+                        {statistics.leastSeenCard.card.name}
+                      </p>
+                      <p className="stat-card-frequency">
+                        {statistics.leastSeenCard.appearances} times (
+                        {statistics.leastSeenCard.percentage.toFixed(1)}%)
+                      </p>
+                    </div>
+                    <span className="toggle-indicator">
+                      {expandedTables.leastSeen ? "▲" : "▼"}
+                    </span>
+                  </div>
                 </div>
               </div>
+
+              {/* Collapsible tables */}
+              {expandedTables.mostSeen && (
+                <div className="card-statistics-tables">
+                  <div className="card-statistics-table">
+                    <h4>Top Cards by Frequency</h4>
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Card</th>
+                          <th>Image</th>
+                          <th>Appearances</th>
+                          <th>Percentage</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {statistics.mostSeenCards.map((item, index) => (
+                          <tr key={`most-${index}`}>
+                            <td>{item.card.name}</td>
+                            <td>
+                              <img
+                                src={getCardImageUrl(item.card, "small")}
+                                alt={item.card.name}
+                                onClick={() => onCardSelect(item.card)}
+                                className="table-card-image"
+                              />
+                            </td>
+                            <td>{item.appearances}</td>
+                            <td>{item.percentage.toFixed(1)}%</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {expandedTables.leastSeen && (
+                <div className="card-statistics-tables">
+                  <div className="card-statistics-table">
+                    <h4>Least Common Cards</h4>
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Card</th>
+                          <th>Image</th>
+                          <th>Appearances</th>
+                          <th>Percentage</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {statistics.leastSeenCards.map((item, index) => (
+                          <tr key={`least-${index}`}>
+                            <td>{item.card.name}</td>
+                            <td>
+                              <img
+                                src={getCardImageUrl(item.card, "small")}
+                                alt={item.card.name}
+                                onClick={() => onCardSelect(item.card)}
+                                className="table-card-image"
+                              />
+                            </td>
+                            <td>{item.appearances}</td>
+                            <td>{item.percentage.toFixed(1)}%</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="statistics-section">
