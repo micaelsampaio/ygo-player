@@ -5,6 +5,7 @@ import { CardGraveyardMenu } from "./card-gy-menu";
 import { CardHandMenu } from "./card-hand-menu";
 import { CardMaterialsMenu } from "./card-materials-menu";
 import { CardMultipleSelectionMenu } from "./card-multiple-selection-menu";
+import { CardStatsDialog } from "./card-stats-dialog";
 import { CardZoneMenu } from "./card-zone-menu";
 import { DeckMenu } from "./deck-menu";
 
@@ -18,4 +19,5 @@ export const ACTIONS = {
     "card-multiple-selection-menu": CardMultipleSelectionMenu,
     "card-deck-menu": CardDeckMenu,
     "card-materials-menu": CardMaterialsMenu,
+    "card-stats-dialog-menu": CardStatsDialog,
 }

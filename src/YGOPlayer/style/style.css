@@ -11,4 +11,5 @@
 
 /* components */
 @import "./buttons.css";
+@import "./modal.css";
 @import "./floating-buttons/floating-buttons.css";

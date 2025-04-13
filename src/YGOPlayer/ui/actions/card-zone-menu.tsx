@@ -108,6 +108,10 @@ export function CardZoneMenu({
     duel.gameActions.changeAtkDef({ card, originZone: zone, prompt: true });
   }, [card, zone]);
 
+  const changeCardStats = useCallback(() => {
+    duel.events.dispatch("set-ui-action", { type: "card-stats-dialog-menu", data: { player, card, originZone: zone } });
+  }, [card, zone]);
+
   const changeCardLevel = useCallback(() => {
     duel.gameActions.changeCardLevel({ card, originZone: zone });
   }, [card, zone]);
@@ -152,6 +156,7 @@ export function CardZoneMenu({
   const xyzMonstersInFieldCounter = YGOGameUtils.XyzMonstersInFieldsCounter(duel.ygo);
   const canAttachMaterial = (isXYZ && xyzMonstersInFieldCounter > 1) || (!isXYZ && xyzMonstersInFieldCounter > 0);
 
+  // TOKEN MENU
   if (isToken) {
     return <CardMenu menuRef={menuRef}>
       <button
@@ -196,8 +201,11 @@ export function CardZoneMenu({
     </CardMenu>
   }
 
+  // CARD MENU
   return (
     <CardMenu menuRef={menuRef}>
+      <button onClick={changeCardStats}>Change Card Stats</button>
+
       <button className="ygo-card-item" onClick={negateCard}>Negate</button>
 
       {isXYZ && (
