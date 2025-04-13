@@ -134,13 +134,15 @@ const DeckAnalytics: React.FC<DeckAnalyticsProps> = ({
       desiredProbability: number = 0.85
     ) => {
       logger.debug(`Calculating optimal distribution for ${targetCards} cards`);
+      // Scale target cards based on deck size
+      const scaledTarget = Math.round((targetCards / 40) * totalCards);
       const results = [];
       for (let i = 0; i <= Math.min(20, totalCards); i++) {
         const probability = calculateDrawProbability(totalCards, i, 5) / 100;
         results.push({
           copies: i,
           probability: probability,
-          isOptimal: i === targetCards,
+          isOptimal: i === scaledTarget,
         });
       }
       return results;
@@ -341,17 +343,23 @@ const DeckAnalytics: React.FC<DeckAnalyticsProps> = ({
             <OptimalDistribution
               title="Normal Summon Density"
               points={normalSummonDist}
-              current={processedAnalytics.monsterCount}
-              optimal={7}
+              current={Object.values(groupedCards || [])
+                .filter((card: any) =>
+                  card.roleInfo?.roles?.includes("NormalSummon")
+                )
+                .reduce((sum, card: any) => sum + (card.copies || 0), 0)}
+              optimal={Math.round((7 / 40) * deckSize)}
               targetPercentage={85}
             />
             <OptimalDistribution
               title="Starter Card Density"
               points={starterDist}
               current={Object.values(groupedCards || [])
-                .filter((card: any) => card.roleInfo?.role === "Starter")
+                .filter((card: any) =>
+                  card.roleInfo?.roles?.includes("Starter")
+                )
                 .reduce((sum, card: any) => sum + (card.copies || 0), 0)}
-              optimal={13}
+              optimal={Math.round((13 / 40) * deckSize)}
               targetPercentage={90}
             />
           </div>
@@ -359,19 +367,141 @@ const DeckAnalytics: React.FC<DeckAnalyticsProps> = ({
           <div className="distribution-explanation">
             <h4>Insights:</h4>
             <ul>
+              {/* Normal Summon Insight */}
               <li>
-                The optimal number of Normal Summons (7) provides ~85% chance to
-                open with at least one, while minimizing brick hands.
+                The optimal number of Normal Summons (
+                {Math.round((7 / 40) * deckSize)}) provides ~
+                {normalSummonDist.find(
+                  (p) => p.copies === Math.round((7 / 40) * deckSize)
+                )?.probability
+                  ? (
+                      normalSummonDist.find(
+                        (p) => p.copies === Math.round((7 / 40) * deckSize)
+                      )!.probability * 100
+                    ).toFixed(2)
+                  : "61.84"}
+                % chance to open with at least one in a {deckSize}-card deck,
+                while minimizing brick hands.
               </li>
+
+              {/* Starter Cards Insight */}
               <li>
-                For consistent combo decks, aim for 12-13 starters to achieve
-                ~90% chance of opening with engine cards.
+                For consistent combo decks, aim for{" "}
+                {Math.round((13 / 40) * deckSize)}-
+                {Math.round((14 / 40) * deckSize)} starters to achieve ~
+                {starterDist.find(
+                  (p) => p.copies === Math.round((13 / 40) * deckSize)
+                )?.probability
+                  ? (
+                      starterDist.find(
+                        (p) => p.copies === Math.round((13 / 40) * deckSize)
+                      )!.probability * 100
+                    ).toFixed(2)
+                  : "88.45"}
+                % chance of opening with at least one starter card.
               </li>
+
+              {/* Current deck stats */}
               <li>
-                Consider your deck's reliance on Normal Summon and adjust
-                accordingly. Control decks might run fewer, while combo decks
-                often max out.
+                Your {deckSize}-card deck currently has{" "}
+                {(() => {
+                  const normalSummons = Object.values(groupedCards || [])
+                    .filter((card: any) =>
+                      card.roleInfo?.roles?.includes("NormalSummon")
+                    )
+                    .reduce((sum, card: any) => sum + (card.copies || 0), 0);
+                  const starters = Object.values(groupedCards || [])
+                    .filter((card: any) =>
+                      card.roleInfo?.roles?.includes("Starter")
+                    )
+                    .reduce((sum, card: any) => sum + (card.copies || 0), 0);
+                  const monsterCount = processedAnalytics.monsterCount;
+                  const deckPercentage = Math.round(
+                    (monsterCount / deckSize) * 100
+                  );
+
+                  return (
+                    <>
+                      <span>
+                        {monsterCount} monsters ({deckPercentage}%),{" "}
+                      </span>
+                      <span>
+                        {normalSummons}{" "}
+                        <span
+                          style={{
+                            color:
+                              normalSummons > Math.round((9 / 40) * deckSize)
+                                ? "#FF9800"
+                                : "inherit",
+                            fontWeight:
+                              normalSummons > Math.round((9 / 40) * deckSize)
+                                ? "bold"
+                                : "normal",
+                          }}
+                        >
+                          {normalSummons > Math.round((9 / 40) * deckSize)
+                            ? "(high) "
+                            : ""}
+                        </span>
+                        normal summons, and{" "}
+                      </span>
+                      <span>
+                        {starters}{" "}
+                        <span
+                          style={{
+                            color:
+                              starters > Math.round((16 / 40) * deckSize)
+                                ? "#FF9800"
+                                : "inherit",
+                            fontWeight:
+                              starters > Math.round((16 / 40) * deckSize)
+                                ? "bold"
+                                : "normal",
+                          }}
+                        >
+                          {starters > Math.round((16 / 40) * deckSize)
+                            ? "(high) "
+                            : ""}
+                        </span>
+                        starter cards.
+                      </span>
+                    </>
+                  );
+                })()}
               </li>
+
+              {/* Warning for high ratios */}
+              {(() => {
+                const normalSummons = Object.values(groupedCards || [])
+                  .filter((card: any) =>
+                    card.roleInfo?.roles?.includes("NormalSummon")
+                  )
+                  .reduce((sum, card: any) => sum + (card.copies || 0), 0);
+
+                const starters = Object.values(groupedCards || [])
+                  .filter((card: any) =>
+                    card.roleInfo?.roles?.includes("Starter")
+                  )
+                  .reduce((sum, card: any) => sum + (card.copies || 0), 0);
+
+                const hasHighRatios =
+                  normalSummons > Math.round((9 / 40) * deckSize) ||
+                  starters > Math.round((16 / 40) * deckSize);
+
+                if (hasHighRatios) {
+                  return (
+                    <li style={{ color: "#d32f2f" }}>
+                      <strong>Warning:</strong> The high density values shown in
+                      <span style={{ color: "#FF9800" }}> orange</span> indicate
+                      you may be overconsistent, which can lead to drawing
+                      duplicate cards that cannot be properly utilized
+                      (especially with normal summons or without discard
+                      mechanics).
+                    </li>
+                  );
+                }
+                return null;
+              })()}
             </ul>
           </div>
         </section>

@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { Card, Deck } from "../types";
+import { YGOGameUtils } from "ygo-player";
+import { canAddCardToDeck, getBanStatusMessage } from "../utils/banlistUtils";
 
 /**
  * Custom hook for managing deck storage, retrieval, and modifications
@@ -45,6 +47,42 @@ export function useDeckStorage() {
   }, []);
 
   /**
+   * Sorts cards in a deck section in a meaningful way
+   */
+  const sortCards = (cards: Card[]): Card[] => {
+    // Use YGOGameUtils for consistent sorting across the application
+    return YGOGameUtils.sortCards
+      ? YGOGameUtils.sortCards(cards)
+      : cards.sort((a, b) => {
+          // Fallback sort implementation if YGOGameUtils.sortCards is not available
+          // First sort by card type: Monsters -> Spells -> Traps
+          const typeOrder = { Monster: 1, Spell: 2, Trap: 3 };
+          const aType = a.type.includes("Monster")
+            ? "Monster"
+            : a.type.includes("Spell")
+            ? "Spell"
+            : "Trap";
+          const bType = b.type.includes("Monster")
+            ? "Monster"
+            : b.type.includes("Spell")
+            ? "Spell"
+            : "Trap";
+
+          if (aType !== bType) {
+            return typeOrder[aType] - typeOrder[bType];
+          }
+
+          // For monsters, sort by level/rank descending
+          if (aType === "Monster" && a.level && b.level) {
+            return b.level - a.level;
+          }
+
+          // Finally sort by name
+          return a.name.localeCompare(b.name);
+        });
+  };
+
+  /**
    * Updates the local and localStorage copies of a deck
    */
   const updateDeckStorage = (updatedDeck: Deck) => {
@@ -83,6 +121,12 @@ export function useDeckStorage() {
   const addCardToDeck = (card: Card) => {
     if (!selectedDeck) return;
 
+    // Check if the card can be added based on banlist restrictions
+    if (!canAddCardToDeck(selectedDeck, card)) {
+      alert(getBanStatusMessage(card)); // Get specific message for this card's ban status
+      return;
+    }
+
     // Check if it's an Extra Deck card
     const isExtraDeck = ["XYZ", "Synchro", "Fusion", "Link"].some((type) =>
       card.type.includes(type)
@@ -90,17 +134,22 @@ export function useDeckStorage() {
 
     const updatedDeck = { ...selectedDeck };
 
+    // Update lastModified timestamp
+    updatedDeck.lastModified = new Date().toISOString();
+
     // Add card to appropriate deck section
     if (isExtraDeck) {
       if (updatedDeck.extraDeck.length < 15) {
-        updatedDeck.extraDeck = [...updatedDeck.extraDeck, card];
+        // Add card and then sort the deck
+        updatedDeck.extraDeck = sortCards([...updatedDeck.extraDeck, card]);
       } else {
         alert("Extra deck can't have more than 15 cards");
         return;
       }
     } else {
       if (updatedDeck.mainDeck.length < 60) {
-        updatedDeck.mainDeck = [...updatedDeck.mainDeck, card];
+        // Add card and then sort the deck
+        updatedDeck.mainDeck = sortCards([...updatedDeck.mainDeck, card]);
       } else {
         alert("Main deck can't have more than 60 cards");
         return;
@@ -156,6 +205,7 @@ export function useDeckStorage() {
       mainDeck: [], // Initialize empty main deck
       extraDeck: [], // Initialize empty extra deck
       sideDeck: [], // Initialize empty side deck
+      createdAt: new Date().toISOString(), // Store creation date
     };
 
     // Save to localStorage
@@ -253,6 +303,14 @@ export function useDeckStorage() {
       importedDeck.name = deckName;
     }
 
+    // Add creation date if not present
+    if (!importedDeck.createdAt) {
+      importedDeck.createdAt = new Date().toISOString();
+    }
+
+    // Add import date
+    importedDeck.importedAt = new Date().toISOString();
+
     try {
       // Save to localStorage
       localStorage.setItem(
@@ -292,6 +350,11 @@ export function useDeckStorage() {
       mainDeck: [...deckToCopy.mainDeck],
       extraDeck: [...deckToCopy.extraDeck],
       sideDeck: [...(deckToCopy.sideDeck || [])], // Include side deck with fallback
+      originalDeck: deckToCopy.name, // Reference to original deck
+      createdAt: new Date().toISOString(), // Add creation date
+      copiedAt: new Date().toISOString(), // Add copy date
+      // Copy over the original creation date if it exists
+      originalCreatedAt: deckToCopy.createdAt || undefined,
     };
 
     // Save to localStorage and update state
@@ -317,7 +380,8 @@ export function useDeckStorage() {
 
     // Side deck can only have up to 15 cards
     if (updatedDeck.sideDeck.length < 15) {
-      updatedDeck.sideDeck = [...updatedDeck.sideDeck, card];
+      // Add card and then sort the side deck
+      updatedDeck.sideDeck = sortCards([...updatedDeck.sideDeck, card]);
       setSelectedDeck(updatedDeck);
       updateDeckStorage(updatedDeck);
 
@@ -381,6 +445,8 @@ export function useDeckStorage() {
     if (targetType === "main") {
       if (updatedDeck.mainDeck.length < 60) {
         updatedDeck.mainDeck.push(card);
+        // Sort the main deck after adding card
+        updatedDeck.mainDeck = sortCards(updatedDeck.mainDeck);
       } else {
         alert("Main deck can't have more than 60 cards");
         return;
@@ -400,6 +466,8 @@ export function useDeckStorage() {
 
       if (updatedDeck.extraDeck.length < 15) {
         updatedDeck.extraDeck.push(card);
+        // Sort the extra deck after adding card
+        updatedDeck.extraDeck = sortCards(updatedDeck.extraDeck);
       } else {
         alert("Extra deck can't have more than 15 cards");
         return;
@@ -407,11 +475,16 @@ export function useDeckStorage() {
     } else if (targetType === "side") {
       if (updatedDeck.sideDeck.length < 15) {
         updatedDeck.sideDeck.push(card);
+        // Sort the side deck after adding card
+        updatedDeck.sideDeck = sortCards(updatedDeck.sideDeck);
       } else {
         alert("Side deck can't have more than 15 cards");
         return;
       }
     }
+
+    // Update the lastModified timestamp
+    updatedDeck.lastModified = new Date().toISOString();
 
     setSelectedDeck(updatedDeck);
     updateDeckStorage(updatedDeck);

@@ -11,6 +11,8 @@ import DrawSimulator from "./components/DrawSimulator"; // Fix import path
 import { useDeckStorage } from "./hooks/useDeckStorage";
 import { useDeckAnalytics } from "./hooks/useDeckAnalytics";
 import { canAddCardToDeck } from "./utils";
+import { initializeBanList } from "./services/banListLoader";
+import { banListService } from "./services/banListService";
 import "./DeckBuilder.css";
 
 const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
@@ -44,6 +46,32 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
   } = useDeckStorage();
 
   const { analyzeDeck } = useDeckAnalytics();
+
+  // Initialize ban list when component mounts
+  useEffect(() => {
+    console.log("Initializing Yu-Gi-Oh ban list...");
+
+    // First load the ban list from our local JSON
+    initializeBanList();
+
+    // Then optionally fetch the latest ban list from the API
+    // This is done asynchronously and will update the cache when complete
+    banListService
+      .getBanList("tcg", true)
+      .then((banList) => {
+        console.log(
+          `Fetched latest TCG ban list with ${
+            Object.keys(banList).length
+          } entries`
+        );
+      })
+      .catch((err) => {
+        console.error(
+          "Failed to fetch latest ban list, using local data:",
+          err
+        );
+      });
+  }, []);
 
   // Calculate analytics only when we select the analytics tab
   // instead of on every deck change

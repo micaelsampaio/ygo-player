@@ -123,6 +123,11 @@ export interface Card {
   scale?: number;
   roleInfo?: CardRoleInfo;
   isFavorite?: boolean;
+  banlist_info?: {
+    ban_tcg?: string;
+    ban_ocg?: string;
+    ban_goat?: string;
+  };
 }
 
 // Deck structure
@@ -131,6 +136,12 @@ export interface Deck {
   mainDeck: Card[];
   extraDeck: Card[];
   sideDeck: Card[]; // Adding side deck support
+  createdAt?: string; // ISO string date when the deck was created
+  importedAt?: string; // ISO string date when the deck was imported
+  copiedAt?: string; // ISO string date when the deck was copied
+  originalDeck?: string; // Reference to the original deck name if this is a copy
+  originalCreatedAt?: string; // Creation date of the original deck
+  lastModified?: string; // Last time the deck was modified
 }
 
 // Advanced search filters

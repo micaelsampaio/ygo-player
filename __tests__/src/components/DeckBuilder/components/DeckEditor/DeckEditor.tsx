@@ -6,8 +6,6 @@ import RoleManager from "../RoleManager/RoleManager";
 import VirtualizedCardList from "../VirtualizedCardList";
 import "./DeckEditor.css";
 
-type SortOption = "name" | "cardType" | "monsterType" | "level" | "atk" | "def";
-
 interface DeckEditorProps {
   deck: Deck | null;
   onCardSelect: (card: Card) => void;
@@ -52,6 +50,146 @@ const DeckEditor: React.FC<DeckEditorProps> = ({
   const mainDeckRef = useRef<HTMLDivElement>(null);
   const extraDeckRef = useRef<HTMLDivElement>(null);
   const sideDeckRef = useRef<HTMLDivElement>(null);
+
+  // Add a flag to track if auto-sorting is enabled
+  const [autoSortEnabled, setAutoSortEnabled] = useState(false);
+
+  // Keep track of the current sort function
+  const [currentSortFn, setCurrentSortFn] = useState<string | null>(null);
+
+  // Function to perform sorting based on the current sort function
+  const sortDeck = (newDeck: Deck, sortFn: string | null = currentSortFn) => {
+    if (!sortFn || sortFn === "none") return newDeck;
+
+    const updatedDeck = { ...newDeck };
+
+    // Sort main deck
+    if (sortFn === "level") {
+      updatedDeck.mainDeck = [...updatedDeck.mainDeck].sort(
+        (a, b) => (b.level || 0) - (a.level || 0)
+      );
+    } else if (sortFn === "name") {
+      updatedDeck.mainDeck = [...updatedDeck.mainDeck].sort((a, b) =>
+        a.name.localeCompare(b.name)
+      );
+    } else if (sortFn === "type") {
+      // Group cards by name first before sorting
+      const cardsByName: Record<string, Card[]> = {};
+      updatedDeck.mainDeck.forEach((card) => {
+        if (!cardsByName[card.name]) {
+          cardsByName[card.name] = [];
+        }
+        cardsByName[card.name].push(card);
+      });
+
+      // Then sort the groups
+      const sortedGroups = Object.entries(cardsByName).sort(
+        ([aName, aCards], [bName, bCards]) => {
+          const a = aCards[0];
+          const b = bCards[0];
+
+          // First sort by card type: Monsters -> Spells -> Traps
+          const typeOrder = { Monster: 1, Spell: 2, Trap: 3 };
+          const aType = a.type.includes("Monster")
+            ? "Monster"
+            : a.type.includes("Spell")
+            ? "Spell"
+            : "Trap";
+          const bType = b.type.includes("Monster")
+            ? "Monster"
+            : b.type.includes("Spell")
+            ? "Spell"
+            : "Trap";
+
+          if (aType !== bType) {
+            return typeOrder[aType] - typeOrder[bType];
+          }
+
+          // For monsters of the same type, sort by level/rank descending
+          if (aType === "Monster" && a.level && b.level) {
+            return b.level - a.level;
+          }
+
+          // Finally sort by name
+          return a.name.localeCompare(b.name);
+        }
+      );
+
+      // Flatten the sorted groups back into an array
+      updatedDeck.mainDeck = sortedGroups.flatMap(([_, cards]) => cards);
+    }
+
+    // Sort extra deck with an improved approach as well
+    if (sortFn !== "none") {
+      // Group extra deck cards by name first
+      const extraCardsByName: Record<string, Card[]> = {};
+      updatedDeck.extraDeck.forEach((card) => {
+        if (!extraCardsByName[card.name]) {
+          extraCardsByName[card.name] = [];
+        }
+        extraCardsByName[card.name].push(card);
+      });
+
+      // Sort the groups
+      const sortedExtraGroups = Object.entries(extraCardsByName).sort(
+        ([aName, aCards], [bName, bCards]) => {
+          const a = aCards[0];
+          const b = bCards[0];
+
+          // First sort by card type (Fusion -> Synchro -> Xyz -> Link)
+          const typeOrder = {
+            "Fusion Monster": 1,
+            "Synchro Monster": 2,
+            "XYZ Monster": 3,
+            "Link Monster": 4,
+            Other: 5,
+          };
+
+          const getTypeValue = (card: Card) => {
+            for (const key of Object.keys(typeOrder)) {
+              if (card.type.includes(key))
+                return typeOrder[key as keyof typeof typeOrder];
+            }
+            return typeOrder["Other"];
+          };
+
+          const aTypeValue = getTypeValue(a);
+          const bTypeValue = getTypeValue(b);
+
+          if (aTypeValue !== bTypeValue) {
+            return aTypeValue - bTypeValue;
+          }
+
+          // For cards of same extra deck type, sort by level/rank
+          if (a.level && b.level) {
+            return b.level - a.level;
+          }
+
+          // Finally by name
+          return a.name.localeCompare(b.name);
+        }
+      );
+
+      // Flatten the sorted groups back into an array
+      updatedDeck.extraDeck = sortedExtraGroups.flatMap(([_, cards]) => cards);
+    }
+
+    return updatedDeck;
+  };
+
+  // Modify the useEffect that handles deck updates
+  useEffect(() => {
+    // Only sort automatically when a card is added or removed, and auto-sort is enabled
+    if (autoSortEnabled && currentSortFn && deck) {
+      const sortedDeck = sortDeck(deck);
+      if (
+        JSON.stringify(sortedDeck.mainDeck) !== JSON.stringify(deck.mainDeck) ||
+        JSON.stringify(sortedDeck.extraDeck) !== JSON.stringify(deck.extraDeck)
+      ) {
+        updateDeck(sortedDeck);
+      }
+    }
+  }, [deck?.mainDeck.length, deck?.extraDeck.length]);
 
   // We'll keep these states for potential future use but won't use them by default
   const [dimensions, setDimensions] = useState({
@@ -186,10 +324,11 @@ const DeckEditor: React.FC<DeckEditorProps> = ({
   const handleDragStart = (
     e: React.DragEvent,
     index: number,
+    originalIndex: number, // Add original index parameter
     isExtra: boolean,
     isSide: boolean = false
   ) => {
-    const dragData = { index, isExtra, isSide };
+    const dragData = { index: originalIndex, isExtra, isSide }; // Use original index
     e.dataTransfer.setData("application/json", JSON.stringify(dragData));
     // Add a small delay to ensure the drag is actually starting
     requestAnimationFrame(() => {
@@ -369,10 +508,15 @@ const DeckEditor: React.FC<DeckEditorProps> = ({
               type="text"
               value={editedName}
               onChange={(e) => setEditedName(e.target.value)}
-              onBlur={handleNameSubmit}
+              onBlur={() => {
+                setIsEditingName(false);
+                onRenameDeck(editedName);
+              }}
               onKeyDown={(e) => {
-                if (e.key === "Enter") handleNameSubmit();
-                if (e.key === "Escape") {
+                if (e.key === "Enter") {
+                  setIsEditingName(false);
+                  onRenameDeck(editedName);
+                } else if (e.key === "Escape") {
                   setIsEditingName(false);
                   setEditedName(deck?.name || "");
                 }
@@ -381,30 +525,56 @@ const DeckEditor: React.FC<DeckEditorProps> = ({
             />
           </div>
         ) : (
-          <h2
+          <h3
             className="deck-name"
             onClick={() => {
-              if (deck) {
-                setIsEditingName(true);
-                setEditedName(deck.name);
-              }
+              setIsEditingName(true);
+              setEditedName(deck?.name || "");
             }}
           >
-            {deck?.name || "No Deck Selected"}
-            {deck && <span className="edit-hint">✎</span>}
-          </h2>
+            {deck?.name}
+            <span className="edit-hint">(click to edit)</span>
+          </h3>
         )}
+
+        <button
+          className="sort-button"
+          title="Sort cards by type"
+          onClick={() => {
+            if (deck && updateDeck) {
+              // Apply the sorting directly
+              const sortFn = "type"; // Default sort by type
+              setCurrentSortFn(sortFn);
+              const sortedDeck = sortDeck(deck, sortFn);
+              updateDeck(sortedDeck);
+            }
+          }}
+        >
+          <span>Sort</span>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <line x1="4" y1="9" x2="20" y2="9"></line>
+            <line x1="4" y1="15" x2="20" y2="15"></line>
+            <line x1="10" y1="3" x2="8" y2="21"></line>
+            <line x1="16" y1="3" x2="14" y2="21"></line>
+          </svg>
+        </button>
+      </div>
+
+      <div className="deck-controls">
+        <h4>Main Deck ({deck?.mainDeck.length || 0}/60)</h4>
       </div>
 
       <div className="current-deck">
-        <div className="deck-controls">
-          <h4>Main Deck ({deck.mainDeck.length})</h4>
-          <button className="sort-button" onClick={handleSort}>
-            <span className="sort-icon">⇅</span>
-            Sort
-          </button>
-        </div>
-
         <div
           className="card-grid"
           ref={mainDeckRef}
@@ -416,10 +586,18 @@ const DeckEditor: React.FC<DeckEditorProps> = ({
               key={`${card.id}-${originalIndex}`}
               className="deck-card-container"
               draggable="true"
-              onDragStart={(e) => handleDragStart(e, index, false)}
+              onDragStart={(e) =>
+                handleDragStart(e, index, originalIndex, false)
+              } // Pass originalIndex
               onDragEnd={handleDragEnd}
-              onDragOver={(e) => e.preventDefault()}
-              onDrop={(e) => handleDrop(e, index, false)}
+              onDragOver={(e) => {
+                e.preventDefault();
+                e.stopPropagation(); // Add this to prevent bubbling
+              }}
+              onDrop={(e) => {
+                e.stopPropagation(); // Add this to prevent the event from bubbling up
+                handleDrop(e, originalIndex, false);
+              }}
               onContextMenu={(e) =>
                 handleRoleIconClick(e, card.id, originalIndex)
               }
@@ -497,7 +675,9 @@ const DeckEditor: React.FC<DeckEditorProps> = ({
           ))}
         </div>
 
-        <h4>Extra Deck ({deck?.extraDeck.length || 0}/15)</h4>
+        <div className="deck-section-header">
+          <h4>Extra Deck ({deck?.extraDeck.length || 0}/15)</h4>
+        </div>
         <div
           className="card-grid"
           ref={extraDeckRef}
@@ -509,7 +689,9 @@ const DeckEditor: React.FC<DeckEditorProps> = ({
               key={`${card.id}-${originalIndex}`}
               className="deck-card-container"
               draggable="true"
-              onDragStart={(e) => handleDragStart(e, index, true)}
+              onDragStart={(e) =>
+                handleDragStart(e, index, originalIndex, true)
+              } // Pass originalIndex
               onDragEnd={handleDragEnd}
               onDragOver={(e) => e.preventDefault()}
               onDrop={(e) => handleDrop(e, index, true)}
@@ -590,7 +772,9 @@ const DeckEditor: React.FC<DeckEditorProps> = ({
           ))}
         </div>
 
-        <h4>Side Deck ({deck?.sideDeck?.length || 0}/15)</h4>
+        <div className="deck-section-header">
+          <h4>Side Deck ({deck?.sideDeck?.length || 0}/15)</h4>
+        </div>
         <div
           className="card-grid"
           ref={sideDeckRef}
@@ -605,7 +789,7 @@ const DeckEditor: React.FC<DeckEditorProps> = ({
               className="deck-card-container"
               draggable="true"
               onDragStart={(e) => {
-                handleDragStart(e, index, false, true);
+                handleDragStart(e, index, index, false, true); // Pass the index twice (as original index)
               }}
               onDragEnd={handleDragEnd}
               onDragOver={(e) => e.preventDefault()}

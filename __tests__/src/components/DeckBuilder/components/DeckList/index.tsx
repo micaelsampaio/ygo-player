@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { Deck } from "../types";
 import "./DecksList.css";
-import DeckActions from "./DeckActions"; // Import the DeckActions component
-import { createCollectionFromDeck } from "../../../Collections/contex"; // Remove useCollectionContext since we'll handle selection via URL
+import { createCollectionFromDeck } from "../../../Collections/contex";
 import { useNavigate } from "react-router-dom";
+import DeckActions from "./DeckActions";
 
 interface DeckListProps {
   decks: Deck[];
@@ -15,7 +15,7 @@ interface DeckListProps {
   onRenameDeck: (deck: Deck, newName: string) => void;
   onClearDeck: (deck: Deck) => void;
   onImportDeck: (deck: Deck) => void;
-  onCreateCollection: (deck: Deck) => void; // Remove optional modifier
+  onCreateCollection: (deck: Deck) => void;
 }
 
 const DeckList: React.FC<DeckListProps> = ({
@@ -33,6 +33,9 @@ const DeckList: React.FC<DeckListProps> = ({
   const navigate = useNavigate();
   const [editingDeck, setEditingDeck] = useState<string | null>(null);
   const [newDeckName, setNewDeckName] = useState("");
+  const [activeDeckOptions, setActiveDeckOptions] = useState<string | null>(
+    null
+  );
 
   const handleRename = (deck: Deck, newName: string) => {
     if (newName.trim() && newName !== deck.name) {
@@ -56,25 +59,93 @@ const DeckList: React.FC<DeckListProps> = ({
     onCreateDeck(newDeckName);
   };
 
-  // Handler for when a deck's name is changed via DeckActions
   const handleDeckRename = (name: string) => {
     if (selectedDeck) {
       onRenameDeck(selectedDeck, name);
     }
+    setActiveDeckOptions(null);
   };
 
-  // Handler for when a deck is cleared via DeckActions
   const handleDeckClear = () => {
     if (selectedDeck) {
       onClearDeck(selectedDeck);
     }
+    setActiveDeckOptions(null);
   };
 
   const handleCreateCollection = (deck: Deck) => {
     const collectionId = createCollectionFromDeck(deck);
-    // Navigate with the collection ID in the URL
     navigate(`/collections?select=${collectionId}`);
+    setActiveDeckOptions(null);
   };
+
+  const handleContextMenu = (deck: Deck, event: React.MouseEvent) => {
+    event.preventDefault(); // Prevent the default context menu
+    event.stopPropagation();
+
+    // Toggle options visibility
+    if (activeDeckOptions === deck.name) {
+      setActiveDeckOptions(null);
+    } else {
+      setActiveDeckOptions(deck.name);
+      onSelectDeck(deck);
+    }
+
+    // Position the options menu at the cursor position
+    const optionsMenu = document.getElementById(`deck-options-${deck.name}`);
+    if (optionsMenu) {
+      // Calculate position to show near the cursor
+      optionsMenu.style.position = "absolute";
+      optionsMenu.style.top = `${
+        event.clientY - event.currentTarget.getBoundingClientRect().top
+      }px`;
+      optionsMenu.style.left = `${
+        event.clientX - event.currentTarget.getBoundingClientRect().left
+      }px`;
+      // Make sure menu doesn't go off the right edge
+      const menuWidth = 250; // Approximate width
+      const containerWidth = event.currentTarget.getBoundingClientRect().width;
+      const cursorX =
+        event.clientX - event.currentTarget.getBoundingClientRect().left;
+      if (cursorX + menuWidth > containerWidth) {
+        optionsMenu.style.left = `${containerWidth - menuWidth}px`;
+      }
+    }
+  };
+
+  const getDateLabel = (deck: Deck) => {
+    const dates = [
+      { label: "Last Modified", date: deck.lastModified },
+      { label: "Created", date: deck.createdAt },
+      { label: "Imported", date: deck.importedAt },
+      { label: "Copied", date: deck.copiedAt },
+    ].filter((entry) => entry.date);
+
+    if (dates.length === 0) return "";
+
+    const latestDate = dates.reduce((latest, current) =>
+      new Date(current.date!) > new Date(latest.date!) ? current : latest
+    );
+
+    return `${latestDate.label}: ${new Date(
+      latestDate.date!
+    ).toLocaleDateString()}`;
+  };
+
+  // Always sort decks by name
+  const sortedDecks = [...decks].sort((a, b) => a.name.localeCompare(b.name));
+
+  // Close deck options when clicking outside
+  React.useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (!(e.target as Element).closest(".deck-options-popup")) {
+        setActiveDeckOptions(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   return (
     <div className="decks-list-container">
@@ -85,45 +156,20 @@ const DeckList: React.FC<DeckListProps> = ({
         </button>
       </div>
 
-      {selectedDeck && (
-        <div className="selected-deck-panel">
-          <div className="selected-deck-info">
-            <span className="selected-label">Currently Selected:</span>
-            <span className="selected-deck-name">{selectedDeck.name}</span>
-            <span className="deck-stats">
-              <span className="stat-chip main">
-                Main: {selectedDeck.mainDeck.length}
-              </span>
-              <span className="stat-chip extra">
-                Extra: {selectedDeck.extraDeck.length}
-              </span>
-            </span>
-          </div>
-          <DeckActions
-            deck={selectedDeck}
-            onRenameDeck={handleDeckRename}
-            onClearDeck={handleDeckClear}
-            onImportDeck={onImportDeck}
-            onCopyDeck={copyDeck}
-            onDeleteDeck={onDeleteDeck}
-            onCreateCollection={handleCreateCollection}
-          />
-        </div>
-      )}
-
       <div className="decks-list">
-        {decks.length === 0 ? (
+        {sortedDecks.length === 0 ? (
           <div className="no-decks">
             <p>No decks yet. Create your first deck!</p>
           </div>
         ) : (
-          decks.map((deck) => (
+          sortedDecks.map((deck) => (
             <div
               key={deck.name}
               className={`deck-item ${
                 selectedDeck?.name === deck.name ? "selected" : ""
               }`}
               onClick={() => !editingDeck && onSelectDeck(deck)}
+              onContextMenu={(e) => handleContextMenu(deck, e)}
             >
               <div className="deck-main-info">
                 {editingDeck === deck.name ? (
@@ -139,23 +185,59 @@ const DeckList: React.FC<DeckListProps> = ({
                   />
                 ) : (
                   <>
-                    <span
-                      className="deck-name"
-                      onDoubleClick={(e) => {
-                        e.stopPropagation();
-                        setNewDeckName(deck.name);
-                        setEditingDeck(deck.name);
-                      }}
-                    >
-                      {deck.name}
-                    </span>
-                    <span className="deck-count">
-                      Main: {deck.mainDeck.length} | Extra:{" "}
-                      {deck.extraDeck.length}
-                    </span>
+                    <span className="deck-name">{deck.name}</span>
+                    <div className="deck-details">
+                      <span className="deck-count">
+                        Main: {deck.mainDeck.length} | Extra:{" "}
+                        {deck.extraDeck.length}
+                      </span>
+                      {(deck.lastModified ||
+                        deck.createdAt ||
+                        deck.importedAt ||
+                        deck.copiedAt) && (
+                        <span className="deck-date">{getDateLabel(deck)}</span>
+                      )}
+                    </div>
                   </>
                 )}
               </div>
+
+              {activeDeckOptions === deck.name && (
+                <div
+                  id={`deck-options-${deck.name}`}
+                  className="deck-options-popup"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <DeckActions
+                    deck={deck}
+                    onRenameDeck={(name) => {
+                      onRenameDeck(deck, name);
+                      setActiveDeckOptions(null);
+                    }}
+                    onClearDeck={() => {
+                      onClearDeck(deck);
+                      setActiveDeckOptions(null);
+                    }}
+                    onImportDeck={(d) => {
+                      onImportDeck(d);
+                      setActiveDeckOptions(null);
+                    }}
+                    onCopyDeck={() => {
+                      copyDeck(deck);
+                      setActiveDeckOptions(null);
+                    }}
+                    onDeleteDeck={() => {
+                      onDeleteDeck(deck);
+                      setActiveDeckOptions(null);
+                    }}
+                    onCreateCollection={() => {
+                      handleCreateCollection(deck);
+                      setActiveDeckOptions(null);
+                    }}
+                    showDropdownImmediately={true} // Add this prop
+                  />
+                </div>
+              )}
             </div>
           ))
         )}

@@ -1,4 +1,5 @@
 import { Card, Deck } from "./types";
+import { banListService } from "./services/banListService";
 
 // Helper function to determine potential archetypes for a card
 export const determineCardArchetypes = (card: Card) => {
@@ -150,7 +151,65 @@ export const getCardCopiesInDeck = (deck: Deck, cardId: number): number => {
   return mainDeckCopies + extraDeckCopies;
 };
 
-// Utility function to validate if a card can be added to the deck
+// Defines card ban status according to Yu-Gi-Oh rules
+export type CardBanStatus =
+  | "forbidden"
+  | "limited"
+  | "semi-limited"
+  | "unlimited";
+
+// Maximum allowed copies per card based on ban status
+export const MAX_COPIES: Record<CardBanStatus, number> = {
+  forbidden: 0,
+  limited: 1,
+  "semi-limited": 2,
+  unlimited: 3,
+};
+
+// Gets the ban status of a card - this is now a synchronous wrapper that uses the cached data
+export const getCardBanStatus = (cardId: number): CardBanStatus => {
+  // Get the ban status from the cached data in the service (avoiding async call)
+  try {
+    const cacheKey = "banlist_current";
+    const cache = (banListService as any).cache;
+
+    // If we have cached data, use it
+    if (cache && cache[cacheKey] && cache[cacheKey].entries) {
+      return cache[cacheKey].entries[cardId] || "unlimited";
+    }
+
+    // Fallback to hardcoded ban list if no cache is available
+    return BAN_LIST[cardId] || "unlimited";
+  } catch (error) {
+    console.error("Error accessing ban list cache:", error);
+    // Fallback to hardcoded ban list
+    return BAN_LIST[cardId] || "unlimited";
+  }
+};
+
+// Hardcoded fallback ban list for cases where the service is not initialized
+// This will be used as a fallback if the async ban list service is not available
+export const BAN_LIST: Record<number, CardBanStatus> = {
+  // Some examples of frequently limited cards in Yu-Gi-Oh
+  7902349: "forbidden", // Left Arm of the Forbidden One
+  44519536: "forbidden", // Right Leg of the Forbidden One
+  70903634: "forbidden", // Right Arm of the Forbidden One
+  8124921: "forbidden", // Left Leg of the Forbidden One
+  33396948: "limited", // Exodia the Forbidden One
+  11110587: "limited", // That Grass Looks Greener
+  28566710: "limited", // Last Turn
+  23002292: "limited", // Red-Eyes Dark Dragoon
+  24224830: "limited", // Called by the Grave
+  27174286: "semi-limited", // Return from the Different Dimension
+  70368879: "semi-limited", // Upstart Goblin
+  83764718: "semi-limited", // Monster Reborn
+};
+
+// Checks if a card can be added to a deck based on its ban status and current copies
 export const canAddCardToDeck = (deck: Deck, cardId: number): boolean => {
-  return getCardCopiesInDeck(deck, cardId) < 3;
+  const currentCopies = getCardCopiesInDeck(deck, cardId);
+  const banStatus = getCardBanStatus(cardId);
+  const maxAllowed = MAX_COPIES[banStatus];
+
+  return currentCopies < maxAllowed;
 };

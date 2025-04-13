@@ -11,6 +11,7 @@ import {
 } from "../../../../utils/deckExport";
 import { YGODeckToImage } from "ygo-core-images-utils";
 
+// Add a new prop to control whether to show the dropdown immediately
 interface DeckActionsProps {
   deck: Deck | null;
   onImportDeck: (deck: Deck) => void;
@@ -18,7 +19,8 @@ interface DeckActionsProps {
   onClearDeck: () => void;
   onCopyDeck: (deck: Deck) => void;
   onDeleteDeck: (deck: Deck) => void;
-  onCreateCollection: (deck: Deck) => void; // Remove optional modifier
+  onCreateCollection: (deck: Deck) => void;
+  showDropdownImmediately?: boolean; // New prop
 }
 
 const DeckActions: React.FC<DeckActionsProps> = ({
@@ -29,8 +31,10 @@ const DeckActions: React.FC<DeckActionsProps> = ({
   onCopyDeck,
   onDeleteDeck,
   onCreateCollection,
+  showDropdownImmediately = false, // Default to false
 }) => {
-  const [isActionsOpen, setIsActionsOpen] = useState(false);
+  // Initialize isActionsOpen based on the showDropdownImmediately prop
+  const [isActionsOpen, setIsActionsOpen] = useState(showDropdownImmediately);
   const [isRenaming, setIsRenaming] = useState(false);
   const [newName, setNewName] = useState("");
   const [importProgress, setImportProgress] = useState<{
