@@ -22,6 +22,12 @@ const CardSuggestions: React.FC<CardSuggestionsProps> = ({
     generateSuggestions();
   }, [deck]);
 
+  // Handle right-click to directly add to the currently selected deck
+  const handleRightClick = (card: Card, event: React.MouseEvent) => {
+    event.preventDefault(); // Prevent default context menu
+    onAddCardToDeck(card); // Add to the currently selected deck type
+  };
+
   const generateSuggestions = async () => {
     // Skip if deck is too small to analyze
     if (deck.mainDeck.length < 10) {
@@ -126,7 +132,11 @@ const CardSuggestions: React.FC<CardSuggestionsProps> = ({
 
       <div className="suggestions-grid">
         {suggestions.map((card) => (
-          <div key={card.id} className="suggestion-card">
+          <div
+            key={card.id}
+            className="suggestion-card"
+            onContextMenu={(e) => handleRightClick(card, e)}
+          >
             <img
               src={getCardImageUrl(card, "small")}
               alt={card.name}
