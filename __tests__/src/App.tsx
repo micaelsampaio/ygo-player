@@ -8,7 +8,7 @@ import { YGOGameUtils } from "ygo-core";
 import { YGODeckToImage } from "ygo-core-images-utils";
 import styled from "styled-components";
 import { Logger } from "./utils/logger";
-import { ComboChooseDeck } from "./components/ComboChooseDeck.js";
+import { ComboChooseDeck } from "./components/ComboChooseDeck";
 import { exportAllData, importAllData } from "./utils/dataExport";
 import { generateExportToMdCode } from "./utils/export-to-md.js";
 import { DataExportModal } from "./components/DataExportModal";
@@ -544,13 +544,13 @@ const EndGameBoard = memo(function EndGameBoard({
         const extraMonsterZone1 = fields[0].extraMonsterZones[0]
           ? 0
           : fields[1].extraMonsterZones[0]
-            ? 1
-            : -1;
+          ? 1
+          : -1;
         const extraMonsterZone2 = fields[0].extraMonsterZones[1]
           ? 0
           : fields[1].extraMonsterZones[1]
-            ? 1
-            : -1;
+          ? 1
+          : -1;
 
         const extraMonsterZones = (
           <>

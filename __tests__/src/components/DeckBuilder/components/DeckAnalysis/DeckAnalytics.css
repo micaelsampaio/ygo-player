@@ -3,27 +3,8 @@
   border-radius: 8px;
   padding: 20px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  height: 100%;
-  overflow-y: auto;
-  max-height: 100vh;
-  scrollbar-width: thin;
-}
-
-.deck-analytics::-webkit-scrollbar {
-  width: 6px;
-}
-
-.deck-analytics::-webkit-scrollbar-track {
-  background: #f1f1f1;
-}
-
-.deck-analytics::-webkit-scrollbar-thumb {
-  background: #888;
-  border-radius: 3px;
-}
-
-.deck-analytics::-webkit-scrollbar-thumb:hover {
-  background: #555;
+  max-height: none;
+  overflow: visible;
 }
 
 .deck-analytics h2 {
@@ -36,19 +17,20 @@
 
 .deck-analytics-header {
   margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .header-title-section {
   display: flex;
   align-items: center;
-  border-bottom: 2px solid #e0e0e0;
   padding-bottom: 10px;
-  width: 100%;
 }
 
-.header-title-section h2 {
-  margin: 0;
-  margin-right: 16px;
+.header-actions {
+  display: flex;
+  gap: 10px;
 }
 
 .analytics-section {
@@ -101,6 +83,58 @@
   right: 0;
   height: 3px;
   background-color: #2196f3;
+}
+
+/* Navigation tabs styling */
+.analytics-navigation {
+  display: flex;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.nav-tab {
+  padding: 10px 20px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: #666;
+  position: relative;
+  transition: color 0.2s ease;
+}
+
+.nav-tab:hover {
+  color: #000;
+}
+
+.nav-tab.active {
+  color: #1976d2;
+  font-weight: 600;
+}
+
+.nav-tab.active::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background-color: #1976d2;
+}
+
+/* Tab content container */
+.tab-content {
+  padding: 10px 0;
+}
+
+/* Suggestions tab styling */
+.suggestions-tab {
+  padding: 10px 0;
+}
+
+.suggestions-tab .deck-card-suggestions {
+  margin-top: 0;
 }
 
 /* Consistency Score */
@@ -846,6 +880,25 @@
   background-color: #2d3748;
 }
 
+/* Export PDF Button */
+.export-pdf-btn {
+  padding: 6px 12px;
+  font-size: 12px;
+  background-color: #e53e3e;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+}
+
+.export-pdf-btn:hover {
+  background-color: #c53030;
+  transform: translateY(-1px);
+}
+
 /* Probability Categories */
 .category-probabilities {
   display: flex;
@@ -903,7 +956,7 @@
   opacity: 0.8;
 }
 
-/* Distribution Graphs */
+/* Distribution Graphs - Updated to be more compact horizontally */
 .distribution-graphs {
   display: grid;
   grid-template-columns: 1fr;
@@ -915,27 +968,31 @@
 .distribution-graph-container {
   position: relative;
   background: #fff;
-  padding: 24px 24px 64px 64px;
+  padding: 24px 24px 64px 48px; /* Reduced left padding */
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   overflow: visible;
   margin: 20px 0;
+  max-width: 450px; /* Added max-width to limit horizontal size */
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .graph-wrapper {
   position: relative;
-  height: 240px;
+  height: 220px; /* Slightly reduced height */
   display: flex;
   align-items: flex-end;
-  padding: 20px 10px;
-  gap: 3px;
-  margin: 0 0 32px 0; /* Add bottom margin for x-axis label */
+  padding: 20px 5px; /* Reduced horizontal padding */
+  gap: 1px; /* Reduced gap between bars */
+  margin: 0 0 32px 0;
 }
 
 .graph-bar {
   flex: 1;
-  min-width: 20px;
-  margin: 0 2px;
+  min-width: 12px; /* Reduced minimum width */
+  max-width: 20px; /* Added maximum width */
+  margin: 0 1px;
   position: relative;
   transition: transform 0.2s;
 }

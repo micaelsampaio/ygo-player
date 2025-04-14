@@ -501,80 +501,45 @@ const DeckEditor: React.FC<DeckEditorProps> = ({
 
   return (
     <div className="deck-editor" ref={containerRef}>
-      <div className="deck-editor-header">
-        {isEditingName ? (
-          <div className="deck-name-edit">
-            <input
-              type="text"
-              value={editedName}
-              onChange={(e) => setEditedName(e.target.value)}
-              onBlur={() => {
-                setIsEditingName(false);
-                onRenameDeck(editedName);
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  setIsEditingName(false);
-                  onRenameDeck(editedName);
-                } else if (e.key === "Escape") {
-                  setIsEditingName(false);
-                  setEditedName(deck?.name || "");
-                }
-              }}
-              autoFocus
-            />
-          </div>
-        ) : (
-          <h3
-            className="deck-name"
-            onClick={() => {
-              setIsEditingName(true);
-              setEditedName(deck?.name || "");
-            }}
-          >
-            {deck?.name}
-            <span className="edit-hint">(click to edit)</span>
-          </h3>
-        )}
-
-        <button
-          className="sort-button"
-          title="Sort cards by type"
-          onClick={() => {
-            if (deck && updateDeck) {
-              // Apply the sorting directly
-              const sortFn = "type"; // Default sort by type
-              setCurrentSortFn(sortFn);
-              const sortedDeck = sortDeck(deck, sortFn);
-              updateDeck(sortedDeck);
-            }
-          }}
-        >
-          <span>Sort</span>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <line x1="4" y1="9" x2="20" y2="9"></line>
-            <line x1="4" y1="15" x2="20" y2="15"></line>
-            <line x1="10" y1="3" x2="8" y2="21"></line>
-            <line x1="16" y1="3" x2="14" y2="21"></line>
-          </svg>
-        </button>
-      </div>
-
       <div className="deck-controls">
-        <h4>Main Deck ({deck?.mainDeck.length || 0}/60)</h4>
+        <div className="deck-header-with-actions"></div>
       </div>
 
       <div className="current-deck">
+        <div className="deck-section-header">
+          <h4>Main Deck ({deck?.mainDeck.length || 0}/60)</h4>
+          <button
+            className="sort-button"
+            title="Sort cards by type"
+            onClick={() => {
+              if (deck && updateDeck) {
+                const sortFn = "type"; // Default sort by type
+                setCurrentSortFn(sortFn);
+                const sortedDeck = sortDeck(deck, sortFn);
+                updateDeck(sortedDeck);
+              }
+            }}
+          >
+            <span>Sort</span>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <line x1="4" y1="9" x2="20" y2="9"></line>
+              <line x1="4" y1="15" x2="20" y2="15"></line>
+              <line x1="10" y1="3" x2="8" y2="21"></line>
+              <line x1="16" y1="3" x2="14" y2="21"></line>
+            </svg>
+          </button>
+        </div>
+
         <div
           className="card-grid"
           ref={mainDeckRef}

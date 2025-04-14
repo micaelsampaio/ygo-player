@@ -142,20 +142,12 @@ const SearchPanel: React.FC<SearchPanelProps> = ({
       {onTargetDeckChange && (
         <div className="target-deck-selector">
           <label>Add cards to:</label>
-          <div className="target-buttons">
-            <button
-              type="button"
-              className={targetDeck === "main" ? "active" : ""}
-              onClick={() => onTargetDeckChange("main")}
+          <div className="target-toggle">
+            <button 
+              className={`toggle-button ${targetDeck === "main" ? "active" : ""}`}
+              onClick={() => onTargetDeckChange(targetDeck === "main" ? "side" : "main")}
             >
-              Main/Extra Deck
-            </button>
-            <button
-              type="button"
-              className={targetDeck === "side" ? "active" : ""}
-              onClick={() => onTargetDeckChange("side")}
-            >
-              Side Deck
+              {targetDeck === "main" ? "Main/Extra Deck" : "Side Deck"}
             </button>
           </div>
         </div>

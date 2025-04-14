@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Card, Deck, DeckBuilderProps } from "./types";
 import DeckList from "./components/DeckList";
 import DeckEditor from "./components/DeckEditor/DeckEditor.tsx";
@@ -31,6 +31,8 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
   const [useEnhancedAnalysis, setUseEnhancedAnalysis] = useState(true);
   const [showEnhancedAnalysisToggle, setShowEnhancedAnalysisToggle] =
     useState(false);
+  const [isEditingDeckName, setIsEditingDeckName] = useState(false);
+  const deckNameInputRef = useRef<HTMLInputElement>(null);
 
   // Custom hooks
   const {
@@ -324,6 +326,23 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
     window.dispatchEvent(new Event("favoritesUpdated"));
   };
 
+  const handleDeckNameEdit = () => {
+    setIsEditingDeckName(true);
+    setTimeout(() => {
+      deckNameInputRef.current?.focus();
+    }, 0);
+  };
+
+  const handleDeckNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (selectedDeck) {
+      handleRenameDeck(selectedDeck, e.target.value);
+    }
+  };
+
+  const handleDeckNameBlur = () => {
+    setIsEditingDeckName(false);
+  };
+
   return (
     <div className="deck-builder">
       <div className="builder-container">
@@ -349,79 +368,122 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
         </div>
 
         <div className="editor-panel">
-          <div className="editor-tabs">
-            <button
-              className={activeTab === "editor" ? "active-tab" : ""}
-              onClick={() => handleTabChange("editor")}
-            >
-              Deck Editor
-            </button>
-            <button
-              className={activeTab === "analytics" ? "active-tab" : ""}
-              onClick={() => handleTabChange("analytics")}
-            >
-              Deck Analytics
-            </button>
-            <button
-              className={activeTab === "simulator" ? "active-tab" : ""}
-              onClick={() => handleTabChange("simulator")}
-            >
-              Draw Simulator
-            </button>
-
-            {showEnhancedAnalysisToggle && activeTab === "analytics" && (
-              <div className="analysis-toggle">
-                <label>
+          <div className="editor-header-container">
+            {selectedDeck && (
+              <div className="deck-header">
+                {isEditingDeckName ? (
                   <input
-                    type="checkbox"
-                    checked={useEnhancedAnalysis}
-                    onChange={toggleEnhancedAnalysis}
+                    ref={deckNameInputRef}
+                    type="text"
+                    value={selectedDeck.name}
+                    onChange={handleDeckNameChange}
+                    onBlur={handleDeckNameBlur}
+                    className="deck-name-input"
                   />
-                  Enhanced Analysis
-                </label>
-                {isAnalyzing && (
-                  <span className="analyzing-indicator">Analyzing...</span>
-                )}
-                {analyzerServiceError && !isAnalyzing && (
-                  <span className="error-indicator">Service Error</span>
+                ) : (
+                  <h2
+                    onClick={handleDeckNameEdit}
+                    className="clickable-deck-name"
+                  >
+                    {selectedDeck.name}
+                  </h2>
                 )}
               </div>
             )}
+
+            <div className="editor-tabs">
+              <button
+                className={activeTab === "editor" ? "active-tab" : ""}
+                onClick={() => handleTabChange("editor")}
+                disabled={!selectedDeck}
+              >
+                Deck Editor
+              </button>
+              <button
+                className={activeTab === "analytics" ? "active-tab" : ""}
+                onClick={() => handleTabChange("analytics")}
+                disabled={!selectedDeck}
+              >
+                Deck Analytics
+              </button>
+              <button
+                className={activeTab === "simulator" ? "active-tab" : ""}
+                onClick={() => handleTabChange("simulator")}
+                disabled={!selectedDeck}
+              >
+                Draw Simulator
+              </button>
+
+              {showEnhancedAnalysisToggle && activeTab === "analytics" && (
+                <div className="analysis-toggle">
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={useEnhancedAnalysis}
+                      onChange={toggleEnhancedAnalysis}
+                    />
+                    Enhanced Analysis
+                  </label>
+                  {isAnalyzing && (
+                    <span className="analyzing-indicator">Analyzing...</span>
+                  )}
+                  {analyzerServiceError && !isAnalyzing && (
+                    <span className="error-indicator">Service Error</span>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
 
-          {activeTab === "editor" && (
-            <DeckEditor
-              deck={selectedDeck}
-              onCardSelect={toggleCardPreview}
-              onCardRemove={(card, index, isExtraDeck, isSideDeck) =>
-                isSideDeck
-                  ? removeCardFromSideDeck(card, index)
-                  : removeCardFromDeck(card, index, isExtraDeck)
-              }
-              onRenameDeck={(newName) =>
-                selectedDeck && handleRenameDeck(selectedDeck, newName)
-              }
-              onClearDeck={() => selectedDeck && handleClearDeck(selectedDeck)}
-              onReorderCards={handleReorderCards}
-              onMoveCardBetweenDecks={moveCardBetweenDecks}
-              updateDeck={updateDeck}
-            />
-          )}
-          {activeTab === "simulator" && (
-            <DrawSimulator
-              deck={selectedDeck}
-              onCardSelect={toggleCardPreview}
-            />
-          )}
-          {activeTab === "analytics" && (
-            <DeckAnalytics
-              analytics={deckAnalytics}
-              deck={selectedDeck}
-              isVisible={activeTab === "analytics"}
-              isLoading={isAnalyzing}
-              isEnhanced={useEnhancedAnalysis && !analyzerServiceError}
-            />
-          )}
+          <div className="editor-panel-content">
+            {!selectedDeck ? (
+              <div className="no-deck-selected">
+                <h3>No Deck Selected</h3>
+                <p>
+                  Select a deck from the left panel or create a new one to
+                  begin.
+                </p>
+                <button
+                  className="action-btn"
+                  onClick={() => createDeck(`New Deck ${decks.length + 1}`)}
+                >
+                  Create New Deck
+                </button>
+              </div>
+            ) : activeTab === "editor" ? (
+              <DeckEditor
+                deck={selectedDeck}
+                onCardSelect={toggleCardPreview}
+                onCardRemove={(card, index, isExtraDeck, isSideDeck) =>
+                  isSideDeck
+                    ? removeCardFromSideDeck(card, index)
+                    : removeCardFromDeck(card, index, isExtraDeck)
+                }
+                onRenameDeck={(newName) =>
+                  selectedDeck && handleRenameDeck(selectedDeck, newName)
+                }
+                onClearDeck={() =>
+                  selectedDeck && handleClearDeck(selectedDeck)
+                }
+                onReorderCards={handleReorderCards}
+                onMoveCardBetweenDecks={moveCardBetweenDecks}
+                updateDeck={updateDeck}
+              />
+            ) : activeTab === "simulator" ? (
+              <DrawSimulator
+                deck={selectedDeck}
+                onCardSelect={toggleCardPreview}
+              />
+            ) : (
+              <DeckAnalytics
+                analytics={deckAnalytics}
+                deck={selectedDeck}
+                isVisible={activeTab === "analytics"}
+                isLoading={isAnalyzing}
+                isEnhanced={useEnhancedAnalysis && !analyzerServiceError}
+              />
+            )}
+          </div>
         </div>
 
         <div className="search-panel">

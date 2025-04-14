@@ -19,7 +19,6 @@ const Header: React.FC<HeaderProps> = ({
 }) => (
   <div className="deck-analytics-header">
     <div className="header-title-section">
-      <h2>{deck?.name || "Deck Analysis"}</h2>
       {isEnhanced && (
         <span
           className="enhanced-badge"
@@ -31,7 +30,7 @@ const Header: React.FC<HeaderProps> = ({
     </div>
     <div className="header-actions">
       <button
-        className="export-btn"
+        className="export-pdf-btn"
         onClick={onExportPdf}
         title="Export analysis to PDF"
       >
