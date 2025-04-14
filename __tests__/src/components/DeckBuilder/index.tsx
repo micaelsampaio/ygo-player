@@ -10,6 +10,7 @@ import CardSuggestions from "./components/CardSuggestion/CardSuggestions.tsx";
 import DrawSimulator from "./components/DrawSimulator"; // Fix import path
 import { useDeckStorage } from "./hooks/useDeckStorage";
 import { useDeckAnalytics } from "./hooks/useDeckAnalytics";
+import { useAnalyzerService } from "./hooks/useAnalyzerService";
 import { canAddCardToDeck } from "./utils";
 import { initializeBanList } from "./services/banListLoader";
 import { banListService } from "./services/banListService";
@@ -27,6 +28,9 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
   >("editor");
   const [targetDeck, setTargetDeck] = useState<"main" | "side">("main");
   const [analyticsCalculated, setAnalyticsCalculated] = useState(false);
+  const [useEnhancedAnalysis, setUseEnhancedAnalysis] = useState(true);
+  const [showEnhancedAnalysisToggle, setShowEnhancedAnalysisToggle] =
+    useState(false);
 
   // Custom hooks
   const {
@@ -46,6 +50,11 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
   } = useDeckStorage();
 
   const { analyzeDeck } = useDeckAnalytics();
+  const {
+    analyzeDeckWithService,
+    isLoading: analyzerServiceLoading,
+    error: analyzerServiceError,
+  } = useAnalyzerService();
 
   // Initialize ban list when component mounts
   useEffect(() => {
@@ -75,20 +84,50 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
 
   // Calculate analytics only when we select the analytics tab
   // instead of on every deck change
-  const calculateDeckAnalytics = useCallback(() => {
+  const calculateDeckAnalytics = useCallback(async () => {
     if (selectedDeck && !isAnalyzing) {
       setIsAnalyzing(true);
       setDeckAnalytics(null); // Clear previous analytics while calculating
 
-      // Use setTimeout to ensure UI remains responsive during calculation
-      setTimeout(() => {
-        const analytics = analyzeDeck(selectedDeck);
-        setDeckAnalytics(analytics);
+      try {
+        if (useEnhancedAnalysis) {
+          // First try to use the enhanced analyzer service
+          console.log("Using enhanced analyzer service");
+          const enhancedAnalytics = await analyzeDeckWithService(selectedDeck);
+
+          if (enhancedAnalytics) {
+            setDeckAnalytics(enhancedAnalytics);
+            setShowEnhancedAnalysisToggle(true);
+          } else {
+            // Fall back to local analysis if the service failed
+            console.log("Enhanced analyzer failed, using local analysis");
+            const localAnalytics = analyzeDeck(selectedDeck);
+            setDeckAnalytics(localAnalytics);
+          }
+        } else {
+          // Just use the local analyzer if enhanced analysis is disabled
+          console.log("Using local analyzer only");
+          const localAnalytics = analyzeDeck(selectedDeck);
+          setDeckAnalytics(localAnalytics);
+          setShowEnhancedAnalysisToggle(true);
+        }
+      } catch (error) {
+        console.error("Error during deck analysis:", error);
+        // Fall back to local analysis in case of any error
+        const localAnalytics = analyzeDeck(selectedDeck);
+        setDeckAnalytics(localAnalytics);
+      } finally {
         setIsAnalyzing(false);
         setAnalyticsCalculated(true);
-      }, 0);
+      }
     }
-  }, [selectedDeck, isAnalyzing, analyzeDeck]);
+  }, [
+    selectedDeck,
+    isAnalyzing,
+    analyzeDeck,
+    analyzeDeckWithService,
+    useEnhancedAnalysis,
+  ]);
 
   // Reset analytics calculated flag when deck changes
   useEffect(() => {
@@ -124,6 +163,17 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
 
     // Calculate analytics only if switching to analytics tab and they haven't been calculated yet
     if (tab === "analytics" && !analyticsCalculated && selectedDeck) {
+      calculateDeckAnalytics();
+    }
+  };
+
+  // Toggle between enhanced and basic analysis
+  const toggleEnhancedAnalysis = () => {
+    setUseEnhancedAnalysis(!useEnhancedAnalysis);
+    setAnalyticsCalculated(false); // Force recalculation
+
+    // Recalculate if we're currently on analytics tab
+    if (activeTab === "analytics" && selectedDeck) {
       calculateDeckAnalytics();
     }
   };
@@ -205,7 +255,7 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
 
     // If this was the selected deck, clear the selection
     if (selectedDeck && selectedDeck.name === deckToDelete.name) {
-      setSelectedDeck(null);
+      selectDeck(null);
     }
   };
 
@@ -318,6 +368,25 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
             >
               Draw Simulator
             </button>
+
+            {showEnhancedAnalysisToggle && activeTab === "analytics" && (
+              <div className="analysis-toggle">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={useEnhancedAnalysis}
+                    onChange={toggleEnhancedAnalysis}
+                  />
+                  Enhanced Analysis
+                </label>
+                {isAnalyzing && (
+                  <span className="analyzing-indicator">Analyzing...</span>
+                )}
+                {analyzerServiceError && !isAnalyzing && (
+                  <span className="error-indicator">Service Error</span>
+                )}
+              </div>
+            )}
           </div>
 
           {activeTab === "editor" && (
@@ -349,6 +418,8 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
               analytics={deckAnalytics}
               deck={selectedDeck}
               isVisible={activeTab === "analytics"}
+              isLoading={isAnalyzing}
+              isEnhanced={useEnhancedAnalysis && !analyzerServiceError}
             />
           )}
         </div>

@@ -12,6 +12,7 @@ import ImprovementTips from "./components/ImprovementTips";
 import ProbabilityFormula from "./components/ProbabilityFormula";
 import OptimalDistribution from "./components/OptimalDistribution";
 import HandCategories from "./components/HandCategories";
+import EnhancedAnalysis from "./components/EnhancedAnalysis";
 import AnalyticsModal from "./AnalyticsModal";
 import "./DeckAnalytics.css";
 import { Logger } from "../../../../utils/logger";
@@ -27,6 +28,8 @@ const DeckAnalytics: React.FC<DeckAnalyticsProps> = ({
   analytics,
   deck,
   isVisible,
+  isLoading = false,
+  isEnhanced = false,
 }) => {
   const [activeTab, setActiveTab] = useState<
     "overview" | "advanced" | "probability" | "suggestions"
@@ -174,10 +177,19 @@ const DeckAnalytics: React.FC<DeckAnalyticsProps> = ({
     return null;
   }
 
-  if (!processedAnalytics) {
+  if (isLoading) {
     return (
       <div className="deck-analytics loading">
         <h2>Analyzing Deck...</h2>
+        <div className="loading-spinner"></div>
+      </div>
+    );
+  }
+
+  if (!processedAnalytics) {
+    return (
+      <div className="deck-analytics loading">
+        <h2>No analytics available</h2>
       </div>
     );
   }
@@ -243,6 +255,11 @@ const DeckAnalytics: React.FC<DeckAnalyticsProps> = ({
   const renderOverviewTab = () => (
     <>
       <div id="basic-analysis-section">
+        {/* Show enhanced analysis if available */}
+        {isEnhanced && processedAnalytics.archetype && (
+          <EnhancedAnalysis analytics={processedAnalytics} />
+        )}
+
         <DeckComposition analytics={processedAnalytics} />
         <DeckStyle powerUtility={deckMetrics.powerUtility} />
         <KeyCards
@@ -280,6 +297,13 @@ const DeckAnalytics: React.FC<DeckAnalyticsProps> = ({
 
   const renderAdvancedAnalysisContent = () => (
     <div className="full-analysis" id="advanced-analysis-section">
+      {/* If enhanced analysis is available, show it at the top of the advanced view as well */}
+      {isEnhanced && processedAnalytics.archetype && (
+        <section className="analysis-section enhanced-section">
+          <EnhancedAnalysis analytics={processedAnalytics} />
+        </section>
+      )}
+
       <section className="analysis-section">
         <h3>Deck Archetype Analysis</h3>
         <ArchetypeAnalysis
@@ -527,6 +551,7 @@ const DeckAnalytics: React.FC<DeckAnalyticsProps> = ({
         onExportPdf={exportToPdf}
         deck={deck}
         analytics={processedAnalytics}
+        isEnhanced={isEnhanced}
       />
       <div className="tab-content">{renderOverviewTab()}</div>
 

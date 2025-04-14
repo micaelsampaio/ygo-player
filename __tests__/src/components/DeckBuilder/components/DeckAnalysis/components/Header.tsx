@@ -1,12 +1,13 @@
-import React, { useState } from "react";
+import React from "react";
+import { DeckAnalyticsType } from "../types";
 import { Deck } from "../../../types";
-import { exportDeckAnalysisToPdf } from "../../../utils/pdfExport";
 
 interface HeaderProps {
   onExport: () => void;
-  onExportPdf?: () => void; // New prop to handle PDF export from parent
+  onExportPdf: () => void;
   deck?: Deck;
-  analytics?: any;
+  analytics: DeckAnalyticsType;
+  isEnhanced?: boolean;
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -14,43 +15,30 @@ const Header: React.FC<HeaderProps> = ({
   onExportPdf,
   deck,
   analytics,
-}) => {
-  const [isExporting, setIsExporting] = useState(false);
-
-  const handlePdfExport = async () => {
-    if (!deck || !analytics) return;
-
-    setIsExporting(true);
-    try {
-      // Use the parent's export function if provided
-      if (onExportPdf) {
-        onExportPdf();
-      }
-    } catch (error) {
-      console.error("Error exporting PDF:", error);
-      alert("Failed to export PDF. Please try again.");
-    } finally {
-      setIsExporting(false);
-    }
-  };
-
-  return (
-    <div className="deck-analytics-header">
-      <div className="header-title-section">
-        <h2>Deck Analysis</h2>
-        <div className="export-buttons" style={{ marginLeft: "auto" }}>
-          <button
-            className="export-pdf-btn"
-            onClick={handlePdfExport}
-            disabled={isExporting || !deck}
-            title="Export complete analysis as PDF report"
-          >
-            {isExporting ? "Generating..." : "📄 Export PDF"}
-          </button>
-        </div>
-      </div>
+  isEnhanced = false,
+}) => (
+  <div className="deck-analytics-header">
+    <div className="header-title-section">
+      <h2>{deck?.name || "Deck Analysis"}</h2>
+      {isEnhanced && (
+        <span
+          className="enhanced-badge"
+          title="Enhanced analysis powered by YGO Analyzer"
+        >
+          Enhanced Analysis
+        </span>
+      )}
     </div>
-  );
-};
+    <div className="header-actions">
+      <button
+        className="export-btn"
+        onClick={onExportPdf}
+        title="Export analysis to PDF"
+      >
+        Export to PDF
+      </button>
+    </div>
+  </div>
+);
 
 export default Header;
