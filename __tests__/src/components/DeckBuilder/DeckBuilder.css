@@ -24,12 +24,37 @@
   overflow-y: auto;
 }
 
+.editor-panel {
+  background: #f7f7f7;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  max-height: 85vh;
+  overflow: hidden; /* Hide overflow at the container level */
+}
+
+.editor-header-container {
+  flex-shrink: 0; /* Prevent the header from shrinking */
+  background: #f7f7f7;
+}
+
+.deck-header {
+  padding: 8px 15px;
+  border-bottom: 1px solid #e0e0e0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f7f7f7;
+}
+
 .editor-tabs {
   display: flex;
   gap: 5px;
-  margin-bottom: 15px;
   border-bottom: 1px solid #ddd;
-  padding-bottom: 10px;
+  padding: 10px 15px;
+  background: #f7f7f7;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 .editor-tabs button {
@@ -37,20 +62,65 @@
   background: none;
   border: none;
   border-radius: 4px;
-  cursor: pointer;
   font-size: 14px;
+  cursor: pointer;
   color: #666;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
+  position: relative;
 }
 
 .editor-tabs button:hover {
-  background: #eee;
   color: #333;
+  background: #e9e9e9;
 }
 
 .editor-tabs button.active-tab {
   background: #2196f3;
   color: white;
+  box-shadow: 0 2px 4px rgba(33, 150, 243, 0.3);
+}
+
+.editor-tabs button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #f0f0f0;
+  color: #999;
+}
+
+.editor-panel-content {
+  flex: 1; /* Take up all remaining space */
+  padding: 15px;
+  overflow-y: auto; /* Only the content scrolls */
+}
+
+.no-deck-selected {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 2rem;
+  text-align: center;
+  color: #666;
+}
+
+.no-deck-selected h3 {
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
+  color: #333;
+}
+
+.no-deck-selected p {
+  margin-bottom: 1.5rem;
+}
+
+.no-deck-selected .action-btn {
+  padding: 8px 16px;
+  background: #2196f3;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
 }
 
 .decks-panel ul {
@@ -396,7 +466,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
+  z-index: 1050; /* Increased z-index to be higher than fixed headers */
   backdrop-filter: blur(5px);
   animation: fadeIn 0.2s ease-out;
 }
@@ -508,6 +578,42 @@
 
 .add-to-deck-btn-large:hover {
   background: #27ae60;
+}
+
+/* Modify the deck-editor-header to align the sort button to the right */
+.deck-editor-header {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 15px;
+}
+
+/* Update positioning and size of the sort button */
+.sort-button {
+  background: #e1f5fe;
+  border: 1px solid #81d4fa;
+  border-radius: 4px;
+  padding: 4px 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s;
+  font-size: 0.8em;
+  color: #0288d1;
+  font-weight: 500;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.sort-button:hover {
+  background: #b3e5fc;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
+}
+
+.sort-button svg {
+  width: 14px;
+  height: 14px;
+  stroke: #0288d1;
 }
 
 /* Animations */
@@ -634,4 +740,44 @@
   .card-search {
     flex-direction: column;
   }
+}
+
+.clickable-deck-name {
+  cursor: pointer;
+  position: relative;
+  margin: 0;
+  font-size: 1.2rem; /* Slightly smaller for better vertical space */
+}
+
+.clickable-deck-name:hover::after {
+  content: "✎";
+  position: absolute;
+  margin-left: 8px;
+  font-size: 0.8em;
+  opacity: 0.6;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.clickable-deck-name:hover {
+  color: #1976d2;
+}
+
+.deck-name-input {
+  background: transparent;
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #333;
+  border: none;
+  border-bottom: 2px solid #1976d2;
+  padding: 0 0 5px 0;
+  margin: 0;
+  width: 80%;
+  font-family: inherit;
+  outline: none;
+}
+
+.deck-name-input:focus {
+  border-color: #2196f3;
+  box-shadow: 0 1px 2px rgba(33, 150, 243, 0.2);
 }

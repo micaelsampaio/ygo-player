@@ -79,6 +79,23 @@ const DeckList: React.FC<DeckListProps> = ({
     setActiveDeckOptions(null);
   };
 
+  const handleDeleteDeck = (deck: Deck) => {
+    if (
+      window.confirm(
+        `Are you sure you want to delete "${deck.name}"? This action cannot be undone.`
+      )
+    ) {
+      // First ensure we have the correct key for localStorage
+      const storageKey = `deck_${deck.name}`;
+
+      // Remove from localStorage directly to ensure it's gone
+      localStorage.removeItem(storageKey);
+
+      // Then call the parent component's delete function
+      onDeleteDeck(deck);
+    }
+  };
+
   const handleContextMenu = (deck: Deck, event: React.MouseEvent) => {
     event.preventDefault(); // Prevent the default context menu
     event.stopPropagation();
@@ -227,7 +244,7 @@ const DeckList: React.FC<DeckListProps> = ({
                       setActiveDeckOptions(null);
                     }}
                     onDeleteDeck={() => {
-                      onDeleteDeck(deck);
+                      handleDeleteDeck(deck);
                       setActiveDeckOptions(null);
                     }}
                     onCreateCollection={() => {

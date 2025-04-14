@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Card, Deck, DeckBuilderProps } from "./types";
 import DeckList from "./components/DeckList";
 import DeckEditor from "./components/DeckEditor/DeckEditor.tsx";
@@ -10,6 +10,7 @@ import CardSuggestions from "./components/CardSuggestion/CardSuggestions.tsx";
 import DrawSimulator from "./components/DrawSimulator"; // Fix import path
 import { useDeckStorage } from "./hooks/useDeckStorage";
 import { useDeckAnalytics } from "./hooks/useDeckAnalytics";
+import { useAnalyzerService } from "./hooks/useAnalyzerService";
 import { canAddCardToDeck } from "./utils";
 import { initializeBanList } from "./services/banListLoader";
 import { banListService } from "./services/banListService";
@@ -27,6 +28,11 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
   >("editor");
   const [targetDeck, setTargetDeck] = useState<"main" | "side">("main");
   const [analyticsCalculated, setAnalyticsCalculated] = useState(false);
+  const [useEnhancedAnalysis, setUseEnhancedAnalysis] = useState(true);
+  const [showEnhancedAnalysisToggle, setShowEnhancedAnalysisToggle] =
+    useState(false);
+  const [isEditingDeckName, setIsEditingDeckName] = useState(false);
+  const deckNameInputRef = useRef<HTMLInputElement>(null);
 
   // Custom hooks
   const {
@@ -46,6 +52,11 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
   } = useDeckStorage();
 
   const { analyzeDeck } = useDeckAnalytics();
+  const {
+    analyzeDeckWithService,
+    isLoading: analyzerServiceLoading,
+    error: analyzerServiceError,
+  } = useAnalyzerService();
 
   // Initialize ban list when component mounts
   useEffect(() => {
@@ -75,20 +86,50 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
 
   // Calculate analytics only when we select the analytics tab
   // instead of on every deck change
-  const calculateDeckAnalytics = useCallback(() => {
+  const calculateDeckAnalytics = useCallback(async () => {
     if (selectedDeck && !isAnalyzing) {
       setIsAnalyzing(true);
       setDeckAnalytics(null); // Clear previous analytics while calculating
 
-      // Use setTimeout to ensure UI remains responsive during calculation
-      setTimeout(() => {
-        const analytics = analyzeDeck(selectedDeck);
-        setDeckAnalytics(analytics);
+      try {
+        if (useEnhancedAnalysis) {
+          // First try to use the enhanced analyzer service
+          console.log("Using enhanced analyzer service");
+          const enhancedAnalytics = await analyzeDeckWithService(selectedDeck);
+
+          if (enhancedAnalytics) {
+            setDeckAnalytics(enhancedAnalytics);
+            setShowEnhancedAnalysisToggle(true);
+          } else {
+            // Fall back to local analysis if the service failed
+            console.log("Enhanced analyzer failed, using local analysis");
+            const localAnalytics = analyzeDeck(selectedDeck);
+            setDeckAnalytics(localAnalytics);
+          }
+        } else {
+          // Just use the local analyzer if enhanced analysis is disabled
+          console.log("Using local analyzer only");
+          const localAnalytics = analyzeDeck(selectedDeck);
+          setDeckAnalytics(localAnalytics);
+          setShowEnhancedAnalysisToggle(true);
+        }
+      } catch (error) {
+        console.error("Error during deck analysis:", error);
+        // Fall back to local analysis in case of any error
+        const localAnalytics = analyzeDeck(selectedDeck);
+        setDeckAnalytics(localAnalytics);
+      } finally {
         setIsAnalyzing(false);
         setAnalyticsCalculated(true);
-      }, 0);
+      }
     }
-  }, [selectedDeck, isAnalyzing, analyzeDeck]);
+  }, [
+    selectedDeck,
+    isAnalyzing,
+    analyzeDeck,
+    analyzeDeckWithService,
+    useEnhancedAnalysis,
+  ]);
 
   // Reset analytics calculated flag when deck changes
   useEffect(() => {
@@ -124,6 +165,17 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
 
     // Calculate analytics only if switching to analytics tab and they haven't been calculated yet
     if (tab === "analytics" && !analyticsCalculated && selectedDeck) {
+      calculateDeckAnalytics();
+    }
+  };
+
+  // Toggle between enhanced and basic analysis
+  const toggleEnhancedAnalysis = () => {
+    setUseEnhancedAnalysis(!useEnhancedAnalysis);
+    setAnalyticsCalculated(false); // Force recalculation
+
+    // Recalculate if we're currently on analytics tab
+    if (activeTab === "analytics" && selectedDeck) {
       calculateDeckAnalytics();
     }
   };
@@ -205,7 +257,7 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
 
     // If this was the selected deck, clear the selection
     if (selectedDeck && selectedDeck.name === deckToDelete.name) {
-      setSelectedDeck(null);
+      selectDeck(null);
     }
   };
 
@@ -274,6 +326,23 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
     window.dispatchEvent(new Event("favoritesUpdated"));
   };
 
+  const handleDeckNameEdit = () => {
+    setIsEditingDeckName(true);
+    setTimeout(() => {
+      deckNameInputRef.current?.focus();
+    }, 0);
+  };
+
+  const handleDeckNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (selectedDeck) {
+      handleRenameDeck(selectedDeck, e.target.value);
+    }
+  };
+
+  const handleDeckNameBlur = () => {
+    setIsEditingDeckName(false);
+  };
+
   return (
     <div className="deck-builder">
       <div className="builder-container">
@@ -299,58 +368,122 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
         </div>
 
         <div className="editor-panel">
-          <div className="editor-tabs">
-            <button
-              className={activeTab === "editor" ? "active-tab" : ""}
-              onClick={() => handleTabChange("editor")}
-            >
-              Deck Editor
-            </button>
-            <button
-              className={activeTab === "analytics" ? "active-tab" : ""}
-              onClick={() => handleTabChange("analytics")}
-            >
-              Deck Analytics
-            </button>
-            <button
-              className={activeTab === "simulator" ? "active-tab" : ""}
-              onClick={() => handleTabChange("simulator")}
-            >
-              Draw Simulator
-            </button>
+          <div className="editor-header-container">
+            {selectedDeck && (
+              <div className="deck-header">
+                {isEditingDeckName ? (
+                  <input
+                    ref={deckNameInputRef}
+                    type="text"
+                    value={selectedDeck.name}
+                    onChange={handleDeckNameChange}
+                    onBlur={handleDeckNameBlur}
+                    className="deck-name-input"
+                  />
+                ) : (
+                  <h2
+                    onClick={handleDeckNameEdit}
+                    className="clickable-deck-name"
+                  >
+                    {selectedDeck.name}
+                  </h2>
+                )}
+              </div>
+            )}
+
+            <div className="editor-tabs">
+              <button
+                className={activeTab === "editor" ? "active-tab" : ""}
+                onClick={() => handleTabChange("editor")}
+                disabled={!selectedDeck}
+              >
+                Deck Editor
+              </button>
+              <button
+                className={activeTab === "analytics" ? "active-tab" : ""}
+                onClick={() => handleTabChange("analytics")}
+                disabled={!selectedDeck}
+              >
+                Deck Analytics
+              </button>
+              <button
+                className={activeTab === "simulator" ? "active-tab" : ""}
+                onClick={() => handleTabChange("simulator")}
+                disabled={!selectedDeck}
+              >
+                Draw Simulator
+              </button>
+
+              {showEnhancedAnalysisToggle && activeTab === "analytics" && (
+                <div className="analysis-toggle">
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={useEnhancedAnalysis}
+                      onChange={toggleEnhancedAnalysis}
+                    />
+                    Enhanced Analysis
+                  </label>
+                  {isAnalyzing && (
+                    <span className="analyzing-indicator">Analyzing...</span>
+                  )}
+                  {analyzerServiceError && !isAnalyzing && (
+                    <span className="error-indicator">Service Error</span>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
 
-          {activeTab === "editor" && (
-            <DeckEditor
-              deck={selectedDeck}
-              onCardSelect={toggleCardPreview}
-              onCardRemove={(card, index, isExtraDeck, isSideDeck) =>
-                isSideDeck
-                  ? removeCardFromSideDeck(card, index)
-                  : removeCardFromDeck(card, index, isExtraDeck)
-              }
-              onRenameDeck={(newName) =>
-                selectedDeck && handleRenameDeck(selectedDeck, newName)
-              }
-              onClearDeck={() => selectedDeck && handleClearDeck(selectedDeck)}
-              onReorderCards={handleReorderCards}
-              onMoveCardBetweenDecks={moveCardBetweenDecks}
-              updateDeck={updateDeck}
-            />
-          )}
-          {activeTab === "simulator" && (
-            <DrawSimulator
-              deck={selectedDeck}
-              onCardSelect={toggleCardPreview}
-            />
-          )}
-          {activeTab === "analytics" && (
-            <DeckAnalytics
-              analytics={deckAnalytics}
-              deck={selectedDeck}
-              isVisible={activeTab === "analytics"}
-            />
-          )}
+          <div className="editor-panel-content">
+            {!selectedDeck ? (
+              <div className="no-deck-selected">
+                <h3>No Deck Selected</h3>
+                <p>
+                  Select a deck from the left panel or create a new one to
+                  begin.
+                </p>
+                <button
+                  className="action-btn"
+                  onClick={() => createDeck(`New Deck ${decks.length + 1}`)}
+                >
+                  Create New Deck
+                </button>
+              </div>
+            ) : activeTab === "editor" ? (
+              <DeckEditor
+                deck={selectedDeck}
+                onCardSelect={toggleCardPreview}
+                onCardRemove={(card, index, isExtraDeck, isSideDeck) =>
+                  isSideDeck
+                    ? removeCardFromSideDeck(card, index)
+                    : removeCardFromDeck(card, index, isExtraDeck)
+                }
+                onRenameDeck={(newName) =>
+                  selectedDeck && handleRenameDeck(selectedDeck, newName)
+                }
+                onClearDeck={() =>
+                  selectedDeck && handleClearDeck(selectedDeck)
+                }
+                onReorderCards={handleReorderCards}
+                onMoveCardBetweenDecks={moveCardBetweenDecks}
+                updateDeck={updateDeck}
+              />
+            ) : activeTab === "simulator" ? (
+              <DrawSimulator
+                deck={selectedDeck}
+                onCardSelect={toggleCardPreview}
+              />
+            ) : (
+              <DeckAnalytics
+                analytics={deckAnalytics}
+                deck={selectedDeck}
+                isVisible={activeTab === "analytics"}
+                isLoading={isAnalyzing}
+                isEnhanced={useEnhancedAnalysis && !analyzerServiceError}
+              />
+            )}
+          </div>
         </div>
 
         <div className="search-panel">

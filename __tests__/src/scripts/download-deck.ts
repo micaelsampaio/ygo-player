@@ -2,7 +2,9 @@
 import { DeckData } from "./ydk-parser";
 
 export async function getCard(id: number) {
-  const response = await fetch(`https://db.ygoprodeck.com/api/v7/cardinfo.php?id=${id}&misc=yes`);
+  const response = await fetch(
+    `https://db.ygoprodeck.com/api/v7/cardinfo.php?id=${id}&misc=yes`
+  );
   if (!response.ok) throw new Error("failed to fetch");
   const cardsResult: any = await response.json();
   const card = cardsResult.data[0];
@@ -24,13 +26,13 @@ export async function downloadDeck(
     events,
   }:
     | {
-      events?: {
-        onProgess: (args: {
-          cardDownloaded: number;
-          totalCards: number;
-        }) => void;
-      };
-    }
+        events?: {
+          onProgess: (args: {
+            cardDownloaded: number;
+            totalCards: number;
+          }) => void;
+        };
+      }
     | undefined = {}
 ) {
   const cards = new Set<number>();

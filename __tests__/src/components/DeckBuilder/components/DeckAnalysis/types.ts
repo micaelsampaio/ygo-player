@@ -50,9 +50,22 @@ export type DeckAnalyticsType = {
       probability?: number;
     };
   }>;
+
+  // Enhanced analytics fields from ygo-analyser
+  archetype?: string;
+  strategy?: string;
+  mainCombos?: string[];
+  strengths?: string[];
+  weaknesses?: string[];
+  counters?: string[];
+  recommendedTechs?: string[];
+  confidenceScore?: number;
 };
 
 export interface DeckAnalyticsProps {
   analytics: DeckAnalyticsType | null;
   deck?: Deck;
+  isVisible?: boolean;
+  isLoading?: boolean;
+  isEnhanced?: boolean;
 }

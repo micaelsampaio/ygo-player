@@ -12,6 +12,7 @@ import ImprovementTips from "./components/ImprovementTips";
 import ProbabilityFormula from "./components/ProbabilityFormula";
 import OptimalDistribution from "./components/OptimalDistribution";
 import HandCategories from "./components/HandCategories";
+import EnhancedAnalysis from "./components/EnhancedAnalysis";
 import AnalyticsModal from "./AnalyticsModal";
 import "./DeckAnalytics.css";
 import { Logger } from "../../../../utils/logger";
@@ -27,9 +28,11 @@ const DeckAnalytics: React.FC<DeckAnalyticsProps> = ({
   analytics,
   deck,
   isVisible,
+  isLoading = false,
+  isEnhanced = false,
 }) => {
   const [activeTab, setActiveTab] = useState<
-    "overview" | "advanced" | "probability" | "suggestions"
+    "overview" | "advanced" | "probability"
   >("overview");
 
   const [modalContent, setModalContent] = useState<{
@@ -174,10 +177,19 @@ const DeckAnalytics: React.FC<DeckAnalyticsProps> = ({
     return null;
   }
 
-  if (!processedAnalytics) {
+  if (isLoading) {
     return (
       <div className="deck-analytics loading">
         <h2>Analyzing Deck...</h2>
+        <div className="loading-spinner"></div>
+      </div>
+    );
+  }
+
+  if (!processedAnalytics) {
+    return (
+      <div className="deck-analytics loading">
+        <h2>No analytics available</h2>
       </div>
     );
   }
@@ -243,6 +255,11 @@ const DeckAnalytics: React.FC<DeckAnalyticsProps> = ({
   const renderOverviewTab = () => (
     <>
       <div id="basic-analysis-section">
+        {/* Show enhanced analysis if available */}
+        {isEnhanced && processedAnalytics.archetype && (
+          <EnhancedAnalysis analytics={processedAnalytics} />
+        )}
+
         <DeckComposition analytics={processedAnalytics} />
         <DeckStyle powerUtility={deckMetrics.powerUtility} />
         <KeyCards
@@ -250,36 +267,18 @@ const DeckAnalytics: React.FC<DeckAnalyticsProps> = ({
           onHoverCard={setHoveredCard}
         />
       </div>
-      <div className="analytics-section">
-        <div className="section-header-with-actions">
-          <h3>Advanced Analysis</h3>
-          <button className="view-more-btn" onClick={openAdvancedModal}>
-            View Full Analysis
-          </button>
-        </div>
-        <p className="section-preview">
-          View detailed archetype analysis, attribute distribution, and deck
-          performance metrics in the full analysis view.
-        </p>
-      </div>
-
-      <div className="analytics-section">
-        <div className="section-header-with-actions">
-          <h3>Advanced Probability Analysis</h3>
-          <button className="view-more-btn" onClick={openProbabilityModal}>
-            View Probabilities
-          </button>
-        </div>
-        <p className="section-preview">
-          View detailed draw probabilities, combo chances, and hand simulation
-          results in the full probability view.
-        </p>
-      </div>
     </>
   );
 
   const renderAdvancedAnalysisContent = () => (
     <div className="full-analysis" id="advanced-analysis-section">
+      {/* If enhanced analysis is available, show it at the top of the advanced view as well */}
+      {isEnhanced && processedAnalytics.archetype && (
+        <section className="analysis-section enhanced-section">
+          <EnhancedAnalysis analytics={processedAnalytics} />
+        </section>
+      )}
+
       <section className="analysis-section">
         <h3>Deck Archetype Analysis</h3>
         <ArchetypeAnalysis
@@ -527,8 +526,35 @@ const DeckAnalytics: React.FC<DeckAnalyticsProps> = ({
         onExportPdf={exportToPdf}
         deck={deck}
         analytics={processedAnalytics}
+        isEnhanced={isEnhanced}
       />
-      <div className="tab-content">{renderOverviewTab()}</div>
+
+      <div className="analytics-navigation">
+        <button
+          className={`nav-tab ${activeTab === "overview" ? "active" : ""}`}
+          onClick={() => setActiveTab("overview")}
+        >
+          Overview
+        </button>
+        <button
+          className={`nav-tab ${activeTab === "advanced" ? "active" : ""}`}
+          onClick={() => setActiveTab("advanced")}
+        >
+          Advanced
+        </button>
+        <button
+          className={`nav-tab ${activeTab === "probability" ? "active" : ""}`}
+          onClick={() => setActiveTab("probability")}
+        >
+          Probability
+        </button>
+      </div>
+
+      <div className="tab-content">
+        {activeTab === "overview" && renderOverviewTab()}
+        {activeTab === "advanced" && renderAdvancedAnalysisContent()}
+        {activeTab === "probability" && renderProbabilityContent()}
+      </div>
 
       <AnalyticsModal
         isOpen={modalContent.isOpen && modalContent.content === "advanced"}

@@ -34,9 +34,10 @@ const SearchResults: React.FC<SearchResultsProps> = ({
     return "";
   };
 
-  const handleToggleFavorite = (card: Card, event: React.MouseEvent) => {
-    event.stopPropagation(); // Prevent card selection when clicking favorite button
-    onToggleFavorite(card);
+  // Handle right-click to directly add to the currently selected deck
+  const handleRightClick = (card: Card, event: React.MouseEvent) => {
+    event.preventDefault(); // Prevent default context menu
+    onCardAdd(card); // Add to the currently selected deck type
   };
 
   if (isLoading) {
@@ -57,7 +58,11 @@ const SearchResults: React.FC<SearchResultsProps> = ({
     <div className="search-results">
       <div className="search-results-grid">
         {results.map((card) => (
-          <div key={card.id} className="suggestion-card">
+          <div 
+            key={card.id} 
+            className="suggestion-card" 
+            onContextMenu={(e) => handleRightClick(card, e)}
+          >
             <img
               src={getCardImageUrl(card, "small")}
               alt={card.name}

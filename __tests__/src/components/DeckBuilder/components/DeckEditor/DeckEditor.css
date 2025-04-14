@@ -128,9 +128,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin: 1.5rem 0 0.5rem 0;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid #eee;
+  margin-bottom: 10px;
+  margin-top: 15px;
 }
 
 .deck-section-header h4 {
@@ -138,6 +137,18 @@
   color: #333;
   font-size: 1.1rem;
   font-weight: 600;
+}
+
+/* Deck header with actions */
+.deck-header-with-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.deck-header-with-actions h4 {
+  margin: 0;
 }
 
 /* Enhanced sort options container styles */
