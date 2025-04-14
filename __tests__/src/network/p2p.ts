@@ -177,7 +177,8 @@ export class PeerToPeer extends EventEmitter {
                 //                credentialType: "password",
               },
             ],
-            iceTransportPolicy: "relay", // Force using TURN relay instead of direct connections
+            //iceCandidatePoolSize: 10,
+            iceTransportPolicy: "all",
             rtcpMuxPolicy: "require",
           },
           debugWebRTC: true,
