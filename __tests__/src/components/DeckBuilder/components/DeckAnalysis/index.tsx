@@ -80,12 +80,42 @@ const DeckAnalytics: React.FC<DeckAnalyticsProps> = ({
       return null;
     }
 
+    // Log incoming data
     logger.debug("DEBUG: DeckAnalytics - Raw analytics received:", {
       monsterCount: analytics.monsterCount,
       spellCount: analytics.spellCount,
       trapCount: analytics.trapCount,
+      hasArchetype: !!analytics.archetype,
+      archetype: analytics.archetype,
       hasEnhanced: !!analytics.archetype && isEnhanced,
     });
+
+    // Check if we have enhanced data in the cache that needs to be preserved
+    if (
+      processedAnalyticsCache &&
+      isEnhanced &&
+      processedAnalyticsCache.archetype &&
+      processedAnalyticsCache.mlEnhanced === true
+    ) {
+      logger.debug(
+        "Preserving enhanced data from cache while updating analytics"
+      );
+
+      // Merge new analytics with the enhanced data we want to preserve
+      // But DON'T update the state here - that's causing the infinite loop
+      return {
+        ...analytics,
+        archetype: processedAnalyticsCache.archetype,
+        strategy: processedAnalyticsCache.strategy,
+        mainCombos: processedAnalyticsCache.mainCombos || [],
+        strengths: processedAnalyticsCache.strengths || [],
+        weaknesses: processedAnalyticsCache.weaknesses || [],
+        counters: processedAnalyticsCache.counters || [],
+        recommendedTechs: processedAnalyticsCache.recommendedTechs || [],
+        confidenceScore: processedAnalyticsCache.confidenceScore,
+        mlEnhanced: true,
+      };
+    }
 
     // Return cached data if available and valid
     if (processedAnalyticsCache) {
@@ -115,9 +145,7 @@ const DeckAnalytics: React.FC<DeckAnalyticsProps> = ({
       setIsEnhancedLoading(false);
     }
 
-    // Store the processed data in cache for future use
-    setProcessedAnalyticsCache(analytics);
-
+    // Important: Don't update state inside useMemo - just return the value
     return analytics;
   }, [
     analytics,
@@ -172,15 +200,61 @@ const DeckAnalytics: React.FC<DeckAnalyticsProps> = ({
     return newMetrics;
   }, [isVisible, processedAnalytics, deckMetricsCache]);
 
-  // Reset caches when deck or analytics change
+  // Reset caches when deck or analytics change - but preserve enhanced data when needed
   useEffect(() => {
-    if (isVisible && analytics && analytics !== processedAnalyticsCache) {
+    // Skip if not visible or no analytics
+    if (!isVisible || !analytics) return;
+
+    // Skip if cache is the same object as analytics (prevents infinite update)
+    if (processedAnalyticsCache === analytics) return;
+
+    // Important: Skip if we're comparing a merged analytics object we created
+    // with our exact analytics input object - this breaks the infinite loop
+    if (
+      processedAnalyticsCache &&
+      analytics !== processedAnalyticsCache &&
+      isEnhanced &&
+      processedAnalyticsCache.mlEnhanced
+    ) {
+      // Only update if we don't already have enhanced data in the merged analytics
+      const needsUpdate =
+        !processedAnalyticsCache.archetype ||
+        processedAnalyticsCache.monsterCount !== analytics.monsterCount ||
+        processedAnalyticsCache.spellCount !== analytics.spellCount ||
+        processedAnalyticsCache.trapCount !== analytics.trapCount;
+
+      if (needsUpdate) {
+        logger.debug("Analytics changed but preserving enhanced data");
+
+        // Create a merged version with new analytics but preserved enhanced data
+        const mergedAnalytics = {
+          ...analytics,
+          // Keep the enhanced data fields
+          archetype: processedAnalyticsCache.archetype,
+          strategy: processedAnalyticsCache.strategy,
+          mainCombos: processedAnalyticsCache.mainCombos || [],
+          strengths: processedAnalyticsCache.strengths || [],
+          weaknesses: processedAnalyticsCache.weaknesses || [],
+          counters: processedAnalyticsCache.counters || [],
+          recommendedTechs: processedAnalyticsCache.recommendedTechs || [],
+          confidenceScore: processedAnalyticsCache.confidenceScore,
+          mlEnhanced: true,
+        };
+
+        // Update cache with merged data
+        setProcessedAnalyticsCache(mergedAnalytics);
+      }
+    } else if (analytics !== processedAnalyticsCache) {
+      // Normal behavior - reset caches when analytics object changes
+      // and we don't have enhanced data to preserve
       logger.debug("Resetting analytics caches due to data change");
       setProcessedAnalyticsCache(null);
       setDeckMetricsCache(null);
-      setIsEnhancedLoading(false);
     }
-  }, [isVisible, analytics, processedAnalyticsCache]);
+
+    // Always reset loading state
+    setIsEnhancedLoading(false);
+  }, [isVisible, analytics, processedAnalyticsCache, isEnhanced]);
 
   // Initialize calculations once when tab becomes visible and data is available
   useEffect(() => {
@@ -462,6 +536,39 @@ const DeckAnalytics: React.FC<DeckAnalyticsProps> = ({
     );
   };
 
+  // Add a debug effect to track enhanced data changes
+  useEffect(() => {
+    if (isEnhanced && !isEnhancedLoading && processedAnalytics) {
+      // This will show up in React DevTools
+      logger.debug("Enhanced data state updated:", {
+        hasArchetype: !!processedAnalytics?.archetype,
+        archetype: processedAnalytics?.archetype,
+        strategy: processedAnalytics?.strategy,
+        hasMainCombos: !!(processedAnalytics?.mainCombos?.length > 0),
+      });
+    }
+  }, [isEnhanced, isEnhancedLoading, processedAnalytics]);
+
+  // New effect to handle preserving enhanced data in cache when needed
+  useEffect(() => {
+    if (
+      isEnhanced &&
+      processedAnalytics &&
+      processedAnalytics.archetype &&
+      !processedAnalytics.mlEnhanced
+    ) {
+      // If we have enhanced data that isn't marked as mlEnhanced, update the cache to mark it
+      logger.debug("Updating cache with enhanced data flag");
+
+      const enhancedData = {
+        ...processedAnalytics,
+        mlEnhanced: true,
+      };
+
+      setProcessedAnalyticsCache(enhancedData);
+    }
+  }, [isEnhanced, processedAnalytics]);
+
   // Update UI to show the enhanced analytics section is loading
   const isAnalyticsLoading = isLoading || isEnhancedLoading;
 
@@ -631,16 +738,6 @@ const DeckAnalytics: React.FC<DeckAnalyticsProps> = ({
         onToggleEnhanced={handleToggleEnhanced}
         isLoading={isEnhancedLoading}
       />
-      {/* Debug output for enhanced data */}
-      {isEnhanced &&
-        !isEnhancedLoading &&
-        console.log("Enhanced data check:", {
-          hasArchetype: !!processedAnalytics?.archetype,
-          archetype: processedAnalytics?.archetype,
-          strategy: processedAnalytics?.strategy,
-          hasMainCombos: !!(processedAnalytics?.mainCombos?.length > 0),
-          processedAnalyticsType: typeof processedAnalytics,
-        })}
       {/* Show notice about enhanced analysis only if it's enabled, not loading, data available but no archetype found */}
       {isEnhanced &&
         !isEnhancedLoading &&
