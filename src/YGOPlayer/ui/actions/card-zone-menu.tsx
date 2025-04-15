@@ -141,7 +141,6 @@ export function CardZoneMenu({
   const isFaceUp = YGOGameUtils.isFaceUp(card);
   const isLink = YGOGameUtils.isLinkMonster(card);
   const isMonsterZone = zoneData.zone === "M" || zoneData.zone === "EMZ";
-  const isMonster = YGOGameUtils.isMonster(card);
   const isMainDeckCard = card.isMainDeckCard;
   const isAttack = YGOGameUtils.isAttack(card);
   const isSpellTrap = YGOGameUtils.isSpellTrap(card);
@@ -248,7 +247,7 @@ export function CardZoneMenu({
         </button>
       )}
 
-      {isMonsterZone && isMonster && !isLink && (
+      {isMonsterZone && !isLink && (
         <>
           {isFaceUp && (
             <>
@@ -285,7 +284,7 @@ export function CardZoneMenu({
         </>
       )}
 
-      {isSpellTrap && isFaceUp && (
+      {!isMonsterZone && isSpellTrap && isFaceUp && (
         <>
           <button type="button" className="ygo-card-item" onClick={setCard}>
             Set
@@ -293,16 +292,15 @@ export function CardZoneMenu({
         </>
       )}
 
-      {(isMonster && isFaceUp) ||
-        (isSpellTrap && (
-          <button
-            type="button"
-            className="ygo-card-item"
-            onClick={activateCard}
-          >
-            Activate
-          </button>
-        ))}
+      {((isMonsterZone && isFaceUp) || (isSpellTrap && !isFaceUp)) && (
+        <button
+          type="button"
+          className="ygo-card-item"
+          onClick={activateCard}
+        >
+          Activate
+        </button>
+      )}
 
       <button type="button" className="ygo-card-item" onClick={sendToGY}>
         Send To GY

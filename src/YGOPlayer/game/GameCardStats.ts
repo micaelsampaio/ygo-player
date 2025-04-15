@@ -80,7 +80,7 @@ export class GameCardStats {
   needsUpdate(): boolean {
     const atk = this.card.currentAtk;
     const def = this.card.currentDef;
-    const level = this.card.currentLevel || this.card.linkval;
+    const level = typeof this.card.currentLevel !== "undefined" ? this.card.currentLevel : this.card.linkval;
     const owner = this.card.owner;
     const materials = this.card.materials.length;
 
@@ -212,7 +212,7 @@ export class GameCardStats {
     this.ctx.textBaseline = "middle";
 
     const isPlayer1 = this.card.owner === 0;
-    const level = this.card.currentLevel || this.card.linkval;
+    const level = typeof this.card.currentLevel !== "undefined" ? this.card.currentLevel : this.card.linkval;
     const levelStr = String(level);
     const x = isPlayer1 ? this.canvas.width - 30 : 30;
     const y = isPlayer1 ? this.canvas.height - 50 : 55;

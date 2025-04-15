@@ -79,7 +79,8 @@ export class GameCard extends YGOEntity {
   public updateCardStats(zoneData: FieldZoneData) {
     if (!this.hasStats) return;
 
-    if (YGOGameUtils.isSpellTrap(this.cardReference)) {
+    if (YGOGameUtils.isSpellTrap(this.cardReference) && zoneData.zone === "S") {
+      if (this.cardStats) this.cardStats.hide();
       return;
     }
 
