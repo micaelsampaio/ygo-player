@@ -1,6 +1,6 @@
 import pako from "pako";
-import { ydkeToJson } from "../scripts/ydke-parser";
-import { downloadDeck } from "../scripts/download-deck";
+import { ydkeToJson } from "./ydke-parser";
+import { downloadDeck } from "./download-deck";
 import { YGODeckToImage } from "ygo-core-images-utils";
 
 const getDecksData = () => {
@@ -59,7 +59,7 @@ const getCollectionsData = () => {
     });
 
   return collectionsData;
-}
+};
 
 export const exportAllData = async (method: "file" | "qr") => {
   const data = {
@@ -151,17 +151,26 @@ export const importAllData = async (file: File | Blob) => {
       localStorage.setItem(key, JSON.stringify(value));
     });
 
-    const currentCollectionData = JSON.parse(window.localStorage.getItem("collections_details") || "[]");
+    const currentCollectionData = JSON.parse(
+      window.localStorage.getItem("collections_details") || "[]"
+    );
 
     Object.entries(data.collections || {}).forEach(([key, value]: any) => {
       localStorage.setItem(key, JSON.stringify(value));
 
-      if (!currentCollectionData.find((collectionItem: any) => collectionItem.id === value.id)) {
+      if (
+        !currentCollectionData.find(
+          (collectionItem: any) => collectionItem.id === value.id
+        )
+      ) {
         currentCollectionData.push(value);
       }
     });
 
-    window.localStorage.setItem("collections_details", JSON.stringify(currentCollectionData));
+    window.localStorage.setItem(
+      "collections_details",
+      JSON.stringify(currentCollectionData)
+    );
 
     return {
       decksCount: Object.keys(data.decks).length,

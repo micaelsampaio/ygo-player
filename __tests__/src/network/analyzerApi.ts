@@ -4,7 +4,7 @@ import axios from "axios";
 
 // Configure API base URLs
 const API_BASE_URL =
-  import.meta.env.VITE_ANALYZER_API_URL || "http://localhost:3000/api";
+  import.meta.env.VITE_ANALYZER_API_URL || "http://localhost:3002/api";
 
 // Configure card data URL to use local data service instead of YGOPRODeck
 const CARD_DATA_URL =

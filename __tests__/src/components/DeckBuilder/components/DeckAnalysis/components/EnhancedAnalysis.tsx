@@ -1,6 +1,6 @@
 import React from "react";
 import { DeckAnalyticsType } from "../types";
-import "./EnhancedAnalysis.css";
+import "../styles/EnhancedAnalysis.css";
 
 interface EnhancedAnalysisProps {
   analytics: DeckAnalyticsType;

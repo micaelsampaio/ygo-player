@@ -14,7 +14,7 @@ import OptimalDistribution from "./components/OptimalDistribution";
 import HandCategories from "./components/HandCategories";
 import EnhancedAnalysis from "./components/EnhancedAnalysis";
 import AnalyticsModal from "./AnalyticsModal";
-import "./DeckAnalytics.css";
+import "./styles/DeckAnalytics.css";
 import { Logger } from "../../../../utils/logger";
 import { exportDeckAnalysisToPdf } from "../../utils/pdfExport";
 import {
@@ -24,16 +24,25 @@ import {
 
 const logger = Logger.createLogger("DeckAnalyticsUI");
 
+// Add a timeout constant for the enhanced analytics loading
+const ENHANCED_ANALYTICS_TIMEOUT = 10000; // 10 seconds timeout
+
 const DeckAnalytics: React.FC<DeckAnalyticsProps> = ({
   analytics,
   deck,
   isVisible,
   isLoading = false,
-  isEnhanced = false,
+  isEnhanced: initialEnhancedState = false,
+  onToggleEnhanced = () => {},
 }) => {
   const [activeTab, setActiveTab] = useState<
     "overview" | "advanced" | "probability"
   >("overview");
+
+  // Use the parent's enhanced state directly
+  const [isEnhanced, setIsEnhanced] = useState<boolean>(initialEnhancedState);
+  // Track if we're waiting for enhanced analytics to load
+  const [isEnhancedLoading, setIsEnhancedLoading] = useState<boolean>(false);
 
   const [modalContent, setModalContent] = useState<{
     isOpen: boolean;
@@ -51,13 +60,37 @@ const DeckAnalytics: React.FC<DeckAnalyticsProps> = ({
   const [deckMetricsCache, setDeckMetricsCache] = useState<any>(null);
   const [isInitialized, setIsInitialized] = useState(false);
 
+  // Add a new state to track analyzer service availability
+  const [analyzerServiceStatus, setAnalyzerServiceStatus] = useState<{
+    available: boolean;
+    checked: boolean;
+    error?: string;
+  }>({ available: false, checked: false });
+
+  // Add a timeout ID ref for cleaning up the timeout
+  const loadingTimeoutRef = React.useRef<number | null>(null);
+
   // Only process analytics when the tab is visible and when not already cached
   const processedAnalytics = useMemo(() => {
     // Skip processing if component isn't visible or no analytics data
-    if (!isVisible || !analytics) return null;
+    if (!isVisible || !analytics) {
+      console.log("DEBUG: DeckAnalytics - No analytics data or not visible");
+      return null;
+    }
+
+    console.log("DEBUG: DeckAnalytics - Raw analytics received:", {
+      monsterCount: analytics.monsterCount,
+      spellCount: analytics.spellCount,
+      trapCount: analytics.trapCount,
+      hasEnhanced: !!analytics.archetype && isEnhanced,
+    });
 
     // Return cached data if available and valid
     if (processedAnalyticsCache) {
+      console.log(
+        "DEBUG: DeckAnalytics - Using cached analytics with monsterCount:",
+        processedAnalyticsCache.monsterCount
+      );
       logger.debug("Using cached analytics data");
       return processedAnalyticsCache;
     }
@@ -65,8 +98,16 @@ const DeckAnalytics: React.FC<DeckAnalyticsProps> = ({
     logger.debug("Processing analytics data for UI");
     // Store the processed data in cache for future use
     setProcessedAnalyticsCache(analytics);
+
+    // If enhanced analysis was requested but not available in the data, show loading state
+    if (isEnhanced && !analytics.archetype && !isLoading) {
+      setIsEnhancedLoading(true);
+    } else {
+      setIsEnhancedLoading(false);
+    }
+
     return analytics;
-  }, [analytics, isVisible, processedAnalyticsCache]);
+  }, [analytics, isVisible, processedAnalyticsCache, isEnhanced, isLoading]);
 
   // Only calculate deck metrics when analytics are processed and not already cached
   const deckMetrics = useMemo(() => {
@@ -118,6 +159,7 @@ const DeckAnalytics: React.FC<DeckAnalyticsProps> = ({
       logger.debug("Resetting analytics caches due to data change");
       setProcessedAnalyticsCache(null);
       setDeckMetricsCache(null);
+      setIsEnhancedLoading(false);
     }
   }, [isVisible, analytics, processedAnalyticsCache]);
 
@@ -128,6 +170,196 @@ const DeckAnalytics: React.FC<DeckAnalyticsProps> = ({
       setIsInitialized(true);
     }
   }, [isVisible, analytics, isInitialized]);
+
+  // Update internal state when prop changes
+  useEffect(() => {
+    setIsEnhanced(initialEnhancedState);
+  }, [initialEnhancedState]);
+
+  // Add a function to check if the analyzer service is available
+  const checkAnalyzerServiceAvailability = useCallback(async () => {
+    try {
+      // Get the ANALYZER_API_URL from the environment or use the default
+      const ANALYZER_API_URL =
+        import.meta.env.VITE_ANALYZER_API_URL || "http://localhost:3002/api";
+
+      // Try to fetch from the health check endpoint with a timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+
+      const response = await fetch(`${ANALYZER_API_URL}/health`, {
+        signal: controller.signal,
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      clearTimeout(timeoutId);
+
+      if (response.ok) {
+        setAnalyzerServiceStatus({ available: true, checked: true });
+        return true;
+      } else {
+        setAnalyzerServiceStatus({
+          available: false,
+          checked: true,
+          error: `Service responded with: ${response.status} ${response.statusText}`,
+        });
+        return false;
+      }
+    } catch (error) {
+      console.error("Error checking analyzer service availability:", error);
+      const errorMessage =
+        error instanceof Error && error.name === "AbortError"
+          ? "Connection timeout - the service may not be running"
+          : error instanceof Error
+          ? error.message
+          : "Failed to connect to analyzer service";
+
+      setAnalyzerServiceStatus({
+        available: false,
+        checked: true,
+        error: errorMessage,
+      });
+      return false;
+    }
+  }, []);
+
+  // Add a function to directly call the analyze endpoint without health check
+  const directlyCallAnalyzeEndpoint = useCallback(async () => {
+    if (!deck) {
+      console.log("❌ No deck to analyze");
+      return false;
+    }
+
+    try {
+      // Get the ANALYZER_API_URL from the environment or use the default
+      const ANALYZER_API_URL =
+        import.meta.env.VITE_ANALYZER_API_URL || "http://localhost:3002/api";
+
+      console.log(
+        `📡 Making direct API call to ${ANALYZER_API_URL}/analyze...`
+      );
+
+      // Prepare deck payload
+      const payload = {
+        deck: {
+          name: deck.name,
+          mainDeck: deck.mainDeck.map((card) => card.id),
+          extraDeck: deck.extraDeck.map((card) => card.id),
+          sideDeck: deck.sideDeck?.map((card) => card.id) || [],
+        },
+      };
+
+      console.log(
+        `Sending deck: ${deck.name} with ${payload.deck.mainDeck.length} main cards`
+      );
+
+      // Make the API request
+      const response = await fetch(`${ANALYZER_API_URL}/analyze`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        console.error(
+          `❌ API error: ${response.status} ${response.statusText}`
+        );
+        // Update service status to show it's not available
+        setAnalyzerServiceStatus({
+          available: false,
+          checked: true,
+          error: `API error: ${response.status} ${response.statusText}`,
+        });
+        return false;
+      }
+
+      console.log(`✅ Direct API call to /analyze successful`);
+      const data = await response.json();
+      console.log(`📋 Received analysis data:`, data);
+
+      // Calculate basic analytics locally to ensure core metrics are always available
+      const { analyzeDeck } =
+        require("../../hooks/useDeckAnalytics").useDeckAnalytics();
+      const localAnalytics = analyzeDeck(deck);
+
+      // Merge the API data with local analytics without checking contents
+      const enhancedAnalytics = {
+        ...localAnalytics,
+        // Just add all fields from the API response
+        ...data,
+        // Ensure these critical fields from local analytics are preserved
+        monsterCount: localAnalytics.monsterCount,
+        spellCount: localAnalytics.spellCount,
+        trapCount: localAnalytics.trapCount,
+        typeDistribution: localAnalytics.typeDistribution,
+        attributeDistribution: localAnalytics.attributeDistribution,
+        levelDistribution: localAnalytics.levelDistribution,
+        potentialArchetypes: localAnalytics.potentialArchetypes,
+      };
+
+      // Update processed analytics cache directly
+      setProcessedAnalyticsCache(enhancedAnalytics);
+
+      // Update service status as available
+      setAnalyzerServiceStatus({
+        available: true,
+        checked: true,
+      });
+
+      console.log("✨ Analytics updated with enhanced data");
+      return true;
+    } catch (error) {
+      console.error("❌ Error making direct API call:", error);
+
+      // Update service status to show it's not available
+      setAnalyzerServiceStatus({
+        available: false,
+        checked: true,
+        error:
+          error instanceof Error
+            ? error.message
+            : "Unknown error calling /analyze",
+      });
+
+      return false;
+    }
+  }, [deck]);
+
+  // Add a timeout to automatically cancel loading state after a certain period
+  useEffect(() => {
+    if (isEnhancedLoading) {
+      console.log("⏱️ Setting up loading timeout");
+      // Clear any existing timeout
+      if (loadingTimeoutRef.current) {
+        window.clearTimeout(loadingTimeoutRef.current);
+      }
+
+      // Set a new timeout
+      loadingTimeoutRef.current = window.setTimeout(() => {
+        console.log("⏰ Enhanced analytics loading timed out");
+        setIsEnhancedLoading(false);
+        // Only set error status if we're still waiting for enhanced data
+        if (isEnhanced && !analyzerServiceStatus.available) {
+          setAnalyzerServiceStatus({
+            available: false,
+            checked: true,
+            error:
+              "Loading timed out - the analyzer service may be unavailable or experiencing issues",
+          });
+        }
+      }, ENHANCED_ANALYTICS_TIMEOUT);
+
+      return () => {
+        // Clean up timeout when component unmounts or loading state changes
+        if (loadingTimeoutRef.current) {
+          console.log("🧹 Clearing loading timeout");
+          window.clearTimeout(loadingTimeoutRef.current);
+          loadingTimeoutRef.current = null;
+        }
+      };
+    }
+  }, [isEnhancedLoading, isEnhanced, analyzerServiceStatus.available]);
 
   // Probability calculations - only perform these when needed for specific views
   const calculateOptimalDistribution = useCallback(
@@ -150,8 +382,90 @@ const DeckAnalytics: React.FC<DeckAnalyticsProps> = ({
       }
       return results;
     },
-    []
+    [calculateDrawProbability]
   );
+
+  // Toggle enhanced mode handler - notify parent
+  const handleToggleEnhanced = useCallback(async () => {
+    // If already in loading state, don't allow multiple toggles
+    if (isEnhancedLoading) return;
+
+    const newState = !isEnhanced;
+
+    // Update loading state if turning on enhanced analysis
+    if (newState) {
+      // Clear any existing timeout to prevent false timeout messages
+      if (loadingTimeoutRef.current) {
+        window.clearTimeout(loadingTimeoutRef.current);
+        loadingTimeoutRef.current = null;
+      }
+
+      setIsEnhancedLoading(true);
+      console.log(
+        "🚀 Enhanced analysis requested - making direct API call to /analyze endpoint"
+      );
+
+      // Make a direct API call to the /analyze endpoint
+      const success = await directlyCallAnalyzeEndpoint();
+
+      // Ensure loading state is turned off regardless of API call success/failure
+      setIsEnhancedLoading(false);
+
+      if (!success) {
+        console.error("❌ Failed to get enhanced analysis data");
+        // Don't set enhanced mode if the API call failed
+        return;
+      }
+
+      // Explicitly set analyzer service as available since we got a successful response
+      setAnalyzerServiceStatus({
+        available: true,
+        checked: true,
+      });
+
+      console.log("✅ Successfully received enhanced analysis data");
+    } else {
+      // If turning off enhanced analysis, clear loading state
+      setIsEnhancedLoading(false);
+      if (loadingTimeoutRef.current) {
+        window.clearTimeout(loadingTimeoutRef.current);
+        loadingTimeoutRef.current = null;
+      }
+      console.log("⚠️ Enhanced analysis turned OFF");
+    }
+
+    // Clear caches to ensure we get fresh data
+    setProcessedAnalyticsCache(null);
+    setDeckMetricsCache(null);
+
+    // Update our local state
+    setIsEnhanced(newState);
+
+    // Show advanced tab when enabling enhanced analysis to make it obvious
+    if (newState) {
+      setActiveTab("advanced");
+    }
+
+    // Notify parent component to update its state and fetch appropriate analytics
+    console.log(
+      `🚀 Calling parent's onToggleEnhanced to fetch enhanced analytics with state: ${newState}`
+    );
+    onToggleEnhanced(newState);
+
+    console.log(`Enhanced analysis toggled to: ${newState ? "ON" : "OFF"}`);
+    if (newState) {
+      console.log(
+        "Analyzer API URL:",
+        import.meta.env.VITE_ANALYZER_API_URL || "http://localhost:3002/api"
+      );
+    }
+  }, [
+    isEnhanced,
+    isEnhancedLoading,
+    onToggleEnhanced,
+    setActiveTab,
+    directlyCallAnalyzeEndpoint,
+  ]);
 
   const exportToPdf = () => {
     if (!processedAnalytics || !deck) return;
@@ -172,12 +486,15 @@ const DeckAnalytics: React.FC<DeckAnalyticsProps> = ({
     );
   };
 
+  // Update UI to show the enhanced analytics section is loading
+  const isAnalyticsLoading = isLoading || isEnhancedLoading;
+
   if (!isVisible) {
     // Return null or an empty placeholder when not visible to prevent rendering
     return null;
   }
 
-  if (isLoading) {
+  if (isAnalyticsLoading && !processedAnalytics) {
     return (
       <div className="deck-analytics loading">
         <h2>Analyzing Deck...</h2>
@@ -255,11 +572,6 @@ const DeckAnalytics: React.FC<DeckAnalyticsProps> = ({
   const renderOverviewTab = () => (
     <>
       <div id="basic-analysis-section">
-        {/* Show enhanced analysis if available */}
-        {isEnhanced && processedAnalytics.archetype && (
-          <EnhancedAnalysis analytics={processedAnalytics} />
-        )}
-
         <DeckComposition analytics={processedAnalytics} />
         <DeckStyle powerUtility={deckMetrics.powerUtility} />
         <KeyCards
@@ -272,7 +584,7 @@ const DeckAnalytics: React.FC<DeckAnalyticsProps> = ({
 
   const renderAdvancedAnalysisContent = () => (
     <div className="full-analysis" id="advanced-analysis-section">
-      {/* If enhanced analysis is available, show it at the top of the advanced view as well */}
+      {/* Show enhanced analysis only in the advanced tab */}
       {isEnhanced && processedAnalytics.archetype && (
         <section className="analysis-section enhanced-section">
           <EnhancedAnalysis analytics={processedAnalytics} />
@@ -368,8 +680,10 @@ const DeckAnalytics: React.FC<DeckAnalyticsProps> = ({
             <ul>
               {/* Normal Summon Insight */}
               <li>
-                The optimal number of Normal Summons (
-                {Math.round((7 / 40) * deckSize)}) provides ~
+                <span className="key-insight">
+                  The optimal number of Normal Summons
+                </span>{" "}
+                ({Math.round((7 / 40) * deckSize)}) provides ~
                 {normalSummonDist.find(
                   (p) => p.copies === Math.round((7 / 40) * deckSize)
                 )?.probability
@@ -385,8 +699,8 @@ const DeckAnalytics: React.FC<DeckAnalyticsProps> = ({
 
               {/* Starter Cards Insight */}
               <li>
-                For consistent combo decks, aim for{" "}
-                {Math.round((13 / 40) * deckSize)}-
+                <span className="key-insight">For consistent combo decks</span>,
+                aim for {Math.round((13 / 40) * deckSize)}-
                 {Math.round((14 / 40) * deckSize)} starters to achieve ~
                 {starterDist.find(
                   (p) => p.copies === Math.round((13 / 40) * deckSize)
@@ -402,7 +716,9 @@ const DeckAnalytics: React.FC<DeckAnalyticsProps> = ({
 
               {/* Current deck stats */}
               <li>
-                Your {deckSize}-card deck currently has{" "}
+                <span className="key-insight">
+                  Your {deckSize}-card deck currently has
+                </span>{" "}
                 {(() => {
                   const normalSummons = Object.values(groupedCards || [])
                     .filter((card: any) =>
@@ -489,8 +805,9 @@ const DeckAnalytics: React.FC<DeckAnalyticsProps> = ({
 
                 if (hasHighRatios) {
                   return (
-                    <li style={{ color: "#d32f2f" }}>
-                      <strong>Warning:</strong> The high density values shown in
+                    <li>
+                      <span className="warning-text">Warning:</span> The high
+                      density values shown in
                       <span style={{ color: "#FF9800" }}> orange</span> indicate
                       you may be overconsistent, which can lead to drawing
                       duplicate cards that cannot be properly utilized
@@ -522,12 +839,70 @@ const DeckAnalytics: React.FC<DeckAnalyticsProps> = ({
   return (
     <div className="deck-analytics">
       <Header
-        onExport={() => {}} // Remove export data functionality
+        onExport={() => {}}
         onExportPdf={exportToPdf}
         deck={deck}
         analytics={processedAnalytics}
         isEnhanced={isEnhanced}
+        onToggleEnhanced={handleToggleEnhanced}
+        isLoading={isEnhancedLoading}
       />
+
+      {/* Show service status notice when needed - Only show if service is NOT available AND we're not loading */}
+      {isEnhanced &&
+        analyzerServiceStatus.checked &&
+        !analyzerServiceStatus.available &&
+        !isEnhancedLoading &&
+        !processedAnalytics?.archetype && (
+          <div className="enhanced-notice">
+            <div className="notice-content error">
+              <span className="notice-icon">⚠️</span>
+              <div className="error-message">
+                <p>
+                  <strong>
+                    The enhanced analysis service is not available.
+                  </strong>
+                </p>
+                <p>
+                  Error: {analyzerServiceStatus.error || "Connection failed"}
+                </p>
+                <p className="service-help">
+                  To use enhanced analysis, please ensure the analyzer service
+                  is running at:
+                  <code>
+                    {import.meta.env.VITE_ANALYZER_API_URL ||
+                      "http://localhost:3002/api"}
+                  </code>
+                </p>
+                <button
+                  className="retry-button"
+                  onClick={async () => {
+                    setIsEnhancedLoading(true);
+                    await directlyCallAnalyzeEndpoint(); // Call the direct analyze endpoint instead of health check
+                    setIsEnhancedLoading(false);
+                  }}
+                >
+                  Retry Connection
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+      {/* Show notice about enhanced analysis if it's enabled but no enhanced data is available */}
+      {isEnhanced &&
+        !processedAnalytics.archetype &&
+        !isEnhancedLoading &&
+        analyzerServiceStatus.available && (
+          <div className="enhanced-notice">
+            <div className="notice-content warning">
+              <span className="notice-icon">⚠️</span>
+              <span>
+                Enhanced analysis data is not available for this deck.
+              </span>
+            </div>
+          </div>
+        )}
 
       <div className="analytics-navigation">
         <button
@@ -549,6 +924,14 @@ const DeckAnalytics: React.FC<DeckAnalyticsProps> = ({
           Probability
         </button>
       </div>
+
+      {/* Show loading state inside tab content when enhanced loading is in progress */}
+      {isEnhancedLoading && (
+        <div className="enhanced-loading-overlay">
+          <div className="loading-spinner"></div>
+          <p>Loading enhanced analysis data...</p>
+        </div>
+      )}
 
       <div className="tab-content">
         {activeTab === "overview" && renderOverviewTab()}

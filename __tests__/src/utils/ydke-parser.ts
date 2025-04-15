@@ -2,8 +2,9 @@ import { DeckData } from "./ydk-parser";
 
 export function ydkeToJson(ydkeUrl: string): DeckData {
   const base64Sections = ydkeUrl.replace("ydke://", "").split("!");
-  const [mainDeckB64, extraDeckB64] = base64Sections;
+  const [mainDeckB64, extraDeckB64, sideDeckB64] = base64Sections;
 
+  //TODO add support for side deck
   const decodeSection = (base64: string): number[] => {
     if (!base64) return [];
     const decoded = atob(base64);
@@ -27,5 +28,6 @@ export function ydkeToJson(ydkeUrl: string): DeckData {
   return {
     mainDeck: decodeSection(mainDeckB64),
     extraDeck: decodeSection(extraDeckB64),
+    sideDeck: decodeSection(sideDeckB64),
   };
 }

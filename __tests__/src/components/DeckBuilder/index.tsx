@@ -21,9 +21,7 @@ import { useAnalyzerService } from "./hooks/useAnalyzerService";
 import { canAddCardToDeck } from "./utils";
 import { initializeBanList } from "./services/banListLoader";
 import { banListService } from "./services/banListService";
-import { syncDecksWithFolder } from "../../utils/deckFileSystem";
-import { downloadDeck } from "../DeckImport/download-deck"; // Import downloadDeck directly
-import { ydkToJson } from "../../scripts/ydk-parser"; // Import ydkToJson directly
+import { syncDecksWithFolder, processFiles } from "../../utils/deckFileSystem";
 import "./DeckBuilder.css";
 
 const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
@@ -38,7 +36,7 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
   >("editor");
   const [targetDeck, setTargetDeck] = useState<"main" | "side">("main");
   const [analyticsCalculated, setAnalyticsCalculated] = useState(false);
-  const [useEnhancedAnalysis, setUseEnhancedAnalysis] = useState(true);
+  const [useEnhancedAnalysis, setUseEnhancedAnalysis] = useState(false); // Set to false by default
   const [showEnhancedAnalysisToggle, setShowEnhancedAnalysisToggle] =
     useState(false);
   const [isEditingDeckName, setIsEditingDeckName] = useState(false);
@@ -116,24 +114,61 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
       setDeckAnalytics(null); // Clear previous analytics while calculating
 
       try {
+        // Always start with local analysis first to ensure basic metrics are always available
+        const localAnalytics = analyzeDeck(selectedDeck);
+
+        // If enhanced analysis is enabled, try to enhance the local analytics
         if (useEnhancedAnalysis) {
-          // First try to use the enhanced analyzer service
-          console.log("Using enhanced analyzer service");
+          // Try to use the enhanced analyzer service
+          console.log(
+            "Using enhanced analyzer service for deck:",
+            selectedDeck.name
+          );
+          console.log("Making API request to analyzer service...");
+
+          // Show loading state for analyzer service
+          console.log(
+            "Analyzer service loading state:",
+            analyzerServiceLoading
+          );
+
           const enhancedAnalytics = await analyzeDeckWithService(selectedDeck);
 
           if (enhancedAnalytics) {
-            setDeckAnalytics(enhancedAnalytics);
+            console.log("Enhanced analytics received:", enhancedAnalytics);
+            // Make sure we preserve all basic metrics from local analytics first
+            const mergedAnalytics = {
+              // Start with ALL local analytics data to ensure basic metrics are preserved
+              ...localAnalytics,
+              // Then add enhanced fields, being careful not to override core metrics
+              archetype:
+                enhancedAnalytics.archetype || localAnalytics.archetype,
+              strategy: enhancedAnalytics.strategy,
+              mainCombos: enhancedAnalytics.mainCombos,
+              strengths: enhancedAnalytics.strengths,
+              weaknesses: enhancedAnalytics.weaknesses,
+              counters: enhancedAnalytics.counters,
+              recommendedTechs: enhancedAnalytics.recommendedTechs,
+              confidenceScore: enhancedAnalytics.confidenceScore,
+              // Ensure these critical fields from local analytics are preserved
+              monsterCount: localAnalytics.monsterCount,
+              spellCount: localAnalytics.spellCount,
+              trapCount: localAnalytics.trapCount,
+              typeDistribution: localAnalytics.typeDistribution,
+              attributeDistribution: localAnalytics.attributeDistribution,
+              levelDistribution: localAnalytics.levelDistribution,
+              potentialArchetypes: localAnalytics.potentialArchetypes,
+            };
+            setDeckAnalytics(mergedAnalytics);
             setShowEnhancedAnalysisToggle(true);
           } else {
-            // Fall back to local analysis if the service failed
+            // Use local analysis if the service failed
             console.log("Enhanced analyzer failed, using local analysis");
-            const localAnalytics = analyzeDeck(selectedDeck);
             setDeckAnalytics(localAnalytics);
           }
         } else {
           // Just use the local analyzer if enhanced analysis is disabled
           console.log("Using local analyzer only");
-          const localAnalytics = analyzeDeck(selectedDeck);
           setDeckAnalytics(localAnalytics);
           setShowEnhancedAnalysisToggle(true);
         }
@@ -153,6 +188,7 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
     analyzeDeck,
     analyzeDeckWithService,
     useEnhancedAnalysis,
+    analyzerServiceLoading, // Add this to the dependency array
   ]);
 
   // Reset analytics calculated flag when deck changes
@@ -194,13 +230,36 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
   };
 
   // Toggle between enhanced and basic analysis
-  const toggleEnhancedAnalysis = () => {
-    setUseEnhancedAnalysis(!useEnhancedAnalysis);
+  const toggleEnhancedAnalysis = async (newState) => {
+    // Force the correct state - don't just toggle
+    console.log(
+      `🔄 DeckBuilder: toggleEnhancedAnalysis called with state: ${newState}`
+    );
+
+    setUseEnhancedAnalysis(newState);
     setAnalyticsCalculated(false); // Force recalculation
 
-    // Recalculate if we're currently on analytics tab
-    if (activeTab === "analytics" && selectedDeck) {
-      calculateDeckAnalytics();
+    console.log(`Enhanced analysis toggled to: ${newState ? "ON" : "OFF"}`);
+
+    // Always recalculate analytics after toggling
+    if (selectedDeck) {
+      console.log(
+        `🧮 Recalculating deck analytics for "${selectedDeck.name}" with enhanced=${newState}`
+      );
+
+      // Small delay to ensure state updates complete
+      setTimeout(async () => {
+        try {
+          await calculateDeckAnalytics();
+          console.log(
+            `✅ Successfully calculated analytics with enhanced=${newState}`
+          );
+        } catch (error) {
+          console.error(`❌ Error calculating deck analytics:`, error);
+        }
+      }, 100);
+    } else {
+      console.log(`⚠️ No deck selected, skipping analytics calculation`);
     }
   };
 
@@ -566,67 +625,13 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
   // Process multiple deck files
   const processSelectedFiles = async (files: File[]) => {
     try {
-      setSyncProgress({
-        isProcessing: true,
-        status: "Processing...",
-        imported: 0,
-        exported: 0,
-        errors: [],
-      });
+      // Use the processFiles utility function from deckFileSystem
+      const { imported, errors } = await processFiles(files, setSyncProgress);
 
-      // Read and process each file
-      const imported: Deck[] = [];
-      const errors: string[] = [];
-
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        try {
-          const fileContent = await readFileAsText(file);
-          const extension = file.name
-            .slice(file.name.lastIndexOf("."))
-            .toLowerCase();
-          const fileName = file.name.slice(0, file.name.lastIndexOf("."));
-
-          if (extension === ".json") {
-            // Parse JSON deck
-            const deck = JSON.parse(fileContent);
-            if (deck.mainDeck && deck.extraDeck) {
-              if (!deck.name) {
-                deck.name = fileName;
-              }
-              imported.push(deck);
-            } else {
-              errors.push(`Invalid deck format in ${file.name}`);
-            }
-          } else if (extension === ".ydk") {
-            // Parse YDK format
-            try {
-              const deckData = ydkToJson(fileContent);
-              // Call downloadDeck with the correct parameters
-              const deck = await downloadDeck(
-                deckData.mainDeck || [],
-                deckData.extraDeck || [],
-                [], // No side deck from the parser
-                fileName // Use the filename as the deck name
-              );
-
-              imported.push(deck);
-            } catch (error) {
-              errors.push(
-                `Error parsing YDK file ${file.name}: ${error.message}`
-              );
-            }
-          } else {
-            errors.push(`Unsupported file type: ${file.name}`);
-          }
-        } catch (error) {
-          errors.push(`Error processing file ${file.name}: ${error.message}`);
-        }
-      }
-
-      // Update state with imported decks
+      // Update decks with imported data
       if (imported.length > 0) {
-        for (const deck of imported) {
+        imported.forEach((deck) => {
+          // Add custom import suffix to avoid name collisions
           const importedDeck = {
             ...deck,
             name: deck.name.endsWith(" (Imported)")
@@ -635,17 +640,8 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
             importedAt: new Date().toISOString(),
           };
           updateDeck(importedDeck);
-        }
+        });
       }
-
-      // Show results
-      setSyncProgress({
-        isProcessing: false,
-        status: "Completed",
-        imported: imported.length,
-        exported: 0,
-        errors,
-      });
 
       // Display summary
       if (errors.length === 0) {
@@ -662,10 +658,18 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
         status: "Failed",
         imported: 0,
         exported: 0,
-        errors: [`Error processing files: ${error.message}`],
+        errors: [
+          `Error processing files: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+        ],
       });
 
-      alert(`Error processing files: ${error.message}`);
+      alert(
+        `Error processing files: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      );
     }
   };
 
@@ -757,24 +761,7 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
                 Draw Simulator
               </button>
 
-              {showEnhancedAnalysisToggle && activeTab === "analytics" && (
-                <div className="analysis-toggle">
-                  <label>
-                    <input
-                      type="checkbox"
-                      checked={useEnhancedAnalysis}
-                      onChange={toggleEnhancedAnalysis}
-                    />
-                    Enhanced Analysis
-                  </label>
-                  {isAnalyzing && (
-                    <span className="analyzing-indicator">Analyzing...</span>
-                  )}
-                  {analyzerServiceError && !isAnalyzing && (
-                    <span className="error-indicator">Service Error</span>
-                  )}
-                </div>
-              )}
+              {/* Removed Enhanced Analysis toggle from here as it's now handled by the badge */}
             </div>
           </div>
 
@@ -824,6 +811,11 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
                 isVisible={activeTab === "analytics"}
                 isLoading={isAnalyzing}
                 isEnhanced={useEnhancedAnalysis && !analyzerServiceError}
+                onToggleEnhanced={(newState) => {
+                  setUseEnhancedAnalysis(newState);
+                  setAnalyticsCalculated(false); // Force recalculation
+                  calculateDeckAnalytics(); // Fetch the appropriate analytics data
+                }}
               />
             )}
           </div>

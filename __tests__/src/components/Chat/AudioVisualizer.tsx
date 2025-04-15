@@ -1,6 +1,6 @@
-import React, { useEffect, useRef } from 'react';
-import styled from 'styled-components';
-import { AudioConfig } from '../audio/types';
+import React, { useEffect, useRef } from "react";
+import styled from "styled-components";
+import { AudioConfig } from "../../audio/types";
 
 const VisualizerContainer = styled.div`
   width: 100%;
@@ -22,9 +22,9 @@ interface AudioVisualizerProps {
   config?: Partial<AudioConfig>;
 }
 
-export const AudioVisualizer: React.FC<AudioVisualizerProps> = ({ 
+export const AudioVisualizer: React.FC<AudioVisualizerProps> = ({
   analyser,
-  config 
+  config,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationFrameRef = useRef<number>();
@@ -34,26 +34,26 @@ export const AudioVisualizer: React.FC<AudioVisualizerProps> = ({
     if (!canvasRef.current) return;
 
     const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d')!;
-    
+    const ctx = canvas.getContext("2d")!;
+
     canvas.width = canvas.offsetWidth;
     canvas.height = canvas.offsetHeight;
-    
+
     if (!dataArrayRef.current) {
       dataArrayRef.current = new Uint8Array(analyser.frequencyBinCount);
     }
 
     const draw = () => {
       animationFrameRef.current = requestAnimationFrame(draw);
-      
+
       analyser.getByteTimeDomainData(dataArrayRef.current!);
 
-      ctx.fillStyle = '#1a1a1a';
+      ctx.fillStyle = "#1a1a1a";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       ctx.beginPath();
       ctx.lineWidth = 2;
-      ctx.strokeStyle = '#00ff00';
+      ctx.strokeStyle = "#00ff00";
 
       const sliceWidth = canvas.width / analyser.frequencyBinCount;
       let x = 0;

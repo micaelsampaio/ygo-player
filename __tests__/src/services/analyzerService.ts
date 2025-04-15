@@ -81,21 +81,49 @@ export class AnalyzerService {
     await this.initialize();
 
     try {
+      console.log(
+        `🔍 AnalyzerService.analyzeDeck called for deck: ${deck.name}`
+      );
+      console.log(`🌐 Making API request to: ${ANALYZER_API_URL}/analyze`);
+
+      // Prepare the request payload
+      const payload = this.prepareDeckForAnalysis(deck);
+      console.log(`📦 Request payload prepared:`, {
+        deckName: deck.name,
+        mainDeckCount: payload.mainDeck.length,
+        extraDeckCount: payload.extraDeck.length,
+        sideDeckCount: payload.sideDeck?.length || 0,
+      });
+
+      // Make the API request with detailed debugging
+      console.log(`📡 Sending API request...`);
+      const startTime = performance.now();
+
       const response = await fetch(`${ANALYZER_API_URL}/analyze`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ deck: this.prepareDeckForAnalysis(deck) }),
+        body: JSON.stringify({ deck: payload }),
       });
 
+      const endTime = performance.now();
+      console.log(`⏱️ API request took ${(endTime - startTime).toFixed(2)}ms`);
+
       if (!response.ok) {
+        console.error(
+          `❌ API error: ${response.status} ${response.statusText}`
+        );
         throw new Error(`Analyzer API error: ${response.statusText}`);
       }
 
-      return await response.json();
+      console.log(`✅ API request successful (${response.status})`);
+
+      const data = await response.json();
+      console.log(`📊 Received analysis data with fields:`, Object.keys(data));
+      return data;
     } catch (error) {
-      console.error("Error analyzing deck:", error);
+      console.error("❌ Error analyzing deck:", error);
       throw error;
     }
   }

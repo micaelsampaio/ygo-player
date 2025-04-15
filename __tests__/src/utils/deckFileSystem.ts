@@ -3,62 +3,14 @@
  */
 
 import { Deck } from "../components/DeckBuilder/types";
-import { downloadDeck } from "../components/DeckImport/download-deck";
-import { ydkToJson } from "../scripts/ydk-parser";
-import { ydkeToJson } from "../scripts/ydke-parser";
-// Remove Node.js fs and path imports
+import { importDeckFromYdk } from "./download-deck";
+import { downloadDeck } from "./download-deck";
+import { ydkToJson } from "./ydk-parser";
 // import * as fs from "fs";
 // import * as path from "path";
 
 // Check if we're in a browser environment
 const isBrowser = typeof window !== "undefined";
-
-/**
- * Exports a deck to a file in the specified folder
- * @param deck The deck to export
- * @param folderPath The folder to export to
- * @param format The format to export as ('ydk' or 'json')
- * @returns Promise that resolves when the export is complete
- */
-export const exportDeckToFolder = async (
-  deck: Deck,
-  folderPath: string,
-  format: "ydk" | "json" = "json"
-): Promise<string> => {
-  if (isBrowser) {
-    throw new Error("File system operations are not supported in the browser.");
-  }
-
-  try {
-    const fs = await import("fs");
-    const path = await import("path");
-
-    // Create the folder if it doesn't exist
-    if (!fs.existsSync(folderPath)) {
-      fs.mkdirSync(folderPath, { recursive: true });
-    }
-
-    const fileName = `${deck.name.replace(/[/\\?%*:|"<>]/g, "-")}.${format}`;
-    const filePath = path.join(folderPath, fileName);
-
-    let fileContent: string;
-    if (format === "ydk") {
-      // Generate YDK format
-      fileContent = generateYdkContent(deck);
-    } else {
-      // Generate JSON format
-      fileContent = JSON.stringify(deck, null, 2);
-    }
-
-    // Write to file
-    fs.writeFileSync(filePath, fileContent);
-
-    return filePath;
-  } catch (error) {
-    console.error(`Error exporting deck "${deck.name}" to folder:`, error);
-    throw new Error(`Failed to export deck "${deck.name}" to folder`);
-  }
-};
 
 /**
  * Exports a deck to a file in the browser
@@ -100,6 +52,181 @@ export const exportDeckToBrowser = async (
 };
 
 /**
+ * Reads the content of a file as text
+ * @param file The file to read
+ * @returns Promise that resolves with the file content as text
+ */
+export const readFileAsText = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      if (event.target?.result) {
+        resolve(event.target.result as string);
+      } else {
+        reject(new Error("Failed to read file"));
+      }
+    };
+    reader.onerror = (error) => reject(error);
+    reader.readAsText(file);
+  });
+};
+
+/**
+ * Process multiple deck files and convert them to Deck objects
+ * @param files The files to process
+ * @param setProgress Optional callback to report progress
+ * @returns Promise with the processed decks and any errors
+ */
+export const processFiles = async (
+  files: File[],
+  setProgress?: (state: {
+    isProcessing: boolean;
+    status: string;
+    imported: number;
+    exported: number;
+    errors: string[];
+  }) => void
+): Promise<{
+  imported: Deck[];
+  errors: string[];
+}> => {
+  try {
+    if (setProgress) {
+      setProgress({
+        isProcessing: true,
+        status: "Processing...",
+        imported: 0,
+        exported: 0,
+        errors: [],
+      });
+    }
+
+    // Read and process each file
+    const imported: Deck[] = [];
+    const errors: string[] = [];
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      try {
+        const fileContent = await readFileAsText(file);
+        const extension = file.name
+          .slice(file.name.lastIndexOf("."))
+          .toLowerCase();
+        const fileName = file.name.slice(0, file.name.lastIndexOf("."));
+
+        if (extension === ".json") {
+          // Parse JSON deck
+          const deck = JSON.parse(fileContent);
+          if (deck.mainDeck && deck.extraDeck) {
+            if (!deck.name) {
+              deck.name = fileName;
+            }
+            imported.push(deck);
+          } else {
+            errors.push(`Invalid deck format in ${file.name}`);
+          }
+        } else if (extension === ".ydk") {
+          // Parse YDK format
+          try {
+            const deckData = ydkToJson(fileContent);
+
+            // Ensure deckData has the expected structure
+            if (!deckData || !deckData.mainDeck || !deckData.extraDeck) {
+              throw new Error("Invalid YDK format or empty deck");
+            }
+
+            // Convert the deck data to arrays if they aren't already
+            const mainDeckArray = Array.isArray(deckData.mainDeck)
+              ? deckData.mainDeck
+              : [];
+            const extraDeckArray = Array.isArray(deckData.extraDeck)
+              ? deckData.extraDeck
+              : [];
+
+            // Call downloadDeck with the correct parameters
+            const deck = await downloadDeck(
+              {
+                mainDeck: mainDeckArray,
+                extraDeck: extraDeckArray,
+              },
+              {
+                events: {
+                  onProgess: ({ cardDownloaded, totalCards }) => {
+                    if (setProgress) {
+                      setProgress({
+                        isProcessing: true,
+                        status: `Downloading cards for ${fileName}...`,
+                        imported: imported.length,
+                        exported: 0,
+                        errors: errors,
+                      });
+                    }
+                  },
+                },
+              }
+            );
+
+            // Create proper deck object
+            const importedDeck = {
+              name: fileName,
+              mainDeck: deck.mainDeck || [],
+              extraDeck: deck.extraDeck || [],
+              sideDeck: [], // Initialize empty side deck
+            };
+
+            imported.push(importedDeck);
+          } catch (error) {
+            errors.push(
+              `Error parsing YDK file ${file.name}: ${
+                error instanceof Error ? error.message : String(error)
+              }`
+            );
+          }
+        } else {
+          errors.push(`Unsupported file type: ${file.name}`);
+        }
+      } catch (error) {
+        errors.push(
+          `Error processing file ${file.name}: ${
+            error instanceof Error ? error.message : String(error)
+          }`
+        );
+      }
+    }
+
+    if (setProgress) {
+      setProgress({
+        isProcessing: false,
+        status: "Completed",
+        imported: imported.length,
+        exported: 0,
+        errors,
+      });
+    }
+
+    return { imported, errors };
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error("Error processing files:", error);
+
+    if (setProgress) {
+      setProgress({
+        isProcessing: false,
+        status: "Failed",
+        imported: 0,
+        exported: 0,
+        errors: [`Error processing files: ${errorMessage}`],
+      });
+    }
+
+    return {
+      imported: [],
+      errors: [`Error processing files: ${errorMessage}`],
+    };
+  }
+};
+
+/**
  * Imports all decks from a folder
  * @param folderPath The folder to import from
  * @returns Array of imported decks
@@ -107,10 +234,6 @@ export const exportDeckToBrowser = async (
 export const importDecksFromFolder = async (
   folderPath: string
 ): Promise<Deck[]> => {
-  if (isBrowser) {
-    throw new Error("File system operations are not supported in the browser.");
-  }
-
   try {
     const fs = await import("fs");
     const path = await import("path");
@@ -135,7 +258,6 @@ export const importDecksFromFolder = async (
         const importPromise = (async () => {
           try {
             let deck: Deck | null = null;
-
             if (extension === ".json") {
               // Import JSON deck
               const content = fs.readFileSync(filePath, "utf8");
@@ -143,26 +265,17 @@ export const importDecksFromFolder = async (
             } else if (extension === ".ydk") {
               // Import YDK deck using our existing ydk-parser
               const content = fs.readFileSync(filePath, "utf8");
-              const deckData = ydkToJson(content);
-              deck = await downloadDeck(
-                deckData.mainDeck || [],
-                deckData.extraDeck || [],
-                [], // No side deck from the parser
-                deckName
-              );
+              importDeckFromYdk(content, deckName);
             }
-
             if (deck) {
               // Ensure deck has a name property
               if (!deck.name) {
                 deck.name = deckName;
               }
-
               // Ensure deck has sideDeck property
               if (!Array.isArray(deck.sideDeck)) {
                 deck.sideDeck = [];
               }
-
               decks.push(deck);
             }
           } catch (error) {

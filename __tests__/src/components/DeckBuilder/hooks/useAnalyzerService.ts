@@ -24,23 +24,35 @@ export function useAnalyzerService() {
     setIsLoading(true);
     setError(null);
 
+    console.log(
+      "🔍 useAnalyzerService.analyzeDeckWithService called with deck:",
+      deck.name
+    );
+    console.log("📤 Sending request to analyzer service...");
+
     try {
       // First ensure analyzer is initialized with card data
       await analyzerService.initialize();
+      console.log("✅ Analyzer service initialized");
 
       // Then analyze the deck
+      console.log("📊 Calling analyzerService.analyzeDeck...");
       const analysis = await analyzerService.analyzeDeck(deck);
+      console.log("📈 Received analysis result:", analysis);
 
       // Merge the external analysis with our local analysis
       return enhanceLocalAnalytics(deck, analysis);
     } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to analyze deck";
+      console.error("❌ Error analyzing deck with service:", errorMessage);
       setError(
         err instanceof Error ? err : new Error("Failed to analyze deck")
       );
-      console.error("Error analyzing deck with service:", err);
       return null;
     } finally {
       setIsLoading(false);
+      console.log("✓ analyzeDeckWithService completed");
     }
   }, []);
 
@@ -49,6 +61,7 @@ export function useAnalyzerService() {
    */
   const getDeckArchetype = useCallback(
     async (deck: Deck): Promise<string | null> => {
+      console.log("🔍 useAnalyzerService.getDeckArchetype called");
       try {
         await analyzerService.initialize();
         return await analyzerService.getDeckArchetype(deck);
@@ -97,13 +110,31 @@ export function useAnalyzerService() {
     deck: Deck,
     externalAnalysis: any
   ): DeckAnalytics => {
-    // This would be your existing analytics data
-    // We'll add the additional insights from the external analyzer
+    console.log("🔄 Enhancing local analytics with external data");
+    // Calculate basic analytics locally to ensure core metrics are always available
+    const { analyzeDeck } = require("./useDeckAnalytics").useDeckAnalytics();
+    const localAnalytics = analyzeDeck(deck);
 
-    // TODO: Implement proper merging with your existing analytics
+    console.log("✅ Local analytics calculation complete");
+
+    // Check if we received valid enhanced data
+    if (!externalAnalysis || !Object.keys(externalAnalysis).length) {
+      console.warn("⚠️ No valid external analysis data received");
+      return localAnalytics;
+    }
+
+    console.log(
+      "🏆 Enhanced analysis data available, merging with local analytics"
+    );
+
+    // Return merged analytics that preserves ALL local data
     return {
-      // Base data from external analysis
-      archetype: externalAnalysis.archetype || "Unknown",
+      // Start with ALL fields from local analytics
+      ...localAnalytics,
+
+      // Then add enhanced fields from external analysis
+      archetype:
+        externalAnalysis.archetype || localAnalytics.archetype || "Unknown",
       strategy: externalAnalysis.strategy || "Unknown",
       mainCombos: externalAnalysis.mainCombos || [],
       strengths: externalAnalysis.strengths || [],
@@ -111,20 +142,6 @@ export function useAnalyzerService() {
       counters: externalAnalysis.counters || [],
       recommendedTechs: externalAnalysis.recommendedTechs || [],
       confidenceScore: externalAnalysis.confidenceScore || 0,
-
-      // We still maintain the local analytics fields
-      typeDistribution: {},
-      attributeDistribution: {},
-      levelDistribution: {},
-      keyCards: [],
-      deckSize: deck.mainDeck.length,
-      consistencyScore: 0,
-      extraDeckSize: deck.extraDeck.length,
-      potentialArchetypes: [],
-      monsterCount: 0,
-      spellCount: 0,
-      trapCount: 0,
-      mainDeck: [],
     };
   };
 

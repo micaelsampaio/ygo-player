@@ -68,4 +68,5 @@ export interface DeckAnalyticsProps {
   isVisible?: boolean;
   isLoading?: boolean;
   isEnhanced?: boolean;
+  onToggleEnhanced?: (newState: boolean) => void;
 }

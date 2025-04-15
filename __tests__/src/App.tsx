@@ -11,7 +11,7 @@ import { Logger } from "./utils/logger";
 import { ComboChooseDeck } from "./components/ComboChooseDeck";
 import { exportAllData, importAllData } from "./utils/dataExport";
 import { generateExportToMdCode } from "./utils/export-to-md.js";
-import { DataExportModal } from "./components/DataExportModal";
+import { DataExportModal } from "./components/Data/DataExportModal.js";
 
 const cdnUrl = String(import.meta.env.VITE_YGO_CDN_URL);
 

@@ -3,9 +3,9 @@ import { DeckAnalyticsType } from "../types";
 
 interface PerformanceMetricsProps {
   analytics: DeckAnalyticsType;
-  deckMetrics: {
-    comboProbability: { probability: number; explanation: string };
-    resourceGeneration: { score: number; explanation: string };
+  deckMetrics?: {
+    comboProbability?: { probability: number; explanation: string };
+    resourceGeneration?: { score: number; explanation: string };
   };
   getConsistencyColor: (score: number) => string;
   getProbabilityColor: (probability: number) => string;
@@ -13,7 +13,7 @@ interface PerformanceMetricsProps {
 
 const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({
   analytics,
-  deckMetrics,
+  deckMetrics = {},
   getConsistencyColor,
   getProbabilityColor,
 }) => (
@@ -46,19 +46,20 @@ const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({
           <div
             className="gauge-fill"
             style={{
-              width: `${deckMetrics.comboProbability.probability}%`,
+              width: `${deckMetrics.comboProbability?.probability || 0}%`,
               backgroundColor: getProbabilityColor(
-                deckMetrics.comboProbability.probability
+                deckMetrics.comboProbability?.probability || 0
               ),
             }}
           />
         </div>
         <div className="metric-value">
-          {deckMetrics.comboProbability.probability.toFixed(0)}%
+          {(deckMetrics.comboProbability?.probability || 0).toFixed(0)}%
         </div>
       </div>
       <div className="metric-explanation">
-        {deckMetrics.comboProbability.explanation}
+        {deckMetrics.comboProbability?.explanation ||
+          "Combo data not available"}
       </div>
     </div>
 
@@ -72,22 +73,23 @@ const PerformanceMetrics: React.FC<PerformanceMetricsProps> = ({
           <div
             className="gauge-fill"
             style={{
-              width: `${deckMetrics.resourceGeneration.score * 10}%`,
+              width: `${(deckMetrics.resourceGeneration?.score || 0) * 10}%`,
               backgroundColor:
-                deckMetrics.resourceGeneration.score >= 7
+                (deckMetrics.resourceGeneration?.score || 0) >= 7
                   ? "#4CAF50"
-                  : deckMetrics.resourceGeneration.score >= 5
+                  : (deckMetrics.resourceGeneration?.score || 0) >= 5
                   ? "#FFC107"
                   : "#F44336",
             }}
           />
         </div>
         <div className="metric-value">
-          {deckMetrics.resourceGeneration.score.toFixed(1)}/10
+          {(deckMetrics.resourceGeneration?.score || 0).toFixed(1)}/10
         </div>
       </div>
       <div className="metric-explanation">
-        {deckMetrics.resourceGeneration.explanation}
+        {deckMetrics.resourceGeneration?.explanation ||
+          "Resource data not available"}
       </div>
     </div>
   </div>

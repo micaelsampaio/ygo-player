@@ -10,7 +10,7 @@ import { Logger } from "../../../utils/logger";
 // Create a logger for deck analytics
 const logger = Logger.createLogger("DeckAnalytics");
 // Set to true only during development/debugging
-const ENABLE_VERBOSE_LOGGING = false;
+const ENABLE_VERBOSE_LOGGING = true; // Temporarily enable verbose logging for debugging
 
 // Wrapper function to conditionally log only when verbose logging is enabled
 const conditionalLog = (message: string, ...args: any[]) => {
@@ -43,6 +43,9 @@ export function useDeckAnalytics() {
   const analyzeDeck = useCallback((deck: Deck): DeckAnalytics => {
     // Performance measurement
     const startTime = performance.now();
+    console.log(
+      `DEBUG: Analyzing deck: "${deck.name}" with ${deck.mainDeck.length} cards`
+    );
     conditionalLog(
       `Analyzing deck: "${deck.name}" (${deck.mainDeck.length} cards)`
     );
@@ -103,6 +106,10 @@ export function useDeckAnalytics() {
         typeDistribution.set("Trap", (typeDistribution.get("Trap") || 0) + 1);
       }
     }
+
+    console.log(
+      `DEBUG: Card counts - Monsters: ${monsterCount}, Spells: ${spellCount}, Traps: ${trapCount}`
+    );
 
     // Convert maps back to objects for compatibility
     const typeDistributionObj = Object.fromEntries(typeDistribution);
@@ -346,7 +353,9 @@ export function useDeckAnalytics() {
     // Calculate analysis time
     const endTime = performance.now();
     const analysisTime = endTime - startTime;
-    conditionalLog(`Deck analysis completed in ${analysisTime.toFixed(2)}ms`);
+    console.log(
+      `DEBUG: Deck analysis completed in ${analysisTime.toFixed(2)}ms`
+    );
 
     // Return the enhanced analytics object with ALL calculated metrics
     const result = {
@@ -376,6 +385,10 @@ export function useDeckAnalytics() {
       },
     };
 
+    console.log(
+      "DEBUG: Returning analytics result with monsterCount:",
+      result.monsterCount
+    );
     return result;
   }, []);
 

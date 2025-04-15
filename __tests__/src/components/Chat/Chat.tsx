@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { AudioVisualizer } from "./AudioVisualizer";
-import { Logger } from "../utils/logger";
+import { Logger } from "../../utils/logger";
 import {
   ChatContainer,
   ChatHeader,

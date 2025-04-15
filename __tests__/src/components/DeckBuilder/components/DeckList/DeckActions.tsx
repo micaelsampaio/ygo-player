@@ -1,9 +1,9 @@
 import React, { useState, useRef } from "react";
-import { Deck } from "../types";
+import { Deck } from "../../types";
 import "./DeckActions.css";
-import { ydkToJson } from "../../../../scripts/ydk-parser";
-import { ydkeToJson } from "../../../../scripts/ydke-parser";
-import { downloadDeck } from "../../../../scripts/download-deck";
+import { ydkToJson } from "../../../../utils/ydk-parser";
+import { ydkeToJson } from "../../../../utils/ydke-parser";
+import { downloadDeck } from "../../../../utils/download-deck";
 import {
   downloadDeckAsYdk,
   downloadDeckAsPng,

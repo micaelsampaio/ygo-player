@@ -124,6 +124,24 @@ const SearchPanel: React.FC<SearchPanelProps> = ({
 
   return (
     <div className="search-panel">
+      {onTargetDeckChange && (
+        <div className="target-deck-selector">
+          <label>Add to:</label>
+          <div className="target-toggle">
+            <button
+              className={`toggle-button ${
+                targetDeck === "main" ? "active" : ""
+              }`}
+              onClick={() =>
+                onTargetDeckChange(targetDeck === "main" ? "side" : "main")
+              }
+            >
+              {targetDeck === "main" ? "Main/Extra Deck" : "Side Deck"}
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="search-tabs">
         <button
           className={activeTab === "search" ? "active" : ""}
@@ -138,20 +156,6 @@ const SearchPanel: React.FC<SearchPanelProps> = ({
           Favorites ({favoriteCards.length})
         </button>
       </div>
-
-      {onTargetDeckChange && (
-        <div className="target-deck-selector">
-          <label>Add cards to:</label>
-          <div className="target-toggle">
-            <button 
-              className={`toggle-button ${targetDeck === "main" ? "active" : ""}`}
-              onClick={() => onTargetDeckChange(targetDeck === "main" ? "side" : "main")}
-            >
-              {targetDeck === "main" ? "Main/Extra Deck" : "Side Deck"}
-            </button>
-          </div>
-        </div>
-      )}
 
       {activeTab === "search" ? (
         <>

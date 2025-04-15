@@ -1,7 +1,7 @@
 import React from "react";
 
 interface DeckStyleProps {
-  powerUtility: {
+  powerUtility?: {
     deckStyle: string;
     explanation: string;
     monsterRatio: number;
@@ -11,6 +11,17 @@ interface DeckStyleProps {
 }
 
 const DeckStyle: React.FC<DeckStyleProps> = ({ powerUtility }) => {
+  if (!powerUtility) {
+    return (
+      <div className="analytics-section">
+        <h3>Deck Style</h3>
+        <div className="deck-style-analysis">
+          <p>Deck style analysis not available.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="analytics-section">
       <h3>Deck Style</h3>

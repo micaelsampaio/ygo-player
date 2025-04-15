@@ -6,7 +6,7 @@ import styled from "styled-components";
 import short from "short-uuid";
 import { YgoReplayToImage, YGOSpreadsheetsUtils } from "ygo-core-images-utils";
 import { YGOCollection } from "./CollectionsPage";
-import { getCard } from "../../scripts/download-deck";
+import { getCard } from "../../utils/download-deck";
 import { YGOCore } from "ygo-core";
 
 const cdnUrl = String(import.meta.env.VITE_YGO_CDN_URL);
@@ -39,14 +39,25 @@ export function CurrentCollection() {
   };
 
   const deleteCombo = (comboIndex: number) => {
-    collection!.combos = collection!.combos.filter((_: any, index: number) => index !== comboIndex);
+    collection!.combos = collection!.combos.filter(
+      (_: any, index: number) => index !== comboIndex
+    );
     setCollection(collection!);
-  }
+  };
 
   const openSpreadsheetBuilder = (replay: any) => {
-    const name = encodeURIComponent(replay.name.replace("replay_", "").replace(/[_-]/g, " ").replace(/\d{13}$/, ""));
+    const name = encodeURIComponent(
+      replay.name
+        .replace("replay_", "")
+        .replace(/[_-]/g, " ")
+        .replace(/\d{13}$/, "")
+    );
     localStorage.setItem("duel-data", JSON.stringify(replay.data));
-    navigate(`/spreadsheet/collection/${collection!.id}/${short.generate()}?name=${name}`);
+    navigate(
+      `/spreadsheet/collection/${
+        collection!.id
+      }/${short.generate()}?name=${name}`
+    );
   };
 
   const collectionToXLS = () => {
@@ -148,7 +159,9 @@ export function CurrentCollection() {
                 >
                   Create Image
                 </ActionButton>
-                <ActionDeleteButton onClick={() => deleteCombo(index)}>Delete</ActionDeleteButton>
+                <ActionDeleteButton onClick={() => deleteCombo(index)}>
+                  Delete
+                </ActionDeleteButton>
               </ComboActions>
             </ComboCard>
           ))}
