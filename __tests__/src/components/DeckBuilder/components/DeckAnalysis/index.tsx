@@ -14,6 +14,7 @@ import OptimalDistribution from "./components/OptimalDistribution";
 import HandCategories from "./components/HandCategories";
 import EnhancedAnalysis from "./components/EnhancedAnalysis";
 import AnalyticsModal from "./AnalyticsModal";
+import ProbabilityContent from "./components/ProbabilityContent";
 import "./styles/DeckAnalytics.css";
 import { Logger } from "../../../../utils/logger";
 import { exportDeckAnalysisToPdf } from "../../utils/pdfExport";
@@ -175,54 +176,6 @@ const DeckAnalytics: React.FC<DeckAnalyticsProps> = ({
   useEffect(() => {
     setIsEnhanced(initialEnhancedState);
   }, [initialEnhancedState]);
-
-  // Add a function to check if the analyzer service is available
-  const checkAnalyzerServiceAvailability = useCallback(async () => {
-    try {
-      // Get the ANALYZER_API_URL from the environment or use the default
-      const ANALYZER_API_URL =
-        import.meta.env.VITE_ANALYZER_API_URL || "http://localhost:3002/api";
-
-      // Try to fetch from the health check endpoint with a timeout
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
-
-      const response = await fetch(`${ANALYZER_API_URL}/health`, {
-        signal: controller.signal,
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-      });
-
-      clearTimeout(timeoutId);
-
-      if (response.ok) {
-        setAnalyzerServiceStatus({ available: true, checked: true });
-        return true;
-      } else {
-        setAnalyzerServiceStatus({
-          available: false,
-          checked: true,
-          error: `Service responded with: ${response.status} ${response.statusText}`,
-        });
-        return false;
-      }
-    } catch (error) {
-      console.error("Error checking analyzer service availability:", error);
-      const errorMessage =
-        error instanceof Error && error.name === "AbortError"
-          ? "Connection timeout - the service may not be running"
-          : error instanceof Error
-          ? error.message
-          : "Failed to connect to analyzer service";
-
-      setAnalyzerServiceStatus({
-        available: false,
-        checked: true,
-        error: errorMessage,
-      });
-      return false;
-    }
-  }, []);
 
   // Add a function to directly call the analyze endpoint without health check
   const directlyCallAnalyzeEndpoint = useCallback(async () => {
@@ -523,22 +476,6 @@ const DeckAnalytics: React.FC<DeckAnalyticsProps> = ({
     return "#F44336";
   };
 
-  const openAdvancedModal = () => {
-    setModalContent({
-      isOpen: true,
-      title: "Advanced Deck Analysis",
-      content: "advanced",
-    });
-  };
-
-  const openProbabilityModal = () => {
-    setModalContent({
-      isOpen: true,
-      title: "Detailed Probability Analysis",
-      content: "probability",
-    });
-  };
-
   const closeModal = () => {
     setModalContent((prev) => ({ ...prev, isOpen: false }));
   };
@@ -631,208 +568,14 @@ const DeckAnalytics: React.FC<DeckAnalyticsProps> = ({
   );
 
   const renderProbabilityContent = () => {
-    // Only calculate probability distributions when needed for this view
-    const groupedCards = processedAnalytics?.mainDeck;
-    const deckSize = processedAnalytics?.deckSize || 40;
-
-    const normalSummonDist = calculateOptimalDistribution(deckSize, 7);
-    const starterDist = calculateOptimalDistribution(deckSize, 13);
-
     return (
-      <div
-        className="full-probability-analysis"
-        id="probability-analysis-section"
-      >
-        <section className="analysis-section">
-          <h3>Probability Formula</h3>
-          <ProbabilityFormula />
-        </section>
-
-        <section className="analysis-section">
-          <h3>Optimal Card Distribution Analysis</h3>
-          <div className="distribution-graphs">
-            <OptimalDistribution
-              title="Normal Summon Density"
-              points={normalSummonDist}
-              current={Object.values(groupedCards || [])
-                .filter((card: any) =>
-                  card.roleInfo?.roles?.includes("NormalSummon")
-                )
-                .reduce((sum, card: any) => sum + (card.copies || 0), 0)}
-              optimal={Math.round((7 / 40) * deckSize)}
-              targetPercentage={85}
-            />
-            <OptimalDistribution
-              title="Starter Card Density"
-              points={starterDist}
-              current={Object.values(groupedCards || [])
-                .filter((card: any) =>
-                  card.roleInfo?.roles?.includes("Starter")
-                )
-                .reduce((sum, card: any) => sum + (card.copies || 0), 0)}
-              optimal={Math.round((13 / 40) * deckSize)}
-              targetPercentage={90}
-            />
-          </div>
-
-          <div className="distribution-explanation">
-            <h4>Insights:</h4>
-            <ul>
-              {/* Normal Summon Insight */}
-              <li>
-                <span className="key-insight">
-                  The optimal number of Normal Summons
-                </span>{" "}
-                ({Math.round((7 / 40) * deckSize)}) provides ~
-                {normalSummonDist.find(
-                  (p) => p.copies === Math.round((7 / 40) * deckSize)
-                )?.probability
-                  ? (
-                      normalSummonDist.find(
-                        (p) => p.copies === Math.round((7 / 40) * deckSize)
-                      )!.probability * 100
-                    ).toFixed(2)
-                  : "61.84"}
-                % chance to open with at least one in a {deckSize}-card deck,
-                while minimizing brick hands.
-              </li>
-
-              {/* Starter Cards Insight */}
-              <li>
-                <span className="key-insight">For consistent combo decks</span>,
-                aim for {Math.round((13 / 40) * deckSize)}-
-                {Math.round((14 / 40) * deckSize)} starters to achieve ~
-                {starterDist.find(
-                  (p) => p.copies === Math.round((13 / 40) * deckSize)
-                )?.probability
-                  ? (
-                      starterDist.find(
-                        (p) => p.copies === Math.round((13 / 40) * deckSize)
-                      )!.probability * 100
-                    ).toFixed(2)
-                  : "88.45"}
-                % chance of opening with at least one starter card.
-              </li>
-
-              {/* Current deck stats */}
-              <li>
-                <span className="key-insight">
-                  Your {deckSize}-card deck currently has
-                </span>{" "}
-                {(() => {
-                  const normalSummons = Object.values(groupedCards || [])
-                    .filter((card: any) =>
-                      card.roleInfo?.roles?.includes("NormalSummon")
-                    )
-                    .reduce((sum, card: any) => sum + (card.copies || 0), 0);
-                  const starters = Object.values(groupedCards || [])
-                    .filter((card: any) =>
-                      card.roleInfo?.roles?.includes("Starter")
-                    )
-                    .reduce((sum, card: any) => sum + (card.copies || 0), 0);
-                  const monsterCount = processedAnalytics.monsterCount;
-                  const deckPercentage = Math.round(
-                    (monsterCount / deckSize) * 100
-                  );
-
-                  return (
-                    <>
-                      <span>
-                        {monsterCount} monsters ({deckPercentage}%),{" "}
-                      </span>
-                      <span>
-                        {normalSummons}{" "}
-                        <span
-                          style={{
-                            color:
-                              normalSummons > Math.round((9 / 40) * deckSize)
-                                ? "#FF9800"
-                                : "inherit",
-                            fontWeight:
-                              normalSummons > Math.round((9 / 40) * deckSize)
-                                ? "bold"
-                                : "normal",
-                          }}
-                        >
-                          {normalSummons > Math.round((9 / 40) * deckSize)
-                            ? "(high) "
-                            : ""}
-                        </span>
-                        normal summons, and{" "}
-                      </span>
-                      <span>
-                        {starters}{" "}
-                        <span
-                          style={{
-                            color:
-                              starters > Math.round((16 / 40) * deckSize)
-                                ? "#FF9800"
-                                : "inherit",
-                            fontWeight:
-                              starters > Math.round((16 / 40) * deckSize)
-                                ? "bold"
-                                : "normal",
-                          }}
-                        >
-                          {starters > Math.round((16 / 40) * deckSize)
-                            ? "(high) "
-                            : ""}
-                        </span>
-                        starter cards.
-                      </span>
-                    </>
-                  );
-                })()}
-              </li>
-
-              {/* Warning for high ratios */}
-              {(() => {
-                const normalSummons = Object.values(groupedCards || [])
-                  .filter((card: any) =>
-                    card.roleInfo?.roles?.includes("NormalSummon")
-                  )
-                  .reduce((sum, card: any) => sum + (card.copies || 0), 0);
-
-                const starters = Object.values(groupedCards || [])
-                  .filter((card: any) =>
-                    card.roleInfo?.roles?.includes("Starter")
-                  )
-                  .reduce((sum, card: any) => sum + (card.copies || 0), 0);
-
-                const hasHighRatios =
-                  normalSummons > Math.round((9 / 40) * deckSize) ||
-                  starters > Math.round((16 / 40) * deckSize);
-
-                if (hasHighRatios) {
-                  return (
-                    <li>
-                      <span className="warning-text">Warning:</span> The high
-                      density values shown in
-                      <span style={{ color: "#FF9800" }}> orange</span> indicate
-                      you may be overconsistent, which can lead to drawing
-                      duplicate cards that cannot be properly utilized
-                      (especially with normal summons or without discard
-                      mechanics).
-                    </li>
-                  );
-                }
-                return null;
-              })()}
-            </ul>
-          </div>
-        </section>
-
-        <section className="analysis-section">
-          <h3>Opening Hand Categories</h3>
-          <HandCategories
-            groupedCards={groupedCards}
-            analytics={processedAnalytics}
-            getProbabilityColor={getProbabilityColor}
-            calculateFrequencyText={calculateFrequencyText}
-            calculateRoleProbability={calculateRoleProbability}
-          />
-        </section>
-      </div>
+      <ProbabilityContent
+        processedAnalytics={processedAnalytics}
+        calculateOptimalDistribution={calculateOptimalDistribution}
+        getProbabilityColor={getProbabilityColor}
+        calculateFrequencyText={calculateFrequencyText}
+        calculateRoleProbability={calculateRoleProbability}
+      />
     );
   };
 
@@ -847,48 +590,6 @@ const DeckAnalytics: React.FC<DeckAnalyticsProps> = ({
         onToggleEnhanced={handleToggleEnhanced}
         isLoading={isEnhancedLoading}
       />
-
-      {/* Show service status notice when needed - Only show if service is NOT available AND we're not loading */}
-      {isEnhanced &&
-        analyzerServiceStatus.checked &&
-        !analyzerServiceStatus.available &&
-        !isEnhancedLoading &&
-        !processedAnalytics?.archetype && (
-          <div className="enhanced-notice">
-            <div className="notice-content error">
-              <span className="notice-icon">⚠️</span>
-              <div className="error-message">
-                <p>
-                  <strong>
-                    The enhanced analysis service is not available.
-                  </strong>
-                </p>
-                <p>
-                  Error: {analyzerServiceStatus.error || "Connection failed"}
-                </p>
-                <p className="service-help">
-                  To use enhanced analysis, please ensure the analyzer service
-                  is running at:
-                  <code>
-                    {import.meta.env.VITE_ANALYZER_API_URL ||
-                      "http://localhost:3002/api"}
-                  </code>
-                </p>
-                <button
-                  className="retry-button"
-                  onClick={async () => {
-                    setIsEnhancedLoading(true);
-                    await directlyCallAnalyzeEndpoint(); // Call the direct analyze endpoint instead of health check
-                    setIsEnhancedLoading(false);
-                  }}
-                >
-                  Retry Connection
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
       {/* Show notice about enhanced analysis if it's enabled but no enhanced data is available */}
       {isEnhanced &&
         !processedAnalytics.archetype &&
