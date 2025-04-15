@@ -60,6 +60,10 @@
 
         .ygo-player-dialog-footer {
             padding: var(--ygo-border-radius-large);
+            display: flex;
+            align-items: center;
+            justify-content: end;
+            gap: var(--ygo-space-sm);
         }
     }
 }

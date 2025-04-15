@@ -41,11 +41,11 @@ function Dialog({
 
     return (
         <ModalContext.Provider value={{ visible, close: closeModal as any }}>
-            <div className={`ygo-player-dialog-container ${visible ? 'ygo-show' : ''} ${size ? `ygo-${size}` : ''}`}
+            <div className={`ygo-player-dialog-container ${visible ? 'ygo-show' : ''}`}
                 onClick={close}
                 onMouseMove={cancelMouseEventsCallback}
             >
-                <div className="ygo-player-dialog" onClick={(e) => {
+                <div className={`ygo-player-dialog ${size ? `ygo-${size}` : ''}`} onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
                 }}>

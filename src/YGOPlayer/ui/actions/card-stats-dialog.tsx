@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Modal } from "../components/Modal"
-import { Card, FieldZone, YGOCommands } from "ygo-core";
+import { Card, FieldZone, YGOCommands, YGOGameUtils } from "ygo-core";
 import { YGODuel } from "../../core/YGODuel";
 
 export function CardStatsDialog({ duel, card, player, originZone, clearAction }: { duel: YGODuel, card: Card, originZone: FieldZone, player: number, clearAction: () => void; }) {
@@ -38,10 +38,12 @@ export function CardStatsDialog({ duel, card, player, originZone, clearAction }:
     }, [card, atk, def, level]);
 
     useEffect(() => {
-        setAtk(card.currentAtk.toString());
-        setDef(card.currentDef.toString());
-        setLevel(card.currentLevel.toString());
+        setAtk((card.currentAtk || "").toString());
+        setDef((card.currentDef || "").toString());
+        setLevel((card.currentLevel || "").toString());
     }, [card]);
+
+    const isLink = YGOGameUtils.isLinkMonster(card);
 
     return <Modal.Dialog close={clearAction} visible size="md">
         <Modal.Header>
@@ -50,44 +52,55 @@ export function CardStatsDialog({ duel, card, player, originZone, clearAction }:
             </div>
         </Modal.Header>
         <Modal.Body>
-            <div className="ygo-flex">
-                <div>ATK</div>
+            <div className="ygo-flex ygo-gap-4 ygo-card-stats-dialog-menu">
                 <div>
-                    <input placeholder="Monster Atk" value={atk} onChange={e => setAtk(e.target.value)} />
+                    <img className="ygo-card" src={card.images.small_url} />
                 </div>
-            </div>
-            <div className="ygo-flex">
-                <div>DEF</div>
                 <div>
-                    <input placeholder="Monster Def" value={def} onChange={e => setDef(e.target.value)} />
-                </div>
-            </div>
-            <div className="ygo-flex">
-                <div>Level</div>
-                <div>
-                    <select value={level} onChange={e => setLevel(e.target.value)}>
-                        <option value="1">1</option>
-                        <option value="2">2</option>
-                        <option value="3">3</option>
-                        <option value="4">4</option>
-                        <option value="5">5</option>
-                        <option value="6">6</option>
-                        <option value="7">7</option>
-                        <option value="8">8</option>
-                        <option value="9">9</option>
-                        <option value="10">10</option>
-                        <option value="11">11</option>
-                        <option value="12">12</option>
-                    </select>
+                    <div className="ygo-text-4">
+                        {card.name}
+                    </div>
+
+                    <table className="ygo-data-table">
+                        <tr>
+                            <td>ATK</td>
+                            <td><input placeholder="Monster Atk" value={atk} onChange={e => setAtk(e.target.value)} /></td>
+                        </tr>
+
+                        {!isLink && <tr>
+                            <td>DEF</td>
+                            <td><input placeholder="Monster Def" value={def} onChange={e => setDef(e.target.value)} /></td>
+                        </tr>}
+
+                        <tr>
+                            <td> LVL</td>
+                            <td>
+                                <select value={level} onChange={e => setLevel(e.target.value)}>
+                                    <option value="1">1</option>
+                                    <option value="2">2</option>
+                                    <option value="3">3</option>
+                                    <option value="4">4</option>
+                                    <option value="5">5</option>
+                                    <option value="6">6</option>
+                                    <option value="7">7</option>
+                                    <option value="8">8</option>
+                                    <option value="9">9</option>
+                                    <option value="10">10</option>
+                                    <option value="11">11</option>
+                                    <option value="12">12</option>
+                                </select>
+                            </td>
+                        </tr>
+                    </table>
                 </div>
             </div>
         </Modal.Body>
         <Modal.Footer>
-            <button className="ygo-btn ygo-btn-primary" onClick={clearAction}>
+            <button className="ygo-btn ygo-btn-action" onClick={clearAction}>
                 Close
             </button>
 
-            <button className="ygo-btn ygo-btn-primary" onClick={applyChanges}>
+            <button className="ygo-btn ygo-btn-action" onClick={applyChanges}>
                 Apply changes
             </button>
         </Modal.Footer>
