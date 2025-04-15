@@ -1,6 +1,6 @@
 import { Card, Deck } from "../DeckBuilder/types";
-import { parseYdkFile } from "./ydkParser";
-import { parseOmegaUrl } from "./omegaParser";
+import { ydkToJson } from "../../scripts/ydk-parser";
+import { ydkeToJson } from "../../scripts/ydke-parser";
 
 const LOCAL_API_URL =
   import.meta.env.VITE_CARD_DATA_URL || "http://localhost:8081";
@@ -144,8 +144,15 @@ export const importDeckFromYdk = async (
   ydkContent: string,
   name: string = "Imported YDK Deck"
 ): Promise<Deck> => {
-  const { mainDeckIds, extraDeckIds, sideDeckIds } = parseYdkFile(ydkContent);
-  return downloadDeck(mainDeckIds, extraDeckIds, sideDeckIds, name);
+  const deckData = ydkToJson(ydkContent);
+  // The current DeckData interface from ydk-parser doesn't include sideDeck,
+  // so we'll just pass an empty array for the side deck
+  return downloadDeck(
+    deckData.mainDeck || [],
+    deckData.extraDeck || [],
+    [], // No side deck from the parser
+    name
+  );
 };
 
 /**
@@ -155,6 +162,11 @@ export const importDeckFromOmegaUrl = async (
   url: string,
   name: string = "Imported Omega Deck"
 ): Promise<Deck> => {
-  const { mainDeckIds, extraDeckIds, sideDeckIds } = parseOmegaUrl(url);
-  return downloadDeck(mainDeckIds, extraDeckIds, sideDeckIds, name);
+  const deckData = ydkeToJson(url);
+  return downloadDeck(
+    deckData.mainDeck || [],
+    deckData.extraDeck || [],
+    [], // The ydkeToJson function doesn't handle side deck, so we pass an empty array
+    name
+  );
 };

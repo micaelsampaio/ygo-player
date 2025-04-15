@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Deck } from "../types";
+import { Deck } from "../../types";
 import "./DecksList.css";
 import { createCollectionFromDeck } from "../../../Collections/contex";
 import { useNavigate } from "react-router-dom";
@@ -16,6 +16,7 @@ interface DeckListProps {
   onClearDeck: (deck: Deck) => void;
   onImportDeck: (deck: Deck) => void;
   onCreateCollection: (deck: Deck) => void;
+  onSyncDecks?: () => void; // New prop for sync functionality
 }
 
 const DeckList: React.FC<DeckListProps> = ({
@@ -29,6 +30,7 @@ const DeckList: React.FC<DeckListProps> = ({
   onClearDeck,
   onImportDeck,
   onCreateCollection,
+  onSyncDecks,
 }) => {
   const navigate = useNavigate();
   const [editingDeck, setEditingDeck] = useState<string | null>(null);
@@ -168,9 +170,16 @@ const DeckList: React.FC<DeckListProps> = ({
     <div className="decks-list-container">
       <div className="decks-header">
         <h2>Your Decks</h2>
-        <button className="new-deck-button" onClick={handleNewDeck}>
-          New Deck
-        </button>
+        <div className="deck-header-actions">
+          <button className="new-deck-button" onClick={handleNewDeck}>
+            New Deck
+          </button>
+          {onSyncDecks && (
+            <button className="sync-decks-button" onClick={onSyncDecks}>
+              Sync Decks
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="decks-list">

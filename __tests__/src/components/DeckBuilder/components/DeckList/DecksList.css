@@ -22,6 +22,68 @@
   color: #333;
 }
 
+.decks-header .deck-header-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.new-deck-button {
+  padding: 8px 16px;
+  background: #2196f3;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+}
+
+.new-deck-button:hover {
+  background: #1976d2;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 5px rgba(33, 150, 243, 0.3);
+}
+
+.new-deck-button::before {
+  content: "+";
+  margin-right: 6px;
+  font-size: 1.2em;
+  font-weight: bold;
+}
+
+.sync-decks-button {
+  padding: 8px 16px;
+  background: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+}
+
+.sync-decks-button:hover {
+  background: #388e3c;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 5px rgba(76, 175, 80, 0.3);
+}
+
+.sync-decks-button::before {
+  content: "↻";
+  margin-right: 6px;
+  font-size: 1.2em;
+  font-weight: bold;
+  transition: transform 0.3s ease;
+}
+
+.sync-decks-button:hover::before {
+  transform: rotate(180deg);
+}
+
 /* New controls container for better layout */
 .decks-controls {
   display: flex;
