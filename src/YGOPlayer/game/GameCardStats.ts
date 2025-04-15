@@ -209,12 +209,14 @@ export class GameCardStats {
   }
 
   renderLevel() {
+    this.ctx.textBaseline = "middle";
+
     const isPlayer1 = this.card.owner === 0;
     const level = this.card.currentLevel || this.card.linkval;
     const levelStr = String(level);
+    const x = isPlayer1 ? this.canvas.width - 30 : 30;
+    const y = isPlayer1 ? this.canvas.height - 50 : 55;
     let iconPath: string;
-    let x = isPlayer1 ? this.canvas.width - 20 : 35;
-    let y = isPlayer1 ? this.canvas.height - 50 : this.canvas.height - 60;
     let levelDifference = 0;
 
     if (YGOGameUtils.isLinkMonster(this.card)) {
@@ -234,8 +236,8 @@ export class GameCardStats {
       0,
       icon.width,
       icon.height,
-      x - 30,
-      y - 17,
+      x - 24,
+      y - 12,
       20,
       20
     );
@@ -252,24 +254,27 @@ export class GameCardStats {
 
   renderMaterials() {
     if (!YGOGameUtils.isXYZMonster(this.card)) return;
+
+    this.ctx.textBaseline = "middle";
+
     const isPlayer1 = this.card.owner === 0;
     const materials = this.card.materials.length;
     const materialsStr = String(materials);
     let iconPath = `${this.duel.config.cdnUrl}/images/ui/ic_xyz_materials128.png`;
 
-    let x = isPlayer1 ? 5 : this.canvas.width - 50;
-    let y = isPlayer1 ? this.canvas.height - 50 : this.canvas.height - 60;
+    const x = isPlayer1 ? 30 : this.canvas.width - 30;
+    const y = isPlayer1 ? this.canvas.height - 50 : 55;
 
     const icon = this.duel.assets.getImage(iconPath);
 
-    this.ctx.drawImage(icon, 0, 0, icon.width, icon.height, x, y - 17, 20, 20);
+    this.ctx.drawImage(icon, 0, 0, icon.width, icon.height, x - 24, y - 12, 20, 20);
 
     this.ctx.font = "Bold 20px Arial";
     this.ctx.fillStyle = "#FFFFFF";
     this.ctx.strokeStyle = "black";
     this.ctx.lineWidth = 2;
-    this.ctx.strokeText(materialsStr, x + 30, y);
-    this.ctx.fillText(materialsStr, x + 30, y);
+    this.ctx.strokeText(materialsStr, x, y);
+    this.ctx.fillText(materialsStr, x, y);
 
     this.materials = materials;
   }
