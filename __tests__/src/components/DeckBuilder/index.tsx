@@ -237,30 +237,20 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
     );
 
     setUseEnhancedAnalysis(newState);
-    setAnalyticsCalculated(false); // Force recalculation
+
+    // We don't need to recalculate here since the child component
+    // already fetched and processed the enhanced data
+    if (newState) {
+      console.log(
+        `🧮 Enhanced analysis state updated for "${selectedDeck?.name}", using already fetched data`
+      );
+    } else {
+      // If turning off enhanced mode, we need to revert to local analytics
+      setAnalyticsCalculated(false);
+      calculateDeckAnalytics();
+    }
 
     console.log(`Enhanced analysis toggled to: ${newState ? "ON" : "OFF"}`);
-
-    // Always recalculate analytics after toggling
-    if (selectedDeck) {
-      console.log(
-        `🧮 Recalculating deck analytics for "${selectedDeck.name}" with enhanced=${newState}`
-      );
-
-      // Small delay to ensure state updates complete
-      setTimeout(async () => {
-        try {
-          await calculateDeckAnalytics();
-          console.log(
-            `✅ Successfully calculated analytics with enhanced=${newState}`
-          );
-        } catch (error) {
-          console.error(`❌ Error calculating deck analytics:`, error);
-        }
-      }, 100);
-    } else {
-      console.log(`⚠️ No deck selected, skipping analytics calculation`);
-    }
   };
 
   const handleImportDeck = (importedDeck: Deck) => {
@@ -812,9 +802,7 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
                 isLoading={isAnalyzing}
                 isEnhanced={useEnhancedAnalysis && !analyzerServiceError}
                 onToggleEnhanced={(newState) => {
-                  setUseEnhancedAnalysis(newState);
-                  setAnalyticsCalculated(false); // Force recalculation
-                  calculateDeckAnalytics(); // Fetch the appropriate analytics data
+                  toggleEnhancedAnalysis(newState);
                 }}
               />
             )}

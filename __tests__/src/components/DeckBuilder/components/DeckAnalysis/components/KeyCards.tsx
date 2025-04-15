@@ -13,8 +13,14 @@ const getProbabilityColor = (probability: number) => {
 };
 
 const KeyCards: React.FC<KeyCardsProps> = ({ keyCards, onHoverCard }) => {
+  // Safety check if keyCards is undefined or null
+  const safeKeyCards = keyCards || [];
+
   // Use memoized key cards to avoid unnecessary recalculations
-  const displayedCards = useMemo(() => keyCards.slice(0, 3), [keyCards]);
+  const displayedCards = useMemo(
+    () => safeKeyCards.slice(0, 3),
+    [safeKeyCards]
+  );
 
   // Memoize the hover handlers to prevent recreation on each render
   const handleMouseEnter = useCallback(
@@ -33,7 +39,8 @@ const KeyCards: React.FC<KeyCardsProps> = ({ keyCards, onHoverCard }) => {
       <h3>Key Cards</h3>
       <div className="key-cards">
         {displayedCards.map((card, index) => {
-          const probability = card.openingProbability;
+          // Make sure probability exists and is a number
+          const probability = card?.openingProbability || 0;
 
           return (
             <div
@@ -66,9 +73,9 @@ const KeyCards: React.FC<KeyCardsProps> = ({ keyCards, onHoverCard }) => {
             </div>
           );
         })}
-        {keyCards.length > 3 && (
+        {safeKeyCards.length > 3 && (
           <div className="more-cards-note">
-            + {keyCards.length - 3} more key cards
+            + {safeKeyCards.length - 3} more key cards
           </div>
         )}
       </div>

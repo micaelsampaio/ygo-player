@@ -1,10 +1,13 @@
 import React from "react";
 import { DeckAnalyticsType } from "../types";
 import "../styles/EnhancedAnalysis.css";
+import { Logger } from "../../../../../utils/logger";
 
 interface EnhancedAnalysisProps {
   analytics: DeckAnalyticsType;
 }
+
+const logger = Logger.createLogger("EnhancedAnalysis");
 
 const EnhancedAnalysis: React.FC<EnhancedAnalysisProps> = ({ analytics }) => {
   const {
@@ -18,8 +21,24 @@ const EnhancedAnalysis: React.FC<EnhancedAnalysisProps> = ({ analytics }) => {
     confidenceScore,
   } = analytics;
 
+  // Log the received enhanced data for debugging
+  React.useEffect(() => {
+    logger.debug("EnhancedAnalysis received data:", {
+      hasArchetype: !!archetype,
+      archetype,
+      strategy,
+      hasMainCombos: mainCombos && mainCombos.length > 0,
+      mainCombosCount: mainCombos?.length || 0,
+      hasStrengths: strengths && strengths.length > 0,
+      hasWeaknesses: weaknesses && weaknesses.length > 0,
+    });
+  }, [archetype, strategy, mainCombos, strengths, weaknesses]);
+
   // Only render if we have enhanced analytics data
   if (!archetype && !strategy) {
+    logger.debug(
+      "EnhancedAnalysis: No archetype or strategy found, not rendering"
+    );
     return null;
   }
 

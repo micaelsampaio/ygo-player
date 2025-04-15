@@ -1,14 +1,14 @@
 import React, { useEffect } from "react";
-import "./AnalyticsModal.css";
+import "../styles/AnalyticsTab.css";
 
-interface AnalyticsModalProps {
+interface AnalyticsTabProps {
   isOpen: boolean;
   onClose: () => void;
   title: string;
   children: React.ReactNode;
 }
 
-const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
+const AnalyticsTab: React.FC<AnalyticsTabProps> = ({
   isOpen,
   onClose,
   title,
@@ -54,4 +54,4 @@ const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
   );
 };
 
-export default AnalyticsModal;
+export default AnalyticsTab;
