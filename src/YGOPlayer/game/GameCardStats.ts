@@ -80,7 +80,7 @@ export class GameCardStats {
   needsUpdate(): boolean {
     const atk = this.card.currentAtk;
     const def = this.card.currentDef;
-    const level = typeof this.card.currentLevel !== "undefined" ? this.card.currentLevel : this.card.linkval;
+    const level = this.card.linkval || this.card.currentLevel;
     const owner = this.card.owner;
     const materials = this.card.materials.length;
 
@@ -137,7 +137,6 @@ export class GameCardStats {
     const atkStr = `${this.atk}`;
     const slashStr = hasDef ? "/" : "";
     const defStr = hasDef ? `${this.def}` : "";
-
     const isAtkPosition = YGOGameUtils.isAttack(this.card);
 
     this.ctx.beginPath();
@@ -212,7 +211,7 @@ export class GameCardStats {
     this.ctx.textBaseline = "middle";
 
     const isPlayer1 = this.card.owner === 0;
-    const level = typeof this.card.currentLevel !== "undefined" ? this.card.currentLevel : this.card.linkval;
+    const level = this.card.linkval || this.card.currentLevel;
     const levelStr = String(level);
     const x = isPlayer1 ? this.canvas.width - 30 : 30;
     const y = isPlayer1 ? this.canvas.height - 50 : 55;
