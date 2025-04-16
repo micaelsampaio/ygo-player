@@ -125,6 +125,7 @@
         background-size: 800% 800%;
         background-repeat: no-repeat;
         background-position: 100% 0%;
+        pointer-events: none;
     }
 }
 

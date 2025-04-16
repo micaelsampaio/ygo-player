@@ -88,6 +88,18 @@ export function CardExtraDeckMenu({
     duel.gameActions.revealCard({ card, originZone, });
   }, [card, originZone]);
 
+  const toGY = useCallback(() => {
+    duel.gameActions.sendToGy({ card, originZone });
+  }, [card, originZone]);
+
+  const banish = useCallback(() => {
+    duel.gameActions.banish({ card, originZone, position: "faceup" });
+  }, [card, originZone]);
+
+  const banishFD = useCallback(() => {
+    duel.gameActions.banish({ card, originZone, position: "facedown" });
+  }, [card, originZone]);
+
   useLayoutEffect(() => {
     const container = menuRef.current!;
     const cardRect = htmlCardElement.getBoundingClientRect();
@@ -208,6 +220,23 @@ export function CardExtraDeckMenu({
                 SS DEF
               </button>
             )}
+
+            <button
+              type="button"
+              className="ygo-card-item"
+              onClick={toGY}
+            >
+              To Grave
+            </button>
+
+            <button type="button" className="ygo-card-item" onClick={banish}>
+              Banish
+            </button>
+
+            <button type="button" className="ygo-card-item" onClick={banishFD}>
+              Banish FD
+            </button>
+
 
             <button type="button" className="ygo-card-item" onClick={revealCard}>Reveal</button>
           </>

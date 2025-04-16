@@ -157,6 +157,14 @@ export function CardBanishMenu({
         <button
           type="button"
           className="ygo-card-item"
+          onClick={toGY}
+        >
+          To Grave
+        </button>
+
+        <button
+          type="button"
+          className="ygo-card-item"
           onClick={targetCard}
         >
           Target
