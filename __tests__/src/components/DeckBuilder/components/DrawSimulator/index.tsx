@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { Card, Deck } from "../../types";
 import { getCardImageUrl } from "../../../../utils/cardImages";
 import { YGOGameUtils } from "ygo-core";
@@ -57,6 +57,13 @@ interface ExtendedStatistics {
     count: number;
     percentage: number;
   }>;
+  cardCombinations: {
+    [size: number]: Array<{
+      cards: Card[];
+      count: number;
+      percentage: number;
+    }>;
+  };
   roleStatistics: {
     [key: string]: {
       atLeastOne: number;
@@ -100,7 +107,9 @@ const DrawSimulator: React.FC<DrawSimulatorProps> = ({
   const [expandedTables, setExpandedTables] = useState({
     mostSeen: false,
     leastSeen: false,
-    commonHand: false, // Add this new state
+    commonHand: false,
+    combinationsPanel: false, // Main panel collapsed by default
+    combinations: {}, // We'll initialize this dynamically
   });
 
   const uniqueCards = useMemo(() => {
@@ -192,6 +201,24 @@ const DrawSimulator: React.FC<DrawSimulatorProps> = ({
     setIsSimulating(false);
   };
 
+  const generateCombinations = (array: Card[], size: number): Card[][] => {
+    if (size > array.length || size <= 0) return [];
+    if (size === array.length) return [array];
+    if (size === 1) return array.map((item) => [item]);
+
+    const combinations: Card[][] = [];
+    array.forEach((item, index) => {
+      const smallerCombinations = generateCombinations(
+        array.slice(index + 1),
+        size - 1
+      );
+      smallerCombinations.forEach((combo) =>
+        combinations.push([item, ...combo])
+      );
+    });
+    return combinations;
+  };
+
   const calculateExtendedStatistics = (
     simResults: SimulationResult[]
   ): ExtendedStatistics => {
@@ -203,6 +230,17 @@ const DrawSimulator: React.FC<DrawSimulatorProps> = ({
       { atLeastOne: number; total: number }
     > = {};
     let wantedCardsSuccessCount = 0;
+
+    // For tracking card combinations
+    const combinationsMap: Record<
+      number,
+      Record<string, { cards: Card[]; count: number }>
+    > = {};
+
+    // Initialize combinations map based on hand size (we'll track combinations from size 2 up to handSize-1)
+    for (let size = 2; size < handSize; size++) {
+      combinationsMap[size] = {};
+    }
 
     simResults.forEach((result) => {
       const handKey = result.hand
@@ -217,6 +255,7 @@ const DrawSimulator: React.FC<DrawSimulatorProps> = ({
       // Create a set to track which roles appeared at least once in this hand
       const rolesInHand = new Set<string>();
 
+      // Track the cards in this hand
       result.hand.forEach((card) => {
         if (!cardAppearances[card.name]) {
           cardAppearances[card.name] = { count: 0, card };
@@ -236,6 +275,21 @@ const DrawSimulator: React.FC<DrawSimulatorProps> = ({
           });
         }
       });
+
+      // Generate and count all possible combinations of different sizes
+      for (let size = 2; size < handSize; size++) {
+        const combinations = generateCombinations(result.hand, size);
+        combinations.forEach((combo) => {
+          const comboKey = combo
+            .map((c) => c.name)
+            .sort()
+            .join("||");
+          if (!combinationsMap[size][comboKey]) {
+            combinationsMap[size][comboKey] = { cards: combo, count: 0 };
+          }
+          combinationsMap[size][comboKey].count++;
+        });
+      }
 
       // Increment atLeastOne counter for each unique role found in this hand
       rolesInHand.forEach((role) => {
@@ -317,6 +371,22 @@ const DrawSimulator: React.FC<DrawSimulatorProps> = ({
       .sort((a, b) => b.count - a.count)
       .slice(0, 5);
 
+    // Process card combinations for each size
+    const cardCombinations: ExtendedStatistics["cardCombinations"] = {};
+
+    for (let size = 2; size < handSize; size++) {
+      const combinations = Object.values(combinationsMap[size])
+        .map((combo) => ({
+          cards: combo.cards,
+          count: combo.count,
+          percentage: (combo.count / totalSims) * 100,
+        }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 5); // Get top 5 combinations for each size
+
+      cardCombinations[size] = combinations;
+    }
+
     return {
       totalSimulations: totalSims,
       mostCommonHand: {
@@ -345,6 +415,7 @@ const DrawSimulator: React.FC<DrawSimulatorProps> = ({
       roleStatistics: roleStats,
       wantedCardsSuccessRate: (wantedCardsSuccessCount / totalSims) * 100,
       wantedCardsSuccessCount,
+      cardCombinations,
     };
   };
 
@@ -381,6 +452,22 @@ const DrawSimulator: React.FC<DrawSimulatorProps> = ({
     // Sort by probability descending
     return cardProbabilities.sort((a, b) => b.probability - a.probability);
   }, [deck, handSize, uniqueCards]);
+
+  useEffect(() => {
+    if (statistics && Object.keys(statistics.cardCombinations).length > 0) {
+      const combinationsExpanded = {};
+
+      // Set all combination sizes to be expanded by default
+      Object.keys(statistics.cardCombinations).forEach((size) => {
+        combinationsExpanded[size] = true;
+      });
+
+      setExpandedTables((prev) => ({
+        ...prev,
+        combinations: combinationsExpanded,
+      }));
+    }
+  }, [statistics]);
 
   if (!deck) {
     return <div className="draw-simulator empty">Select a deck first</div>;
@@ -854,6 +941,95 @@ const DrawSimulator: React.FC<DrawSimulatorProps> = ({
                   )
                 )}
               </div>
+            </div>
+
+            <div className="statistics-section">
+              <div
+                className="hand-header clickable"
+                onClick={() =>
+                  setExpandedTables({
+                    ...expandedTables,
+                    combinationsPanel: !expandedTables.combinationsPanel,
+                  })
+                }
+              >
+                <h3>Card Combinations</h3>
+                <span className="toggle-indicator">
+                  {expandedTables.combinationsPanel ? "▲" : "▼"}
+                </span>
+              </div>
+              {expandedTables.combinationsPanel && (
+                <>
+                  <p>
+                    Most common card combinations appearing in opening hands:
+                  </p>
+                  {Object.entries(statistics.cardCombinations).map(
+                    ([size, combinations]) => (
+                      <div
+                        key={`combo-size-${size}`}
+                        className="card-statistics-table"
+                      >
+                        <div
+                          className="hand-header clickable"
+                          onClick={() =>
+                            setExpandedTables({
+                              ...expandedTables,
+                              combinations: {
+                                ...expandedTables.combinations,
+                                [size]: !expandedTables.combinations[size],
+                              },
+                            })
+                          }
+                        >
+                          <h4>Most Common {size}-Card Combinations</h4>
+                          <span className="toggle-indicator">
+                            {expandedTables.combinations[size] ? "▲" : "▼"}
+                          </span>
+                        </div>
+                        {expandedTables.combinations[size] && (
+                          <>
+                            {combinations.length > 0 ? (
+                              <table>
+                                <thead>
+                                  <tr>
+                                    <th>Frequency</th>
+                                    <th>Percentage</th>
+                                    <th>Cards</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {combinations.map((combo, index) => (
+                                    <tr key={`combo-${size}-${index}`}>
+                                      <td>{combo.count} times</td>
+                                      <td>{combo.percentage.toFixed(1)}%</td>
+                                      <td className="hand-cards-preview">
+                                        {combo.cards.map((card, cardIndex) => (
+                                          <img
+                                            key={`combo-${size}-${index}-${cardIndex}`}
+                                            src={getCardImageUrl(card, "small")}
+                                            alt={card.name}
+                                            onClick={() => onCardSelect(card)}
+                                            className="table-card-image"
+                                            title={card.name}
+                                          />
+                                        ))}
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            ) : (
+                              <p>
+                                No data available for {size}-card combinations
+                              </p>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    )
+                  )}
+                </>
+              )}
             </div>
           </>
         )}
