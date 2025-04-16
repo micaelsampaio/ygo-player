@@ -60,8 +60,8 @@
 }
 
 .ygo-player-core .ygo-card-menu .ygo-card-item:not(:disabled):hover {
-    background-color: var(--ygo-hover-color);
-    color: var(--ygo-text-color);
+    background-color: var(--ygo-border-color-light);
+    transition: none;
 }
 
 .ygo-player-core .ygo-card-menu .ygo-card-item:disabled {
@@ -494,6 +494,86 @@
 .ygo-player-core input::placeholder {
     color: var(--ygo-form-input-placeholder-text-color);
 }
+
+
+/* SELECT */
+.ygo-player-core {
+    .ygo-select-container {
+        position: relative;
+        width: 100%;
+        max-width: 600px;
+        border: 1px solid var(--ygo-border-color);
+        border-radius: var(--ygo-border-radius-small);
+        font-size: var(--ygo-font-sm);
+        background-color: var(--ygo-background-color);
+        color: var(--ygo-form--input-text-color);
+        box-sizing: border-box;
+        outline: none;
+
+        &:focus {
+            outline: none;
+            border: 1px solid var(--ygo-primary-color);
+            box-shadow: var(--ygo-primary-color) 0px 0px 6px;
+        }
+    }
+
+    .ygo-select-display {
+        padding: 10px;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .ygo-select-display .ygo-arrow {
+        margin-left: 10px;
+        width: 15px;
+        height: 15px;
+
+        svg {
+            width: 100%;
+            height: 100%;
+        }
+    }
+
+    .ygo-select-display .ygo-placeholder {
+        color: var(--ygo-form-input-placeholder-text-color);
+    }
+
+    .ygo-select-options {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        position: absolute;
+        top: calc(100% + 5px);
+        width: 100%;
+        z-index: 100;
+        background-color: var(--ygo-background-color);
+        border: 1px solid var(--ygo-border-color);
+        border-radius: var(--ygo-border-radius-small);
+        max-height: 200px;
+        overflow-y: auto;
+    }
+
+    .ygo-select-option {
+        padding: 10px;
+        cursor: pointer;
+    }
+
+    .ygo-select-option:hover,
+    .ygo-select-option.ygo-highlighted {
+        background-color: var(--ygo-background-color-70);
+    }
+
+    .ygo-select-option.ygo-selected {
+        background-color: var(--ygo-primary-color);
+        color: #fff;
+    }
+}
+
+/* END SELEC */
+
+
 
 .ygo-player-core .card-icon {
     width: 18px;

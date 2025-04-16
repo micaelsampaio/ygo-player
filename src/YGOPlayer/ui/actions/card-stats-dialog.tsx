@@ -2,6 +2,23 @@ import { useCallback, useEffect, useState } from "react";
 import { Modal } from "../components/Modal"
 import { Card, FieldZone, YGOCommands, YGOGameUtils } from "ygo-core";
 import { YGODuel } from "../../core/YGODuel";
+import { YGOSelect } from "../components/select";
+import { YGOInput } from "../components/Input";
+
+const levelOptions = [
+    { label: "1", value: "1" },
+    { label: "2", value: "2" },
+    { label: "3", value: "3" },
+    { label: "4", value: "4" },
+    { label: "5", value: "5" },
+    { label: "6", value: "6" },
+    { label: "7", value: "7" },
+    { label: "8", value: "8" },
+    { label: "9", value: "9" },
+    { label: "10", value: "10" },
+    { label: "11", value: "11" },
+    { label: "12", value: "12" },
+]
 
 export function CardStatsDialog({ duel, card, player, originZone, clearAction }: { duel: YGODuel, card: Card, originZone: FieldZone, player: number, clearAction: () => void; }) {
 
@@ -38,9 +55,9 @@ export function CardStatsDialog({ duel, card, player, originZone, clearAction }:
     }, [card, atk, def, level]);
 
     useEffect(() => {
-        setAtk((card.currentAtk || "").toString());
-        setDef((card.currentDef || "").toString());
-        setLevel((card.currentLevel || "").toString());
+        setAtk((card.currentAtk || "0").toString());
+        setDef((card.currentDef || "0").toString());
+        setLevel((card.currentLevel || "1").toString());
     }, [card]);
 
     const isLink = YGOGameUtils.isLinkMonster(card);
@@ -52,45 +69,35 @@ export function CardStatsDialog({ duel, card, player, originZone, clearAction }:
             </div>
         </Modal.Header>
         <Modal.Body>
-            <div className="ygo-flex ygo-gap-4 ygo-card-stats-dialog-menu">
+            <div className="ygo-text-4">
+                {card.name}
+            </div>
+            <div className="ygo-flex ygo-gap-4 ygo-mt-3 ygo-card-stats-dialog-menu">
                 <div>
                     <img className="ygo-card" src={card.images.small_url} />
                 </div>
                 <div>
-                    <div className="ygo-text-4">
-                        {card.name}
-                    </div>
-
-                    <table className="ygo-data-table">
+                    <table className="ygo-data-table ygo-table-space-2">
                         <tr>
                             <td>ATK</td>
-                            <td><input placeholder="Monster Atk" value={atk} onChange={e => setAtk(e.target.value)} /></td>
+                            <td><YGOInput placeholder="Monster Atk" value={atk} onChange={e => setAtk(e.target.value)} /></td>
                         </tr>
 
                         {!isLink && <tr>
                             <td>DEF</td>
-                            <td><input placeholder="Monster Def" value={def} onChange={e => setDef(e.target.value)} /></td>
+                            <td><YGOInput placeholder="Monster Def" value={def} onChange={e => setDef(e.target.value)} /></td>
                         </tr>}
 
-                        <tr>
+                        {!isLink && <tr>
                             <td> LVL</td>
                             <td>
-                                <select value={level} onChange={e => setLevel(e.target.value)}>
-                                    <option value="1">1</option>
-                                    <option value="2">2</option>
-                                    <option value="3">3</option>
-                                    <option value="4">4</option>
-                                    <option value="5">5</option>
-                                    <option value="6">6</option>
-                                    <option value="7">7</option>
-                                    <option value="8">8</option>
-                                    <option value="9">9</option>
-                                    <option value="10">10</option>
-                                    <option value="11">11</option>
-                                    <option value="12">12</option>
-                                </select>
+                                <YGOSelect
+                                    value={level}
+                                    onChange={newLevel => setLevel(newLevel)}
+                                    options={levelOptions}
+                                />
                             </td>
-                        </tr>
+                        </tr>}
                     </table>
                 </div>
             </div>

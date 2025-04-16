@@ -188,4 +188,12 @@
         margin-top: 20px;
         margin-bottom: 20px;
     }
+
+    .ygo-table-space-1 {
+        border-spacing: 5px;
+    }
+
+    .ygo-table-space-2 {
+        border-spacing: 10px;
+    }
 }

@@ -64,7 +64,6 @@ export function DeckMenu({ duel, deck }: { duel: YGODuel, deck: Deck, clearActio
             <div>
                 <button className="ygo-card-item" disabled={mainDeckSize === 0} type="button" onClick={() => setMilCounter(counter => counter + 1)}>+</button>
             </div>
-
         </div>
         <button className="ygo-card-item" type="button" onClick={viewDeck}>View Deck</button>
         <button className="ygo-card-item" disabled={mainDeckSize === 0} type="button" onClick={drawFromDeck}>Draw</button>

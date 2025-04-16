@@ -170,11 +170,9 @@ export function CardBanishMenu({
           Target
         </button>
 
-        {!isFieldSpell && <>
-          <button type="button" className="ygo-card-item" onClick={toST}>
-            TO ST
-          </button>
-        </>}
+        <button type="button" className="ygo-card-item" onClick={toST}>
+          TO ST
+        </button>
 
         <button type="button" className="ygo-card-item" onClick={toHand}>
           To Hand
