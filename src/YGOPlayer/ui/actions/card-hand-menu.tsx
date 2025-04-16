@@ -178,7 +178,7 @@ export function CardHandMenu({
           To Top Deck
         </button>
         <button className="ygo-card-item" type="button" onClick={sendToGy}>
-          To Graveyard
+          To Grave
         </button>
         {
           // FIELD SPELL
@@ -286,7 +286,7 @@ export function CardHandMenu({
         </button>
 
         <button className="ygo-card-item" type="button" onClick={sendToGy}>
-          To Graveyard
+          To Grave
         </button>
 
         <button
