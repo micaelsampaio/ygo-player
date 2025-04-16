@@ -82,6 +82,14 @@ export function CardBanishMenu({
     duel.gameActions.targetCard({ card, originZone });
   }, [card, originZone]);
 
+  const activateFieldSpell = useCallback(() => {
+    duel.gameActions.fieldSpell({ card, originZone, position: "faceup" });
+  }, [card, originZone]);
+
+  const setFieldSpell = useCallback(() => {
+    duel.gameActions.fieldSpell({ card, originZone, position: "facedown" });
+  }, [card, originZone]);
+
   const negateCard = useCallback(() => {
     duel.gameActions.negateCard({ card, originZone });
   }, [card, originZone]);
@@ -100,12 +108,51 @@ export function CardBanishMenu({
 
   const hasXyzMonstersInField = YGOGameUtils.hasXyzMonstersInField(field);
   const isMonster = YGOGameUtils.isMonster(card);
-  const isFaceup = YGOGameUtils.isFaceUp(card);
+  const isFieldSpell = YGOGameUtils.isFieldSpell(card);
 
   return (
     <>
       <CardMenu menuRef={menuRef}>
-        <button className="ygo-card-item" onClick={negateCard}>Negate</button>
+        {isMonster && (
+          <>
+            <button
+              type="button"
+              className="ygo-card-item"
+              onClick={specialSummonATK}
+            >
+              SS ATK
+            </button>
+
+            <button
+              type="button"
+              className="ygo-card-item"
+              onClick={specialSummonDEF}
+            >
+              SS DEF
+            </button>
+          </>
+        )}
+
+        {isFieldSpell && <>
+          <button
+            className="ygo-card-item"
+            type="button"
+            onClick={activateFieldSpell}
+          >
+            Activate Field Spell
+          </button>
+          <button
+            className="ygo-card-item"
+            type="button"
+            onClick={setFieldSpell}
+          >
+            Set Field Spell
+          </button>
+        </>}
+
+        <button type="button" className="ygo-card-item" onClick={activateCard}>
+          Activate
+        </button>
 
         <button
           type="button"
@@ -115,12 +162,21 @@ export function CardBanishMenu({
           Target
         </button>
 
-        <button type="button" className="ygo-card-item" onClick={toST}>
-          TO ST
+        {!isFieldSpell && <>
+          <button type="button" className="ygo-card-item" onClick={toST}>
+            TO ST
+          </button>
+        </>}
+
+        <button type="button" className="ygo-card-item" onClick={toHand}>
+          To Hand
         </button>
 
         {card.isMainDeckCard && (
           <>
+            <button type="button" className="ygo-card-item" onClick={toTopDeck}>
+              To Top Deck
+            </button>
             <button
               type="button"
               className="ygo-card-item"
@@ -128,11 +184,9 @@ export function CardBanishMenu({
             >
               To Bottom Deck
             </button>
-            <button type="button" className="ygo-card-item" onClick={toTopDeck}>
-              To Top Deck
-            </button>
           </>
         )}
+
         {!card.isMainDeckCard && (
           <>
             <button
@@ -144,40 +198,7 @@ export function CardBanishMenu({
             </button>
           </>
         )}
-        <button type="button" className="ygo-card-item" onClick={toGY}>
-          To GY
-        </button>
-        <button type="button" className="ygo-card-item" onClick={toHand}>
-          To Hand
-        </button>
-        {isFaceup && (
-          <button
-            type="button"
-            className="ygo-card-item"
-            onClick={activateCard}
-          >
-            Activate
-          </button>
-        )}
 
-        {isMonster && (
-          <>
-            <button
-              type="button"
-              className="ygo-card-item"
-              onClick={specialSummonATK}
-            >
-              SS ATK
-            </button>
-            <button
-              type="button"
-              className="ygo-card-item"
-              onClick={specialSummonDEF}
-            >
-              SS DEF
-            </button>
-          </>
-        )}
         {hasXyzMonstersInField && (
           <>
             <button
@@ -189,6 +210,8 @@ export function CardBanishMenu({
             </button>
           </>
         )}
+
+        <button className="ygo-card-item" onClick={negateCard}>Negate</button>
       </CardMenu>
     </>
   );
