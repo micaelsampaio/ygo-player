@@ -78,6 +78,14 @@ export function CardHandMenu({
     duel.gameActions.sendToGy({ card, originZone });
   }, [card, index]);
 
+  const toTopDeck = useCallback(() => {
+    duel.gameActions.toDeck({ card, originZone, position: "top" });
+  }, [card, index]);
+
+  const toBottomDeck = useCallback(() => {
+    duel.gameActions.toDeck({ card, originZone, position: "bottom" });
+  }, [card, index]);
+
   const banish = useCallback(() => {
     duel.gameActions.banish({ card, originZone, position: "faceup" });
   }, [card, index]);
@@ -135,68 +143,13 @@ export function CardHandMenu({
   const canTribute = isMonster && card.level > 4;
   const hasXyzMonstersInField = YGOGameUtils.XyzMonstersInFieldsCounter(duel.ygo) > 0;
 
-  return (
-    <>
+  if (!isMonster && isSpellOrTrap) {
+    return <>
       <CardMenu menuRef={menuRef}>
+        <button className="ygo-card-item" onClick={revealCard}>
+          Reveal
+        </button>
 
-        <button className="ygo-card-item" onClick={negateCard}>Negate</button>
-
-        {isMonster && (
-          <>
-            <button
-              className="ygo-card-item"
-              disabled={freeMonsterZones === 0}
-              type="button"
-              onClick={normalSummon}
-            >
-              Normal Summon
-            </button>
-            <button
-              className="ygo-card-item"
-              disabled={freeMonsterZones === 0}
-              type="button"
-              onClick={setSummon}
-            >
-              Set
-            </button>
-            <button
-              className="ygo-card-item"
-              disabled={freeMonsterZones === 0}
-              type="button"
-              onClick={specialSummonATK}
-            >
-              Special Summon ATK
-            </button>
-            <button
-              className="ygo-card-item"
-              disabled={freeMonsterZones === 0}
-              type="button"
-              onClick={specialSummonDEF}
-            >
-              Special Summon DEF
-            </button>
-          </>
-        )}
-        {canTribute && (
-          <button
-            className="ygo-card-item"
-            disabled={freeMonsterZones === 0}
-            type="button"
-            onClick={tributeSummonATK}
-          >
-            Tribute Summon ATK
-          </button>
-        )}
-        {canTribute && (
-          <button
-            className="ygo-card-item"
-            disabled={freeMonsterZones === 0}
-            type="button"
-            onClick={tributeSummonDEF}
-          >
-            Tribute Summon DEF
-          </button>
-        )}
         {hasXyzMonstersInField && (
           <div>
             <button
@@ -208,16 +161,62 @@ export function CardHandMenu({
             </button>
           </div>
         )}
-        {(isSpell || isTrap) && (
-          <>
-            <button
-              className="ygo-card-item"
-              type="button"
-              disabled={freeSpellTrapZones === 0}
-              onClick={activateSpellTrap}
-            >
-              Activate
-            </button>
+
+        <button className="ygo-card-item" onClick={toST}>
+          To S/T
+        </button>
+        <button className="ygo-card-item" type="button" onClick={banishFD}>
+          Banish FD
+        </button>
+        <button className="ygo-card-item" type="button" onClick={banish}>
+          Banish
+        </button>
+        <button className="ygo-card-item" onClick={toBottomDeck}>
+          To Bottom Deck
+        </button>
+        <button className="ygo-card-item" onClick={toTopDeck}>
+          To Top Deck
+        </button>
+        <button className="ygo-card-item" type="button" onClick={sendToGy}>
+          To Graveyard
+        </button>
+        {
+          // FIELD SPELL
+          isFieldSpell && <>
+            <div>
+              <button
+                className="ygo-card-item"
+                type="button"
+                disabled={freeSpellTrapZones === 0}
+                onClick={setFieldSpell}
+              >
+                Set Field Spell
+              </button>
+            </div>
+
+            <div>
+              <button
+                className="ygo-card-item"
+                type="button"
+                onClick={activateFieldSpell}
+              >
+                Activate Field Spell
+              </button>
+            </div>
+          </>}
+        {
+          // SPELL AND TRAPS
+          !isFieldSpell && <>
+            {isTrap && <>
+              <button
+                className="ygo-card-item"
+                type="button"
+                disabled={freeSpellTrapZones === 0}
+                onClick={activateSpellTrap}
+              >
+                Activate From Hand
+              </button>
+            </>}
             <button
               className="ygo-card-item"
               type="button"
@@ -226,53 +225,135 @@ export function CardHandMenu({
             >
               Set
             </button>
-          </>
-        )}
-        {isFieldSpell && (
-          <>
-            <div>
-              <button
-                className="ygo-card-item"
-                type="button"
-                onClick={activateFieldSpell}
-              >
-                Activate Field
-              </button>
-            </div>
-            <div>
+
+            {isSpell && <>
               <button
                 className="ygo-card-item"
                 type="button"
                 disabled={freeSpellTrapZones === 0}
-                onClick={setFieldSpell}
+                onClick={activateSpellTrap}
               >
-                Set Field
+                Activate
               </button>
-            </div>
+            </>}
           </>
-        )}
-        <button className="ygo-card-item" onClick={toST}>
-          To S/T
-        </button>
-        <button className="ygo-card-item" type="button" onClick={sendToGy}>
-          To Graveyard
-        </button>
-        <button className="ygo-card-item" type="button" onClick={banish}>
-          Banish
-        </button>
-        <button className="ygo-card-item" type="button" onClick={banishFD}>
-          Banish FD
-        </button>
+        }
+      </CardMenu >
+    </>
+  }
+
+  return (
+    <>
+      <CardMenu menuRef={menuRef}>
         <button className="ygo-card-item" onClick={revealCard}>
           Reveal
         </button>
+
+        <button className="ygo-card-item" onClick={negateCard}>Negate</button>
+
+        {hasXyzMonstersInField && (
+          <div>
+            <button
+              className="ygo-card-item"
+              type="button"
+              onClick={attachMaterial}
+            >
+              Attach Material
+            </button>
+          </div>
+        )}
+
+        <button className="ygo-card-item" onClick={toST}>
+          To S/T
+        </button>
+
+
+        <button className="ygo-card-item" onClick={toBottomDeck}>
+          To Bottom Deck
+        </button>
+
+        <button className="ygo-card-item" onClick={toTopDeck}>
+          To Top Deck
+        </button>
+
+
+        <button className="ygo-card-item" type="button" onClick={banishFD}>
+          Banish FD
+        </button>
+
+        <button className="ygo-card-item" type="button" onClick={banish}>
+          Banish
+        </button>
+
+        <button className="ygo-card-item" type="button" onClick={sendToGy}>
+          To Graveyard
+        </button>
+
+        <button
+          className="ygo-card-item"
+          disabled={freeMonsterZones === 0}
+          type="button"
+          onClick={specialSummonDEF}
+        >
+          Special Summon DEF
+        </button>
+
+        {canTribute && <>
+          <button
+            className="ygo-card-item"
+            disabled={freeMonsterZones === 0}
+            type="button"
+            onClick={tributeSummonDEF}
+          >
+            Tribute Summon DEF
+          </button>
+
+          <button
+            className="ygo-card-item"
+            disabled={freeMonsterZones === 0}
+            type="button"
+            onClick={tributeSummonATK}
+          >
+            Tribute Summon ATK
+          </button>
+        </>}
+
+        <button
+          className="ygo-card-item"
+          disabled={freeMonsterZones === 0}
+          type="button"
+          onClick={specialSummonATK}
+        >
+          Special Summon ATK
+        </button>
+
 
         {!isSpellOrTrap && (
           <button className="ygo-card-item" onClick={activateCard}>
             Activate on Hand
           </button>
         )}
-      </CardMenu>
+
+        <button
+          className="ygo-card-item"
+          disabled={freeMonsterZones === 0}
+          type="button"
+          onClick={setSummon}
+        >
+          Set
+        </button>
+
+        <button
+          className="ygo-card-item"
+          disabled={freeMonsterZones === 0}
+          type="button"
+          onClick={normalSummon}
+        >
+          Normal Summon
+        </button>
+
+
+      </CardMenu >
     </>
   );
 }
