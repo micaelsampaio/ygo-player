@@ -183,26 +183,21 @@ export function CardHandMenu({
         {
           // FIELD SPELL
           isFieldSpell && <>
-            <div>
-              <button
-                className="ygo-card-item"
-                type="button"
-                disabled={freeSpellTrapZones === 0}
-                onClick={setFieldSpell}
-              >
-                Set Field Spell
-              </button>
-            </div>
+            <button
+              className="ygo-card-item"
+              type="button"
+              onClick={setFieldSpell}
+            >
+              Set Field Spell
+            </button>
 
-            <div>
-              <button
-                className="ygo-card-item"
-                type="button"
-                onClick={activateFieldSpell}
-              >
-                Activate Field Spell
-              </button>
-            </div>
+            <button
+              className="ygo-card-item"
+              type="button"
+              onClick={activateFieldSpell}
+            >
+              Activate Field Spell
+            </button>
           </>}
         {
           // SPELL AND TRAPS
