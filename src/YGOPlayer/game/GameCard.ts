@@ -79,7 +79,7 @@ export class GameCard extends YGOEntity {
   public updateCardStats(zoneData: FieldZoneData) {
     if (!this.hasStats) return;
 
-    if (YGOGameUtils.isSpellTrap(this.cardReference) && zoneData.zone === "S") {
+    if (YGOGameUtils.isSpellTrap(this.cardReference) && (zoneData.zone === "S" || zoneData.zone === "F")) {
       if (this.cardStats) this.cardStats.hide();
       return;
     }
@@ -95,7 +95,7 @@ export class GameCard extends YGOEntity {
       this.cardStats.parent = this.gameObject;
     }
 
-    if (zoneData.zone === "S") {
+    if (zoneData.zone === "S" || zoneData.zone === "F") {
       this.cardStats.hide();
       return;
     }
