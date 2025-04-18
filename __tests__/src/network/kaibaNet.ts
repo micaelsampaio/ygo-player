@@ -474,8 +474,19 @@ export class KaibaNet extends EventEmitter {
   async sendMessage(roomId: string, message: string) {
     const commLayer = this.getActiveCommunicationLayer();
 
+    // Ensure we're using the actual room ID from the instance,
+    // not the player ID which might be passed in by mistake
+    const actualRoomId = this.roomId || roomId;
+
+    logger.debug(
+      `Sending message to room: ${actualRoomId} (input roomId was: ${roomId})`
+    );
+
     const messageB64 = stringToB64(message);
-    await commLayer.messageTopic(roomId, "duel:chat:message:" + messageB64);
+    await commLayer.messageTopic(
+      actualRoomId,
+      "duel:chat:message:" + messageB64
+    );
   }
 
   async startVoiceChat(roomId: string) {

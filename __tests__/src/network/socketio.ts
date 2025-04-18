@@ -296,21 +296,58 @@ export class SocketIOCommunication
       return;
     }
 
-    return new Promise((resolve, reject) => {
-      this.socket?.emit(
-        "topic:message",
-        { topic, message },
-        (response: any) => {
-          if (response.error) {
-            logger.error("SocketIO: Failed to send message:", response.error);
-            reject(new Error(response.error));
-          } else {
-            logger.debug("SocketIO: Message sent to topic:", topic);
-            resolve();
+    // Instead of pre-emptively resubscribing, keep track of subscribed topics
+    // and only try to resubscribe when actually needed
+    try {
+      return new Promise((resolve, reject) => {
+        this.socket?.emit(
+          "topic:message",
+          { topic, message },
+          (response: any) => {
+            if (response.error) {
+              logger.error("SocketIO: Failed to send message:", response.error);
+
+              // Only resubscribe if we get a specific subscription error
+              if (response.error.includes("Not subscribed")) {
+                logger.warn(
+                  `SocketIO: Not subscribed to topic ${topic}, attempting to resubscribe`
+                );
+                // Try to resubscribe and send the message again
+                this.subscribeTopic(topic).then(() => {
+                  this.socket?.emit(
+                    "topic:message",
+                    { topic, message },
+                    (response2: any) => {
+                      if (response2.error) {
+                        logger.error(
+                          "SocketIO: Still failed to send message after resubscribing:",
+                          response2.error
+                        );
+                        reject(new Error(response2.error));
+                      } else {
+                        logger.debug(
+                          "SocketIO: Message sent to topic after resubscribing:",
+                          topic
+                        );
+                        resolve();
+                      }
+                    }
+                  );
+                });
+              } else {
+                reject(new Error(response.error));
+              }
+            } else {
+              logger.debug("SocketIO: Message sent to topic:", topic);
+              resolve();
+            }
           }
-        }
-      );
-    });
+        );
+      });
+    } catch (error) {
+      logger.error("SocketIO: Error in messageTopic:", error);
+      throw error;
+    }
   }
 
   async startVoiceChat(roomId: string): Promise<boolean> {
