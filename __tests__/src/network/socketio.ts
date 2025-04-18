@@ -539,6 +539,7 @@ export class SocketIOCommunication
     const messageStr = data.message;
 
     if (this.roomId) {
+      // First emit the generic room topic message for any subscribers
       this.emit(`topic:${this.roomId}:message`, { messageStr });
     }
 
@@ -563,45 +564,26 @@ export class SocketIOCommunication
       try {
         const gameStateBase64 = messageStr.split("duel:refresh:state:")[1];
         logger.debug(
-          "SocketIO: Received base64 game state, length:",
+          "SocketIO: Processing game state refresh, encoded data length:",
           gameStateBase64.length
         );
 
-        // Add a debug check to see if the base64 content is valid
-        const isValidBase64 = /^[A-Za-z0-9+/=]+$/.test(gameStateBase64);
-        logger.debug("SocketIO: Base64 validation check:", isValidBase64);
-
-        if (!isValidBase64) {
-          logger.warn("SocketIO: Received potentially malformed base64 data");
-        }
-
-        // Improved error handling for base64 decoding
-        let decodedText;
+        // Add detailed debugging
         try {
-          decodedText = this.decodeBase64(gameStateBase64);
-          logger.debug("SocketIO: Decoded text length:", decodedText.length);
-
-          // Log a small sample of the decoded text to help with debugging
-          if (decodedText.length > 0) {
-            const sample =
-              decodedText.length > 30
-                ? decodedText.substring(0, 30) + "..."
-                : decodedText;
-            logger.debug("SocketIO: Decoded text sample:", sample);
-          }
+          const decodedText = this.decodeBase64(gameStateBase64);
+          logger.debug("SocketIO: Successfully decoded game state text");
 
           // Parse the game state
           const gameState = JSON.parse(decodedText);
-          logger.debug("SocketIO: Parsed game state");
+          logger.debug("SocketIO: Successfully parsed game state JSON");
 
           // Emit event with the decoded game state
+          logger.debug("SocketIO: Emitting duel:refresh:state: event");
           this.emit("duel:refresh:state:", gameState);
-        } catch (error) {
+        } catch (parseError) {
           logger.error(
-            "SocketIO: Failed to decode game state:",
-            error,
-            "Original message:",
-            messageStr.substring(0, 200) + "..." // Log only first part of message to avoid console overflow
+            "SocketIO: Failed to decode or parse game state:",
+            parseError
           );
         }
       } catch (error) {
@@ -620,6 +602,11 @@ export class SocketIOCommunication
       const playerId = messageStr.split("duel:player:join:")[1];
       logger.debug("SocketIO: Player joined:", playerId);
       this.emit("duel:player:join:", playerId);
+    } else if (messageStr.includes("duel:player:ready:")) {
+      // Handle player ready event
+      const playerReadyId = messageStr.split("duel:player:ready:")[1];
+      logger.debug("SocketIO: Player ready:", playerReadyId);
+      this.emit("duel:player:ready:", playerReadyId);
     } else if (messageStr === "duel:all_players_ready") {
       logger.debug("SocketIO: All players are ready in the room");
       this.emit("duel:all_players_ready");

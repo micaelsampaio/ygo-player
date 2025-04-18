@@ -246,6 +246,11 @@ export class KaibaNet extends EventEmitter {
       this.emit("duel:player:join:", playerId);
     });
 
+    // Add player ready event handling
+    communicationLayer.on("duel:player:ready:", (playerId) => {
+      this.emit("duel:player:ready:", playerId);
+    });
+
     communicationLayer.on("duel:command:exec", (command) => {
       this.emit("duel:command:exec", command);
     });
@@ -452,15 +457,61 @@ export class KaibaNet extends EventEmitter {
   }
 
   async refreshGameState(roomId: string, gameState: string) {
-    logger.debug("KaibaNet: Refreshing game state", roomId, gameState);
+    try {
+      // Log state size to help with debugging
+      const gameStateSize =
+        typeof gameState === "string"
+          ? gameState.length
+          : JSON.stringify(gameState).length;
+      logger.debug(
+        `KaibaNet: Refreshing game state. Room: ${roomId}, State size: ${gameStateSize} bytes`
+      );
 
-    const commLayer = this.getActiveCommunicationLayer();
+      // Ensure we're using the correct room ID
+      const actualRoomId = this.roomId || roomId;
+      if (actualRoomId !== roomId) {
+        logger.warn(
+          `KaibaNet: Using stored room ID (${actualRoomId}) instead of provided room ID (${roomId})`
+        );
+      }
 
-    // Encode the room decks data
-    const base64Encoded = objectToB64(gameState);
+      const commLayer = this.getActiveCommunicationLayer();
 
-    // Use the messageTopic method from the ICommunicationLayer interface
-    await commLayer.messageTopic(roomId, "duel:refresh:state:" + base64Encoded);
+      // First, ensure we're subscribed to the room topic
+      logger.debug(
+        `KaibaNet: Ensuring subscription to room topic: ${actualRoomId}`
+      );
+      if (this.communicationType === "socketio") {
+        // For Socket.IO, explicitly re-subscribe to ensure we have an active subscription
+        const subscribed = await commLayer.subscribeTopic(actualRoomId);
+        if (!subscribed) {
+          logger.warn(
+            `KaibaNet: Failed to subscribe to room: ${actualRoomId}, but continuing anyway`
+          );
+        }
+      }
+
+      // Encode the game state data to Base64
+      const base64Encoded = objectToB64(gameState);
+      logger.debug(
+        `KaibaNet: Base64 encoded state size: ${base64Encoded.length} characters`
+      );
+
+      // Send the message to the room topic
+      logger.debug(
+        `KaibaNet: Sending game state refresh to room: ${actualRoomId}`
+      );
+      await commLayer.messageTopic(
+        actualRoomId,
+        "duel:refresh:state:" + base64Encoded
+      );
+      logger.debug(`KaibaNet: Game state refresh sent successfully`);
+
+      return true;
+    } catch (error) {
+      logger.error(`KaibaNet: Error refreshing game state: ${error}`);
+      return false;
+    }
   }
 
   async execYGOCommand(roomId: string, command: any) {

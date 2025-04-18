@@ -179,27 +179,64 @@ export default function Duel({
     };
   }, [roomId, kaibaNet]);
 
-  // Handle player join events
+  // Handle player join events and ready state
   useEffect(() => {
     if (!duelData || !roomId) return;
 
+    // Track players who have joined but aren't ready yet
+    const pendingPlayers = new Set<string>();
+
     const handlePlayerJoin = (playerJoinedId: string) => {
       logger.debug("Player joined:", playerJoinedId);
+
+      // Track that this player joined but may not be ready yet
+      if (playerJoinedId !== kaibaNet.getPlayerId()) {
+        pendingPlayers.add(playerJoinedId);
+        logger.debug(
+          "Adding to pending players:",
+          playerJoinedId,
+          pendingPlayers
+        );
+      }
+    };
+
+    const handlePlayerReady = (playerReadyId: string) => {
+      logger.debug("Player ready:", playerReadyId);
+
+      // Remove from pending when they're ready
+      if (pendingPlayers.has(playerReadyId)) {
+        pendingPlayers.delete(playerReadyId);
+        logger.debug("Removed from pending:", playerReadyId, pendingPlayers);
+      }
+    };
+
+    const handleAllPlayersReady = () => {
+      logger.debug("All players ready event received");
+
+      // Only the room creator (host) should send the game state
       if (kaibaNet.getPlayerId() === roomId) {
+        logger.debug("I am the host, sending current game state");
         const ygo: YGOPlayerComponent = document.querySelector(
           "ygo-player"
         )! as any;
         const currentDuelState = ygo.duel.ygo.getCurrentStateProps();
-        logger.debug("Duel data: ", currentDuelState);
+        logger.debug("Refreshing with duel state:", currentDuelState);
 
-        kaibaNet.refreshGameState(roomId, currentDuelState);
+        // Add a small delay to ensure all clients are ready to receive the state
+        setTimeout(() => {
+          kaibaNet.refreshGameState(roomId, currentDuelState);
+        }, 500);
       }
     };
 
     kaibaNet.on("duel:player:join:", handlePlayerJoin);
+    kaibaNet.on("duel:player:ready:", handlePlayerReady);
+    kaibaNet.on("duel:all_players_ready", handleAllPlayersReady);
 
     return () => {
       kaibaNet.off("duel:player:join:", handlePlayerJoin);
+      kaibaNet.off("duel:player:ready:", handlePlayerReady);
+      kaibaNet.off("duel:all_players_ready", handleAllPlayersReady);
     };
   }, [duelData, roomId, kaibaNet]);
 
