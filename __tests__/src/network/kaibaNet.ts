@@ -517,8 +517,22 @@ export class KaibaNet extends EventEmitter {
   async execYGOCommand(roomId: string, command: any) {
     const commLayer = this.getActiveCommunicationLayer();
 
+    // Ensure we're using the actual room ID from the instance,
+    // not the player ID which might be passed in by mistake
+    const actualRoomId = this.roomId || roomId;
+
+    if (actualRoomId !== roomId) {
+      logger.warn(
+        `KaibaNet: Using stored room ID (${actualRoomId}) instead of provided ID (${roomId}) for command execution`
+      );
+    }
+
+    logger.debug(`KaibaNet: Sending command to room: ${actualRoomId}`);
     const commandB64 = objectToB64(command);
-    await commLayer.messageTopic(roomId, "duel:command:exec:" + commandB64);
+    await commLayer.messageTopic(
+      actualRoomId,
+      "duel:command:exec:" + commandB64
+    );
   }
 
   // Add new method for sending chat messages
