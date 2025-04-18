@@ -12,6 +12,7 @@ import { ComboChooseDeck } from "./components/ComboChooseDeck";
 import { exportAllData, importAllData } from "./utils/dataExport";
 import { generateExportToMdCode } from "./utils/export-to-md.js";
 import { DataExportModal } from "./components/Data/DataExportModal.js";
+import { ConnectionSwitcher } from "./components/ConnectionSwitcher";
 
 const cdnUrl = String(import.meta.env.VITE_YGO_CDN_URL);
 
@@ -285,6 +286,7 @@ export default function App() {
 
   return (
     <div>
+      <ConnectionSwitcher />
       <AppContainer>
         <LeftContent>
           <div

@@ -20,6 +20,8 @@ export class KaibaNet extends EventEmitter {
   private readonly VOICE_PROTOCOL = "/ygo/voice/1.0.0";
   private audioManager: AudioManager;
   private currentVoiceTopic: string | null = null;
+  private communicationType: string = "p2p"; // Default to P2P
+  private communicationLayer: any = null; // For other communication types
 
   private constructor() {
     super();
@@ -84,6 +86,137 @@ export class KaibaNet extends EventEmitter {
 
   public getRooms() {
     return this.rooms;
+  }
+
+  public getCommunicationType(): string {
+    return this.communicationType;
+  }
+
+  /**
+   * Switch to a different communication method
+   * @param type The type of communication to switch to ('p2p' or 'socketio')
+   * @param options Configuration options
+   */
+  async switchCommunication(
+    type: string,
+    options: {
+      bootstrapNode?: string;
+      discoveryTopic?: string;
+      serverUrl?: string;
+    } = {}
+  ) {
+    logger.debug(
+      `Switching communication from ${this.communicationType} to ${type}`
+    );
+
+    if (type === this.communicationType) {
+      logger.debug(`Already using ${type} communication, no change needed`);
+      return;
+    }
+
+    try {
+      // Clean up existing connections and listeners
+      this.cleanup();
+
+      // Import necessary modules
+      const { CommunicationFactory } = await import("./communicationFactory");
+
+      // Set the new communication type
+      this.communicationType = type;
+
+      // Create the appropriate communication layer using the factory
+      const communicationLayer = CommunicationFactory.createCommunication(
+        type as any,
+        {
+          // Use Vite's import.meta.env for environment variables
+          bootstrapNode:
+            import.meta.env.VITE_BOOTSTRAP_NODE || options.bootstrapNode,
+          discoveryTopic:
+            import.meta.env.VITE_DISCOVERY_TOPIC ||
+            options.discoveryTopic ||
+            "peer-discovery",
+          // Priority order: ENV > options > default
+          serverUrl:
+            import.meta.env.VITE_SOCKET_SERVER ||
+            options.serverUrl ||
+            "http://localhost:3035",
+        }
+      );
+
+      // Re-initialize with the new communication layer
+      this.initialized = false;
+
+      if (type === "p2p") {
+        this.peerToPeer = communicationLayer as any; // Cast to appropriate type
+      } else {
+        // For Socket.IO or future communication types
+        this.peerToPeer = null;
+        this.communicationLayer = communicationLayer;
+      }
+
+      // Initialize the new communication layer
+      await communicationLayer.initialize();
+
+      // Setup event listeners for the new communication layer
+      this.setupEventListenersForCommunicationLayer(communicationLayer);
+
+      // Set properties from the new communication layer
+      this.playerId = communicationLayer.getPeerId();
+      this.initialized = true;
+
+      logger.debug(`Successfully switched to ${type} communication`);
+
+      // Notify that communication type has changed
+      this.emit("communication:changed", type);
+    } catch (error) {
+      logger.error(`Failed to switch communication to ${type}:`, error);
+      throw error;
+    }
+  }
+
+  private setupEventListenersForCommunicationLayer(communicationLayer: any) {
+    // Setup common event listeners for any communication layer
+
+    communicationLayer.on("peer:discovery", this.addPlayer);
+    communicationLayer.on("connection:open", this.connectPlayer);
+    communicationLayer.on("connection:close", this.disconnectPlayer);
+    communicationLayer.on("remove:peer", this.removePlayer);
+
+    // Room updates
+    communicationLayer.on("rooms:updated", (rooms) => {
+      this.rooms = rooms;
+      this.emit("rooms:updated", rooms);
+    });
+
+    // Forward duel events
+    communicationLayer.on("duel:all_players_ready", () => {
+      this.emit("duel:all_players_ready");
+    });
+
+    communicationLayer.on("duel:chat:message", (message) => {
+      this.emit("duel:chat:message", message);
+    });
+
+    communicationLayer.on("duel:refresh:state:", (state) => {
+      this.emit("duel:refresh:state:", state);
+    });
+
+    communicationLayer.on("duel:player:join:", (playerId) => {
+      this.emit("duel:player:join:", playerId);
+    });
+
+    communicationLayer.on("duel:command:exec", (command) => {
+      this.emit("duel:command:exec", command);
+    });
+
+    // Forward audio events
+    communicationLayer.on("audio:error", (error) => {
+      this.emit("audio:error", error);
+    });
+
+    communicationLayer.on("audio:stateChange", (state) => {
+      this.emit("audio:stateChange", state);
+    });
   }
 
   private addPlayer = ({ peerId, addresses }) => {
