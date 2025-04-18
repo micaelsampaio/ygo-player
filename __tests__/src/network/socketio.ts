@@ -510,6 +510,13 @@ export class SocketIOCommunication
       try {
         const messageBase64 = messageStr.split("duel:chat:message:")[1];
         const decodedMessage = this.decodeBase64(messageBase64);
+
+        // Skip messages sent by self to avoid duplicating them
+        if (decodedMessage.startsWith(`${this.playerId}:`)) {
+          logger.debug("SocketIO: Skipping self-sent message");
+          return;
+        }
+
         logger.debug("SocketIO: Decoded chat message:", decodedMessage);
         this.emit("duel:chat:message", decodedMessage);
       } catch (error) {
@@ -540,39 +547,28 @@ export class SocketIOCommunication
           // Log a small sample of the decoded text to help with debugging
           if (decodedText.length > 0) {
             const sample =
-              decodedText.length > 100
-                ? decodedText.substring(0, 100) + "..."
+              decodedText.length > 30
+                ? decodedText.substring(0, 30) + "..."
                 : decodedText;
             logger.debug("SocketIO: Decoded text sample:", sample);
           }
-        } catch (decodeError) {
-          logger.error("SocketIO: Base64 decoding failed:", decodeError);
-          throw new Error(`Base64 decoding failed: ${decodeError.message}`);
+
+          // Parse the game state
+          const gameState = JSON.parse(decodedText);
+          logger.debug("SocketIO: Parsed game state");
+
+          // Emit event with the decoded game state
+          this.emit("duel:refresh:state:", gameState);
+        } catch (error) {
+          logger.error(
+            "SocketIO: Failed to decode game state:",
+            error,
+            "Original message:",
+            messageStr.substring(0, 200) + "..." // Log only first part of message to avoid console overflow
+          );
         }
-
-        // Improved error handling for JSON parsing
-        let decodedGameState;
-        try {
-          decodedGameState = JSON.parse(decodedText);
-        } catch (jsonError) {
-          logger.error("SocketIO: JSON parsing failed:", jsonError);
-          throw new Error(`JSON parsing failed: ${jsonError.message}`);
-        }
-
-        logger.debug(
-          "SocketIO: Successfully decoded game state, keys:",
-          Object.keys(decodedGameState)
-        );
-
-        // Emit the game state
-        this.emit("duel:refresh:state:", decodedGameState);
       } catch (error) {
-        logger.error(
-          "SocketIO: Failed to decode game state:",
-          error,
-          "Original message:",
-          messageStr.substring(0, 200) + "..." // Log only first part of message to avoid console overflow
-        );
+        logger.error("SocketIO: Failed to process game state message:", error);
       }
     } else if (messageStr.includes("duel:command:exec:")) {
       try {

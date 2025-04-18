@@ -410,6 +410,13 @@ export class P2PCommunication
     if (messageStr.includes("duel:chat:message:")) {
       const messageBase64 = messageStr.split(":")[3];
       const decodedMessage = this.decodeBase64(messageBase64);
+
+      // Skip messages sent by self to avoid duplicating them
+      if (decodedMessage.startsWith(`${this.playerId}:`)) {
+        logger.debug("P2P: Skipping self-sent message");
+        return;
+      }
+
       this.emit("duel:chat:message", decodedMessage);
     }
 
