@@ -5,6 +5,7 @@ import { useKaibaNet } from "./hooks/useKaibaNet";
 import Chat from "./components/Chat/Chat";
 import { LoadingOverlay } from "./components/LoadingOverlay";
 import { Logger } from "./utils/logger";
+import OfflineNotification from "./components/OfflineNotification";
 
 interface DuelProps {
   roomId?: string;
@@ -22,7 +23,9 @@ export default function Duel({
   const kaibaNet = useKaibaNet();
   const [isLoading, setIsLoading] = useState(true);
   const [loadingStatus, setLoadingStatus] = useState("Initializing duel...");
-  const [loadingProgress, setLoadingProgress] = useState<number | undefined>(undefined);
+  const [loadingProgress, setLoadingProgress] = useState<number | undefined>(
+    undefined
+  );
   const [duelData, setDuelData] = useState<any>(null);
   const [messages, setMessages] = useState<string[]>([]);
   const [isVoiceEnabled, setIsVoiceEnabled] = useState(false);
@@ -55,7 +58,7 @@ export default function Duel({
   // Initialize duel data
   useEffect(() => {
     setLoadingStatus("Finding duel data...");
-    
+
     // Initialize duel data
     const newDuelData =
       location.state?.duelData ??
@@ -83,7 +86,7 @@ export default function Duel({
 
     setLoadingStatus("Setting up game environment...");
     setLoadingProgress(50);
-    
+
     logger.debug("Setting up YGO player with data:", duelData);
 
     const ygo: YGOPlayerComponent = document.querySelector(
@@ -95,7 +98,7 @@ export default function Duel({
     if (duelData.replay) {
       setLoadingStatus("Loading replay data...");
       setLoadingProgress(60);
-      
+
       const config: any = {
         decks: duelData.players,
         replay: duelData.replay,
@@ -103,7 +106,7 @@ export default function Duel({
       };
 
       ygo.replay(config);
-      
+
       // For replays, we don't need to wait for other players
       setTimeout(() => {
         setLoadingProgress(100);
@@ -112,7 +115,7 @@ export default function Duel({
     } else {
       setLoadingStatus("Setting up duel...");
       setLoadingProgress(60);
-      
+
       const config: any = {
         players: duelData.players,
         cdnUrl: String(import.meta.env.VITE_YGO_CDN_URL),
@@ -123,7 +126,7 @@ export default function Duel({
       console.log("TCL:: OPTIONS", config);
 
       ygo.editor(config);
-      
+
       // For multiplayer duels, we'll handle loading state in the player ready events
       setYgoInitialized(true);
     }
@@ -170,7 +173,7 @@ export default function Duel({
       logger.debug("YGO player started");
       setLoadingStatus("Game starting...");
       setLoadingProgress(80);
-      
+
       setTimeout(() => {
         ygo.on("command-executed", handleCommandExecuted);
       }, 1000);
@@ -182,7 +185,7 @@ export default function Duel({
       logger.debug("Received game state refresh:", gameState);
       setLoadingStatus("Game state received, finalizing setup...");
       setLoadingProgress(90);
-      
+
       setDuelData((prevData: any) => {
         logger.debug("Updating duel data", { prevData, gameState });
         return {
@@ -190,7 +193,7 @@ export default function Duel({
           ...gameState,
         };
       });
-      
+
       // After receiving game state, we still need to wait for player ready events
       if (kaibaNet.getPlayerId() !== roomId) {
         // If we're not the host, we can remove the loading overlay after getting game state
@@ -221,15 +224,17 @@ export default function Duel({
 
     // Track players who have joined but aren't ready yet
     const pendingPlayers = new Set<string>();
-    
+
     const handlePlayerJoin = (playerJoinedId: string) => {
       logger.debug("Player joined:", playerJoinedId);
-      
+
       if (kaibaNet.getPlayerId() === roomId) {
         // If we're the host and another player joins
-        setLoadingStatus(`Player ${playerJoinedId} joined, waiting for them to be ready...`);
+        setLoadingStatus(
+          `Player ${playerJoinedId} joined, waiting for them to be ready...`
+        );
       }
-      
+
       // Track that this player joined but may not be ready yet
       if (playerJoinedId !== kaibaNet.getPlayerId()) {
         pendingPlayers.add(playerJoinedId);
@@ -240,27 +245,29 @@ export default function Duel({
         );
       }
     };
-    
+
     const handlePlayerReady = (playerReadyId: string) => {
       logger.debug("Player ready:", playerReadyId);
-      
+
       if (kaibaNet.getPlayerId() === roomId) {
         setLoadingStatus(`Player ${playerReadyId} is ready!`);
-        setLoadingProgress((current) => current ? Math.min(95, current + 10) : 70);
+        setLoadingProgress((current) =>
+          current ? Math.min(95, current + 10) : 70
+        );
       }
-      
+
       // Remove from pending when they're ready
       if (pendingPlayers.has(playerReadyId)) {
         pendingPlayers.delete(playerReadyId);
         logger.debug("Removed from pending:", playerReadyId, pendingPlayers);
       }
     };
-    
+
     const handleAllPlayersReady = () => {
       logger.debug("All players ready event received");
       setLoadingStatus("All players ready, starting duel...");
       setLoadingProgress(95);
-      
+
       // Only the room creator (host) should send the game state
       if (kaibaNet.getPlayerId() === roomId) {
         logger.debug("I am the host, sending current game state");
@@ -269,11 +276,11 @@ export default function Duel({
         )! as any;
         const currentDuelState = ygo.duel.ygo.getCurrentStateProps();
         logger.debug("Refreshing with duel state:", currentDuelState);
-        
+
         // Add a small delay to ensure all clients are ready to receive the state
         setTimeout(() => {
           kaibaNet.refreshGameState(roomId, currentDuelState);
-          
+
           // After sending the game state as host, we can remove the loading overlay
           setTimeout(() => {
             setLoadingStatus("Duel ready!");
@@ -434,6 +441,36 @@ export default function Duel({
     kaibaNet.setPlaybackMuted(muted);
   };
 
+  // Function to handle reconnection success
+  const handleReconnect = () => {
+    // Refresh the page state or reinitialize components as needed
+    setLoadingStatus("Reconnecting to online mode...");
+    setLoadingProgress(30);
+    setIsLoading(true);
+
+    // Short timeout to let the UI update before reconnection
+    setTimeout(() => {
+      // Re-initialize with new connection
+      if (roomId) {
+        // Re-join the room with the new connection
+        kaibaNet
+          .joinRoom(roomId)
+          .then(() => {
+            setLoadingStatus("Reconnected successfully!");
+            setLoadingProgress(100);
+            // Give time for the success message to be seen
+            setTimeout(() => setIsLoading(false), 1000);
+          })
+          .catch((error) => {
+            logger.error("Failed to rejoin room after reconnection:", error);
+            setIsLoading(false);
+          });
+      } else {
+        setIsLoading(false);
+      }
+    }, 500);
+  };
+
   return (
     <div
       style={{
@@ -446,7 +483,12 @@ export default function Duel({
       {/* @ts-ignore */}
       <ygo-player />
 
-      {isLoading && <LoadingOverlay statusMessage={loadingStatus} progress={loadingProgress} />}
+      {isLoading && (
+        <LoadingOverlay
+          statusMessage={loadingStatus}
+          progress={loadingProgress}
+        />
+      )}
       <Chat
         roomId={roomId}
         playerId={playerId}
@@ -462,6 +504,9 @@ export default function Duel({
       >
         <button onClick={saveReplay}>Save Replay</button>
       </div>
+
+      {/* Add the offline notification component */}
+      <OfflineNotification onTryReconnect={handleReconnect} />
     </div>
   );
 }

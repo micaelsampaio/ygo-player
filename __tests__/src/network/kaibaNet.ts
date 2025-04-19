@@ -69,38 +69,79 @@ export class KaibaNet extends EventEmitter {
       // Import the factory dynamically
       const { CommunicationFactory } = await import("./communicationFactory");
 
-      // Create the appropriate communication layer using the factory
-      const communicationLayer = CommunicationFactory.createCommunication(
-        this.communicationType as any,
-        {
-          // Use environment variables if available
-          bootstrapNode: import.meta.env.VITE_BOOTSTRAP_NODE,
-          discoveryTopic:
-            import.meta.env.VITE_DISCOVERY_TOPIC || "peer-discovery",
-          serverUrl:
-            import.meta.env.VITE_SOCKET_SERVER || "http://localhost:3035",
+      try {
+        // Create the appropriate communication layer using the factory
+        const communicationLayer = CommunicationFactory.createCommunication(
+          this.communicationType as any,
+          {
+            // Use environment variables if available
+            bootstrapNode: import.meta.env.VITE_BOOTSTRAP_NODE,
+            discoveryTopic:
+              import.meta.env.VITE_DISCOVERY_TOPIC || "peer-discovery",
+            serverUrl:
+              import.meta.env.VITE_SOCKET_SERVER || "http://localhost:3035",
+          }
+        );
+
+        // Initialize the communication layer
+        await communicationLayer.initialize();
+
+        // Store the communication layer in a common property
+        this.communicationLayer = communicationLayer;
+
+        // Set up event listeners for the new communication layer
+        this.setupEventListenersForCommunicationLayer(communicationLayer);
+
+        // Get playerId from the communication layer
+        this.playerId = communicationLayer.getPeerId();
+
+        this.initialized = true;
+        logger.info(
+          `KaibaNet initialized with ${this.communicationType}, playerId: ${this.playerId}`
+        );
+      } catch (error) {
+        logger.warn(
+          `Failed to initialize ${this.communicationType} mode: ${error}`
+        );
+
+        // Fall back to offline mode if the requested mode fails
+        if (this.communicationType !== "offline") {
+          logger.info("Falling back to offline mode due to connection issues");
+
+          // Switch to offline mode
+          this.setCommunicationType("offline");
+
+          // Create and initialize the offline communication layer
+          const offlineLayer =
+            CommunicationFactory.createCommunication("offline");
+          await offlineLayer.initialize();
+
+          // Store the offline communication layer
+          this.communicationLayer = offlineLayer;
+
+          // Set up event listeners for the offline layer
+          this.setupEventListenersForCommunicationLayer(offlineLayer);
+
+          // Get playerId from the offline layer
+          this.playerId = offlineLayer.getPeerId();
+
+          this.initialized = true;
+
+          // Emit an event to notify about offline mode
+          this.emit("offline:mode:activated");
+
+          logger.info(
+            `KaibaNet initialized in offline mode, playerId: ${this.playerId}`
+          );
+        } else {
+          // If even offline mode fails, something is seriously wrong
+          logger.error("Failed to initialize offline mode, this is unexpected");
+          throw error;
         }
-      );
-
-      // Initialize the communication layer
-      await communicationLayer.initialize();
-
-      // Store the communication layer in a common property
-      this.communicationLayer = communicationLayer;
-
-      // Set up event listeners for the new communication layer
-      this.setupEventListenersForCommunicationLayer(communicationLayer);
-
-      // Get playerId from the communication layer
-      this.playerId = communicationLayer.getPeerId();
-
-      this.initialized = true;
-      logger.debug(
-        `KaibaNet initialized with ${this.communicationType}, playerId: ${this.playerId}`
-      );
-    } catch (error) {
-      logger.error("Failed to initialize KaibaNet:", error);
-      throw error;
+      }
+    } catch (finalError) {
+      logger.error("Failed to initialize KaibaNet:", finalError);
+      throw finalError;
     }
   }
 

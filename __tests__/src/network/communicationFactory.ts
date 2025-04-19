@@ -1,11 +1,12 @@
 import { ICommunicationLayer } from "./interfaces/ICommunicationLayer";
 import { P2PCommunication } from "./p2pCommunication";
 import { SocketIOCommunication } from "./socketio";
+import { LocalCommunication } from "./localCommunication";
 
 /**
  * Available communication types
  */
-export type CommunicationType = "p2p" | "socketio";
+export type CommunicationType = "p2p" | "socketio" | "offline";
 
 /**
  * Configuration options for network communication
@@ -44,6 +45,8 @@ export class CommunicationFactory {
             options.serverUrl ||
             "http://localhost:3035"
         );
+      case "offline":
+        return new LocalCommunication();
       default:
         throw new Error(`Unsupported communication type: ${type}`);
     }
