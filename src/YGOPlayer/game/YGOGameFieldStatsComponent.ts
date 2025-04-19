@@ -12,6 +12,7 @@ export class YGOGameFieldStatsComponent {
             this.stats[i].hide();
         }
 
+        // TODO @RMS: HANDLE THIS BETTER
         window.addEventListener("mousedown", (event) => {
             if (event.button === 1) {
                 event.preventDefault();
