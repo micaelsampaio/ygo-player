@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { KaibaNet } from "../network/kaibaNet";
+import { CommunicationType } from "../network/communicationFactory";
 import { Logger } from "../utils/logger";
 
 const logger = Logger.createLogger("KaibaNetProvider");
@@ -12,6 +13,39 @@ export function useKaibaNet() {
     throw new Error("useKaibaNet must be used within a KaibaNetProvider");
   }
   return context;
+}
+
+export function useCommunicationType() {
+  const kaibaNet = useKaibaNet();
+  // Get initial type from localStorage or default to "p2p"
+  const storedType = localStorage.getItem("commType") as CommunicationType;
+  const [type, setTypeState] = useState<CommunicationType>(storedType || "p2p");
+
+  // Wrapper for switching communication type
+  const setType = async (newType: CommunicationType) => {
+    try {
+      logger.debug(`Switching communication type from ${type} to ${newType}`);
+
+      // Get bootstrap node and server URL directly from import.meta.env (Vite's approach)
+      const bootstrapNode = import.meta.env.VITE_BOOTSTRAP_NODE;
+      const socketServer =
+        import.meta.env.VITE_SOCKET_SERVER || "http://localhost:3035";
+
+      await kaibaNet.switchCommunication(newType, {
+        bootstrapNode,
+        serverUrl: socketServer,
+      });
+
+      setTypeState(newType);
+      localStorage.setItem("commType", newType);
+      return true;
+    } catch (error) {
+      logger.error(`Failed to switch communication type to ${newType}:`, error);
+      throw error;
+    }
+  };
+
+  return { type, setType };
 }
 
 export function KaibaNetProvider({ children }: { children: React.ReactNode }) {
