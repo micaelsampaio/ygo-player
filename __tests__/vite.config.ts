@@ -17,12 +17,12 @@ export default defineConfig(({ mode }) => {
         path: "path-browserify",
         // Resolve CSS for ygo-player
         "ygo-player/style.css": isDocker
-          ? resolve(__dirname, "./node_modules/ygo-player/style.css") // Point to style.css in Docker
-          : resolve(__dirname, "../dist/style.css"), // Point to style.css for local development
+          ? resolve(__dirname, "./node_modules/ygo-player/style.css")
+          : resolve(__dirname, "../dist/style.css"),
         // Resolve JavaScript (bundle.js) for ygo-player
         "ygo-player": isDocker
-          ? resolve(__dirname, "./node_modules/ygo-player/bundle.js") // Point to bundle.js in Docker
-          : resolve(__dirname, "../dist/bundle.js"), // Point to src for local development
+          ? resolve(__dirname, "./node_modules/ygo-player/bundle.js")
+          : resolve(__dirname, "../dist/bundle.js"),
         "ygo-core-images-utils/style.css": isDocker
           ? resolve(__dirname, "./node_modules/ygo-core-images-utils/style.css")
           : resolve(__dirname, "../../ygo-core-images-utils/dist/style.css"),
@@ -39,7 +39,10 @@ export default defineConfig(({ mode }) => {
     },
     // Properly expose env variables to the client
     define: {
-      // Remove process.env references completely
+      // Add polyfill for process.env to fix "process is not defined" error
+      "process.env": {},
+      "process.browser": true,
+      "process.version": '"16.0.0"',
     },
   };
 });

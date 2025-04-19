@@ -1,5 +1,4 @@
 import debug from "debug";
-import "source-map-support/register";
 import * as path from "path-browserify";
 
 export type LogLevel = "debug" | "info" | "warn" | "error";

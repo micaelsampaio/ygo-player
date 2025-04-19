@@ -1,15 +1,14 @@
 /**
  * Utility functions for managing deck files in the file system
+ * Browser-only version
  */
 
 import { Deck } from "../components/DeckBuilder/types";
 import { importDeckFromYdk } from "./download-deck";
 import { downloadDeck } from "./download-deck";
 import { ydkToJson } from "./ydk-parser";
-// import * as fs from "fs";
-// import * as path from "path";
 
-// Check if we're in a browser environment
+// Check if we're in a browser environment (always should be true)
 const isBrowser = typeof window !== "undefined";
 
 /**
@@ -227,83 +226,12 @@ export const processFiles = async (
 };
 
 /**
- * Imports all decks from a folder
- * @param folderPath The folder to import from
- * @returns Array of imported decks
- */
-export const importDecksFromFolder = async (
-  folderPath: string
-): Promise<Deck[]> => {
-  try {
-    const fs = await import("fs");
-    const path = await import("path");
-
-    if (!fs.existsSync(folderPath)) {
-      throw new Error(`Folder does not exist: ${folderPath}`);
-    }
-
-    const files = fs.readdirSync(folderPath);
-    const decks: Deck[] = [];
-    const importPromises: Promise<void>[] = [];
-
-    // Process each file
-    for (const file of files) {
-      const filePath = path.join(folderPath, file);
-      const stat = fs.statSync(filePath);
-
-      if (stat.isFile()) {
-        const extension = path.extname(file).toLowerCase();
-        const deckName = path.basename(file, extension);
-
-        const importPromise = (async () => {
-          try {
-            let deck: Deck | null = null;
-            if (extension === ".json") {
-              // Import JSON deck
-              const content = fs.readFileSync(filePath, "utf8");
-              deck = JSON.parse(content);
-            } else if (extension === ".ydk") {
-              // Import YDK deck using our existing ydk-parser
-              const content = fs.readFileSync(filePath, "utf8");
-              importDeckFromYdk(content, deckName);
-            }
-            if (deck) {
-              // Ensure deck has a name property
-              if (!deck.name) {
-                deck.name = deckName;
-              }
-              // Ensure deck has sideDeck property
-              if (!Array.isArray(deck.sideDeck)) {
-                deck.sideDeck = [];
-              }
-              decks.push(deck);
-            }
-          } catch (error) {
-            console.error(`Error importing deck from "${filePath}":`, error);
-          }
-        })();
-
-        importPromises.push(importPromise);
-      }
-    }
-
-    // Wait for all import operations to complete
-    await Promise.all(importPromises);
-
-    return decks;
-  } catch (error) {
-    console.error(`Error importing decks from folder:`, error);
-    throw new Error(`Failed to import decks from folder: ${error.message}`);
-  }
-};
-
-/**
- * Syncs decks between the application and a folder
+ * Browser-only version of syncing decks
  * @param decks Array of decks in the application
- * @param folderPath The folder to sync with (ignored in browser)
- * @param direction The sync direction ('import', 'export', or 'both')
+ * @param folderPath Ignored in browser version
+ * @param direction Only 'export' is supported in browser
  * @param format The format to use for exporting ('ydk' or 'json')
- * @returns Object with the results of the sync operation
+ * @returns Object with the results of the operation
  */
 export const syncDecksWithFolder = async (
   decks: Deck[],
@@ -320,69 +248,40 @@ export const syncDecksWithFolder = async (
   const errors: string[] = [];
 
   try {
-    if (isBrowser) {
-      // Browser-specific logic
-      if (direction === "export" || direction === "both") {
-        // In browser, we can only export decks one by one
-        // We'll show a dialog asking if the user wants to export each deck
-        if (
-          confirm(
-            `Do you want to export ${
-              decks.length
-            } deck(s) as ${format.toUpperCase()} files?`
-          )
-        ) {
-          for (const deck of decks) {
-            try {
-              await exportDeckToBrowser(deck, format);
-              exported.push(deck);
-            } catch (error) {
-              errors.push(
-                `Error exporting deck "${deck.name}": ${error.message}`
-              );
-            }
-          }
-        }
-      }
-
-      if (direction === "import" || direction === "both") {
-        // For import in browser, we need to use the file input
-        // This is already implemented in the DeckActions component
-        errors.push(
-          "Importing decks from a folder is not supported in the browser. Please use the 'Import Deck' button instead."
-        );
-      }
-    } else {
-      // Node.js-specific logic
-      if (direction === "import" || direction === "both") {
-        try {
-          const importedDecks = await importDecksFromFolder(folderPath);
-          imported.push(...importedDecks);
-        } catch (error) {
-          errors.push(`Error importing decks: ${error.message}`);
-        }
-      }
-
-      if (direction === "export" || direction === "both") {
+    // Browser-specific logic
+    if (direction === "export" || direction === "both") {
+      // In browser, we can only export decks one by one
+      if (
+        confirm(
+          `Do you want to export ${
+            decks.length
+          } deck(s) as ${format.toUpperCase()} files?`
+        )
+      ) {
         for (const deck of decks) {
           try {
-            const exportedPath = await exportDeckToFolder(
-              deck,
-              folderPath,
-              format
-            );
-            exported.push({ ...deck, exportedPath });
+            await exportDeckToBrowser(deck, format);
+            exported.push(deck);
           } catch (error) {
-            errors.push(
-              `Error exporting deck "${deck.name}": ${error.message}`
-            );
+            const errorMessage =
+              error instanceof Error ? error.message : String(error);
+            errors.push(`Error exporting deck "${deck.name}": ${errorMessage}`);
           }
         }
       }
     }
+
+    if (direction === "import" || direction === "both") {
+      // For import in browser, we need to use the file input
+      // This is already implemented in the DeckActions component
+      errors.push(
+        "Importing decks from a folder is not supported in the browser. Please use the 'Import Deck' button instead."
+      );
+    }
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
     console.error(`Error syncing decks:`, error);
-    throw new Error(`Failed to sync decks: ${error.message}`);
+    throw new Error(`Failed to sync decks: ${errorMessage}`);
   }
 
   return { imported, exported, errors };
