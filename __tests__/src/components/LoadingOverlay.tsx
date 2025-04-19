@@ -37,27 +37,23 @@ export const LoadingOverlay: React.FC<LoadingOverlayProps> = ({
       }}
     >
       <div>{statusMessage}</div>
-
+      
       {progress !== undefined ? (
         <div style={{ marginTop: "1rem", width: "100%" }}>
-          <div
-            style={{
-              width: "100%",
-              height: "10px",
-              backgroundColor: "rgba(255,255,255,0.2)",
+          <div style={{ 
+            width: "100%", 
+            height: "10px", 
+            backgroundColor: "rgba(255,255,255,0.2)", 
+            borderRadius: "5px",
+            overflow: "hidden"
+          }}>
+            <div style={{
+              width: `${progress}%`,
+              height: "100%",
+              backgroundColor: "#3498db",
               borderRadius: "5px",
-              overflow: "hidden",
-            }}
-          >
-            <div
-              style={{
-                width: `${progress}%`,
-                height: "100%",
-                backgroundColor: "#3498db",
-                borderRadius: "5px",
-                transition: "width 0.3s ease-in-out",
-              }}
-            />
+              transition: "width 0.3s ease-in-out"
+            }}/>
           </div>
           <div style={{ fontSize: "0.9rem", marginTop: "0.5rem" }}>
             {progress}% complete
@@ -77,7 +73,7 @@ export const LoadingOverlay: React.FC<LoadingOverlayProps> = ({
           }}
         />
       )}
-
+      
       <div style={{ fontSize: "0.9rem", marginTop: "1rem", opacity: 0.7 }}>
         This may take a moment...
       </div>
