@@ -111,12 +111,29 @@ export default function App() {
     console.log("duel", roomJson);
     localStorage.setItem("duel-data", JSON.stringify(roomJson));
     setRoomDecks(roomJson);
-    kaibaNet.createRoom();
 
-    // duel owner starts the room and enters the duel
-    const roomId = kaibaNet.getPlayerId() ? kaibaNet.getPlayerId() : "";
+    // Check if we're in offline mode
+    const isOffline = kaibaNet.getCommunicationType() === "offline";
+    let roomId: string;
+
+    if (isOffline) {
+      // In offline mode, generate a random room ID instead of creating a room
+      roomId = `offline-room-${Date.now()}`;
+      logger.debug("Running in offline mode, using generated roomId:", roomId);
+    } else {
+      // For online modes, create a room as before
+      kaibaNet.createRoom();
+      roomId = kaibaNet.getPlayerId() ? kaibaNet.getPlayerId() : "";
+    }
+
+    // Navigate to the duel page with appropriate state
     navigate(`/duel/${roomId}`, {
-      state: { roomId, duelData: roomJson, playerId: kaibaNet.getPlayerId() },
+      state: {
+        roomId,
+        duelData: roomJson,
+        playerId: kaibaNet.getPlayerId(),
+        offline: isOffline,
+      },
     });
   };
 
@@ -139,9 +156,25 @@ export default function App() {
 
   const handleRoomJoin = async (roomId: any) => {
     console.log("App:handleRoomJoin:roomDecks", roomDecks);
-    await kaibaNet.joinRoom(roomId);
+
+    // Check if we're in offline mode
+    const isOffline = kaibaNet.getCommunicationType() === "offline";
+
+    if (isOffline) {
+      // In offline mode, don't attempt to join a room via network
+      logger.debug("Running in offline mode, skipping network room join");
+    } else {
+      // For online modes, join the room as before
+      await kaibaNet.joinRoom(roomId);
+    }
+
+    // Navigate to the duel page with appropriate state
     navigate(`/duel/${roomId}`, {
-      state: { roomId, playerId: kaibaNet.getPlayerId() },
+      state: {
+        roomId,
+        playerId: kaibaNet.getPlayerId(),
+        offline: isOffline,
+      },
     });
   };
 

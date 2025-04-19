@@ -23,7 +23,7 @@ const ConnectionInfo = styled.div`
   margin-bottom: 8px;
 `;
 
-const ConnectionStatus = styled.div<{ active: boolean }>`
+const ConnectionStatus = styled.div<{ $active: boolean }>`
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -34,68 +34,129 @@ const ConnectionStatus = styled.div<{ active: boolean }>`
     width: 10px;
     height: 10px;
     border-radius: 50%;
-    background-color: ${(props) => (props.active ? "#4caf50" : "#999")};
+    background-color: ${(props) => (props.$active ? "#4caf50" : "#999")};
   }
 `;
 
-const SwitchButton = styled.button`
-  background-color: #2196f3;
-  color: white;
-  border: none;
+const ToggleContainer = styled.div`
+  display: flex;
+  width: 100%;
   border-radius: 4px;
-  padding: 6px 12px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: background-color 0.2s;
+  overflow: hidden;
+  margin-top: 8px;
+  background-color: #e0e0e0;
+  position: relative;
+`;
+
+const ToggleOption = styled.button<{ isActive: boolean }>`
+  flex: 1;
+  padding: 8px 0;
+  border: none;
+  background: transparent;
+  cursor: ${(props) => (props.disabled ? "not-allowed" : "pointer")};
+  position: relative;
+  z-index: 2;
+  color: ${(props) => (props.isActive ? "#fff" : "#333")};
+  font-weight: ${(props) => (props.isActive ? "bold" : "normal")};
+  transition: color 0.3s;
 
   &:hover {
-    background-color: #0b7dda;
+    color: ${(props) => (props.isActive ? "#fff" : "#000")};
   }
+`;
 
-  &:disabled {
-    background-color: #cccccc;
-    cursor: not-allowed;
-  }
+const ToggleSlider = styled.div<{ position: number }>`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 33.33%;
+  height: 100%;
+  background-color: ${(props) => {
+    switch (props.position) {
+      case 0:
+        return "#2196f3"; // P2P
+      case 1:
+        return "#9c27b0"; // Socket.IO
+      case 2:
+        return "#f44336"; // Offline
+      default:
+        return "#2196f3";
+    }
+  }};
+  border-radius: 4px;
+  transition: transform 0.3s ease;
+  transform: translateX(${(props) => props.position * 100}%);
+  z-index: 1;
 `;
 
 export function ConnectionSwitcher() {
   const { type, setType } = useCommunicationType();
   const [isSwitching, setIsSwitching] = useState(false);
 
-  const handleSwitchConnection = async () => {
+  const handleToggle = async (newType: CommunicationType) => {
+    if (newType === type || isSwitching) return;
+
     try {
       setIsSwitching(true);
-
-      // Toggle between p2p and socketio
-      const newType: CommunicationType = type === "p2p" ? "socketio" : "p2p";
       logger.debug(`Switching connection from ${type} to ${newType}`);
 
       await setType(newType);
 
-      // Update localStorage to remember the setting
-      localStorage.setItem("commType", newType);
-
       logger.debug(`Successfully switched to ${newType}`);
     } catch (error) {
-      logger.error("Failed to switch connection type:", error);
+      logger.error(`Failed to switch connection type to ${newType}:`, error);
     } finally {
       setIsSwitching(false);
     }
   };
 
+  // Get friendly display name for current connection type
+  const getConnectionName = (): string => {
+    if (type === "p2p") return "P2P Connection (libp2p)";
+    if (type === "socketio") return "Socket.IO Connection";
+    return "Offline Mode (No Connection)";
+  };
+
+  // Get the position for the toggle slider
+  const getTogglePosition = (): number => {
+    if (type === "p2p") return 0;
+    if (type === "socketio") return 1;
+    return 2; // offline
+  };
+
   return (
     <SwitcherContainer>
       <ConnectionInfo>
-        <ConnectionStatus active={true}>
-          {type === "p2p" ? "P2P Connection (libp2p)" : "Socket.IO Connection"}
+        <ConnectionStatus $active={type !== "offline"}>
+          {getConnectionName()}
+          {isSwitching && " (Switching...)"}
         </ConnectionStatus>
       </ConnectionInfo>
 
-      <SwitchButton onClick={handleSwitchConnection} disabled={isSwitching}>
-        {isSwitching
-          ? "Switching..."
-          : `Switch to ${type === "p2p" ? "Socket.IO" : "P2P"}`}
-      </SwitchButton>
+      <ToggleContainer>
+        <ToggleSlider position={getTogglePosition()} />
+        <ToggleOption
+          isActive={type === "p2p"}
+          disabled={isSwitching}
+          onClick={() => handleToggle("p2p")}
+        >
+          P2P
+        </ToggleOption>
+        <ToggleOption
+          isActive={type === "socketio"}
+          disabled={isSwitching}
+          onClick={() => handleToggle("socketio")}
+        >
+          Socket.IO
+        </ToggleOption>
+        <ToggleOption
+          isActive={type === "offline"}
+          disabled={isSwitching}
+          onClick={() => handleToggle("offline")}
+        >
+          Offline
+        </ToggleOption>
+      </ToggleContainer>
     </SwitcherContainer>
   );
 }

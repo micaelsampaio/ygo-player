@@ -33,6 +33,16 @@ export class SocketIOCommunication
   async initialize(): Promise<void> {
     try {
       logger.debug("SocketIO: Connecting to server:", this.serverUrl);
+
+      // Skip connection attempt if using offline URL
+      if (this.serverUrl === "offline://dummy") {
+        logger.info(
+          "SocketIO: Running in offline mode, no connection will be attempted"
+        );
+        this.playerId = "offline-player";
+        return Promise.resolve();
+      }
+
       this.socket = io(this.serverUrl, {
         reconnection: true,
         reconnectionAttempts: 5,
@@ -45,7 +55,18 @@ export class SocketIOCommunication
       return Promise.resolve();
     } catch (error) {
       logger.error("SocketIO: Failed to initialize:", error);
-      return Promise.reject(error);
+
+      // Set offline player ID so the app can still function
+      this.playerId = "offline-player";
+      logger.info(
+        "SocketIO: Continuing in offline mode due to connection failure"
+      );
+
+      // Notify listeners that we're operating in offline mode due to failure
+      this.emit("connection:offline", { reason: "connection_error" });
+
+      // Don't reject - allow the app to continue in offline mode
+      return Promise.resolve();
     }
   }
 

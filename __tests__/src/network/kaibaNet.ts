@@ -69,7 +69,26 @@ export class KaibaNet extends EventEmitter {
       // Import the factory dynamically
       const { CommunicationFactory } = await import("./communicationFactory");
 
-      // Create the appropriate communication layer using the factory
+      // Handle offline mode specially - use the minimal offline implementation
+      if (this.communicationType === "offline") {
+        logger.debug("KaibaNet: Using offline mode");
+
+        // Create an offline communication layer
+        this.communicationLayer =
+          CommunicationFactory.createCommunication("offline");
+
+        // Initialize (this is a no-op for offline mode but keeps the API consistent)
+        await this.communicationLayer.initialize();
+
+        // Set our player ID
+        this.playerId = this.communicationLayer.getPeerId();
+
+        this.initialized = true;
+        logger.debug("KaibaNet: Initialized in offline mode");
+        return;
+      }
+
+      // For online modes, create the appropriate communication layer using the factory
       const communicationLayer = CommunicationFactory.createCommunication(
         this.communicationType as any,
         {
@@ -82,8 +101,33 @@ export class KaibaNet extends EventEmitter {
         }
       );
 
-      // Initialize the communication layer
-      await communicationLayer.initialize();
+      try {
+        // Initialize the communication layer
+        await communicationLayer.initialize();
+      } catch (commError) {
+        logger.error("Failed to initialize communication layer:", commError);
+
+        // If we can't connect, switch to offline mode
+        this.communicationType = "offline";
+
+        // Create an offline communication layer as fallback
+        this.communicationLayer =
+          CommunicationFactory.createCommunication("offline");
+        await this.communicationLayer.initialize();
+
+        this.playerId = this.communicationLayer.getPeerId();
+        this.initialized = true;
+
+        // Store the preference in localStorage too
+        if (typeof localStorage !== "undefined") {
+          localStorage.setItem("commType", "offline");
+        }
+
+        logger.warn(
+          "Automatically switched to offline mode due to connection failure"
+        );
+        return;
+      }
 
       // Store the communication layer in a common property
       this.communicationLayer = communicationLayer;
@@ -100,7 +144,31 @@ export class KaibaNet extends EventEmitter {
       );
     } catch (error) {
       logger.error("Failed to initialize KaibaNet:", error);
-      throw error;
+
+      try {
+        // Fall back to offline mode on any error
+        this.communicationType = "offline";
+
+        // Create offline communication layer as a last resort
+        const { CommunicationFactory } = await import("./communicationFactory");
+        this.communicationLayer =
+          CommunicationFactory.createCommunication("offline");
+        await this.communicationLayer.initialize();
+
+        this.playerId = this.communicationLayer.getPeerId();
+        this.initialized = true;
+
+        if (typeof localStorage !== "undefined") {
+          localStorage.setItem("commType", "offline");
+        }
+
+        logger.warn(
+          "Automatically switched to offline mode due to initialization error"
+        );
+      } catch (fallbackError) {
+        logger.error("Failed even to initialize offline mode:", fallbackError);
+        throw fallbackError;
+      }
     }
   }
 
@@ -140,7 +208,7 @@ export class KaibaNet extends EventEmitter {
 
   /**
    * Switch to a different communication method
-   * @param type The type of communication to switch to ('p2p' or 'socketio')
+   * @param type The type of communication to switch to ('p2p', 'socketio', or 'offline')
    * @param options Configuration options
    */
   async switchCommunication(
@@ -173,20 +241,22 @@ export class KaibaNet extends EventEmitter {
       // Create the appropriate communication layer using the factory
       const communicationLayer = CommunicationFactory.createCommunication(
         type as any,
-        {
-          // Use Vite's import.meta.env for environment variables
-          bootstrapNode:
-            import.meta.env.VITE_BOOTSTRAP_NODE || options.bootstrapNode,
-          discoveryTopic:
-            import.meta.env.VITE_DISCOVERY_TOPIC ||
-            options.discoveryTopic ||
-            "peer-discovery",
-          // Priority order: ENV > options > default
-          serverUrl:
-            import.meta.env.VITE_SOCKET_SERVER ||
-            options.serverUrl ||
-            "http://localhost:3035",
-        }
+        type === "offline"
+          ? {} // No options needed for offline mode
+          : {
+              // Use Vite's import.meta.env for environment variables
+              bootstrapNode:
+                import.meta.env.VITE_BOOTSTRAP_NODE || options.bootstrapNode,
+              discoveryTopic:
+                import.meta.env.VITE_DISCOVERY_TOPIC ||
+                options.discoveryTopic ||
+                "peer-discovery",
+              // Priority order: ENV > options > default
+              serverUrl:
+                import.meta.env.VITE_SOCKET_SERVER ||
+                options.serverUrl ||
+                "http://localhost:3035",
+            }
       );
 
       // Mark as not initialized during the switch
@@ -198,8 +268,10 @@ export class KaibaNet extends EventEmitter {
       // Initialize the new communication layer
       await communicationLayer.initialize();
 
-      // Setup event listeners for the new communication layer
-      this.setupEventListenersForCommunicationLayer(communicationLayer);
+      // Setup event listeners for the new communication layer (skip for offline mode)
+      if (type !== "offline") {
+        this.setupEventListenersForCommunicationLayer(communicationLayer);
+      }
 
       // Set properties from the new communication layer
       this.playerId = communicationLayer.getPeerId();
@@ -211,6 +283,19 @@ export class KaibaNet extends EventEmitter {
       this.emit("communication:changed", type);
     } catch (error) {
       logger.error(`Failed to switch communication to ${type}:`, error);
+
+      // If switching fails, try to fall back to offline mode
+      if (type !== "offline") {
+        logger.warn(
+          "Attempting to fall back to offline mode after failed switch"
+        );
+        try {
+          await this.switchCommunication("offline");
+        } catch (fallbackError) {
+          logger.error("Failed to fall back to offline mode:", fallbackError);
+        }
+      }
+
       throw error;
     }
   }
@@ -637,6 +722,13 @@ export class KaibaNet extends EventEmitter {
    * @throws Error if no communication layer is available
    */
   private getActiveCommunicationLayer(): any {
+    // If in offline mode, we don't need a real communication layer
+    if (this.communicationType === "offline") {
+      // Just return the communication layer we initialized
+      // with the dummy URL in communicationFactory
+      return this.communicationLayer;
+    }
+
     const commLayer =
       this.communicationType === "p2p"
         ? this.peerToPeer

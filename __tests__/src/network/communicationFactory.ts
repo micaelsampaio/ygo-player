@@ -1,11 +1,12 @@
 import { ICommunicationLayer } from "./interfaces/ICommunicationLayer";
 import { P2PCommunication } from "./p2pCommunication";
 import { SocketIOCommunication } from "./socketio";
+import { EventEmitter } from "events";
 
 /**
  * Available communication types
  */
-export type CommunicationType = "p2p" | "socketio";
+export type CommunicationType = "p2p" | "socketio" | "offline";
 
 /**
  * Configuration options for network communication
@@ -14,6 +15,76 @@ export interface CommunicationOptions {
   bootstrapNode?: string;
   discoveryTopic?: string;
   serverUrl?: string;
+}
+
+/**
+ * A minimal offline communication layer that implements the ICommunicationLayer interface
+ * but doesn't actually attempt any network communication
+ */
+class OfflineCommunicationLayer
+  extends EventEmitter
+  implements ICommunicationLayer
+{
+  private playerId = "offline-player";
+  private roomId: string | null = null;
+
+  async initialize(): Promise<void> {
+    return Promise.resolve();
+  }
+
+  cleanup(): void {
+    // No-op in offline mode
+  }
+
+  getPeerId(): string {
+    return this.playerId;
+  }
+
+  getRoomId(): string | null {
+    return this.roomId;
+  }
+
+  async createRoom(): Promise<void> {
+    this.roomId = `offline-room-${Date.now()}`;
+    return Promise.resolve();
+  }
+
+  async joinRoom(): Promise<void> {
+    return Promise.resolve();
+  }
+
+  async subscribeTopic(): Promise<boolean> {
+    return Promise.resolve(true);
+  }
+
+  unsubscribeTopic(): void {
+    // No-op in offline mode
+  }
+
+  async messageTopic(): Promise<void> {
+    // No-op in offline mode
+    return Promise.resolve();
+  }
+
+  async startVoiceChat(): Promise<boolean> {
+    return Promise.resolve(false);
+  }
+
+  stopVoiceChat(): void {
+    // No-op in offline mode
+  }
+
+  setMicMuted(): void {
+    // No-op in offline mode
+  }
+
+  setPlaybackMuted(): void {
+    // No-op in offline mode
+  }
+
+  getAudioAnalyser(): AnalyserNode | null {
+    return null;
+  }
 }
 
 /**
@@ -44,6 +115,9 @@ export class CommunicationFactory {
             options.serverUrl ||
             "http://localhost:3035"
         );
+      case "offline":
+        // Just create a minimal implementation that doesn't do any actual networking
+        return new OfflineCommunicationLayer();
       default:
         throw new Error(`Unsupported communication type: ${type}`);
     }

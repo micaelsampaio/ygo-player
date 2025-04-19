@@ -17,9 +17,19 @@ export function useKaibaNet() {
 
 export function useCommunicationType() {
   const kaibaNet = useKaibaNet();
-  // Get initial type from localStorage or default to "p2p"
+  // Get initial type from localStorage or default to "offline" mode
   const storedType = localStorage.getItem("commType") as CommunicationType;
-  const [type, setTypeState] = useState<CommunicationType>(storedType || "p2p");
+  const [type, setTypeState] = useState<CommunicationType>(
+    storedType || "offline"
+  );
+
+  // Set a default if there isn't one already
+  useEffect(() => {
+    if (!localStorage.getItem("commType")) {
+      localStorage.setItem("commType", "offline");
+      logger.debug("Set default communication type to offline");
+    }
+  }, []);
 
   // Wrapper for switching communication type
   const setType = async (newType: CommunicationType) => {
