@@ -13,6 +13,7 @@ import { exportAllData, importAllData } from "./utils/dataExport";
 import { generateExportToMdCode } from "./utils/export-to-md.js";
 import { DataExportModal } from "./components/Data/DataExportModal.js";
 import { ConnectionSwitcher } from "./components/ConnectionSwitcher";
+import { createRoom } from "./utils/roomUtils";
 
 const cdnUrl = String(import.meta.env.VITE_YGO_CDN_URL);
 
@@ -78,7 +79,7 @@ export default function App() {
 
   let navigate = useNavigate();
 
-  const duel = (deck1: any, deck2: any, options: any = undefined) => {
+  const duel = async (deck1: any, deck2: any, options: any = undefined) => {
     const roomJson = {
       players: [
         {
@@ -93,47 +94,20 @@ export default function App() {
         },
       ],
       options: {
-        shuffleDecks: false,
+        shuffleDecks: true,
         ...(options || {}),
       },
     };
 
-    roomJson.players.forEach((player) => {
-      for (let i = player.mainDeck.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [player.mainDeck[i], player.mainDeck[j]] = [
-          player.mainDeck[j],
-          player.mainDeck[i],
-        ];
-      }
-    });
-
     console.log("duel", roomJson);
-    localStorage.setItem("duel-data", JSON.stringify(roomJson));
     setRoomDecks(roomJson);
 
-    // Check if we're in offline mode
-    const isOffline = kaibaNet.getCommunicationType() === "offline";
-    let roomId: string;
+    // Use the createRoom utility function
+    const navigationState = await createRoom(kaibaNet, roomJson);
 
-    if (isOffline) {
-      // In offline mode, generate a random room ID instead of creating a room
-      roomId = `offline-room-${Date.now()}`;
-      logger.debug("Running in offline mode, using generated roomId:", roomId);
-    } else {
-      // For online modes, create a room as before
-      kaibaNet.createRoom();
-      roomId = kaibaNet.getPlayerId() ? kaibaNet.getPlayerId() : "";
-    }
-
-    // Navigate to the duel page with appropriate state
-    navigate(`/duel/${roomId}`, {
-      state: {
-        roomId,
-        duelData: roomJson,
-        playerId: kaibaNet.getPlayerId(),
-        offline: isOffline,
-      },
+    // Navigate to the duel page with the state returned from createRoom
+    navigate(`/duel/${navigationState.roomId}`, {
+      state: navigationState,
     });
   };
 

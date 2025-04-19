@@ -10,6 +10,12 @@ import {
   exportDeckToClipboard,
 } from "../../../../utils/deckExport";
 import { YGODeckToImage } from "ygo-core-images-utils";
+import { useNavigate } from "react-router-dom";
+import { useKaibaNet } from "../../../../hooks/useKaibaNet";
+import { Logger } from "../../../../utils/logger";
+import { createRoom } from "../../../../utils/roomUtils";
+
+const logger = Logger.createLogger("DeckActions");
 
 // Add a new prop to control whether to show the dropdown immediately
 interface DeckActionsProps {
@@ -45,6 +51,8 @@ const DeckActions: React.FC<DeckActionsProps> = ({
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const actionsRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
+  const kaibaNet = useKaibaNet();
 
   // Close dropdown when clicking outside
   React.useEffect(() => {
@@ -65,6 +73,51 @@ const DeckActions: React.FC<DeckActionsProps> = ({
   }, [isActionsOpen]);
 
   if (!deck) return null;
+
+  // Function to play with the selected deck
+  const playWithDeck = async () => {
+    try {
+      logger.debug("Creating room to play with deck:", deck.name);
+
+      // Set up the duel data structure
+      const duelData = {
+        players: [
+          {
+            name: "player1",
+            mainDeck: [...deck.mainDeck],
+            extraDeck: deck.extraDeck,
+          },
+          {
+            name: "player2",
+            // Default opponent deck will be set in the duel
+            mainDeck: [],
+            extraDeck: [],
+          },
+        ],
+        options: {
+          shuffleDecks: true,
+        },
+      };
+
+      // Use the createRoom utility function
+      const navigationState = await createRoom(kaibaNet, duelData);
+
+      // Navigate to the duel page using the state from createRoom
+      navigate(`/duel/${navigationState.roomId}`, {
+        state: navigationState,
+      });
+
+      // Close the dropdown
+      setIsActionsOpen(false);
+    } catch (error) {
+      logger.error("Failed to start duel with deck:", error);
+      alert(
+        `Failed to start duel: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
+    }
+  };
 
   const exportDeckAsYDK = () => {
     downloadDeckAsYdk(deck.name, deck);
@@ -341,6 +394,18 @@ const DeckActions: React.FC<DeckActionsProps> = ({
 
       {isActionsOpen && (
         <div className="actions-dropdown">
+          <div className="actions-group">
+            <div className="group-header">Play</div>
+            <button
+              onClick={playWithDeck}
+              title="Start a duel with this deck"
+              className="action-button"
+            >
+              <span className="action-icon">🎮</span>
+              <span className="action-text">Play with Deck</span>
+            </button>
+          </div>
+
           <div className="actions-group">
             <div className="group-header">Export</div>
             <button
