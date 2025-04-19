@@ -8,7 +8,24 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd());
 
   // Check if running in Docker using Vite's environment variable approach
-  const isDocker = env.VITE_DOCKER === "true";
+  const isDocker = env.VITE_DOCKER === "true" || process.env.DOCKER === "true";
+  
+  // Add debug logging
+  console.log("Environment mode:", mode);
+  console.log("Environment variables:", env);
+  console.log("Is Docker:", isDocker);
+  console.log("Current working directory:", process.cwd());
+  
+  // Log the resolved paths
+  const playerCssPath = isDocker
+    ? resolve(__dirname, "./node_modules/ygo-player/style.css")
+    : resolve(__dirname, "../dist/style.css");
+  const playerJsPath = isDocker
+    ? resolve(__dirname, "./node_modules/ygo-player/bundle.js") 
+    : resolve(__dirname, "../dist/bundle.js");
+    
+  console.log("Player CSS path:", playerCssPath);
+  console.log("Player JS path:", playerJsPath);
 
   return {
     plugins: [react()],
@@ -36,11 +53,15 @@ export default defineConfig(({ mode }) => {
     },
     build: {
       sourcemap: true,
+      // Set environment variables explicitly for the build
+      envPrefix: ["VITE_", "DOCKER"],
     },
     // Properly expose env variables to the client
     define: {
       // Add polyfill for process.env to fix "process is not defined" error
-      "process.env": {},
+      "process.env": {
+        DOCKER: JSON.stringify(process.env.DOCKER || env.VITE_DOCKER),
+      },
       "process.browser": true,
       "process.version": '"16.0.0"',
     },

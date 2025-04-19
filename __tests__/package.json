@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
+    "build:docker": "VITE_DOCKER=true vite build",
     "lint": "eslint .",
     "preview": "vite preview",
     "bootstrap-node": "node src/network/bootstrap-node.js"

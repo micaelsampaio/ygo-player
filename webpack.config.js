@@ -55,5 +55,3 @@ export default {
     outputModule: true,
   },
 };
-
-// TODO COPY YGO CORE

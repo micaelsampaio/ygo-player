@@ -9,8 +9,9 @@ FROM ygo-core-images-utils AS images-utils
 FROM node:22-alpine AS tests
 WORKDIR /app
 
-# Set the DOCKER environment variable
+# Set the environment variables correctly for Vite
 ENV DOCKER=true
+ENV VITE_DOCKER=true
 
 # Copy package.json and package-lock.json for the tests project
 COPY package.json ./
@@ -30,7 +31,7 @@ COPY --from=images-utils /app/dist ./node_modules/ygo-core-images-utils
 COPY . .
 
 # Build the tests project
-RUN npm run build
+RUN VITE_DOCKER=true npm run build:docker
 
 # --- Stage 3: Serve with Nginx ---
 FROM nginx:alpine AS server
