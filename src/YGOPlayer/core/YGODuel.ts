@@ -27,14 +27,15 @@ import { YGODuelScene } from "./YGODuelScene";
 import { YGOConfig } from "./YGOConfig";
 import { Command } from "ygo-core";
 import { YGOMapClick } from "./YGOMapClick";
-import { TrailRenderer } from "../game/YgoTrailRender";
+import { YGOGameFieldStatsComponent } from "../game/YGOGameFieldStatsComponent";
 
 export class YGODuel {
+  public ygo!: InstanceType<typeof YGOCore>;
   public state: YGODuelState;
   public core: YGOPlayerCore;
   public assets: YGOAssets;
   public fields: PlayerField[];
-  public ygo!: InstanceType<typeof YGOCore>;
+  public fieldStats!: YGOGameFieldStatsComponent;
   public fieldLocations!: Map<string, GameFieldLocation>;
   public camera: THREE.PerspectiveCamera;
   public entities: YGOEntity[];
@@ -115,6 +116,7 @@ export class YGODuel {
           "https://threejs.org/examples/fonts/helvetiker_regular.typeface.json"
         ),
         this.assets.loadImages(
+          `${this.config.cdnUrl}/images/ui/card_icons.png`,
           `${this.config.cdnUrl}/images/ui/ic_stars128.png`,
           `${this.config.cdnUrl}/images/ui/ic_rank128.png`,
           `${this.config.cdnUrl}/images/ui/ic_link128.png`,
@@ -217,7 +219,7 @@ export class YGODuel {
     }
 
     this.renderField();
-
+    this.fieldStats.update();
     this.events.dispatch("render-ui");
   }
 

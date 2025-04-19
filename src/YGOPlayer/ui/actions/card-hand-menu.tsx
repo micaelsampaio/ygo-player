@@ -293,6 +293,15 @@ export function CardHandMenu({
           Special Summon DEF
         </button>
 
+        <button
+          className="ygo-card-item"
+          disabled={freeMonsterZones === 0}
+          type="button"
+          onClick={specialSummonATK}
+        >
+          Special Summon ATK
+        </button>
+
         {canTribute && <>
           <button
             className="ygo-card-item"
@@ -312,16 +321,6 @@ export function CardHandMenu({
             Tribute Summon ATK
           </button>
         </>}
-
-        <button
-          className="ygo-card-item"
-          disabled={freeMonsterZones === 0}
-          type="button"
-          onClick={specialSummonATK}
-        >
-          Special Summon ATK
-        </button>
-
 
         {!isSpellOrTrap && (
           <button className="ygo-card-item" onClick={activateCard}>

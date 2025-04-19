@@ -10,6 +10,7 @@ import { ExtraDeck } from "../game/ExtraDeck";
 import { Card, FieldZone, FieldZoneData, YGOReplayData } from "ygo-core";
 import { YGOGameUtils } from "ygo-core";
 import { Banish } from "../game/Banish";
+import { YGOGameFieldStatsComponent } from "../game/YGOGameFieldStatsComponent";
 
 type CreateFieldDto = {
   duel: YGODuel;
@@ -129,6 +130,8 @@ export function createFields({ duel, fieldModel }: CreateFieldDto) {
     fields[0].extraMonsterZone.push(extraMonsterZone);
     fields[1].extraMonsterZone.push(extraMonsterZone);
   }
+
+  duel.fieldStats = new YGOGameFieldStatsComponent(duel);
 
   return fields;
 }
