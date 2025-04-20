@@ -24,6 +24,21 @@ export interface RoomNavigationState {
 }
 
 /**
+ * Cleans previous duel data from localStorage
+ * This should be called before creating or joining a room
+ */
+export function cleanDuelData(): void {
+  logger.debug("Cleaning previous duel data");
+  const keysToRemove = ["commands", "duel-data"];
+  keysToRemove.forEach((key) => {
+    if (localStorage.getItem(key)) {
+      localStorage.removeItem(key);
+      logger.debug(`Removed ${key} from localStorage`);
+    }
+  });
+}
+
+/**
  * Creates a room for dueling and returns the navigation state
  * @param kaibaNet KaibaNet instance
  * @param duelData Duel data with players and options
@@ -34,6 +49,9 @@ export async function createRoom(
   duelData: DuelData
 ): Promise<RoomNavigationState> {
   logger.debug("Creating room with duel data:", duelData);
+
+  // Clean up any previous duel data
+  cleanDuelData();
 
   // Store the duel data in localStorage
   localStorage.setItem("duel-data", JSON.stringify(duelData));

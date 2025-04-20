@@ -13,7 +13,7 @@ import { exportAllData, importAllData } from "./utils/dataExport";
 import { generateExportToMdCode } from "./utils/export-to-md.js";
 import { DataExportModal } from "./components/Data/DataExportModal.js";
 import { ConnectionSwitcher } from "./components/ConnectionSwitcher";
-import { createRoom } from "./utils/roomUtils";
+import { createRoom, cleanDuelData } from "./utils/roomUtils";
 
 const cdnUrl = String(import.meta.env.VITE_YGO_CDN_URL);
 
@@ -130,6 +130,9 @@ export default function App() {
 
   const handleRoomJoin = async (roomId: any) => {
     console.log("App:handleRoomJoin:roomDecks", roomDecks);
+
+    // Clean up any previous duel data using the centralized utility function
+    cleanDuelData();
 
     // Check if we're in offline mode
     const isOffline = kaibaNet.getCommunicationType() === "offline";
