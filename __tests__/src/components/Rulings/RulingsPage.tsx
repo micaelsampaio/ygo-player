@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import { RulingsAPI, Ruling, RulingCategory } from "./RulingsAPI";
 import { Logger } from "../../utils/logger";
+import { Link } from "react-router-dom";
+import CardTextAnalyzerComponent from "../CardTextAnalyzer/CardTextAnalyzerComponent";
 
 // Create a logger instance
 const logger = Logger.createLogger("RulingsPage");
@@ -14,6 +16,7 @@ const RulingsPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [activeRuling, setActiveRuling] = useState<Ruling | null>(null);
+  const [activeTab, setActiveTab] = useState<"rulings" | "analyzer">("rulings");
 
   // Load categories and initial rulings on component mount
   useEffect(() => {
@@ -61,6 +64,11 @@ const RulingsPage: React.FC = () => {
         {
           name: "once-per-turn",
           description: "Once Per Turn Effects",
+          count: 0,
+        },
+        {
+          name: "card-text-psct",
+          description: "Card Text Problem Solving",
           count: 0,
         },
       ]);
@@ -147,89 +155,110 @@ const RulingsPage: React.FC = () => {
         <p>Your guide to official rulings and card interactions</p>
       </Header>
 
-      <ContentWrapper>
-        <Sidebar>
-          <h3>Categories</h3>
-          <CategoryList>
-            {categories.map((category) => (
-              <CategoryItem
-                key={category.name}
-                isSelected={selectedCategory === category.name}
-                onClick={() => handleCategoryChange(category.name)}
-              >
-                {category.description}
-                {category.count > 0 && (
-                  <CategoryCount>{category.count}</CategoryCount>
-                )}
-              </CategoryItem>
-            ))}
-          </CategoryList>
-        </Sidebar>
+      <TabContainer>
+        <TabButton
+          isActive={activeTab === "rulings"}
+          onClick={() => setActiveTab("rulings")}
+        >
+          Card Rulings
+        </TabButton>
+        <TabButton
+          isActive={activeTab === "analyzer"}
+          onClick={() => setActiveTab("analyzer")}
+        >
+          Card Text Analyzer
+        </TabButton>
+      </TabContainer>
 
-        <MainContent>
-          <SearchBar onSubmit={handleSearch}>
-            <SearchInput
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search for card names, keywords, or specific rulings..."
-            />
-            <SearchButton type="submit">Search</SearchButton>
-          </SearchBar>
+      {activeTab === "rulings" ? (
+        <ContentWrapper>
+          <Sidebar>
+            <h3>Categories</h3>
+            <CategoryList>
+              {categories.map((category) => (
+                <CategoryItem
+                  key={category.name}
+                  isSelected={selectedCategory === category.name}
+                  onClick={() => handleCategoryChange(category.name)}
+                >
+                  {category.description}
+                  {category.count > 0 && (
+                    <CategoryCount>{category.count}</CategoryCount>
+                  )}
+                </CategoryItem>
+              ))}
+            </CategoryList>
+          </Sidebar>
 
-          {error && <ErrorMessage>{error}</ErrorMessage>}
+          <MainContent>
+            <SearchBar onSubmit={handleSearch}>
+              <SearchInput
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search for card names, keywords, or specific rulings..."
+              />
+              <SearchButton type="submit">Search</SearchButton>
+            </SearchBar>
 
-          {isLoading ? (
-            <LoadingIndicator>Loading rulings...</LoadingIndicator>
-          ) : (
-            <>
-              <RulingsCount>{rulings.length} rulings found</RulingsCount>
+            {error && <ErrorMessage>{error}</ErrorMessage>}
 
-              <RulingsList>
-                {rulings.map((ruling) => (
-                  <RulingItem
-                    key={ruling.id}
-                    onClick={() => setActiveRuling(ruling)}
-                  >
-                    <RulingQuestion>{ruling.question}</RulingQuestion>
-                    <RulingMeta>
-                      {ruling.relatedCards.length > 0 && (
-                        <RelatedCards>
-                          {ruling.relatedCards.map((card) => (
-                            <RelatedCardBadge key={card.id}>
-                              {card.name}
-                            </RelatedCardBadge>
-                          ))}
-                        </RelatedCards>
-                      )}
-                      <RulingSourceContainer>
-                        <RulingSource>
-                          Source: {ruling.source} • {ruling.date}
-                        </RulingSource>
-                        {ruling.sourceUrl && (
-                          <SourceLink
-                            href={ruling.sourceUrl}
-                            target="_blank"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            View Source
-                          </SourceLink>
+            {isLoading ? (
+              <LoadingIndicator>Loading rulings...</LoadingIndicator>
+            ) : (
+              <>
+                <RulingsCount>{rulings.length} rulings found</RulingsCount>
+
+                <RulingsList>
+                  {rulings.map((ruling) => (
+                    <RulingItem
+                      key={ruling.id}
+                      onClick={() => setActiveRuling(ruling)}
+                    >
+                      <RulingQuestion>{ruling.question}</RulingQuestion>
+                      <RulingMeta>
+                        {ruling.relatedCards.length > 0 && (
+                          <RelatedCards>
+                            {ruling.relatedCards.map((card) => (
+                              <RelatedCardBadge key={card.id}>
+                                {card.name}
+                              </RelatedCardBadge>
+                            ))}
+                          </RelatedCards>
                         )}
-                      </RulingSourceContainer>
-                    </RulingMeta>
-                  </RulingItem>
-                ))}
+                        <RulingSourceContainer>
+                          <RulingSource>
+                            Source: {ruling.source} • {ruling.date}
+                          </RulingSource>
+                          {ruling.sourceUrl && (
+                            <SourceLink
+                              href={ruling.sourceUrl}
+                              target="_blank"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              View Source
+                            </SourceLink>
+                          )}
+                        </RulingSourceContainer>
+                      </RulingMeta>
+                    </RulingItem>
+                  ))}
 
-                {rulings.length === 0 && !isLoading && (
-                  <NoRulingsMessage>
-                    No rulings found. Try a different search term or category.
-                  </NoRulingsMessage>
-                )}
-              </RulingsList>
-            </>
-          )}
-        </MainContent>
-      </ContentWrapper>
+                  {rulings.length === 0 && !isLoading && (
+                    <NoRulingsMessage>
+                      No rulings found. Try a different search term or category.
+                    </NoRulingsMessage>
+                  )}
+                </RulingsList>
+              </>
+            )}
+          </MainContent>
+        </ContentWrapper>
+      ) : (
+        <CardTextAnalyzerContainer>
+          <CardTextAnalyzerComponent />
+        </CardTextAnalyzerContainer>
+      )}
 
       {activeRuling && (
         <RulingModal>
@@ -608,6 +637,35 @@ const KeywordBadge = styled.span`
   border-radius: 15px;
   padding: 5px 12px;
   font-size: 0.9em;
+`;
+
+const TabContainer = styled.div`
+  display: flex;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #eee;
+`;
+
+const TabButton = styled.button<{ isActive: boolean }>`
+  padding: 12px 20px;
+  background: none;
+  border: none;
+  border-bottom: 3px solid
+    ${(props) => (props.isActive ? "#2196f3" : "transparent")};
+  color: ${(props) => (props.isActive ? "#2196f3" : "#666")};
+  font-size: 16px;
+  font-weight: ${(props) => (props.isActive ? "bold" : "normal")};
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-right: 10px;
+
+  &:hover {
+    background-color: #f9f9f9;
+    color: #2196f3;
+  }
+`;
+
+const CardTextAnalyzerContainer = styled.div`
+  padding: 20px 0;
 `;
 
 export default RulingsPage;

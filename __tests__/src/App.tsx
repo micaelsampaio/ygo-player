@@ -1,6 +1,6 @@
 import YUBEL from "./decks/YUBEL_FS.json";
 import CHIMERA from "./decks/CHIMERA.json";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, Routes, Route } from "react-router-dom";
 import RoomLobby from "./components/RoomLobby.js";
 import { useKaibaNet } from "./hooks/useKaibaNet";
 import { memo, useEffect, useState } from "react";
@@ -295,7 +295,7 @@ export default function App() {
   useLazyReplay({ replays, setReplays });
 
   return (
-    <div>
+    <div className="App">
       <ConnectionSwitcher />
       <AppContainer>
         <LeftContent>
@@ -424,6 +424,7 @@ export default function App() {
         onImport={handleImport}
         onImportQR={handleImportQR}
       />
+      <Routes></Routes>
     </div>
   );
 }

@@ -11,6 +11,7 @@ interface SearchResultsProps {
   onToggleFavorite: (card: Card) => void;
   isEmptySearch: boolean;
   isLoading?: boolean;
+  hideAddToDeck?: boolean; // New prop to hide "Add to Deck" functionality
 }
 
 const SearchResults: React.FC<SearchResultsProps> = ({
@@ -20,6 +21,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
   onToggleFavorite,
   isEmptySearch,
   isLoading = false,
+  hideAddToDeck = false, // Default to showing "Add to Deck"
 }) => {
   const getMonsterBadgeClass = (type: string) => {
     const typeLC = type.toLowerCase();
@@ -36,6 +38,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
 
   // Handle right-click to directly add to the currently selected deck
   const handleRightClick = (card: Card, event: React.MouseEvent) => {
+    if (hideAddToDeck) return; // Don't add to deck if hideAddToDeck is true
     event.preventDefault(); // Prevent default context menu
     onCardAdd(card); // Add to the currently selected deck type
   };
@@ -58,9 +61,11 @@ const SearchResults: React.FC<SearchResultsProps> = ({
     <div className="search-results">
       <div className="search-results-grid">
         {results.map((card) => (
-          <div 
-            key={card.id} 
-            className="suggestion-card" 
+          <div
+            key={card.id}
+            className={`suggestion-card ${
+              hideAddToDeck ? "no-add-button" : ""
+            }`}
             onContextMenu={(e) => handleRightClick(card, e)}
           >
             <img
@@ -79,12 +84,16 @@ const SearchResults: React.FC<SearchResultsProps> = ({
               <div className="suggestion-name" title={card.name}>
                 {card.name}
               </div>
-              <button
-                className="add-suggestion"
-                onClick={() => onCardAdd(card)}
-              >
-                Add to Deck
-              </button>
+              {!hideAddToDeck ? (
+                <button
+                  className="add-suggestion"
+                  onClick={() => onCardAdd(card)}
+                >
+                  Add to Deck
+                </button>
+              ) : (
+                <div className="spacer"></div>
+              )}
             </div>
           </div>
         ))}

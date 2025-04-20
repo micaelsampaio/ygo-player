@@ -195,6 +195,178 @@ export class RulingsAPI {
         keywords: ["damage step", "flip effects", "attack", "face-down"],
         votes: 91,
       },
+      {
+        id: "6",
+        question:
+          "Can I chain multiple Quick-Play Spell Cards in the same chain?",
+        answer:
+          "Yes, you can chain as many Quick-Play Spell Cards as you want, as long as they meet their activation requirements. This includes chaining multiple copies of the same Quick-Play Spell Card if it doesn't have any once-per-turn restrictions.",
+        relatedCards: [],
+        source: "Official Rulebook",
+        sourceUrl: "https://www.yugioh-card.com/en/rulebook/",
+        date: "2023-02-22",
+        category: "chain-resolution",
+        keywords: ["quick-play", "spell card", "chain", "activation"],
+        votes: 152,
+      },
+      {
+        id: "7",
+        question:
+          "How do 'If this card is sent to the GY' effects work with cards like Macro Cosmos?",
+        answer:
+          "If a card with an effect that triggers 'If this card is sent to the GY' would be sent to the GY while Macro Cosmos is applying, the monster is banished instead and its effect cannot activate because the condition of being sent to the GY was not met.",
+        relatedCards: [
+          { id: 30241314, name: "Macro Cosmos" },
+          { id: 40044918, name: "Elemental HERO Stratos" },
+        ],
+        source: "Card Ruling Database",
+        sourceUrl: "https://db.ygorganization.com/card/30241314",
+        date: "2023-01-05",
+        category: "card-interactions",
+        keywords: ["graveyard", "banish", "trigger effect", "macro cosmos"],
+        votes: 175,
+      },
+      // Card Text Problem-Solving Card Text (PSCT) rulings
+      {
+        id: "8",
+        question:
+          "What is Problem-Solving Card Text (PSCT) and why is it important?",
+        answer:
+          "Problem-Solving Card Text (PSCT) is a standardized way of writing card text introduced in 2011 to make card effects clearer and more consistent. It uses specific punctuation and phrasing to indicate timing, costs, and effects. Understanding PSCT helps players correctly interpret card effects and resolve them properly during gameplay.",
+        relatedCards: [],
+        source: "Official Konami Article",
+        sourceUrl:
+          "https://www.yugioh-card.com/en/play/problem-solving-card-text/",
+        date: "2023-04-12",
+        category: "card-text-psct",
+        keywords: ["psct", "card text", "interpretation", "punctuation"],
+        votes: 245,
+      },
+      {
+        id: "9",
+        question:
+          "What's the difference between a colon (:) and a semicolon (;) in card text?",
+        answer:
+          "In Problem-Solving Card Text, a colon (:) indicates an activation condition followed by an effect. When you see a colon, the effect activates and creates a chain link. A semicolon (;) separates an activation condition and cost from an effect. Text before the semicolon happens when you activate the effect, and text after it happens when the effect resolves. Both colon and semicolon indicate that an effect starts a chain.",
+        relatedCards: [
+          { id: 24224830, name: "Called by the Grave" },
+          { id: 59438930, name: "Pot of Desires" },
+        ],
+        source: "PSCT Guide",
+        sourceUrl: "https://yugiohblog.konami.com/articles/?p=4514",
+        date: "2023-05-23",
+        category: "card-text-psct",
+        keywords: [
+          "psct",
+          "punctuation",
+          "colon",
+          "semicolon",
+          "activation",
+          "cost",
+        ],
+        votes: 312,
+      },
+      {
+        id: "10",
+        question: "What does 'and if you do' mean in card text?",
+        answer:
+          "'And if you do' means both actions happen simultaneously—they're considered to be happening at the same time. If one action can't happen, the other still does. For example, with \"Destroy that monster, and if you do, draw 1 card\", you'll draw a card even if the monster becomes unable to be destroyed due to an effect like Indestructible armor.",
+        relatedCards: [
+          { id: 44095762, name: "Mirror Force" },
+          { id: 10045474, name: "Infinite Impermanence" },
+        ],
+        source: "Card Ruling Database",
+        sourceUrl: "https://db.ygorganization.com/",
+        date: "2023-06-14",
+        category: "card-text-psct",
+        keywords: [
+          "psct",
+          "and if you do",
+          "simultaneous effects",
+          "conjunction",
+        ],
+        votes: 198,
+      },
+      {
+        id: "11",
+        question:
+          "What's the difference between 'then' and 'also' in card text?",
+        answer:
+          "'Then' indicates that the second action happens after the first and only if the first action was successful. If the first action doesn't happen completely, the second won't happen at all. 'Also' means the second effect happens regardless of whether the first one was successful or not. Both actions are part of the same effect resolution.",
+        relatedCards: [],
+        source: "Official Rulebook Appendix",
+        sourceUrl: "https://www.yugioh-card.com/en/rulebook/",
+        date: "2023-03-17",
+        category: "card-text-psct",
+        keywords: ["psct", "then", "also", "sequential effects", "conjunction"],
+        votes: 173,
+      },
+      {
+        id: "12",
+        question: "What does 'after this effect resolves' mean in card text?",
+        answer:
+          "'After this effect resolves' means the specified action happens immediately after the current chain link has completely resolved, but before moving on to resolve the next chain link (if any). This is not part of the effect itself but a separate action that doesn't start a chain. For example, 'After this effect resolves, you can Special Summon 1 monster from your hand' means you first resolve the entire effect, then decide if you want to Special Summon.",
+        relatedCards: [
+          { id: 24094653, name: "Polymerization" },
+          { id: 6172122, name: "Red-Eyes Fusion" },
+        ],
+        source: "PSCT Guide",
+        sourceUrl: "https://yugiohblog.konami.com/articles/?p=4514",
+        date: "2023-07-05",
+        category: "card-text-psct",
+        keywords: [
+          "psct",
+          "after this effect resolves",
+          "chain resolution",
+          "timing",
+        ],
+        votes: 205,
+      },
+      {
+        id: "13",
+        question: "What does '(Quick Effect)' mean in monster effect text?",
+        answer:
+          "'(Quick Effect)' indicates that a monster effect can be activated during either player's turn, at any point when a fast effect can be activated (similar to Quick-Play Spells or Trap Cards). Quick Effects can be chained to other effects and can be activated in response to another action. For example, 'During either player's turn (Quick Effect): You can discard this card; negate the activation of a Spell Card' means you can activate this effect during either player's turn, even during a chain.",
+        relatedCards: [
+          { id: 59438930, name: "Ash Blossom & Joyous Spring" },
+          { id: 14558127, name: "Ghost Ogre & Snow Rabbit" },
+        ],
+        source: "PSCT Guide",
+        sourceUrl: "https://yugiohblog.konami.com/articles/?p=4514",
+        date: "2023-02-18",
+        category: "card-text-psct",
+        keywords: [
+          "psct",
+          "quick effect",
+          "fast effect",
+          "monster effect",
+          "chain",
+        ],
+        votes: 267,
+      },
+      {
+        id: "14",
+        question:
+          "What's the difference between 'target' and effects that don't use the word 'target'?",
+        answer:
+          "When a card effect uses the word 'target', it means you must select the target(s) at activation time, before the effect resolves. Cards that protect against targeting ('cannot be targeted') will prevent these effects. Effects that don't use the word 'target' select what they affect at resolution time, bypassing 'cannot be targeted' protections. For example, 'Target 1 monster; destroy it' requires selecting the target at activation, while 'Destroy 1 monster on the field' chooses at resolution.",
+        relatedCards: [
+          { id: 44095762, name: "Mirror Force" },
+          { id: 40044918, name: "Elemental HERO Stratos" },
+        ],
+        source: "Official Rulebook",
+        sourceUrl: "https://www.yugioh-card.com/en/rulebook/",
+        date: "2023-04-29",
+        category: "card-text-psct",
+        keywords: [
+          "psct",
+          "target",
+          "targeting",
+          "protection",
+          "effect resolution",
+        ],
+        votes: 341,
+      },
     ];
   }
 }

@@ -221,8 +221,16 @@
   border-radius: 8px;
   background-color: #fff;
   border: 1px solid #eee;
-  max-height: 85vh; /* Increase max height */
+  max-height: 60vh; /* Reduced from 85vh to be more contained */
   overflow-y: auto;
+  position: relative; /* Ensure proper stacking context */
+  z-index: 10; /* Ensure it's above other elements but still respects containment */
+}
+
+/* Add a specific class for the duel interface search results */
+.duel-interface .search-results {
+  max-height: 40vh; /* Even more constrained in the duel interface */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Add shadow for better visibility */
 }
 
 .search-results-grid {
@@ -579,6 +587,18 @@
 
 .favorites-content {
   min-height: 200px;
+  position: relative;
+  width: 100%;
+  overflow-y: auto;
+  max-height: 60vh;
+}
+
+/* Make sure search results in favorites tab stay contained */
+.favorites-content .search-results {
+  position: relative;
+  width: 100%;
+  margin: 0;
+  z-index: 1;
 }
 
 /* Target Deck Selector */
@@ -693,6 +713,24 @@
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Maintain consistent spacing in favorites view when the "Add to Deck" button is hidden */
+.suggestion-card.no-add-button .suggestion-details {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 60px; /* Match the height of cards with buttons */
+}
+
+.spacer {
+  height: 26px; /* Match the height of the add-to-deck button */
 }

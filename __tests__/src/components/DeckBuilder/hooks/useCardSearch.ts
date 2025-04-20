@@ -38,23 +38,9 @@ export function useCardSearch() {
       setError(null);
 
       try {
-        // Construct query params
-        const queryParams = new URLSearchParams();
-
-        // Add a limit to prevent too many results
-        queryParams.append("num", "30");
-        queryParams.append("offset", "0");
-
-        // Add search parameters
-        Object.entries(searchParams).forEach(([key, value]) => {
-          if (value && value.trim()) {
-            queryParams.append(key, value.trim());
-          }
-        });
-
-        // Make API request
+        // Use the local analyzer API to get all cards
         const response = await fetch(
-          `https://db.ygoprodeck.com/api/v7/cardinfo.php?${queryParams}`
+          `${import.meta.env.VITE_ANALYZER_API_URL}/cards`
         );
 
         if (!response.ok) {
@@ -63,14 +49,71 @@ export function useCardSearch() {
 
         const data = await response.json();
 
-        if (data.error) {
-          setResults([]);
-          setIsEmptySearch(true);
-        } else {
-          const cards = data.data || [];
-          setResults(cards);
-          setIsEmptySearch(cards.length === 0);
+        if (!data.cards || !Array.isArray(data.cards)) {
+          throw new Error("Invalid response format from API");
         }
+
+        // Filter cards locally based on search parameters
+        let filteredCards: Card[] = [];
+
+        if (isAdvancedSearch) {
+          // Handle advanced search
+          filteredCards = data.cards.filter((card: Card) => {
+            const filters = searchParams as SearchFilters;
+            let match = true;
+
+            if (filters.name && filters.name.length >= 3) {
+              match =
+                match &&
+                card.name.toLowerCase().includes(filters.name.toLowerCase());
+            }
+
+            if (filters.type && filters.type.length >= 1) {
+              match =
+                match &&
+                card.type.toLowerCase().includes(filters.type.toLowerCase());
+            }
+
+            if (filters.attribute && filters.attribute.length >= 1) {
+              match =
+                match &&
+                card.attribute?.toLowerCase() ===
+                  filters.attribute.toLowerCase();
+            }
+
+            if (filters.level && filters.level.length >= 1) {
+              match = match && card.level?.toString() === filters.level;
+            }
+
+            if (filters.race && filters.race.length >= 1) {
+              match =
+                match &&
+                card.race?.toLowerCase().includes(filters.race.toLowerCase());
+            }
+
+            if (filters.text && filters.text.length >= 3) {
+              match =
+                match &&
+                card.desc.toLowerCase().includes(filters.text.toLowerCase());
+            }
+
+            return match;
+          });
+        } else {
+          // Handle basic search (by name)
+          const searchName = "fname" in searchParams ? searchParams.fname : "";
+          if (searchName && searchName.length >= 3) {
+            filteredCards = data.cards.filter((card: Card) =>
+              card.name.toLowerCase().includes(searchName.toLowerCase())
+            );
+          }
+        }
+
+        // Limit results to prevent performance issues
+        filteredCards = filteredCards.slice(0, 30);
+
+        setResults(filteredCards);
+        setIsEmptySearch(filteredCards.length === 0);
       } catch (error) {
         console.error("Search error:", error);
         setError(
