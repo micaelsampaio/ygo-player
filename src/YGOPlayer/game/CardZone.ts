@@ -103,7 +103,7 @@ export class CardZone extends YGOEntity implements YGOUiElement {
       event.preventDefault();
       event.stopPropagation();
 
-      if (this.startMouseClickTime + 1000 < Date.now()) return;
+      if (this.getCardReference() && this.startMouseClickTime + 1000 < Date.now()) return;
 
       if (this.getCardReference()) {
         if (this.duel.config.autoChangePlayer) {
