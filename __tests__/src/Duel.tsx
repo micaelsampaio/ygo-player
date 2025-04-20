@@ -158,13 +158,20 @@ export default function Duel({
     const handleCommandExecuted = (data: any) => {
       logger.debug("SEND COMMAND ", JSON.stringify(data.command.toJSON()));
       if (SEND_COMMAND_ALLOWED) {
+        // Send the command data to other players for execution
         kaibaNet.execYGOCommand(roomId, data.command.toCommandData());
+        
+        // Format the command for the chat
         const messageTemplate = formatCommandToCliStyle(data.command.toJSON());
         const { commandMessage } = commandMessageToCommand(
           messageTemplate
         ) as any;
-        // Show command message in chat
+        
+        // Show command message in local chat
         handleChatMessage(commandMessage);
+        
+        // Send command message to other players' chat
+        kaibaNet.sendMessage(roomId, commandMessage);
       }
     };
 
@@ -374,7 +381,8 @@ export default function Duel({
       data: options,
     };
 
-    const commandMessage = `${playerId}:${commandType} ${JSON.stringify(
+    // Format the command message to be recognized as a command in the Chat component
+    const commandMessage = `${playerId}:/cmd/${commandType.split("/cmd/")[1]} ${JSON.stringify(
       options
     )}`;
     return { commandMessage, command };
@@ -395,6 +403,22 @@ export default function Duel({
     }
 
     logger.debug("WILL EXEC ", command);
+    
+    // Generate a chat message for the received command
+    // Only do this for commands received from other players
+    if (command.commandSource !== playerId) {
+      // Create a formatted command string similar to the CLI format
+      const commandType = command.type.replace("Command", "");
+      const options = command.data || {};
+      const optionsStr = JSON.stringify(options);
+      
+      // Create a command message that will be recognized by the Chat component
+      const commandMessage = `${command.commandSource || 'player'}:/cmd/${commandType} ${optionsStr}`;
+      
+      // Add the command message to the chat
+      handleChatMessage(commandMessage);
+    }
+    
     SEND_COMMAND_ALLOWED = false;
     ygo.duel.execCommand(JSON.stringify(command));
     SEND_COMMAND_ALLOWED = true;
@@ -414,6 +438,8 @@ export default function Duel({
       handleChatMessage(commandMessage);
       // Execute the command
       handleCommandExec(command);
+      // Send command message to other players
+      kaibaNet.sendMessage(roomId, commandMessage);
       return;
     }
 
