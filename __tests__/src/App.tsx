@@ -350,6 +350,9 @@ export default function App() {
             <li>
               <Link to={"/collections"}>Collections</Link>
             </li>
+            <li>
+              <Link to={"/rulings"}>Card Rulings</Link>
+            </li>
           </ul>
 
           {replays.length > 0 && (
