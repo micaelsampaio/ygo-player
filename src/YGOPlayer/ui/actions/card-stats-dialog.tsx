@@ -69,7 +69,7 @@ export function CardStatsDialog({ duel, card, player, originZone, clearAction }:
             </div>
         </Modal.Header>
         <Modal.Body>
-            <div className="ygo-text-4">
+            <div className="ygo-text-lg">
                 {card.name}
             </div>
             <div className="ygo-flex ygo-gap-4 ygo-mt-3 ygo-card-stats-dialog-menu">

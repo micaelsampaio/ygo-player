@@ -300,78 +300,76 @@
             min-width: 100px;
         }
 
-        .ygo-card-stats {
-            display: flex;
-            gap: 5px;
-            font-size: 20px;
-            font-weight: bold;
-            margin-bottom: 5px;
-
-            .ygo-card-stats-icon {
-                width: 24px;
-                height: 24px;
-                min-width: 24px;
-                min-height: 24px;
-                background-image: var(--ygo-player-asset-ui-card-icons);
-                background-size: 800% 800%;
-                background-repeat: no-repeat;
-            }
-
-            .ygo-card-stats-icon-atk {
-                background-position: 0% 0%;
-            }
-
-            .ygo-card-stats-icon-def {
-                background-position: 14% 0%;
-            }
-
-            .ygo-card-stats-icon-level {
-                background-position: 0% 14%;
-            }
-
-            .ygo-card-stats-icon-link-monster {
-                background-position: 14% 14%;
-            }
-
-            .ygo-card-stats-icon-rank {
-                background-position: 28% 14%;
-            }
-
-            .ygo-card-stats-icon-field {
-                background-position: 0% 28%;
-            }
-
-            .ygo-card-stats-icon-counter {
-                background-position: 14% 28%;
-            }
-
-            .ygo-card-stats-icon-continuous {
-                background-position: 28% 28%;
-            }
-
-            .ygo-card-stats-icon-equip {
-                background-position: 42% 28%;
-            }
-
-            .ygo-card-stats-icon-quick {
-                background-position: 56% 28%;
-            }
-
-            .ygo-card-stats-icon-ritual {
-                background-position: 70% 28%;
-            }
-
-
-        }
-
         .ygo-card-description {
             padding: 10px;
+            line-height: 24px;
 
             &>div {
                 margin-bottom: 10px;
             }
         }
+    }
 
+    .ygo-card-stats {
+        display: flex;
+        gap: 5px;
+        font-size: 20px;
+        font-weight: bold;
+        margin-bottom: 5px;
+
+        .ygo-card-stats-icon {
+            width: 24px;
+            height: 24px;
+            min-width: 24px;
+            min-height: 24px;
+            background-image: var(--ygo-player-asset-ui-card-icons);
+            background-size: 800% 800%;
+            background-repeat: no-repeat;
+        }
+
+        .ygo-card-stats-icon-atk {
+            background-position: 0% 0%;
+        }
+
+        .ygo-card-stats-icon-def {
+            background-position: 14% 0%;
+        }
+
+        .ygo-card-stats-icon-level {
+            background-position: 0% 14%;
+        }
+
+        .ygo-card-stats-icon-link-monster {
+            background-position: 14% 14%;
+        }
+
+        .ygo-card-stats-icon-rank {
+            background-position: 28% 14%;
+        }
+
+        .ygo-card-stats-icon-field {
+            background-position: 0% 28%;
+        }
+
+        .ygo-card-stats-icon-counter {
+            background-position: 14% 28%;
+        }
+
+        .ygo-card-stats-icon-continuous {
+            background-position: 28% 28%;
+        }
+
+        .ygo-card-stats-icon-equip {
+            background-position: 42% 28%;
+        }
+
+        .ygo-card-stats-icon-quick {
+            background-position: 56% 28%;
+        }
+
+        .ygo-card-stats-icon-ritual {
+            background-position: 70% 28%;
+        }
     }
 }
 
@@ -410,6 +408,44 @@
 
     .ygo-fusion-card-bg {
         background-color: var(--ygo-card-fusion-color);
+    }
+
+    /* BORDERS */
+    .ygo-content-card-type-border {
+        border-bottom-width: 5px;
+        border-bottom-style: solid;
+    }
+
+    .ygo-effect-monster-card-border {
+        border-color: var(--ygo-card-effect-monster-color);
+    }
+
+    .ygo-trap-card-border {
+        border-color: var(--ygo-card-trap-color);
+    }
+
+    .ygo-spell-card-border {
+        border-color: var(--ygo-card-spell-color);
+    }
+
+    .ygo-link-card-border {
+        border-color: var(--ygo-card-link-color);
+    }
+
+    .ygo-synchro-card-border {
+        border-color: var(--ygo-card-synchron-color);
+    }
+
+    .ygo-xyz-card-border {
+        border-color: var(--ygo-card-xyz-color);
+    }
+
+    .ygo-xyz-card-border {
+        border-color: var(--ygo-card-xyz-color);
+    }
+
+    .ygo-fusion-card-border {
+        border-color: var(--ygo-card-fusion-color);
     }
 
 }
@@ -620,19 +656,52 @@
 }
 
 .ygo-player-core {
-    .ygo-text-3 {
-        font-size: 14px;
+
+    .ygo-text-xxs {
+        font-size: 11px;
+        line-height: 14px;
     }
 
-    .ygo-text-4 {
+    .ygo-text-xs {
+        font-size: 12px;
+        line-height: 16px;
+    }
+
+    .ygo-text-sm {
+        font-size: 14px;
+        line-height: 20px;
+    }
+
+    .ygo-text-md {
         font-size: 16px;
+        line-height: 24px;
+    }
+
+    .ygo-text-lg {
+        font-size: 18px;
+        line-height: 26px;
+    }
+
+    .ygo-text-xl {
+        font-size: 20px;
+        line-height: 28px;
+    }
+
+    .ygo-text-2xl {
+        font-size: 24px;
+        line-height: 32px;
+    }
+
+    .ygo-text-3xl {
+        font-size: 28px;
+        line-height: 36px;
     }
 
     .ygo-text-bold {
         font-weight: bold;
     }
 
-    .ygo-text-center {
+    text-center {
         text-align: center;
     }
 }
@@ -660,5 +729,9 @@
             width: 150px;
             height: auto;
         }
+    }
+
+    .ygo-scroll-y {
+        overflow-y: auto;
     }
 }

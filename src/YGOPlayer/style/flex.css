@@ -13,7 +13,8 @@
 }
 
 
-.ygo-player-core .ygo-flex-column {
+.ygo-player-core .ygo-flex-column,
+.ygo-player-core .ygo-flex-col {
     flex-direction: column;
 }
 
@@ -84,6 +85,7 @@
 .ygo-player-core .ygo-items-center {
     align-items: center;
 }
+
 .ygo-player-core .ygo-justify-center {
     justify-content: center;
 }

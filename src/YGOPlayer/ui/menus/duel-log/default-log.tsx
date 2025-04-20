@@ -26,7 +26,7 @@ export function DefaultLogRow({
     <DuelLogRow log={log}>
       <DuelLogContainer>
         <div className="ygo-duel-log-default-row">
-          <div className="ygo-text-4 ygo-mb-1 ygo-text-bold">{card.name}</div>
+          <div className="ygo-text-sm ygo-mb-1 ygo-text-bold">{card.name}</div>
           <div className="ygo-flex ygo-gap-2">
             <div>
               <img
@@ -35,7 +35,7 @@ export function DefaultLogRow({
               />
             </div>
             <div className="ygo-flex-grow-1">
-              <div className="ygo-text-4 ygo-mb-1 ygo-text-bold ygo-text-center">
+              <div className="ygo-text-sm ygo-mb-1 ygo-text-bold ygo-text-center">
                 {log.type}
               </div>
               <div className="ygo-flex ygo-gap-2">

@@ -16,7 +16,7 @@ export const StartHandLogRow = memo(function ({
     <DuelLogRow log={log}>
       <DuelLogContainer>
         <div>
-          <div className="ygo-text-4 ygo-text-bold">
+          <div className="ygo-text-sm ygo-text-bold">
             {log.type}
           </div>
           <div className="ygo-flex ygo-gap-1" style={{ flexWrap: "wrap" }}>
