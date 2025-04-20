@@ -25,7 +25,9 @@ export class GameCardHand extends YGOEntity implements YGOUiElement {
 
     this.duel = duel;
 
-    const height = CARD_HEIGHT_SIZE, width = height / CARD_RATIO, depth = CARD_DEPTH;
+    const height = CARD_HEIGHT_SIZE,
+      width = height / CARD_RATIO,
+      depth = CARD_DEPTH;
     const geometry = new THREE.BoxGeometry(width, height, depth);
 
     const frontMaterial = new THREE.MeshBasicMaterial({ color: 0x0000ff }); // Depth
@@ -44,10 +46,17 @@ export class GameCardHand extends YGOEntity implements YGOUiElement {
     this.gameObject = new THREE.Mesh(geometry, materials);
     this.position = this.gameObject.position;
     this.duel.core.scene.add(this.gameObject);
-    this.duel.gameController.getComponent<YGOMouseEvents>("mouse_events")?.registerElement(this);
+
+    // Store the reference to this UI element in the gameObject's userData
+    this.gameObject.userData.uiElementRef = this;
+    this.gameObject.userData.isInteractive = true;
+
+    // Register with mouse events component
+    this.duel.gameController
+      .getComponent<YGOMouseEvents>("mouse_events")
+      ?.registerElement(this);
     this.isActive = false;
     this.player = player;
-    (this.gameObject as any).isUiCardElement = true;
   }
 
   onMouseClick?(event: MouseEvent): void {
@@ -102,7 +111,9 @@ export class GameCardHand extends YGOEntity implements YGOUiElement {
     this.gameObject.name = `HAND_CARD_${this.card.name}`;
 
     const frontTexture = this.duel.assets.getTexture(card.images.small_url);
-    const backTexture = this.duel.assets.getTexture(`${this.duel.config.cdnUrl}/images/card_back.png`);
+    const backTexture = this.duel.assets.getTexture(
+      `${this.duel.config.cdnUrl}/images/card_back.png`
+    );
     const frontMaterial = new CardMaterial({ map: frontTexture }); // Front with texture
     const backMaterial = new THREE.MeshBasicMaterial({ map: backTexture }); // Back
     const depthMaterial = new THREE.MeshBasicMaterial({ color: 0xb5b5b5 }); // Depth

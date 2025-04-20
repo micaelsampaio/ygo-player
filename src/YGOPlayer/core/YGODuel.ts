@@ -28,6 +28,7 @@ import { YGOConfig } from "./YGOConfig";
 import { Command } from "ygo-core";
 import { YGOMapClick } from "./YGOMapClick";
 import { YGOGameFieldStatsComponent } from "../game/YGOGameFieldStatsComponent";
+import { YGOLongPressHandler } from "./components/YGOLongPressHandler";
 
 export class YGODuel {
   public ygo!: InstanceType<typeof YGOCore>;
@@ -83,10 +84,25 @@ export class YGODuel {
     this.gameController.addComponent("tasks", this.tasks);
     this.gameController.addComponent("commands", this.commands);
     this.gameController.addComponent("actions_manager", this.actionManager);
-    this.gameController.addComponent("action_card_selection", new ActionCardSelection({ duel: this }));
+    this.gameController.addComponent(
+      "action_card_selection",
+      new ActionCardSelection({ duel: this })
+    );
     this.gameController.addComponent("map-click-zone", new YGOMapClick(this));
-    this.actionManager.actions.set("card-hand-menu", new ActionCardHandMenu(this));
-    this.actionManager.actions.set("card-zone-menu", new ActionCardZoneMenu(this));
+
+    // Add and start the long press handler
+    const longPressHandler = new YGOLongPressHandler(this);
+    this.gameController.addComponent("long_press_handler", longPressHandler);
+    longPressHandler.start();
+
+    this.actionManager.actions.set(
+      "card-hand-menu",
+      new ActionCardHandMenu(this)
+    );
+    this.actionManager.actions.set(
+      "card-zone-menu",
+      new ActionCardZoneMenu(this)
+    );
 
     this.gameActions = new YGOGameActions(this);
 
@@ -209,8 +225,8 @@ export class YGODuel {
       const player = this.ygo.state.fields[0].extraMonsterZone[i]
         ? 0
         : this.ygo.state.fields[1].extraMonsterZone[i]
-          ? 1
-          : 0;
+        ? 1
+        : 0;
       const cardFromPlayer =
         this.ygo.state.fields[0].extraMonsterZone[i] ??
         this.ygo.state.fields[1].extraMonsterZone[i];
@@ -602,7 +618,13 @@ export class YGODuel {
     this.events.dispatch("clear-ui-action");
   }
   private setupVars() {
-    document.documentElement.style.setProperty('--ygo-player-asset-ui-card-icons', `url('${this.config.cdnUrl}/images/ui/card_icons.png')`);
-    document.documentElement.style.setProperty('--ygo-player-asset-ui-game-zones', `url('${this.config.cdnUrl}/images/ui/ic_game_zones.png')`);
+    document.documentElement.style.setProperty(
+      "--ygo-player-asset-ui-card-icons",
+      `url('${this.config.cdnUrl}/images/ui/card_icons.png')`
+    );
+    document.documentElement.style.setProperty(
+      "--ygo-player-asset-ui-game-zones",
+      `url('${this.config.cdnUrl}/images/ui/ic_game_zones.png')`
+    );
   }
 }

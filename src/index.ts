@@ -1,5 +1,7 @@
 /// CSS
 import "./YGOPlayer/style/style.css";
+import "./YGOPlayer/style/card-preview.css";
+import "./YGOPlayer/style/long-press-indicator.css";
 
 /// TS
 export * from "ygo-core";
