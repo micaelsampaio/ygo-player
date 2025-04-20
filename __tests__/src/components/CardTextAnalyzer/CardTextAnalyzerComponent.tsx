@@ -28,11 +28,72 @@ interface AnalysisResponse {
   analysis: CardAnalysis;
 }
 
+// Card text reading information for the guide section
+const cardTextReadingInfo = [
+  {
+    title: "Problem-Solving Card Text (PSCT) Structure",
+    content:
+      "Yu-Gi-Oh! cards follow a specific text structure to clarify timing and effects:",
+    items: [
+      'Activation conditions (before the colon ":"): Tell you when or how the effect can be activated',
+      'Costs (between colon ":" and semicolon ";"): What you must pay to activate the effect',
+      'Effects (after the semicolon ";"): What the card actually does when resolved',
+      'Restrictions: Limitations on card use, often starting with "You can only..." or "Once per turn..."',
+      "Maintenance conditions: Ongoing costs or upkeep requirements for continuous effects",
+    ],
+  },
+  {
+    title: "Key Phrases and Punctuation",
+    content:
+      "Understanding the precise meaning of punctuation and phrases is crucial:",
+    items: [
+      "Colon (:): Separates activation conditions from costs/effects",
+      "Semicolon (;): Separates costs from effects",
+      "Period (.): Separates different effects on the same card",
+      "Bullet points (•): Used to organize separate effects or options",
+      "(Quick Effect): Indicates an effect that can be activated during either player's turn at fast effect timing",
+    ],
+  },
+  {
+    title: "Effect Timing Conjunctions",
+    content:
+      "These connecting words precisely indicate when and how effects happen:",
+    items: [
+      "And: Both actions happen together as one effect",
+      "And if you do: The second action happens only if the first successfully resolves, and they happen simultaneously",
+      "Then: The second action happens after the first, and only if the first action was successful",
+      "Also: The second action happens regardless of whether the first action was successful",
+      "After that: The second action happens after the first resolves completely",
+    ],
+  },
+  {
+    title: "Targeting vs. Non-Targeting",
+    content: "Cards are very specific about whether they target or not:",
+    items: [
+      'Cards that say "target" explicitly target the specified cards at activation time',
+      'Cards without the word "target" don\'t target, even if they affect specific cards',
+      'Effects that say "choose" or "select" without saying "target" are non-targeting',
+      "Understanding targeting is important because many cards have protection against targeting effects",
+    ],
+  },
+  {
+    title: "Once Per Turn Restrictions",
+    content:
+      "Cards limit how often their effects can be used with specific phrasing:",
+    items: [
+      '"Once per turn": Applies to each individual copy of the card (soft once per turn)',
+      '"You can only use this effect of [card name] once per turn": Applies to all copies of the card (hard once per turn)',
+      '"You can only use 1 [card name] effect per turn, and only once that turn": Limits to one effect among multiple effects the card may have',
+    ],
+  },
+];
+
 const CardTextAnalyzerComponent: React.FC = () => {
   const [selectedCard, setSelectedCard] = useState<Card | null>(null);
   const [analysis, setAnalysis] = useState<CardAnalysis | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
+  const [showGuide, setShowGuide] = useState<boolean>(false);
 
   // Clear the input fields and results
   const clearAll = () => {
@@ -47,9 +108,13 @@ const CardTextAnalyzerComponent: React.FC = () => {
     await analyzeCard(card);
   };
 
+  // Toggle guide section visibility
+  const toggleGuide = () => {
+    setShowGuide(!showGuide);
+  };
+
   // Add to favorites handler (required by SearchPanel)
   const handleToggleFavorite = (card: Card) => {
-    // Access the existing favorite cards functionality
     const storedFavorites = localStorage.getItem("favoriteCards");
     let favorites: Card[] = storedFavorites ? JSON.parse(storedFavorites) : [];
 
@@ -65,9 +130,7 @@ const CardTextAnalyzerComponent: React.FC = () => {
   };
 
   // No-op for "add to deck" - required by SearchPanel but not implemented
-  const handleAddToDeck = () => {
-    // Empty function - no-op as we don't need to add to deck in this component
-  };
+  const handleAddToDeck = () => {};
 
   // Analyze the selected card
   const analyzeCard = async (card: Card) => {
@@ -78,7 +141,6 @@ const CardTextAnalyzerComponent: React.FC = () => {
     try {
       console.log("Analyzing card:", card.name, card.id);
 
-      // Fixed API endpoint URL - using the correct endpoint with ID in URL path
       const analyzerUrl =
         import.meta.env.VITE_ANALYZER_API_URL || "http://localhost:3003";
       const response = await fetch(
@@ -103,10 +165,8 @@ const CardTextAnalyzerComponent: React.FC = () => {
         return;
       }
 
-      // Set the analysis data
       setAnalysis(data.analysis);
 
-      // Debug output to see what's in the analysis object
       console.log("Parsed analysis data:", {
         activationConditions: data.analysis.activationConditions,
         costs: data.analysis.costs,
@@ -125,12 +185,10 @@ const CardTextAnalyzerComponent: React.FC = () => {
     }
   };
 
-  // Function to check if a section has any content
   const hasSectionContent = (items: string[] | undefined): boolean => {
     return Array.isArray(items) && items.length > 0;
   };
 
-  // Render a section if it has content
   const renderSection = (
     title: string,
     items: string[] | undefined,
@@ -157,6 +215,31 @@ const CardTextAnalyzerComponent: React.FC = () => {
         structure and terminology.
       </p>
 
+      {/* Card Text Reading Guide (moved to top) */}
+      <div className="guide-section top-guide">
+        <button onClick={toggleGuide} className="toggle-guide-button">
+          {showGuide
+            ? "Hide Card Text Reading Guide"
+            : "Show Card Text Reading Guide"}
+        </button>
+        {showGuide && (
+          <div className="guide-content">
+            <h3>Card Text Reading Guide</h3>
+            {cardTextReadingInfo.map((info, idx) => (
+              <div key={idx} className="guide">
+                <h4>{info.title}</h4>
+                <p>{info.content}</p>
+                <ul>
+                  {info.items.map((item, itemIdx) => (
+                    <li key={itemIdx}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
       <div className="analyzer-content">
         <div className="search-container">
           {selectedCard ? (
@@ -176,7 +259,7 @@ const CardTextAnalyzerComponent: React.FC = () => {
                 onCardSelect={handleCardSelect}
                 onCardAdd={handleAddToDeck}
                 onToggleFavorite={handleToggleFavorite}
-                hideAddToDeck={true} // Hide "add to deck" functionality
+                hideAddToDeck={true}
               />
             </div>
           )}
@@ -230,8 +313,6 @@ const CardTextAnalyzerComponent: React.FC = () => {
 
           <div className="sections-analysis">
             <h4>Text Structure</h4>
-            {/* Debug output for troubleshooting */}
-            {/* <pre>{JSON.stringify(analysis, null, 2)}</pre> */}
 
             {hasSectionContent(analysis.activationConditions) ||
             hasSectionContent(analysis.costs) ||
@@ -262,7 +343,6 @@ const CardTextAnalyzerComponent: React.FC = () => {
             )}
           </div>
 
-          {/* Properties Section */}
           <div className="card-properties">
             <h4>Card Properties</h4>
             <ul className="properties-list">
@@ -299,7 +379,6 @@ const CardTextAnalyzerComponent: React.FC = () => {
             </ul>
           </div>
 
-          {/* PSCT Linking Words */}
           {analysis.linkingWords && analysis.linkingWords.length > 0 && (
             <div className="linking-words">
               <h4>PSCT Conjunctions</h4>

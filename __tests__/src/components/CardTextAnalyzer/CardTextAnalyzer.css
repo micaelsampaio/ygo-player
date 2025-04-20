@@ -545,6 +545,101 @@
   box-shadow: none;
 }
 
+/* Guide Section */
+.guide-section {
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.toggle-guide-button {
+  background-color: #673ab7;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 10px 20px;
+  cursor: pointer;
+  font-weight: 500;
+  margin-bottom: 20px;
+  transition: all 0.2s ease;
+}
+
+.toggle-guide-button:hover {
+  background-color: #5e35b1;
+  transform: translateY(-2px);
+  box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2);
+}
+
+.guide-content {
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.guide-content h3 {
+  margin-top: 0;
+  color: #333;
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 1.4rem;
+}
+
+.guide {
+  margin-bottom: 25px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.guide:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.guide h4 {
+  color: #512da8;
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+}
+
+.guide h4::before {
+  content: "📖";
+  margin-right: 8px;
+  font-size: 1.2rem;
+}
+
+.guide p {
+  color: #555;
+  margin-top: 0;
+  margin-bottom: 10px;
+}
+
+.guide ul {
+  margin: 10px 0;
+  padding-left: 20px;
+}
+
+.guide li {
+  margin-bottom: 8px;
+  color: #444;
+  line-height: 1.4;
+}
+
+.guide-note {
+  font-style: italic;
+  color: #666;
+  background-color: #f0f0f0;
+  padding: 10px;
+  border-radius: 4px;
+  margin-top: 10px;
+  border-left: 3px solid #673ab7;
+}
+
 @media (max-width: 768px) {
   .card-text-analyzer {
     padding: 15px;
@@ -588,5 +683,17 @@
   .properties-list {
     flex-direction: column;
     gap: 8px;
+  }
+
+  .guide-content {
+    padding: 15px;
+  }
+
+  .guide h4 {
+    font-size: 1rem;
+  }
+
+  .toggle-guide-button {
+    width: 100%;
   }
 }
