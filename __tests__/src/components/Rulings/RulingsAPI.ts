@@ -1,4 +1,3 @@
-import axios from "axios";
 import { Logger } from "../../utils/logger";
 
 const logger = Logger.createLogger("RulingsAPI");
@@ -30,10 +29,14 @@ export class RulingsAPI {
    */
   static async searchRulings(query: string): Promise<Ruling[]> {
     try {
-      const response = await axios.get(`${API_URL}/rulings/search`, {
-        params: { query },
-      });
-      return response.data.rulings;
+      const response = await fetch(
+        `${API_URL}/rulings/search?query=${encodeURIComponent(query)}`
+      );
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      const data = await response.json();
+      return data.rulings;
     } catch (error) {
       logger.error("Error searching rulings:", error);
       throw new Error("Failed to search rulings");
@@ -45,8 +48,12 @@ export class RulingsAPI {
    */
   static async getCardRulings(cardId: number): Promise<Ruling[]> {
     try {
-      const response = await axios.get(`${API_URL}/rulings/card/${cardId}`);
-      return response.data.rulings;
+      const response = await fetch(`${API_URL}/rulings/card/${cardId}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      const data = await response.json();
+      return data.rulings;
     } catch (error) {
       logger.error(`Error getting rulings for card ${cardId}:`, error);
       throw new Error("Failed to get card rulings");
@@ -58,10 +65,12 @@ export class RulingsAPI {
    */
   static async getRulingsByCategory(category: string): Promise<Ruling[]> {
     try {
-      const response = await axios.get(
-        `${API_URL}/rulings/category/${category}`
-      );
-      return response.data.rulings;
+      const response = await fetch(`${API_URL}/rulings/category/${category}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      const data = await response.json();
+      return data.rulings;
     } catch (error) {
       logger.error(`Error getting rulings for category ${category}:`, error);
       throw new Error("Failed to get category rulings");
@@ -73,8 +82,12 @@ export class RulingsAPI {
    */
   static async getCategories(): Promise<RulingCategory[]> {
     try {
-      const response = await axios.get(`${API_URL}/rulings/categories`);
-      return response.data.categories;
+      const response = await fetch(`${API_URL}/rulings/categories`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      const data = await response.json();
+      return data.categories;
     } catch (error) {
       logger.error("Error getting ruling categories:", error);
       throw new Error("Failed to get ruling categories");
@@ -86,7 +99,16 @@ export class RulingsAPI {
    */
   static async voteRuling(rulingId: string, isHelpful: boolean): Promise<void> {
     try {
-      await axios.post(`${API_URL}/rulings/${rulingId}/vote`, { isHelpful });
+      const response = await fetch(`${API_URL}/rulings/${rulingId}/vote`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ isHelpful }),
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
       logger.info(
         `Vote submitted for ruling ${rulingId}: ${
           isHelpful ? "helpful" : "not helpful"

@@ -9,21 +9,21 @@ export default defineConfig(({ mode }) => {
 
   // Check if running in Docker using Vite's environment variable approach
   const isDocker = env.VITE_DOCKER === "true" || process.env.DOCKER === "true";
-  
+
   // Add debug logging
   console.log("Environment mode:", mode);
   console.log("Environment variables:", env);
   console.log("Is Docker:", isDocker);
   console.log("Current working directory:", process.cwd());
-  
+
   // Log the resolved paths
   const playerCssPath = isDocker
     ? resolve(__dirname, "./node_modules/ygo-player/style.css")
     : resolve(__dirname, "../dist/style.css");
   const playerJsPath = isDocker
-    ? resolve(__dirname, "./node_modules/ygo-player/bundle.js") 
+    ? resolve(__dirname, "./node_modules/ygo-player/bundle.js")
     : resolve(__dirname, "../dist/bundle.js");
-    
+
   console.log("Player CSS path:", playerCssPath);
   console.log("Player JS path:", playerJsPath);
 
