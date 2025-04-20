@@ -76,6 +76,12 @@ export class YGOMouseEvents extends YGOComponent {
         if (elements.length > 0) {
             const element: any = elementCardInHand?.object || elements[0].object;
             this.mouseDownElement = element;
+
+            const clickElement = element.uiElementRef as YGOUiElement;
+
+            if (clickElement.onMouseDown) {
+                clickElement.onMouseDown(event);
+            }
         } else {
             this.mouseDownElement = null;
         }
@@ -83,6 +89,19 @@ export class YGOMouseEvents extends YGOComponent {
 
     private event_OnMouseUp(event: MouseEvent) {
         const elements = this.getIntersectsElements(event);
+        const elementCardInHand = this.getCardInHandFromInterseptions(elements);
+
+        if (elements.length > 0) {
+            const element: any = elementCardInHand?.object || elements[0].object;
+
+            (event as any).sameTargetAsMouseDown = this.mouseDownElement === element;
+
+            const clickElement = element.uiElementRef as YGOUiElement;
+
+            if (clickElement.onMouseUp) {
+                clickElement.onMouseUp(event);
+            }
+        }
     }
 
     private event_OnMouseClick(event: MouseEvent) {

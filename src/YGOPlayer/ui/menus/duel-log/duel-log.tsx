@@ -50,7 +50,24 @@ export function DuelLogMenu({ duel, menus }: { duel: YGODuel; menus: any[] }) {
   }, [isVisible])
 
   return (
-    <div className={`ygo-duel-log-container ${isVisible ? "" : "ygo-hidden"}`} ref={duelLogsContainer}>
+    <div className={`ygo-duel-log-container ${isVisible ? "" : "ygo-hidden"}`} ref={duelLogsContainer}
+      onClick={(e) => {
+        e.stopPropagation();
+        e.preventDefault();
+      }}
+      onMouseMove={(e) => {
+        e.stopPropagation();
+        e.preventDefault();
+      }}
+      onMouseDown={(e) => {
+        e.stopPropagation();
+        e.preventDefault();
+      }}
+      onMouseUp={(e) => {
+        e.stopPropagation();
+        e.preventDefault();
+      }}
+    >
       <div className="ygo-logs">
         {logs.map((log, index) => {
           const Component = (COMPONENTS as any)[log.type] || COMPONENTS.default;

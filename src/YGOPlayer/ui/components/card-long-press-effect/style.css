@@ -1,0 +1,33 @@
+.ygo-player-core {
+
+    .ygo-card-long-press-effect {
+        pointer-events: none;
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        background-color: var(--ygo-background-color-70);
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: var(--ygo-border-radius-medium);
+        transform: translate(-50%, -50%);
+
+        .ygo-progress-ring {
+            transform: rotate(-90deg);
+            width: 30px;
+            height: 30px;
+            padding: 0px;
+        }
+
+        .ygo-ring-bg {
+            stroke: var(--ygo-border-color);
+        }
+
+        .ygo-ring-fill {
+            stroke: var(--ygo-border-color-light);
+            transition: stroke-dashoffset 0.1s linear;
+        }
+    }
+}

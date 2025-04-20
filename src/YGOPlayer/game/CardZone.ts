@@ -25,6 +25,8 @@ export class CardZone extends YGOEntity implements YGOUiElement {
   private normalMaterial: THREE.MeshBasicMaterial;
   private hoverMaterial: THREE.MeshBasicMaterial;
   private card: GameCard | null;
+  private startMouseClickTime: number;
+
   public onClickCb: ((cardZone: CardZone) => void) | null;
 
   constructor({
@@ -48,6 +50,7 @@ export class CardZone extends YGOEntity implements YGOUiElement {
     this.player = player;
     this.card = null;
     this.zoneData = YGOGameUtils.getZoneData(this.zone);
+    this.startMouseClickTime = -1;
 
     if (this.zone.startsWith("S")) {
       this.size = new THREE.Vector2(4, 3.5);
@@ -100,6 +103,8 @@ export class CardZone extends YGOEntity implements YGOUiElement {
       event.preventDefault();
       event.stopPropagation();
 
+      if (this.startMouseClickTime + 1000 < Date.now()) return;
+
       if (this.getCardReference()) {
         if (this.duel.config.autoChangePlayer) {
           this.duel.setActivePlayer(this.player);
@@ -126,6 +131,18 @@ export class CardZone extends YGOEntity implements YGOUiElement {
     if (this.onClickCb) {
       this.onClickCb(this);
     }
+  }
+
+
+  onMouseDown?(event: MouseEvent): void {
+    if (this.onClickCb || !this.getCardReference()) return;
+    this.startMouseClickTime = Date.now();
+    this.duel.events.dispatch("on-card-mouse-down", { card: this.getCardReference(), event });
+  }
+
+  onMouseUp?(event: MouseEvent): void {
+    if (this.onClickCb || !this.getCardReference()) return;
+    this.duel.events.dispatch("on-card-mouse-up", { card: this.card, event });
   }
 
   onMouseEnter(event: MouseEvent): void {

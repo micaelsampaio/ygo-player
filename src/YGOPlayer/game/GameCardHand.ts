@@ -19,6 +19,7 @@ export class GameCardHand extends YGOEntity implements YGOUiElement {
   public isUiElementHover: boolean = true;
   public isUiCardElement: boolean = true;
   public player: number;
+  private startMouseClickTime: number;
 
   constructor({ duel, player }: { duel: YGODuel; player: number }) {
     super();
@@ -47,6 +48,7 @@ export class GameCardHand extends YGOEntity implements YGOUiElement {
     this.duel.gameController.getComponent<YGOMouseEvents>("mouse_events")?.registerElement(this);
     this.isActive = false;
     this.player = player;
+    this.startMouseClickTime = -1;
     (this.gameObject as any).isUiCardElement = true;
   }
 
@@ -54,6 +56,11 @@ export class GameCardHand extends YGOEntity implements YGOUiElement {
     if (!this.isUiElementClick) return;
     event.preventDefault();
     event.stopPropagation();
+
+    if (this.startMouseClickTime + 1000 < Date.now()) {
+      this.setActive(false);
+      return;
+    };
 
     this.duel.events.dispatch("set-selected-card", {
       player: this.card.originalOwner,
@@ -64,8 +71,7 @@ export class GameCardHand extends YGOEntity implements YGOUiElement {
       this.duel.setActivePlayer(this.player);
     }
 
-    const action =
-      this.duel.actionManager.getAction<ActionCardHandMenu>("card-hand-menu");
+    const action = this.duel.actionManager.getAction<ActionCardHandMenu>("card-hand-menu");
     action.setData({
       duel: this.duel,
       card: this.card,
@@ -86,6 +92,15 @@ export class GameCardHand extends YGOEntity implements YGOUiElement {
     if (this.isActive) return;
     if (!this.isUiElementHover) return;
     this.gameObject.position.copy(this.position);
+  }
+
+  onMouseDown?(event: MouseEvent): void {
+    this.startMouseClickTime = Date.now();
+    this.duel.events.dispatch("on-card-mouse-down", { card: this.card, event });
+  }
+
+  onMouseUp?(event: MouseEvent): void {
+    this.duel.events.dispatch("on-card-mouse-up", { card: this.card, event });
   }
 
   setCard(card: Card) {

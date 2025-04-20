@@ -7,6 +7,7 @@ import { TimeLine } from "./menus/timeline";
 import { ChangeGamePlayer } from "./components/ChangeGamePlayer";
 import { BottomRightActions } from "./menus/bottom-right-actions";
 import { PlayerHUD } from "./components/player-hud/PlayerHUD";
+import { CardLongPressEffect } from "./components/card-long-press-effect/CardLongPressEffect";
 
 export interface UiGameConfig {
     actions: boolean
@@ -129,7 +130,6 @@ export function YGOUiController({ duel }: { duel: YGODuel }) {
             setGameConfig(currentGameConfig => ({ ...currentGameConfig, actions: false }));
         });
 
-
     }, []);
 
     const Action = (ACTIONS as any)[action.type] as any;
@@ -143,6 +143,7 @@ export function YGOUiController({ duel }: { duel: YGODuel }) {
         <BottomRightActions duel={duel} />
         <PlayerHUD duel={duel} player={0} />
         <PlayerHUD duel={duel} player={1} />
+        <CardLongPressEffect duel={duel} />
 
         {
             menus.map(menu => {

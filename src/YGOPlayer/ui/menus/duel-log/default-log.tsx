@@ -30,6 +30,9 @@ export function DefaultLogRow({
           <div className="ygo-flex ygo-gap-2">
             <div>
               <img
+                onMouseDown={(event: any) => duel.events.dispatch("on-card-mouse-down", { card, event })}
+                onMouseUp={(event: any) => duel.events.dispatch("on-card-mouse-up", { card, event })}
+                onClick={() => duel.events.dispatch("set-selected-card", { player: log.player, card })}
                 src={card.images.small_url}
                 style={{ width: "45px" }}
               />

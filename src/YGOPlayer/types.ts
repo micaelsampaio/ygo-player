@@ -29,6 +29,8 @@ export interface YGOUiElement {
   isUiElementHover?: boolean;
   isUiCardElement?: boolean;
   onMouseClick?(event: MouseEvent): void;
+  onMouseDown?(event: MouseEvent): void;
+  onMouseUp?(event: MouseEvent): void;
   onMouseEnter?(event: MouseEvent): void;
   onMouseLeave?(event: MouseEvent): void;
 }
