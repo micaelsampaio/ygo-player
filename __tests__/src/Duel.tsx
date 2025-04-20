@@ -404,20 +404,9 @@ export default function Duel({
 
     logger.debug("WILL EXEC ", command);
     
-    // Generate a chat message for the received command
-    // Only do this for commands received from other players
-    if (command.commandSource !== playerId) {
-      // Create a formatted command string similar to the CLI format
-      const commandType = command.type.replace("Command", "");
-      const options = command.data || {};
-      const optionsStr = JSON.stringify(options);
-      
-      // Create a command message that will be recognized by the Chat component
-      const commandMessage = `${command.commandSource || 'player'}:/cmd/${commandType} ${optionsStr}`;
-      
-      // Add the command message to the chat
-      handleChatMessage(commandMessage);
-    }
+    // We don't need to generate chat messages here for commands from other players
+    // They will already be received through the regular chat message system
+    // This prevents duplicated messages in the chat
     
     SEND_COMMAND_ALLOWED = false;
     ygo.duel.execCommand(JSON.stringify(command));
