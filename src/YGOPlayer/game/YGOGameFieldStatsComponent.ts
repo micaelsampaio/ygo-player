@@ -88,9 +88,9 @@ class YGOGameFieldStatsRender {
     this.mesh = new THREE.Mesh(planeGeometry, material);
 
     if (player === 0) {
-      this.mesh.position.set(8.5, 0.15 - 2, 1);
+      this.mesh.position.set(-8.25, 0.15 - 1.5, 1);
     } else {
-      this.mesh.position.set(-8.5, 0.15 + 2, 1);
+      this.mesh.position.set(8.25, 1.5 - 0.15, 1);
     }
 
     this.canvasTexture = canvasTexture;
