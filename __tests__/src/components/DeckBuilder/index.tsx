@@ -522,21 +522,51 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
   const handleAddAllCardsFromGroup = (cardsToAdd: Card[]) => {
     if (!selectedDeck || cardsToAdd.length === 0) return;
 
+    // Create a copy of the current deck to batch all updates
+    let updatedMainDeck = [...selectedDeck.mainDeck];
+    let updatedExtraDeck = [...selectedDeck.extraDeck];
+    let updatedSideDeck = selectedDeck.sideDeck
+      ? [...selectedDeck.sideDeck]
+      : [];
+
     let addedCount = 0;
     let skippedCount = 0;
 
+    // Process all cards first before updating the deck
     cardsToAdd.forEach((card) => {
       if (canAddCardToDeck(selectedDeck, card.id)) {
+        // Determine which deck section to add to
         if (targetDeck === "main") {
-          addCardToDeck(card);
+          // Check if it's an extra deck card
+          if (
+            card.type &&
+            ["XYZ", "Synchro", "Fusion", "Link"].some((type) =>
+              card.type.includes(type)
+            )
+          ) {
+            updatedExtraDeck.push(card);
+          } else {
+            updatedMainDeck.push(card);
+          }
         } else {
-          addCardToSideDeck(card);
+          updatedSideDeck.push(card);
         }
         addedCount++;
       } else {
         skippedCount++;
       }
     });
+
+    // Now update the deck with all changes at once
+    const updatedDeck = {
+      ...selectedDeck,
+      mainDeck: updatedMainDeck,
+      extraDeck: updatedExtraDeck,
+      sideDeck: updatedSideDeck,
+    };
+
+    updateDeck(updatedDeck);
+    selectDeck(updatedDeck); // Update selection to refresh the UI
 
     console.log(
       `Added ${addedCount} cards to deck. Skipped ${skippedCount} cards (limit of 3 copies reached).`
@@ -1016,6 +1046,7 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
               onAddCardToGroup={addCardToGroup}
               onRemoveCardFromGroup={removeCardFromGroup}
               onCardSelect={toggleCardPreview}
+              onAddCardToDeck={handleAddCard}
               onAddAllCardsFromGroup={handleAddAllCardsFromGroup}
             />
           )}

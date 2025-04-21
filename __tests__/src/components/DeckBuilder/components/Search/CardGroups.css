@@ -22,6 +22,31 @@
   color: #333;
 }
 
+/* New Add All to Deck button styles */
+.add-all-button {
+  background: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.add-all-button:hover {
+  background: #45a049;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 5px rgba(76, 175, 80, 0.3);
+}
+
+.add-all-button:disabled {
+  background: #cccccc;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
 .new-collection-button {
   background: #673ab7;
   color: white;
@@ -219,10 +244,42 @@
   cursor: pointer;
 }
 
-.remove-card-btn {
+/* Card action buttons container */
+.card-action-buttons {
   position: absolute;
   top: 3px;
   right: 3px;
+  display: flex;
+  gap: 3px;
+}
+
+/* Add card button styles */
+.add-card-btn {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(76, 175, 80, 0.8);
+  color: white;
+  border: none;
+  font-size: 14px;
+  line-height: 1;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.add-card-btn:hover {
+  background: rgba(76, 175, 80, 1);
+}
+
+.remove-card-btn {
+  position: relative;
+  top: auto;
+  right: auto;
   width: 20px;
   height: 20px;
   border-radius: 50%;
@@ -240,8 +297,13 @@
   transition: opacity 0.2s;
 }
 
+.collection-card:hover .add-card-btn,
 .collection-card:hover .remove-card-btn {
   opacity: 1;
+}
+
+.remove-card-btn:hover {
+  background: rgba(255, 0, 0, 1);
 }
 
 @media (max-width: 768px) {
