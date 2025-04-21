@@ -8,18 +8,18 @@ export class GameHand extends YGOEntity {
   private duel: YGODuel;
   public canHoverHand: boolean = true;
   public canClickHand: boolean = true;
-
   public cards: GameCardHand[];
-
   public selectedCard: GameCardHand | undefined;
   private player: number;
+  public showHand: boolean;
 
-  constructor(duel: YGODuel, player: number) {
+  constructor(duel: YGODuel, player: number, showHand: boolean) {
     super();
     this.duel = duel;
     this.player = player;
     this.cards = [];
     this.selectedCard = undefined;
+    this.showHand = showHand;
   }
 
   public disableHand() { }
@@ -65,6 +65,7 @@ export class GameHand extends YGOEntity {
     const handY = this.player === 0 ? -visibleHeightAtZ / 2 + screenEdgeOffset : visibleHeightAtZ / 2 - screenEdgeOffset;
     const normalHandWidth = (totalCards - 1) * cardSpacing + cardWidth;
     const needsCompression = normalHandWidth > handDistribution;
+    const showHand = this.player === 0;
     let actualSpacing = cardSpacing;
     let actualWidth = normalHandWidth;
 
@@ -92,7 +93,7 @@ export class GameHand extends YGOEntity {
       if (handCard.card.originalOwner === 0) {
         handCard.gameObject.rotation.set(0, 0, 0);
       } else {
-        handCard.gameObject.rotation.set(0, 0, THREE.MathUtils.degToRad(180));
+        handCard.gameObject.rotation.set(0, this.showHand ? 0 : THREE.MathUtils.degToRad(180), THREE.MathUtils.degToRad(180));
       }
 
       handCard.gameObject.visible = true;

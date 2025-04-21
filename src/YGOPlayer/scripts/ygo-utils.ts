@@ -18,6 +18,7 @@ type CreateFieldDto = {
 };
 
 export function createFields({ duel, fieldModel }: CreateFieldDto) {
+  const { player: playerGameIndex = 0, showHand = false } = duel.config.options || {};
   fieldModel.rotation.copy(YGOMath.degToRadEuler(90, 0, 0));
   fieldModel.position.set(0, 0, 0);
 
@@ -113,7 +114,7 @@ export function createFields({ duel, fieldModel }: CreateFieldDto) {
       fieldZoneId,
       zones[fieldZoneId]
     );
-    field.hand = new GameHand(duel, player);
+    field.hand = new GameHand(duel, player, showHand || playerGameIndex === player);
 
     fields.push(field);
   }
