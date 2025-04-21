@@ -46,6 +46,37 @@ const SearchResults: React.FC<SearchResultsProps> = ({
     onCardAdd(card); // Add to the currently selected deck type
   };
 
+  // Add drag functionality to allow dragging cards to deck
+  const handleDragStart = (e: React.DragEvent, card: Card) => {
+    // Use the same format as CardGroups to be compatible with DeckEditor
+    const dragData = {
+      card: card,
+      isFromSearchResults: true,
+    };
+
+    // Set the data as a JSON string
+    e.dataTransfer.setData("application/json", JSON.stringify(dragData));
+
+    // Create a small drag image
+    const dragElem = document.createElement("div");
+    dragElem.style.width = "60px";
+    dragElem.style.height = "88px";
+    dragElem.style.backgroundImage = `url(${getImageSource(card)})`;
+    dragElem.style.backgroundSize = "contain";
+    dragElem.style.backgroundRepeat = "no-repeat";
+    dragElem.style.position = "absolute";
+    dragElem.style.top = "-1000px";
+
+    document.body.appendChild(dragElem);
+
+    e.dataTransfer.setDragImage(dragElem, 30, 44);
+
+    // Clean up the temporary element after the drag starts
+    setTimeout(() => {
+      document.body.removeChild(dragElem);
+    }, 0);
+  };
+
   if (isLoading) {
     return <div className="search-results loading">Searching cards...</div>;
   }
@@ -70,6 +101,8 @@ const SearchResults: React.FC<SearchResultsProps> = ({
               hideAddToDeck ? "no-add-button" : ""
             }`}
             onContextMenu={(e) => handleRightClick(card, e)}
+            draggable={!hideAddToDeck}
+            onDragStart={(e) => !hideAddToDeck && handleDragStart(e, card)}
           >
             <img
               src={getImageSource(card)}

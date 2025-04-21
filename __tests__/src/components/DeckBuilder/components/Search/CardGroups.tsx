@@ -51,6 +51,40 @@ const CardGroups: React.FC<CardGroupsProps> = ({
     }
   };
 
+  // Add function to handle drag start for cards
+  const handleDragStart = (e: React.DragEvent, card: Card) => {
+    // To be compatible with DeckEditor's handleDrop function,
+    // we need to format the data correctly using the 'card' property
+    const dragData = {
+      card: card,
+      isFromCardGroups: true,
+    };
+
+    // Set the data as a JSON string
+    e.dataTransfer.setData("application/json", JSON.stringify(dragData));
+
+    // Create a small drag image rather than using the full image
+    const dragElem = document.createElement("div");
+    dragElem.style.width = "60px";
+    dragElem.style.height = "88px";
+    dragElem.style.backgroundImage = `url(${
+      card.card_images?.[0]?.image_url_small || ""
+    })`;
+    dragElem.style.backgroundSize = "contain";
+    dragElem.style.backgroundRepeat = "no-repeat";
+    dragElem.style.position = "absolute";
+    dragElem.style.top = "-1000px";
+
+    document.body.appendChild(dragElem);
+
+    e.dataTransfer.setDragImage(dragElem, 30, 44);
+
+    // Clean up the temporary element after the drag starts
+    setTimeout(() => {
+      document.body.removeChild(dragElem);
+    }, 0);
+  };
+
   return (
     <div className="card-groups-container">
       <div className="card-groups-header">
@@ -114,7 +148,12 @@ const CardGroups: React.FC<CardGroupsProps> = ({
                     ) : (
                       <div className="cards-grid">
                         {group.cards.map((card) => (
-                          <div key={card.id} className="collection-card">
+                          <div
+                            key={card.id}
+                            className="collection-card"
+                            draggable="true"
+                            onDragStart={(e) => handleDragStart(e, card)}
+                          >
                             <img
                               src={card.card_images[0]?.image_url_small || ""}
                               alt={card.name}

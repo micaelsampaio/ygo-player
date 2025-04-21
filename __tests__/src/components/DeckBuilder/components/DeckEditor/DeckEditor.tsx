@@ -353,46 +353,128 @@ const DeckEditor: React.FC<DeckEditorProps> = ({
   ) => {
     e.preventDefault();
     try {
-      const dragData = JSON.parse(e.dataTransfer.getData("application/json"));
-
-      // If source and destination deck types match, reorder within the same deck
-      if (dragData.isExtra === isExtraDeck && dragData.isSide === isSideDeck) {
-        onReorderCards(dragData.index, dropIndex, isExtraDeck, isSideDeck);
+      const data = e.dataTransfer.getData("application/json");
+      if (!data) {
+        console.warn("No data found in drop event");
         return;
       }
 
-      // Handle transfers between decks
-      if (onMoveCardBetweenDecks) {
-        let sourceType: "main" | "extra" | "side";
-        let targetType: "main" | "extra" | "side";
+      const dragData = JSON.parse(data);
 
-        // Determine source deck type
-        if (dragData.isSide) {
-          sourceType = "side";
-        } else if (dragData.isExtra) {
-          sourceType = "extra";
+      // Check if this is a card from any of our card sources (CardGroups, SearchResults, or Suggestions)
+      if (
+        (dragData.isFromCardGroups ||
+          dragData.isFromSearchResults ||
+          dragData.isFromSuggestions) &&
+        dragData.card
+      ) {
+        const card = dragData.card;
+
+        // Determine which deck section to add to based on card type
+        if (isExtraDeck) {
+          // Only add extra deck monsters to the extra deck
+          if (
+            card.type &&
+            ["XYZ", "Synchro", "Fusion", "Link"].some((type) =>
+              card.type.includes(type)
+            )
+          ) {
+            if (onCardSelect) {
+              // Optional: Preview the card
+              onCardSelect(card);
+            }
+
+            // Update the deck with the new card
+            if (updateDeck && deck) {
+              const updatedDeck = {
+                ...deck,
+                extraDeck: [...deck.extraDeck, card],
+              };
+              updateDeck(updatedDeck);
+            }
+          } else {
+            alert("Only Extra Deck monsters can be added to the Extra Deck");
+          }
+          return;
+        } else if (isSideDeck) {
+          // Add to side deck
+          if (updateDeck && deck) {
+            const sideDeck = deck.sideDeck || [];
+            const updatedDeck = {
+              ...deck,
+              sideDeck: [...sideDeck, card],
+            };
+            updateDeck(updatedDeck);
+          }
+          return;
         } else {
-          sourceType = "main";
-        }
+          // Add to main deck
+          if (
+            card.type &&
+            ["XYZ", "Synchro", "Fusion", "Link"].some((type) =>
+              card.type.includes(type)
+            )
+          ) {
+            // This is an extra deck card, should go to extra deck
+            alert("Extra Deck monsters cannot be added to the Main Deck");
+            return;
+          }
 
-        // Determine target deck type
-        if (isSideDeck) {
-          targetType = "side";
-        } else if (isExtraDeck) {
-          targetType = "extra";
-        } else {
-          targetType = "main";
+          if (updateDeck && deck) {
+            const updatedDeck = {
+              ...deck,
+              mainDeck: [...deck.mainDeck, card],
+            };
+            updateDeck(updatedDeck);
+          }
+          return;
         }
+      }
 
-        // Prevent moving extra deck cards to main deck
-        if (sourceType === "extra" && targetType === "main") {
-          alert("Extra Deck cards cannot be moved to the Main Deck");
+      // Handle drops from within the deck editor (original functionality)
+      if (dragData.index !== undefined) {
+        // If source and destination deck types match, reorder within the same deck
+        if (
+          dragData.isExtra === isExtraDeck &&
+          dragData.isSide === isSideDeck
+        ) {
+          onReorderCards(dragData.index, dropIndex, isExtraDeck, isSideDeck);
           return;
         }
 
-        // Call the move function if source and target are different
-        if (sourceType !== targetType) {
-          onMoveCardBetweenDecks(sourceType, targetType, dragData.index);
+        // Handle transfers between decks
+        if (onMoveCardBetweenDecks) {
+          let sourceType: "main" | "extra" | "side";
+          let targetType: "main" | "extra" | "side";
+
+          // Determine source deck type
+          if (dragData.isSide) {
+            sourceType = "side";
+          } else if (dragData.isExtra) {
+            sourceType = "extra";
+          } else {
+            sourceType = "main";
+          }
+
+          // Determine target deck type
+          if (isSideDeck) {
+            targetType = "side";
+          } else if (isExtraDeck) {
+            targetType = "extra";
+          } else {
+            targetType = "main";
+          }
+
+          // Prevent moving extra deck cards to main deck
+          if (sourceType === "extra" && targetType === "main") {
+            alert("Extra Deck cards cannot be moved to the Main Deck");
+            return;
+          }
+
+          // Call the move function if source and target are different
+          if (sourceType !== targetType) {
+            onMoveCardBetweenDecks(sourceType, targetType, dragData.index);
+          }
         }
       }
     } catch (err) {
