@@ -25,6 +25,45 @@ const LeftContent = styled.div`
   flex-grow: 1;
 `;
 
+const NavSection = styled.div`
+  margin-bottom: 30px;
+`;
+
+const NavHeader = styled.h2`
+  border-bottom: 1px solid #333;
+  padding-bottom: 10px;
+  margin-bottom: 15px;
+  color: #0078d4;
+`;
+
+const NavList = styled.ul`
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0;
+`;
+
+const NavItem = styled.li`
+  margin-bottom: 10px;
+`;
+
+const NavLink = styled(Link)`
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 16px;
+  background-color: #2a2a2a;
+  color: white;
+  text-decoration: none;
+  border-radius: 4px;
+  font-weight: 500;
+
+  &:hover {
+    background-color: #444;
+  }
+`;
+
 const logger = Logger.createLogger("App");
 
 export default function App() {
@@ -310,53 +349,70 @@ export default function App() {
             <h1>Home</h1>
           </div>
 
-          <ul>
-            <li>
-              <Link onClick={(e) => duelAs(e, YUBEL, CHIMERA)} to="#">
-                Duel as Yubel
-              </Link>
-            </li>
-            <li>
-              <Link onClick={(e) => duelAs(e, CHIMERA, YUBEL)} to="#">
-                Duel as Chimera
-              </Link>
-            </li>
+          <NavSection>
+            <NavHeader>My Yu-Gi-Oh!</NavHeader>
+            <NavList>
+              <NavItem>
+                <NavLink to="/my/decks">My Decks</NavLink>
+              </NavItem>
+              <NavItem>
+                <NavLink to="/my/combos">My Combos</NavLink>
+              </NavItem>
+              <NavItem>
+                <NavLink to="/my/replays">My Replays</NavLink>
+              </NavItem>
+              <NavItem>
+                <NavLink to="/collections">Collections</NavLink>
+              </NavItem>
+            </NavList>
+          </NavSection>
 
-            {decks.map((deckId) => {
-              return (
-                <li>
-                  <Link
+          <NavSection>
+            <NavHeader>Tools</NavHeader>
+            <NavList>
+              <NavItem>
+                <NavLink to="/deckbuilder">Deck Builder</NavLink>
+              </NavItem>
+              <NavItem>
+                <NavLink to="/deck">Import Deck</NavLink>
+              </NavItem>
+              <NavItem>
+                <NavLink to="/rulings">Card Rulings</NavLink>
+              </NavItem>
+            </NavList>
+          </NavSection>
+
+          <NavSection>
+            <NavHeader>Quick Play</NavHeader>
+            <NavList>
+              <NavItem>
+                <NavLink to="#" onClick={(e) => duelAs(e, YUBEL, CHIMERA)}>
+                  Duel as Yubel
+                </NavLink>
+              </NavItem>
+              <NavItem>
+                <NavLink to="#" onClick={(e) => duelAs(e, CHIMERA, YUBEL)}>
+                  Duel as Chimera
+                </NavLink>
+              </NavItem>
+            </NavList>
+          </NavSection>
+
+          <NavSection>
+            <NavHeader>My Decks</NavHeader>
+            <NavList>
+              {decks.map((deckId) => (
+                <NavItem key={deckId}>
+                  <NavLink
                     to="#"
                     onClick={(e) => duelWithDeckFromStore(e, deckId)}
                   >
-                    Duel as {deckId}
-                  </Link>{" "}
-                  <button onClick={() => deleteDeck(deckId)}>delete</button>
-                  <button onClick={() => downloadDeckAsPng(deckId)}>
-                    download as image
-                  </button>
-                  <button onClick={() => downloadDeckAsYdk(deckId)}>
-                    download YDK
-                  </button>
-                  <button onClick={() => exportToMd(deckId)}>
-                    export to MD
-                  </button>
-                </li>
-              );
-            })}
-            <li>
-              <Link to={"/deck"}>Download deck</Link>
-            </li>
-            <li>
-              <Link to={"/deckbuilder"}>Deck Builder</Link>
-            </li>
-            <li>
-              <Link to={"/collections"}>Collections</Link>
-            </li>
-            <li>
-              <Link to={"/rulings"}>Card Rulings</Link>
-            </li>
-          </ul>
+                    Duel as {deckId.replace("deck_", "")}
+                  </NavLink>
+                </NavItem>
+              ))}
+            </NavList>
+          </NavSection>
 
           {replays.length > 0 && (
             <div>

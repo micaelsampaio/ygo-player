@@ -13,6 +13,11 @@ import { Logger } from "./utils/logger";
 import { SpreadsheetBuilder } from "./spreadsheet/SpreadsheetBuilder.tsx";
 import { CollectionsPage } from "./components/Collections/CollectionsPage.tsx";
 import RulingsPage from "./components/Rulings/RulingsPage.tsx";
+// Import new pages
+import MyDecksPage from "./components/MyDecks/MyDecksPage.tsx";
+import DeckDetailPage from "./components/MyDecks/DeckDetailPage.tsx";
+import MyCombosPage from "./components/MyCombos/MyCombosPage.tsx";
+import MyReplaysPage from "./components/MyReplays/MyReplaysPage.tsx";
 
 debug.enable("ygo:*");
 localStorage.setItem("debug", "ygo:*");
@@ -40,6 +45,20 @@ createRoot(document.getElementById("root")!).render(
           element={<CollectionsPage />}
         />
         <Route path="/rulings" element={<RulingsPage />} />
+
+        {/* New routes for deck management */}
+        <Route path="/my/decks" element={<MyDecksPage />} />
+        <Route path="/my/decks/:deckId" element={<DeckDetailPage />} />
+        <Route
+          path="/my/decks/:deckId/collections"
+          element={<DeckDetailPage />}
+        />
+        <Route path="/my/decks/:deckId/combos" element={<DeckDetailPage />} />
+        <Route path="/my/decks/:deckId/replays" element={<DeckDetailPage />} />
+
+        {/* New routes for combos and replays */}
+        <Route path="/my/combos" element={<MyCombosPage />} />
+        <Route path="/my/replays" element={<MyReplaysPage />} />
       </Routes>
     </BrowserRouter>
   </KaibaNetProvider>
