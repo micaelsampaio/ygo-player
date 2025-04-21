@@ -14,6 +14,7 @@ export class YGOPlayerCore {
     public gltfLoader: GLTFLoader;
     public renderer: THREE.WebGLRenderer;
     public deltaTime: number;
+    public unscaledDeltaTime: number;
     public fonts = new Map<string, Font>();
     public mapBounds: THREE.Object3D;
 
@@ -30,6 +31,7 @@ export class YGOPlayerCore {
         this.sceneOverlay = new THREE.Scene();
         this.canvas = canvas;
         this.deltaTime = 0;
+        this.unscaledDeltaTime = 0;
         this.timeScale = 1;
         this.previousFrame = performance.now();
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -53,7 +55,8 @@ export class YGOPlayerCore {
 
     public render() {
         const now = performance.now();
-        this.deltaTime = ((now - this.previousFrame) / 1000) * this.timeScale;
+        this.unscaledDeltaTime = (now - this.previousFrame) / 1000;
+        this.deltaTime = this.unscaledDeltaTime * this.timeScale;
         this.previousFrame = now;
 
         this.renderer.render(this.scene, this.camera);

@@ -267,9 +267,9 @@ export class ActionCardSelection extends YGOComponent implements YGOAction {
         });
     }
 
-    public updateAction(dt: number): void {
+    public updateAction(): void {
 
-        this.time += dt * 10;
+        this.time += this.duel.core.unscaledDeltaTime * 10;
         const oscillator = (Math.sin(this.time) + 1) / 2;
         const easedValue = Easing.linear(oscillator);
         this.opacityValue = lerp(0.3, 1, easedValue);
