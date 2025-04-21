@@ -103,7 +103,10 @@ export default function App() {
 
   const [decks, setDecks] = useState(() => {
     const allKeys = Object.keys(localStorage);
-    const decks = allKeys.filter((key) => key.startsWith("deck_"));
+    // Filter out deck_groups since it's not an actual deck but a collection of decks
+    const decks = allKeys.filter(
+      (key) => key.startsWith("deck_") && key !== "deck_groups"
+    );
     return decks;
   });
   const [roomDecks, setRoomDecks] = useState<any>({});
@@ -385,6 +388,7 @@ export default function App() {
           <NavSection>
             <NavHeader>Quick Play</NavHeader>
             <NavList>
+              {/* Predefined decks */}
               <NavItem>
                 <NavLink to="#" onClick={(e) => duelAs(e, YUBEL, CHIMERA)}>
                   Duel as Yubel
@@ -395,22 +399,56 @@ export default function App() {
                   Duel as Chimera
                 </NavLink>
               </NavItem>
-            </NavList>
-          </NavSection>
 
-          <NavSection>
-            <NavHeader>My Decks</NavHeader>
-            <NavList>
-              {decks.map((deckId) => (
-                <NavItem key={deckId}>
-                  <NavLink
-                    to="#"
-                    onClick={(e) => duelWithDeckFromStore(e, deckId)}
-                  >
-                    Duel as {deckId.replace("deck_", "")}
-                  </NavLink>
+              {/* Divider between predefined and custom decks */}
+              {decks.length > 0 && (
+                <NavItem
+                  style={{
+                    width: "100%",
+                    borderTop: "1px dashed #444",
+                    margin: "10px 0",
+                    padding: "5px 0",
+                  }}
+                >
+                  <span style={{ color: "#999", fontSize: "14px" }}>
+                    Your Decks
+                  </span>
                 </NavItem>
-              ))}
+              )}
+
+              {/* User's custom decks */}
+              {decks.map((deckId) => {
+                // Get the actual deck data to display the proper name
+                try {
+                  const deckData = JSON.parse(
+                    localStorage.getItem(deckId) || "{}"
+                  );
+                  const deckName = deckData.name || deckId.replace("deck_", "");
+
+                  return (
+                    <NavItem key={deckId}>
+                      <NavLink
+                        to="#"
+                        onClick={(e) => duelWithDeckFromStore(e, deckId)}
+                      >
+                        Duel as {deckName}
+                      </NavLink>
+                    </NavItem>
+                  );
+                } catch (err) {
+                  // Fallback in case of parsing error
+                  return (
+                    <NavItem key={deckId}>
+                      <NavLink
+                        to="#"
+                        onClick={(e) => duelWithDeckFromStore(e, deckId)}
+                      >
+                        Duel as {deckId.replace("deck_", "")}
+                      </NavLink>
+                    </NavItem>
+                  );
+                }
+              })}
             </NavList>
           </NavSection>
 

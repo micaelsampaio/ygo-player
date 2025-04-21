@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Card, Deck } from "../types";
 import { YGOGameUtils } from "ygo-player";
 import { canAddCardToDeck, getBanStatusMessage } from "../utils/banlistUtils";
+import { v4 as uuidv4 } from "uuid"; // Add UUID import
 
 /**
  * Custom hook for managing deck storage, retrieval, and modifications
@@ -32,6 +33,14 @@ export function useDeckStorage() {
                 if (!Array.isArray(deck.sideDeck)) {
                   deck.sideDeck = [];
                 }
+
+                // Ensure the deck has an ID
+                if (!deck.id) {
+                  deck.id = uuidv4();
+                  // Save the updated deck with ID back to localStorage
+                  localStorage.setItem(key, JSON.stringify(deck));
+                }
+
                 availableDecks.push(deck);
               }
             }
@@ -201,6 +210,7 @@ export function useDeckStorage() {
     }
 
     const newDeck: Deck = {
+      id: uuidv4(), // Always assign a UUID to new decks
       name, // The new deck name
       mainDeck: [], // Initialize empty main deck
       extraDeck: [], // Initialize empty extra deck
@@ -346,6 +356,7 @@ export function useDeckStorage() {
     }
 
     const newDeck: Deck = {
+      id: uuidv4(), // Assign new UUID to copied deck
       name: finalName,
       mainDeck: [...deckToCopy.mainDeck],
       extraDeck: [...deckToCopy.extraDeck],
