@@ -28,12 +28,14 @@ import { YGOConfig } from "./YGOConfig";
 import { Command } from "ygo-core";
 import { YGOMapClick } from "./YGOMapClick";
 import { YGOGameFieldStatsComponent } from "../game/YGOGameFieldStatsComponent";
+import { YGOSoundController } from "./YGOSoundController";
 
 export class YGODuel {
   public ygo!: InstanceType<typeof YGOCore>;
   public state: YGODuelState;
   public core: YGOPlayerCore;
   public assets: YGOAssets;
+  public soundController = new YGOSoundController();
   public fields: PlayerField[];
   public fieldStats!: YGOGameFieldStatsComponent;
   public fieldLocations!: Map<string, GameFieldLocation>;
@@ -75,11 +77,13 @@ export class YGODuel {
     this.actionManager = new ActionManager();
     this.tasks = new YGOTaskController(this);
     this.commands = new YGOCommandsController(this);
+    this.soundController = new YGOSoundController();
     this.mouseEvents = new YGOMouseEvents(this);
     this.assets = new YGOAssets(this);
     this.events = new EventBus();
 
     this.gameController.addComponent("mouse_events", this.mouseEvents);
+    this.gameController.addComponent("sound_controller", this.soundController);
     this.gameController.addComponent("tasks", this.tasks);
     this.gameController.addComponent("commands", this.commands);
     this.gameController.addComponent("actions_manager", this.actionManager);
@@ -89,6 +93,7 @@ export class YGODuel {
     this.actionManager.actions.set("card-zone-menu", new ActionCardZoneMenu(this));
 
     this.gameActions = new YGOGameActions(this);
+    this.soundController.addLayer({ name: "GAME" });
 
     this.setupVars();
 
@@ -121,6 +126,11 @@ export class YGODuel {
           `${this.config.cdnUrl}/images/ui/ic_rank128.png`,
           `${this.config.cdnUrl}/images/ui/ic_link128.png`,
           `${this.config.cdnUrl}/images/ui/ic_xyz_materials128.png`
+        ),
+        this.soundController.loadSounds(
+          this.createCdnUrl("/sounds/card-place-1.ogg"),
+          this.createCdnUrl("/sounds/card-place-2.ogg"),
+          this.createCdnUrl("/sounds/card-place-3.ogg")
         ),
         //this.assets.loadTextures(Array.from((this.ygo.state as any).cardsIngame.values()).map(id => `http://127.0.0.1:8080/images/cards_small/${id}.jpg`)),
       ]);
@@ -604,5 +614,9 @@ export class YGODuel {
   private setupVars() {
     document.documentElement.style.setProperty('--ygo-player-asset-ui-card-icons', `url('${this.config.cdnUrl}/images/ui/card_icons.png')`);
     document.documentElement.style.setProperty('--ygo-player-asset-ui-game-zones', `url('${this.config.cdnUrl}/images/ui/ic_game_zones.png')`);
+  }
+
+  public createCdnUrl(path: string) {
+    return `${this.config.cdnUrl}${path}`;
   }
 }

@@ -63,3 +63,19 @@ export interface YGOPlayerStartReplayProps {
   replay: YGOReplayData;
   options: YGOPropsOptions;
 }
+
+export interface YGOAudioLayer {
+  name: string
+  enabled: boolean
+  useTimeScale: boolean
+  volume: number
+  sounds: YGOAudioClip[]
+}
+
+export interface YGOAudioClip {
+  key: string
+  playing: boolean
+  volume: number
+  loop: boolean
+  element: HTMLAudioElement
+}

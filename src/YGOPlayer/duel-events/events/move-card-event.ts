@@ -7,6 +7,7 @@ import {
   getCardRotationFromFieldZoneData,
   getGameZone,
   getZonePositionFromZoneData,
+  randomIntFromInterval,
 } from "../../scripts/ygo-utils";
 import { CallbackTransition } from "../utils/callback";
 import { PositionTransition } from "../utils/position-transition";
@@ -145,6 +146,12 @@ export class MoveCardEventHandler extends YGOCommandHandler {
     //     const gy = duel.fields[this.cardReference.originalOwner].graveyard;
     //     gy.createSendToGraveyardEffect({ card: card.gameObject, sequence });
     // }
+
+    console.log("TCL:: ", originZoneData?.zone, zoneData.zone);
+
+    if (originZoneData?.zone === "H" && (zoneData.zone === "M" || zoneData.zone === "S")) {
+      duel.soundController.playSound({ key: duel.createCdnUrl(`/sounds/card-place-${randomIntFromInterval(1, 4)}.ogg`), volume: 0.7 });
+    }
 
     if (
       zoneData.zone === "M" ||

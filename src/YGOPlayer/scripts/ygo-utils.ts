@@ -516,3 +516,7 @@ export function getCardPositionInFrontOfCamera({ camera, distance = 4 }: { camer
 
   return startPosition;
 }
+
+export function randomIntFromInterval(min: number, max: number): number { // min and max included 
+  return Math.floor(Math.random() * (max - min + 1) + min);
+}
