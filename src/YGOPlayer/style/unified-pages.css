@@ -1,0 +1,564 @@
+/* 
+   unified-pages.css
+   This stylesheet provides consistent styling for all pages in the YGO Player application.
+   It ensures a uniform experience across home, deckbuilder, collections, and rulings pages.
+*/
+
+@import "./variables.css";
+
+/* Common Page Layout */
+.ygo-app {
+  min-height: 100vh;
+  background-color: var(--ygo-background-color);
+  display: flex;
+  flex-direction: column;
+}
+
+.ygo-page {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: var(--ygo-space-md);
+  color: var(--ygo-text-color);
+  flex: 1;
+  width: 100%;
+}
+
+/* Page Header Styling */
+.ygo-page-header {
+  margin-bottom: var(--ygo-space-md);
+  border-bottom: 1px solid var(--ygo-border-color);
+  padding-bottom: var(--ygo-space-sm);
+}
+
+.ygo-page-title {
+  color: var(--ygo-heading-color);
+  font-size: var(--ygo-font-xxl);
+  margin-bottom: var(--ygo-space-xs);
+}
+
+.ygo-page-description {
+  color: var(--ygo-text-color);
+  font-size: var(--ygo-font-md);
+  margin-bottom: var(--ygo-space-md);
+}
+
+/* Navigation */
+.ygo-nav {
+  display: flex;
+  background-color: var(--ygo-action-color-dark);
+  border-radius: var(--ygo-border-radius-medium);
+  padding: var(--ygo-space-xs);
+  margin-bottom: var(--ygo-space-md);
+  overflow-x: auto;
+}
+
+.ygo-nav-item {
+  padding: var(--ygo-space-xs) var(--ygo-space-sm);
+  color: var(--ygo-text-color);
+  text-decoration: none;
+  border-radius: var(--ygo-border-radius-small);
+  transition: background-color 0.2s ease;
+  white-space: nowrap;
+}
+
+.ygo-nav-item:hover {
+  background-color: var(--ygo-action-color);
+  color: var(--ygo-heading-color);
+}
+
+.ygo-nav-item.active {
+  background-color: var(--ygo-primary-color);
+  color: var(--ygo-heading-color);
+}
+
+/* Enhanced Hero Section */
+.ygo-home-hero {
+  text-align: center;
+  margin-bottom: var(--ygo-space-lg);
+  padding: var(--ygo-space-xl) 0 var(--ygo-space-lg);
+  background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)),
+    url("https://placehold.co/1280x400?text=Yu-Gi-Oh+Background") no-repeat
+      center center;
+  background-size: cover;
+  border-radius: var(--ygo-border-radius-medium);
+}
+
+.ygo-home-title {
+  font-size: calc(var(--ygo-font-xxl) + 10px);
+  color: var(--ygo-heading-color);
+  margin-bottom: var(--ygo-space-sm);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.ygo-home-subtitle {
+  font-size: var(--ygo-font-lg);
+  color: var(--ygo-text-color);
+  margin-bottom: var(--ygo-space-md);
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.ygo-hero-cta {
+  display: flex;
+  justify-content: center;
+  gap: var(--ygo-space-md);
+  margin-top: var(--ygo-space-md);
+}
+
+/* Section Cards */
+.ygo-section {
+  background-color: var(--ygo-background-color-80);
+  border-radius: var(--ygo-border-radius-medium);
+  margin-bottom: var(--ygo-space-md);
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.ygo-section-header {
+  background-color: var(--ygo-action-color);
+  padding: var(--ygo-space-xs) var(--ygo-space-sm);
+  border-bottom: 1px solid var(--ygo-border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ygo-section-title {
+  color: var(--ygo-heading-color);
+  font-size: var(--ygo-font-md);
+  margin: 0;
+}
+
+.ygo-section-action {
+  text-decoration: none;
+}
+
+.ygo-section-content {
+  padding: var(--ygo-space-sm);
+}
+
+/* Card Grid Layout for Collections & Search Results */
+.ygo-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--ygo-space-md);
+  margin-top: var(--ygo-space-md);
+}
+
+.ygo-card-item {
+  background-color: var(--ygo-background-color-80);
+  border-radius: var(--ygo-border-radius-small);
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.ygo-card-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.ygo-card-image {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.ygo-card-info {
+  padding: var(--ygo-space-xs);
+}
+
+.ygo-card-name {
+  font-size: var(--ygo-font-sm);
+  color: var(--ygo-heading-color);
+  margin: 0 0 4px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ygo-card-type {
+  font-size: var(--ygo-font-xs);
+  color: var(--ygo-text-color);
+}
+
+/* Replays Grid */
+.ygo-replays-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: var(--ygo-space-md);
+  margin-top: var(--ygo-space-md);
+}
+
+.ygo-endgame-board-container {
+  margin-top: var(--ygo-space-sm);
+  padding: var(--ygo-space-sm);
+  background-color: var(--ygo-background-color);
+  border-radius: var(--ygo-border-radius-small);
+  overflow-x: auto;
+}
+
+/* Form Row for inline form elements */
+.ygo-form-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ygo-gap-sm);
+  align-items: center;
+}
+
+/* Empty State */
+.ygo-empty-state {
+  text-align: center;
+  padding: var(--ygo-space-lg) var(--ygo-space-md);
+}
+
+.ygo-empty-icon {
+  font-size: 3rem;
+  margin-bottom: var(--ygo-space-sm);
+}
+
+.ygo-empty-state h3 {
+  color: var(--ygo-heading-color);
+  margin-bottom: var(--ygo-space-xs);
+}
+
+.ygo-empty-state p {
+  color: var(--ygo-text-color);
+  margin-bottom: var(--ygo-space-md);
+}
+
+/* Dropdown Menu */
+.ygo-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.ygo-dropdown-content {
+  display: none;
+  position: absolute;
+  right: 0;
+  min-width: 180px;
+  background-color: var(--ygo-background-color);
+  border: 1px solid var(--ygo-border-color);
+  border-radius: var(--ygo-border-radius-small);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  z-index: 10;
+  margin-top: 2px;
+}
+
+.ygo-dropdown:hover .ygo-dropdown-content {
+  display: block;
+}
+
+.ygo-dropdown-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 10px 15px;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--ygo-border-color);
+  color: var(--ygo-text-color);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.ygo-dropdown-item:last-child {
+  border-bottom: none;
+}
+
+.ygo-dropdown-item:hover {
+  background-color: var(--ygo-action-color-dark);
+}
+
+.ygo-dropdown-danger {
+  color: #e74c3c;
+}
+
+.ygo-dropdown-danger:hover {
+  background-color: rgba(231, 76, 60, 0.1);
+}
+
+/* Footer */
+.ygo-footer {
+  margin-top: var(--ygo-space-lg);
+  text-align: center;
+  padding: var(--ygo-space-md) 0;
+  border-top: 1px solid var(--ygo-border-color);
+  color: var(--ygo-text-color);
+}
+
+/* Deck Builder Specific */
+.ygo-deck-area {
+  background-color: var(--ygo-background-color-80);
+  border: 1px solid var(--ygo-border-color);
+  border-radius: var(--ygo-border-radius-medium);
+  padding: var(--ygo-space-sm);
+  margin-bottom: var(--ygo-space-md);
+}
+
+.ygo-deck-title {
+  font-size: var(--ygo-font-md);
+  color: var(--ygo-heading-color);
+  margin-top: 0;
+  margin-bottom: var(--ygo-space-sm);
+  border-bottom: 1px solid var(--ygo-border-color);
+  padding-bottom: var(--ygo-space-xs);
+}
+
+.ygo-deck-stats {
+  display: flex;
+  gap: var(--ygo-gap-md);
+  flex-wrap: wrap;
+  margin-bottom: var(--ygo-space-sm);
+}
+
+.ygo-deck-stat {
+  background-color: var(--ygo-action-color);
+  border-radius: var(--ygo-border-radius-small);
+  padding: var(--ygo-space-xs) var(--ygo-space-sm);
+  font-size: var(--ygo-font-sm);
+}
+
+/* Deck Card Styling */
+.ygo-deck-card {
+  background-color: var(--ygo-action-color-dark);
+  border-radius: var(--ygo-border-radius-medium);
+  padding: var(--ygo-space-sm);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.ygo-deck-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Button Styles */
+.ygo-button {
+  display: inline-block;
+  padding: 8px 16px;
+  background-color: var(--ygo-action-color);
+  color: var(--ygo-text-color);
+  border: 1px solid var(--ygo-border-color);
+  border-radius: var(--ygo-border-radius-small);
+  font-size: var(--ygo-font-sm);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+  text-decoration: none;
+  margin: 4px 2px;
+}
+
+.ygo-button:hover {
+  background-color: var(--ygo-action-color-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.ygo-button-primary {
+  background-color: var(--ygo-primary-color);
+  color: var(--ygo-heading-color);
+  border-color: var(--ygo-primary-color);
+}
+
+.ygo-button-primary:hover {
+  background-color: var(--ygo-primary-hover-color);
+}
+
+.ygo-button-secondary {
+  background-color: var(--ygo-secondary-color);
+  color: var(--ygo-background-color);
+  border-color: var(--ygo-secondary-color);
+}
+
+.ygo-button-secondary:hover {
+  filter: brightness(1.1);
+}
+
+.ygo-button-danger {
+  background-color: #e74c3c;
+  color: white;
+  border-color: #e74c3c;
+}
+
+.ygo-button-danger:hover {
+  background-color: #c0392b;
+}
+
+.ygo-button-small {
+  padding: 4px 8px;
+  font-size: calc(var(--ygo-font-sm) - 2px);
+}
+
+.ygo-button-large {
+  padding: 12px 24px;
+  font-size: calc(var(--ygo-font-sm) + 2px);
+}
+
+.ygo-button-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Rulings Page Specific */
+.ygo-ruling-card {
+  border: 1px solid var(--ygo-border-color);
+  border-radius: var(--ygo-border-radius-medium);
+  margin-bottom: var(--ygo-space-md);
+  background-color: var(--ygo-background-color-80);
+  overflow: hidden;
+}
+
+.ygo-ruling-header {
+  padding: var(--ygo-space-sm);
+  border-bottom: 1px solid var(--ygo-border-color);
+  background-color: var(--ygo-action-color-dark);
+}
+
+.ygo-ruling-content {
+  padding: var(--ygo-space-sm);
+}
+
+.ygo-ruling-footer {
+  padding: var(--ygo-space-xs) var(--ygo-space-sm);
+  border-top: 1px solid var(--ygo-border-color);
+  background-color: var(--ygo-action-color-dark);
+  font-size: var(--ygo-font-xs);
+  color: var(--ygo-text-color);
+}
+
+/* Mobile Responsive Adjustments */
+@media (max-width: 768px) {
+  .ygo-page {
+    padding: var(--ygo-space-sm);
+  }
+
+  .ygo-card-grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: var(--ygo-space-sm);
+  }
+
+  .ygo-nav {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    justify-content: flex-start;
+    padding: var(--ygo-space-xs) 0;
+  }
+
+  .ygo-section-header {
+    padding: var(--ygo-space-xs);
+  }
+
+  .ygo-section-content {
+    padding: var(--ygo-space-xs);
+  }
+
+  .ygo-deck-stats {
+    flex-direction: column;
+    gap: var(--ygo-gap-xs);
+  }
+}
+
+/* Collections Page Specific */
+.ygo-collection-stats {
+  display: flex;
+  gap: var(--ygo-gap-md);
+  flex-wrap: wrap;
+  margin-bottom: var(--ygo-space-md);
+}
+
+.ygo-stat-card {
+  background-color: var(--ygo-action-color-dark);
+  border-radius: var(--ygo-border-radius-medium);
+  padding: var(--ygo-space-sm);
+  flex: 1 1 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.ygo-stat-value {
+  font-size: var(--ygo-font-xl);
+  color: var(--ygo-heading-color);
+  font-weight: bold;
+}
+
+.ygo-stat-label {
+  font-size: var(--ygo-font-sm);
+  color: var(--ygo-text-color);
+}
+
+/* Home Page Specific */
+.ygo-home-hero {
+  text-align: center;
+  margin-bottom: var(--ygo-space-lg);
+  padding: var(--ygo-space-xl) 0 var(--ygo-space-lg);
+  background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)),
+    url("https://placehold.co/1280x400?text=Yu-Gi-Oh+Background") no-repeat
+      center center;
+  background-size: cover;
+  border-radius: var(--ygo-border-radius-medium);
+}
+
+.ygo-home-title {
+  font-size: calc(var(--ygo-font-xxl) + 10px);
+  color: var(--ygo-heading-color);
+  margin-bottom: var(--ygo-space-sm);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.ygo-home-subtitle {
+  font-size: var(--ygo-font-lg);
+  color: var(--ygo-text-color);
+  margin-bottom: var(--ygo-space-md);
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.ygo-hero-cta {
+  display: flex;
+  justify-content: center;
+  gap: var(--ygo-space-md);
+  margin-top: var(--ygo-space-md);
+}
+
+.ygo-feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--ygo-space-md);
+  margin-bottom: var(--ygo-space-lg);
+}
+
+.ygo-feature-card {
+  background-color: var(--ygo-background-color-80);
+  border-radius: var(--ygo-border-radius-medium);
+  padding: var(--ygo-space-md);
+  text-align: center;
+  transition: transform 0.2s ease;
+}
+
+.ygo-feature-card:hover {
+  transform: translateY(-5px);
+}
+
+.ygo-feature-icon {
+  font-size: 2.5rem;
+  margin-bottom: var(--ygo-space-sm);
+  color: var(--ygo-primary-color);
+}
+
+.ygo-feature-title {
+  font-size: var(--ygo-font-lg);
+  color: var(--ygo-heading-color);
+  margin-bottom: var(--ygo-space-xs);
+}
+
+.ygo-feature-description {
+  color: var(--ygo-text-color);
+}
