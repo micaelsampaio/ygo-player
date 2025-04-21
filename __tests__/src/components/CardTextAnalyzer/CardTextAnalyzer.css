@@ -26,27 +26,24 @@
   gap: 20px;
 }
 
-.search-container {
+.analyzer-search-container {
+  position: relative;
   margin-bottom: 20px;
 }
 
-.search-wrapper {
+.analyzer-search-wrapper {
   border: 1px solid #eee;
   border-radius: 6px;
   padding: 15px;
   background-color: #f9f9f9;
 }
 
-.search-container {
-  position: relative;
-}
-
-.search-box {
+.analyzer-search-box {
   display: flex;
   gap: 10px;
 }
 
-.search-input {
+.analyzer-search-input {
   flex-grow: 1;
   padding: 10px;
   border: 1px solid #ddd;
@@ -54,7 +51,7 @@
   font-size: 1rem;
 }
 
-.search-button {
+.analyzer-search-button {
   padding: 10px 20px;
   background-color: #3498db;
   color: white;
@@ -64,11 +61,11 @@
   font-weight: bold;
 }
 
-.search-button:hover {
+.analyzer-search-button:hover {
   background-color: #2980b9;
 }
 
-.search-results {
+.analyzer-search-results {
   position: absolute;
   top: 100%;
   left: 0;
@@ -540,9 +537,38 @@
   margin: 5px 0;
 }
 
-.card-text-analyzer .search-panel {
-  padding: 0;
-  box-shadow: none;
+/* Specific styles for the search panel in the analyzer context */
+.analyzer-search {
+  padding: 0 !important;
+  box-shadow: none !important;
+  margin-bottom: 0 !important;
+}
+
+.analyzer-search .search-status {
+  margin: 0 0 2px 0 !important;
+  height: auto !important;
+}
+
+.analyzer-search .analyzer-search-results {
+  margin-top: 0 !important;
+  position: static !important;
+  max-height: 400px !important;
+  overflow-y: auto !important;
+  box-shadow: none !important;
+}
+
+.analyzer-search .search-results {
+  margin-top: 0 !important;
+  position: static !important;
+  max-height: 400px !important;
+  overflow-y: auto !important;
+  box-shadow: none !important;
+  top: 0 !important; /* Override the top: 100% that is causing the issue */
+}
+
+/* Ensure the search wrapper in analyzer has no margin */
+.search-wrapper.analyzer-search-panel {
+  margin-bottom: 0 !important;
 }
 
 /* Guide Section */
@@ -653,7 +679,7 @@
     flex-direction: column;
   }
 
-  .search-box {
+  .analyzer-search-box {
     flex-direction: column;
   }
 

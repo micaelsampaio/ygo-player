@@ -1,0 +1,256 @@
+.card-groups-container {
+  margin-bottom: 20px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 15px;
+  position: relative;
+}
+
+.card-groups-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.card-groups-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #333;
+}
+
+.new-collection-button {
+  background: #673ab7;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.new-collection-button:hover {
+  background: #5e35b1;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 5px rgba(103, 58, 183, 0.3);
+}
+
+.create-collection-form,
+.edit-group-form {
+  background: #f8f8f8;
+  border-radius: 6px;
+  padding: 12px;
+  margin-bottom: 15px;
+}
+
+.create-collection-form input,
+.edit-group-form input {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.create-collection-form textarea,
+.edit-group-form textarea {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  min-height: 60px;
+  resize: vertical;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.form-actions button {
+  padding: 6px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: #f0f0f0;
+  cursor: pointer;
+}
+
+.form-actions button.create-button,
+.form-actions button.save-button {
+  background: #673ab7;
+  color: white;
+  border-color: #673ab7;
+}
+
+.form-actions button:hover {
+  opacity: 0.9;
+}
+
+.form-actions button:disabled {
+  background: #f0f0f0;
+  color: #999;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.no-collections {
+  text-align: center;
+  color: #666;
+  padding: 20px 0;
+}
+
+.card-group-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.card-group-item {
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  padding: 15px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid #e0e0e0;
+}
+
+.card-group-item.selected {
+  background-color: #f1e8ff;
+  border-color: #d1c4e9;
+}
+
+.card-group-item:hover {
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+}
+
+.group-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.group-header h4 {
+  margin: 0;
+  font-size: 1rem;
+  color: #333;
+}
+
+.group-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.edit-button,
+.delete-button {
+  background: none;
+  border: none;
+  padding: 5px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  color: #666;
+  border-radius: 3px;
+}
+
+.edit-button:hover {
+  background-color: #f0f0f0;
+  color: #673ab7;
+}
+
+.delete-button:hover {
+  background-color: #feeeef;
+  color: #e53935;
+}
+
+.group-description {
+  margin: 8px 0;
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.card-count {
+  font-size: 0.85rem;
+  color: #888;
+  margin-top: 8px;
+}
+
+.collection-cards {
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.empty-collection {
+  font-style: italic;
+  color: #999;
+  text-align: center;
+  padding: 10px 0;
+}
+
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 10px;
+}
+
+.collection-card {
+  position: relative;
+  border-radius: 5px;
+  overflow: hidden;
+  transition: transform 0.2s;
+}
+
+.collection-card:hover {
+  transform: scale(1.05);
+  z-index: 1;
+}
+
+.collection-card img {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.remove-card-btn {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(255, 0, 0, 0.7);
+  color: white;
+  border: none;
+  font-size: 14px;
+  line-height: 1;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.collection-card:hover .remove-card-btn {
+  opacity: 1;
+}
+
+@media (max-width: 768px) {
+  .cards-grid {
+    grid-template-columns: repeat(auto-fill, minmax(65px, 1fr));
+  }
+
+  .group-actions {
+    flex-direction: column;
+    gap: 5px;
+  }
+}

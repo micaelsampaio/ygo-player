@@ -576,7 +576,7 @@ const DeckEditor: React.FC<DeckEditorProps> = ({
                   const target = e.target as HTMLImageElement;
                   target.src = `${
                     import.meta.env.VITE_YGO_CDN_URL
-                  }/images/cards/card_back.jpg`;
+                  }/images/card_back.png`;
                 }}
               />
               {card.roleInfo?.roles && card.roleInfo.roles.length > 0 && (
@@ -673,7 +673,7 @@ const DeckEditor: React.FC<DeckEditorProps> = ({
                   const target = e.target as HTMLImageElement;
                   target.src = `${
                     import.meta.env.VITE_YGO_CDN_URL
-                  }/images/cards/card_back.jpg`;
+                  }/images/card_back.png`;
                 }}
               />
               {card.roleInfo?.roles && card.roleInfo.roles.length > 0 && (
@@ -772,7 +772,7 @@ const DeckEditor: React.FC<DeckEditorProps> = ({
                   const target = e.target as HTMLImageElement;
                   target.src = `${
                     import.meta.env.VITE_YGO_CDN_URL
-                  }/images/cards/card_back.jpg`;
+                  }/images/card_back.png`;
                 }}
               />
               {card.roleInfo?.roles && card.roleInfo.roles.length > 0 && (

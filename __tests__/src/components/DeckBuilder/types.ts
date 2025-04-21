@@ -132,6 +132,7 @@ export interface Card {
 
 // Deck structure
 export interface Deck {
+  id?: string; // Adding ID field for better uniqueness guarantee
   name: string;
   mainDeck: Card[];
   extraDeck: Card[];
@@ -142,6 +143,32 @@ export interface Deck {
   originalDeck?: string; // Reference to the original deck name if this is a copy
   originalCreatedAt?: string; // Creation date of the original deck
   lastModified?: string; // Last time the deck was modified
+  groupId?: string; // Reference to the group this deck belongs to
+}
+
+// Deck Group structure for organizing decks into folders
+export interface DeckGroup {
+  id: string;
+  name: string;
+  description?: string;
+  createdAt: string;
+  lastModified?: string;
+  icon?: string; // Optional icon identifier
+  color?: string; // Optional color for UI display
+  parentId?: string; // For nested groups (optional)
+}
+
+// Card Group structure for organizing cards into collections
+export interface CardGroup {
+  id: string;
+  name: string;
+  description?: string;
+  cards: Card[];
+  createdAt: string;
+  lastModified?: string;
+  tags?: string[]; // Optional tags for filtering and organization
+  icon?: string; // Optional icon identifier
+  color?: string; // Optional color for UI display
 }
 
 // Advanced search filters

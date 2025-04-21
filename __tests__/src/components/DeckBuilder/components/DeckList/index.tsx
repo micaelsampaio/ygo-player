@@ -1,9 +1,10 @@
-import React, { useState } from "react";
-import { Deck } from "../../types";
+import React, { useState, useEffect } from "react";
+import { Deck, DeckGroup } from "../../types";
 import "./DecksList.css";
 import { createCollectionFromDeck } from "../../../Collections/contex";
 import { useNavigate } from "react-router-dom";
 import DeckActions from "./DeckActions";
+import DeckGroups from "./DeckGroups";
 
 interface DeckListProps {
   decks: Deck[];
@@ -11,12 +12,19 @@ interface DeckListProps {
   onSelectDeck: (deck: Deck | null) => void;
   onDeleteDeck: (deck: Deck) => void;
   copyDeck: (deck: Deck) => void;
-  onCreateDeck: (name: string) => void;
+  onCreateDeck: (name: string, groupId?: string) => void;
   onRenameDeck: (deck: Deck, newName: string) => void;
   onClearDeck: (deck: Deck) => void;
   onImportDeck: (deck: Deck) => void;
   onCreateCollection: (deck: Deck) => void;
-  onSyncDecks?: () => void; // New prop for sync functionality
+  onSyncDecks?: () => void;
+  deckGroups: DeckGroup[];
+  selectedGroup: DeckGroup | null;
+  onSelectGroup: (group: DeckGroup) => void;
+  onCreateGroup: (name: string, description?: string) => DeckGroup | null;
+  onUpdateGroup: (groupId: string, updates: Partial<DeckGroup>) => void;
+  onDeleteGroup: (groupId: string) => boolean;
+  onMoveDeckToGroup: (deckId: string, groupId: string) => boolean;
 }
 
 const DeckList: React.FC<DeckListProps> = ({
@@ -31,6 +39,13 @@ const DeckList: React.FC<DeckListProps> = ({
   onImportDeck,
   onCreateCollection,
   onSyncDecks,
+  deckGroups,
+  selectedGroup,
+  onSelectGroup,
+  onCreateGroup,
+  onUpdateGroup,
+  onDeleteGroup,
+  onMoveDeckToGroup,
 }) => {
   const navigate = useNavigate();
   const [editingDeck, setEditingDeck] = useState<string | null>(null);
@@ -38,6 +53,43 @@ const DeckList: React.FC<DeckListProps> = ({
   const [activeDeckOptions, setActiveDeckOptions] = useState<string | null>(
     null
   );
+  const [viewMode, setViewMode] = useState<"all" | "groups">("all");
+  const [filteredDecks, setFilteredDecks] = useState<Deck[]>(decks);
+  const [groupStats, setGroupStats] = useState<
+    Record<string, { count: number; decks: Deck[] }>
+  >({});
+
+  useEffect(() => {
+    const stats: Record<string, { count: number; decks: Deck[] }> = {};
+
+    deckGroups.forEach((group) => {
+      stats[group.id] = { count: 0, decks: [] };
+    });
+
+    decks.forEach((deck) => {
+      const groupId = deck.groupId || "default";
+      if (!stats[groupId]) {
+        stats[groupId] = { count: 0, decks: [] };
+      }
+      stats[groupId].count += 1;
+      stats[groupId].decks.push(deck);
+    });
+
+    setGroupStats(stats);
+  }, [decks, deckGroups]);
+
+  useEffect(() => {
+    if (viewMode === "all" || !selectedGroup) {
+      setFilteredDecks(decks);
+    } else {
+      const groupDecks = decks.filter(
+        (deck) =>
+          deck.groupId === selectedGroup.id ||
+          (selectedGroup.id === "default" && !deck.groupId)
+      );
+      setFilteredDecks(groupDecks);
+    }
+  }, [decks, selectedGroup, viewMode]);
 
   const handleRename = (deck: Deck, newName: string) => {
     if (newName.trim() && newName !== deck.name) {
@@ -58,7 +110,7 @@ const DeckList: React.FC<DeckListProps> = ({
 
   const handleNewDeck = () => {
     const newDeckName = `New Deck ${decks.length + 1}`;
-    onCreateDeck(newDeckName);
+    onCreateDeck(newDeckName, selectedGroup?.id);
   };
 
   const handleDeckRename = (name: string) => {
@@ -87,22 +139,16 @@ const DeckList: React.FC<DeckListProps> = ({
         `Are you sure you want to delete "${deck.name}"? This action cannot be undone.`
       )
     ) {
-      // First ensure we have the correct key for localStorage
       const storageKey = `deck_${deck.name}`;
-
-      // Remove from localStorage directly to ensure it's gone
       localStorage.removeItem(storageKey);
-
-      // Then call the parent component's delete function
       onDeleteDeck(deck);
     }
   };
 
   const handleContextMenu = (deck: Deck, event: React.MouseEvent) => {
-    event.preventDefault(); // Prevent the default context menu
+    event.preventDefault();
     event.stopPropagation();
 
-    // Toggle options visibility
     if (activeDeckOptions === deck.name) {
       setActiveDeckOptions(null);
     } else {
@@ -110,10 +156,8 @@ const DeckList: React.FC<DeckListProps> = ({
       onSelectDeck(deck);
     }
 
-    // Position the options menu at the cursor position
     const optionsMenu = document.getElementById(`deck-options-${deck.name}`);
     if (optionsMenu) {
-      // Calculate position to show near the cursor
       optionsMenu.style.position = "absolute";
       optionsMenu.style.top = `${
         event.clientY - event.currentTarget.getBoundingClientRect().top
@@ -121,8 +165,7 @@ const DeckList: React.FC<DeckListProps> = ({
       optionsMenu.style.left = `${
         event.clientX - event.currentTarget.getBoundingClientRect().left
       }px`;
-      // Make sure menu doesn't go off the right edge
-      const menuWidth = 250; // Approximate width
+      const menuWidth = 250;
       const containerWidth = event.currentTarget.getBoundingClientRect().width;
       const cursorX =
         event.clientX - event.currentTarget.getBoundingClientRect().left;
@@ -151,10 +194,10 @@ const DeckList: React.FC<DeckListProps> = ({
     ).toLocaleDateString()}`;
   };
 
-  // Always sort decks by name
-  const sortedDecks = [...decks].sort((a, b) => a.name.localeCompare(b.name));
+  const sortedDecks = [...filteredDecks].sort((a, b) =>
+    a.name.localeCompare(b.name)
+  );
 
-  // Close deck options when clicking outside
   React.useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (!(e.target as Element).closest(".deck-options-popup")) {
@@ -165,6 +208,15 @@ const DeckList: React.FC<DeckListProps> = ({
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  const handleMoveDeckToGroup = (deck: Deck, groupId: string) => {
+    if (deck.id) {
+      onMoveDeckToGroup(deck.id, groupId);
+      setActiveDeckOptions(null);
+    } else {
+      console.error("Deck has no ID, cannot move to group");
+    }
+  };
 
   return (
     <div className="decks-list-container">
@@ -182,15 +234,51 @@ const DeckList: React.FC<DeckListProps> = ({
         </div>
       </div>
 
+      <div className="view-mode-toggle">
+        <button
+          className={`view-mode-button ${viewMode === "all" ? "active" : ""}`}
+          onClick={() => setViewMode("all")}
+        >
+          All Decks
+        </button>
+        <button
+          className={`view-mode-button ${
+            viewMode === "groups" ? "active" : ""
+          }`}
+          onClick={() => setViewMode("groups")}
+        >
+          By Folder
+        </button>
+      </div>
+
+      {viewMode === "groups" && (
+        <DeckGroups
+          deckGroups={deckGroups}
+          selectedGroup={selectedGroup}
+          onSelectGroup={onSelectGroup}
+          onCreateGroup={onCreateGroup}
+          onUpdateGroup={onUpdateGroup}
+          onDeleteGroup={onDeleteGroup}
+          groupStats={groupStats}
+        />
+      )}
+
       <div className="decks-list">
         {sortedDecks.length === 0 ? (
           <div className="no-decks">
-            <p>No decks yet. Create your first deck!</p>
+            {viewMode === "groups" && selectedGroup ? (
+              <p>
+                No decks in this folder. Create a new deck or move existing
+                decks here.
+              </p>
+            ) : (
+              <p>No decks yet. Create your first deck!</p>
+            )}
           </div>
         ) : (
           sortedDecks.map((deck) => (
             <div
-              key={deck.name}
+              key={deck.id || deck.name}
               className={`deck-item ${
                 selectedDeck?.name === deck.name ? "selected" : ""
               }`}
@@ -260,7 +348,11 @@ const DeckList: React.FC<DeckListProps> = ({
                       handleCreateCollection(deck);
                       setActiveDeckOptions(null);
                     }}
-                    showDropdownImmediately={true} // Add this prop
+                    showDropdownImmediately={true}
+                    deckGroups={deckGroups}
+                    onMoveDeckToGroup={(groupId) =>
+                      handleMoveDeckToGroup(deck, groupId)
+                    }
                   />
                 </div>
               )}

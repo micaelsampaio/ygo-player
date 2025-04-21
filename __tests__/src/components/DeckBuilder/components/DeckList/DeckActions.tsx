@@ -1,5 +1,5 @@
 import React, { useState, useRef } from "react";
-import { Deck } from "../../types";
+import { Deck, DeckGroup } from "../../types";
 import "./DeckActions.css";
 import { ydkToJson } from "../../../../utils/ydk-parser";
 import { ydkeToJson } from "../../../../utils/ydke-parser";
@@ -27,6 +27,8 @@ interface DeckActionsProps {
   onDeleteDeck: (deck: Deck) => void;
   onCreateCollection: (deck: Deck) => void;
   showDropdownImmediately?: boolean; // New prop
+  deckGroups?: DeckGroup[];
+  onMoveDeckToGroup?: (groupId: string) => void;
 }
 
 const DeckActions: React.FC<DeckActionsProps> = ({
@@ -38,11 +40,14 @@ const DeckActions: React.FC<DeckActionsProps> = ({
   onDeleteDeck,
   onCreateCollection,
   showDropdownImmediately = false, // Default to false
+  deckGroups = [], // Default to empty array
+  onMoveDeckToGroup,
 }) => {
   // Initialize isActionsOpen based on the showDropdownImmediately prop
   const [isActionsOpen, setIsActionsOpen] = useState(showDropdownImmediately);
   const [isRenaming, setIsRenaming] = useState(false);
   const [newName, setNewName] = useState("");
+  const [isMoveGroupMenuOpen, setIsMoveGroupMenuOpen] = useState(false);
   const [importProgress, setImportProgress] = useState<{
     isImporting: boolean;
     progress: number;
@@ -381,6 +386,20 @@ const DeckActions: React.FC<DeckActionsProps> = ({
     }
   };
 
+  const handleMoveDeckToGroup = (groupId: string) => {
+    if (onMoveDeckToGroup) {
+      onMoveDeckToGroup(groupId);
+    }
+    setIsMoveGroupMenuOpen(false);
+    setIsActionsOpen(false);
+  };
+
+  const getCurrentGroupName = () => {
+    if (!deck?.groupId) return "Default";
+    const group = deckGroups.find((g) => g.id === deck.groupId);
+    return group ? group.name : "Unknown Group";
+  };
+
   return (
     <div className="deck-actions" ref={actionsRef}>
       <button
@@ -491,6 +510,42 @@ const DeckActions: React.FC<DeckActionsProps> = ({
               <span className="action-icon">✏️</span>
               <span className="action-text">Rename Deck</span>
             </button>
+
+            {onMoveDeckToGroup && deckGroups.length > 0 && (
+              <div className="move-to-group-container">
+                <button
+                  onClick={() => setIsMoveGroupMenuOpen(!isMoveGroupMenuOpen)}
+                  title="Move deck to a different group"
+                  className="action-button"
+                >
+                  <span className="action-icon">📁</span>
+                  <span className="action-text">
+                    Move to Folder ({getCurrentGroupName()})
+                  </span>
+                  <span className="group-menu-arrow">
+                    {isMoveGroupMenuOpen ? "▲" : "▼"}
+                  </span>
+                </button>
+
+                {isMoveGroupMenuOpen && (
+                  <div className="group-selection-menu">
+                    {deckGroups.map((group) => (
+                      <button
+                        key={group.id}
+                        onClick={() => handleMoveDeckToGroup(group.id)}
+                        className={`group-option ${
+                          deck?.groupId === group.id ? "current-group" : ""
+                        }`}
+                        disabled={deck?.groupId === group.id}
+                      >
+                        <span className="group-icon">📁</span>
+                        <span className="group-name">{group.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
 
             <button
               onClick={() => {

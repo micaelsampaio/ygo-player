@@ -246,3 +246,64 @@
   margin: 10px 0;
   color: #555;
 }
+
+/* Add styles for group selection functionality */
+.move-to-group-container {
+  position: relative;
+  width: 100%;
+}
+
+.group-selection-menu {
+  position: absolute;
+  right: 0;
+  z-index: 10;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  width: calc(100% - 10px);
+  max-height: 200px;
+  overflow-y: auto;
+  margin-top: 2px;
+  margin-left: 5px;
+}
+
+.group-option {
+  display: flex;
+  align-items: center;
+  padding: 8px 10px;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.group-option:hover {
+  background-color: #f0f0f0;
+}
+
+.group-option.current-group {
+  background-color: #e6f7ff;
+  font-weight: bold;
+}
+
+.group-option:disabled {
+  opacity: 0.5;
+  cursor: default;
+  background-color: #f8f8f8;
+}
+
+.group-icon {
+  margin-right: 8px;
+}
+
+.group-name {
+  flex-grow: 1;
+}
+
+.group-menu-arrow {
+  margin-left: 5px;
+  font-size: 10px;
+}

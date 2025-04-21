@@ -1,0 +1,257 @@
+.deck-groups-container {
+  margin-bottom: 20px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 15px;
+  position: relative;
+}
+
+.deck-groups-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.deck-groups-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #333;
+}
+
+.new-group-button {
+  background: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.new-group-button:hover {
+  background: #45a049;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 5px rgba(76, 175, 80, 0.3);
+}
+
+.create-group-form,
+.edit-group-form {
+  background: #f8f8f8;
+  border-radius: 6px;
+  padding: 12px;
+  margin-bottom: 15px;
+}
+
+.create-group-form input,
+.edit-group-form input {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.create-group-form textarea,
+.edit-group-form textarea {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  min-height: 60px;
+  resize: vertical;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.form-actions button {
+  padding: 6px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: #f0f0f0;
+  cursor: pointer;
+}
+
+.form-actions button.create-button,
+.form-actions button.save-button {
+  background: #2196f3;
+  color: white;
+  border-color: #2196f3;
+}
+
+.form-actions button:hover {
+  opacity: 0.9;
+}
+
+.form-actions button:disabled {
+  background: #f0f0f0;
+  color: #999;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.deck-groups-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.deck-group-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  border-radius: 6px;
+  margin-bottom: 8px;
+  border: 1px solid #e0e0e0;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.deck-group-item:hover {
+  background-color: #f5f5f5;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.deck-group-item.selected {
+  background-color: #e3f2fd;
+  border-color: #bbdefb;
+}
+
+.group-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0; /* Ensures flex items can shrink below content size */
+}
+
+.group-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  color: #2196f3;
+  flex-shrink: 0; /* Prevents the icon from shrinking */
+}
+
+.group-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.group-details {
+  display: flex;
+  flex-direction: column;
+  min-width: 0; /* Allows content to shrink */
+  flex: 1;
+}
+
+.group-name-container {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  overflow: hidden;
+}
+
+.group-name {
+  font-weight: 500;
+  color: #333;
+  font-size: 0.95rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0; /* Important for text ellipsis to work in a flex container */
+}
+
+.group-description {
+  font-size: 0.8rem;
+  color: #666;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.deck-count {
+  font-size: 0.75rem; /* Smaller font size */
+  color: #666;
+  white-space: nowrap;
+  flex-shrink: 0; /* Prevent shrinking */
+  margin-left: 8px; /* Space after the folder name */
+  background-color: #f0f0f0; /* Light background */
+  padding: 2px 6px; /* Padding for the badge */
+  border-radius: 10px; /* Rounded corners */
+  font-weight: normal; /* Ensure it's not bold */
+}
+
+.group-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0; /* Prevent shrinking */
+  margin-left: auto; /* Push actions to the right */
+}
+
+.edit-button,
+.delete-button {
+  background: none;
+  border: none;
+  padding: 5px 8px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  color: #666;
+  border-radius: 3px;
+  white-space: nowrap; /* Prevent text wrapping */
+  min-width: 40px; /* Ensure minimum width for the buttons */
+}
+
+.edit-button:hover {
+  background-color: #f0f0f0;
+  color: #2196f3;
+}
+
+.delete-button:hover {
+  background-color: #fee;
+  color: #e53935;
+}
+
+.edit-button:disabled,
+.delete-button:disabled {
+  color: #ccc;
+  cursor: not-allowed;
+  background: none;
+}
+
+@media (max-width: 768px) {
+  .deck-group-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .group-actions {
+    margin-top: 10px;
+    align-self: flex-end;
+  }
+
+  .deck-count {
+    margin-left: 0;
+    margin-top: 5px;
+  }
+
+  .edit-button,
+  .delete-button {
+    min-width: auto;
+    padding: 5px 10px;
+  }
+}

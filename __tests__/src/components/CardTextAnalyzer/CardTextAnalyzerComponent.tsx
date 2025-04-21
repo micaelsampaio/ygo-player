@@ -254,12 +254,13 @@ const CardTextAnalyzerComponent: React.FC = () => {
           )}
 
           {!selectedCard && (
-            <div className="search-wrapper">
+            <div className="analyzer-search-wrapper">
               <SearchPanel
                 onCardSelect={handleCardSelect}
                 onCardAdd={handleAddToDeck}
                 onToggleFavorite={handleToggleFavorite}
                 hideAddToDeck={true}
+                className="analyzer-search"
               />
             </div>
           )}

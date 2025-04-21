@@ -1,8 +1,6 @@
 import React from "react";
 import { Card } from "../../types";
-import { getCardImageUrl } from "../../../../utils/cardImages";
-
-const CARD_BACK_IMAGE = "/assets/images/card-back.jpg";
+import { getCardImageUrl, CARD_BACK_IMAGE } from "../../../../utils/cardImages";
 
 interface SearchResultsProps {
   results: Card[];
@@ -34,6 +32,11 @@ const SearchResults: React.FC<SearchResultsProps> = ({
     if (typeLC.includes("effect")) return "monster effect";
     if (typeLC.includes("monster")) return "monster effect";
     return "";
+  };
+
+  const getImageSource = (card: Card) => {
+    // Always use our CDN instead of ygoprodeck.com
+    return getCardImageUrl(card, "small");
   };
 
   // Handle right-click to directly add to the currently selected deck
@@ -69,13 +72,14 @@ const SearchResults: React.FC<SearchResultsProps> = ({
             onContextMenu={(e) => handleRightClick(card, e)}
           >
             <img
-              src={getCardImageUrl(card, "small")}
+              src={getImageSource(card)}
               alt={card.name}
               className="suggestion-image"
               onClick={() => onCardSelect(card)}
               loading="lazy"
               crossOrigin="anonymous"
               onError={(e) => {
+                console.log(`Failed to load image for card: ${card.name}`);
                 e.currentTarget.src = CARD_BACK_IMAGE;
                 e.currentTarget.classList.add("placeholder");
               }}

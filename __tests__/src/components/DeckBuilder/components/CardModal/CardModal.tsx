@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Card } from "../../types";
 import "./CardModal.css";
-import { getCardImageUrl } from "../../../../utils/cardImages";
+import { getCardImageUrl, CARD_BACK_IMAGE } from "../../../../utils/cardImages";
 
 interface CardModalProps {
   card: Card;
@@ -147,9 +147,7 @@ const CardModal: React.FC<CardModalProps> = ({
             <img
               src={
                 hasImageFallback
-                  ? `${
-                      import.meta.env.VITE_YGO_CDN_URL
-                    }/images/cards_small/card_back.jpg`
+                  ? CARD_BACK_IMAGE
                   : getCardImageUrl(card, "normal")
               }
               alt={card.name}

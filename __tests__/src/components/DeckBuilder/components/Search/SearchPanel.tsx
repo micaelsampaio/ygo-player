@@ -14,6 +14,7 @@ interface SearchPanelProps {
   onTargetDeckChange?: (target: "main" | "side") => void;
   hideAddToDeck?: boolean; // Add prop to hide "Add to Deck" functionality
   isDuelInterface?: boolean; // Add prop to indicate when used in duel interface
+  className?: string; // Add custom className prop
 }
 
 const SearchPanel: React.FC<SearchPanelProps> = ({
@@ -24,6 +25,7 @@ const SearchPanel: React.FC<SearchPanelProps> = ({
   onTargetDeckChange,
   hideAddToDeck = false, // Default to showing "Add to Deck"
   isDuelInterface = false, // Default to false for backward compatibility
+  className = "", // Default to empty string
 }) => {
   const [activeTab, setActiveTab] = useState<"search" | "favorites">("search");
   const [favoriteCards, setFavoriteCards] = useState<Card[]>([]);
@@ -127,7 +129,11 @@ const SearchPanel: React.FC<SearchPanelProps> = ({
   };
 
   return (
-    <div className={`search-panel ${isDuelInterface ? "duel-interface" : ""}`}>
+    <div
+      className={`search-panel ${
+        isDuelInterface ? "duel-interface" : ""
+      } ${className}`}
+    >
       {onTargetDeckChange && !hideAddToDeck && (
         <div className="target-deck-selector">
           <label>Add to:</label>

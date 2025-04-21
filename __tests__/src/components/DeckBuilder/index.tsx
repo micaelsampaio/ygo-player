@@ -6,22 +6,25 @@ declare global {
 }
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { Card, Deck, DeckBuilderProps } from "./types";
+import { Card, Deck, DeckBuilderProps, DeckGroup, CardGroup } from "./types";
 import DeckList from "./components/DeckList";
 import DeckEditor from "./components/DeckEditor/DeckEditor.tsx";
 import SearchPanel from "./components/Search/SearchPanel";
+import CardGroups from "./components/Search/CardGroups";
 import DeckAnalytics from "./components/DeckAnalysis";
 import CardModal from "./components/CardModal/CardModal.tsx";
 import CardNotification from "./components/CardNotification/CardNotification.tsx";
 import CardSuggestions from "./components/CardSuggestion/CardSuggestions.tsx";
 import DrawSimulator from "./components/DrawSimulator"; // Fix import path
 import { useDeckStorage } from "./hooks/useDeckStorage";
+import { useDeckGroups } from "./hooks/useDeckGroups"; // New hook for deck groups
 import { useDeckAnalytics } from "./hooks/useDeckAnalytics";
 import { useAnalyzerService } from "./hooks/useAnalyzerService";
 import { canAddCardToDeck } from "./utils";
 import { initializeBanList } from "./services/banListLoader";
 import { banListService } from "./services/banListService";
 import { syncDecksWithFolder, processFiles } from "../../utils/deckFileSystem";
+import { v4 as uuidv4 } from "uuid"; // You'll need to install this dependency
 import "./DeckBuilder.css";
 
 const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
@@ -41,6 +44,7 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
     useState(false);
   const [isEditingDeckName, setIsEditingDeckName] = useState(false);
   const [isSyncModalOpen, setIsSyncModalOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<"cards" | "collections">("cards");
   const [syncProgress, setSyncProgress] = useState<{
     isProcessing: boolean;
     status: string;
@@ -73,12 +77,46 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
     copyDeck,
   } = useDeckStorage();
 
+  // Use the new deck groups hook
+  const {
+    deckGroups,
+    cardGroups,
+    selectedDeckGroup,
+    selectedCardGroup,
+    setSelectedDeckGroup,
+    setSelectedCardGroup,
+    createDeckGroup,
+    updateDeckGroup,
+    deleteDeckGroup,
+    moveDeckToGroup,
+    getDecksInGroup,
+    createCardGroup,
+    updateCardGroup,
+    deleteCardGroup,
+    addCardToGroup,
+    removeCardFromGroup,
+  } = useDeckGroups();
+
   const { analyzeDeck } = useDeckAnalytics();
   const {
     analyzeDeckWithService,
     isLoading: analyzerServiceLoading,
     error: analyzerServiceError,
   } = useAnalyzerService();
+
+  // Effect to ensure all decks have IDs
+  useEffect(() => {
+    // Ensure all decks have IDs for proper management with groups
+    decks.forEach((deck) => {
+      if (!deck.id) {
+        const updatedDeck = {
+          ...deck,
+          id: uuidv4(),
+        };
+        updateDeck(updatedDeck);
+      }
+    });
+  }, [decks]);
 
   // Initialize ban list when component mounts
   useEffect(() => {
@@ -202,8 +240,13 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
       initialDecks.forEach((deck) => {
         // Add the deck if it doesn't already exist
         if (!decks.some((d) => d.name === deck.name)) {
-          createDeck(deck.name);
-          updateDeck(deck);
+          // Ensure deck has an ID
+          const deckWithId = {
+            ...deck,
+            id: deck.id || uuidv4(),
+          };
+          createDeck(deckWithId.name);
+          updateDeck(deckWithId);
         }
       });
     }
@@ -264,10 +307,12 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
       return;
     }
 
-    // Add the deck to storage
+    // Add the deck to storage with ID and selected group
     const newDeck = {
       ...importedDeck,
+      id: uuidv4(),
       name: importedDeck.name + " (Imported)",
+      groupId: selectedDeckGroup?.id || "default", // Assign to current group if one is selected
     };
 
     // Use your existing deck storage mechanism
@@ -325,6 +370,22 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
     }
   };
 
+  const handleAddCardToCollection = (card: Card) => {
+    if (selectedCardGroup) {
+      addCardToGroup(selectedCardGroup.id, card);
+    } else {
+      // If no collection is selected, offer to create one
+      const collectionName = prompt("Name for new group:");
+      if (collectionName) {
+        const newGroup = createCardGroup(collectionName);
+        if (newGroup) {
+          addCardToGroup(newGroup.id, card);
+          setSelectedCardGroup(newGroup);
+        }
+      }
+    }
+  };
+
   const handleDeleteDeck = (deckToDelete: Deck) => {
     deleteDeck(deckToDelete.name);
 
@@ -332,6 +393,48 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
     if (selectedDeck && selectedDeck.name === deckToDelete.name) {
       selectDeck(null);
     }
+  };
+
+  const handleCreateDeck = (name: string, groupId?: string) => {
+    // Create a deck with an ID and assign it to the specified group or current group
+    const newDeck = createDeck(name);
+    if (newDeck && (groupId || selectedDeckGroup)) {
+      const updatedDeck = {
+        ...newDeck,
+        id: newDeck.id || uuidv4(),
+        groupId: groupId || selectedDeckGroup?.id,
+      };
+      updateDeck(updatedDeck);
+      return updatedDeck;
+    }
+    return newDeck;
+  };
+
+  const handleMoveDeckToGroup = (deckId: string, groupId: string) => {
+    const result = moveDeckToGroup(deckId, groupId);
+
+    // Update UI by refreshing the entire deck list
+    if (result) {
+      // Find the updated deck in local storage and update local state
+      const updatedDeck = decks.find((d) => d.id === deckId);
+      if (updatedDeck) {
+        // Create an updated copy with the new groupId
+        const refreshedDeck = {
+          ...updatedDeck,
+          groupId: groupId,
+          lastModified: new Date().toISOString(),
+        };
+
+        // Force a UI update by updating the deck
+        updateDeck(refreshedDeck);
+
+        // If this was the selected deck, update the selection to show changes immediately
+        if (selectedDeck?.id === deckId) {
+          selectDeck(refreshedDeck);
+        }
+      }
+    }
+    return result;
   };
 
   const handleReorderCards = (
@@ -450,10 +553,12 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
           // Add custom import suffix to avoid name collisions
           const importedDeck = {
             ...deck,
+            id: uuidv4(),
             name: deck.name.endsWith(" (Imported)")
               ? deck.name
               : deck.name + " (Imported)",
             importedAt: new Date().toISOString(),
+            groupId: selectedDeckGroup?.id || "default",
           };
           updateDeck(importedDeck);
         });
@@ -624,10 +729,12 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
           // Add custom import suffix to avoid name collisions
           const importedDeck = {
             ...deck,
+            id: uuidv4(),
             name: deck.name.endsWith(" (Imported)")
               ? deck.name
               : deck.name + " (Imported)",
             importedAt: new Date().toISOString(),
+            groupId: selectedDeckGroup?.id || "default",
           };
           updateDeck(importedDeck);
         });
@@ -679,6 +786,30 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
     });
   };
 
+  // Calculate group stats for decks
+  const calculateGroupStats = useCallback(() => {
+    const stats: Record<string, { count: number; decks: Deck[] }> = {};
+
+    // Initialize all groups
+    deckGroups.forEach((group) => {
+      stats[group.id] = { count: 0, decks: [] };
+    });
+
+    // Count decks per group
+    decks.forEach((deck) => {
+      const groupId = deck.groupId || "default";
+      if (!stats[groupId]) {
+        stats[groupId] = { count: 0, decks: [] };
+      }
+      stats[groupId].count++;
+      stats[groupId].decks.push(deck);
+    });
+
+    return stats;
+  }, [decks, deckGroups]);
+
+  const groupStats = calculateGroupStats();
+
   return (
     <div className="deck-builder">
       <div className="builder-container">
@@ -689,7 +820,7 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
             onSelectDeck={selectDeck}
             onDeleteDeck={handleDeleteDeck}
             copyDeck={copyDeck}
-            onCreateDeck={createDeck}
+            onCreateDeck={handleCreateDeck}
             onRenameDeck={handleRenameDeck}
             onClearDeck={handleClearDeck}
             onImportDeck={handleImportDeck}
@@ -701,6 +832,14 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
               }
             }}
             onSyncDecks={() => setIsSyncModalOpen(true)}
+            // New props for deck groups
+            deckGroups={deckGroups}
+            selectedGroup={selectedDeckGroup}
+            onSelectGroup={setSelectedDeckGroup}
+            onCreateGroup={createDeckGroup}
+            onUpdateGroup={updateDeckGroup}
+            onDeleteGroup={deleteDeckGroup}
+            onMoveDeckToGroup={handleMoveDeckToGroup}
           />
         </div>
 
@@ -750,8 +889,6 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
               >
                 Draw Simulator
               </button>
-
-              {/* Removed Enhanced Analysis toggle from here as it's now handled by the badge */}
             </div>
           </div>
 
@@ -765,7 +902,12 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
                 </p>
                 <button
                   className="action-btn"
-                  onClick={() => createDeck(`New Deck ${decks.length + 1}`)}
+                  onClick={() =>
+                    handleCreateDeck(
+                      `New Deck ${decks.length + 1}`,
+                      selectedDeckGroup?.id
+                    )
+                  }
                 >
                   Create New Deck
                 </button>
@@ -809,15 +951,51 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
           </div>
         </div>
 
+        {/* Always render the search panel, regardless of whether a deck is selected */}
         <div className="search-panel">
-          <SearchPanel
-            onCardSelect={toggleCardPreview}
-            onCardAdd={handleAddCard}
-            onToggleFavorite={handleToggleFavorite}
-            targetDeck={targetDeck}
-            onTargetDeckChange={setTargetDeck}
-          />
-          {selectedDeck && (
+          <div className="view-mode-toggle search-view-toggle">
+            <button
+              className={`view-mode-button ${
+                viewMode === "cards" ? "active" : ""
+              }`}
+              onClick={() => setViewMode("cards")}
+            >
+              Cards
+            </button>
+            <button
+              className={`view-mode-button ${
+                viewMode === "collections" ? "active" : ""
+              }`}
+              onClick={() => setViewMode("collections")}
+            >
+              Groups
+            </button>
+          </div>
+
+          {viewMode === "cards" ? (
+            <SearchPanel
+              onCardSelect={toggleCardPreview}
+              onCardAdd={handleAddCard}
+              onToggleFavorite={handleToggleFavorite}
+              onAddToCollection={handleAddCardToCollection}
+              targetDeck={targetDeck}
+              onTargetDeckChange={setTargetDeck}
+            />
+          ) : (
+            <CardGroups
+              cardGroups={cardGroups}
+              selectedGroup={selectedCardGroup}
+              onSelectGroup={setSelectedCardGroup}
+              onCreateGroup={createCardGroup}
+              onUpdateGroup={updateCardGroup}
+              onDeleteGroup={deleteCardGroup}
+              onAddCardToGroup={addCardToGroup}
+              onRemoveCardFromGroup={removeCardFromGroup}
+              onCardSelect={toggleCardPreview}
+            />
+          )}
+
+          {selectedDeck && viewMode === "cards" && (
             <CardSuggestions
               deck={selectedDeck}
               onAddCardToDeck={handleAddCard}
@@ -833,6 +1011,7 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
           onClose={closeModal}
           onAddCard={selectedDeck ? handleAddCard : undefined}
           onToggleFavorite={handleToggleFavorite}
+          onAddToCollection={handleAddCardToCollection}
         />
       )}
 

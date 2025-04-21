@@ -3,6 +3,9 @@ import { Card } from "../components/DeckBuilder/types";
 // Get the CDN URL from environment variables
 const CDN_URL = import.meta.env.VITE_YGO_CDN_URL || "http://127.0.0.1:8080";
 
+// Centralized card back image path
+export const CARD_BACK_IMAGE = `${CDN_URL}/images/card_back.png`;
+
 /**
  * Get the URL for a card image from the configured CDN
  * @param card The card object or card ID
@@ -18,7 +21,7 @@ export const getCardImageUrl = (
 
   if (!cardId) {
     console.warn("Attempting to get image URL for card with no ID", card);
-    return `${CDN_URL}/images/cards/card_back.jpg`;
+    return CARD_BACK_IMAGE;
   }
 
   // Build the URL path based on the requested size
@@ -49,7 +52,7 @@ export const createCardImageElement = (
 
   // Set up fallback for error
   img.onerror = () => {
-    img.src = `${CDN_URL}/images/cards/card_back.jpg`;
+    img.src = CARD_BACK_IMAGE;
     img.classList.add("card-image-fallback");
   };
 
@@ -62,7 +65,7 @@ export const createCardImageElement = (
 export const preloadCommonCardImages = () => {
   // Card back is always needed
   const cardBack = new Image();
-  cardBack.src = `${CDN_URL}/images/cards/card_back.jpg`;
+  cardBack.src = CARD_BACK_IMAGE;
 
   // You could also preload other commonly used cards
   // const commonCards = [1234, 5678, 9012]; // Example card IDs

@@ -145,7 +145,7 @@ const CardSuggestions: React.FC<CardSuggestionsProps> = ({
                 const target = e.target as HTMLImageElement;
                 target.src = `${
                   import.meta.env.VITE_YGO_CDN_URL
-                }/images/cards_small/card_back.jpg`;
+                }/images/card_back.png`;
                 target.classList.add("card-image-fallback");
               }}
             />
