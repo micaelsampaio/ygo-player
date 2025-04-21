@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useCallback, useRef } from "react";
 import { YGODuel } from "../../core/YGODuel";
 
 export function ControlsMenu({ duel }: { duel: YGODuel }) {
@@ -23,9 +23,27 @@ export function ControlsMenu({ duel }: { duel: YGODuel }) {
         duel.commands.pause();
     };
 
+    const setTimeScale = useCallback((dt: number) => {
+        duel.core.setTimeScale(dt);
+    }, [])
+
     return <div className="ygo-card-menu ygo-controls-menu">
         <div className="">
             Controls
+        </div>
+        <div className="ygo-flex ygo-gap-1">
+            <button disabled={duel.core.timeScale === 1} type="button" className="ygo-card-item" onClick={() => setTimeScale(1)}>
+                1x
+            </button>
+            <button disabled={duel.core.timeScale === 1.5} type="button" className="ygo-card-item" onClick={() => setTimeScale(1.5)}>
+                1.5x
+            </button>
+            <button disabled={duel.core.timeScale === 2} type="button" className="ygo-card-item" onClick={() => setTimeScale(2)}>
+                2x
+            </button>
+            <button disabled={duel.core.timeScale === 3} type="button" className="ygo-card-item" onClick={() => setTimeScale(3)}>
+                3x
+            </button>
         </div>
         <button disabled={isPlaying || !hasNextCommand} type="button" className="ygo-card-item" onClick={play}>
             Play

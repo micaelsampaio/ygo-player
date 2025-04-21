@@ -16,6 +16,10 @@ export class YGOPlayerCore {
     public deltaTime: number;
     public fonts = new Map<string, Font>();
     public mapBounds: THREE.Object3D;
+
+    // time
+    public timeScale: number;
+
     // internal
     private previousFrame: number;
     private isOverlayEnabled: boolean;
@@ -26,6 +30,7 @@ export class YGOPlayerCore {
         this.sceneOverlay = new THREE.Scene();
         this.canvas = canvas;
         this.deltaTime = 0;
+        this.timeScale = 1;
         this.previousFrame = performance.now();
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         this.fonts = new Map();
@@ -48,7 +53,7 @@ export class YGOPlayerCore {
 
     public render() {
         const now = performance.now();
-        this.deltaTime = (now - this.previousFrame) / 1000;
+        this.deltaTime = ((now - this.previousFrame) / 1000) * this.timeScale;
         this.previousFrame = now;
 
         this.renderer.render(this.scene, this.camera);
@@ -117,5 +122,10 @@ export class YGOPlayerCore {
         this.camera.near = distance / 100;
         this.camera.far = distance * 100;
         this.camera.updateProjectionMatrix();
+    }
+
+    setTimeScale(value: number) {
+        this.timeScale = value;
+        // TODO PUBLISH EVENTS
     }
 }

@@ -33,9 +33,7 @@ export class YGOTaskController extends YGOComponent {
         return !this.isProcessing();
     }
 
-    update(): void {
-        const dt = this.duel.deltaTime;
-
+    update(dt: number): void {
         this.updateTasks(dt);
     }
 
