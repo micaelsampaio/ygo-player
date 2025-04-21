@@ -359,6 +359,9 @@ export default function App() {
                 <NavLink to="/my/decks">My Decks</NavLink>
               </NavItem>
               <NavItem>
+                <NavLink to="/my/cards/groups">My Card Groups</NavLink>
+              </NavItem>
+              <NavItem>
                 <NavLink to="/my/combos">My Combos</NavLink>
               </NavItem>
               <NavItem>

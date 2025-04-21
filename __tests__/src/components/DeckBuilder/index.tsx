@@ -519,6 +519,30 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
     setIsEditingDeckName(false);
   };
 
+  const handleAddAllCardsFromGroup = (cardsToAdd: Card[]) => {
+    if (!selectedDeck || cardsToAdd.length === 0) return;
+
+    let addedCount = 0;
+    let skippedCount = 0;
+
+    cardsToAdd.forEach((card) => {
+      if (canAddCardToDeck(selectedDeck, card.id)) {
+        if (targetDeck === "main") {
+          addCardToDeck(card);
+        } else {
+          addCardToSideDeck(card);
+        }
+        addedCount++;
+      } else {
+        skippedCount++;
+      }
+    });
+
+    console.log(
+      `Added ${addedCount} cards to deck. Skipped ${skippedCount} cards (limit of 3 copies reached).`
+    );
+  };
+
   // Deck sync functionality
   const handleSyncWithFolder = async (
     folderPath: string,
@@ -992,6 +1016,7 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
               onAddCardToGroup={addCardToGroup}
               onRemoveCardFromGroup={removeCardFromGroup}
               onCardSelect={toggleCardPreview}
+              onAddAllCardsFromGroup={handleAddAllCardsFromGroup}
             />
           )}
 

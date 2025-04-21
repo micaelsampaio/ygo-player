@@ -18,6 +18,8 @@ import MyDecksPage from "./components/MyDecks/MyDecksPage.tsx";
 import DeckDetailPage from "./components/MyDecks/DeckDetailPage.tsx";
 import MyCombosPage from "./components/MyCombos/MyCombosPage.tsx";
 import MyReplaysPage from "./components/MyReplays/MyReplaysPage.tsx";
+// Import the new MyCardGroupsPage component
+import MyCardGroupsPage from "./components/Cards/MyCardGroupsPage.tsx";
 
 debug.enable("ygo:*");
 localStorage.setItem("debug", "ygo:*");
@@ -59,6 +61,9 @@ createRoot(document.getElementById("root")!).render(
         {/* New routes for combos and replays */}
         <Route path="/my/combos" element={<MyCombosPage />} />
         <Route path="/my/replays" element={<MyReplaysPage />} />
+
+        {/* New route for card groups */}
+        <Route path="/my/cards/groups" element={<MyCardGroupsPage />} />
       </Routes>
     </BrowserRouter>
   </KaibaNetProvider>
