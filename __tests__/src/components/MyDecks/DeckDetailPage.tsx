@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
+import styled from "styled-components";
 import { YGODeckToImage } from "ygo-core-images-utils";
-import "../../styles/design-system.css";
-import "./DeckDetailPage.css";
+import theme from "../../styles/theme";
+import AppLayout from "../Layout/AppLayout";
+import { Button, Card } from "../UI";
+import { YGOCardGrid } from "../UI/YGOCard";
+import { ArrowLeft } from "lucide-react";
 
 const DeckDetailPage = () => {
   const navigate = useNavigate();
@@ -15,11 +19,21 @@ const DeckDetailPage = () => {
   useEffect(() => {
     // Load the deck data
     if (deckId) {
+      setLoading(true);
       try {
+        // First try direct access with the key
         const storedDeck = localStorage.getItem(`deck_${deckId}`);
+
         if (storedDeck) {
           setDeck(JSON.parse(storedDeck));
           setFileName(deckId.replace(/\s+/g, "_").toLowerCase());
+        } else {
+          // If not found, search through all localStorage keys to find a deck with matching ID
+          const found = findDeckById(deckId);
+          if (found) {
+            setDeck(found.deck);
+            setFileName(found.name.replace(/\s+/g, "_").toLowerCase());
+          }
         }
       } catch (error) {
         console.error("Error loading deck:", error);
@@ -27,6 +41,28 @@ const DeckDetailPage = () => {
       setLoading(false);
     }
   }, [deckId]);
+
+  // Helper function to search for a deck by ID
+  const findDeckById = (id: string) => {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key?.startsWith("deck_")) {
+        try {
+          const deckData = localStorage.getItem(key);
+          if (deckData) {
+            const deck = JSON.parse(deckData);
+            // Check if this deck has the ID we're looking for
+            if (deck.id === id) {
+              return { deck, name: key.replace("deck_", "") };
+            }
+          }
+        } catch (error) {
+          console.error(`Error checking deck ${key}:`, error);
+        }
+      }
+    }
+    return null;
+  };
 
   const downloadDeckAsYdk = async () => {
     if (!deck || !deckId) return;
@@ -75,24 +111,22 @@ const DeckDetailPage = () => {
     }`;
   };
 
-  if (loading) {
-    return (
-      <div className="deck-detail-page">
-        <div className="loading-indicator">Loading deck details...</div>
-      </div>
-    );
-  }
-
   if (!deck || !deckId) {
     return (
-      <div className="deck-detail-page">
-        <div className="message-container">
-          <p className="error-message">Deck not found</p>
-          <button onClick={goBack} className="btn btn-primary">
-            Back to My Decks
-          </button>
-        </div>
-      </div>
+      <AppLayout>
+        <PageContainer>
+          <Card elevation="medium">
+            <Card.Content>
+              <EmptyState>
+                <p>Deck not found</p>
+                <Button variant="primary" onClick={goBack}>
+                  Back to My Decks
+                </Button>
+              </EmptyState>
+            </Card.Content>
+          </Card>
+        </PageContainer>
+      </AppLayout>
     );
   }
 
@@ -108,188 +142,426 @@ const DeckDetailPage = () => {
   };
 
   return (
-    <div className="deck-detail-page">
-      <div className="deck-detail-header">
-        <button onClick={goBack} className="back-button">
-          ← Back to My Decks
-        </button>
+    <AppLayout>
+      <PageContainer>
+        <PageHeader>
+          <BackButton onClick={goBack}>
+            <ArrowLeft size={16} />
+            <span>Back to My Decks</span>
+          </BackButton>
+          <h1>{deck.name}</h1>
+        </PageHeader>
 
-        <div className="deck-title-section">
-          <h1>{deckId.replace("deck_", "")}</h1>
-          <span className="deck-count">{getCardCountString()}</span>
-          {deck.createdAt && (
-            <span className="deck-created">
-              Created: {new Date(deck.createdAt).toLocaleDateString()}
-            </span>
-          )}
-        </div>
+        <Card elevation="medium" margin="0 0 24px 0">
+          <Card.Content>
+            <DeckMetaInfo>
+              <DeckStats>
+                <span className="deck-count">{getCardCountString()}</span>
+                {deck.createdAt && (
+                  <span className="deck-created">
+                    Created: {new Date(deck.createdAt).toLocaleDateString()}
+                  </span>
+                )}
+              </DeckStats>
+              <ButtonContainer>
+                <Button variant="primary" onClick={handleDuel}>
+                  Duel
+                </Button>
+                <Button variant="secondary" onClick={handleEdit}>
+                  Edit Deck
+                </Button>
+                <Button variant="tertiary" onClick={downloadDeckAsYdk}>
+                  Download YDK
+                </Button>
+                <Button variant="tertiary" onClick={downloadDeckAsPng}>
+                  Download PNG
+                </Button>
+              </ButtonContainer>
+            </DeckMetaInfo>
+          </Card.Content>
+        </Card>
 
-        <div className="deck-actions">
-          <button onClick={handleDuel} className="btn btn-primary">
-            Duel
-          </button>
-          <button onClick={downloadDeckAsYdk} className="btn btn-outline">
-            Download YDK
-          </button>
-          <button onClick={downloadDeckAsPng} className="btn btn-outline">
-            Download PNG
-          </button>
-          <button onClick={handleEdit} className="btn btn-secondary">
-            Edit Deck
-          </button>
-        </div>
-      </div>
+        {loading ? (
+          <LoadingCard>
+            <Card.Content>
+              <LoadingText>Loading deck details...</LoadingText>
+            </Card.Content>
+          </LoadingCard>
+        ) : (
+          <>
+            {/* Main Deck Section */}
+            <DeckSectionCard elevation="low" margin="0 0 24px 0">
+              <Card.Content>
+                <SectionTitle>Main Deck ({deck.mainDeck.length})</SectionTitle>
 
-      <div className="deck-content">
-        <div className="deck-cards-container">
-          <div className="deck-section main-deck">
-            <h2>Main Deck ({deck.mainDeck.length})</h2>
+                {/* Monsters Section */}
+                {cardsByType.monsters.length > 0 && (
+                  <CardTypeSection>
+                    <SectionSubtitle>
+                      Monsters ({cardsByType.monsters.length})
+                    </SectionSubtitle>
+                    <YGOCardGrid gap="10px">
+                      {cardsByType.monsters.map((card: any, index: number) => (
+                        <CardContainer key={`monster-${card.id}-${index}`}>
+                          <CardImage
+                            src={
+                              card.card_images?.[0]?.image_url_small ||
+                              `https://images.ygoprodeck.com/images/cards_small/${card.id}.jpg`
+                            }
+                            alt={card.name}
+                            title={card.name}
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.src =
+                                "https://images.ygoprodeck.com/images/cards_small/back_high.jpg";
+                            }}
+                          />
+                          <CardCountBadge>
+                            {
+                              deck.mainDeck.filter((c: any) => c.id === card.id)
+                                .length
+                            }
+                            x
+                          </CardCountBadge>
+                        </CardContainer>
+                      ))}
+                    </YGOCardGrid>
+                  </CardTypeSection>
+                )}
 
-            {cardsByType.monsters.length > 0 && (
-              <div className="card-type-section">
-                <h3>Monsters ({cardsByType.monsters.length})</h3>
-                <div className="card-grid">
-                  {cardsByType.monsters.map((card: any, index: number) => (
-                    <div
-                      key={`monster-${card.id}-${index}`}
-                      className="card-item"
-                    >
-                      <img
-                        src={
-                          card.card_images[0]?.image_url_small ||
-                          `https://images.ygoprodeck.com/images/cards_small/${card.id}.jpg`
-                        }
-                        alt={card.name}
-                        title={card.name}
-                      />
-                      <div className="card-count-badge">
-                        {
-                          deck.mainDeck.filter((c: any) => c.id === card.id)
-                            .length
-                        }
-                        x
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
+                {/* Spells Section */}
+                {cardsByType.spells.length > 0 && (
+                  <CardTypeSection>
+                    <SectionSubtitle>
+                      Spells ({cardsByType.spells.length})
+                    </SectionSubtitle>
+                    <YGOCardGrid gap="10px">
+                      {cardsByType.spells.map((card: any, index: number) => (
+                        <CardContainer key={`spell-${card.id}-${index}`}>
+                          <CardImage
+                            src={
+                              card.card_images?.[0]?.image_url_small ||
+                              `https://images.ygoprodeck.com/images/cards_small/${card.id}.jpg`
+                            }
+                            alt={card.name}
+                            title={card.name}
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.src =
+                                "https://images.ygoprodeck.com/images/cards_small/back_high.jpg";
+                            }}
+                          />
+                          <CardCountBadge>
+                            {
+                              deck.mainDeck.filter((c: any) => c.id === card.id)
+                                .length
+                            }
+                            x
+                          </CardCountBadge>
+                        </CardContainer>
+                      ))}
+                    </YGOCardGrid>
+                  </CardTypeSection>
+                )}
+
+                {/* Traps Section */}
+                {cardsByType.traps.length > 0 && (
+                  <CardTypeSection>
+                    <SectionSubtitle>
+                      Traps ({cardsByType.traps.length})
+                    </SectionSubtitle>
+                    <YGOCardGrid gap="10px">
+                      {cardsByType.traps.map((card: any, index: number) => (
+                        <CardContainer key={`trap-${card.id}-${index}`}>
+                          <CardImage
+                            src={
+                              card.card_images?.[0]?.image_url_small ||
+                              `https://images.ygoprodeck.com/images/cards_small/${card.id}.jpg`
+                            }
+                            alt={card.name}
+                            title={card.name}
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.src =
+                                "https://images.ygoprodeck.com/images/cards_small/back_high.jpg";
+                            }}
+                          />
+                          <CardCountBadge>
+                            {
+                              deck.mainDeck.filter((c: any) => c.id === card.id)
+                                .length
+                            }
+                            x
+                          </CardCountBadge>
+                        </CardContainer>
+                      ))}
+                    </YGOCardGrid>
+                  </CardTypeSection>
+                )}
+              </Card.Content>
+            </DeckSectionCard>
+
+            {/* Extra Deck Section */}
+            {cardsByType.extra.length > 0 && (
+              <DeckSectionCard elevation="low" margin="0 0 24px 0">
+                <Card.Content>
+                  <SectionTitle className="extra-deck-title">
+                    Extra Deck ({cardsByType.extra.length})
+                  </SectionTitle>
+                  <YGOCardGrid gap="10px">
+                    {cardsByType.extra.map((card: any, index: number) => (
+                      <CardContainer key={`extra-${card.id}-${index}`}>
+                        <CardImage
+                          className="extra-card"
+                          src={
+                            card.card_images?.[0]?.image_url_small ||
+                            `https://images.ygoprodeck.com/images/cards_small/${card.id}.jpg`
+                          }
+                          alt={card.name}
+                          title={card.name}
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.src =
+                              "https://images.ygoprodeck.com/images/cards_small/back_high.jpg";
+                          }}
+                        />
+                        <CardCountBadge>
+                          {
+                            deck.extraDeck.filter((c: any) => c.id === card.id)
+                              .length
+                          }
+                          x
+                        </CardCountBadge>
+                      </CardContainer>
+                    ))}
+                  </YGOCardGrid>
+                </Card.Content>
+              </DeckSectionCard>
             )}
 
-            {cardsByType.spells.length > 0 && (
-              <div className="card-type-section">
-                <h3>Spells ({cardsByType.spells.length})</h3>
-                <div className="card-grid">
-                  {cardsByType.spells.map((card: any, index: number) => (
-                    <div
-                      key={`spell-${card.id}-${index}`}
-                      className="card-item"
-                    >
-                      <img
-                        src={
-                          card.card_images[0]?.image_url_small ||
-                          `https://images.ygoprodeck.com/images/cards_small/${card.id}.jpg`
-                        }
-                        alt={card.name}
-                        title={card.name}
-                      />
-                      <div className="card-count-badge">
-                        {
-                          deck.mainDeck.filter((c: any) => c.id === card.id)
-                            .length
-                        }
-                        x
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
+            {/* Side Deck Section */}
+            {cardsByType.side.length > 0 && (
+              <DeckSectionCard elevation="low">
+                <Card.Content>
+                  <SectionTitle className="side-deck-title">
+                    Side Deck ({cardsByType.side.length})
+                  </SectionTitle>
+                  <YGOCardGrid gap="10px">
+                    {cardsByType.side.map((card: any, index: number) => (
+                      <CardContainer key={`side-${card.id}-${index}`}>
+                        <CardImage
+                          className="side-card"
+                          src={
+                            card.card_images?.[0]?.image_url_small ||
+                            `https://images.ygoprodeck.com/images/cards_small/${card.id}.jpg`
+                          }
+                          alt={card.name}
+                          title={card.name}
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.src =
+                              "https://images.ygoprodeck.com/images/cards_small/back_high.jpg";
+                          }}
+                        />
+                        <CardCountBadge>
+                          {
+                            deck.sideDeck.filter((c: any) => c.id === card.id)
+                              .length
+                          }
+                          x
+                        </CardCountBadge>
+                      </CardContainer>
+                    ))}
+                  </YGOCardGrid>
+                </Card.Content>
+              </DeckSectionCard>
             )}
-
-            {cardsByType.traps.length > 0 && (
-              <div className="card-type-section">
-                <h3>Traps ({cardsByType.traps.length})</h3>
-                <div className="card-grid">
-                  {cardsByType.traps.map((card: any, index: number) => (
-                    <div key={`trap-${card.id}-${index}`} className="card-item">
-                      <img
-                        src={
-                          card.card_images[0]?.image_url_small ||
-                          `https://images.ygoprodeck.com/images/cards_small/${card.id}.jpg`
-                        }
-                        alt={card.name}
-                        title={card.name}
-                      />
-                      <div className="card-count-badge">
-                        {
-                          deck.mainDeck.filter((c: any) => c.id === card.id)
-                            .length
-                        }
-                        x
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {cardsByType.extra.length > 0 && (
-            <div className="deck-section extra-deck">
-              <h2>Extra Deck ({cardsByType.extra.length})</h2>
-              <div className="card-grid">
-                {cardsByType.extra.map((card: any, index: number) => (
-                  <div key={`extra-${card.id}-${index}`} className="card-item">
-                    <img
-                      src={
-                        card.card_images[0]?.image_url_small ||
-                        `https://images.ygoprodeck.com/images/cards_small/${card.id}.jpg`
-                      }
-                      alt={card.name}
-                      title={card.name}
-                    />
-                    <div className="card-count-badge">
-                      {
-                        deck.extraDeck.filter((c: any) => c.id === card.id)
-                          .length
-                      }
-                      x
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {cardsByType.side.length > 0 && (
-            <div className="deck-section side-deck">
-              <h2>Side Deck ({cardsByType.side.length})</h2>
-              <div className="card-grid">
-                {cardsByType.side.map((card: any, index: number) => (
-                  <div key={`side-${card.id}-${index}`} className="card-item">
-                    <img
-                      src={
-                        card.card_images[0]?.image_url_small ||
-                        `https://images.ygoprodeck.com/images/cards_small/${card.id}.jpg`
-                      }
-                      alt={card.name}
-                      title={card.name}
-                    />
-                    <div className="card-count-badge">
-                      {
-                        deck.sideDeck.filter((c: any) => c.id === card.id)
-                          .length
-                      }
-                      x
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
+          </>
+        )}
+      </PageContainer>
+    </AppLayout>
   );
 };
+
+// Styled components
+const PageContainer = styled.div`
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: ${theme.spacing.lg};
+`;
+
+const PageHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: ${theme.spacing.lg};
+  position: relative;
+
+  h1 {
+    margin: 0;
+    color: ${theme.colors.text.primary};
+    font-size: ${theme.typography.size["2xl"]};
+    text-align: center;
+    width: 100%;
+  }
+`;
+
+const BackButton = styled.button`
+  position: absolute;
+  left: 0;
+  display: flex;
+  align-items: center;
+  gap: ${theme.spacing.xs};
+  color: ${theme.colors.primary.main};
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: ${theme.spacing.xs} ${theme.spacing.sm};
+  font-size: ${theme.typography.size.md};
+  transition: color ${theme.transitions.default};
+
+  &:hover {
+    color: ${theme.colors.primary.dark};
+  }
+`;
+
+const DeckMetaInfo = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: ${theme.spacing.md};
+  }
+`;
+
+const DeckStats = styled.div`
+  display: flex;
+  flex-direction: column;
+
+  .deck-count {
+    font-size: ${theme.typography.size.lg};
+    color: ${theme.colors.text.primary};
+    margin-bottom: ${theme.spacing.xs};
+  }
+
+  .deck-created {
+    font-size: ${theme.typography.size.sm};
+    color: ${theme.colors.text.secondary};
+  }
+`;
+
+const ButtonContainer = styled.div`
+  display: flex;
+  gap: ${theme.spacing.md};
+  flex-wrap: wrap;
+
+  @media (max-width: 768px) {
+    width: 100%;
+    justify-content: center;
+  }
+`;
+
+const DeckSectionCard = styled(Card)`
+  margin-bottom: ${theme.spacing.lg};
+  overflow: visible;
+`;
+
+const SectionTitle = styled.h2`
+  margin: 0 0 ${theme.spacing.md} 0;
+  color: ${theme.colors.text.primary};
+  font-size: ${theme.typography.size.xl};
+  font-weight: ${theme.typography.weight.semibold};
+  padding-bottom: ${theme.spacing.sm};
+  border-bottom: 2px solid ${theme.colors.border.default};
+
+  &.extra-deck-title {
+    color: ${theme.colors.primary.dark};
+  }
+
+  &.side-deck-title {
+    color: ${theme.colors.secondary.main};
+  }
+`;
+
+const CardTypeSection = styled.div`
+  margin-bottom: ${theme.spacing.lg};
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+`;
+
+const SectionSubtitle = styled.h3`
+  margin: 0 0 ${theme.spacing.md} 0;
+  color: ${theme.colors.text.secondary};
+  font-size: ${theme.typography.size.lg};
+  font-weight: ${theme.typography.weight.medium};
+`;
+
+const CardContainer = styled.div`
+  position: relative;
+  border-radius: ${theme.borderRadius.sm};
+  transition: transform ${theme.transitions.default};
+
+  &:hover {
+    transform: translateY(-5px);
+    z-index: 1;
+  }
+`;
+
+const CardImage = styled.img`
+  width: 100%;
+  border-radius: ${theme.borderRadius.sm};
+  box-shadow: ${theme.shadows.sm};
+  display: block;
+
+  &.extra-card {
+    border: 2px solid ${theme.colors.primary.main};
+  }
+
+  &.side-card {
+    border: 2px solid ${theme.colors.secondary.main};
+  }
+`;
+
+const CardCountBadge = styled.div`
+  position: absolute;
+  top: ${theme.spacing.xs};
+  right: ${theme.spacing.xs};
+  background-color: rgba(0, 0, 0, 0.7);
+  color: white;
+  font-size: ${theme.typography.size.xs};
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-weight: ${theme.typography.weight.semibold};
+`;
+
+const LoadingCard = styled(Card)`
+  text-align: center;
+  padding: ${theme.spacing.xl};
+`;
+
+const LoadingText = styled.div`
+  font-size: ${theme.typography.size.lg};
+  color: ${theme.colors.text.secondary};
+`;
+
+const EmptyState = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: ${theme.spacing.md};
+  padding: ${theme.spacing.xl} 0;
+  text-align: center;
+
+  p {
+    font-size: ${theme.typography.size.lg};
+    color: ${theme.colors.text.secondary};
+    margin-bottom: ${theme.spacing.md};
+  }
+`;
 
 export default DeckDetailPage;
