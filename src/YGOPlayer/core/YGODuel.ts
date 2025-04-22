@@ -136,6 +136,7 @@ export class YGODuel {
       ]);
 
       this.fields = createFields({ duel: this, fieldModel: fieldModel.scene });
+      this.fieldStats = new YGOGameFieldStatsComponent(this);
       this.entities.push(this.gameController);
 
       this.gameController
@@ -146,9 +147,6 @@ export class YGODuel {
 
       this.core.updateCamera();
 
-      setTimeout(() => {
-        this.test();
-      }, 500);
     } catch (error) {
       console.error("ERROR:");
       console.error("TCL:", error);

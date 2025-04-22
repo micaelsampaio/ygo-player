@@ -132,8 +132,6 @@ export function createFields({ duel, fieldModel }: CreateFieldDto) {
     fields[1].extraMonsterZone.push(extraMonsterZone);
   }
 
-  duel.fieldStats = new YGOGameFieldStatsComponent(duel);
-
   return fields;
 }
 
