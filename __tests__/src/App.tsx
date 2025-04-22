@@ -2,11 +2,11 @@ import YUBEL from "./decks/YUBEL_FS.json";
 import CHIMERA from "./decks/CHIMERA.json";
 import { useNavigate, Link, Routes, Route } from "react-router-dom";
 import RoomLobby from "./components/RoomLobby.js";
+import DuelLobbyPage from "./components/DuelLobby/DuelLobbyPage";
 import { useKaibaNet } from "./hooks/useKaibaNet";
 import { memo, useEffect, useState } from "react";
 import { YGOGameUtils } from "ygo-core";
 import { YGODeckToImage } from "ygo-core-images-utils";
-import styled from "styled-components";
 import { Logger } from "./utils/logger";
 import { ComboChooseDeck } from "./components/ComboChooseDeck";
 import { exportAllData, importAllData } from "./utils/dataExport";
@@ -14,59 +14,198 @@ import { generateExportToMdCode } from "./utils/export-to-md.js";
 import { DataExportModal } from "./components/Data/DataExportModal.js";
 import { ConnectionSwitcher } from "./components/ConnectionSwitcher";
 import { createRoom, cleanDuelData } from "./utils/roomUtils";
+import AppLayout from "./components/Layout/AppLayout";
+import { ThemeProvider } from "styled-components";
+import GlobalStyles from "./styles/GlobalStyles";
+import theme from "./styles/theme";
+import Card from "./components/UI/Card";
+import Button from "./components/UI/Button";
+import styled from "styled-components";
 
+// Import CDN URL for card images
 const cdnUrl = String(import.meta.env.VITE_YGO_CDN_URL);
-
-const AppContainer = styled.div`
-  display: flex;
-`;
-
-const LeftContent = styled.div`
-  flex-grow: 1;
-`;
-
-const NavSection = styled.div`
-  margin-bottom: 30px;
-`;
-
-const NavHeader = styled.h2`
-  border-bottom: 1px solid #333;
-  padding-bottom: 10px;
-  margin-bottom: 15px;
-  color: #0078d4;
-`;
-
-const NavList = styled.ul`
-  list-style: none;
-  padding: 0;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin: 0;
-`;
-
-const NavItem = styled.li`
-  margin-bottom: 10px;
-`;
-
-const NavLink = styled(Link)`
-  display: inline-flex;
-  align-items: center;
-  padding: 8px 16px;
-  background-color: #2a2a2a;
-  color: white;
-  text-decoration: none;
-  border-radius: 4px;
-  font-weight: 500;
-
-  &:hover {
-    background-color: #444;
-  }
-`;
 
 const logger = Logger.createLogger("App");
 
-export default function App() {
+// Styled components using our theme
+const HomePage = styled.div`
+  max-width: 1800px;
+  margin: 0 auto;
+  padding: 0;
+`;
+
+const HomeContent = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 400px;
+  gap: ${theme.spacing.lg};
+
+  @media (max-width: 1100px) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+const ContentLeft = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: ${theme.spacing.lg};
+`;
+
+const ContentRight = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: ${theme.spacing.lg};
+`;
+
+const SectionHeader = styled.div`
+  margin-bottom: ${theme.spacing.md};
+
+  h2 {
+    color: ${theme.colors.text.primary};
+    font-weight: ${theme.typography.weight.semibold};
+    font-size: ${theme.typography.size.xl};
+    margin: 0;
+  }
+`;
+
+const CardNavigation = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: ${theme.spacing.md};
+  margin-bottom: ${theme.spacing.lg};
+`;
+
+const NavCard = styled(Link)`
+  background-color: ${theme.colors.background.paper};
+  color: ${theme.colors.text.primary};
+  padding: ${theme.spacing.lg};
+  border-radius: ${theme.borderRadius.md};
+  box-shadow: ${theme.shadows.sm};
+  text-align: center;
+  text-decoration: none;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: ${theme.shadows.md};
+    text-decoration: none;
+  }
+
+  .nav-card-title {
+    font-weight: ${theme.typography.weight.medium};
+    font-size: ${theme.typography.size.md};
+  }
+`;
+
+const QuickPlaySection = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: ${theme.spacing.md};
+`;
+
+const QuickPlayCard = styled(Card)`
+  padding: ${theme.spacing.md};
+
+  h3 {
+    font-size: ${theme.typography.size.lg};
+    margin-bottom: ${theme.spacing.sm};
+  }
+`;
+
+const QuickPlayLinks = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: ${theme.spacing.sm};
+`;
+
+const QuickPlayLink = styled.a`
+  display: block;
+  padding: ${theme.spacing.sm};
+  color: ${theme.colors.primary.main};
+  text-decoration: none;
+  border-radius: ${theme.borderRadius.sm};
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: ${theme.colors.background.card};
+    text-decoration: none;
+  }
+`;
+
+const ReplaysSection = styled.div`
+  margin-top: ${theme.spacing.lg};
+`;
+
+const ReplaySelector = styled.div`
+  display: flex;
+  align-items: center;
+  gap: ${theme.spacing.sm};
+  margin-bottom: ${theme.spacing.md};
+
+  select {
+    padding: ${theme.spacing.sm};
+    border-radius: ${theme.borderRadius.sm};
+    border: 1px solid ${theme.colors.border.default};
+    background-color: ${theme.colors.background.paper};
+    min-width: 200px;
+  }
+`;
+
+const ReplaysList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: ${theme.spacing.md};
+`;
+
+const ReplayItem = styled(Card)`
+  padding: ${theme.spacing.md};
+`;
+
+const ReplayHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: ${theme.spacing.md};
+
+  h3 {
+    margin: 0;
+    font-size: ${theme.typography.size.lg};
+  }
+`;
+
+const ReplayActions = styled.div`
+  display: flex;
+  gap: ${theme.spacing.sm};
+`;
+
+const ViewAllBtn = styled(Link)`
+  width: 100%;
+  text-align: center;
+  margin-top: ${theme.spacing.md};
+`;
+
+const QuickLinks = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: ${theme.spacing.md};
+`;
+
+const QuickLink = styled(Link)`
+  display: flex;
+  align-items: center;
+  gap: ${theme.spacing.sm};
+  text-decoration: none;
+  color: ${theme.colors.text.primary};
+`;
+
+const QuickLinkIcon = styled.span`
+  font-size: ${theme.typography.size.lg};
+`;
+
+const QuickLinkText = styled.span`
+  font-size: ${theme.typography.size.md};
+`;
+
+export default function App({ duelLobbyMode }: { duelLobbyMode?: boolean }) {
   const kaibaNet = useKaibaNet();
   const [rooms, setRooms] = useState(() => kaibaNet.getRooms());
   const [deckToPlay, setDeckToPlay] = useState("");
@@ -78,7 +217,7 @@ export default function App() {
   };
 
   useEffect(() => {
-    console.log("kaibaNet in useEffect:", kaibaNet); // Ensure this is the same instance
+    console.log("kaibaNet in useEffect:", kaibaNet);
     console.log("Setting up event listener for rooms:updated");
     kaibaNet.removeAllListeners("rooms:updated");
     kaibaNet.on("rooms:updated", onRoomsUpdated);
@@ -336,196 +475,256 @@ export default function App() {
 
   useLazyReplay({ replays, setReplays });
 
+  if (duelLobbyMode) {
+    return <DuelLobbyPage />;
+  }
+
   return (
-    <div className="App">
-      <ConnectionSwitcher />
-      <AppContainer>
-        <LeftContent>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              gap: "10px",
-            }}
-          >
-            <h1>Home</h1>
-          </div>
+    <ThemeProvider theme={theme}>
+      <GlobalStyles />
+      <AppLayout>
+        <HomePage>
+          <ConnectionSwitcher />
 
-          <NavSection>
-            <NavHeader>My Yu-Gi-Oh!</NavHeader>
-            <NavList>
-              <NavItem>
-                <NavLink to="/my/decks">My Decks</NavLink>
-              </NavItem>
-              <NavItem>
-                <NavLink to="/my/cards/groups">My Card Groups</NavLink>
-              </NavItem>
-              <NavItem>
-                <NavLink to="/my/combos">My Combos</NavLink>
-              </NavItem>
-              <NavItem>
-                <NavLink to="/my/replays">My Replays</NavLink>
-              </NavItem>
-              <NavItem>
-                <NavLink to="/collections">Collections</NavLink>
-              </NavItem>
-            </NavList>
-          </NavSection>
+          <HomeContent>
+            <ContentLeft>
+              <div>
+                <SectionHeader>
+                  <h2>My Yu-Gi-Oh!</h2>
+                </SectionHeader>
+                <CardNavigation>
+                  <NavCard to="/my/decks">
+                    <span className="nav-card-title">My Decks</span>
+                  </NavCard>
+                  <NavCard to="/my/cards/groups">
+                    <span className="nav-card-title">My Card Groups</span>
+                  </NavCard>
+                  <NavCard to="/my/combos">
+                    <span className="nav-card-title">My Combos</span>
+                  </NavCard>
+                  <NavCard to="/my/replays">
+                    <span className="nav-card-title">My Replays</span>
+                  </NavCard>
+                  <NavCard to="/collections">
+                    <span className="nav-card-title">Collections</span>
+                  </NavCard>
+                </CardNavigation>
+              </div>
 
-          <NavSection>
-            <NavHeader>Tools</NavHeader>
-            <NavList>
-              <NavItem>
-                <NavLink to="/deckbuilder">Deck Builder</NavLink>
-              </NavItem>
-              <NavItem>
-                <NavLink to="/deck">Import Deck</NavLink>
-              </NavItem>
-              <NavItem>
-                <NavLink to="/rulings">Card Rulings</NavLink>
-              </NavItem>
-            </NavList>
-          </NavSection>
+              <div>
+                <SectionHeader>
+                  <h2>Tools</h2>
+                </SectionHeader>
+                <CardNavigation>
+                  <NavCard to="/deckbuilder">
+                    <span className="nav-card-title">Deck Builder</span>
+                  </NavCard>
+                  <NavCard to="/deck">
+                    <span className="nav-card-title">Import Deck</span>
+                  </NavCard>
+                  <NavCard to="/cards/database">
+                    <span className="nav-card-title">Card Database</span>
+                  </NavCard>
+                  <NavCard to="/rulings">
+                    <span className="nav-card-title">Card Rulings</span>
+                  </NavCard>
+                </CardNavigation>
+              </div>
 
-          <NavSection>
-            <NavHeader>Quick Play</NavHeader>
-            <NavList>
-              {/* Predefined decks */}
-              <NavItem>
-                <NavLink to="#" onClick={(e) => duelAs(e, YUBEL, CHIMERA)}>
-                  Duel as Yubel
-                </NavLink>
-              </NavItem>
-              <NavItem>
-                <NavLink to="#" onClick={(e) => duelAs(e, CHIMERA, YUBEL)}>
-                  Duel as Chimera
-                </NavLink>
-              </NavItem>
+              <div>
+                <SectionHeader>
+                  <h2>Duel</h2>
+                </SectionHeader>
+                <CardNavigation>
+                  <NavCard to="/duel">
+                    <span className="nav-card-title">Quick Duel</span>
+                  </NavCard>
+                  <NavCard to="/duel/lobby">
+                    <span className="nav-card-title">Duel Lobby</span>
+                  </NavCard>
+                </CardNavigation>
+              </div>
 
-              {/* Divider between predefined and custom decks */}
-              {decks.length > 0 && (
-                <NavItem
-                  style={{
-                    width: "100%",
-                    borderTop: "1px dashed #444",
-                    margin: "10px 0",
-                    padding: "5px 0",
-                  }}
-                >
-                  <span style={{ color: "#999", fontSize: "14px" }}>
-                    Your Decks
-                  </span>
-                </NavItem>
+              <div>
+                <SectionHeader>
+                  <h2>Quick Play</h2>
+                </SectionHeader>
+                <QuickPlaySection>
+                  {/* Predefined decks */}
+                  <QuickPlayCard elevation="low">
+                    <Card.Content>
+                      <h3>Featured Decks</h3>
+                      <QuickPlayLinks>
+                        <QuickPlayLink
+                          href="#"
+                          onClick={(e) => duelAs(e, YUBEL, CHIMERA)}
+                        >
+                          Duel as Yubel
+                        </QuickPlayLink>
+                        <QuickPlayLink
+                          href="#"
+                          onClick={(e) => duelAs(e, CHIMERA, YUBEL)}
+                        >
+                          Duel as Chimera
+                        </QuickPlayLink>
+                      </QuickPlayLinks>
+                    </Card.Content>
+                  </QuickPlayCard>
+
+                  {/* User's custom decks */}
+                  {decks.length > 0 && (
+                    <QuickPlayCard elevation="low">
+                      <Card.Content>
+                        <h3>Your Decks</h3>
+                        <QuickPlayLinks>
+                          {decks.map((deckId) => {
+                            // Get the actual deck data to display the proper name
+                            try {
+                              const deckData = JSON.parse(
+                                localStorage.getItem(deckId) || "{}"
+                              );
+                              const deckName =
+                                deckData.name || deckId.replace("deck_", "");
+
+                              return (
+                                <QuickPlayLink
+                                  key={deckId}
+                                  href="#"
+                                  onClick={(e) =>
+                                    duelWithDeckFromStore(e, deckId)
+                                  }
+                                >
+                                  Duel as {deckName}
+                                </QuickPlayLink>
+                              );
+                            } catch (err) {
+                              // Fallback in case of parsing error
+                              return (
+                                <QuickPlayLink
+                                  key={deckId}
+                                  href="#"
+                                  onClick={(e) =>
+                                    duelWithDeckFromStore(e, deckId)
+                                  }
+                                >
+                                  Duel as {deckId.replace("deck_", "")}
+                                </QuickPlayLink>
+                              );
+                            }
+                          })}
+                        </QuickPlayLinks>
+                      </Card.Content>
+                    </QuickPlayCard>
+                  )}
+                </QuickPlaySection>
+              </div>
+
+              {replays.length > 0 && (
+                <ReplaysSection>
+                  <SectionHeader>
+                    <h2>Recent Replays</h2>
+                  </SectionHeader>
+                  <ReplaySelector>
+                    <label>Play As: </label>
+                    <select
+                      value={selectedDeck}
+                      onChange={(e) => {
+                        window.localStorage.setItem(
+                          "selected-deck",
+                          e.target.value
+                        );
+                        setSelectedDeck(e.target.value);
+                      }}
+                    >
+                      <option>Select a Deck</option>
+                      {decks.map((deck) => (
+                        <option key={deck} value={deck}>
+                          {deck}
+                        </option>
+                      ))}
+                    </select>
+                    {selectedDeck && (
+                      <Button
+                        onClick={() => setDeckToPlay(selectedDeck)}
+                        variant="primary"
+                        size="md"
+                      >
+                        Create a combo
+                      </Button>
+                    )}
+                  </ReplaySelector>
+
+                  <ReplaysList>
+                    {replays.slice(0, 5).map((replay) => (
+                      <ReplayItem key={replay.name} elevation="low">
+                        <ReplayHeader>
+                          <h3>{replay.name}</h3>
+                          <ReplayActions>
+                            <Button
+                              onClick={() => deleteReplay(replay.name)}
+                              variant="tertiary"
+                            >
+                              Delete
+                            </Button>
+                            <Button
+                              as="a"
+                              onClick={(e) => openRelay(e, replay.name)}
+                              href="#"
+                              variant="primary"
+                            >
+                              View Replay
+                            </Button>
+                          </ReplayActions>
+                        </ReplayHeader>
+                        <EndGameBoard
+                          play={playFromAReplay}
+                          openSpreadsheetBuilder={openSpreadsheetBuilder}
+                          data={replay.data}
+                        />
+                      </ReplayItem>
+                    ))}
+                    {replays.length > 5 && (
+                      <ViewAllBtn
+                        to="/my/replays"
+                        className="btn btn-outline view-all-btn"
+                      >
+                        <Button variant="tertiary" fullWidth>
+                          View All Replays
+                        </Button>
+                      </ViewAllBtn>
+                    )}
+                  </ReplaysList>
+                </ReplaysSection>
               )}
 
-              {/* User's custom decks */}
-              {decks.map((deckId) => {
-                // Get the actual deck data to display the proper name
-                try {
-                  const deckData = JSON.parse(
-                    localStorage.getItem(deckId) || "{}"
-                  );
-                  const deckName = deckData.name || deckId.replace("deck_", "");
-
-                  return (
-                    <NavItem key={deckId}>
-                      <NavLink
-                        to="#"
-                        onClick={(e) => duelWithDeckFromStore(e, deckId)}
-                      >
-                        Duel as {deckName}
-                      </NavLink>
-                    </NavItem>
-                  );
-                } catch (err) {
-                  // Fallback in case of parsing error
-                  return (
-                    <NavItem key={deckId}>
-                      <NavLink
-                        to="#"
-                        onClick={(e) => duelWithDeckFromStore(e, deckId)}
-                      >
-                        Duel as {deckId.replace("deck_", "")}
-                      </NavLink>
-                    </NavItem>
-                  );
-                }
-              })}
-            </NavList>
-          </NavSection>
-
-          {replays.length > 0 && (
-            <div>
-              <h1># Replays </h1>
-              Play As{" "}
-              <select
-                value={selectedDeck}
-                onChange={(e) => {
-                  window.localStorage.setItem("selected-deck", e.target.value);
-                  setSelectedDeck(e.target.value);
-                }}
-              >
-                <option>Select a Deck</option>
-                {decks.map((deck) => (
-                  <option key={deck} value={deck}>
-                    {deck}
-                  </option>
-                ))}
-              </select>
-              {selectedDeck && (
-                <button onClick={() => setDeckToPlay(selectedDeck)}>
-                  Create a combo
-                </button>
+              {deckToPlay && (
+                <Card elevation="low" padding={theme.spacing.md}>
+                  <ComboChooseDeck
+                    deckId={deckToPlay}
+                    onChoose={duelFromInitialField}
+                  />
+                </Card>
               )}
-              <ul>
-                {replays.map((replay) => {
-                  return (
-                    <li>
-                      <Link onClick={(e) => openRelay(e, replay.name)} to="#">
-                        {replay.name}
-                      </Link>{" "}
-                      <button onClick={() => deleteReplay(replay.name)}>
-                        delete
-                      </button>
-                      <br />
-                      <EndGameBoard
-                        play={playFromAReplay}
-                        openSpreadsheetBuilder={openSpreadsheetBuilder}
-                        data={replay.data}
-                      />
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-          )}
+            </ContentLeft>
 
-          {deckToPlay && (
-            <ComboChooseDeck
-              deckId={deckToPlay}
-              onChoose={duelFromInitialField}
-            />
-          )}
-        </LeftContent>
-        <div>
-          <RoomLobby
-            playerId={kaibaNet.getPlayerId()}
-            rooms={rooms}
-            onRoomJoin={handleRoomJoin}
+            <ContentRight>
+              {/* Quick links removed as requested */}
+            </ContentRight>
+          </HomeContent>
+
+          <DataExportModal
+            onExport={handleExport}
+            onImport={handleImport}
+            onImportQR={handleImportQR}
           />
-        </div>
-      </AppContainer>
-      <DataExportModal
-        onExport={handleExport}
-        onImport={handleImport}
-        onImportQR={handleImportQR}
-      />
-      <Routes></Routes>
-    </div>
+          <Routes></Routes>
+        </HomePage>
+      </AppLayout>
+    </ThemeProvider>
   );
 }
 
+// ... rest of the code remains the same
 function useLazyReplay({ replays, setReplays }: any) {
   useEffect(() => {
     if (replays.length === 0) return;
@@ -556,8 +755,6 @@ function useLazyReplay({ replays, setReplays }: any) {
     loadReplay();
   }, []);
 }
-
-/// TODO
 
 const EndGameBoard = memo(function EndGameBoard({
   data,

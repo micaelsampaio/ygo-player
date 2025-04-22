@@ -20,6 +20,10 @@ import MyCombosPage from "./components/MyCombos/MyCombosPage.tsx";
 import MyReplaysPage from "./components/MyReplays/MyReplaysPage.tsx";
 // Import the new MyCardGroupsPage component
 import MyCardGroupsPage from "./components/Cards/MyCardGroupsPage.tsx";
+// Import our DuelLobbyPage
+import DuelLobbyPage from "./components/DuelLobby/DuelLobbyPage.tsx";
+// Import for new Card Database page
+import CardDatabasePage from "./components/Cards/CardDatabasePage.tsx";
 
 debug.enable("ygo:*");
 localStorage.setItem("debug", "ygo:*");
@@ -64,6 +68,12 @@ createRoot(document.getElementById("root")!).render(
 
         {/* New route for card groups */}
         <Route path="/my/cards/groups" element={<MyCardGroupsPage />} />
+
+        {/* Updated route for duel lobby */}
+        <Route path="/duel/lobby" element={<DuelLobbyPage />} />
+
+        {/* Add Card Database page */}
+        <Route path="/cards/database" element={<CardDatabasePage />} />
       </Routes>
     </BrowserRouter>
   </KaibaNetProvider>

@@ -4,6 +4,7 @@ import { RulingsAPI, Ruling, RulingCategory } from "./RulingsAPI";
 import { Logger } from "../../utils/logger";
 import { Link } from "react-router-dom";
 import CardTextAnalyzerComponent from "../CardTextAnalyzer/CardTextAnalyzerComponent";
+import AppLayout from "../Layout/AppLayout";
 
 // Create a logger instance
 const logger = Logger.createLogger("RulingsPage");
@@ -149,176 +150,179 @@ const RulingsPage: React.FC = () => {
   };
 
   return (
-    <PageContainer>
-      <Header>
-        <h1>Yu-Gi-Oh! Rulings Database</h1>
-        <p>Your guide to official rulings and card interactions</p>
-      </Header>
+    <AppLayout>
+      <PageContainer>
+        <Header>
+          <h1>Yu-Gi-Oh! Rulings Database</h1>
+          <p>Your guide to official rulings and card interactions</p>
+        </Header>
 
-      <TabContainer>
-        <TabButton
-          isActive={activeTab === "rulings"}
-          onClick={() => setActiveTab("rulings")}
-        >
-          Card Rulings
-        </TabButton>
-        <TabButton
-          isActive={activeTab === "analyzer"}
-          onClick={() => setActiveTab("analyzer")}
-        >
-          Card Text Analyzer
-        </TabButton>
-      </TabContainer>
+        <TabContainer>
+          <TabButton
+            isActive={activeTab === "rulings"}
+            onClick={() => setActiveTab("rulings")}
+          >
+            Card Rulings
+          </TabButton>
+          <TabButton
+            isActive={activeTab === "analyzer"}
+            onClick={() => setActiveTab("analyzer")}
+          >
+            Card Text Analyzer
+          </TabButton>
+        </TabContainer>
 
-      {activeTab === "rulings" ? (
-        <ContentWrapper>
-          <Sidebar>
-            <h3>Categories</h3>
-            <CategoryList>
-              {categories.map((category) => (
-                <CategoryItem
-                  key={category.name}
-                  isSelected={selectedCategory === category.name}
-                  onClick={() => handleCategoryChange(category.name)}
-                >
-                  {category.description}
-                  {category.count > 0 && (
-                    <CategoryCount>{category.count}</CategoryCount>
-                  )}
-                </CategoryItem>
-              ))}
-            </CategoryList>
-          </Sidebar>
-
-          <MainContent>
-            <SearchBar onSubmit={handleSearch}>
-              <SearchInput
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search for card names, keywords, or specific rulings..."
-              />
-              <SearchButton type="submit">Search</SearchButton>
-            </SearchBar>
-
-            {error && <ErrorMessage>{error}</ErrorMessage>}
-
-            {isLoading ? (
-              <LoadingIndicator>Loading rulings...</LoadingIndicator>
-            ) : (
-              <>
-                <RulingsCount>{rulings.length} rulings found</RulingsCount>
-
-                <RulingsList>
-                  {rulings.map((ruling) => (
-                    <RulingItem
-                      key={ruling.id}
-                      onClick={() => setActiveRuling(ruling)}
-                    >
-                      <RulingQuestion>{ruling.question}</RulingQuestion>
-                      <RulingMeta>
-                        {ruling.relatedCards.length > 0 && (
-                          <RelatedCards>
-                            {ruling.relatedCards.map((card) => (
-                              <RelatedCardBadge key={card.id}>
-                                {card.name}
-                              </RelatedCardBadge>
-                            ))}
-                          </RelatedCards>
-                        )}
-                        <RulingSourceContainer>
-                          <RulingSource>
-                            Source: {ruling.source} • {ruling.date}
-                          </RulingSource>
-                          {ruling.sourceUrl && (
-                            <SourceLink
-                              href={ruling.sourceUrl}
-                              target="_blank"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              View Source
-                            </SourceLink>
-                          )}
-                        </RulingSourceContainer>
-                      </RulingMeta>
-                    </RulingItem>
-                  ))}
-
-                  {rulings.length === 0 && !isLoading && (
-                    <NoRulingsMessage>
-                      No rulings found. Try a different search term or category.
-                    </NoRulingsMessage>
-                  )}
-                </RulingsList>
-              </>
-            )}
-          </MainContent>
-        </ContentWrapper>
-      ) : (
-        <CardTextAnalyzerContainer>
-          <CardTextAnalyzerComponent />
-        </CardTextAnalyzerContainer>
-      )}
-
-      {activeRuling && (
-        <RulingModal>
-          <RulingModalContent>
-            <CloseButton onClick={() => setActiveRuling(null)}>×</CloseButton>
-            <RulingModalTitle>{activeRuling.question}</RulingModalTitle>
-            <RulingModalAnswer>{activeRuling.answer}</RulingModalAnswer>
-
-            {activeRuling.relatedCards.length > 0 && (
-              <RulingModalSection>
-                <h4>Related Cards</h4>
-                <RelatedCardsList>
-                  {activeRuling.relatedCards.map((card) => (
-                    <RelatedCardItem key={card.id}>
-                      <img
-                        src={`${String(
-                          import.meta.env.VITE_YGO_CDN_URL
-                        )}/images/cards_small/${card.id}.jpg`}
-                        alt={card.name}
-                      />
-                      <span>{card.name}</span>
-                    </RelatedCardItem>
-                  ))}
-                </RelatedCardsList>
-              </RulingModalSection>
-            )}
-
-            <RulingModalSection>
-              <h4>Details</h4>
-              <RulingDetailsList>
-                <RulingDetailsItem>
-                  <strong>Category:</strong>{" "}
-                  {activeRuling.category.replace(/-/g, " ")}
-                </RulingDetailsItem>
-                <RulingDetailsItem>
-                  <strong>Source:</strong> {activeRuling.source}
-                  {activeRuling.sourceUrl && (
-                    <SourceLink href={activeRuling.sourceUrl} target="_blank">
-                      Visit Source
-                    </SourceLink>
-                  )}
-                </RulingDetailsItem>
-                <RulingDetailsItem>
-                  <strong>Date:</strong> {activeRuling.date}
-                </RulingDetailsItem>
-              </RulingDetailsList>
-            </RulingModalSection>
-
-            <RulingModalSection>
-              <h4>Keywords</h4>
-              <KeywordsList>
-                {activeRuling.keywords.map((keyword) => (
-                  <KeywordBadge key={keyword}>{keyword}</KeywordBadge>
+        {activeTab === "rulings" ? (
+          <ContentWrapper>
+            <Sidebar>
+              <h3>Categories</h3>
+              <CategoryList>
+                {categories.map((category) => (
+                  <CategoryItem
+                    key={category.name}
+                    isSelected={selectedCategory === category.name}
+                    onClick={() => handleCategoryChange(category.name)}
+                  >
+                    {category.description}
+                    {category.count > 0 && (
+                      <CategoryCount>{category.count}</CategoryCount>
+                    )}
+                  </CategoryItem>
                 ))}
-              </KeywordsList>
-            </RulingModalSection>
-          </RulingModalContent>
-        </RulingModal>
-      )}
-    </PageContainer>
+              </CategoryList>
+            </Sidebar>
+
+            <MainContent>
+              <SearchBar onSubmit={handleSearch}>
+                <SearchInput
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search for card names, keywords, or specific rulings..."
+                />
+                <SearchButton type="submit">Search</SearchButton>
+              </SearchBar>
+
+              {error && <ErrorMessage>{error}</ErrorMessage>}
+
+              {isLoading ? (
+                <LoadingIndicator>Loading rulings...</LoadingIndicator>
+              ) : (
+                <>
+                  <RulingsCount>{rulings.length} rulings found</RulingsCount>
+
+                  <RulingsList>
+                    {rulings.map((ruling) => (
+                      <RulingItem
+                        key={ruling.id}
+                        onClick={() => setActiveRuling(ruling)}
+                      >
+                        <RulingQuestion>{ruling.question}</RulingQuestion>
+                        <RulingMeta>
+                          {ruling.relatedCards.length > 0 && (
+                            <RelatedCards>
+                              {ruling.relatedCards.map((card) => (
+                                <RelatedCardBadge key={card.id}>
+                                  {card.name}
+                                </RelatedCardBadge>
+                              ))}
+                            </RelatedCards>
+                          )}
+                          <RulingSourceContainer>
+                            <RulingSource>
+                              Source: {ruling.source} • {ruling.date}
+                            </RulingSource>
+                            {ruling.sourceUrl && (
+                              <SourceLink
+                                href={ruling.sourceUrl}
+                                target="_blank"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                View Source
+                              </SourceLink>
+                            )}
+                          </RulingSourceContainer>
+                        </RulingMeta>
+                      </RulingItem>
+                    ))}
+
+                    {rulings.length === 0 && !isLoading && (
+                      <NoRulingsMessage>
+                        No rulings found. Try a different search term or
+                        category.
+                      </NoRulingsMessage>
+                    )}
+                  </RulingsList>
+                </>
+              )}
+            </MainContent>
+          </ContentWrapper>
+        ) : (
+          <CardTextAnalyzerContainer>
+            <CardTextAnalyzerComponent />
+          </CardTextAnalyzerContainer>
+        )}
+
+        {activeRuling && (
+          <RulingModal>
+            <RulingModalContent>
+              <CloseButton onClick={() => setActiveRuling(null)}>×</CloseButton>
+              <RulingModalTitle>{activeRuling.question}</RulingModalTitle>
+              <RulingModalAnswer>{activeRuling.answer}</RulingModalAnswer>
+
+              {activeRuling.relatedCards.length > 0 && (
+                <RulingModalSection>
+                  <h4>Related Cards</h4>
+                  <RelatedCardsList>
+                    {activeRuling.relatedCards.map((card) => (
+                      <RelatedCardItem key={card.id}>
+                        <img
+                          src={`${String(
+                            import.meta.env.VITE_YGO_CDN_URL
+                          )}/images/cards_small/${card.id}.jpg`}
+                          alt={card.name}
+                        />
+                        <span>{card.name}</span>
+                      </RelatedCardItem>
+                    ))}
+                  </RelatedCardsList>
+                </RulingModalSection>
+              )}
+
+              <RulingModalSection>
+                <h4>Details</h4>
+                <RulingDetailsList>
+                  <RulingDetailsItem>
+                    <strong>Category:</strong>{" "}
+                    {activeRuling.category.replace(/-/g, " ")}
+                  </RulingDetailsItem>
+                  <RulingDetailsItem>
+                    <strong>Source:</strong> {activeRuling.source}
+                    {activeRuling.sourceUrl && (
+                      <SourceLink href={activeRuling.sourceUrl} target="_blank">
+                        Visit Source
+                      </SourceLink>
+                    )}
+                  </RulingDetailsItem>
+                  <RulingDetailsItem>
+                    <strong>Date:</strong> {activeRuling.date}
+                  </RulingDetailsItem>
+                </RulingDetailsList>
+              </RulingModalSection>
+
+              <RulingModalSection>
+                <h4>Keywords</h4>
+                <KeywordsList>
+                  {activeRuling.keywords.map((keyword) => (
+                    <KeywordBadge key={keyword}>{keyword}</KeywordBadge>
+                  ))}
+                </KeywordsList>
+              </RulingModalSection>
+            </RulingModalContent>
+          </RulingModal>
+        )}
+      </PageContainer>
+    </AppLayout>
   );
 };
 

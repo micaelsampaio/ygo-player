@@ -25,6 +25,7 @@ import { initializeBanList } from "./services/banListLoader";
 import { banListService } from "./services/banListService";
 import { syncDecksWithFolder, processFiles } from "../../utils/deckFileSystem";
 import { v4 as uuidv4 } from "uuid"; // You'll need to install this dependency
+import AppLayout from "../Layout/AppLayout";
 import "./DeckBuilder.css";
 
 const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
@@ -865,340 +866,342 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
   const groupStats = calculateGroupStats();
 
   return (
-    <div className="deck-builder">
-      <div className="builder-container">
-        <div className="decks-panel">
-          <DeckList
-            decks={decks}
-            selectedDeck={selectedDeck}
-            onSelectDeck={selectDeck}
-            onDeleteDeck={handleDeleteDeck}
-            copyDeck={copyDeck}
-            onCreateDeck={handleCreateDeck}
-            onRenameDeck={handleRenameDeck}
-            onClearDeck={handleClearDeck}
-            onImportDeck={handleImportDeck}
-            onCreateCollection={(deck) => {
-              // Implement createCollection functionality
-              if (deck) {
-                console.log("Creating collection from deck:", deck.name);
-                // This would typically interact with your collection system
-              }
-            }}
-            onSyncDecks={() => setIsSyncModalOpen(true)}
-            // New props for deck groups
-            deckGroups={deckGroups}
-            selectedGroup={selectedDeckGroup}
-            onSelectGroup={setSelectedDeckGroup}
-            onCreateGroup={createDeckGroup}
-            onUpdateGroup={updateDeckGroup}
-            onDeleteGroup={deleteDeckGroup}
-            onMoveDeckToGroup={handleMoveDeckToGroup}
-          />
-        </div>
-
-        <div className="editor-panel">
-          <div className="editor-header-container">
-            {selectedDeck && (
-              <div className="deck-header">
-                {isEditingDeckName ? (
-                  <input
-                    ref={deckNameInputRef}
-                    type="text"
-                    value={selectedDeck.name}
-                    onChange={handleDeckNameChange}
-                    onBlur={handleDeckNameBlur}
-                    className="deck-name-input"
-                  />
-                ) : (
-                  <h2
-                    onClick={handleDeckNameEdit}
-                    className="clickable-deck-name"
-                  >
-                    {selectedDeck.name}
-                  </h2>
-                )}
-              </div>
-            )}
-
-            <div className="editor-tabs">
-              <button
-                className={activeTab === "editor" ? "active-tab" : ""}
-                onClick={() => handleTabChange("editor")}
-                disabled={!selectedDeck}
-              >
-                Deck Editor
-              </button>
-              <button
-                className={activeTab === "analytics" ? "active-tab" : ""}
-                onClick={() => handleTabChange("analytics")}
-                disabled={!selectedDeck}
-              >
-                Deck Analytics
-              </button>
-              <button
-                className={activeTab === "simulator" ? "active-tab" : ""}
-                onClick={() => handleTabChange("simulator")}
-                disabled={!selectedDeck}
-              >
-                Draw Simulator
-              </button>
-            </div>
+    <AppLayout>
+      <div className="deck-builder">
+        <div className="builder-container">
+          <div className="decks-panel">
+            <DeckList
+              decks={decks}
+              selectedDeck={selectedDeck}
+              onSelectDeck={selectDeck}
+              onDeleteDeck={handleDeleteDeck}
+              copyDeck={copyDeck}
+              onCreateDeck={handleCreateDeck}
+              onRenameDeck={handleRenameDeck}
+              onClearDeck={handleClearDeck}
+              onImportDeck={handleImportDeck}
+              onCreateCollection={(deck) => {
+                // Implement createCollection functionality
+                if (deck) {
+                  console.log("Creating collection from deck:", deck.name);
+                  // This would typically interact with your collection system
+                }
+              }}
+              onSyncDecks={() => setIsSyncModalOpen(true)}
+              // New props for deck groups
+              deckGroups={deckGroups}
+              selectedGroup={selectedDeckGroup}
+              onSelectGroup={setSelectedDeckGroup}
+              onCreateGroup={createDeckGroup}
+              onUpdateGroup={updateDeckGroup}
+              onDeleteGroup={deleteDeckGroup}
+              onMoveDeckToGroup={handleMoveDeckToGroup}
+            />
           </div>
 
-          <div className="editor-panel-content">
-            {!selectedDeck ? (
-              <div className="no-deck-selected">
-                <h3>No Deck Selected</h3>
-                <p>
-                  Select a deck from the left panel or create a new one to
-                  begin.
-                </p>
-                <button
-                  className="action-btn"
-                  onClick={() =>
-                    handleCreateDeck(
-                      `New Deck ${decks.length + 1}`,
-                      selectedDeckGroup?.id
-                    )
-                  }
-                >
-                  Create New Deck
-                </button>
-              </div>
-            ) : activeTab === "editor" ? (
-              <DeckEditor
-                deck={selectedDeck}
-                onCardSelect={toggleCardPreview}
-                onCardRemove={(card, index, isExtraDeck, isSideDeck) =>
-                  isSideDeck
-                    ? removeCardFromSideDeck(card, index)
-                    : removeCardFromDeck(card, index, isExtraDeck)
-                }
-                onRenameDeck={(newName) =>
-                  selectedDeck && handleRenameDeck(selectedDeck, newName)
-                }
-                onClearDeck={() =>
-                  selectedDeck && handleClearDeck(selectedDeck)
-                }
-                onReorderCards={handleReorderCards}
-                onMoveCardBetweenDecks={moveCardBetweenDecks}
-                updateDeck={updateDeck}
-              />
-            ) : activeTab === "simulator" ? (
-              <DrawSimulator
-                deck={selectedDeck}
-                onCardSelect={toggleCardPreview}
-              />
-            ) : (
-              <DeckAnalytics
-                analytics={deckAnalytics}
-                deck={selectedDeck}
-                isVisible={activeTab === "analytics"}
-                isLoading={isAnalyzing}
-                isEnhanced={useEnhancedAnalysis && !analyzerServiceError}
-                onToggleEnhanced={(newState) => {
-                  toggleEnhancedAnalysis(newState);
-                }}
-              />
-            )}
-          </div>
-        </div>
-
-        {/* Always render the search panel, regardless of whether a deck is selected */}
-        <div className="search-panel">
-          <div className="view-mode-toggle search-view-toggle">
-            <button
-              className={`view-mode-button ${
-                viewMode === "cards" ? "active" : ""
-              }`}
-              onClick={() => setViewMode("cards")}
-            >
-              Cards
-            </button>
-            <button
-              className={`view-mode-button ${
-                viewMode === "collections" ? "active" : ""
-              }`}
-              onClick={() => setViewMode("collections")}
-            >
-              Groups
-            </button>
-          </div>
-
-          {viewMode === "cards" ? (
-            <SearchPanel
-              onCardSelect={toggleCardPreview}
-              onCardAdd={handleAddCard}
-              onToggleFavorite={handleToggleFavorite}
-              onAddToCollection={handleAddCardToCollection}
-              targetDeck={targetDeck}
-              onTargetDeckChange={setTargetDeck}
-            />
-          ) : (
-            <CardGroups
-              cardGroups={cardGroups}
-              selectedGroup={selectedCardGroup}
-              onSelectGroup={setSelectedCardGroup}
-              onCreateGroup={createCardGroup}
-              onUpdateGroup={updateCardGroup}
-              onDeleteGroup={deleteCardGroup}
-              onAddCardToGroup={addCardToGroup}
-              onRemoveCardFromGroup={removeCardFromGroup}
-              onCardSelect={toggleCardPreview}
-              onAddCardToDeck={handleAddCard}
-              onAddAllCardsFromGroup={handleAddAllCardsFromGroup}
-            />
-          )}
-
-          {selectedDeck && viewMode === "cards" && (
-            <CardSuggestions
-              deck={selectedDeck}
-              onAddCardToDeck={handleAddCard}
-            />
-          )}
-        </div>
-      </div>
-
-      {previewCard && (
-        <CardModal
-          card={previewCard}
-          isOpen={isModalOpen}
-          onClose={closeModal}
-          onAddCard={selectedDeck ? handleAddCard : undefined}
-          onToggleFavorite={handleToggleFavorite}
-          onAddToCollection={handleAddCardToCollection}
-        />
-      )}
-
-      {lastAddedCard && <CardNotification card={lastAddedCard} />}
-
-      {/* Deck Sync Modal */}
-      {isSyncModalOpen && (
-        <div className="deck-sync-modal-overlay">
-          <div className="deck-sync-modal">
-            <div className="deck-sync-modal-header">
-              <h2>Sync Decks with Folder</h2>
-              <button
-                className="close-button"
-                onClick={() => setIsSyncModalOpen(false)}
-              >
-                ×
-              </button>
-            </div>
-
-            <div className="deck-sync-modal-content">
-              <div className="folder-selection">
-                <label>Folder Path:</label>
-                <div className="folder-input">
-                  <input
-                    id="deck-sync-folder-path"
-                    type="text"
-                    placeholder="Select a folder..."
-                    readOnly
-                  />
-                  <button onClick={handleFolderSelect}>Browse...</button>
-                </div>
-              </div>
-
-              <div className="sync-options">
-                <div className="option-group">
-                  <label>Sync Direction:</label>
-                  <div className="radio-group">
-                    <label>
-                      <input
-                        type="radio"
-                        name="sync-direction"
-                        value="import"
-                        defaultChecked={true}
-                      />
-                      Import Decks
-                    </label>
-                    <label>
-                      <input
-                        type="radio"
-                        name="sync-direction"
-                        value="export"
-                        defaultChecked={false}
-                      />
-                      Export Decks
-                    </label>
-                  </div>
-                </div>
-              </div>
-
-              {syncProgress.status && (
-                <div className="sync-results">
-                  <h3>Sync Results</h3>
-
-                  <div className="results-section">
-                    <h4>Status: {syncProgress.status}</h4>
-                    <p>Imported: {syncProgress.imported} decks</p>
-                    <p>Exported: {syncProgress.exported} decks</p>
-                  </div>
-
-                  {syncProgress.errors.length > 0 && (
-                    <div className="results-section errors">
-                      <h4>Errors ({syncProgress.errors.length})</h4>
-                      <ul>
-                        {syncProgress.errors.map((error, index) => (
-                          <li key={index}>{error}</li>
-                        ))}
-                      </ul>
-                    </div>
+          <div className="editor-panel">
+            <div className="editor-header-container">
+              {selectedDeck && (
+                <div className="deck-header">
+                  {isEditingDeckName ? (
+                    <input
+                      ref={deckNameInputRef}
+                      type="text"
+                      value={selectedDeck.name}
+                      onChange={handleDeckNameChange}
+                      onBlur={handleDeckNameBlur}
+                      className="deck-name-input"
+                    />
+                  ) : (
+                    <h2
+                      onClick={handleDeckNameEdit}
+                      className="clickable-deck-name"
+                    >
+                      {selectedDeck.name}
+                    </h2>
                   )}
                 </div>
               )}
-            </div>
 
-            <div className="deck-sync-modal-footer">
-              <div className="deck-count">Total Decks: {decks.length}</div>
-              <div className="actions">
+              <div className="editor-tabs">
                 <button
-                  className="cancel-button"
-                  onClick={() => setIsSyncModalOpen(false)}
-                  disabled={syncProgress.isProcessing}
+                  className={activeTab === "editor" ? "active-tab" : ""}
+                  onClick={() => handleTabChange("editor")}
+                  disabled={!selectedDeck}
                 >
-                  Close
+                  Deck Editor
                 </button>
                 <button
-                  className="sync-button"
-                  onClick={() => {
-                    const direction = document.querySelector(
-                      'input[name="sync-direction"]:checked'
-                    ) as HTMLInputElement;
-
-                    if (direction?.value === "export") {
-                      // For export, use the existing syncDecksWithFolder function with browser downloads
-                      handleSyncWithFolder(
-                        "Browser Download",
-                        "export",
-                        "json"
-                      );
-                    } else {
-                      // For import, check if files have already been selected
-                      if (
-                        window.selectedDeckFiles &&
-                        window.selectedDeckFiles.length > 0
-                      ) {
-                        // Process the already selected files
-                        processSelectedFiles(window.selectedDeckFiles);
-                      } else {
-                        // No files selected yet, so open the file selector
-                        handleFolderSelect();
-                      }
-                    }
-                  }}
-                  disabled={syncProgress.isProcessing}
+                  className={activeTab === "analytics" ? "active-tab" : ""}
+                  onClick={() => handleTabChange("analytics")}
+                  disabled={!selectedDeck}
                 >
-                  {syncProgress.isProcessing ? "Syncing..." : "Start Sync"}
+                  Deck Analytics
+                </button>
+                <button
+                  className={activeTab === "simulator" ? "active-tab" : ""}
+                  onClick={() => handleTabChange("simulator")}
+                  disabled={!selectedDeck}
+                >
+                  Draw Simulator
                 </button>
               </div>
             </div>
+
+            <div className="editor-panel-content">
+              {!selectedDeck ? (
+                <div className="no-deck-selected">
+                  <h3>No Deck Selected</h3>
+                  <p>
+                    Select a deck from the left panel or create a new one to
+                    begin.
+                  </p>
+                  <button
+                    className="action-btn"
+                    onClick={() =>
+                      handleCreateDeck(
+                        `New Deck ${decks.length + 1}`,
+                        selectedDeckGroup?.id
+                      )
+                    }
+                  >
+                    Create New Deck
+                  </button>
+                </div>
+              ) : activeTab === "editor" ? (
+                <DeckEditor
+                  deck={selectedDeck}
+                  onCardSelect={toggleCardPreview}
+                  onCardRemove={(card, index, isExtraDeck, isSideDeck) =>
+                    isSideDeck
+                      ? removeCardFromSideDeck(card, index)
+                      : removeCardFromDeck(card, index, isExtraDeck)
+                  }
+                  onRenameDeck={(newName) =>
+                    selectedDeck && handleRenameDeck(selectedDeck, newName)
+                  }
+                  onClearDeck={() =>
+                    selectedDeck && handleClearDeck(selectedDeck)
+                  }
+                  onReorderCards={handleReorderCards}
+                  onMoveCardBetweenDecks={moveCardBetweenDecks}
+                  updateDeck={updateDeck}
+                />
+              ) : activeTab === "simulator" ? (
+                <DrawSimulator
+                  deck={selectedDeck}
+                  onCardSelect={toggleCardPreview}
+                />
+              ) : (
+                <DeckAnalytics
+                  analytics={deckAnalytics}
+                  deck={selectedDeck}
+                  isVisible={activeTab === "analytics"}
+                  isLoading={isAnalyzing}
+                  isEnhanced={useEnhancedAnalysis && !analyzerServiceError}
+                  onToggleEnhanced={(newState) => {
+                    toggleEnhancedAnalysis(newState);
+                  }}
+                />
+              )}
+            </div>
+          </div>
+
+          {/* Always render the search panel, regardless of whether a deck is selected */}
+          <div className="search-panel">
+            <div className="view-mode-toggle search-view-toggle">
+              <button
+                className={`view-mode-button ${
+                  viewMode === "cards" ? "active" : ""
+                }`}
+                onClick={() => setViewMode("cards")}
+              >
+                Cards
+              </button>
+              <button
+                className={`view-mode-button ${
+                  viewMode === "collections" ? "active" : ""
+                }`}
+                onClick={() => setViewMode("collections")}
+              >
+                Groups
+              </button>
+            </div>
+
+            {viewMode === "cards" ? (
+              <SearchPanel
+                onCardSelect={toggleCardPreview}
+                onCardAdd={handleAddCard}
+                onToggleFavorite={handleToggleFavorite}
+                onAddToCollection={handleAddCardToCollection}
+                targetDeck={targetDeck}
+                onTargetDeckChange={setTargetDeck}
+              />
+            ) : (
+              <CardGroups
+                cardGroups={cardGroups}
+                selectedGroup={selectedCardGroup}
+                onSelectGroup={setSelectedCardGroup}
+                onCreateGroup={createCardGroup}
+                onUpdateGroup={updateCardGroup}
+                onDeleteGroup={deleteCardGroup}
+                onAddCardToGroup={addCardToGroup}
+                onRemoveCardFromGroup={removeCardFromGroup}
+                onCardSelect={toggleCardPreview}
+                onAddCardToDeck={handleAddCard}
+                onAddAllCardsFromGroup={handleAddAllCardsFromGroup}
+              />
+            )}
+
+            {selectedDeck && viewMode === "cards" && (
+              <CardSuggestions
+                deck={selectedDeck}
+                onAddCardToDeck={handleAddCard}
+              />
+            )}
           </div>
         </div>
-      )}
-    </div>
+
+        {previewCard && (
+          <CardModal
+            card={previewCard}
+            isOpen={isModalOpen}
+            onClose={closeModal}
+            onAddCard={selectedDeck ? handleAddCard : undefined}
+            onToggleFavorite={handleToggleFavorite}
+            onAddToCollection={handleAddCardToCollection}
+          />
+        )}
+
+        {lastAddedCard && <CardNotification card={lastAddedCard} />}
+
+        {/* Deck Sync Modal */}
+        {isSyncModalOpen && (
+          <div className="deck-sync-modal-overlay">
+            <div className="deck-sync-modal">
+              <div className="deck-sync-modal-header">
+                <h2>Sync Decks with Folder</h2>
+                <button
+                  className="close-button"
+                  onClick={() => setIsSyncModalOpen(false)}
+                >
+                  ×
+                </button>
+              </div>
+
+              <div className="deck-sync-modal-content">
+                <div className="folder-selection">
+                  <label>Folder Path:</label>
+                  <div className="folder-input">
+                    <input
+                      id="deck-sync-folder-path"
+                      type="text"
+                      placeholder="Select a folder..."
+                      readOnly
+                    />
+                    <button onClick={handleFolderSelect}>Browse...</button>
+                  </div>
+                </div>
+
+                <div className="sync-options">
+                  <div className="option-group">
+                    <label>Sync Direction:</label>
+                    <div className="radio-group">
+                      <label>
+                        <input
+                          type="radio"
+                          name="sync-direction"
+                          value="import"
+                          defaultChecked={true}
+                        />
+                        Import Decks
+                      </label>
+                      <label>
+                        <input
+                          type="radio"
+                          name="sync-direction"
+                          value="export"
+                          defaultChecked={false}
+                        />
+                        Export Decks
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                {syncProgress.status && (
+                  <div className="sync-results">
+                    <h3>Sync Results</h3>
+
+                    <div className="results-section">
+                      <h4>Status: {syncProgress.status}</h4>
+                      <p>Imported: {syncProgress.imported} decks</p>
+                      <p>Exported: {syncProgress.exported} decks</p>
+                    </div>
+
+                    {syncProgress.errors.length > 0 && (
+                      <div className="results-section errors">
+                        <h4>Errors ({syncProgress.errors.length})</h4>
+                        <ul>
+                          {syncProgress.errors.map((error, index) => (
+                            <li key={index}>{error}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <div className="deck-sync-modal-footer">
+                <div className="deck-count">Total Decks: {decks.length}</div>
+                <div className="actions">
+                  <button
+                    className="cancel-button"
+                    onClick={() => setIsSyncModalOpen(false)}
+                    disabled={syncProgress.isProcessing}
+                  >
+                    Close
+                  </button>
+                  <button
+                    className="sync-button"
+                    onClick={() => {
+                      const direction = document.querySelector(
+                        'input[name="sync-direction"]:checked'
+                      ) as HTMLInputElement;
+
+                      if (direction?.value === "export") {
+                        // For export, use the existing syncDecksWithFolder function with browser downloads
+                        handleSyncWithFolder(
+                          "Browser Download",
+                          "export",
+                          "json"
+                        );
+                      } else {
+                        // For import, check if files have already been selected
+                        if (
+                          window.selectedDeckFiles &&
+                          window.selectedDeckFiles.length > 0
+                        ) {
+                          // Process the already selected files
+                          processSelectedFiles(window.selectedDeckFiles);
+                        } else {
+                          // No files selected yet, so open the file selector
+                          handleFolderSelect();
+                        }
+                      }
+                    }}
+                    disabled={syncProgress.isProcessing}
+                  >
+                    {syncProgress.isProcessing ? "Syncing..." : "Start Sync"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </AppLayout>
   );
 };
 

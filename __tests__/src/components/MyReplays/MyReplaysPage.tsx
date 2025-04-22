@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
+import theme from "../../styles/theme";
+import AppLayout from "../Layout/AppLayout";
+import { Button, Card, Badge } from "../UI";
 
 interface Replay {
   id: string;
@@ -90,131 +93,157 @@ const MyReplaysPage = () => {
   };
 
   return (
-    <PageContainer>
-      <Header>
-        <h1>My Replays</h1>
-        <Button onClick={() => navigate("/")}>Back to Home</Button>
-      </Header>
+    <AppLayout>
+      <PageContainer>
+        <PageHeader>
+          <h1>My Replays</h1>
+          <Button variant="secondary" onClick={() => navigate("/")}>
+            Back to Home
+          </Button>
+        </PageHeader>
 
-      {isLoading ? (
-        <Loading>Loading replays...</Loading>
-      ) : replays.length === 0 ? (
-        <EmptyState>
-          <p>You don't have any duel replays yet.</p>
-          <Button onClick={() => navigate("/")}>Start a Duel</Button>
-        </EmptyState>
-      ) : (
-        <ReplayList>
-          {replays.map((replay) => (
-            <ReplayItem key={replay.id}>
-              <ReplayInfo>
-                <ReplayTitle>Duel Replay</ReplayTitle>
-                <ReplayDate>{replay.date}</ReplayDate>
-                <DuelDetails>
-                  {replay.players && replay.players.length >= 2 ? (
-                    <>
-                      <Player>
-                        <PlayerName>
-                          {getDeckName(replay.players[0].name)}
-                        </PlayerName>
-                        <CardCount>
-                          {replay.players[0].mainDeck?.length || 0} cards
-                        </CardCount>
-                      </Player>
-                      <VsContainer>VS</VsContainer>
-                      <Player>
-                        <PlayerName>
-                          {getDeckName(replay.players[1].name)}
-                        </PlayerName>
-                        <CardCount>
-                          {replay.players[1].mainDeck?.length || 0} cards
-                        </CardCount>
-                      </Player>
-                    </>
-                  ) : (
-                    <p>Replay data unavailable</p>
-                  )}
-                </DuelDetails>
-              </ReplayInfo>
+        {isLoading ? (
+          <LoadingCard>
+            <Card.Content>
+              <LoadingText>Loading replays...</LoadingText>
+            </Card.Content>
+          </LoadingCard>
+        ) : replays.length === 0 ? (
+          <EmptyStateCard>
+            <Card.Content>
+              <p>You don't have any duel replays yet.</p>
+              <Button variant="primary" onClick={() => navigate("/duel")}>
+                Start a Duel
+              </Button>
+            </Card.Content>
+          </EmptyStateCard>
+        ) : (
+          <ReplayList>
+            {replays.map((replay) => (
+              <ReplayItem key={replay.id} elevation="low">
+                <Card.Content>
+                  <ReplayContentWrapper>
+                    <ReplayInfo>
+                      <ReplayHeader>
+                        <ReplayTitle>Duel Replay</ReplayTitle>
+                        <Badge variant="info" size="sm">
+                          {replay.date}
+                        </Badge>
+                      </ReplayHeader>
 
-              <ButtonGroup>
-                <Button primary onClick={() => watchReplay(replay.id)}>
-                  Watch Replay
-                </Button>
-                <Button onClick={() => createSpreadsheet(replay)}>
-                  Create Spreadsheet
-                </Button>
-                <ActionButton onClick={() => deleteReplay(replay.id)}>
-                  🗑️ Delete
-                </ActionButton>
-              </ButtonGroup>
-            </ReplayItem>
-          ))}
-        </ReplayList>
-      )}
-    </PageContainer>
+                      <DuelDetails>
+                        {replay.players && replay.players.length >= 2 ? (
+                          <>
+                            <Player>
+                              <PlayerName>
+                                {getDeckName(replay.players[0].name)}
+                              </PlayerName>
+                              <CardCount>
+                                {replay.players[0].mainDeck?.length || 0} cards
+                              </CardCount>
+                            </Player>
+                            <VsContainer>VS</VsContainer>
+                            <Player>
+                              <PlayerName>
+                                {getDeckName(replay.players[1].name)}
+                              </PlayerName>
+                              <CardCount>
+                                {replay.players[1].mainDeck?.length || 0} cards
+                              </CardCount>
+                            </Player>
+                          </>
+                        ) : (
+                          <p>Replay data unavailable</p>
+                        )}
+                      </DuelDetails>
+                    </ReplayInfo>
+
+                    <ReplayActions>
+                      <Button
+                        variant="primary"
+                        onClick={() => watchReplay(replay.id)}
+                      >
+                        Watch Replay
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        onClick={() => createSpreadsheet(replay)}
+                      >
+                        Create Spreadsheet
+                      </Button>
+                      <Button
+                        variant="danger"
+                        onClick={() => deleteReplay(replay.id)}
+                      >
+                        Delete
+                      </Button>
+                    </ReplayActions>
+                  </ReplayContentWrapper>
+                </Card.Content>
+              </ReplayItem>
+            ))}
+          </ReplayList>
+        )}
+      </PageContainer>
+    </AppLayout>
   );
 };
 
 const PageContainer = styled.div`
   max-width: 1200px;
   margin: 0 auto;
-  padding: 20px;
+  padding: ${theme.spacing.lg};
 `;
 
-const Header = styled.div`
+const PageHeader = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 30px;
+  margin-bottom: ${theme.spacing.xl};
 
   h1 {
     margin: 0;
+    color: ${theme.colors.text.primary};
+    font-size: ${theme.typography.size["3xl"]};
   }
 `;
 
-const ButtonGroup = styled.div`
-  display: flex;
-  gap: 10px;
+const LoadingCard = styled(Card)`
+  text-align: center;
+  padding: ${theme.spacing.xl};
 `;
 
-const Button = styled.button<{ primary?: boolean }>`
-  padding: 8px 16px;
-  background-color: ${(props) => (props.primary ? "#0078d4" : "#2a2a2a")};
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-
-  &:hover {
-    background-color: ${(props) => (props.primary ? "#0056b3" : "#444")};
-  }
+const LoadingText = styled.div`
+  font-size: ${theme.typography.size.lg};
+  color: ${theme.colors.text.secondary};
 `;
 
-const ActionButton = styled.button`
-  padding: 8px 16px;
-  background-color: transparent;
-  color: #ff4444;
-  border: 1px solid #444;
-  border-radius: 4px;
-  cursor: pointer;
+const EmptyStateCard = styled(Card)`
+  padding: ${theme.spacing.xl};
+  text-align: center;
 
-  &:hover {
-    background-color: rgba(255, 68, 68, 0.1);
+  p {
+    color: ${theme.colors.text.secondary};
+    margin-bottom: ${theme.spacing.lg};
+    font-size: ${theme.typography.size.md};
   }
 `;
 
 const ReplayList = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: ${theme.spacing.md};
 `;
 
-const ReplayItem = styled.div`
-  padding: 20px;
-  background-color: #2a2a2a;
-  border-radius: 8px;
+const ReplayItem = styled(Card)`
+  transition: transform ${theme.transitions.default};
+
+  &:hover {
+    transform: translateY(-2px);
+  }
+`;
+
+const ReplayContentWrapper = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -222,7 +251,7 @@ const ReplayItem = styled.div`
   @media (max-width: 768px) {
     flex-direction: column;
     align-items: flex-start;
-    gap: 15px;
+    gap: ${theme.spacing.md};
   }
 `;
 
@@ -230,22 +259,24 @@ const ReplayInfo = styled.div`
   flex: 1;
 `;
 
-const ReplayTitle = styled.h3`
-  margin: 0 0 5px 0;
-  color: white;
+const ReplayHeader = styled.div`
+  display: flex;
+  align-items: center;
+  gap: ${theme.spacing.md};
+  margin-bottom: ${theme.spacing.sm};
 `;
 
-const ReplayDate = styled.div`
-  color: #999;
-  font-size: 14px;
-  margin-bottom: 10px;
+const ReplayTitle = styled.h3`
+  margin: 0;
+  color: ${theme.colors.text.primary};
+  font-size: ${theme.typography.size.lg};
 `;
 
 const DuelDetails = styled.div`
   display: flex;
   align-items: center;
-  gap: 15px;
-  margin-top: 10px;
+  gap: ${theme.spacing.md};
+  margin-top: ${theme.spacing.sm};
 `;
 
 const Player = styled.div`
@@ -253,36 +284,31 @@ const Player = styled.div`
 `;
 
 const PlayerName = styled.div`
-  font-weight: bold;
-  color: white;
+  font-weight: ${theme.typography.weight.medium};
+  color: ${theme.colors.text.primary};
 `;
 
 const CardCount = styled.div`
-  font-size: 12px;
-  color: #999;
+  font-size: ${theme.typography.size.sm};
+  color: ${theme.colors.text.secondary};
 `;
 
 const VsContainer = styled.div`
-  padding: 5px 10px;
-  background-color: #333;
-  border-radius: 4px;
-  color: white;
-  font-weight: bold;
+  padding: ${theme.spacing.xs} ${theme.spacing.sm};
+  background-color: ${theme.colors.background.card};
+  border-radius: ${theme.borderRadius.sm};
+  color: ${theme.colors.text.primary};
+  font-weight: ${theme.typography.weight.bold};
 `;
 
-const Loading = styled.div`
-  text-align: center;
-  padding: 50px;
-  font-size: 16px;
-  color: #999;
-`;
+const ReplayActions = styled.div`
+  display: flex;
+  gap: ${theme.spacing.sm};
 
-const EmptyState = styled.div`
-  text-align: center;
-  padding: 50px;
-  background-color: #2a2a2a;
-  border-radius: 8px;
-  color: white;
+  @media (max-width: 768px) {
+    width: 100%;
+    justify-content: flex-end;
+  }
 `;
 
 export default MyReplaysPage;
