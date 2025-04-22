@@ -583,6 +583,27 @@ const DeckEditor: React.FC<DeckEditorProps> = ({
 
   return (
     <div className="deck-editor" ref={containerRef}>
+      <div className="deck-title-header">
+        <h3>Deck Editor</h3>
+        {isEditingName ? (
+          <div className="deck-name-edit">
+            <input
+              type="text"
+              value={editedName}
+              onChange={(e) => setEditedName(e.target.value)}
+              onBlur={handleNameSubmit}
+              onKeyDown={(e) => e.key === "Enter" && handleNameSubmit()}
+              autoFocus
+            />
+          </div>
+        ) : (
+          <div className="deck-name" onClick={() => setIsEditingName(true)}>
+            {deck.name}
+            <span className="edit-hint">(click to edit)</span>
+          </div>
+        )}
+      </div>
+
       <div className="deck-controls">
         <div className="deck-header-with-actions"></div>
       </div>

@@ -868,6 +868,9 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
   return (
     <AppLayout>
       <div className="deck-builder">
+        <div className="page-header">
+          <h1>Deck Builder</h1>
+        </div>
         <div className="builder-container">
           <div className="decks-panel">
             <DeckList
