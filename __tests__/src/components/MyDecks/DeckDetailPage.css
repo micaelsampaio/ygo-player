@@ -102,12 +102,6 @@
   font-weight: var(--font-weight-medium);
 }
 
-.card-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-  gap: var(--spacing-md);
-}
-
 .card-item {
   position: relative;
   border-radius: var(--border-radius-md);
