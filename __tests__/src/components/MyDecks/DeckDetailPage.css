@@ -1,0 +1,217 @@
+/* DeckDetailPage styling using the design system variables */
+
+.deck-detail-page {
+  padding: var(--spacing-lg);
+}
+
+.deck-detail-header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
+  background-color: var(--color-bg-secondary);
+  padding: var(--spacing-lg);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-md);
+}
+
+.deck-title-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.deck-title-section h1 {
+  margin: 0;
+  font-size: var(--font-size-2xl);
+  color: var(--color-primary);
+}
+
+.deck-count {
+  font-size: var(--font-size-md);
+  color: var(--color-text-secondary);
+}
+
+.deck-created {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.deck-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-md);
+}
+
+.back-button {
+  align-self: flex-start;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: none;
+  border: none;
+  color: var(--color-primary);
+  font-size: var(--font-size-md);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  transition: all var(--transition-fast);
+}
+
+.back-button:hover {
+  color: var(--color-primary-dark);
+  text-decoration: underline;
+}
+
+.deck-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+.deck-cards-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xl);
+}
+
+.deck-section {
+  background-color: var(--color-bg-primary);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.deck-section h2 {
+  margin: 0 0 var(--spacing-md) 0;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  border-bottom: 2px solid var(--color-primary-light);
+  padding-bottom: var(--spacing-sm);
+}
+
+.card-type-section {
+  margin-bottom: var(--spacing-lg);
+}
+
+.card-type-section h3 {
+  margin: var(--spacing-md) 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-medium);
+}
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: var(--spacing-md);
+}
+
+.card-item {
+  position: relative;
+  border-radius: var(--border-radius-md);
+  overflow: hidden;
+  transition: transform var(--transition-fast);
+  box-shadow: var(--shadow-sm);
+}
+
+.card-item img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.card-item:hover {
+  transform: scale(1.05);
+  box-shadow: var(--shadow-md);
+  z-index: 2;
+}
+
+.card-count-badge {
+  position: absolute;
+  top: var(--spacing-xs);
+  right: var(--spacing-xs);
+  background-color: rgba(0, 0, 0, 0.7);
+  color: white;
+  font-size: var(--font-size-xs);
+  padding: 2px 6px;
+  border-radius: 10px;
+}
+
+.extra-deck .card-item {
+  border: 2px solid var(--color-accent);
+}
+
+.side-deck .card-item {
+  border: 2px solid var(--color-secondary);
+}
+
+.loading-indicator {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-lg);
+}
+
+.message-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-xl);
+  text-align: center;
+}
+
+.error-message {
+  color: var(--color-danger);
+  font-size: var(--font-size-lg);
+}
+
+/* Responsive adjustments */
+@media (min-width: 768px) {
+  .deck-detail-header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+  }
+
+  .back-button {
+    position: absolute;
+    top: var(--spacing-md);
+    left: var(--spacing-md);
+  }
+
+  .deck-title-section {
+    flex: 1;
+    padding-left: 100px; /* Space for back button */
+  }
+
+  .deck-actions {
+    flex: 0 0 auto;
+    margin-top: 0;
+  }
+}
+
+@media (max-width: 576px) {
+  .deck-detail-page {
+    padding: var(--spacing-md);
+  }
+
+  .deck-section {
+    padding: var(--spacing-md);
+  }
+
+  .card-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--spacing-sm);
+  }
+
+  .deck-actions {
+    justify-content: center;
+  }
+}

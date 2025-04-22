@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
+import theme from "../../styles/theme";
+import AppLayout from "../Layout/AppLayout";
+import { Button, Card, Badge } from "../UI";
 
 interface Combo {
   id: string;
@@ -62,140 +65,174 @@ const MyCombosPage = () => {
   };
 
   return (
-    <PageContainer>
-      <Header>
-        <h1>My Combos</h1>
-        <Button onClick={() => navigate("/")}>Create New Combo</Button>
-      </Header>
-
-      {isLoading ? (
-        <Loading>Loading combos...</Loading>
-      ) : combos.length === 0 ? (
-        <EmptyState>
-          <p>You don't have any combos yet.</p>
-          <p>Combos are created in collections.</p>
-          <Button onClick={() => navigate("/collections")}>
-            Go to Collections
+    <AppLayout>
+      <PageContainer>
+        <PageHeader>
+          <h1>My Combos</h1>
+          <Button variant="primary" onClick={() => navigate("/collections")}>
+            Create New Combo
           </Button>
-        </EmptyState>
-      ) : (
-        <ComboGrid>
-          {combos.map((combo) => (
-            <ComboCard key={`${combo.collection}-${combo.id}`}>
-              <ComboTitle>{combo.name}</ComboTitle>
-              <ComboCollectionName>
-                Collection: {combo.collectionName || combo.collection}
-              </ComboCollectionName>
-              <ComboStats>
-                <StatItem>
-                  <StatLabel>Steps</StatLabel>
-                  <StatValue>{combo.logs?.length || 0}</StatValue>
-                </StatItem>
-                <StatItem>
-                  <StatLabel>Cards Used</StatLabel>
-                  <StatValue>
-                    {Array.isArray(combo.logs)
-                      ? new Set(
-                          combo.logs.flatMap(
-                            (log) => log.cards?.map((c: any) => c.id) || []
-                          )
-                        ).size
-                      : 0}
-                  </StatValue>
-                </StatItem>
-              </ComboStats>
-              <ButtonGroup>
-                <Button primary onClick={() => handleViewCombo(combo)}>
-                  View Combo
-                </Button>
-                <Button
-                  onClick={() => navigate(`/collections/${combo.collection}`)}
-                >
-                  Go to Collection
-                </Button>
-              </ButtonGroup>
-            </ComboCard>
-          ))}
-        </ComboGrid>
-      )}
-    </PageContainer>
+        </PageHeader>
+
+        {isLoading ? (
+          <LoadingCard>
+            <Card.Content>
+              <LoadingText>Loading combos...</LoadingText>
+            </Card.Content>
+          </LoadingCard>
+        ) : combos.length === 0 ? (
+          <EmptyStateCard>
+            <Card.Content>
+              <p>You don't have any combos yet.</p>
+              <p>Combos are created in collections.</p>
+              <Button
+                variant="primary"
+                onClick={() => navigate("/collections")}
+              >
+                Go to Collections
+              </Button>
+            </Card.Content>
+          </EmptyStateCard>
+        ) : (
+          <ComboGrid>
+            {combos.map((combo) => (
+              <ComboCard
+                key={`${combo.collection}-${combo.id}`}
+                elevation="low"
+              >
+                <Card.Content>
+                  <ComboHeader>
+                    <ComboTitle>{combo.name}</ComboTitle>
+                    <Badge variant="secondary" size="sm" pill>
+                      {combo.collectionName || combo.collection}
+                    </Badge>
+                  </ComboHeader>
+
+                  <ComboStats>
+                    <StatItem>
+                      <StatLabel>Steps</StatLabel>
+                      <StatValue>{combo.logs?.length || 0}</StatValue>
+                    </StatItem>
+                    <StatItem>
+                      <StatLabel>Cards Used</StatLabel>
+                      <StatValue>
+                        {Array.isArray(combo.logs)
+                          ? new Set(
+                              combo.logs.flatMap(
+                                (log) => log.cards?.map((c: any) => c.id) || []
+                              )
+                            ).size
+                          : 0}
+                      </StatValue>
+                    </StatItem>
+                  </ComboStats>
+
+                  <ButtonContainer>
+                    <Button
+                      variant="primary"
+                      fullWidth
+                      onClick={() => handleViewCombo(combo)}
+                    >
+                      View Combo
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      fullWidth
+                      onClick={() =>
+                        navigate(`/collections/${combo.collection}`)
+                      }
+                    >
+                      Go to Collection
+                    </Button>
+                  </ButtonContainer>
+                </Card.Content>
+              </ComboCard>
+            ))}
+          </ComboGrid>
+        )}
+      </PageContainer>
+    </AppLayout>
   );
 };
 
 const PageContainer = styled.div`
   max-width: 1200px;
   margin: 0 auto;
-  padding: 20px;
+  padding: ${theme.spacing.lg};
 `;
 
-const Header = styled.div`
+const PageHeader = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 30px;
+  margin-bottom: ${theme.spacing.xl};
 
   h1 {
     margin: 0;
+    color: ${theme.colors.text.primary};
+    font-size: ${theme.typography.size["3xl"]};
   }
 `;
 
-const ButtonGroup = styled.div`
-  display: flex;
-  gap: 10px;
+const LoadingCard = styled(Card)`
+  text-align: center;
+  padding: ${theme.spacing.xl};
 `;
 
-const Button = styled.button<{ primary?: boolean }>`
-  padding: 8px 16px;
-  background-color: ${(props) => (props.primary ? "#0078d4" : "#2a2a2a")};
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.2s;
+const LoadingText = styled.div`
+  font-size: ${theme.typography.size.lg};
+  color: ${theme.colors.text.secondary};
+`;
 
-  &:hover {
-    background-color: ${(props) => (props.primary ? "#0056b3" : "#444")};
-  }
+const ButtonContainer = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: ${theme.spacing.sm};
+  margin-top: ${theme.spacing.md};
 `;
 
 const ComboGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: ${theme.spacing.lg};
 `;
 
-const ComboCard = styled.div`
-  background-color: #2a2a2a;
-  border-radius: 8px;
-  padding: 20px;
+const ComboCard = styled(Card)`
+  transition: transform ${theme.transitions.default},
+    box-shadow ${theme.transitions.default};
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: ${theme.shadows.md};
+  }
+`;
+
+const ComboHeader = styled.div`
   display: flex;
-  flex-direction: column;
-  gap: 15px;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: ${theme.spacing.md};
 `;
 
 const ComboTitle = styled.h3`
   margin: 0;
-  color: white;
-`;
-
-const ComboCollectionName = styled.div`
-  color: #999;
-  font-size: 14px;
+  color: ${theme.colors.text.primary};
+  font-size: ${theme.typography.size.lg};
 `;
 
 const ComboStats = styled.div`
   display: flex;
-  background-color: #222;
-  border-radius: 6px;
+  background-color: ${theme.colors.background.card};
+  border-radius: ${theme.borderRadius.md};
   overflow: hidden;
-  margin: 10px 0;
+  margin: ${theme.spacing.md} 0;
 `;
 
 const StatItem = styled.div`
   flex: 1;
-  padding: 10px;
+  padding: ${theme.spacing.md};
   text-align: center;
-  border-right: 1px solid #333;
+  border-right: 1px solid ${theme.colors.border.light};
 
   &:last-child {
     border-right: none;
@@ -203,30 +240,26 @@ const StatItem = styled.div`
 `;
 
 const StatLabel = styled.div`
-  font-size: 12px;
-  color: #999;
-  margin-bottom: 5px;
+  font-size: ${theme.typography.size.sm};
+  color: ${theme.colors.text.secondary};
+  margin-bottom: ${theme.spacing.xs};
 `;
 
 const StatValue = styled.div`
-  font-size: 16px;
-  font-weight: bold;
-  color: white;
+  font-size: ${theme.typography.size.lg};
+  font-weight: ${theme.typography.weight.semibold};
+  color: ${theme.colors.text.primary};
 `;
 
-const Loading = styled.div`
+const EmptyStateCard = styled(Card)`
+  padding: ${theme.spacing.xl};
   text-align: center;
-  padding: 50px;
-  font-size: 16px;
-  color: #999;
-`;
 
-const EmptyState = styled.div`
-  text-align: center;
-  padding: 50px;
-  background-color: #2a2a2a;
-  border-radius: 8px;
-  color: white;
+  p {
+    color: ${theme.colors.text.secondary};
+    margin-bottom: ${theme.spacing.md};
+    font-size: ${theme.typography.size.md};
+  }
 `;
 
 export default MyCombosPage;

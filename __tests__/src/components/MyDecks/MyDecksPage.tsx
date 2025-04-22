@@ -4,6 +4,9 @@ import styled from "styled-components";
 import { YGODeckToImage } from "ygo-core-images-utils";
 import { useDeckGroups } from "../DeckBuilder/hooks/useDeckGroups";
 import { Deck, DeckGroup } from "../DeckBuilder/types";
+import theme from "../../styles/theme";
+import AppLayout from "../Layout/AppLayout";
+import { Button, Card, Badge, TextField, Select } from "../UI";
 
 const MyDecksPage = () => {
   const navigate = useNavigate();
@@ -167,271 +170,294 @@ const MyDecksPage = () => {
   );
 
   return (
-    <PageContainer>
-      <Header>
-        <h1>My Decks</h1>
-        <ButtonGroup>
-          <Button onClick={() => navigate("/deckbuilder")}>
-            Create New Deck
-          </Button>
-          <Button onClick={() => navigate("/deck")}>Import Deck</Button>
-          <Button onClick={() => setIsEditingGroups(!isEditingGroups)}>
-            {isEditingGroups ? "Done" : "Manage Groups"}
-          </Button>
-        </ButtonGroup>
-      </Header>
-
-      <GroupsContainer>
-        <GroupsHeading>
-          <h3>Deck Groups</h3>
-          {isEditingGroups && (
-            <GroupActions>
-              <GroupInput
-                type="text"
-                value={newGroupName}
-                onChange={(e) => setNewGroupName(e.target.value)}
-                placeholder="New group name"
-              />
-              <ActionButton onClick={handleCreateGroup}>Create</ActionButton>
-            </GroupActions>
-          )}
-        </GroupsHeading>
-
-        <GroupTabsContainer>
-          {/* Add "All" option */}
-          <GroupTab
-            active={!selectedDeckGroup}
-            onClick={() => handleSelectGroup(null)}
-          >
-            All Decks ({allDecks.length})
-          </GroupTab>
-
-          {displayedGroups.map((group) => (
-            <GroupTab
-              key={group.id}
-              active={selectedDeckGroup?.id === group.id}
-              onClick={() => handleSelectGroup(group)}
+    <AppLayout>
+      <PageContainer>
+        <PageHeader>
+          <h1>My Decks</h1>
+          <HeaderActions>
+            <Button variant="primary" onClick={() => navigate("/deckbuilder")}>
+              Create New Deck
+            </Button>
+            <Button variant="tertiary" onClick={() => navigate("/deck")}>
+              Import Deck
+            </Button>
+            <Button
+              variant={isEditingGroups ? "primary" : "secondary"}
+              onClick={() => setIsEditingGroups(!isEditingGroups)}
             >
-              {group.name} ({getDecksInGroup(group.id).length})
-              {isEditingGroups && group.id !== "default" && (
-                <DeleteGroupButton
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDeleteGroup(group);
-                  }}
-                >
-                  ×
-                </DeleteGroupButton>
-              )}
-            </GroupTab>
-          ))}
-        </GroupTabsContainer>
+              {isEditingGroups ? "Done" : "Manage Groups"}
+            </Button>
+          </HeaderActions>
+        </PageHeader>
 
-        {isEditingGroups && selectedDecks.size > 0 && (
-          <MoveToGroupPanel>
-            <span>{selectedDecks.size} deck(s) selected</span>
-            <MoveToGroupSelect
-              value=""
-              onChange={(e) => {
-                if (e.target.value) {
-                  moveSelectedDecksToGroup(e.target.value);
-                }
-              }}
-            >
-              <option value="" disabled>
-                Move to group...
-              </option>
-              {deckGroups.map((group) => (
-                <option key={group.id} value={group.id}>
-                  {group.name}
-                </option>
-              ))}
-            </MoveToGroupSelect>
-          </MoveToGroupPanel>
-        )}
-      </GroupsContainer>
-
-      {displayedDecks.length === 0 ? (
-        <EmptyState>
-          {allDecks.length === 0 ? (
-            <>
-              <p>You don't have any decks yet.</p>
-              <Button onClick={() => navigate("/deckbuilder")}>
-                Create Your First Deck
-              </Button>
-            </>
-          ) : (
-            <p>
-              No decks in this group. Select a different group or add decks to
-              this group.
-            </p>
-          )}
-        </EmptyState>
-      ) : (
-        <DeckGrid>
-          {displayedDecks.map((deck) => (
-            <DeckCard
-              key={deck.id || `deck_${deck.name}`}
-              selected={selectedDecks.has(deck.id || `deck_${deck.name}`)}
-              onClick={() =>
-                isEditingGroups
-                  ? toggleDeckSelection(deck.id || `deck_${deck.name}`)
-                  : null
-              }
-            >
+        <Card elevation="low" margin="0 0 24px 0">
+          <Card.Content>
+            <GroupsHeading>
+              <h2>Deck Groups</h2>
               {isEditingGroups && (
-                <SelectCheckbox
-                  type="checkbox"
-                  checked={selectedDecks.has(deck.id || `deck_${deck.name}`)}
-                  onChange={() =>
-                    toggleDeckSelection(deck.id || `deck_${deck.name}`)
-                  }
-                  onClick={(e) => e.stopPropagation()}
-                />
+                <GroupActions>
+                  <TextField
+                    value={newGroupName}
+                    onChange={(e) => setNewGroupName(e.target.value)}
+                    placeholder="New group name"
+                    variant="outline"
+                  />
+                  <Button
+                    variant="primary"
+                    size="md"
+                    onClick={handleCreateGroup}
+                  >
+                    Create
+                  </Button>
+                </GroupActions>
               )}
-              <DeckTitle>{deck.name}</DeckTitle>
-              <DeckMeta>
-                <MetaItem>Main: {deck.mainDeck.length}</MetaItem>
-                <MetaItem>Extra: {deck.extraDeck.length}</MetaItem>
-                {deck.groupId && (
-                  <GroupBadge>
-                    {deckGroups.find((g) => g.id === deck.groupId)?.name ||
-                      "Unknown Group"}
-                  </GroupBadge>
+            </GroupsHeading>
+
+            <GroupTabsContainer>
+              {/* Add "All" option */}
+              <GroupTab
+                active={!selectedDeckGroup}
+                onClick={() => handleSelectGroup(null)}
+              >
+                All Decks ({allDecks.length})
+              </GroupTab>
+
+              {displayedGroups.map((group) => (
+                <GroupTab
+                  key={group.id}
+                  active={selectedDeckGroup?.id === group.id}
+                  onClick={() => handleSelectGroup(group)}
+                >
+                  {group.name} ({getDecksInGroup(group.id).length})
+                  {isEditingGroups && group.id !== "default" && (
+                    <DeleteGroupButton
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteGroup(group);
+                      }}
+                    >
+                      ×
+                    </DeleteGroupButton>
+                  )}
+                </GroupTab>
+              ))}
+            </GroupTabsContainer>
+
+            {isEditingGroups && selectedDecks.size > 0 && (
+              <MoveToGroupPanel>
+                <span>{selectedDecks.size} deck(s) selected</span>
+                <Select
+                  options={deckGroups.map((group) => ({
+                    value: group.id,
+                    label: group.name,
+                  }))}
+                  onChange={(value) => {
+                    if (value) {
+                      moveSelectedDecksToGroup(value);
+                    }
+                  }}
+                  placeholder="Move to group..."
+                />
+              </MoveToGroupPanel>
+            )}
+          </Card.Content>
+        </Card>
+
+        {displayedDecks.length === 0 ? (
+          <EmptyStateCard>
+            <Card.Content>
+              {allDecks.length === 0 ? (
+                <>
+                  <p>You don't have any decks yet.</p>
+                  <Button
+                    variant="primary"
+                    onClick={() => navigate("/deckbuilder")}
+                  >
+                    Create Your First Deck
+                  </Button>
+                </>
+              ) : (
+                <p>
+                  No decks in this group. Select a different group or add decks
+                  to this group.
+                </p>
+              )}
+            </Card.Content>
+          </EmptyStateCard>
+        ) : (
+          <DeckGrid>
+            {displayedDecks.map((deck) => (
+              <DeckCard
+                key={deck.id || `deck_${deck.name}`}
+                selected={selectedDecks.has(deck.id || `deck_${deck.name}`)}
+                elevation="low"
+                onClick={() =>
+                  isEditingGroups
+                    ? toggleDeckSelection(deck.id || `deck_${deck.name}`)
+                    : null
+                }
+              >
+                {isEditingGroups && (
+                  <SelectCheckbox
+                    type="checkbox"
+                    checked={selectedDecks.has(deck.id || `deck_${deck.name}`)}
+                    onChange={() =>
+                      toggleDeckSelection(deck.id || `deck_${deck.name}`)
+                    }
+                    onClick={(e) => e.stopPropagation()}
+                  />
                 )}
-              </DeckMeta>
+                <Card.Content>
+                  <DeckTitle>{deck.name}</DeckTitle>
+                  <DeckMeta>
+                    <MetaItem>Main: {deck.mainDeck.length}</MetaItem>
+                    <MetaItem>Extra: {deck.extraDeck.length}</MetaItem>
+                    {deck.groupId && (
+                      <GroupBadge variant="primary" size="sm" pill>
+                        {deckGroups.find((g) => g.id === deck.groupId)?.name ||
+                          "Unknown Group"}
+                      </GroupBadge>
+                    )}
+                  </DeckMeta>
 
-              <ButtonGroup>
-                <Button
-                  primary
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    navigate(`/my/decks/${deck.id || `deck_${deck.name}`}`);
-                  }}
-                >
-                  View Details
-                </Button>
-                <Button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    navigate(`/duel?deck=${deck.id || `deck_${deck.name}`}`);
-                  }}
-                >
-                  Duel
-                </Button>
-              </ButtonGroup>
+                  <ButtonContainer>
+                    <Button
+                      variant="primary"
+                      fullWidth
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/my/decks/${deck.id || `deck_${deck.name}`}`);
+                      }}
+                    >
+                      View Details
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      fullWidth
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(
+                          `/duel?deck=${deck.id || `deck_${deck.name}`}`
+                        );
+                      }}
+                    >
+                      Duel
+                    </Button>
+                  </ButtonContainer>
 
-              <ActionBar>
-                <ActionButton
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    downloadDeckAsPng(deck);
-                  }}
-                >
-                  🖼️ PNG
-                </ActionButton>
-                <ActionButton
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    downloadDeckAsYdk(deck);
-                  }}
-                >
-                  📂 YDK
-                </ActionButton>
-                <ActionButton
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    deleteDeck(deck);
-                  }}
-                >
-                  🗑️ Delete
-                </ActionButton>
-              </ActionBar>
-            </DeckCard>
-          ))}
-        </DeckGrid>
-      )}
-    </PageContainer>
+                  <ActionBar>
+                    <ActionButton
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        downloadDeckAsPng(deck);
+                      }}
+                    >
+                      🖼️ PNG
+                    </ActionButton>
+                    <ActionButton
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        downloadDeckAsYdk(deck);
+                      }}
+                    >
+                      📂 YDK
+                    </ActionButton>
+                    <ActionButton
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteDeck(deck);
+                      }}
+                    >
+                      🗑️ Delete
+                    </ActionButton>
+                  </ActionBar>
+                </Card.Content>
+              </DeckCard>
+            ))}
+          </DeckGrid>
+        )}
+      </PageContainer>
+    </AppLayout>
   );
 };
 
-// Styled components remain the same
+// Styled components updated to use theme variables
 const PageContainer = styled.div`
   max-width: 1200px;
   margin: 0 auto;
-  padding: 20px;
+  padding: ${theme.spacing.lg};
 `;
 
-const Header = styled.div`
+const PageHeader = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 30px;
+  margin-bottom: ${theme.spacing.xl};
 
   h1 {
     margin: 0;
+    color: ${theme.colors.text.primary};
+    font-size: ${theme.typography.size["3xl"]};
   }
 `;
 
-const GroupsContainer = styled.div`
-  margin-bottom: 30px;
+const HeaderActions = styled.div`
+  display: flex;
+  gap: ${theme.spacing.md};
 `;
 
 const GroupsHeading = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 10px;
+  margin-bottom: ${theme.spacing.md};
 
-  h3 {
+  h2 {
     margin: 0;
+    color: ${theme.colors.text.primary};
+    font-size: ${theme.typography.size.xl};
   }
 `;
 
 const GroupActions = styled.div`
   display: flex;
   align-items: center;
-  gap: 10px;
-`;
-
-const GroupInput = styled.input`
-  padding: 8px 12px;
-  background-color: #333;
-  color: white;
-  border: 1px solid #444;
-  border-radius: 4px;
+  gap: ${theme.spacing.md};
 `;
 
 const GroupTabsContainer = styled.div`
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 20px;
+  gap: ${theme.spacing.sm};
+  margin-bottom: ${theme.spacing.md};
 `;
 
 const GroupTab = styled.div<{ active: boolean }>`
-  padding: 8px 16px;
-  background-color: ${(props) => (props.active ? "#0078d4" : "#2a2a2a")};
-  color: white;
-  border-radius: 4px;
+  padding: ${theme.spacing.sm} ${theme.spacing.md};
+  background-color: ${(props) =>
+    props.active ? theme.colors.primary.main : theme.colors.background.card};
+  color: ${(props) =>
+    props.active ? theme.colors.text.inverse : theme.colors.text.primary};
+  border-radius: ${theme.borderRadius.md};
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: background-color ${theme.transitions.default};
   display: flex;
   align-items: center;
   position: relative;
 
   &:hover {
-    background-color: ${(props) => (props.active ? "#0056b3" : "#444")};
+    background-color: ${(props) =>
+      props.active ? theme.colors.primary.dark : theme.colors.background.dark};
   }
 `;
 
 const DeleteGroupButton = styled.button`
   background: none;
   border: none;
-  color: white;
-  font-size: 16px;
-  font-weight: bold;
-  margin-left: 8px;
+  color: ${theme.colors.text.inverse};
+  font-size: ${theme.typography.size.md};
+  font-weight: ${theme.typography.weight.bold};
+  margin-left: ${theme.spacing.sm};
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -439,130 +465,120 @@ const DeleteGroupButton = styled.button`
   padding: 0 5px;
 
   &:hover {
-    color: #ff4444;
+    color: ${theme.colors.error.main};
   }
 `;
 
 const MoveToGroupPanel = styled.div`
   display: flex;
   align-items: center;
-  gap: 15px;
-  padding: 10px;
-  background-color: #2a2a2a;
-  border-radius: 4px;
-  margin-bottom: 20px;
-`;
+  gap: ${theme.spacing.lg};
+  padding: ${theme.spacing.md};
+  background-color: ${theme.colors.background.card};
+  border-radius: ${theme.borderRadius.md};
+  margin-top: ${theme.spacing.md};
 
-const MoveToGroupSelect = styled.select`
-  padding: 8px 12px;
-  background-color: #333;
-  color: white;
-  border: 1px solid #444;
-  border-radius: 4px;
-`;
-
-const ButtonGroup = styled.div`
-  display: flex;
-  gap: 10px;
-`;
-
-const Button = styled.button<{ primary?: boolean }>`
-  padding: 8px 16px;
-  background-color: ${(props) => (props.primary ? "#0078d4" : "#2a2a2a")};
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-
-  &:hover {
-    background-color: ${(props) => (props.primary ? "#0056b3" : "#444")};
+  span {
+    color: ${theme.colors.text.primary};
+    font-weight: ${theme.typography.weight.medium};
   }
 `;
 
 const DeckGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: ${theme.spacing.lg};
 `;
 
-const DeckCard = styled.div<{ selected?: boolean }>`
-  background-color: ${(props) => (props.selected ? "#193c5a" : "#2a2a2a")};
+const DeckCard = styled(Card)<{ selected?: boolean }>`
   border: ${(props) =>
-    props.selected ? "2px solid #0078d4" : "2px solid transparent"};
-  border-radius: 8px;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  position: relative;
+    props.selected
+      ? `2px solid ${theme.colors.primary.main}`
+      : `1px solid ${theme.colors.border.default}`};
+  background-color: ${(props) =>
+    props.selected
+      ? theme.colors.action.selected
+      : theme.colors.background.paper};
   cursor: ${(props) => (props.selected !== undefined ? "pointer" : "default")};
+  transition: transform ${theme.transitions.default},
+    box-shadow ${theme.transitions.default};
 
   &:hover {
-    background-color: ${(props) => (props.selected ? "#193c5a" : "#333")};
+    transform: translateY(-2px);
   }
 `;
 
 const SelectCheckbox = styled.input`
   position: absolute;
-  top: 15px;
-  right: 15px;
+  top: ${theme.spacing.md};
+  right: ${theme.spacing.md};
   width: 20px;
   height: 20px;
   cursor: pointer;
+  accent-color: ${theme.colors.primary.main};
 `;
 
 const DeckTitle = styled.h3`
-  margin: 0;
-  color: white;
+  margin: 0 0 ${theme.spacing.sm} 0;
+  color: ${theme.colors.text.primary};
+  font-size: ${theme.typography.size.lg};
 `;
 
 const DeckMeta = styled.div`
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: ${theme.spacing.sm};
+  margin-bottom: ${theme.spacing.md};
 `;
 
 const MetaItem = styled.span`
-  font-size: 12px;
-  color: #ccc;
+  font-size: ${theme.typography.size.sm};
+  color: ${theme.colors.text.secondary};
 `;
 
-const GroupBadge = styled.span`
-  padding: 2px 8px;
-  background-color: #0078d4;
-  color: white;
-  border-radius: 10px;
-  font-size: 12px;
+const GroupBadge = styled(Badge)`
+  margin-left: auto;
+`;
+
+const ButtonContainer = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: ${theme.spacing.sm};
+  margin-bottom: ${theme.spacing.sm};
 `;
 
 const ActionBar = styled.div`
   display: flex;
-  gap: 8px;
-  margin-top: 10px;
+  gap: ${theme.spacing.sm};
+  margin-top: ${theme.spacing.sm};
+  justify-content: flex-end;
 `;
 
 const ActionButton = styled.button`
-  padding: 5px 10px;
+  padding: ${theme.spacing.xs} ${theme.spacing.sm};
   background-color: transparent;
-  color: #ccc;
-  border: 1px solid #444;
-  border-radius: 4px;
+  color: ${theme.colors.text.secondary};
+  border: 1px solid ${theme.colors.border.default};
+  border-radius: ${theme.borderRadius.sm};
   cursor: pointer;
-  font-size: 12px;
+  font-size: ${theme.typography.size.sm};
+  transition: all ${theme.transitions.default};
 
   &:hover {
-    background-color: #333;
-    color: white;
+    background-color: ${theme.colors.background.card};
+    color: ${theme.colors.text.primary};
   }
 `;
 
-const EmptyState = styled.div`
+const EmptyStateCard = styled(Card)`
+  padding: ${theme.spacing.xl};
   text-align: center;
-  padding: 50px;
-  background-color: #2a2a2a;
-  border-radius: 8px;
-  color: white;
+
+  p {
+    color: ${theme.colors.text.secondary};
+    margin-bottom: ${theme.spacing.lg};
+    font-size: ${theme.typography.size.md};
+  }
 `;
 
 export default MyDecksPage;
