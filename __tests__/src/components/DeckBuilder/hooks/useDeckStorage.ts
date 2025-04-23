@@ -289,10 +289,20 @@ export function useDeckStorage() {
       // Update storage key reference
       updatedDeck.storageKey = newStorageKey;
 
-      // Update decks list
+      // Update decks list - check if deck with same ID already exists to prevent duplicates
       setDecks((prevDecks) => {
-        const newDecks = prevDecks.filter((deck) => deck.id !== updatedDeck.id);
-        return [...newDecks, updatedDeck];
+        // Check if this deck already exists in our state
+        const deckExists = prevDecks.some((deck) => deck.id === updatedDeck.id);
+
+        if (deckExists) {
+          // Replace the existing deck with the updated one
+          return prevDecks.map((deck) =>
+            deck.id === updatedDeck.id ? updatedDeck : deck
+          );
+        } else {
+          // This is a new deck, add it to the array
+          return [...prevDecks, updatedDeck];
+        }
       });
 
       // Update selected deck if it's the same one
