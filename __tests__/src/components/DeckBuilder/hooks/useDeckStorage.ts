@@ -352,6 +352,11 @@ export function useDeckStorage() {
       return null;
     }
 
+    // Ensure the sideDeck array exists (it might be missing in imported decks)
+    if (!Array.isArray(importedDeck.sideDeck)) {
+      importedDeck.sideDeck = [];
+    }
+
     const deckName = importedDeck.name + appendName;
 
     // Check for duplicate names
