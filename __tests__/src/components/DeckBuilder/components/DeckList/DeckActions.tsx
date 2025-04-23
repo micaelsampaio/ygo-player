@@ -205,6 +205,7 @@ const DeckActions: React.FC<DeckActionsProps> = ({
           name: "YDKE Imported Deck",
           mainDeck: importedDeckData.mainDeck || [],
           extraDeck: importedDeckData.extraDeck || [],
+          sideDeck: importedDeckData.sideDeck || [],
         };
 
         onImportDeck(importedDeck);
@@ -240,6 +241,7 @@ const DeckActions: React.FC<DeckActionsProps> = ({
           name: "Clipboard Deck",
           mainDeck: importedDeckData.mainDeck || [],
           extraDeck: importedDeckData.extraDeck || [],
+          sideDeck: importedDeckData.sideDeck || [],
         };
 
         onImportDeck(importedDeck);
@@ -299,6 +301,7 @@ const DeckActions: React.FC<DeckActionsProps> = ({
               name: file.name.replace(".ydk", "") + " (Imported)",
               mainDeck: importedDeckData.mainDeck || [],
               extraDeck: importedDeckData.extraDeck || [],
+              sideDeck: importedDeckData.sideDeck || [],
             };
 
             onImportDeck(importedDeck);
