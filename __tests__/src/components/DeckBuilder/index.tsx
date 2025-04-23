@@ -405,6 +405,8 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
       id: uuidv4(),
       name: importedDeck.name + " (Imported)",
       groupId: selectedDeckGroup?.id || "default", // Assign to current group if one is selected
+      // Make sure sideDeck is properly initialized
+      sideDeck: importedDeck.sideDeck || [],
     };
 
     // Use your existing deck storage mechanism
