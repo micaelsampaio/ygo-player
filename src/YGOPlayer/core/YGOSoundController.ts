@@ -31,7 +31,7 @@ export class YGOSoundController extends YGOComponent {
         });
     }
 
-    public async playSound({
+    public playSound({
         key,
         layer,
         volume = 1,
@@ -43,11 +43,12 @@ export class YGOSoundController extends YGOComponent {
         volume?: number;
         loop?: boolean;
         onComplete?: () => void;
-    }) {
-        const audioClip = await this.getSound(key);
+    }): YGOAudioClip {
+        const audioClip = this.getSound(key);
+
         if (!audioClip) {
             console.warn(`Sound ${key} could not be loaded.`);
-            return;
+            return null as any;
         }
 
         const audio = audioClip.element;
@@ -57,7 +58,7 @@ export class YGOSoundController extends YGOComponent {
         const targetLayer = layer ? this.layers.find(l => l.name === layer) : this.layers[0];
         if (!targetLayer) {
             console.warn(`Layer "${layer}" not found.`);
-            return;
+            return null as any;
         }
 
         if (targetLayer.useTimeScale) {
@@ -75,9 +76,10 @@ export class YGOSoundController extends YGOComponent {
         targetLayer.sounds.push(instance);
 
         audio.currentTime = 0;
+        audio.volume = audio.volume * targetLayer.volume;
 
         try {
-            await audio.play();
+            audio.play();
         } catch (err) {
             console.error(`Error playing audio "${key}"`, err);
         }
@@ -90,6 +92,8 @@ export class YGOSoundController extends YGOComponent {
                 onComplete?.();
             };
         }
+
+        return instance;
     }
 
     public async loadSound(path: string) {
@@ -173,6 +177,19 @@ export class YGOSoundController extends YGOComponent {
             for (const sound of layer.sounds) {
                 sound.element.playbackRate = value;
             }
+        }
+    }
+
+    public setLayerVolume(layerName: string, volume: number) {
+
+        const layer = this.layers.find(l => l.name === layerName);
+
+        if (!layer) return;
+
+        layer.volume = Math.max(0, Math.min(1, volume));
+
+        for (const sound of layer.sounds) {
+            sound.element.volume = sound.volume * layer.volume;
         }
     }
 }

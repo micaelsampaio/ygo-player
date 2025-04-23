@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { GLTF, GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 //@ts-ignore
 import { Font, FontLoader } from 'three/addons/loaders/FontLoader.js';
+import { EventBus } from '../scripts/event-bus';
 
 export class YGOPlayerCore {
     public scene: THREE.Scene;
@@ -17,6 +18,7 @@ export class YGOPlayerCore {
     public unscaledDeltaTime: number;
     public fonts = new Map<string, Font>();
     public mapBounds: THREE.Object3D;
+    public events: EventBus<any>;
 
     // time
     public timeScale: number;
@@ -26,6 +28,7 @@ export class YGOPlayerCore {
     private isOverlayEnabled: boolean;
 
     constructor({ canvas }: { canvas: HTMLCanvasElement }) {
+        this.events = new EventBus();
         this.isOverlayEnabled = false;
         this.scene = new THREE.Scene();
         this.sceneOverlay = new THREE.Scene();
@@ -39,7 +42,6 @@ export class YGOPlayerCore {
         this.textureLoader = new THREE.TextureLoader();
         this.gltfLoader = new GLTFLoader();
         this.fontLoader = new FontLoader();
-
         this.renderer = new THREE.WebGLRenderer({ canvas });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.shadowMap.enabled = true;
@@ -128,7 +130,11 @@ export class YGOPlayerCore {
     }
 
     setTimeScale(value: number) {
-        this.timeScale = value;
-        // TODO PUBLISH EVENTS
+        const changed = value !== this.timeScale;
+
+        if (changed) {
+            this.timeScale = value;
+            this.events.dispatch("on-timescale-change", this.timeScale);
+        }
     }
 }

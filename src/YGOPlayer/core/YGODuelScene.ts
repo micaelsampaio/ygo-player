@@ -12,6 +12,28 @@ export class YGODuelScene {
         this.gameFields = [];
     }
 
+    public createGameMusic() {
+        const sound = this.duel.soundController.playSound({
+            key: this.duel.createCdnUrl("/music/temp.mp3"),
+            layer: "GAME_MUSIC",
+            volume: 0.2,
+            loop: true
+        });
+
+        const audio = sound.element;
+
+        const isPlaying = () => !audio.paused && !audio.ended && audio.readyState > 2;
+
+        if (!isPlaying()) {
+            const resumeAudio = () => {
+                audio.play().catch((e) => console.warn("Audio play failed:", e));
+                window.removeEventListener("click", resumeAudio, true);
+            };
+
+            window.addEventListener("click", resumeAudio, true);
+        }
+    }
+
     public createFields({ gameField }: { gameField: THREE.Scene }) {
 
         const directionalLight = new THREE.DirectionalLight(0xffffff, 3);

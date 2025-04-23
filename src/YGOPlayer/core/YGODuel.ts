@@ -94,8 +94,11 @@ export class YGODuel {
 
     this.gameActions = new YGOGameActions(this);
     this.soundController.addLayer({ name: "GAME" });
+    this.soundController.addLayer({ name: "GAME_MUSIC", useTimeScale: false });
 
     this.setupVars();
+
+    this.core.events.on("on-timescale-change", (timeScale: number) => this.soundController.setTimeScale(timeScale));
 
     // this.config.options = {
     //     ...this.config.options || {},
@@ -139,14 +142,12 @@ export class YGODuel {
       this.fieldStats = new YGOGameFieldStatsComponent(this);
       this.entities.push(this.gameController);
 
-      this.gameController
-        .getComponent<ActionCardSelection>("action_card_selection")
-        .createCardSelections();
+      this.gameController.getComponent<ActionCardSelection>("action_card_selection").createCardSelections();
 
       this.duelScene.createFields({ gameField: gameFieldScene.scene });
+      this.duelScene.createGameMusic();
 
       this.core.updateCamera();
-
     } catch (error) {
       console.error("ERROR:");
       console.error("TCL:", error);

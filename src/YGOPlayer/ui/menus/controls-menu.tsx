@@ -27,9 +27,40 @@ export function ControlsMenu({ duel }: { duel: YGODuel }) {
         duel.core.setTimeScale(dt);
     }, [])
 
+    const setAudioVolume = useCallback((value: number) => {
+        duel.soundController.setLayerVolume("GAME_MUSIC", value)
+    }, [])
+    const setAudioVolume2 = useCallback((value: number) => {
+        duel.soundController.setLayerVolume("GAME", value)
+    }, [])
+
     return <div className="ygo-card-menu ygo-controls-menu">
         <div className="">
             Controls
+        </div>
+        <div>
+            GAME <br />
+            <input type="range" id="volume" name="volume" step="0.1" min="0.0" max="1.0" onChange={e => setAudioVolume2(Number(e.target.value))} />
+        </div>
+        <div>
+            Music <br />
+            <input type="range" id="volume" name="volume" step="0.1" min="0.0" max="1.0" onChange={e => setAudioVolume(Number(e.target.value))} />
+        </div>
+        <div className="ygo-flex ygo-gap-1">
+
+
+            <button type="button" className="ygo-card-item" onClick={() => setAudioVolume(0.1)}>
+                10
+            </button>
+            <button type="button" className="ygo-card-item" onClick={() => setAudioVolume(0.2)}>
+                20
+            </button>
+            <button type="button" className="ygo-card-item" onClick={() => setAudioVolume(0.5)}>
+                50
+            </button>
+            <button type="button" className="ygo-card-item" onClick={() => setAudioVolume(1)}>
+                100
+            </button>
         </div>
         <div className="ygo-flex ygo-gap-1">
             <button disabled={duel.core.timeScale === 1} type="button" className="ygo-card-item" onClick={() => setTimeScale(1)}>
