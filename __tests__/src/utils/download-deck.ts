@@ -4,7 +4,7 @@ import { ydkeToJson } from "./ydke-parser";
 import { Card, Deck } from "../components/DeckBuilder/types";
 
 const LOCAL_API_URL =
-  import.meta.env.VITE_YGO_CDN_UR || "http://localhost:8080";
+  import.meta.env.VITE_YGO_CDN_URL || "http://localhost:8080";
 const YGOPRODECK_API_URL = "https://db.ygoprodeck.com/api/v7";
 
 /**
