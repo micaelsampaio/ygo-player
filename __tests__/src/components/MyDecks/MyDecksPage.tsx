@@ -7,6 +7,10 @@ import { Deck, DeckGroup } from "../DeckBuilder/types";
 import theme from "../../styles/theme";
 import AppLayout from "../Layout/AppLayout";
 import { Button, Card, Badge, TextField, Select } from "../UI";
+import { syncDecksWithFolder } from "../../utils/deckFileSystem";
+import { Logger } from "../../utils/logger";
+
+const logger = Logger.createLogger("MyDecksPage");
 
 const MyDecksPage = () => {
   const navigate = useNavigate();
@@ -26,6 +30,11 @@ const MyDecksPage = () => {
   const [isEditingGroups, setIsEditingGroups] = useState(false);
   const [selectedDecks, setSelectedDecks] = useState<Set<string>>(new Set());
   const [newGroupName, setNewGroupName] = useState("");
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncResult, setSyncResult] = useState<{
+    success: boolean;
+    message: string;
+  } | null>(null);
 
   // Load all decks on component mount
   useEffect(() => {
@@ -163,6 +172,66 @@ const MyDecksPage = () => {
     await deckBuilder.toImage({ fileName, download: true });
   };
 
+  const handleSyncDecks = async () => {
+    try {
+      setIsSyncing(true);
+      setSyncResult(null);
+
+      logger.info("Syncing decks...");
+      const result = await syncDecksWithFolder(allDecks, "", "export", "ydk");
+
+      if (result.errors.length > 0) {
+        setSyncResult({
+          success: false,
+          message: `Exported ${result.exported.length} decks with ${result.errors.length} errors.`,
+        });
+        logger.error("Sync errors:", result.errors);
+      } else {
+        setSyncResult({
+          success: true,
+          message: `Successfully exported ${result.exported.length} decks.`,
+        });
+        logger.info("Sync successful:", result);
+      }
+    } catch (error) {
+      setSyncResult({
+        success: false,
+        message:
+          error instanceof Error ? error.message : "Failed to sync decks.",
+      });
+      logger.error("Sync error:", error);
+    } finally {
+      setIsSyncing(false);
+
+      // Clear the result message after 5 seconds
+      setTimeout(() => {
+        setSyncResult(null);
+      }, 5000);
+    }
+  };
+
+  const handleCreateNewDeck = () => {
+    // Generate a UUID for the new deck
+    const newDeckId = `deck_${crypto.randomUUID()}`;
+
+    // Create a basic deck structure
+    const newDeck = {
+      id: newDeckId, // Store the full ID including "deck_" prefix
+      name: `New Deck ${allDecks.length + 1}`,
+      mainDeck: [],
+      extraDeck: [],
+      sideDeck: [],
+      createdAt: new Date().toISOString(),
+      groupId: selectedDeckGroup?.id || "default",
+    };
+
+    // Save the new deck to localStorage
+    localStorage.setItem(newDeckId, JSON.stringify(newDeck));
+
+    // Navigate to deck builder with the new deck selected
+    navigate(`/deckbuilder?edit=${newDeckId}`);
+  };
+
   // Filter out the default "All Decks" group from the display
   // since we already have a separate tab for it
   const displayedGroups = deckGroups.filter(
@@ -175,11 +244,18 @@ const MyDecksPage = () => {
         <PageHeader>
           <h1>My Decks</h1>
           <HeaderActions>
-            <Button variant="primary" onClick={() => navigate("/deckbuilder")}>
+            <Button variant="primary" onClick={handleCreateNewDeck}>
               Create New Deck
             </Button>
             <Button variant="tertiary" onClick={() => navigate("/deck")}>
               Import Deck
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={handleSyncDecks}
+              disabled={isSyncing || allDecks.length === 0}
+            >
+              {isSyncing ? "Syncing..." : "Sync Decks"}
             </Button>
             <Button
               variant={isEditingGroups ? "primary" : "secondary"}
@@ -189,6 +265,12 @@ const MyDecksPage = () => {
             </Button>
           </HeaderActions>
         </PageHeader>
+
+        {syncResult && (
+          <SyncNotification $success={syncResult.success}>
+            {syncResult.message}
+          </SyncNotification>
+        )}
 
         <Card elevation="low" margin="0 0 24px 0">
           <Card.Content>
@@ -404,6 +486,31 @@ const PageHeader = styled.div`
 const HeaderActions = styled.div`
   display: flex;
   gap: ${theme.spacing.md};
+`;
+
+const SyncNotification = styled.div<{ $success: boolean }>`
+  padding: ${theme.spacing.md};
+  margin-bottom: ${theme.spacing.md};
+  background-color: ${(props) =>
+    props.$success ? theme.colors.success.light : theme.colors.error.light};
+  color: ${(props) =>
+    props.$success ? theme.colors.success.dark : theme.colors.error.dark};
+  border-radius: ${theme.borderRadius.md};
+  border-left: 4px solid
+    ${(props) =>
+      props.$success ? theme.colors.success.main : theme.colors.error.main};
+  animation: fadeIn 0.3s ease-in;
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
 `;
 
 const GroupsHeading = styled.div`

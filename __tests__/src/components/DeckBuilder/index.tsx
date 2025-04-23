@@ -119,6 +119,97 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
     });
   }, [decks]);
 
+  // Handle 'edit' parameter in the URL to select a specific deck
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const editDeckId = params.get("edit");
+
+    if (editDeckId) {
+      try {
+        // Check if this deck is already selected
+        if (
+          selectedDeck &&
+          (selectedDeck.id === editDeckId ||
+            `deck_${selectedDeck.id}` === editDeckId)
+        ) {
+          console.log(
+            `Deck ${selectedDeck.name} is already selected for editing`
+          );
+          return;
+        }
+
+        // First, check if a deck with this exact ID exists in our loaded decks
+        const deckWithExactId = decks.find((d) => d.id === editDeckId);
+        if (deckWithExactId) {
+          selectDeck(deckWithExactId);
+          console.log(`Selected deck for editing: ${deckWithExactId.name}`);
+          return;
+        }
+
+        // Next, try to load directly from localStorage using the ID as the key
+        const storedDeck = localStorage.getItem(editDeckId);
+        if (storedDeck) {
+          try {
+            const parsedDeck = JSON.parse(storedDeck);
+            // Ensure the deck has an ID
+            if (!parsedDeck.id) {
+              parsedDeck.id = editDeckId;
+            }
+
+            // Save the updated deck and select it
+            updateDeck(parsedDeck);
+            selectDeck(parsedDeck);
+            console.log(`Loaded deck from localStorage key: ${editDeckId}`);
+            return;
+          } catch (parseError) {
+            console.error(
+              `Error parsing deck data for ${editDeckId}:`,
+              parseError
+            );
+          }
+        }
+
+        // If we reach here, search through all localStorage to find a deck with this ID inside the object
+        const allKeys = Object.keys(localStorage);
+        for (const key of allKeys) {
+          if (key.startsWith("deck_")) {
+            try {
+              const deckData = localStorage.getItem(key);
+              if (deckData) {
+                const parsedDeck = JSON.parse(deckData);
+                if (parsedDeck.id === editDeckId) {
+                  // Found a deck with this ID in its properties
+                  updateDeck(parsedDeck);
+                  selectDeck(parsedDeck);
+                  console.log(
+                    `Found and selected deck by internal ID: ${parsedDeck.name}`
+                  );
+                  return;
+                }
+              }
+            } catch (error) {
+              console.error(`Error checking deck ${key}:`, error);
+            }
+          }
+        }
+
+        // If we still haven't found the deck, show an error message
+        // We no longer create a new deck automatically since that's causing duplicates
+        console.error(`Deck with ID ${editDeckId} not found.`);
+        alert(
+          `Could not find the deck you're trying to edit. It may have been deleted.`
+        );
+      } catch (error) {
+        console.error(`Error handling deck edit for ${editDeckId}:`, error);
+        alert(
+          `Error loading deck: ${
+            error instanceof Error ? error.message : "Unknown error"
+          }`
+        );
+      }
+    }
+  }, [decks, selectDeck, updateDeck, selectedDeck]);
+
   // Initialize ban list when component mounts
   useEffect(() => {
     console.log("Initializing Yu-Gi-Oh ban list...");

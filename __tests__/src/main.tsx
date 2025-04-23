@@ -24,6 +24,8 @@ import MyCardGroupsPage from "./components/Cards/MyCardGroupsPage.tsx";
 import DuelLobbyPage from "./components/DuelLobby/DuelLobbyPage.tsx";
 // Import for new Card Database page
 import CardDatabasePage from "./components/Cards/CardDatabasePage.tsx";
+// Import Settings page
+import SettingsPage from "./components/Settings/SettingsPage.tsx";
 
 debug.enable("ygo:*");
 localStorage.setItem("debug", "ygo:*");
@@ -51,6 +53,7 @@ createRoot(document.getElementById("root")!).render(
           element={<CollectionsPage />}
         />
         <Route path="/rulings" element={<RulingsPage />} />
+        <Route path="/settings" element={<SettingsPage />} />
 
         {/* New routes for deck management */}
         <Route path="/my/decks" element={<MyDecksPage />} />

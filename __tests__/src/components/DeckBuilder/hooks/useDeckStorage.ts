@@ -18,7 +18,7 @@ export function useDeckStorage() {
       const availableDecks: Deck[] = [];
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
-        if (key?.startsWith("deck_")) {
+        if (key?.startsWith("deck_") && !key.includes("deck_groups")) {
           try {
             const deckData = localStorage.getItem(key);
             if (deckData) {
@@ -36,10 +36,13 @@ export function useDeckStorage() {
 
                 // Ensure the deck has an ID
                 if (!deck.id) {
-                  deck.id = uuidv4();
+                  deck.id = uuidv4(); // Generate a new UUID
                   // Save the updated deck with ID back to localStorage
                   localStorage.setItem(key, JSON.stringify(deck));
                 }
+
+                // Store the storage key on the deck object for retrieval later
+                deck.storageKey = key;
 
                 availableDecks.push(deck);
               }
@@ -92,19 +95,39 @@ export function useDeckStorage() {
   };
 
   /**
+   * Gets the storage key for a deck
+   */
+  const getDeckStorageKey = (deck: Deck): string => {
+    // If the deck has a storageKey, use it
+    if (deck.storageKey) {
+      return deck.storageKey;
+    }
+    // Otherwise, use the deck name with the "deck_" prefix
+    return `deck_${deck.name}`;
+  };
+
+  /**
    * Updates the local and localStorage copies of a deck
    */
   const updateDeckStorage = (updatedDeck: Deck) => {
+    if (!updatedDeck.name) {
+      console.error("Cannot update deck: Missing name");
+      return;
+    }
+
     try {
+      // Get the storage key for this deck
+      const storageKey = getDeckStorageKey(updatedDeck);
+
       // Save updated deck to localStorage
-      localStorage.setItem(
-        `deck_${updatedDeck.name}`,
-        JSON.stringify(updatedDeck)
-      );
+      localStorage.setItem(storageKey, JSON.stringify(updatedDeck));
+
+      // Remember the storage key for future updates
+      updatedDeck.storageKey = storageKey;
 
       // Update decks list if needed
       setDecks((prevDecks) => {
-        const index = prevDecks.findIndex((d) => d.name === updatedDeck.name);
+        const index = prevDecks.findIndex((d) => d.id === updatedDeck.id);
         if (index !== -1) {
           const newDecks = [...prevDecks];
           newDecks[index] = updatedDeck;
@@ -120,7 +143,7 @@ export function useDeckStorage() {
   /**
    * Selects a deck for editing
    */
-  const selectDeck = (deck: Deck) => {
+  const selectDeck = (deck: Deck | null) => {
     setSelectedDeck(deck);
   };
 
@@ -209,8 +232,9 @@ export function useDeckStorage() {
       return null;
     }
 
+    // Create deck with a UUID
     const newDeck: Deck = {
-      id: uuidv4(), // Always assign a UUID to new decks
+      id: uuidv4(),
       name, // The new deck name
       mainDeck: [], // Initialize empty main deck
       extraDeck: [], // Initialize empty extra deck
@@ -218,9 +242,12 @@ export function useDeckStorage() {
       createdAt: new Date().toISOString(), // Store creation date
     };
 
-    // Save to localStorage
+    // Save to localStorage using the name as the key
+    const storageKey = `deck_${name}`;
+    newDeck.storageKey = storageKey;
+
     try {
-      localStorage.setItem(`deck_${name}`, JSON.stringify(newDeck));
+      localStorage.setItem(storageKey, JSON.stringify(newDeck));
 
       // Update decks list
       setDecks((prevDecks) => [...prevDecks, newDeck]);
@@ -240,29 +267,41 @@ export function useDeckStorage() {
    * Updates an existing deck
    */
   const updateDeck = (updatedDeck: Deck) => {
-    if (!updatedDeck?.name) return;
-
-    // If name changed, we need to remove the old entry
-    if (selectedDeck && selectedDeck.name !== updatedDeck.name) {
-      localStorage.removeItem(`deck_${selectedDeck.name}`);
+    if (!updatedDeck?.name) {
+      console.error("Cannot update deck: Missing name");
+      return;
     }
 
-    // Update localStorage with new name
-    localStorage.setItem(
-      `deck_${updatedDeck.name}`,
-      JSON.stringify(updatedDeck)
-    );
+    try {
+      // If name changed, we need to handle the storage key change
+      const oldDeck = decks.find((deck) => deck.id === updatedDeck.id);
+      const oldStorageKey = oldDeck?.storageKey || `deck_${oldDeck?.name}`;
+      const newStorageKey = `deck_${updatedDeck.name}`;
 
-    // Update decks list
-    setDecks((prevDecks) => {
-      const newDecks = prevDecks.filter(
-        (deck) => deck.name !== selectedDeck?.name
-      );
-      return [...newDecks, updatedDeck];
-    });
+      // If the name changed, remove the old entry
+      if (oldStorageKey !== newStorageKey) {
+        localStorage.removeItem(oldStorageKey);
+      }
 
-    // Update selected deck
-    setSelectedDeck(updatedDeck);
+      // Update localStorage with new key
+      localStorage.setItem(newStorageKey, JSON.stringify(updatedDeck));
+
+      // Update storage key reference
+      updatedDeck.storageKey = newStorageKey;
+
+      // Update decks list
+      setDecks((prevDecks) => {
+        const newDecks = prevDecks.filter((deck) => deck.id !== updatedDeck.id);
+        return [...newDecks, updatedDeck];
+      });
+
+      // Update selected deck if it's the same one
+      if (selectedDeck && selectedDeck.id === updatedDeck.id) {
+        setSelectedDeck(updatedDeck);
+      }
+    } catch (error) {
+      console.error("Error updating deck:", error);
+    }
   };
 
   /**
@@ -270,8 +309,18 @@ export function useDeckStorage() {
    */
   const deleteDeck = (deckName: string) => {
     try {
+      // Find the deck by name to get its storage key
+      const deckToDelete = decks.find((deck) => deck.name === deckName);
+      if (!deckToDelete) {
+        console.error(`Cannot find deck "${deckName}" to delete`);
+        return false;
+      }
+
+      // Get the storage key
+      const storageKey = getDeckStorageKey(deckToDelete);
+
       // Remove from localStorage
-      localStorage.removeItem(`deck_${deckName}`);
+      localStorage.removeItem(storageKey);
 
       // Update decks list
       setDecks((prevDecks) =>
@@ -321,12 +370,16 @@ export function useDeckStorage() {
     // Add import date
     importedDeck.importedAt = new Date().toISOString();
 
+    // Ensure the deck has a unique ID
+    importedDeck.id = uuidv4();
+
+    // Set the storage key
+    const storageKey = `deck_${importedDeck.name}`;
+    importedDeck.storageKey = storageKey;
+
     try {
-      // Save to localStorage
-      localStorage.setItem(
-        `deck_${importedDeck.name}`,
-        JSON.stringify(importedDeck)
-      );
+      // Save to localStorage with name-based key
+      localStorage.setItem(storageKey, JSON.stringify(importedDeck));
 
       // Update decks list
       setDecks((prevDecks) => [...prevDecks, importedDeck]);
@@ -366,11 +419,17 @@ export function useDeckStorage() {
       copiedAt: new Date().toISOString(), // Add copy date
       // Copy over the original creation date if it exists
       originalCreatedAt: deckToCopy.createdAt || undefined,
+      // Copy over group ID if it exists
+      groupId: deckToCopy.groupId || undefined,
     };
+
+    // Generate storage key based on name
+    const storageKey = `deck_${finalName}`;
+    newDeck.storageKey = storageKey;
 
     // Save to localStorage and update state
     try {
-      localStorage.setItem(`deck_${finalName}`, JSON.stringify(newDeck));
+      localStorage.setItem(storageKey, JSON.stringify(newDeck));
       setDecks((prevDecks) => [...prevDecks, newDeck]);
       setSelectedDeck(newDeck);
       return newDeck;

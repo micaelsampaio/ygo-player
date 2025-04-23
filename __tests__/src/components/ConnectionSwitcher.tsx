@@ -3,65 +3,75 @@ import { useCommunicationType } from "../hooks/useKaibaNet";
 import { CommunicationType } from "../network/communicationFactory";
 import styled from "styled-components";
 import { Logger } from "../utils/logger";
+import theme from "../styles/theme";
 
 const logger = Logger.createLogger("ConnectionSwitcher");
 
 const SwitcherContainer = styled.div`
   display: flex;
   flex-direction: column;
-  padding: 8px 12px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  background-color: #f5f5f5;
-  margin-bottom: 16px;
+  padding: 6px 8px;
+  border: 1px solid ${theme.colors.border.light};
+  border-radius: ${theme.borderRadius.sm};
+  background-color: ${theme.colors.background.paper};
+  margin-bottom: 12px;
+  max-width: 300px;
 `;
 
 const ConnectionInfo = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
+  font-size: ${theme.typography.size.sm};
 `;
 
 const ConnectionStatus = styled.div<{ $active: boolean }>`
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 
   &::before {
     content: "";
     display: inline-block;
-    width: 10px;
-    height: 10px;
+    width: 8px;
+    height: 8px;
     border-radius: 50%;
-    background-color: ${(props) => (props.$active ? "#4caf50" : "#999")};
+    background-color: ${(props) =>
+      props.$active ? theme.colors.success.main : theme.colors.text.disabled};
   }
 `;
 
 const ToggleContainer = styled.div`
   display: flex;
   width: 100%;
-  border-radius: 4px;
+  border-radius: ${theme.borderRadius.sm};
   overflow: hidden;
-  margin-top: 8px;
-  background-color: #e0e0e0;
+  margin-top: 6px;
+  background-color: ${theme.colors.background.card};
   position: relative;
 `;
 
 const ToggleOption = styled.button<{ isActive: boolean }>`
   flex: 1;
-  padding: 8px 0;
+  padding: 6px 0;
   border: none;
   background: transparent;
   cursor: ${(props) => (props.disabled ? "not-allowed" : "pointer")};
   position: relative;
   z-index: 2;
-  color: ${(props) => (props.isActive ? "#fff" : "#333")};
-  font-weight: ${(props) => (props.isActive ? "bold" : "normal")};
+  color: ${(props) =>
+    props.isActive ? theme.colors.text.inverse : theme.colors.text.secondary};
+  font-weight: ${(props) =>
+    props.isActive
+      ? theme.typography.weight.medium
+      : theme.typography.weight.normal};
+  font-size: ${theme.typography.size.sm};
   transition: color 0.3s;
 
   &:hover {
-    color: ${(props) => (props.isActive ? "#fff" : "#000")};
+    color: ${(props) =>
+      props.isActive ? theme.colors.text.inverse : theme.colors.text.primary};
   }
 `;
 
@@ -74,16 +84,16 @@ const ToggleSlider = styled.div<{ position: number }>`
   background-color: ${(props) => {
     switch (props.position) {
       case 0:
-        return "#2196f3"; // P2P
+        return theme.colors.primary.main; // Direct
       case 1:
-        return "#9c27b0"; // Socket.IO
+        return theme.colors.secondary.main; // Server
       case 2:
-        return "#f44336"; // Offline
+        return theme.colors.warning.main; // Offline
       default:
-        return "#2196f3";
+        return theme.colors.primary.main;
     }
   }};
-  border-radius: 4px;
+  border-radius: ${theme.borderRadius.sm};
   transition: transform 0.3s ease;
   transform: translateX(${(props) => props.position * 100}%);
   z-index: 1;
@@ -112,9 +122,9 @@ export function ConnectionSwitcher() {
 
   // Get friendly display name for current connection type
   const getConnectionName = (): string => {
-    if (type === "p2p") return "P2P Connection (libp2p)";
-    if (type === "socketio") return "Socket.IO Connection";
-    return "Offline Mode (No Connection)";
+    if (type === "p2p") return "Direct";
+    if (type === "socketio") return "Server";
+    return "Offline";
   };
 
   // Get the position for the toggle slider
@@ -128,7 +138,7 @@ export function ConnectionSwitcher() {
     <SwitcherContainer>
       <ConnectionInfo>
         <ConnectionStatus $active={type !== "offline"}>
-          {getConnectionName()}
+          {getConnectionName()} Mode
           {isSwitching && " (Switching...)"}
         </ConnectionStatus>
       </ConnectionInfo>
@@ -140,14 +150,14 @@ export function ConnectionSwitcher() {
           disabled={isSwitching}
           onClick={() => handleToggle("p2p")}
         >
-          P2P
+          Direct
         </ToggleOption>
         <ToggleOption
           isActive={type === "socketio"}
           disabled={isSwitching}
           onClick={() => handleToggle("socketio")}
         >
-          Socket.IO
+          Server
         </ToggleOption>
         <ToggleOption
           isActive={type === "offline"}

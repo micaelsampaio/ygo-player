@@ -88,7 +88,25 @@ const DeckDetailPage = () => {
   };
 
   const handleEdit = () => {
-    navigate(`/deckbuilder?edit=${deckId}`);
+    if (!deck) return;
+
+    // First check if deck has a proper id
+    if (deck.id) {
+      // Use the deck's id directly as the edit parameter
+      navigate(`/deckbuilder?edit=${deck.id}`);
+      return;
+    }
+
+    // If deck has no id, try to get the actual deck id from the URL parameter
+    if (deckId) {
+      // If deckId is the full storage key (starts with deck_), use it directly
+      if (deckId.startsWith("deck_")) {
+        navigate(`/deckbuilder?edit=${deckId}`);
+      } else {
+        // Otherwise add the deck_ prefix
+        navigate(`/deckbuilder?edit=deck_${deckId}`);
+      }
+    }
   };
 
   const handleDuel = () => {
