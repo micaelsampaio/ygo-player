@@ -16,6 +16,7 @@ import CardModal from "./components/CardModal/CardModal.tsx";
 import CardNotification from "./components/CardNotification/CardNotification.tsx";
 import CardSuggestions from "./components/CardSuggestion/CardSuggestions.tsx";
 import DrawSimulator from "./components/DrawSimulator"; // Fix import path
+import DeckSyncModal from "./components/DeckSyncModal/DeckSyncModal";
 import { useDeckStorage } from "./hooks/useDeckStorage";
 import { useDeckGroups } from "./hooks/useDeckGroups"; // New hook for deck groups
 import { useDeckAnalytics } from "./hooks/useDeckAnalytics";
@@ -1172,130 +1173,13 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
         {lastAddedCard && <CardNotification card={lastAddedCard} />}
 
         {/* Deck Sync Modal */}
-        {isSyncModalOpen && (
-          <div className="deck-sync-modal-overlay">
-            <div className="deck-sync-modal">
-              <div className="deck-sync-modal-header">
-                <h2>Sync Decks with Folder</h2>
-                <button
-                  className="close-button"
-                  onClick={() => setIsSyncModalOpen(false)}
-                >
-                  ×
-                </button>
-              </div>
-
-              <div className="deck-sync-modal-content">
-                <div className="folder-selection">
-                  <label>Folder Path:</label>
-                  <div className="folder-input">
-                    <input
-                      id="deck-sync-folder-path"
-                      type="text"
-                      placeholder="Select a folder..."
-                      readOnly
-                    />
-                    <button onClick={handleFolderSelect}>Browse...</button>
-                  </div>
-                </div>
-
-                <div className="sync-options">
-                  <div className="option-group">
-                    <label>Sync Direction:</label>
-                    <div className="radio-group">
-                      <label>
-                        <input
-                          type="radio"
-                          name="sync-direction"
-                          value="import"
-                          defaultChecked={true}
-                        />
-                        Import Decks
-                      </label>
-                      <label>
-                        <input
-                          type="radio"
-                          name="sync-direction"
-                          value="export"
-                          defaultChecked={false}
-                        />
-                        Export Decks
-                      </label>
-                    </div>
-                  </div>
-                </div>
-
-                {syncProgress.status && (
-                  <div className="sync-results">
-                    <h3>Sync Results</h3>
-
-                    <div className="results-section">
-                      <h4>Status: {syncProgress.status}</h4>
-                      <p>Imported: {syncProgress.imported} decks</p>
-                      <p>Exported: {syncProgress.exported} decks</p>
-                    </div>
-
-                    {syncProgress.errors.length > 0 && (
-                      <div className="results-section errors">
-                        <h4>Errors ({syncProgress.errors.length})</h4>
-                        <ul>
-                          {syncProgress.errors.map((error, index) => (
-                            <li key={index}>{error}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              <div className="deck-sync-modal-footer">
-                <div className="deck-count">Total Decks: {decks.length}</div>
-                <div className="actions">
-                  <button
-                    className="cancel-button"
-                    onClick={() => setIsSyncModalOpen(false)}
-                    disabled={syncProgress.isProcessing}
-                  >
-                    Close
-                  </button>
-                  <button
-                    className="sync-button"
-                    onClick={() => {
-                      const direction = document.querySelector(
-                        'input[name="sync-direction"]:checked'
-                      ) as HTMLInputElement;
-
-                      if (direction?.value === "export") {
-                        // For export, use the existing syncDecksWithFolder function with browser downloads
-                        handleSyncWithFolder(
-                          "Browser Download",
-                          "export",
-                          "json"
-                        );
-                      } else {
-                        // For import, check if files have already been selected
-                        if (
-                          window.selectedDeckFiles &&
-                          window.selectedDeckFiles.length > 0
-                        ) {
-                          // Process the already selected files
-                          processSelectedFiles(window.selectedDeckFiles);
-                        } else {
-                          // No files selected yet, so open the file selector
-                          handleFolderSelect();
-                        }
-                      }
-                    }}
-                    disabled={syncProgress.isProcessing}
-                  >
-                    {syncProgress.isProcessing ? "Syncing..." : "Start Sync"}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+        <DeckSyncModal
+          isOpen={isSyncModalOpen}
+          onClose={() => setIsSyncModalOpen(false)}
+          decks={decks}
+          selectedDeckGroupId={selectedDeckGroup?.id}
+          updateDeck={updateDeck}
+        />
       </div>
     </AppLayout>
   );
