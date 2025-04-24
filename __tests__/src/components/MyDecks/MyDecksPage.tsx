@@ -38,6 +38,9 @@ const MyDecksPage = () => {
     string | null
   >(null);
   const contextMenuRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+  const [coverCards, setCoverCards] = useState<Record<string, number>>({});
+  const [isDragging, setIsDragging] = useState<string | null>(null);
+  const [dragOverGroupId, setDragOverGroupId] = useState<string | null>(null);
 
   useEffect(() => {
     loadAllDecks();
@@ -65,6 +68,17 @@ const MyDecksPage = () => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [activeDeckContextMenu]);
+
+  useEffect(() => {
+    try {
+      const storedCoverCards = JSON.parse(
+        localStorage.getItem("deck_cover_cards") || "{}"
+      );
+      setCoverCards(storedCoverCards);
+    } catch (error) {
+      console.error("Error loading cover cards:", error);
+    }
+  }, []);
 
   const loadAllDecks = () => {
     const decks: Deck[] = [];
@@ -227,13 +241,10 @@ const MyDecksPage = () => {
     event.preventDefault();
     event.stopPropagation();
 
-    // Use our smart positioning function
     const { x, y } = calculateContextMenuPosition(event.clientX, event.clientY);
 
-    // Store the calculated position
     contextMenuRef.current = { x, y };
 
-    // Toggle the context menu
     setActiveDeckContextMenu(
       activeDeckContextMenu === (deck.id || `deck_${deck.name}`)
         ? null
@@ -308,36 +319,122 @@ const MyDecksPage = () => {
   };
 
   const calculateContextMenuPosition = (x: number, y: number) => {
-    // Get viewport dimensions
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
 
-    // Estimate menu dimensions
-    const menuWidth = 300; // px - width of the context menu
-    const menuHeight = Math.min(600, viewportHeight * 0.8); // px - capped at 600px or 80% of viewport height
+    const menuWidth = 300;
+    const menuHeight = Math.min(600, viewportHeight * 0.8);
 
-    // Define preferred position - centered below the cursor
-    // The menu will appear centered horizontally relative to the cursor and 10px below it
     let adjustedX = Math.max(0, x - menuWidth / 2);
-    let adjustedY = y + 10; // Position menu 10px below cursor instead of directly at cursor position
+    let adjustedY = y + 10;
 
-    // Make sure the menu doesn't go off-screen to the right
     if (adjustedX + menuWidth > viewportWidth) {
       adjustedX = viewportWidth - menuWidth - 5;
     }
 
-    // Make sure the menu doesn't go off-screen to the bottom
     if (adjustedY + menuHeight > viewportHeight) {
-      // If there's not enough room below, position it above the cursor
-      // But leave enough room so the cursor doesn't overlap with the menu
       adjustedY = Math.max(5, y - menuHeight - 10);
     }
 
-    // Ensure menu is never positioned off-screen
     adjustedX = Math.max(5, adjustedX);
     adjustedY = Math.max(5, adjustedY);
 
     return { x: adjustedX, y: adjustedY };
+  };
+
+  const getCoverCard = (deck: Deck) => {
+    const deckId = deck.id || `deck_${deck.name}`;
+
+    if (
+      coverCards[deckId] &&
+      deck.mainDeck.find((card) => card.id === coverCards[deckId])
+    ) {
+      return deck.mainDeck.find((card) => card.id === coverCards[deckId]);
+    }
+
+    const allCards = [...deck.mainDeck, ...deck.extraDeck];
+    if (allCards.length === 0) return null;
+
+    const monsterCards = allCards.filter(
+      (card) => card.type && card.type.toLowerCase().includes("monster")
+    );
+
+    const sortedMonsters = [...monsterCards].sort((a, b) => {
+      if (a.level !== undefined && b.level !== undefined) {
+        return b.level - a.level;
+      }
+      return 0;
+    });
+
+    return sortedMonsters.length > 0 ? sortedMonsters[0] : allCards[0];
+  };
+
+  const setCoverCard = (deckId: string, cardId: number) => {
+    setCoverCards((prev) => ({
+      ...prev,
+      [deckId]: cardId,
+    }));
+
+    try {
+      const storedCoverCards = JSON.parse(
+        localStorage.getItem("deck_cover_cards") || "{}"
+      );
+      localStorage.setItem(
+        "deck_cover_cards",
+        JSON.stringify({
+          ...storedCoverCards,
+          [deckId]: cardId,
+        })
+      );
+    } catch (error) {
+      console.error("Error saving cover card preference:", error);
+    }
+  };
+
+  const handleDragStart = (e: React.DragEvent<HTMLDivElement>, deck: Deck) => {
+    e.dataTransfer.setData("text/plain", deck.id || `deck_${deck.name}`);
+    setIsDragging(deck.id || `deck_${deck.name}`);
+
+    const dragElement = document.createElement("div");
+    dragElement.textContent = deck.name;
+    dragElement.style.padding = "10px";
+    dragElement.style.background = "#2196f3";
+    dragElement.style.color = "white";
+    dragElement.style.borderRadius = "5px";
+    dragElement.style.boxShadow = "0 2px 10px rgba(0,0,0,0.2)";
+    dragElement.style.position = "fixed";
+    dragElement.style.top = "-1000px";
+
+    document.body.appendChild(dragElement);
+    e.dataTransfer.setDragImage(dragElement, 20, 20);
+
+    setTimeout(() => {
+      document.body.removeChild(dragElement);
+    }, 0);
+  };
+
+  const handleDragEnd = () => {
+    setIsDragging(null);
+    setDragOverGroupId(null);
+  };
+
+  const handleDragOver = (
+    e: React.DragEvent<HTMLDivElement>,
+    groupId: string
+  ) => {
+    e.preventDefault();
+    if (dragOverGroupId !== groupId) {
+      setDragOverGroupId(groupId);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>, groupId: string) => {
+    e.preventDefault();
+    const deckId = e.dataTransfer.getData("text/plain");
+    moveDeckToGroup(deckId, groupId);
+    setIsDragging(null);
+    setDragOverGroupId(null);
+    loadAllDecks();
   };
 
   const displayedGroups = deckGroups.filter(
@@ -402,6 +499,9 @@ const MyDecksPage = () => {
               <GroupTab
                 active={!selectedDeckGroup}
                 onClick={() => handleSelectGroup(null)}
+                onDragOver={(e) => handleDragOver(e, "default")}
+                onDrop={(e) => handleDrop(e, "default")}
+                isDragOver={dragOverGroupId === "default"}
               >
                 All Decks ({allDecks.length})
               </GroupTab>
@@ -411,6 +511,9 @@ const MyDecksPage = () => {
                   key={group.id}
                   active={selectedDeckGroup?.id === group.id}
                   onClick={() => handleSelectGroup(group)}
+                  onDragOver={(e) => handleDragOver(e, group.id)}
+                  onDrop={(e) => handleDrop(e, group.id)}
+                  isDragOver={dragOverGroupId === group.id}
                 >
                   {group.name} ({getDecksInGroup(group.id).length})
                   {isEditingGroups && group.id !== "default" && (
@@ -469,94 +572,146 @@ const MyDecksPage = () => {
           </EmptyStateCard>
         ) : (
           <DeckGrid>
-            {displayedDecks.map((deck) => (
-              <DeckCardWrapper
-                key={deck.id || `deck_${deck.name}`}
-                selected={selectedDecks.has(deck.id || `deck_${deck.name}`)}
-                onClick={() =>
-                  isEditingGroups
-                    ? toggleDeckSelection(deck.id || `deck_${deck.name}`)
-                    : null
-                }
-                onContextMenu={(e) => handleDeckContextMenu(deck, e)}
-              >
-                {isEditingGroups && (
-                  <SelectCheckbox
-                    type="checkbox"
-                    checked={selectedDecks.has(deck.id || `deck_${deck.name}`)}
-                    onChange={() =>
-                      toggleDeckSelection(deck.id || `deck_${deck.name}`)
-                    }
-                    onClick={(e) => e.stopPropagation()}
-                  />
-                )}
-                <Card.Content>
-                  <DeckTitle>{deck.name}</DeckTitle>
-                  <DeckMeta>
-                    <MetaItem>Main: {deck.mainDeck.length}</MetaItem>
-                    <MetaItem>Extra: {deck.extraDeck.length}</MetaItem>
-                    {deck.groupId && (
-                      <GroupBadge variant="primary" size="sm" pill>
-                        {deckGroups.find((g) => g.id === deck.groupId)?.name ||
-                          "Unknown Group"}
-                      </GroupBadge>
-                    )}
-                  </DeckMeta>
+            {displayedDecks.map((deck) => {
+              const coverCard = getCoverCard(deck);
+              const deckId = deck.id || `deck_${deck.name}`;
 
-                  <ButtonContainer>
-                    <Button
-                      variant="primary"
-                      fullWidth
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate(`/my/decks/${deck.id || `deck_${deck.name}`}`);
-                      }}
-                    >
-                      View Details
-                    </Button>
-                    <Button
-                      variant="secondary"
-                      fullWidth
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate(
-                          `/duel?deck=${deck.id || `deck_${deck.name}`}`
-                        );
-                      }}
-                    >
-                      Duel
-                    </Button>
-                  </ButtonContainer>
+              return (
+                <DeckCardWrapper
+                  key={deckId}
+                  selected={selectedDecks.has(deckId)}
+                  onClick={() =>
+                    isEditingGroups ? toggleDeckSelection(deckId) : null
+                  }
+                  onContextMenu={(e) => handleDeckContextMenu(deck, e)}
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, deck)}
+                  onDragEnd={handleDragEnd}
+                  $isDragging={isDragging === deckId}
+                >
+                  {isEditingGroups && (
+                    <SelectCheckbox
+                      type="checkbox"
+                      checked={selectedDecks.has(deckId)}
+                      onChange={() => toggleDeckSelection(deckId)}
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  )}
+                  <Card.Content>
+                    <DeckInfoContainer>
+                      <div>
+                        <DeckTitle>{deck.name}</DeckTitle>
+                        <DeckMeta>
+                          <MetaItem>Main: {deck.mainDeck.length}</MetaItem>
+                          <MetaItem>Extra: {deck.extraDeck.length}</MetaItem>
+                          {deck.groupId && (
+                            <GroupBadge variant="primary" size="sm" pill>
+                              {deckGroups.find((g) => g.id === deck.groupId)
+                                ?.name || "Unknown Group"}
+                            </GroupBadge>
+                          )}
+                        </DeckMeta>
+                      </div>
 
-                  <ActionBar>
-                    <ActionButton
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        downloadDeckAsPng(deck);
-                      }}
-                    >
-                      🖼️ PNG
-                    </ActionButton>
-                    <ActionButton
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        downloadDeckAsYdk(deck);
-                      }}
-                    >
-                      📂 YDK
-                    </ActionButton>
-                    <ActionButton
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        deleteDeck(deck);
-                      }}
-                    >
-                      🗑️ Delete
-                    </ActionButton>
-                  </ActionBar>
-                </Card.Content>
-              </DeckCardWrapper>
-            ))}
+                      {coverCard && (
+                        <DeckCoverContainer>
+                          <DeckCoverCard
+                            src={`https://images.ygoprodeck.com/images/cards_small/${coverCard.id}.jpg`}
+                            alt={coverCard.name}
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.src =
+                                "https://images.ygoprodeck.com/images/cards_small/back_high.jpg";
+                            }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (e.button === 2) {
+                                e.preventDefault();
+                                const cardSelection = prompt(
+                                  "Enter card ID to set as cover:"
+                                );
+                                if (cardSelection) {
+                                  const cardId = parseInt(cardSelection);
+                                  if (!isNaN(cardId)) {
+                                    setCoverCard(deckId, cardId);
+                                  }
+                                }
+                              }
+                            }}
+                          />
+                          <ChangeCoverButton
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const cardSelection = prompt(
+                                "Enter card ID to set as cover:"
+                              );
+                              if (cardSelection) {
+                                const cardId = parseInt(cardSelection);
+                                if (!isNaN(cardId)) {
+                                  setCoverCard(deckId, cardId);
+                                }
+                              }
+                            }}
+                          >
+                            Change Cover
+                          </ChangeCoverButton>
+                        </DeckCoverContainer>
+                      )}
+                    </DeckInfoContainer>
+
+                    <ButtonContainer>
+                      <Button
+                        variant="primary"
+                        fullWidth
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/my/decks/${deckId}`);
+                        }}
+                      >
+                        View Details
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        fullWidth
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/duel?deck=${deckId}`);
+                        }}
+                      >
+                        Duel
+                      </Button>
+                    </ButtonContainer>
+
+                    <ActionBar>
+                      <ActionButton
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          downloadDeckAsPng(deck);
+                        }}
+                      >
+                        🖼️ PNG
+                      </ActionButton>
+                      <ActionButton
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          downloadDeckAsYdk(deck);
+                        }}
+                      >
+                        📂 YDK
+                      </ActionButton>
+                      <ActionButton
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteDeck(deck);
+                        }}
+                      >
+                        🗑️ Delete
+                      </ActionButton>
+                    </ActionBar>
+                  </Card.Content>
+                </DeckCardWrapper>
+              );
+            })}
           </DeckGrid>
         )}
 
@@ -714,18 +869,27 @@ const GroupTabsContainer = styled.div`
   margin-bottom: ${theme.spacing.md};
 `;
 
-const GroupTab = styled.div<{ active: boolean }>`
+const GroupTab = styled.div<{ active: boolean; isDragOver?: boolean }>`
   padding: ${theme.spacing.sm} ${theme.spacing.md};
   background-color: ${(props) =>
-    props.active ? theme.colors.primary.main : theme.colors.background.card};
+    props.isDragOver
+      ? theme.colors.primary.light
+      : props.active
+      ? theme.colors.primary.main
+      : theme.colors.background.card};
   color: ${(props) =>
-    props.active ? theme.colors.text.inverse : theme.colors.text.primary};
+    props.active || props.isDragOver
+      ? theme.colors.text.inverse
+      : theme.colors.text.primary};
   border-radius: ${theme.borderRadius.md};
   cursor: pointer;
-  transition: background-color ${theme.transitions.default};
+  transition: all ${theme.transitions.default};
   display: flex;
   align-items: center;
   position: relative;
+  border: ${(props) =>
+    props.isDragOver ? `2px dashed ${theme.colors.primary.dark}` : "none"};
+  transform: ${(props) => (props.isDragOver ? "scale(1.05)" : "none")};
 
   &:hover {
     background-color: ${(props) =>
@@ -772,7 +936,10 @@ const DeckGrid = styled.div`
   gap: ${theme.spacing.lg};
 `;
 
-const DeckCardWrapper = styled.div<{ selected?: boolean }>`
+const DeckCardWrapper = styled.div<{
+  selected?: boolean;
+  $isDragging?: boolean;
+}>`
   position: relative;
   border: ${(props) =>
     props.selected
@@ -784,9 +951,12 @@ const DeckCardWrapper = styled.div<{ selected?: boolean }>`
       : theme.colors.background.paper};
   cursor: ${(props) => (props.selected !== undefined ? "pointer" : "default")};
   transition: transform ${theme.transitions.default},
-    box-shadow ${theme.transitions.default};
+    box-shadow ${theme.transitions.default},
+    opacity ${theme.transitions.default};
   border-radius: ${theme.borderRadius.md};
   box-shadow: ${theme.shadows.sm};
+  opacity: ${(props) => (props.$isDragging ? 0.6 : 1)};
+  transform: ${(props) => (props.$isDragging ? "scale(0.98)" : "none")};
 
   &:hover {
     transform: translateY(-2px);
@@ -803,6 +973,53 @@ const SelectCheckbox = styled.input`
   cursor: pointer;
   accent-color: ${theme.colors.primary.main};
   z-index: 1;
+`;
+
+const DeckInfoContainer = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: ${theme.spacing.md};
+`;
+
+const DeckCoverContainer = styled.div`
+  position: relative;
+  margin-left: ${theme.spacing.md};
+  flex-shrink: 0;
+`;
+
+const DeckCoverCard = styled.img`
+  width: 70px;
+  height: 102px;
+  border-radius: ${theme.borderRadius.sm};
+  box-shadow: ${theme.shadows.md};
+  transition: transform 0.2s ease;
+
+  &:hover {
+    transform: scale(1.1);
+    z-index: 5;
+  }
+`;
+
+const ChangeCoverButton = styled.button`
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(0, 0, 0, 0.7);
+  color: white;
+  border: none;
+  border-radius: ${theme.borderRadius.xs};
+  padding: ${theme.spacing.xs} ${theme.spacing.sm};
+  font-size: ${theme.typography.size.xs};
+  cursor: pointer;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.2s;
+
+  ${DeckCoverContainer}:hover & {
+    opacity: 1;
+  }
 `;
 
 const DeckTitle = styled.h3`
@@ -874,8 +1091,8 @@ const ContextMenuContainer = styled.div`
   box-shadow: ${theme.shadows.md};
   border-radius: ${theme.borderRadius.md};
   overflow: hidden;
-  width: 300px; /* Fixed width for consistency */
-  max-height: 80vh; /* 80% of viewport height maximum */
+  width: 300px;
+  max-height: 80vh;
   border: 1px solid ${theme.colors.border.default};
   display: flex;
   flex-direction: column;
@@ -903,10 +1120,9 @@ const ContextMenuContainer = styled.div`
     display: block;
     max-height: 80vh;
     overflow-y: auto;
-    overscroll-behavior: contain; /* Prevent page scrolling when menu scrolling reaches end */
+    overscroll-behavior: contain;
   }
 
-  /* Styling for scrollbar to make it more visible */
   .actions-dropdown::-webkit-scrollbar {
     width: 8px;
   }
@@ -921,7 +1137,6 @@ const ContextMenuContainer = styled.div`
     border-radius: 4px;
   }
 
-  /* Ensure group headers stay visible */
   .actions-group .group-header {
     position: sticky;
     top: 0;
@@ -932,7 +1147,6 @@ const ContextMenuContainer = styled.div`
     box-shadow: 0 1px 0 ${theme.colors.border.light};
   }
 
-  /* Add some spacing and borders between groups for better visual separation */
   .actions-group {
     border-bottom: 1px solid ${theme.colors.border.light};
   }
