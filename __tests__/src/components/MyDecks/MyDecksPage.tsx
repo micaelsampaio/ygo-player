@@ -9,6 +9,7 @@ import AppLayout from "../Layout/AppLayout";
 import { Button, Card, Badge, TextField, Select } from "../UI";
 import { syncDecksWithFolder } from "../../utils/deckFileSystem";
 import { Logger } from "../../utils/logger";
+import DeckSyncModal from "../DeckBuilder/components/DeckSyncModal/DeckSyncModal";
 
 const logger = Logger.createLogger("MyDecksPage");
 
@@ -31,6 +32,7 @@ const MyDecksPage = () => {
   const [selectedDecks, setSelectedDecks] = useState<Set<string>>(new Set());
   const [newGroupName, setNewGroupName] = useState("");
   const [isSyncing, setIsSyncing] = useState(false);
+  const [isSyncModalOpen, setIsSyncModalOpen] = useState(false);
   const [syncResult, setSyncResult] = useState<{
     success: boolean;
     message: string;
@@ -172,42 +174,32 @@ const MyDecksPage = () => {
     await deckBuilder.toImage({ fileName, download: true });
   };
 
-  const handleSyncDecks = async () => {
-    try {
-      setIsSyncing(true);
+  const handleSyncDecks = () => {
+    // Open the sync modal instead of directly syncing
+    setIsSyncModalOpen(true);
+  };
+
+  // Function to update a deck after sync
+  const updateDeck = (deck: Deck) => {
+    // Make sure deck has an ID
+    const deckId = deck.id || `deck_${deck.name}`;
+
+    // Save to localStorage
+    localStorage.setItem(deckId, JSON.stringify(deck));
+
+    // Refresh our local state
+    loadAllDecks();
+
+    // Show success notification
+    setSyncResult({
+      success: true,
+      message: `Deck "${deck.name}" successfully synced.`,
+    });
+
+    // Clear the notification after 3 seconds
+    setTimeout(() => {
       setSyncResult(null);
-
-      logger.info("Syncing decks...");
-      const result = await syncDecksWithFolder(allDecks, "", "export", "ydk");
-
-      if (result.errors.length > 0) {
-        setSyncResult({
-          success: false,
-          message: `Exported ${result.exported.length} decks with ${result.errors.length} errors.`,
-        });
-        logger.error("Sync errors:", result.errors);
-      } else {
-        setSyncResult({
-          success: true,
-          message: `Successfully exported ${result.exported.length} decks.`,
-        });
-        logger.info("Sync successful:", result);
-      }
-    } catch (error) {
-      setSyncResult({
-        success: false,
-        message:
-          error instanceof Error ? error.message : "Failed to sync decks.",
-      });
-      logger.error("Sync error:", error);
-    } finally {
-      setIsSyncing(false);
-
-      // Clear the result message after 5 seconds
-      setTimeout(() => {
-        setSyncResult(null);
-      }, 5000);
-    }
+    }, 3000);
   };
 
   const handleCreateNewDeck = () => {
@@ -458,6 +450,15 @@ const MyDecksPage = () => {
             ))}
           </DeckGrid>
         )}
+
+        {/* Deck Sync Modal */}
+        <DeckSyncModal
+          isOpen={isSyncModalOpen}
+          onClose={() => setIsSyncModalOpen(false)}
+          decks={allDecks}
+          selectedDeckGroupId={selectedDeckGroup?.id}
+          updateDeck={updateDeck}
+        />
       </PageContainer>
     </AppLayout>
   );
