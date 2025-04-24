@@ -3,7 +3,8 @@ import { Deck, DeckGroup } from "../../types";
 import "./DecksList.css";
 import { createCollectionFromDeck } from "../../../Collections/contex";
 import { useNavigate } from "react-router-dom";
-import DeckActions from "./DeckActions";
+// Import the shared DeckActions component instead of the local one
+import DeckActions from "../../../../components/shared/DeckActions";
 import DeckGroups from "./DeckGroups";
 
 interface DeckListProps {

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { YGODeckToImage } from "ygo-core-images-utils";
@@ -7,11 +7,10 @@ import { Deck, DeckGroup } from "../DeckBuilder/types";
 import theme from "../../styles/theme";
 import AppLayout from "../Layout/AppLayout";
 import { Button, Card, Badge, TextField, Select } from "../UI";
-import { syncDecksWithFolder } from "../../utils/deckFileSystem";
-import { Logger } from "../../utils/logger";
 import DeckSyncModal from "../DeckBuilder/components/DeckSyncModal/DeckSyncModal";
-
-const logger = Logger.createLogger("MyDecksPage");
+import DeckActions from "../DeckBuilder/components/DeckList/DeckActions"; // Fixed path to DeckActions
+import { createPortal } from "react-dom";
+import { createCollectionFromDeck } from "../Collections/contex";
 
 const MyDecksPage = () => {
   const navigate = useNavigate();
@@ -20,7 +19,6 @@ const MyDecksPage = () => {
     selectedDeckGroup,
     setSelectedDeckGroup,
     createDeckGroup,
-    updateDeckGroup,
     deleteDeckGroup,
     moveDeckToGroup,
     getDecksInGroup,
@@ -31,19 +29,18 @@ const MyDecksPage = () => {
   const [isEditingGroups, setIsEditingGroups] = useState(false);
   const [selectedDecks, setSelectedDecks] = useState<Set<string>>(new Set());
   const [newGroupName, setNewGroupName] = useState("");
-  const [isSyncing, setIsSyncing] = useState(false);
   const [isSyncModalOpen, setIsSyncModalOpen] = useState(false);
   const [syncResult, setSyncResult] = useState<{
     success: boolean;
     message: string;
   } | null>(null);
+  const [activeDeckContextMenu, setActiveDeckContextMenu] = useState<string | null>(null);
+  const contextMenuRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
-  // Load all decks on component mount
   useEffect(() => {
     loadAllDecks();
   }, []);
 
-  // Update displayed decks when selected group changes
   useEffect(() => {
     if (!selectedDeckGroup) {
       setDisplayedDecks(allDecks);
@@ -52,6 +49,17 @@ const MyDecksPage = () => {
       setDisplayedDecks(groupDecks);
     }
   }, [selectedDeckGroup, allDecks]);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (activeDeckContextMenu && !(e.target as Element).closest('.deck-context-menu')) {
+        setActiveDeckContextMenu(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [activeDeckContextMenu]);
 
   const loadAllDecks = () => {
     const decks: Deck[] = [];
@@ -64,12 +72,10 @@ const MyDecksPage = () => {
       try {
         const deckData = JSON.parse(localStorage.getItem(key) || "{}");
         if (deckData.mainDeck) {
-          // Make sure each deck has an id for proper handling
           if (!deckData.id) {
             deckData.id = key;
           }
 
-          // Set a name if missing
           if (!deckData.name) {
             deckData.name = key.replace("deck_", "");
           }
@@ -82,8 +88,6 @@ const MyDecksPage = () => {
     }
 
     setAllDecks(decks);
-
-    // Default to showing all decks initially
     setDisplayedDecks(decks);
   };
 
@@ -137,7 +141,6 @@ const MyDecksPage = () => {
       moveDeckToGroup(deckId, targetGroupId);
     });
 
-    // Reload decks to reflect changes
     loadAllDecks();
     setSelectedDecks(new Set());
   };
@@ -147,8 +150,11 @@ const MyDecksPage = () => {
     if (confirm(`Are you sure you want to delete ${deck.name}?`)) {
       localStorage.removeItem(deckId);
 
-      // Refresh the deck lists
       setAllDecks((prevDecks) => prevDecks.filter((d) => d.id !== deckId));
+
+      if (activeDeckContextMenu === deckId) {
+        setActiveDeckContextMenu(null);
+      }
     }
   };
 
@@ -175,40 +181,28 @@ const MyDecksPage = () => {
   };
 
   const handleSyncDecks = () => {
-    // Open the sync modal instead of directly syncing
     setIsSyncModalOpen(true);
   };
 
-  // Function to update a deck after sync
   const updateDeck = (deck: Deck) => {
-    // Make sure deck has an ID
     const deckId = deck.id || `deck_${deck.name}`;
-
-    // Save to localStorage
     localStorage.setItem(deckId, JSON.stringify(deck));
-
-    // Refresh our local state
     loadAllDecks();
-
-    // Show success notification
     setSyncResult({
       success: true,
       message: `Deck "${deck.name}" successfully synced.`,
     });
 
-    // Clear the notification after 3 seconds
     setTimeout(() => {
       setSyncResult(null);
     }, 3000);
   };
 
   const handleCreateNewDeck = () => {
-    // Generate a UUID for the new deck
     const newDeckId = `deck_${crypto.randomUUID()}`;
 
-    // Create a basic deck structure
     const newDeck = {
-      id: newDeckId, // Store the full ID including "deck_" prefix
+      id: newDeckId,
       name: `New Deck ${allDecks.length + 1}`,
       mainDeck: [],
       extraDeck: [],
@@ -217,15 +211,84 @@ const MyDecksPage = () => {
       groupId: selectedDeckGroup?.id || "default",
     };
 
-    // Save the new deck to localStorage
     localStorage.setItem(newDeckId, JSON.stringify(newDeck));
-
-    // Navigate to deck builder with the new deck selected
     navigate(`/deckbuilder?edit=${newDeckId}`);
   };
 
-  // Filter out the default "All Decks" group from the display
-  // since we already have a separate tab for it
+  const handleDeckContextMenu = (deck: Deck, event: React.MouseEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    contextMenuRef.current = { 
+      x: event.clientX, 
+      y: event.clientY 
+    };
+
+    setActiveDeckContextMenu(activeDeckContextMenu === (deck.id || `deck_${deck.name}`) ? null : (deck.id || `deck_${deck.name}`));
+  };
+
+  const handleImportDeck = (importedDeck: Deck) => {
+    const deckId = importedDeck.id || `deck_${importedDeck.name}`;
+    importedDeck.id = deckId;
+    importedDeck.importedAt = new Date().toISOString();
+    localStorage.setItem(deckId, JSON.stringify(importedDeck));
+    loadAllDecks();
+    setActiveDeckContextMenu(null);
+  };
+
+  const handleRenameDeck = (deck: Deck, newName: string) => {
+    if (!newName.trim()) return;
+
+    const deckId = deck.id || `deck_${deck.name}`;
+    const updatedDeck = { ...deck, name: newName, lastModified: new Date().toISOString() };
+    localStorage.setItem(deckId, JSON.stringify(updatedDeck));
+    loadAllDecks();
+    setActiveDeckContextMenu(null);
+  };
+
+  const handleClearDeck = (deck: Deck) => {
+    const deckId = deck.id || `deck_${deck.name}`;
+    const updatedDeck = { 
+      ...deck, 
+      mainDeck: [], 
+      extraDeck: [], 
+      sideDeck: [],
+      lastModified: new Date().toISOString() 
+    };
+    localStorage.setItem(deckId, JSON.stringify(updatedDeck));
+    loadAllDecks();
+    setActiveDeckContextMenu(null);
+  };
+
+  const handleCopyDeck = (deck: Deck) => {
+    const copyName = `${deck.name} (Copy)`;
+    const newDeckId = `deck_${crypto.randomUUID()}`;
+
+    const copiedDeck: Deck = {
+      ...deck,
+      id: newDeckId,
+      name: copyName,
+      copiedAt: new Date().toISOString(),
+    };
+
+    localStorage.setItem(newDeckId, JSON.stringify(copiedDeck));
+    loadAllDecks();
+    setActiveDeckContextMenu(null);
+  };
+
+  const handleCreateCollection = (deck: Deck) => {
+    const collectionId = createCollectionFromDeck(deck);
+    navigate(`/collections?select=${collectionId}`);
+    setActiveDeckContextMenu(null);
+  };
+
+  const handleMoveDeckToGroup = (deck: Deck, groupId: string) => {
+    const deckId = deck.id || `deck_${deck.name}`;
+    moveDeckToGroup(deckId, groupId);
+    loadAllDecks();
+    setActiveDeckContextMenu(null);
+  };
+
   const displayedGroups = deckGroups.filter(
     (group) => !(group.id === "default" && group.name === "All Decks")
   );
@@ -239,15 +302,12 @@ const MyDecksPage = () => {
             <Button variant="primary" onClick={handleCreateNewDeck}>
               Create New Deck
             </Button>
-            <Button variant="tertiary" onClick={() => navigate("/deck")}>
-              Import Deck
-            </Button>
             <Button
               variant="secondary"
               onClick={handleSyncDecks}
-              disabled={isSyncing || allDecks.length === 0}
+              disabled={allDecks.length === 0}
             >
-              {isSyncing ? "Syncing..." : "Sync Decks"}
+              Sync Decks
             </Button>
             <Button
               variant={isEditingGroups ? "primary" : "secondary"}
@@ -264,7 +324,7 @@ const MyDecksPage = () => {
           </SyncNotification>
         )}
 
-        <Card elevation="low" margin="0 0 24px 0">
+        <StyledCard>
           <Card.Content>
             <GroupsHeading>
               <h2>Deck Groups</h2>
@@ -288,7 +348,6 @@ const MyDecksPage = () => {
             </GroupsHeading>
 
             <GroupTabsContainer>
-              {/* Add "All" option */}
               <GroupTab
                 active={!selectedDeckGroup}
                 onClick={() => handleSelectGroup(null)}
@@ -330,12 +389,11 @@ const MyDecksPage = () => {
                       moveSelectedDecksToGroup(value);
                     }
                   }}
-                  placeholder="Move to group..."
                 />
               </MoveToGroupPanel>
             )}
           </Card.Content>
-        </Card>
+        </StyledCard>
 
         {displayedDecks.length === 0 ? (
           <EmptyStateCard>
@@ -361,15 +419,15 @@ const MyDecksPage = () => {
         ) : (
           <DeckGrid>
             {displayedDecks.map((deck) => (
-              <DeckCard
+              <DeckCardWrapper
                 key={deck.id || `deck_${deck.name}`}
                 selected={selectedDecks.has(deck.id || `deck_${deck.name}`)}
-                elevation="low"
                 onClick={() =>
                   isEditingGroups
                     ? toggleDeckSelection(deck.id || `deck_${deck.name}`)
                     : null
                 }
+                onContextMenu={(e) => handleDeckContextMenu(deck, e)}
               >
                 {isEditingGroups && (
                   <SelectCheckbox
@@ -446,12 +504,11 @@ const MyDecksPage = () => {
                     </ActionButton>
                   </ActionBar>
                 </Card.Content>
-              </DeckCard>
+              </DeckCardWrapper>
             ))}
           </DeckGrid>
         )}
 
-        {/* Deck Sync Modal */}
         <DeckSyncModal
           isOpen={isSyncModalOpen}
           onClose={() => setIsSyncModalOpen(false)}
@@ -460,11 +517,53 @@ const MyDecksPage = () => {
           updateDeck={updateDeck}
         />
       </PageContainer>
+
+      {activeDeckContextMenu && createPortal(
+        <ContextMenuContainer 
+          className="deck-context-menu"
+          style={{ 
+            top: `${contextMenuRef.current.y}px`, 
+            left: `${contextMenuRef.current.x}px` 
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <DeckActions
+            deck={displayedDecks.find(d => (d.id || `deck_${d.name}`) === activeDeckContextMenu)!}
+            onRenameDeck={(name) => {
+              const deck = displayedDecks.find(d => (d.id || `deck_${d.name}`) === activeDeckContextMenu)!;
+              handleRenameDeck(deck, name);
+            }}
+            onClearDeck={() => {
+              const deck = displayedDecks.find(d => (d.id || `deck_${d.name}`) === activeDeckContextMenu)!;
+              handleClearDeck(deck);
+            }}
+            onImportDeck={handleImportDeck}
+            onCopyDeck={() => {
+              const deck = displayedDecks.find(d => (d.id || `deck_${d.name}`) === activeDeckContextMenu)!;
+              handleCopyDeck(deck);
+            }}
+            onDeleteDeck={() => {
+              const deck = displayedDecks.find(d => (d.id || `deck_${d.name}`) === activeDeckContextMenu)!;
+              deleteDeck(deck);
+            }}
+            onCreateCollection={() => {
+              const deck = displayedDecks.find(d => (d.id || `deck_${d.name}`) === activeDeckContextMenu)!;
+              handleCreateCollection(deck);
+            }}
+            showDropdownImmediately={true}
+            deckGroups={deckGroups}
+            onMoveDeckToGroup={(groupId) => {
+              const deck = displayedDecks.find(d => (d.id || `deck_${d.name}`) === activeDeckContextMenu)!;
+              handleMoveDeckToGroup(deck, groupId);
+            }}
+          />
+        </ContextMenuContainer>,
+        document.body
+      )}
     </AppLayout>
   );
 };
 
-// Styled components updated to use theme variables
 const PageContainer = styled.div`
   max-width: 1200px;
   margin: 0 auto;
@@ -512,6 +611,13 @@ const SyncNotification = styled.div<{ $success: boolean }>`
       transform: translateY(0);
     }
   }
+`;
+
+const StyledCard = styled.div`
+  background-color: ${theme.colors.background.paper};
+  border-radius: ${theme.borderRadius.md};
+  box-shadow: ${theme.shadows.sm};
+  margin-bottom: 24px;
 `;
 
 const GroupsHeading = styled.div`
@@ -598,7 +704,8 @@ const DeckGrid = styled.div`
   gap: ${theme.spacing.lg};
 `;
 
-const DeckCard = styled(Card)<{ selected?: boolean }>`
+const DeckCardWrapper = styled.div<{ selected?: boolean }>`
+  position: relative;
   border: ${(props) =>
     props.selected
       ? `2px solid ${theme.colors.primary.main}`
@@ -610,9 +717,12 @@ const DeckCard = styled(Card)<{ selected?: boolean }>`
   cursor: ${(props) => (props.selected !== undefined ? "pointer" : "default")};
   transition: transform ${theme.transitions.default},
     box-shadow ${theme.transitions.default};
+  border-radius: ${theme.borderRadius.md};
+  box-shadow: ${theme.shadows.sm};
 
   &:hover {
     transform: translateY(-2px);
+    box-shadow: ${theme.shadows.md};
   }
 `;
 
@@ -624,6 +734,7 @@ const SelectCheckbox = styled.input`
   height: 20px;
   cursor: pointer;
   accent-color: ${theme.colors.primary.main};
+  z-index: 1;
 `;
 
 const DeckTitle = styled.h3`
@@ -679,13 +790,42 @@ const ActionButton = styled.button`
 `;
 
 const EmptyStateCard = styled(Card)`
-  padding: ${theme.spacing.xl};
   text-align: center;
 
   p {
     color: ${theme.colors.text.secondary};
     margin-bottom: ${theme.spacing.lg};
     font-size: ${theme.typography.size.md};
+  }
+`;
+
+const ContextMenuContainer = styled.div`
+  position: fixed;
+  z-index: 1000;
+  background-color: ${theme.colors.background.paper};
+  box-shadow: ${theme.shadows.md};
+  border-radius: ${theme.borderRadius.md};
+  overflow: hidden;
+  max-width: 300px;
+  border: 1px solid ${theme.colors.border.default};
+
+  .deck-actions {
+    margin-bottom: 0;
+  }
+
+  .actions-toggle {
+    display: none;
+  }
+
+  .actions-dropdown {
+    position: relative;
+    right: auto;
+    top: auto;
+    animation: none;
+    box-shadow: none;
+    margin-top: 0;
+    width: 100%;
+    display: block;
   }
 `;
 
