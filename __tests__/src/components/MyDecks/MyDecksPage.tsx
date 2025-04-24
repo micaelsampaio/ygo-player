@@ -227,11 +227,13 @@ const MyDecksPage = () => {
     event.preventDefault();
     event.stopPropagation();
 
-    contextMenuRef.current = {
-      x: event.clientX,
-      y: event.clientY,
-    };
+    // Use our smart positioning function
+    const { x, y } = calculateContextMenuPosition(event.clientX, event.clientY);
 
+    // Store the calculated position
+    contextMenuRef.current = { x, y };
+
+    // Toggle the context menu
     setActiveDeckContextMenu(
       activeDeckContextMenu === (deck.id || `deck_${deck.name}`)
         ? null
@@ -303,6 +305,39 @@ const MyDecksPage = () => {
     moveDeckToGroup(deckId, groupId);
     loadAllDecks();
     setActiveDeckContextMenu(null);
+  };
+
+  const calculateContextMenuPosition = (x: number, y: number) => {
+    // Get viewport dimensions
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+
+    // Estimate menu dimensions
+    const menuWidth = 300; // px - width of the context menu
+    const menuHeight = Math.min(600, viewportHeight * 0.8); // px - capped at 600px or 80% of viewport height
+
+    // Define preferred position - centered below the cursor
+    // The menu will appear centered horizontally relative to the cursor and 10px below it
+    let adjustedX = Math.max(0, x - menuWidth / 2);
+    let adjustedY = y + 10; // Position menu 10px below cursor instead of directly at cursor position
+
+    // Make sure the menu doesn't go off-screen to the right
+    if (adjustedX + menuWidth > viewportWidth) {
+      adjustedX = viewportWidth - menuWidth - 5;
+    }
+
+    // Make sure the menu doesn't go off-screen to the bottom
+    if (adjustedY + menuHeight > viewportHeight) {
+      // If there's not enough room below, position it above the cursor
+      // But leave enough room so the cursor doesn't overlap with the menu
+      adjustedY = Math.max(5, y - menuHeight - 10);
+    }
+
+    // Ensure menu is never positioned off-screen
+    adjustedX = Math.max(5, adjustedX);
+    adjustedY = Math.max(5, adjustedY);
+
+    return { x: adjustedX, y: adjustedY };
   };
 
   const displayedGroups = deckGroups.filter(
@@ -839,11 +874,18 @@ const ContextMenuContainer = styled.div`
   box-shadow: ${theme.shadows.md};
   border-radius: ${theme.borderRadius.md};
   overflow: hidden;
-  max-width: 300px;
+  width: 300px; /* Fixed width for consistency */
+  max-height: 80vh; /* 80% of viewport height maximum */
   border: 1px solid ${theme.colors.border.default};
+  display: flex;
+  flex-direction: column;
 
   .deck-actions {
     margin-bottom: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
   }
 
   .actions-toggle {
@@ -859,6 +901,44 @@ const ContextMenuContainer = styled.div`
     margin-top: 0;
     width: 100%;
     display: block;
+    max-height: 80vh;
+    overflow-y: auto;
+    overscroll-behavior: contain; /* Prevent page scrolling when menu scrolling reaches end */
+  }
+
+  /* Styling for scrollbar to make it more visible */
+  .actions-dropdown::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .actions-dropdown::-webkit-scrollbar-track {
+    background: ${theme.colors.background.dark};
+    border-radius: 4px;
+  }
+
+  .actions-dropdown::-webkit-scrollbar-thumb {
+    background: ${theme.colors.primary.main};
+    border-radius: 4px;
+  }
+
+  /* Ensure group headers stay visible */
+  .actions-group .group-header {
+    position: sticky;
+    top: 0;
+    background-color: ${theme.colors.background.paper};
+    z-index: 1;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    box-shadow: 0 1px 0 ${theme.colors.border.light};
+  }
+
+  /* Add some spacing and borders between groups for better visual separation */
+  .actions-group {
+    border-bottom: 1px solid ${theme.colors.border.light};
+  }
+
+  .actions-group:last-child {
+    border-bottom: none;
   }
 `;
 
