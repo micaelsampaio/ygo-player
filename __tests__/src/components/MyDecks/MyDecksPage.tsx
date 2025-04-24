@@ -3,14 +3,140 @@ import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { YGODeckToImage } from "ygo-core-images-utils";
 import { useDeckGroups } from "../DeckBuilder/hooks/useDeckGroups";
-import { Deck, DeckGroup } from "../DeckBuilder/types";
+import { Deck, DeckGroup, Card } from "../DeckBuilder/types";
 import theme from "../../styles/theme";
 import AppLayout from "../Layout/AppLayout";
-import { Button, Card, Badge, TextField, Select } from "../UI";
+import { Button, Card as CardUI, Badge, TextField, Select } from "../UI";
 import DeckSyncModal from "../DeckBuilder/components/DeckSyncModal/DeckSyncModal";
-import DeckActions from "../DeckBuilder/components/DeckList/DeckActions"; // Fixed path to DeckActions
+import DeckActions from "../DeckBuilder/components/DeckList/DeckActions";
 import { createPortal } from "react-dom";
 import { createCollectionFromDeck } from "../Collections/contex";
+import { YGOCardGrid } from "../UI/YGOCard";
+
+// New interface for the CoverCardModal component
+interface CoverCardModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  deck: Deck | null;
+  onSelectCoverCard: (cardId: number) => void;
+  currentCoverId?: number;
+}
+
+// New CoverCardModal component for selecting cover cards
+const CoverCardModal: React.FC<CoverCardModalProps> = ({
+  isOpen,
+  onClose,
+  deck,
+  onSelectCoverCard,
+  currentCoverId,
+}) => {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [activeTab, setActiveTab] = useState("main");
+
+  if (!isOpen || !deck) return null;
+
+  const allCards = [
+    ...deck.mainDeck,
+    ...deck.extraDeck,
+    ...(deck.sideDeck || []),
+  ];
+
+  const filteredCards = allCards.filter((card: Card) =>
+    card.name?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const mainDeckCards = deck.mainDeck.filter((card: Card) =>
+    card.name?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const extraDeckCards = deck.extraDeck.filter((card: Card) =>
+    card.name?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const displayCards =
+    activeTab === "all"
+      ? filteredCards
+      : activeTab === "main"
+      ? mainDeckCards
+      : extraDeckCards;
+
+  const handleCardSelect = (card: Card) => {
+    onSelectCoverCard(card.id);
+    onClose();
+  };
+
+  return createPortal(
+    <ModalOverlay onClick={onClose}>
+      <ModalContent onClick={(e) => e.stopPropagation()}>
+        <ModalHeader>
+          <h3>Select Cover Card for {deck.name}</h3>
+          <CloseButton onClick={onClose}>&times;</CloseButton>
+        </ModalHeader>
+
+        <ModalBody>
+          <SearchBar
+            type="text"
+            placeholder="Search cards..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+
+          <TabsContainer>
+            <TabButton
+              $active={activeTab === "all"}
+              onClick={() => setActiveTab("all")}
+            >
+              All Cards ({allCards.length})
+            </TabButton>
+            <TabButton
+              $active={activeTab === "main"}
+              onClick={() => setActiveTab("main")}
+            >
+              Main Deck ({deck.mainDeck.length})
+            </TabButton>
+            <TabButton
+              $active={activeTab === "extra"}
+              onClick={() => setActiveTab("extra")}
+            >
+              Extra Deck ({deck.extraDeck.length})
+            </TabButton>
+          </TabsContainer>
+
+          <CardGridContainer>
+            <YGOCardGrid gap="8px">
+              {displayCards.map((card: Card, index: number) => (
+                <CardContainer
+                  key={`${card.id}-${index}`}
+                  $selected={card.id === currentCoverId}
+                  onClick={() => handleCardSelect(card)}
+                >
+                  <CardImage
+                    src={`https://images.ygoprodeck.com/images/cards_small/${card.id}.jpg`}
+                    alt={card.name}
+                    title={card.name}
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.src =
+                        "https://images.ygoprodeck.com/images/cards_small/back_high.jpg";
+                    }}
+                  />
+                  {card.id === currentCoverId && <SelectedIndicator />}
+                </CardContainer>
+              ))}
+            </YGOCardGrid>
+
+            {displayCards.length === 0 && (
+              <EmptyMessage>
+                No cards found matching "{searchTerm}"
+              </EmptyMessage>
+            )}
+          </CardGridContainer>
+        </ModalBody>
+      </ModalContent>
+    </ModalOverlay>,
+    document.body
+  );
+};
 
 const MyDecksPage = () => {
   const navigate = useNavigate();
@@ -41,6 +167,9 @@ const MyDecksPage = () => {
   const [coverCards, setCoverCards] = useState<Record<string, number>>({});
   const [isDragging, setIsDragging] = useState<string | null>(null);
   const [dragOverGroupId, setDragOverGroupId] = useState<string | null>(null);
+  const [isCoverCardModalOpen, setIsCoverCardModalOpen] = useState(false);
+  const [currentDeckForCoverSelection, setCurrentDeckForCoverSelection] =
+    useState<Deck | null>(null);
 
   useEffect(() => {
     loadAllDecks();
@@ -441,6 +570,11 @@ const MyDecksPage = () => {
     (group) => !(group.id === "default" && group.name === "All Decks")
   );
 
+  const openCoverCardModal = (deck: Deck) => {
+    setCurrentDeckForCoverSelection(deck);
+    setIsCoverCardModalOpen(true);
+  };
+
   return (
     <AppLayout>
       <PageContainer>
@@ -473,7 +607,7 @@ const MyDecksPage = () => {
         )}
 
         <StyledCard>
-          <Card.Content>
+          <CardUI.Content>
             <GroupsHeading>
               <h2>Deck Groups</h2>
               {isEditingGroups && (
@@ -546,12 +680,12 @@ const MyDecksPage = () => {
                 />
               </MoveToGroupPanel>
             )}
-          </Card.Content>
+          </CardUI.Content>
         </StyledCard>
 
         {displayedDecks.length === 0 ? (
           <EmptyStateCard>
-            <Card.Content>
+            <CardUI.Content>
               {allDecks.length === 0 ? (
                 <>
                   <p>You don't have any decks yet.</p>
@@ -568,7 +702,7 @@ const MyDecksPage = () => {
                   to this group.
                 </p>
               )}
-            </Card.Content>
+            </CardUI.Content>
           </EmptyStateCard>
         ) : (
           <DeckGrid>
@@ -597,7 +731,7 @@ const MyDecksPage = () => {
                       onClick={(e) => e.stopPropagation()}
                     />
                   )}
-                  <Card.Content>
+                  <CardUI.Content>
                     <DeckInfoContainer>
                       <div>
                         <DeckTitle>{deck.name}</DeckTitle>
@@ -625,32 +759,13 @@ const MyDecksPage = () => {
                             }}
                             onClick={(e) => {
                               e.stopPropagation();
-                              if (e.button === 2) {
-                                e.preventDefault();
-                                const cardSelection = prompt(
-                                  "Enter card ID to set as cover:"
-                                );
-                                if (cardSelection) {
-                                  const cardId = parseInt(cardSelection);
-                                  if (!isNaN(cardId)) {
-                                    setCoverCard(deckId, cardId);
-                                  }
-                                }
-                              }
+                              openCoverCardModal(deck);
                             }}
                           />
                           <ChangeCoverButton
                             onClick={(e) => {
                               e.stopPropagation();
-                              const cardSelection = prompt(
-                                "Enter card ID to set as cover:"
-                              );
-                              if (cardSelection) {
-                                const cardId = parseInt(cardSelection);
-                                if (!isNaN(cardId)) {
-                                  setCoverCard(deckId, cardId);
-                                }
-                              }
+                              openCoverCardModal(deck);
                             }}
                           >
                             Change Cover
@@ -708,7 +823,7 @@ const MyDecksPage = () => {
                         🗑️ Delete
                       </ActionButton>
                     </ActionBar>
-                  </Card.Content>
+                  </CardUI.Content>
                 </DeckCardWrapper>
               );
             })}
@@ -721,6 +836,27 @@ const MyDecksPage = () => {
           decks={allDecks}
           selectedDeckGroupId={selectedDeckGroup?.id}
           updateDeck={updateDeck}
+        />
+
+        <CoverCardModal
+          isOpen={isCoverCardModalOpen}
+          onClose={() => setIsCoverCardModalOpen(false)}
+          deck={currentDeckForCoverSelection}
+          onSelectCoverCard={(cardId) =>
+            setCoverCard(
+              currentDeckForCoverSelection?.id ||
+                `deck_${currentDeckForCoverSelection?.name}`,
+              cardId
+            )
+          }
+          currentCoverId={
+            currentDeckForCoverSelection
+              ? coverCards[
+                  currentDeckForCoverSelection.id ||
+                    `deck_${currentDeckForCoverSelection.name}`
+                ]
+              : undefined
+          }
         />
       </PageContainer>
 
@@ -1009,7 +1145,7 @@ const ChangeCoverButton = styled.button`
   background-color: rgba(0, 0, 0, 0.7);
   color: white;
   border: none;
-  border-radius: ${theme.borderRadius.xs};
+  border-radius: ${theme.borderRadius.sm};
   padding: ${theme.spacing.xs} ${theme.spacing.sm};
   font-size: ${theme.typography.size.xs};
   cursor: pointer;
@@ -1074,7 +1210,7 @@ const ActionButton = styled.button`
   }
 `;
 
-const EmptyStateCard = styled(Card)`
+const EmptyStateCard = styled(CardUI)`
   text-align: center;
 
   p {
@@ -1154,6 +1290,164 @@ const ContextMenuContainer = styled.div`
   .actions-group:last-child {
     border-bottom: none;
   }
+`;
+
+const ModalOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+`;
+
+const ModalContent = styled.div`
+  background-color: ${theme.colors.background.paper};
+  border-radius: ${theme.borderRadius.md};
+  box-shadow: ${theme.shadows.md};
+  width: 90%;
+  max-width: 800px;
+  max-height: 90%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+`;
+
+const ModalHeader = styled.div`
+  padding: ${theme.spacing.md};
+  background-color: ${theme.colors.background.card};
+  border-bottom: 1px solid ${theme.colors.border.default};
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  h3 {
+    margin: 0;
+    color: ${theme.colors.text.primary};
+    font-size: ${theme.typography.size.lg};
+  }
+`;
+
+const CloseButton = styled.button`
+  background: none;
+  border: none;
+  color: ${theme.colors.text.secondary};
+  font-size: ${theme.typography.size.lg};
+  cursor: pointer;
+
+  &:hover {
+    color: ${theme.colors.error.main};
+  }
+`;
+
+const ModalBody = styled.div`
+  padding: ${theme.spacing.md};
+  overflow-y: auto;
+  flex: 1;
+`;
+
+const SearchBar = styled.input`
+  width: 100%;
+  padding: ${theme.spacing.sm};
+  margin-bottom: ${theme.spacing.md};
+  border: 1px solid ${theme.colors.border.default};
+  border-radius: ${theme.borderRadius.sm};
+  font-size: ${theme.typography.size.md};
+`;
+
+const TabsContainer = styled.div`
+  display: flex;
+  gap: ${theme.spacing.sm};
+  margin-bottom: ${theme.spacing.md};
+`;
+
+const TabButton = styled.button<{ $active: boolean }>`
+  padding: ${theme.spacing.sm} ${theme.spacing.md};
+  background-color: ${(props) =>
+    props.$active ? theme.colors.primary.main : theme.colors.background.card};
+  color: ${(props) =>
+    props.$active ? theme.colors.text.inverse : theme.colors.text.primary};
+  border: none;
+  border-radius: ${theme.borderRadius.md};
+  cursor: pointer;
+  font-size: ${theme.typography.size.md};
+  font-weight: ${theme.typography.weight.medium};
+
+  &:hover {
+    background-color: ${(props) =>
+      props.$active ? theme.colors.primary.dark : theme.colors.background.dark};
+  }
+`;
+
+const CardGridContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: ${theme.spacing.md};
+`;
+
+const CardContainer = styled.div<{ $selected?: boolean }>`
+  position: relative;
+  border: ${(props) =>
+    props.$selected
+      ? `2px solid ${theme.colors.primary.main}`
+      : `1px solid ${theme.colors.border.default}`};
+  border-radius: ${theme.borderRadius.sm};
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    transform: scale(1.05);
+    box-shadow: ${theme.shadows.md};
+  }
+`;
+
+const CardImage = styled.img`
+  width: 100%;
+  height: auto;
+  display: block;
+`;
+
+const SelectedIndicator = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.3);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  &::after {
+    content: "✓";
+    color: white;
+    font-size: ${theme.typography.size["2xl"]};
+    font-weight: ${theme.typography.weight.bold};
+    text-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+    animation: fadeIn 0.3s ease;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: scale(0.8);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+`;
+
+const EmptyMessage = styled.div`
+  text-align: center;
+  color: ${theme.colors.text.secondary};
+  font-size: ${theme.typography.size.md};
 `;
 
 export default MyDecksPage;
