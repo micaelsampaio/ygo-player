@@ -984,7 +984,6 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
                   // This would typically interact with your collection system
                 }
               }}
-              onSyncDecks={() => setIsSyncModalOpen(true)}
               // New props for deck groups
               deckGroups={deckGroups}
               selectedGroup={selectedDeckGroup}

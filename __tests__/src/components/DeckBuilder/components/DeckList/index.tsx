@@ -222,16 +222,7 @@ const DeckList: React.FC<DeckListProps> = ({
     <div className="decks-list-container">
       <div className="decks-header">
         <h2>Your Decks</h2>
-        <div className="deck-header-actions">
-          <button className="new-deck-button" onClick={handleNewDeck}>
-            New Deck
-          </button>
-          {onSyncDecks && (
-            <button className="sync-decks-button" onClick={onSyncDecks}>
-              Sync Decks
-            </button>
-          )}
-        </div>
+        {/* Removed the deck-header-actions div that contained the New Deck and Sync Decks buttons */}
       </div>
 
       <div className="view-mode-toggle">
