@@ -34,7 +34,9 @@ const MyDecksPage = () => {
     success: boolean;
     message: string;
   } | null>(null);
-  const [activeDeckContextMenu, setActiveDeckContextMenu] = useState<string | null>(null);
+  const [activeDeckContextMenu, setActiveDeckContextMenu] = useState<
+    string | null
+  >(null);
   const contextMenuRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
   useEffect(() => {
@@ -52,13 +54,16 @@ const MyDecksPage = () => {
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (activeDeckContextMenu && !(e.target as Element).closest('.deck-context-menu')) {
+      if (
+        activeDeckContextMenu &&
+        !(e.target as Element).closest(".deck-context-menu")
+      ) {
         setActiveDeckContextMenu(null);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [activeDeckContextMenu]);
 
   const loadAllDecks = () => {
@@ -215,16 +220,23 @@ const MyDecksPage = () => {
     navigate(`/deckbuilder?edit=${newDeckId}`);
   };
 
-  const handleDeckContextMenu = (deck: Deck, event: React.MouseEvent<HTMLDivElement>) => {
+  const handleDeckContextMenu = (
+    deck: Deck,
+    event: React.MouseEvent<HTMLDivElement>
+  ) => {
     event.preventDefault();
     event.stopPropagation();
 
-    contextMenuRef.current = { 
-      x: event.clientX, 
-      y: event.clientY 
+    contextMenuRef.current = {
+      x: event.clientX,
+      y: event.clientY,
     };
 
-    setActiveDeckContextMenu(activeDeckContextMenu === (deck.id || `deck_${deck.name}`) ? null : (deck.id || `deck_${deck.name}`));
+    setActiveDeckContextMenu(
+      activeDeckContextMenu === (deck.id || `deck_${deck.name}`)
+        ? null
+        : deck.id || `deck_${deck.name}`
+    );
   };
 
   const handleImportDeck = (importedDeck: Deck) => {
@@ -240,7 +252,11 @@ const MyDecksPage = () => {
     if (!newName.trim()) return;
 
     const deckId = deck.id || `deck_${deck.name}`;
-    const updatedDeck = { ...deck, name: newName, lastModified: new Date().toISOString() };
+    const updatedDeck = {
+      ...deck,
+      name: newName,
+      lastModified: new Date().toISOString(),
+    };
     localStorage.setItem(deckId, JSON.stringify(updatedDeck));
     loadAllDecks();
     setActiveDeckContextMenu(null);
@@ -248,12 +264,12 @@ const MyDecksPage = () => {
 
   const handleClearDeck = (deck: Deck) => {
     const deckId = deck.id || `deck_${deck.name}`;
-    const updatedDeck = { 
-      ...deck, 
-      mainDeck: [], 
-      extraDeck: [], 
+    const updatedDeck = {
+      ...deck,
+      mainDeck: [],
+      extraDeck: [],
       sideDeck: [],
-      lastModified: new Date().toISOString() 
+      lastModified: new Date().toISOString(),
     };
     localStorage.setItem(deckId, JSON.stringify(updatedDeck));
     loadAllDecks();
@@ -518,48 +534,65 @@ const MyDecksPage = () => {
         />
       </PageContainer>
 
-      {activeDeckContextMenu && createPortal(
-        <ContextMenuContainer 
-          className="deck-context-menu"
-          style={{ 
-            top: `${contextMenuRef.current.y}px`, 
-            left: `${contextMenuRef.current.x}px` 
-          }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <DeckActions
-            deck={displayedDecks.find(d => (d.id || `deck_${d.name}`) === activeDeckContextMenu)!}
-            onRenameDeck={(name) => {
-              const deck = displayedDecks.find(d => (d.id || `deck_${d.name}`) === activeDeckContextMenu)!;
-              handleRenameDeck(deck, name);
+      {activeDeckContextMenu &&
+        createPortal(
+          <ContextMenuContainer
+            className="deck-context-menu"
+            style={{
+              top: `${contextMenuRef.current.y}px`,
+              left: `${contextMenuRef.current.x}px`,
             }}
-            onClearDeck={() => {
-              const deck = displayedDecks.find(d => (d.id || `deck_${d.name}`) === activeDeckContextMenu)!;
-              handleClearDeck(deck);
-            }}
-            onImportDeck={handleImportDeck}
-            onCopyDeck={() => {
-              const deck = displayedDecks.find(d => (d.id || `deck_${d.name}`) === activeDeckContextMenu)!;
-              handleCopyDeck(deck);
-            }}
-            onDeleteDeck={() => {
-              const deck = displayedDecks.find(d => (d.id || `deck_${d.name}`) === activeDeckContextMenu)!;
-              deleteDeck(deck);
-            }}
-            onCreateCollection={() => {
-              const deck = displayedDecks.find(d => (d.id || `deck_${d.name}`) === activeDeckContextMenu)!;
-              handleCreateCollection(deck);
-            }}
-            showDropdownImmediately={true}
-            deckGroups={deckGroups}
-            onMoveDeckToGroup={(groupId) => {
-              const deck = displayedDecks.find(d => (d.id || `deck_${d.name}`) === activeDeckContextMenu)!;
-              handleMoveDeckToGroup(deck, groupId);
-            }}
-          />
-        </ContextMenuContainer>,
-        document.body
-      )}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <DeckActions
+              deck={
+                displayedDecks.find(
+                  (d) => (d.id || `deck_${d.name}`) === activeDeckContextMenu
+                )!
+              }
+              onRenameDeck={(name) => {
+                const deck = displayedDecks.find(
+                  (d) => (d.id || `deck_${d.name}`) === activeDeckContextMenu
+                )!;
+                handleRenameDeck(deck, name);
+              }}
+              onClearDeck={() => {
+                const deck = displayedDecks.find(
+                  (d) => (d.id || `deck_${d.name}`) === activeDeckContextMenu
+                )!;
+                handleClearDeck(deck);
+              }}
+              onImportDeck={handleImportDeck}
+              onCopyDeck={() => {
+                const deck = displayedDecks.find(
+                  (d) => (d.id || `deck_${d.name}`) === activeDeckContextMenu
+                )!;
+                handleCopyDeck(deck);
+              }}
+              onDeleteDeck={() => {
+                const deck = displayedDecks.find(
+                  (d) => (d.id || `deck_${d.name}`) === activeDeckContextMenu
+                )!;
+                deleteDeck(deck);
+              }}
+              onCreateCollection={() => {
+                const deck = displayedDecks.find(
+                  (d) => (d.id || `deck_${d.name}`) === activeDeckContextMenu
+                )!;
+                handleCreateCollection(deck);
+              }}
+              showDropdownImmediately={true}
+              deckGroups={deckGroups}
+              onMoveDeckToGroup={(groupId) => {
+                const deck = displayedDecks.find(
+                  (d) => (d.id || `deck_${d.name}`) === activeDeckContextMenu
+                )!;
+                handleMoveDeckToGroup(deck, groupId);
+              }}
+            />
+          </ContextMenuContainer>,
+          document.body
+        )}
     </AppLayout>
   );
 };
