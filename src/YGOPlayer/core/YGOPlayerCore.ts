@@ -5,6 +5,10 @@ import { GLTF, GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { Font, FontLoader } from 'three/addons/loaders/FontLoader.js';
 import { EventBus } from '../scripts/event-bus';
 
+export const globalUniforms = {
+    time: { value: 0.0 }
+};
+
 export class YGOPlayerCore {
     public scene: THREE.Scene;
     public sceneOverlay: THREE.Scene;
@@ -26,6 +30,9 @@ export class YGOPlayerCore {
     // internal
     private previousFrame: number;
     private isOverlayEnabled: boolean;
+
+    // globals
+    public globalUniforms = globalUniforms;
 
     constructor({ canvas }: { canvas: HTMLCanvasElement }) {
         this.events = new EventBus();
@@ -60,6 +67,7 @@ export class YGOPlayerCore {
         this.unscaledDeltaTime = (now - this.previousFrame) / 1000;
         this.deltaTime = this.unscaledDeltaTime * this.timeScale;
         this.previousFrame = now;
+        this.globalUniforms.time.value = performance.now() / 1000;
 
         this.renderer.render(this.scene, this.camera);
 

@@ -71,7 +71,7 @@ export class YGOAssets {
         return this.duel.core.textureLoader.load(url, (data) => this.textures.set(url, data));
     }
 
-    createPoool(pool: PoolObjects) {
+    createPool(pool: PoolObjects) {
         this.poolObjects.set(pool.name, pool);
         pool.create();
     }

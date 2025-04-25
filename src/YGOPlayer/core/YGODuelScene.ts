@@ -114,6 +114,6 @@ export class YGODuelScene {
                 return clone;
             }
         });
-        this.duel.assets.createPoool(destroyPool);
+        this.duel.assets.createPool(destroyPool);
     }
 }

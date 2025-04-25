@@ -218,12 +218,12 @@ export class CardZone extends YGOEntity implements YGOUiElement {
       this.getCardReference()!,
       this.zone
     );
+    this.card.gameObject.visible = true;
     this.card.gameObject.position.copy(this.position);
     this.card.gameObject.rotation.copy(rotation);
     this.card.gameObject.scale.copy(this.scale);
     this.card.showCardStats();
     this.card.updateCardStats(this.zoneData);
-    this.card.gameObject.visible = true;
   }
 
   private updateZoneData() {

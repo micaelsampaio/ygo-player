@@ -5,13 +5,14 @@ import { Card, FieldZoneData } from "ygo-core";
 import { YGOGameUtils } from "ygo-core";
 import { GameCardStats } from "./GameCardStats";
 import { CARD_DEPTH, CARD_HEIGHT_SIZE, CARD_RATIO } from "../constants";
-import { CardMaterial } from "./materials/game-card-material";
+import { CardMaterial, CardTransparentOverlay } from "./materials/game-card-material";
 
 export class GameCard extends YGOEntity {
   private duel: YGODuel;
   public zone: string = ""; // TODO USE THIS ??
   public cardReference!: Card;
 
+  private transparentCard: THREE.Mesh | undefined;
   private cardStats: GameCardStats | undefined;
   private hasStats: boolean;
 
@@ -77,6 +78,9 @@ export class GameCard extends YGOEntity {
   }
 
   public updateCardStats(zoneData: FieldZoneData) {
+
+    this.updateTransparentCard(zoneData);
+
     if (!this.hasStats) return;
 
     if (YGOGameUtils.isSpellTrap(this.cardReference) && (zoneData.zone === "S" || zoneData.zone === "F")) {
@@ -109,12 +113,72 @@ export class GameCard extends YGOEntity {
     this.cardStats.render();
   }
 
+  private updateTransparentCard(zone: FieldZoneData) {
+
+    if (this.transparentCard) {
+      return this.showTransparentCard();
+    };
+
+    if (!this.cardReference || !YGOGameUtils.isFaceDown(this.cardReference)) {
+      return;
+    }
+
+    const card = this.cardReference;
+    const frontTexture = this.duel.assets.getTexture(card.images.small_url);
+    const backTexture = this.duel.assets.getTexture(`${this.duel.config.cdnUrl}/images/card_back.png`);
+
+    const transparentMaterial = new CardTransparentOverlay({
+      map: frontTexture,
+      backTexture: backTexture,
+      opacity: 0.8,
+      transparent: true,
+      animationDuration: 2.5,
+      minOpacity: 0.65,
+      maxOpacity: 1
+    });
+
+    this.gameObject.visible = false;
+
+    const height = CARD_HEIGHT_SIZE, width = height / CARD_RATIO;
+    const planeGeometry = new THREE.PlaneGeometry(width, height);
+
+    this.transparentCard = new THREE.Mesh(planeGeometry, transparentMaterial);
+    this.duel.core.scene.add(this.transparentCard);
+
+    this.showTransparentCard();
+  }
+
+  private showTransparentCard() {
+    if (this.transparentCard) {
+      if (this.cardReference && YGOGameUtils.isFaceDown(this.cardReference)) {
+        this.transparentCard.visible = true;
+        this.gameObject.visible = false;
+
+        this.transparentCard.scale.copy(this.gameObject.scale);
+        this.transparentCard.position.copy(this.gameObject.position);
+        this.transparentCard.rotation.copy(this.gameObject.rotation);
+        this.transparentCard.rotateY(THREE.MathUtils.degToRad(180));
+      } else {
+        this.transparentCard.visible = false;
+        this.gameObject.visible = true;
+      }
+    };
+  }
+  private hideTransparentCard() {
+    if (this.transparentCard) {
+      this.transparentCard.visible = false;
+      this.gameObject.visible = true;
+    };
+  }
+
   public hideCardStats() {
     if (this.cardStats) this.cardStats.hide();
+    this.hideTransparentCard();
   }
 
   public showCardStats() {
     if (this.cardStats) this.cardStats.show();
+    this.showTransparentCard();
   }
 
   private destroyCardStats() {
@@ -125,6 +189,7 @@ export class GameCard extends YGOEntity {
 
   destroy() {
     this.destroyCardStats();
+    if (this.transparentCard) this.duel.core.scene.remove(this.transparentCard);
     this.duel.destroy(this);
   }
 }
