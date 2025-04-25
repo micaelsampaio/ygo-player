@@ -463,7 +463,7 @@
 
 .ygo-player-core .ygo-player-overlay {
     position: fixed;
-    top: 20px;
+    top: 120px;
     right: 20px;
     border-radius: 100%;
     width: 80px;

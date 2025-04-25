@@ -79,7 +79,7 @@ export class GameCard extends YGOEntity {
 
   public updateCardStats(zoneData: FieldZoneData) {
 
-    this.updateTransparentCard(zoneData);
+    this.updateTransparentCard();
 
     if (!this.hasStats) return;
 
@@ -113,7 +113,9 @@ export class GameCard extends YGOEntity {
     this.cardStats.render();
   }
 
-  private updateTransparentCard(zone: FieldZoneData) {
+  private updateTransparentCard() {
+
+    if (!this.duel.settings.getShowFaceDownCardsTransparent()) return;
 
     if (this.transparentCard) {
       return this.showTransparentCard();
@@ -146,6 +148,14 @@ export class GameCard extends YGOEntity {
     this.duel.core.scene.add(this.transparentCard);
 
     this.showTransparentCard();
+  }
+
+  public updateTransparentCardsState(status: boolean) {
+    if (!status) {
+      this.hideTransparentCard();
+    } else {
+      this.updateTransparentCard();
+    }
   }
 
   private showTransparentCard() {

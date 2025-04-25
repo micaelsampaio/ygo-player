@@ -1,12 +1,12 @@
 .ygo-player-core {
     .ygo-player-hud {
         position: absolute;
-        left: 0px;
         padding: 5px;
         color: #FFF;
         font-weight: bold;
 
         &.ygo-player-0 {
+            left: 0px;
             bottom: 80px;
 
             .ygo-player-hud-bar {
@@ -15,7 +15,7 @@
         }
 
         &.ygo-player-1 {
-            top: unset;
+            right: 0px;
             top: 0px;
 
             .ygo-player-hud-bar {

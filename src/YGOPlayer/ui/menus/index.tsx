@@ -1,3 +1,4 @@
+import { GameSettingsDialog } from "../actions/game-settings-dialog";
 import { Banish } from "./banish";
 import { ControlsMenu } from "./controls-menu";
 import { ExtraDeck } from "./extra-deck";
@@ -18,4 +19,5 @@ export const MENUS = {
     "selected-card-highlight": SelectedCardHighlightedMenu,
     "select-card-menu": SelectCardPopup,
     "controls-menu": ControlsMenu,
+    "settings-menu": GameSettingsDialog,
 }

@@ -60,6 +60,11 @@
         padding-bottom: 20px;
     }
 
+    .ygo-px-0 {
+        padding-left: 0px !important;
+        padding-right: 0px !important;
+    }
+
     .ygo-px-1 {
         padding-left: 5px;
         padding-right: 5px;

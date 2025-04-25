@@ -29,6 +29,7 @@ import { Command } from "ygo-core";
 import { YGOMapClick } from "./YGOMapClick";
 import { YGOGameFieldStatsComponent } from "../game/YGOGameFieldStatsComponent";
 import { YGOSoundController } from "./YGOSoundController";
+import { YGOPlayerSettingsAdapter } from "./YGOPlayerSettings";
 
 export class YGODuel {
   public ygo!: InstanceType<typeof YGOCore>;
@@ -52,6 +53,7 @@ export class YGODuel {
   private currentPlayerIndex = 0;
   public config: YGOConfig;
   public duelScene: YGODuelScene;
+  public settings: YGOPlayerSettingsAdapter;
 
   constructor({
     canvas,
@@ -62,6 +64,7 @@ export class YGODuel {
   }) {
     this.state = YGODuelState.EDITOR;
     this.config = config;
+    this.settings = new YGOPlayerSettingsAdapter();
 
     if (this.config.autoChangePlayer === undefined) {
       this.config.autoChangePlayer = true;
@@ -93,8 +96,8 @@ export class YGODuel {
     this.actionManager.actions.set("card-zone-menu", new ActionCardZoneMenu(this));
 
     this.gameActions = new YGOGameActions(this);
-    this.soundController.addLayer({ name: "GAME" });
-    this.soundController.addLayer({ name: "GAME_MUSIC", useTimeScale: false });
+    this.soundController.addLayer({ name: "GAME", volume: this.settings.getGameVolume() });
+    this.soundController.addLayer({ name: "GAME_MUSIC", volume: this.settings.getMusicVolume(), useTimeScale: false });
 
     this.setupVars();
 
@@ -146,6 +149,24 @@ export class YGODuel {
 
       this.duelScene.createFields({ gameField: gameFieldScene.scene });
       this.duelScene.createGameMusic();
+
+      this.settings.events.on("onShowFaceDownCardsTransparentChange", (oldValue, showTransparentCards) => {
+        this.fields.forEach(field => {
+
+          field.monsterZone.forEach(zone => {
+            zone.getGameCard()?.updateTransparentCardsState(showTransparentCards);
+          })
+          field.extraMonsterZone.forEach(zone => {
+            zone.getGameCard()?.updateTransparentCardsState(showTransparentCards);
+          })
+          field.spellTrapZone.forEach(zone => {
+            zone.getGameCard()?.updateTransparentCardsState(showTransparentCards);
+          })
+        })
+      });
+
+      this.settings.events.on("onGameVolumeChange", (_, value) => this.soundController.setLayerVolume("GAME", value))
+      this.settings.events.on("onMusicVolumeChange", (_, value) => this.soundController.setLayerVolume("GAME_MUSIC", value))
 
       this.core.updateCamera();
     } catch (error) {

@@ -32,7 +32,7 @@ export class YGOPlayerSettingsAdapter {
     public events: EventBus<YGOPlayerSettingsEvents>;
 
     constructor(options?: YGOPlayerSettingsAdapterOptions) {
-        this.autoSave = typeof options?.autoSave ? !!options?.autoSave : true;
+        this.autoSave = typeof options?.autoSave !== "undefined" ? !!options?.autoSave : true;
         this.data = this.loadConfig();
         this.events = new EventBus();
     }
@@ -41,6 +41,10 @@ export class YGOPlayerSettingsAdapter {
         const userSettings = getJsonFromLocalStorage(YGO_SETTINGS_KEY);
         const settings = deepMerge<YGOPlayerSettings>(DEFAULT_SETTINGS, userSettings);
         return settings;
+    }
+
+    public getMusicVolume() {
+        return this.data.musicVolume;
     }
 
     public setMusicVolume(value: number) {
@@ -55,6 +59,10 @@ export class YGOPlayerSettingsAdapter {
         }
     }
 
+    public getGameVolume() {
+        return this.data.gameVolume;
+    }
+
     public setGameVolume(value: number) {
         if (value !== this.data.gameVolume) {
             const oldValue = this.data.gameVolume;
@@ -65,6 +73,10 @@ export class YGOPlayerSettingsAdapter {
             this.events.dispatch("onGameVolumeChange", oldValue, value);
             this.events.dispatch("onSettingsChanged");
         }
+    }
+
+    public getShowFaceDownCardsTransparent() {
+        return this.data.showFaceDownCardsTransparent;
     }
 
     public setShowFaceDownCardsTransparent(value: boolean) {
@@ -83,6 +95,10 @@ export class YGOPlayerSettingsAdapter {
         if (this.autoSave) {
             this.save();
         }
+    }
+
+    public getStorageKey(): string {
+        return YGO_SETTINGS_KEY;
     }
 
     public save() {
