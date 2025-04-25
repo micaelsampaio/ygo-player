@@ -16,6 +16,7 @@ export function BottomRightActions({ duel }: { duel: YGODuel }) {
     }, [duel]);
 
     const showGameStats = useCallback((e: React.MouseEvent) => {
+        duel.events.dispatch("close-ui-menu", { group: "game-overlay" });
         duel.fieldStats.show();
     }, [duel]);
 
