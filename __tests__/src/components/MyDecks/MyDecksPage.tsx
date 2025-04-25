@@ -58,8 +58,8 @@ const CoverCardModal: React.FC<CoverCardModalProps> = ({
     activeTab === "all"
       ? filteredCards
       : activeTab === "main"
-        ? mainDeckCards
-        : extraDeckCards;
+      ? mainDeckCards
+      : extraDeckCards;
 
   const handleCardSelect = (card: Card) => {
     onSelectCoverCard(card.id);
@@ -614,11 +614,7 @@ const MyDecksPage = () => {
             <Button variant="primary" onClick={handleCreateNewDeck}>
               Create New Deck
             </Button>
-            <Button
-              variant="secondary"
-              onClick={handleSyncDecks}
-              disabled={allDecks.length === 0}
-            >
+            <Button variant="secondary" onClick={handleSyncDecks}>
               Sync Decks
             </Button>
             <Button
@@ -874,16 +870,16 @@ const MyDecksPage = () => {
           onSelectCoverCard={(cardId) =>
             setCoverCard(
               currentDeckForCoverSelection?.id ||
-              `deck_${currentDeckForCoverSelection?.name}`,
+                `deck_${currentDeckForCoverSelection?.name}`,
               cardId
             )
           }
           currentCoverId={
             currentDeckForCoverSelection
               ? coverCards[
-              currentDeckForCoverSelection.id ||
-              `deck_${currentDeckForCoverSelection.name}`
-              ]
+                  currentDeckForCoverSelection.id ||
+                    `deck_${currentDeckForCoverSelection.name}`
+                ]
               : undefined
           }
         />
@@ -986,7 +982,7 @@ const SyncNotification = styled.div<{ $success: boolean }>`
   border-radius: ${theme.borderRadius.md};
   border-left: 4px solid
     ${(props) =>
-    props.$success ? theme.colors.success.main : theme.colors.error.main};
+      props.$success ? theme.colors.success.main : theme.colors.error.main};
   animation: fadeIn 0.3s ease-in;
 
   @keyframes fadeIn {
@@ -1040,8 +1036,8 @@ const GroupTab = styled.div<{ active: boolean; isDragOver?: boolean }>`
     props.isDragOver
       ? theme.colors.primary.light
       : props.active
-        ? theme.colors.primary.main
-        : theme.colors.background.card};
+      ? theme.colors.primary.main
+      : theme.colors.background.card};
   color: ${(props) =>
     props.active || props.isDragOver
       ? theme.colors.text.inverse
@@ -1058,7 +1054,7 @@ const GroupTab = styled.div<{ active: boolean; isDragOver?: boolean }>`
 
   &:hover {
     background-color: ${(props) =>
-    props.active ? theme.colors.primary.dark : theme.colors.background.dark};
+      props.active ? theme.colors.primary.dark : theme.colors.background.dark};
   }
 `;
 
@@ -1408,7 +1404,7 @@ const TabButton = styled.button<{ $active: boolean }>`
 
   &:hover {
     background-color: ${(props) =>
-    props.$active ? theme.colors.primary.dark : theme.colors.background.dark};
+      props.$active ? theme.colors.primary.dark : theme.colors.background.dark};
   }
 `;
 
