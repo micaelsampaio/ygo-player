@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import styled from "styled-components";
 import { Card as CardType } from "../DeckBuilder/types";
 import SearchPanel from "../DeckBuilder/components/Search/SearchPanel";
@@ -10,6 +10,7 @@ import { Button, Card, TextField, Badge } from "../UI";
 
 const MyCardGroupsPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const {
     cardGroups,
     selectedCardGroup,
@@ -24,6 +25,21 @@ const MyCardGroupsPage = () => {
   const [isEditingGroups, setIsEditingGroups] = useState(false);
   const [newGroupName, setNewGroupName] = useState("");
   const [selectedCard, setSelectedCard] = useState<CardType | null>(null);
+
+  // Effect to handle URL parameters for pre-selecting a group
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const groupIdParam = params.get("group");
+
+    if (groupIdParam && cardGroups.length > 0) {
+      const targetGroup = cardGroups.find((group) => group.id === groupIdParam);
+      if (targetGroup) {
+        setSelectedCardGroup(targetGroup);
+        // If we're coming from another page to edit this group, automatically enable editing mode
+        setIsEditingGroups(true);
+      }
+    }
+  }, [location.search, cardGroups]);
 
   // Handle creating a new card group
   const handleCreateGroup = () => {

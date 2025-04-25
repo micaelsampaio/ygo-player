@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { CardGroup, Card } from "../../types";
+import { useNavigate } from "react-router-dom";
 import "./CardGroups.css";
 
 interface CardGroupsProps {
@@ -29,6 +30,15 @@ const CardGroups: React.FC<CardGroupsProps> = ({
   onAddCardToDeck,
   onAddAllCardsFromGroup,
 }) => {
+  const navigate = useNavigate();
+  const [contextMenu, setContextMenu] = useState<{
+    visible: boolean;
+    x: number;
+    y: number;
+    groupId: string;
+  } | null>(null);
+  const contextMenuRef = useRef<HTMLDivElement>(null);
+
   const handleRemoveCard = (groupId: string, cardId: number) => {
     onRemoveCardFromGroup(groupId, cardId);
   };
@@ -85,6 +95,45 @@ const CardGroups: React.FC<CardGroupsProps> = ({
     }, 0);
   };
 
+  // Handle right-click on a card group item
+  const handleContextMenu = (e: React.MouseEvent, group: CardGroup) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    // Position the context menu at the cursor location
+    setContextMenu({
+      visible: true,
+      x: e.clientX,
+      y: e.clientY,
+      groupId: group.id,
+    });
+  };
+
+  // Handle the "Edit Group" option in the context menu
+  const handleEditGroup = (groupId: string) => {
+    // Navigate to the Card Groups management page with the group ID as a URL parameter
+    navigate(`/my/cards/groups?group=${groupId}`);
+    setContextMenu(null);
+  };
+
+  // Close the context menu when clicking outside of it
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        contextMenuRef.current &&
+        !contextMenuRef.current.contains(event.target as Node) &&
+        contextMenu?.visible
+      ) {
+        setContextMenu(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [contextMenu]);
+
   return (
     <div className="card-groups-container">
       <div className="card-groups-header">
@@ -102,6 +151,8 @@ const CardGroups: React.FC<CardGroupsProps> = ({
             <p>
               <strong>Card Groups:</strong> Select a group to view its cards or
               add them all to your deck.
+              <br />
+              <small>Right-click on a group for more options.</small>
             </p>
           </div>
           <div className="card-group-list">
@@ -112,6 +163,7 @@ const CardGroups: React.FC<CardGroupsProps> = ({
                   selectedGroup?.id === group.id ? "selected" : ""
                 }`}
                 onClick={() => onSelectGroup(group)}
+                onContextMenu={(e) => handleContextMenu(e, group)}
               >
                 <div className="group-header">
                   <h4>{group.name}</h4>
@@ -194,6 +246,49 @@ const CardGroups: React.FC<CardGroupsProps> = ({
             ))}
           </div>
         </>
+      )}
+
+      {/* Context Menu */}
+      {contextMenu && contextMenu.visible && (
+        <div
+          ref={contextMenuRef}
+          className="group-context-menu"
+          style={{
+            position: "fixed",
+            top: contextMenu.y,
+            left: contextMenu.x,
+            zIndex: 1000,
+          }}
+        >
+          <button
+            className="context-menu-item"
+            onClick={() => handleEditGroup(contextMenu.groupId)}
+          >
+            <span className="context-menu-icon">✏️</span>
+            <span className="context-menu-text">Edit Group</span>
+          </button>
+          <button
+            className="context-menu-item"
+            onClick={() => {
+              if (onDeleteGroup(contextMenu.groupId)) {
+                setContextMenu(null);
+              }
+            }}
+          >
+            <span className="context-menu-icon">🗑️</span>
+            <span className="context-menu-text">Delete Group</span>
+          </button>
+          <button
+            className="context-menu-item"
+            onClick={() => {
+              navigate("/my/cards/groups");
+              setContextMenu(null);
+            }}
+          >
+            <span className="context-menu-icon">📂</span>
+            <span className="context-menu-text">Manage All Groups</span>
+          </button>
+        </div>
       )}
     </div>
   );
