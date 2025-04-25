@@ -159,6 +159,11 @@ export class GameCard extends YGOEntity {
   }
 
   private showTransparentCard() {
+    if (!this.duel.settings.getShowFaceDownCardsTransparent()) {
+      this.hideTransparentCard();
+      return;
+    };
+
     if (this.transparentCard) {
       if (this.cardReference && YGOGameUtils.isFaceDown(this.cardReference)) {
         this.transparentCard.visible = true;
