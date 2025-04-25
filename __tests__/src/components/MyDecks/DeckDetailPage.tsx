@@ -16,6 +16,8 @@ import {
   Clock,
   Users,
   Image,
+  Check,
+  Copy,
 } from "lucide-react";
 import CoverCardModal from "../MyDecks/CoverCardModal";
 import CardModal from "../DeckBuilder/components/CardModal/CardModal";
@@ -36,6 +38,11 @@ const DeckDetailPage = () => {
   // Add state for card preview modal
   const [previewCard, setPreviewCard] = useState<any>(null);
   const [isCardModalOpen, setIsCardModalOpen] = useState(false);
+
+  const [shareStatus, setShareStatus] = useState<"idle" | "copied" | "error">(
+    "idle"
+  );
+  const [shareTooltipVisible, setShareTooltipVisible] = useState(false);
 
   const handleCardClick = (card: any) => {
     setPreviewCard(card);
@@ -175,8 +182,9 @@ const DeckDetailPage = () => {
     const extraCount = deck.extraDeck?.length || 0;
     const sideCount = deck.sideDeck?.length || 0;
 
-    return `${mainCount} Main | ${extraCount} Extra${sideCount > 0 ? ` | ${sideCount} Side` : ""
-      }`;
+    return `${mainCount} Main | ${extraCount} Extra${
+      sideCount > 0 ? ` | ${sideCount} Side` : ""
+    }`;
   };
 
   const handleSelectCoverCard = (cardId: number) => {
@@ -217,6 +225,83 @@ const DeckDetailPage = () => {
     }
 
     return getCardImageUrl(coverCardId);
+  };
+
+  const generateYdkeUrl = (deck: any) => {
+    if (!deck) return "";
+
+    // Convert deck cards to YDKE format
+    const encodeCards = (cards: any[]) => {
+      if (!cards || cards.length === 0) return "";
+
+      // Extract card IDs
+      const cardIds = cards.map((card) => card.id);
+
+      // Create buffer for all cards (4 bytes per card ID)
+      const buffer = new Uint8Array(cardIds.length * 4);
+      const dataView = new DataView(buffer.buffer);
+
+      // Write each card ID as a 4-byte integer (little-endian)
+      cardIds.forEach((id, index) => {
+        dataView.setUint32(index * 4, id, true); // true for little-endian
+      });
+
+      // Base64 encode the buffer
+      const binary = Array.from(buffer)
+        .map((byte) => String.fromCharCode(byte))
+        .join("");
+
+      return btoa(binary);
+    };
+
+    const main = encodeCards(deck.mainDeck || []);
+    const extra = encodeCards(deck.extraDeck || []);
+    const side = encodeCards(deck.sideDeck || []);
+
+    console.log("Encoded deck parts:", { main, extra, side });
+
+    const ydkeUrl = `ydke://${main}!${extra}!${side}!`;
+    return ydkeUrl;
+  };
+
+  const getShareUrl = (deck: any) => {
+    if (!deck) return "";
+
+    const baseUrl = window.location.origin;
+    const ydkeUrl = generateYdkeUrl(deck);
+    const encodedName = encodeURIComponent(deck.name || "Shared_Deck");
+
+    return `${baseUrl}/my/decks/public/${encodedName}?data=${encodeURIComponent(
+      ydkeUrl
+    )}`;
+  };
+
+  const handleShareDeck = async () => {
+    if (!deck) return;
+
+    try {
+      const shareUrl = getShareUrl(deck);
+      console.log("Share URL:", shareUrl);
+
+      await navigator.clipboard.writeText(shareUrl);
+      setShareStatus("copied");
+      setShareTooltipVisible(true);
+
+      // Hide the tooltip after 2 seconds
+      setTimeout(() => {
+        setShareStatus("idle");
+        setShareTooltipVisible(false);
+      }, 2000);
+    } catch (error) {
+      console.error("Failed to copy share URL:", error);
+      setShareStatus("error");
+      setShareTooltipVisible(true);
+
+      setTimeout(() => {
+        setShareStatus("idle");
+        setShareTooltipVisible(false);
+      }, 2000);
+    }
   };
 
   if (!deck || !deckId) {
@@ -315,20 +400,20 @@ const DeckDetailPage = () => {
 
                       {(coverCardDetails.level ||
                         coverCardDetails.level === 0) && (
-                          <CardStat>Level: {coverCardDetails.level}</CardStat>
-                        )}
+                        <CardStat>Level: {coverCardDetails.level}</CardStat>
+                      )}
 
                       {(coverCardDetails.atk !== undefined ||
                         coverCardDetails.def !== undefined) && (
-                          <CardStats>
-                            {coverCardDetails.atk !== undefined && (
-                              <span>ATK: {coverCardDetails.atk}</span>
-                            )}
-                            {coverCardDetails.def !== undefined && (
-                              <span>DEF: {coverCardDetails.def}</span>
-                            )}
-                          </CardStats>
-                        )}
+                        <CardStats>
+                          {coverCardDetails.atk !== undefined && (
+                            <span>ATK: {coverCardDetails.atk}</span>
+                          )}
+                          {coverCardDetails.def !== undefined && (
+                            <span>DEF: {coverCardDetails.def}</span>
+                          )}
+                        </CardStats>
+                      )}
 
                       {coverCardDetails.desc && (
                         <CardDescription>
@@ -354,8 +439,22 @@ const DeckDetailPage = () => {
                   <ActionButton variant="tertiary" onClick={downloadDeckAsPng}>
                     <Image size={16} /> PNG
                   </ActionButton>
-                  <ActionButton variant="ghost" onClick={() => { }}>
-                    <Share2 size={16} /> Share
+                  <ActionButton variant="ghost" onClick={handleShareDeck}>
+                    <ShareButtonContent>
+                      {shareStatus === "copied" ? (
+                        <Check size={16} />
+                      ) : (
+                        <Share2 size={16} />
+                      )}{" "}
+                      Share
+                      {shareTooltipVisible && (
+                        <ShareTooltip status={shareStatus}>
+                          {shareStatus === "copied"
+                            ? "Copied to clipboard!"
+                            : "Failed to copy"}
+                        </ShareTooltip>
+                      )}
+                    </ShareButtonContent>
                   </ActionButton>
                 </ButtonContainer>
               </DeckInfoSection>
@@ -872,10 +971,11 @@ const ChangeCoverButton = styled.button`
   padding: ${theme.spacing.xs} ${theme.spacing.sm};
   font-size: ${theme.typography.size.sm};
   cursor: pointer;
-  transition: color ${theme.transitions.default}, background ${theme.transitions.default};
+  transition: color ${theme.transitions.default},
+    background ${theme.transitions.default};
   border-radius: ${theme.borderRadius.sm};
   margin-left: auto;
-  
+
   &:hover {
     color: ${theme.colors.primary.dark};
     background-color: ${theme.colors.background.card};
@@ -1056,6 +1156,62 @@ const EditSideButton = styled(Button)`
   display: flex;
   align-items: center;
   gap: ${theme.spacing.xs};
+`;
+
+const ShareButtonContent = styled.div`
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: ${theme.spacing.xs};
+`;
+
+const ShareTooltip = styled.div<{ status: string }>`
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  background: ${(props) =>
+    props.status === "copied"
+      ? theme.colors.success.main
+      : theme.colors.error.main};
+  color: white;
+  padding: ${theme.spacing.xs} ${theme.spacing.sm};
+  border-radius: ${theme.borderRadius.sm};
+  font-size: ${theme.typography.size.sm};
+  pointer-events: none;
+  box-shadow: ${theme.shadows.md};
+  animation: fadeInOut 2s ease-in-out;
+
+  &:after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 5px;
+    border-style: solid;
+    border-color: ${(props) =>
+        props.status === "copied"
+          ? theme.colors.success.main
+          : theme.colors.error.main}
+      transparent transparent transparent;
+  }
+
+  @keyframes fadeInOut {
+    0% {
+      opacity: 0;
+    }
+    10% {
+      opacity: 1;
+    }
+    90% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
 `;
 
 export default DeckDetailPage;

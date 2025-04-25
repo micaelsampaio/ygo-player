@@ -309,20 +309,24 @@ const DeckList: React.FC<DeckListProps> = ({
               </div>
 
               {/* Add clickable menu icon */}
-              <div 
+              <div
                 className="deck-menu-icon"
                 onClick={(e) => {
                   e.stopPropagation();
-                  
+
                   // Get the position of the icon that was clicked
-                  const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
-                  
+                  const rect = (
+                    e.currentTarget as HTMLDivElement
+                  ).getBoundingClientRect();
+
                   // Set the active deck and show options menu
                   setActiveDeckOptions(deck.name);
                   onSelectDeck(deck);
 
                   // Position the menu next to the icon
-                  const optionsMenu = document.getElementById(`deck-options-${deck.name}`);
+                  const optionsMenu = document.getElementById(
+                    `deck-options-${deck.name}`
+                  );
                   if (optionsMenu) {
                     optionsMenu.style.position = "absolute";
                     optionsMenu.style.top = `${0}px`;

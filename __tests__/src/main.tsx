@@ -26,6 +26,8 @@ import DuelLobbyPage from "./components/DuelLobby/DuelLobbyPage.tsx";
 import CardDatabasePage from "./components/Cards/CardDatabasePage.tsx";
 // Import Settings page
 import SettingsPage from "./components/Settings/SettingsPage.tsx";
+// Import SharedDeckPage component
+import SharedDeckPage from "./components/MyDecks/SharedDeckPage";
 
 debug.enable("ygo:*");
 localStorage.setItem("debug", "ygo:*");
@@ -57,6 +59,11 @@ createRoot(document.getElementById("root")!).render(
 
         {/* New routes for deck management */}
         <Route path="/my/decks" element={<MyDecksPage />} />
+        
+        {/* Route for shared decks - must be defined BEFORE the generic deck route */}
+        <Route path="/my/decks/public/:deckName" element={<SharedDeckPage />} />
+        
+        {/* Individual deck routes */}
         <Route path="/my/decks/:deckId" element={<DeckDetailPage />} />
         <Route
           path="/my/decks/:deckId/collections"
