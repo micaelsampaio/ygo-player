@@ -54,14 +54,14 @@ export function CurrentCollection() {
     );
     localStorage.setItem("duel-data", JSON.stringify(replay.data));
     navigate(
-      `/spreadsheet/collection/${
-        collection!.id
+      `/spreadsheet/collection/${collection!.id
       }/${short.generate()}?name=${name}`
     );
   };
 
   const collectionToXLS = () => {
     const utils = new YGOSpreadsheetsUtils();
+    utils.setCdnUrl(cdnUrl);
     utils.setCollection({ collection: collection as any });
     utils.createXLS({ download: true });
   };

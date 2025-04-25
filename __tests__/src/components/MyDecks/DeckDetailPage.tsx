@@ -129,6 +129,7 @@ const DeckDetailPage = () => {
     if (!deck || !deckId) return;
 
     const deckBuilder = new YGODeckToImage({
+      cdnUrl: import.meta.env.VITE_YGO_CDN_URL,
       name: deckId.replace("deck_", ""),
       mainDeck: deck.mainDeck,
       extraDeck: deck.extraDeck,
@@ -174,9 +175,8 @@ const DeckDetailPage = () => {
     const extraCount = deck.extraDeck?.length || 0;
     const sideCount = deck.sideDeck?.length || 0;
 
-    return `${mainCount} Main | ${extraCount} Extra${
-      sideCount > 0 ? ` | ${sideCount} Side` : ""
-    }`;
+    return `${mainCount} Main | ${extraCount} Extra${sideCount > 0 ? ` | ${sideCount} Side` : ""
+      }`;
   };
 
   const handleSelectCoverCard = (cardId: number) => {
@@ -315,20 +315,20 @@ const DeckDetailPage = () => {
 
                       {(coverCardDetails.level ||
                         coverCardDetails.level === 0) && (
-                        <CardStat>Level: {coverCardDetails.level}</CardStat>
-                      )}
+                          <CardStat>Level: {coverCardDetails.level}</CardStat>
+                        )}
 
                       {(coverCardDetails.atk !== undefined ||
                         coverCardDetails.def !== undefined) && (
-                        <CardStats>
-                          {coverCardDetails.atk !== undefined && (
-                            <span>ATK: {coverCardDetails.atk}</span>
-                          )}
-                          {coverCardDetails.def !== undefined && (
-                            <span>DEF: {coverCardDetails.def}</span>
-                          )}
-                        </CardStats>
-                      )}
+                          <CardStats>
+                            {coverCardDetails.atk !== undefined && (
+                              <span>ATK: {coverCardDetails.atk}</span>
+                            )}
+                            {coverCardDetails.def !== undefined && (
+                              <span>DEF: {coverCardDetails.def}</span>
+                            )}
+                          </CardStats>
+                        )}
 
                       {coverCardDetails.desc && (
                         <CardDescription>
@@ -354,7 +354,7 @@ const DeckDetailPage = () => {
                   <ActionButton variant="tertiary" onClick={downloadDeckAsPng}>
                     <Image size={16} /> PNG
                   </ActionButton>
-                  <ActionButton variant="ghost" onClick={() => {}}>
+                  <ActionButton variant="ghost" onClick={() => { }}>
                     <Share2 size={16} /> Share
                   </ActionButton>
                 </ButtonContainer>
