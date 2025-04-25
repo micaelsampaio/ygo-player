@@ -1,58 +1,58 @@
 :root {
-    --ygo-primary-color: #4a90e2;
-    --ygo-primary-hover-color: #3b77bd;
-    --ygo-secondary-color: #50e3c2;
-    --ygo-background-color: #181818;
-    --ygo-background-color-60: rgba(24, 24, 24, 0.6);
-    --ygo-background-color-70: rgba(24, 24, 24, 0.7);
-    --ygo-background-color-80: rgba(24, 24, 24, 0.8);
+  --ygo-primary-color: #4a90e2;
+  --ygo-primary-hover-color: #3b77bd;
+  --ygo-secondary-color: #50e3c2;
+  --ygo-background-color: #181818;
+  --ygo-background-color-60: rgba(24, 24, 24, 0.6);
+  --ygo-background-color-70: rgba(24, 24, 24, 0.7);
+  --ygo-background-color-80: rgba(24, 24, 24, 0.8);
 
-    --ygo-confirm-color: rgba(1, 255, 98, 0.8);
-    --ygo-action-color: #444444;
-    --ygo-action-color-dark: #2e2e2e;
+  --ygo-confirm-color: rgba(1, 255, 98, 0.8);
+  --ygo-action-color: #444444;
+  --ygo-action-color-dark: #2e2e2e;
 
-    --ygo-text-color: #e0e0e0;
-    --ygo-heading-color: #ffffff;
-    --ygo-border-color: #444444;
-    --ygo-border-color-light: #AAAAAA;
-    --ygo-hover-color: #6ec1e4;
-    --ygo-overlay-background-color: rgba(0, 0, 0, 0.8);
+  --ygo-text-color: #e0e0e0;
+  --ygo-heading-color: #ffffff;
+  --ygo-border-color: #444444;
+  --ygo-border-color-light: #aaaaaa;
+  --ygo-hover-color: #6ec1e4;
+  --ygo-overlay-background-color: rgba(0, 0, 0, 0.8);
 
-    --ygo-float-button-bg-color: rgba(24, 24, 24, 0.6);
-    --ygo-float-button-bg-color-hover: rgba(24, 24, 24, 1);
+  --ygo-float-button-bg-color: rgba(24, 24, 24, 0.6);
+  --ygo-float-button-bg-color-hover: rgba(24, 24, 24, 1);
 
-    --ygo-form-input-placeholder-text-color: rgba(255, 255, 255, 0.6);
-    --ygo-form--input-text-color: #FFF;
+  --ygo-form-input-placeholder-text-color: rgba(255, 255, 255, 0.6);
+  --ygo-form--input-text-color: #fff;
 
-    --ygo-space-xs: 8px;
-    --ygo-space-sm: 16px;
-    --ygo-space-md: 24px;
-    --ygo-space-lg: 32px;
-    --ygo-space-xl: 48px;
+  --ygo-space-xs: 8px;
+  --ygo-space-sm: 16px;
+  --ygo-space-md: 24px;
+  --ygo-space-lg: 32px;
+  --ygo-space-xl: 48px;
 
-    --ygo-footer-margin: 120px;
+  --ygo-footer-margin: 120px;
 
-    --ygo-font-xs: 12px;  /* 0.75rem */
-    --ygo-font-sm: 14px;  /* 0.875rem */
-    --ygo-font-md: 16px;  /* 1rem - Base font size */
-    --ygo-font-lg: 18px;  /* 1.125rem */
-    --ygo-font-xl: 20px;  /* 1.25rem */
-    --ygo-font-xxl: 24px; /* 1.5rem */
+  --ygo-font-xs: 12px; /* 0.75rem */
+  --ygo-font-sm: 14px; /* 0.875rem */
+  --ygo-font-md: 16px; /* 1rem - Base font size */
+  --ygo-font-lg: 18px; /* 1.125rem */
+  --ygo-font-xl: 20px; /* 1.25rem */
+  --ygo-font-xxl: 24px; /* 1.5rem */
 
-    --ygo-gap-xs: 5px;
-    --ygo-gap-sm: 10px;
-    --ygo-gap-md: 16px;
+  --ygo-gap-xs: 5px;
+  --ygo-gap-sm: 10px;
+  --ygo-gap-md: 16px;
 
-    --ygo-border-radius-small: 4px;
-    --ygo-border-radius-medium: 8px;
-    --ygo-border-radius-large: 16px;
+  --ygo-border-radius-small: 4px;
+  --ygo-border-radius-medium: 8px;
+  --ygo-border-radius-large: 16px;
 
-    --ygo-card-effect-monster-color: #ac5600;
-    --ygo-card-normal-monster-color: #ac8a25;
-    --ygo-card-trap-color: #773a73;
-    --ygo-card-spell-color: #077044;
-    --ygo-card-link-color: #1b4ba3;
-    --ygo-card-xyz-color: #252525;
-    --ygo-card-synchron-color: #696969;
-    --ygo-card-fusion-color: #5d3772;
+  --ygo-card-effect-monster-color: #ac5600;
+  --ygo-card-normal-monster-color: #ac8a25;
+  --ygo-card-trap-color: #773a73;
+  --ygo-card-spell-color: #077044;
+  --ygo-card-link-color: #1b4ba3;
+  --ygo-card-xyz-color: #252525;
+  --ygo-card-synchron-color: #696969;
+  --ygo-card-fusion-color: #5d3772;
 }

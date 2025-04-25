@@ -22,6 +22,9 @@ import {
 import CoverCardModal from "../MyDecks/CoverCardModal";
 import CardModal from "../DeckBuilder/components/CardModal/CardModal";
 import { getCardImageUrl, CARD_BACK_IMAGE } from "../../utils/cardImages";
+import { useKaibaNet } from "../../hooks/useKaibaNet";
+import { Logger } from "../../utils/logger";
+import { createRoom } from "../../utils/roomUtils";
 
 const DeckDetailPage = () => {
   const navigate = useNavigate();
@@ -34,6 +37,7 @@ const DeckDetailPage = () => {
   const [isCoverModalOpen, setIsCoverModalOpen] = useState(false);
   const [coverCardId, setCoverCardId] = useState<number | undefined>(undefined);
   const [coverCardDetails, setCoverCardDetails] = useState<any>(null);
+  const kaibaNet = useKaibaNet();
 
   // Add state for card preview modal
   const [previewCard, setPreviewCard] = useState<any>(null);
@@ -167,8 +171,41 @@ const DeckDetailPage = () => {
     }
   };
 
-  const handleDuel = () => {
-    navigate(`/duel?deck=deck_${deckId}`);
+  const handleDuel = async () => {
+    try {
+      const duelData = {
+        players: [
+          {
+            name: "player1",
+            mainDeck: [...deck.mainDeck],
+            extraDeck: deck.extraDeck || [],
+          },
+          {
+            name: "player2",
+            mainDeck: [],
+            extraDeck: [],
+          },
+        ],
+        options: {
+          shuffleDecks: true,
+        },
+      };
+
+      // Use the createRoom utility function
+      const navigationState = await createRoom(kaibaNet, duelData);
+
+      // Navigate to the duel page using the state from createRoom
+      navigate(`/duel/${navigationState.roomId}`, {
+        state: navigationState,
+      });
+    } catch (error) {
+      console.error("Failed to start duel with deck:", error);
+      alert(
+        `Failed to start duel: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
+    }
   };
 
   const goBack = () => {

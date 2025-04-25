@@ -13,6 +13,8 @@ import { createPortal } from "react-dom";
 import { createCollectionFromDeck } from "../Collections/contex";
 import { YGOCardGrid } from "../UI/YGOCard";
 import { getCardImageUrl, CARD_BACK_IMAGE } from "../../utils/cardImages";
+import { useKaibaNet } from "../../hooks/useKaibaNet";
+import { createRoom } from "../../utils/roomUtils";
 
 // New interface for the CoverCardModal component
 interface CoverCardModalProps {
@@ -170,6 +172,7 @@ const MyDecksPage = () => {
   const [isCoverCardModalOpen, setIsCoverCardModalOpen] = useState(false);
   const [currentDeckForCoverSelection, setCurrentDeckForCoverSelection] =
     useState<Deck | null>(null);
+  const kaibaNet = useKaibaNet();
 
   useEffect(() => {
     loadAllDecks();
@@ -605,6 +608,45 @@ const MyDecksPage = () => {
     setIsCoverCardModalOpen(true);
   };
 
+  const handleDuelWithDeck = async (deck: Deck) => {
+    try {
+      // Set up the duel data structure
+      const duelData = {
+        players: [
+          {
+            name: "player1",
+            mainDeck: [...deck.mainDeck],
+            extraDeck: deck.extraDeck || [],
+          },
+          {
+            name: "player2",
+            // Default opponent deck will be set in the duel
+            mainDeck: [],
+            extraDeck: [],
+          },
+        ],
+        options: {
+          shuffleDecks: true,
+        },
+      };
+
+      // Use the createRoom utility function
+      const navigationState = await createRoom(kaibaNet, duelData);
+
+      // Navigate to the duel page using the state from createRoom
+      navigate(`/duel/${navigationState.roomId}`, {
+        state: navigationState,
+      });
+    } catch (error) {
+      console.error("Failed to start duel with deck:", error);
+      alert(
+        `Failed to start duel: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
+    }
+  };
+
   return (
     <AppLayout>
       <PageContainer>
@@ -815,7 +857,7 @@ const MyDecksPage = () => {
                         fullWidth
                         onClick={(e) => {
                           e.stopPropagation();
-                          navigate(`/duel?deck=${deckId}`);
+                          handleDuelWithDeck(deck);
                         }}
                       >
                         Duel
