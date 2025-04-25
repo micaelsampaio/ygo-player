@@ -204,7 +204,7 @@ const QuickLinkText = styled.span`
   font-size: ${theme.typography.size.md};
 `;
 
-export default function App({ duelLobbyMode }: { duelLobbyMode?: boolean }) {
+export function App({ duelLobbyMode }: { duelLobbyMode?: boolean }) {
   const kaibaNet = useKaibaNet();
   const [rooms, setRooms] = useState(() => kaibaNet.getRooms());
   const [deckToPlay, setDeckToPlay] = useState("");
@@ -965,3 +965,5 @@ const exportToMd = (deckId: string) => {
   const code = generateExportToMdCode(deck.mainDeck, deck.extraDeck);
   navigator.clipboard.writeText(code);
 };
+
+export default App;
