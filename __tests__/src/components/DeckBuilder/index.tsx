@@ -113,7 +113,7 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
       if (!deck.id) {
         const updatedDeck = {
           ...deck,
-          id: uuidv4(),
+          id: `deck_${deck.name}`,
         };
         updateDeck(updatedDeck);
       }
@@ -336,7 +336,7 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
           // Ensure deck has an ID
           const deckWithId = {
             ...deck,
-            id: deck.id || uuidv4(),
+            id: `deck_${deck.name}`,
           };
           createDeck(deckWithId.name);
           updateDeck(deckWithId);
@@ -401,10 +401,14 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
     }
 
     // Add the deck to storage with ID and selected group
+    const importedDeckName = importedDeck.name.endsWith(" (Imported)")
+      ? importedDeck.name
+      : importedDeck.name + " (Imported)";
+      
     const newDeck = {
       ...importedDeck,
-      id: uuidv4(),
-      name: importedDeck.name + " (Imported)",
+      id: `deck_${importedDeckName}`,
+      name: importedDeckName,
       groupId: selectedDeckGroup?.id || "default", // Assign to current group if one is selected
       // Make sure sideDeck is properly initialized
       sideDeck: importedDeck.sideDeck || [],
@@ -496,7 +500,7 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
     if (newDeck && (groupId || selectedDeckGroup)) {
       const updatedDeck = {
         ...newDeck,
-        id: newDeck.id || uuidv4(),
+        id: `deck_${newDeck.name}`,
         groupId: groupId || selectedDeckGroup?.id,
       };
       updateDeck(updatedDeck);
@@ -700,12 +704,14 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
       if (result.imported.length > 0) {
         result.imported.forEach((deck) => {
           // Add custom import suffix to avoid name collisions
+          const importedDeckName = deck.name.endsWith(" (Imported)")
+            ? deck.name
+            : deck.name + " (Imported)";
+            
           const importedDeck = {
             ...deck,
-            id: uuidv4(),
-            name: deck.name.endsWith(" (Imported)")
-              ? deck.name
-              : deck.name + " (Imported)",
+            id: `deck_${importedDeckName}`,
+            name: importedDeckName,
             importedAt: new Date().toISOString(),
             groupId: selectedDeckGroup?.id || "default",
           };
@@ -876,12 +882,14 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
       if (imported.length > 0) {
         imported.forEach((deck) => {
           // Add custom import suffix to avoid name collisions
+          const importedDeckName = deck.name.endsWith(" (Imported)")
+            ? deck.name
+            : deck.name + " (Imported)";
+            
           const importedDeck = {
             ...deck,
-            id: uuidv4(),
-            name: deck.name.endsWith(" (Imported)")
-              ? deck.name
-              : deck.name + " (Imported)",
+            id: `deck_${importedDeckName}`,
+            name: importedDeckName,
             importedAt: new Date().toISOString(),
             groupId: selectedDeckGroup?.id || "default",
           };

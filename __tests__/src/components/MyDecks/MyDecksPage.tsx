@@ -347,11 +347,12 @@ const MyDecksPage = () => {
   };
 
   const handleCreateNewDeck = () => {
-    const newDeckId = `deck_${crypto.randomUUID()}`;
+    const newDeckName = `New Deck ${allDecks.length + 1}`;
+    const newDeckId = `deck_${newDeckName}`;
 
     const newDeck = {
       id: newDeckId,
-      name: `New Deck ${allDecks.length + 1}`,
+      name: newDeckName,
       mainDeck: [],
       extraDeck: [],
       sideDeck: [],

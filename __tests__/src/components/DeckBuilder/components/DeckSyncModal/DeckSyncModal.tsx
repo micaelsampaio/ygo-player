@@ -164,12 +164,14 @@ const DeckSyncModal: React.FC<DeckSyncModalProps> = ({
       if (imported.length > 0) {
         imported.forEach((deck) => {
           // Add custom import suffix to avoid name collisions
+          const importedDeckName = deck.name.endsWith(" (Imported)")
+            ? deck.name
+            : deck.name + " (Imported)";
+            
           const importedDeck = {
             ...deck,
-            id: uuidv4(),
-            name: deck.name.endsWith(" (Imported)")
-              ? deck.name
-              : deck.name + " (Imported)",
+            id: `deck_${importedDeckName}`,
+            name: importedDeckName,
             importedAt: new Date().toISOString(),
             groupId: selectedDeckGroupId,
           };
@@ -239,12 +241,14 @@ const DeckSyncModal: React.FC<DeckSyncModalProps> = ({
       if (result.imported.length > 0) {
         result.imported.forEach((deck) => {
           // Add custom import suffix to avoid name collisions
+          const importedDeckName = deck.name.endsWith(" (Imported)")
+            ? deck.name
+            : deck.name + " (Imported)";
+            
           const importedDeck = {
             ...deck,
-            id: uuidv4(),
-            name: deck.name.endsWith(" (Imported)")
-              ? deck.name
-              : deck.name + " (Imported)",
+            id: `deck_${importedDeckName}`,
+            name: importedDeckName,
             importedAt: new Date().toISOString(),
             groupId: selectedDeckGroupId,
           };
