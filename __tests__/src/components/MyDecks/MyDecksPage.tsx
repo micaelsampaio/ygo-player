@@ -12,6 +12,7 @@ import DeckActions from "../DeckBuilder/components/DeckList/DeckActions";
 import { createPortal } from "react-dom";
 import { createCollectionFromDeck } from "../Collections/contex";
 import { YGOCardGrid } from "../UI/YGOCard";
+import { getCardImageUrl, CARD_BACK_IMAGE } from "../../utils/cardImages";
 
 // New interface for the CoverCardModal component
 interface CoverCardModalProps {
@@ -111,13 +112,12 @@ const CoverCardModal: React.FC<CoverCardModalProps> = ({
                   onClick={() => handleCardSelect(card)}
                 >
                   <CardImage
-                    src={`https://images.ygoprodeck.com/images/cards_small/${card.id}.jpg`}
+                    src={getCardImageUrl(card.id, "small")}
                     alt={card.name}
                     title={card.name}
                     onError={(e) => {
                       const target = e.target as HTMLImageElement;
-                      target.src =
-                        "https://images.ygoprodeck.com/images/cards_small/back_high.jpg";
+                      target.src = CARD_BACK_IMAGE;
                     }}
                   />
                   {card.id === currentCoverId && <SelectedIndicator />}
@@ -474,13 +474,31 @@ const MyDecksPage = () => {
   const getCoverCard = (deck: Deck) => {
     const deckId = deck.id || `deck_${deck.name}`;
 
-    if (
-      coverCards[deckId] &&
-      deck.mainDeck.find((card) => card.id === coverCards[deckId])
-    ) {
-      return deck.mainDeck.find((card) => card.id === coverCards[deckId]);
+    // First priority: Check if the deck has a coverCardId property
+    if (deck.coverCardId) {
+      const cardFromDeck = [
+        ...deck.mainDeck,
+        ...deck.extraDeck,
+        ...(deck.sideDeck || []),
+      ].find((card) => card.id === deck.coverCardId);
+      if (cardFromDeck) {
+        return cardFromDeck;
+      }
     }
 
+    // Second priority: Check the separate coverCards storage (backwards compatibility)
+    if (coverCards[deckId]) {
+      const cardFromCoverCardsStore = [
+        ...deck.mainDeck,
+        ...deck.extraDeck,
+        ...(deck.sideDeck || []),
+      ].find((card) => card.id === coverCards[deckId]);
+      if (cardFromCoverCardsStore) {
+        return cardFromCoverCardsStore;
+      }
+    }
+
+    // Fallback: Use the default card selection logic
     const allCards = [...deck.mainDeck, ...deck.extraDeck];
     if (allCards.length === 0) return null;
 
@@ -499,12 +517,22 @@ const MyDecksPage = () => {
   };
 
   const setCoverCard = (deckId: string, cardId: number) => {
+    // First update the local state for immediate UI update
     setCoverCards((prev) => ({
       ...prev,
       [deckId]: cardId,
     }));
 
+    // Update the deck object itself to store coverCardId directly in the deck
     try {
+      const deckData = localStorage.getItem(deckId);
+      if (deckData) {
+        const deck = JSON.parse(deckData);
+        deck.coverCardId = cardId;
+        localStorage.setItem(deckId, JSON.stringify(deck));
+      }
+
+      // For backward compatibility, also update the separate cover cards storage
       const storedCoverCards = JSON.parse(
         localStorage.getItem("deck_cover_cards") || "{}"
       );
@@ -750,12 +778,11 @@ const MyDecksPage = () => {
                       {coverCard && (
                         <DeckCoverContainer>
                           <DeckCoverCard
-                            src={`https://images.ygoprodeck.com/images/cards_small/${coverCard.id}.jpg`}
+                            src={getCardImageUrl(coverCard.id, "small")}
                             alt={coverCard.name}
                             onError={(e) => {
                               const target = e.target as HTMLImageElement;
-                              target.src =
-                                "https://images.ygoprodeck.com/images/cards_small/back_high.jpg";
+                              target.src = CARD_BACK_IMAGE;
                             }}
                             onClick={(e) => {
                               e.stopPropagation();
