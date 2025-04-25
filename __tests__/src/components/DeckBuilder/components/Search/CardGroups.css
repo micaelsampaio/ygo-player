@@ -156,19 +156,39 @@
   transform: translateY(-1px);
 }
 
+/* We're replacing this with an explicit menu-icon element */
 .card-group-item::after {
-  content: "⋮";
+  display: none;
+}
+
+/* New clickable menu icon */
+.menu-icon {
   position: absolute;
   top: 12px;
   right: 12px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: 16px;
   color: #888;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.menu-icon::after {
+  content: "⋮";
   opacity: 0.6;
   transition: opacity 0.2s;
 }
 
-.card-group-item:hover::after {
+.menu-icon:hover::after {
   opacity: 1;
+}
+
+.menu-icon:hover {
+  background-color: rgba(0, 0, 0, 0.05);
 }
 
 .group-header {

@@ -109,10 +109,40 @@ const CardGroups: React.FC<CardGroupsProps> = ({
     });
   };
 
+  // Handle click on the three dots menu icon
+  const handleMenuIconClick = (e: React.MouseEvent, group: CardGroup) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    // Get the position of the icon that was clicked
+    const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
+
+    // Position the menu below the icon
+    setContextMenu({
+      visible: true,
+      x: rect.right - 10,
+      y: rect.bottom + 5,
+      groupId: group.id,
+    });
+  };
+
   // Handle the "Edit Group" option in the context menu
   const handleEditGroup = (groupId: string) => {
     // Navigate to the Card Groups management page with the group ID as a URL parameter
     navigate(`/my/cards/groups?group=${groupId}`);
+    setContextMenu(null);
+  };
+
+  // Handle deleting a group from the context menu
+  const handleDeleteFromMenu = (groupId: string) => {
+    if (onDeleteGroup(groupId)) {
+      setContextMenu(null);
+    }
+  };
+
+  // Handle navigating to manage groups page
+  const handleManageGroups = () => {
+    navigate("/my/cards/groups");
     setContextMenu(null);
   };
 
@@ -152,7 +182,9 @@ const CardGroups: React.FC<CardGroupsProps> = ({
               <strong>Card Groups:</strong> Select a group to view its cards or
               add them all to your deck.
               <br />
-              <small>Right-click on a group for more options.</small>
+              <small>
+                Right-click on a group or click the ⋮ icon for more options.
+              </small>
             </p>
           </div>
           <div className="card-group-list">
@@ -187,6 +219,13 @@ const CardGroups: React.FC<CardGroupsProps> = ({
                 )}
 
                 <div className="card-count">{group.cards.length} cards</div>
+
+                {/* Add a clickable menu icon */}
+                <div
+                  className="menu-icon"
+                  onClick={(e) => handleMenuIconClick(e, group)}
+                  title="Group options"
+                ></div>
 
                 {selectedGroup?.id === group.id && (
                   <div
@@ -262,6 +301,7 @@ const CardGroups: React.FC<CardGroupsProps> = ({
         >
           <button
             className="context-menu-item"
+            type="button"
             onClick={() => handleEditGroup(contextMenu.groupId)}
           >
             <span className="context-menu-icon">✏️</span>
@@ -269,21 +309,16 @@ const CardGroups: React.FC<CardGroupsProps> = ({
           </button>
           <button
             className="context-menu-item"
-            onClick={() => {
-              if (onDeleteGroup(contextMenu.groupId)) {
-                setContextMenu(null);
-              }
-            }}
+            type="button"
+            onClick={() => handleDeleteFromMenu(contextMenu.groupId)}
           >
             <span className="context-menu-icon">🗑️</span>
             <span className="context-menu-text">Delete Group</span>
           </button>
           <button
             className="context-menu-item"
-            onClick={() => {
-              navigate("/my/cards/groups");
-              setContextMenu(null);
-            }}
+            type="button"
+            onClick={handleManageGroups}
           >
             <span className="context-menu-icon">📂</span>
             <span className="context-menu-text">Manage All Groups</span>
