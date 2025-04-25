@@ -112,6 +112,9 @@ const GlobalStyles = createGlobalStyle`
     --ygo-font-md: ${theme.typography.size.md};
     --ygo-font-lg: ${theme.typography.size.lg};
     --ygo-font-xl: ${theme.typography.size.xl};
+    --ygo-font-2xl: ${theme.typography.size["2xl"]};
+    --ygo-font-3xl: ${theme.typography.size["3xl"]};
+    --ygo-font-4xl: ${theme.typography.size["4xl"]};
     
     --ygo-space-xs: ${theme.spacing.xs};
     --ygo-space-sm: ${theme.spacing.sm};

@@ -91,45 +91,30 @@ const StyledButton = styled.button<ButtonProps>`
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: ${theme.spacing.sm};
+  padding: ${({ size }) => buttonSizes[size || "md"]};
   border-radius: ${theme.borderRadius.md};
-  font-weight: ${theme.typography.weight.medium};
-  cursor: pointer;
+  cursor: ${({ disabled }) => (disabled ? "not-allowed" : "pointer")};
   transition: all ${theme.transitions.default};
-  outline: none;
+  opacity: ${({ disabled }) => (disabled ? 0.6 : 1)};
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+    Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  font-weight: ${theme.typography.weight.medium};
 
-  // Apply variant styles
-  ${({ variant = "primary" }) => buttonVariants[variant]}
+  ${({ variant }) => buttonVariants[variant || "primary"]};
+  ${({ fullWidth }) => fullWidth && "width: 100%;"}
 
-  // Apply size styles
-  ${({ size = "md" }) => buttonSizes[size]}
-  
-  // Full width option
-  ${({ fullWidth }) =>
-    fullWidth &&
-    css`
-      width: 100%;
-    `}
-  
-  // Loading state
-  ${({ isLoading }) =>
-    isLoading &&
-    css`
-      cursor: wait;
-      opacity: 0.7;
-      &:hover {
-        background-color: ${theme.colors.primary.main};
-      }
-    `}
-  
-  // Disabled state
-  &:disabled {
-    cursor: not-allowed;
-    opacity: 0.6;
-    background-color: ${theme.colors.background.card};
-    color: ${theme.colors.text.disabled};
-    border-color: ${theme.colors.border.default};
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(0, 120, 212, 0.4);
   }
+
+  ${({ iconOnly, size }) =>
+    iconOnly &&
+    `
+    width: ${size === "sm" ? "32px" : size === "lg" ? "48px" : "40px"};
+    height: ${size === "sm" ? "32px" : size === "lg" ? "48px" : "40px"};
+    padding: 0;
+  `}
 `;
 
 const Button = ({

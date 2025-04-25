@@ -1,19 +1,19 @@
 import React, { ReactNode, useEffect } from "react";
 import ReactDOM from "react-dom";
-import styled, { css, keyframes } from "styled-components";
+import styled, { keyframes } from "styled-components";
 import theme from "../../styles/theme";
 import Button from "./Button";
 
-interface ModalProps {
+export interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
   title?: string;
   children: ReactNode;
   size?: "sm" | "md" | "lg" | "xl" | "full";
-  closeOnEsc?: boolean;
-  closeOnOverlayClick?: boolean;
   showCloseButton?: boolean;
-  footer?: ReactNode;
+  closeOnEscape?: boolean;
+  closeOnOverlayClick?: boolean;
+  className?: string;
 }
 
 // Animations
@@ -22,145 +22,85 @@ const fadeIn = keyframes`
   to { opacity: 1; }
 `;
 
-const zoomIn = keyframes`
-  from { transform: scale(0.95); }
-  to { transform: scale(1); }
-`;
-
-const ModalOverlay = styled.div`
+const ModalOverlay = styled.div<{ isOpen: boolean }>`
   position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
+  right: 0;
+  bottom: 0;
   background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
+  display: ${({ isOpen }) => (isOpen ? "flex" : "none")};
   align-items: center;
   justify-content: center;
   z-index: ${theme.zIndices.modal};
-  animation: ${fadeIn} 0.2s ease-out;
-  overflow-y: auto;
-  padding: ${theme.spacing.md};
+  backdrop-filter: blur(2px);
 `;
 
 const getModalSize = (size: string) => {
-  switch (size) {
-    case "sm":
-      return css`
-        max-width: 400px;
-      `;
-    case "md":
-      return css`
-        max-width: 600px;
-      `;
-    case "lg":
-      return css`
-        max-width: 800px;
-      `;
-    case "xl":
-      return css`
-        max-width: 1000px;
-      `;
-    case "full":
-      return css`
-        max-width: calc(100vw - 64px);
-        max-height: calc(100vh - 64px);
-      `;
-    default:
-      return css`
-        max-width: 600px;
-      `;
-  }
+  const sizes = {
+    sm: "400px",
+    md: "600px",
+    lg: "800px",
+    xl: "1000px",
+    full: "90%",
+  };
+  return sizes[size] || sizes.md;
 };
 
 const ModalContainer = styled.div<{ size: string }>`
+  position: relative;
   background-color: ${theme.colors.background.paper};
   border-radius: ${theme.borderRadius.md};
   box-shadow: ${theme.shadows.lg};
-  width: 100%;
-  ${(props) => getModalSize(props.size)}
+  width: ${({ size }) => getModalSize(size)};
+  max-width: 90%;
+  max-height: 90vh;
   display: flex;
   flex-direction: column;
-  animation: ${fadeIn} 0.2s ease-out, ${zoomIn} 0.2s ease-out;
-  max-height: calc(100vh - 64px);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+    Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
 `;
 
 const ModalHeader = styled.div`
   padding: ${theme.spacing.md} ${theme.spacing.lg};
   border-bottom: 1px solid ${theme.colors.border.light};
   display: flex;
-  align-items: center;
   justify-content: space-between;
+  align-items: center;
 `;
 
-const ModalTitle = styled.h3`
+const ModalTitle = styled.h2`
   margin: 0;
-  font-size: ${theme.typography.size.lg};
-  font-weight: ${theme.typography.weight.semibold};
   color: ${theme.colors.text.primary};
+  font-size: ${theme.typography.size.xl};
+  font-weight: ${theme.typography.weight.semibold};
 `;
 
 const CloseButton = styled.button`
   background: none;
   border: none;
   cursor: pointer;
+  font-size: ${theme.typography.size.xl};
   color: ${theme.colors.text.secondary};
-  font-size: ${theme.typography.size.lg};
+  padding: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  transition: background-color 0.2s;
+  transition: all ${theme.transitions.default};
 
   &:hover {
     background-color: ${theme.colors.background.card};
-  }
-
-  &:focus {
-    outline: none;
-    box-shadow: 0 0 0 2px ${theme.colors.primary.main};
+    color: ${theme.colors.text.primary};
   }
 `;
 
-const CloseIcon = () => (
-  <svg
-    width="16"
-    height="16"
-    viewBox="0 0 16 16"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <path
-      d="M12.5 3.5L3.5 12.5"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-    <path
-      d="M3.5 3.5L12.5 12.5"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-  </svg>
-);
-
-const ModalBody = styled.div`
-  padding: ${theme.spacing.lg};
+const ModalContent = styled.div`
+  padding: ${theme.spacing.lg} ${theme.spacing.lg};
   overflow-y: auto;
-  flex: 1;
-`;
-
-const ModalFooter = styled.div`
-  padding: ${theme.spacing.md} ${theme.spacing.lg};
-  border-top: 1px solid ${theme.colors.border.light};
-  display: flex;
-  justify-content: flex-end;
-  gap: ${theme.spacing.sm};
+  flex-grow: 1;
 `;
 
 const Modal: React.FC<ModalProps> = ({
@@ -169,28 +109,28 @@ const Modal: React.FC<ModalProps> = ({
   title,
   children,
   size = "md",
-  closeOnEsc = true,
-  closeOnOverlayClick = true,
   showCloseButton = true,
-  footer,
+  closeOnEscape = true,
+  closeOnOverlayClick = true,
+  className,
 }) => {
   useEffect(() => {
-    const handleEscKey = (event: KeyboardEvent) => {
-      if (closeOnEsc && event.key === "Escape") {
+    const handleEscapeKey = (event: KeyboardEvent) => {
+      if (isOpen && closeOnEscape && event.key === "Escape") {
         onClose();
       }
     };
 
     if (isOpen) {
-      document.addEventListener("keydown", handleEscKey);
+      document.addEventListener("keydown", handleEscapeKey);
       document.body.style.overflow = "hidden";
     }
 
     return () => {
-      document.removeEventListener("keydown", handleEscKey);
-      document.body.style.overflow = "";
+      document.removeEventListener("keydown", handleEscapeKey);
+      document.body.style.overflow = "visible";
     };
-  }, [isOpen, closeOnEsc, onClose]);
+  }, [isOpen, closeOnEscape, onClose]);
 
   const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (closeOnOverlayClick && e.target === e.currentTarget) {
@@ -198,23 +138,20 @@ const Modal: React.FC<ModalProps> = ({
     }
   };
 
-  if (!isOpen) return null;
-
   return ReactDOM.createPortal(
-    <ModalOverlay onClick={handleOverlayClick}>
-      <ModalContainer size={size} onClick={(e) => e.stopPropagation()}>
+    <ModalOverlay isOpen={isOpen} onClick={handleOverlayClick}>
+      <ModalContainer size={size} className={className}>
         {(title || showCloseButton) && (
           <ModalHeader>
             {title && <ModalTitle>{title}</ModalTitle>}
             {showCloseButton && (
               <CloseButton onClick={onClose} aria-label="Close">
-                <CloseIcon />
+                &times;
               </CloseButton>
             )}
           </ModalHeader>
         )}
-        <ModalBody>{children}</ModalBody>
-        {footer && <ModalFooter>{footer}</ModalFooter>}
+        <ModalContent>{children}</ModalContent>
       </ModalContainer>
     </ModalOverlay>,
     document.body

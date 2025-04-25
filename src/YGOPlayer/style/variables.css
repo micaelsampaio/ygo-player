@@ -32,12 +32,12 @@
 
     --ygo-footer-margin: 120px;
 
-    --ygo-font-xs: 8px;
-    --ygo-font-sm: 16px;
-    --ygo-font-md: 18px;
-    --ygo-font-lg: 20px;
-    --ygo-font-xl: 24px;
-    --ygo-font-xxl: 30px;
+    --ygo-font-xs: 12px;  /* 0.75rem */
+    --ygo-font-sm: 14px;  /* 0.875rem */
+    --ygo-font-md: 16px;  /* 1rem - Base font size */
+    --ygo-font-lg: 18px;  /* 1.125rem */
+    --ygo-font-xl: 20px;  /* 1.25rem */
+    --ygo-font-xxl: 24px; /* 1.5rem */
 
     --ygo-gap-xs: 5px;
     --ygo-gap-sm: 10px;
