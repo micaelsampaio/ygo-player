@@ -121,28 +121,6 @@ const EnhancedAnalysis: React.FC<EnhancedAnalysisProps> = ({ analytics }) => {
             </div>
           )}
         </div>
-
-        {counters && counters.length > 0 && (
-          <div className="insight-section">
-            <h4>Counter Strategies</h4>
-            <ul className="insight-list counter-list">
-              {counters.map((counter, index) => (
-                <li key={`counter-${index}`}>{counter}</li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        {recommendedTechs && recommendedTechs.length > 0 && (
-          <div className="insight-section">
-            <h4>Recommended Tech Cards</h4>
-            <ul className="insight-list tech-list">
-              {recommendedTechs.map((tech, index) => (
-                <li key={`tech-${index}`}>{tech}</li>
-              ))}
-            </ul>
-          </div>
-        )}
       </div>
     </div>
   );
