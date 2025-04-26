@@ -26,6 +26,8 @@ import DuelLobbyPage from "./components/DuelLobby/DuelLobbyPage.tsx";
 import CardDatabasePage from "./components/Cards/CardDatabasePage.tsx";
 import SettingsPage from "./components/Settings/SettingsPage.tsx";
 import SharedDeckPage from "./components/MyDecks/SharedDeckPage";
+import HelpPage from "./components/Help";
+import ContactPage from "./pages/ContactPage";
 
 debug.enable("ygo:*");
 localStorage.setItem("debug", "ygo:*");
@@ -57,6 +59,10 @@ createRoot(document.getElementById("root")!).render(
         />
         <Route path="/rulings" element={<RulingsPage />} />
         <Route path="/settings" element={<SettingsPage />} />
+        {/* Help page route */}
+        <Route path="/help" element={<HelpPage />} />
+        {/* Contact page route */}
+        <Route path="/contact" element={<ContactPage />} />
 
         {/* Routes for deck management */}
         <Route path="/my/decks" element={<MyDecksPage />} />

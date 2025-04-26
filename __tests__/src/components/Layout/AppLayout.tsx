@@ -168,13 +168,14 @@ const Copyright = styled.p`
 `;
 
 const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
-  // Navigation items - updated to include Card Database and Rulings
+  // Navigation items - updated to include Card Database, Rulings, and Contact
   const navItems = [
     { to: "/duel/lobby", label: "Duel Lobby" },
     { to: "/my/decks", label: "My Decks" },
     { to: "/deckbuilder", label: "Deck Builder" },
     { to: "/cards/database", label: "Card Database" },
     { to: "/rulings", label: "Rulings" },
+    { to: "/contact", label: "Contact" },
   ];
 
   // Header content
