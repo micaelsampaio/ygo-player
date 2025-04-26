@@ -7,6 +7,7 @@ import { YGOUiElement } from '../types';
 export class YGOTurnPlayer extends YGOEntity implements YGOUiElement {
     public isUiElement: boolean = true;
     private textures: THREE.Texture[];
+    private fieldTurnHover: THREE.Mesh;
 
     constructor(private duel: YGODuel) {
         super();
@@ -14,9 +15,11 @@ export class YGOTurnPlayer extends YGOEntity implements YGOUiElement {
         const fieldObjects = this.duel.assets.models.get(this.duel.createCdnUrl("/models/field_objects.glb"))
         const fieldTurn = fieldObjects?.scene.children.find(children => children.name === "player_turn")!;
         const fieldTurnPlaceHolder = fieldObjects?.scene.children.find(children => children.name === "player_turn_placeholder")!.clone()! as THREE.Mesh;
+        this.fieldTurnHover = fieldObjects?.scene.children.find(children => children.name === "player_turn_hover")!.clone() as THREE.Mesh;
 
         fieldTurn.add(fieldTurnPlaceHolder);
         fieldTurn.rotation.set(THREE.MathUtils.degToRad(90), 0, 0);
+        this.fieldTurnHover.rotation.set(THREE.MathUtils.degToRad(90), 0, 0);
 
         fieldTurnPlaceHolder.position.set(0, 0.01, 0);
         fieldTurnPlaceHolder.rotation.set(0, 0, 0);
@@ -35,9 +38,15 @@ export class YGOTurnPlayer extends YGOEntity implements YGOUiElement {
         clickElement.position.set(10, 0, 1);
 
         clickElement.add(fieldTurn);
+        clickElement.add(this.fieldTurnHover);
         fieldTurn.position.set(0, 0, -0.1);
 
         this.gameObject = clickElement;
+
+        const fieldTurnHoverMaterial = new THREE.MeshBasicMaterial({ color: 0x0000ff, transparent: true, opacity: 0.5 });
+        this.fieldTurnHover.material = fieldTurnHoverMaterial;
+        this.fieldTurnHover.visible = false;
+        this.fieldTurnHover.position.set(0, 0, 0);
 
         this.duel.gameController.getComponent<YGOMouseEvents>("mouse_events")?.registerElement(this);
         this.duel.core.scene.add(this.gameObject);
@@ -50,5 +59,13 @@ export class YGOTurnPlayer extends YGOEntity implements YGOUiElement {
 
     onMouseClick(): void {
         this.duel.setActivePlayer(this.duel.getActivePlayer() === 0 ? 1 : 0);
+    }
+
+    onMouseEnter(event: MouseEvent): void {
+        this.fieldTurnHover.visible = true;
+    }
+
+    onMouseLeave(event: MouseEvent): void {
+        this.fieldTurnHover.visible = false;
     }
 }
