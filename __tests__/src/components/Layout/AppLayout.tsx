@@ -25,6 +25,23 @@ const LogoText = styled.span`
   font-family: ${typography.fontFamily};
 `;
 
+const LogoImage = styled.div`
+  background-image: url('${import.meta.env.VITE_YGO_CDN_URL}/images/logo_dark.png');
+  background-size: contain;
+  background-position: left center;
+  background-repeat: no-repeat;
+  width: 100px;
+  height: 40px;
+`;
+const LogoImageFooter = styled.div`
+  background-image: url('${import.meta.env.VITE_YGO_CDN_URL}/images/logo_dark.png');
+  background-size: contain;
+  background-position: left center;
+  background-repeat: no-repeat;
+  width: 150px;
+  height: 80px;
+`;
+
 const UserControlsContainer = styled.div`
   display: flex;
   align-items: center;
@@ -162,7 +179,8 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   const headerContent = (
     <HeaderContainer>
       <Logo to="/">
-        <LogoText>YGO101</LogoText>
+        {/* <LogoText>YGO101</LogoText> */}
+        <LogoImage></LogoImage>
       </Logo>
 
       <Navigation
@@ -184,7 +202,8 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
     <FooterContainer>
       <FooterContent>
         <FooterLogoSection>
-          <LogoText>YGO101</LogoText>
+          {/* <LogoText>YGO101</LogoText> */}
+          <LogoImageFooter />
           <FooterTagline>The ultimate Yu-Gi-Oh! companion app</FooterTagline>
         </FooterLogoSection>
 

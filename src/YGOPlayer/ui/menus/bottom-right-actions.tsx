@@ -15,12 +15,12 @@ export function BottomRightActions({ duel }: { duel: YGODuel }) {
         duel.events.dispatch("toggle-ui-menu", { group: "game-overlay", type: "settings-menu" });
     }, [duel]);
 
-    const showGameStats = useCallback((e: React.MouseEvent) => {
+    const showGameStats = useCallback(() => {
         duel.events.dispatch("close-ui-menu", { group: "game-overlay" });
         duel.fieldStats.show();
     }, [duel]);
 
-    const hideGameStats = useCallback((e: React.MouseEvent) => {
+    const hideGameStats = useCallback(() => {
         duel.fieldStats.hide();
     }, [duel]);
 
@@ -34,7 +34,7 @@ export function BottomRightActions({ duel }: { duel: YGODuel }) {
             <button className="ygo-floating-button" onClick={toggleGameReplayControls}>
                 <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3"><path d="M440-120v-240h80v80h320v80H520v80h-80Zm-320-80v-80h240v80H120Zm160-160v-80H120v-80h160v-80h80v240h-80Zm160-80v-80h400v80H440Zm160-160v-240h80v80h160v80H680v80h-80Zm-480-80v-80h400v80H120Z" /></svg>
             </button>
-            <button className="ygo-floating-button" onMouseDown={showGameStats} onMouseUp={hideGameStats}>
+            <button className="ygo-floating-button" onTouchStart={showGameStats} onMouseDown={showGameStats} onMouseUp={hideGameStats} onTouchEnd={hideGameStats}>
                 <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3"><path d="M480-280q17 0 28.5-11.5T520-320q0-17-11.5-28.5T480-360q-17 0-28.5 11.5T440-320q0 17 11.5 28.5T480-280Zm-40-160h80v-240h-80v240ZM200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h168q13-36 43.5-58t68.5-22q38 0 68.5 22t43.5 58h168q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560H200v560Zm280-590q13 0 21.5-8.5T510-820q0-13-8.5-21.5T480-850q-13 0-21.5 8.5T450-820q0 13 8.5 21.5T480-790ZM200-200v-560 560Z" /></svg>
             </button>
             <button className="ygo-floating-button" onClick={toggleDuelLogs}>

@@ -11,6 +11,7 @@
     overflow-y: auto;
     border-radius: 10px;
     max-height: calc(100% - var(--ygo-footer-margin) - 20px);
+    z-index: 5;
 }
 
 .ygo-player-core {

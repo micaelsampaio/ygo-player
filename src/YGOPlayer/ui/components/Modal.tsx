@@ -68,8 +68,8 @@ function Footer({ children }: { children: React.ReactNode }) {
     return <div className="ygo-player-dialog-footer">{children}</div>;
 }
 
-function Body({ children }: { children: React.ReactNode }) {
-    return <div className="ygo-player-dialog-content">{children}</div>;
+function Body({ className, children }: { className?: string, children: React.ReactNode }) {
+    return <div className={`ygo-player-dialog-content ${className || ""}`}>{children}</div>;
 }
 
 function BackDrop({ onClick }: { onClick?: () => void }) {

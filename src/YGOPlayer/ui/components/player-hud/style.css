@@ -60,6 +60,24 @@
         }
     }
 
+    @media (max-width: 768px) and (orientation: landscape) {
+        .ygo-player-hude-player-content {
+            min-width: 100px;
+        }
+
+        .ygo-player-hud-name {
+            font-size: 14px;
+        }
+
+        .ygo-player-hud-lp {
+            font-size: 20px;
+        }
+
+        .ygo-lp-text {
+            display: none;
+        }
+    }
+
 
     /* <div className={`ygo-player-hud ygo-player-${player}`}>
         <div className="ygo-player-hude-player-content">

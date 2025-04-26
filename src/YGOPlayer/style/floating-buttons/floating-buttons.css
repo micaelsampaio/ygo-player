@@ -53,3 +53,29 @@
     border-color: var(--ygo-confirm-color);
     outline-color: var(--ygo-confirm-color);
 }
+
+
+.ygo-player-core {
+    @media (max-width: 768px) {
+        .game-actions-bottom-right {
+            display: flex;
+            flex-direction: column-reverse;
+            align-items: end;
+        }
+
+        .ygo-floating-button {
+            width: 40px;
+            height: 40px;
+
+            .ygo-floating-button-icon {
+                width: 14px;
+                height: 14px;
+            }
+        }
+
+        .ygo-floating-button.ygo-floating-button-confirm {
+            width: 40px;
+            height: 40px;
+        }
+    }
+}

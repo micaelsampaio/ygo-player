@@ -486,7 +486,7 @@ export default function Duel({
         analyser={analyser}
       />
       <div
-        style={{ position: "fixed", top: "200px", right: "10px", zIndex: 9999 }}
+        style={{ position: "fixed", top: "200px", right: "10px", zIndex: 4 }}
       >
         <button className="btn-btn-action" onClick={saveReplay}>Save Replay</button>
       </div>

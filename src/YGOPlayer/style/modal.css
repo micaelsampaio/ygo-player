@@ -60,6 +60,10 @@
             overflow: auto;
         }
 
+        .ygo-player-dialog-content.ygo-no-scroll {
+            overflow: unset !important;
+        }
+
         .ygo-player-dialog-footer {
             padding: var(--ygo-border-radius-large);
             display: flex;
