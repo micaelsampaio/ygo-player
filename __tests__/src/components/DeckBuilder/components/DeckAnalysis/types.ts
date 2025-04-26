@@ -60,6 +60,46 @@ export type DeckAnalyticsType = {
   counters?: string[];
   recommendedTechs?: string[];
   confidenceScore?: number;
+
+  // New field for effect categories
+  effectCategories?: {
+    lockRestrictionCards: Array<{
+      id: number;
+      name: string;
+      type: string;
+      desc: string;
+    }>;
+    searchCards: Array<{
+      id: number;
+      name: string;
+      type: string;
+      desc: string;
+    }>;
+    setterCards: Array<{
+      id: number;
+      name: string;
+      type: string;
+      desc: string;
+    }>;
+    negateCards: Array<{
+      id: number;
+      name: string;
+      type: string;
+      desc: string;
+    }>;
+    removalCards: Array<{
+      id: number;
+      name: string;
+      type: string;
+      desc: string;
+    }>;
+    foolishCards: Array<{
+      id: number;
+      name: string;
+      type: string;
+      desc: string;
+    }>;
+  };
 };
 
 export interface DeckAnalyticsProps {

@@ -281,6 +281,7 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
               counters: enhancedAnalytics.counters,
               recommendedTechs: enhancedAnalytics.recommendedTechs,
               confidenceScore: enhancedAnalytics.confidenceScore,
+              effectCategories: enhancedAnalytics.effectCategories || null,
               // Ensure these critical fields from local analytics are preserved
               monsterCount: localAnalytics.monsterCount,
               spellCount: localAnalytics.spellCount,

@@ -113,6 +113,7 @@ const DeckAnalytics: React.FC<DeckAnalyticsProps> = ({
         counters: processedAnalyticsCache.counters || [],
         recommendedTechs: processedAnalyticsCache.recommendedTechs || [],
         confidenceScore: processedAnalyticsCache.confidenceScore,
+        effectCategories: processedAnalyticsCache.effectCategories || null,
         mlEnhanced: true,
       };
     }
@@ -238,6 +239,7 @@ const DeckAnalytics: React.FC<DeckAnalyticsProps> = ({
           counters: processedAnalyticsCache.counters || [],
           recommendedTechs: processedAnalyticsCache.recommendedTechs || [],
           confidenceScore: processedAnalyticsCache.confidenceScore,
+          effectCategories: processedAnalyticsCache.effectCategories || null,
           mlEnhanced: true,
         };
 
@@ -350,6 +352,7 @@ const DeckAnalytics: React.FC<DeckAnalyticsProps> = ({
         counters: data.counters || [],
         recommendedTechs: data.recommendedTechs || [],
         confidenceScore: data.confidenceScore || 0,
+        effectCategories: data.effectCategories || null,
 
         // Preserve local analytics metrics that shouldn't be overwritten
         monsterCount: localAnalytics.monsterCount,
@@ -671,7 +674,10 @@ const DeckAnalytics: React.FC<DeckAnalyticsProps> = ({
         {/* Show enhanced analysis only in the advanced tab */}
         {isEnhanced && processedAnalytics && processedAnalytics.archetype && (
           <section className="analysis-section enhanced-section">
-            <EnhancedAnalysis analytics={processedAnalytics} />
+            <EnhancedAnalysis 
+              analytics={processedAnalytics} 
+              onCardClick={(card) => setHoveredCard(card.name)}
+            />
           </section>
         )}
 
