@@ -66,7 +66,7 @@ export class YGOMouseEvents extends YGOComponent {
         mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
         this.raycaster.setFromCamera(mouse, this.camera);
         const intersects = this.raycaster.intersectObjects(activeElements);
-        return intersects;
+        return intersects.filter((intersect: any) => intersect?.object?.uiElementRef);
     }
 
     private event_OnMouseDown(event: MouseEvent) {
@@ -112,6 +112,9 @@ export class YGOMouseEvents extends YGOComponent {
 
         if (elements.length > 0) {
             const element: any = elementCardInHand?.object || elements[0].object;
+
+            console.log("TCL: CLICK ELEMENT ", element);
+            console.log("TCL: CLICK ELEMENT ", element.uiElementRef);
 
             if (element === this.mouseDownElement) {
                 clickElement = element.uiElementRef as YGOUiElement;

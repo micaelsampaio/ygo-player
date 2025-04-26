@@ -1,12 +1,16 @@
 import { YGOAnimationObject } from "../game/YGOAnimationObject";
+import { YGOGameFieldObject } from "../game/YGOGameFieldObject";
+import { YGOTurnPlayer } from "../game/YGOTurnPlayer";
 import { PoolObjects } from "./PoolObjects";
 import { YGODuel } from "./YGODuel";
 import * as THREE from "three";
 
+
 export class YGODuelScene {
     public selectedCardPlaceholder!: THREE.Object3D;
     public handPlaceholder!: THREE.Object3D;
-    public gameFields: THREE.Scene[];
+    public gameFields: YGOGameFieldObject[];
+    public turnPlayer!: YGOTurnPlayer;
 
     constructor(private duel: YGODuel) {
         this.gameFields = [];
@@ -65,8 +69,8 @@ export class YGODuelScene {
         this.duel.core.scene.add(gameField);
         this.duel.core.scene.add(clonedGameField);
 
-        this.gameFields.push(gameField);
-        this.gameFields.push(clonedGameField);
+        this.gameFields.push(new YGOGameFieldObject(this.duel, gameField, 0));
+        this.gameFields.push(new YGOGameFieldObject(this.duel, clonedGameField, 1));
 
         const selectedCardGeometry = new THREE.PlaneGeometry(7, 15);
         const selectedCardMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000, transparent: true, opacity: 0, wireframe: false });
@@ -80,10 +84,9 @@ export class YGODuelScene {
         this.duel.core.scene.add(handObject);
         this.handPlaceholder = handObject;
 
-
         this.duel.fields.forEach((field, playerIndex) => {
-            field.graveyard.hoverObject = this.duel.duelScene.gameFields[playerIndex].children.find(obj => obj.name === "GY_SELECTION_MESH");
-            field.banishedZone.hoverObject = this.duel.duelScene.gameFields[playerIndex].children.find(obj => obj.name === "B_SELECTION_MESH");
+            field.graveyard.hoverObject = this.duel.duelScene.gameFields[playerIndex].gameObject.children.find(obj => obj.name === "GY_SELECTION_MESH");
+            field.banishedZone.hoverObject = this.duel.duelScene.gameFields[playerIndex].gameObject.children.find(obj => obj.name === "B_SELECTION_MESH");
 
             if (field.graveyard.hoverObject) {
                 field.graveyard.hoverObject.visible = false;
@@ -93,6 +96,7 @@ export class YGODuelScene {
             }
         });
 
+        this.turnPlayer = new YGOTurnPlayer(this.duel);
 
         this.createEffects();
     }

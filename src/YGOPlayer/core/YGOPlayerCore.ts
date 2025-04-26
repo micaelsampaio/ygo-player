@@ -4,6 +4,7 @@ import { GLTF, GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 //@ts-ignore
 import { Font, FontLoader } from 'three/addons/loaders/FontLoader.js';
 import { EventBus } from '../scripts/event-bus';
+// import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
 export const globalUniforms = {
     time: { value: 0.0 }
@@ -60,6 +61,9 @@ export class YGOPlayerCore {
         this.mapBounds = new THREE.Mesh(mapGeometry, mapMaterial);
 
         this.scene.add(this.mapBounds);
+
+        // (this as any).controls = new OrbitControls(this.camera, this.renderer.domElement);
+
     }
 
     public render() {
@@ -70,6 +74,8 @@ export class YGOPlayerCore {
         this.globalUniforms.time.value = performance.now() / 1000;
 
         this.renderer.render(this.scene, this.camera);
+
+        // (this as any).controls.update();
 
         if (this.isOverlayEnabled) {
             this.renderer.autoClear = false;

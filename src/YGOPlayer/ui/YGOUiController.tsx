@@ -4,7 +4,6 @@ import { ACTIONS } from "./actions";
 import { DuelLogMenu } from "./menus/duel-log/duel-log";
 import { MENUS } from "./menus";
 import { TimeLine } from "./menus/timeline";
-import { ChangeGamePlayer } from "./components/ChangeGamePlayer";
 import { BottomRightActions } from "./menus/bottom-right-actions";
 import { PlayerHUD } from "./components/player-hud/PlayerHUD";
 import { CardLongPressEffect } from "./components/card-long-press-effect/CardLongPressEffect";
@@ -139,7 +138,6 @@ export function YGOUiController({ duel }: { duel: YGODuel }) {
     return <>
         <DuelLogMenu duel={duel} menus={menus} />
         <TimeLine duel={duel} />
-        <ChangeGamePlayer duel={duel} />
         <BottomRightActions duel={duel} />
         <PlayerHUD duel={duel} player={0} />
         <PlayerHUD duel={duel} player={1} />

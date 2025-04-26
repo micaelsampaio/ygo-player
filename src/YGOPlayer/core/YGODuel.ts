@@ -39,7 +39,6 @@ export class YGODuel {
   public soundController = new YGOSoundController();
   public fields: PlayerField[];
   public fieldStats!: YGOGameFieldStatsComponent;
-  public fieldLocations!: Map<string, GameFieldLocation>;
   public camera: THREE.PerspectiveCamera;
   public entities: YGOEntity[];
   public events: EventBus<any>;
@@ -122,6 +121,7 @@ export class YGODuel {
         this.assets.loadGLTF(`${this.config.cdnUrl}/models/field.glb`),
         this.assets.loadGLTF(`${this.config.cdnUrl}/models/game_field.glb`),
         this.assets.loadGLTF(`${this.config.cdnUrl}/models/destroy_effect.glb`),
+        this.assets.loadGLTF(`${this.config.cdnUrl}/models/field_objects.glb`),
         this.core.loadFontAsync(
           "GameFont",
           "https://threejs.org/examples/fonts/helvetiker_regular.typeface.json"
@@ -131,6 +131,8 @@ export class YGODuel {
           `${this.config.cdnUrl}/images/ui/ic_stars128.png`,
           `${this.config.cdnUrl}/images/ui/ic_rank128.png`,
           `${this.config.cdnUrl}/images/ui/ic_link128.png`,
+          `${this.config.cdnUrl}/images/ui/turn_player_1.png`,
+          `${this.config.cdnUrl}/images/ui/turn_player_2.png`,
           `${this.config.cdnUrl}/images/ui/ic_xyz_materials128.png`
         ),
         this.soundController.loadSounds(
