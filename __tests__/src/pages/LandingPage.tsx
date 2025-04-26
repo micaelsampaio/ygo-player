@@ -21,7 +21,7 @@ const LandingPage: React.FC = () => {
             <HeroContent>
               <LogoContainer>
                 <Logo>YGO Player</Logo>
-                <Tagline>The ultimate Yu-Gi-Oh! dueling platform</Tagline>
+                <Tagline>The ultimate Yu-Gi-Oh! companion app</Tagline>
               </LogoContainer>
               <HeroDescription>
                 Build decks, duel opponents, analyze strategies, and master your
