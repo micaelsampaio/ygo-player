@@ -26,7 +26,8 @@ const LogoText = styled.span`
 `;
 
 const LogoImage = styled.div`
-  background-image: url('${import.meta.env.VITE_YGO_CDN_URL}/images/logo_dark.png');
+  background-image: url("${import.meta.env
+    .VITE_YGO_CDN_URL}/images/logo_dark.png");
   background-size: contain;
   background-position: left center;
   background-repeat: no-repeat;
@@ -34,7 +35,8 @@ const LogoImage = styled.div`
   height: 40px;
 `;
 const LogoImageFooter = styled.div`
-  background-image: url('${import.meta.env.VITE_YGO_CDN_URL}/images/logo_dark.png');
+  background-image: url("${import.meta.env
+    .VITE_YGO_CDN_URL}/images/logo_dark.png");
   background-size: contain;
   background-position: left center;
   background-repeat: no-repeat;
@@ -231,11 +233,11 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
               </FooterLinkItem>
               <FooterLinkItem>
                 <ExternalLink
-                  href="https://github.com/ivoribeiro/ygo"
+                  href="https://x.com/ygo101com"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  GitHub
+                  Twitter
                 </ExternalLink>
               </FooterLinkItem>
             </FooterLinksList>
