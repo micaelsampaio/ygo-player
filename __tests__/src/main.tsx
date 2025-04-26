@@ -28,6 +28,7 @@ import SettingsPage from "./components/Settings/SettingsPage.tsx";
 import SharedDeckPage from "./components/MyDecks/SharedDeckPage";
 import HelpPage from "./components/Help";
 import ContactPage from "./pages/ContactPage";
+import MatchupMakerPage from "./pages/MatchupMakerPage";
 
 debug.enable("ygo:*");
 localStorage.setItem("debug", "ygo:*");
@@ -91,6 +92,9 @@ createRoot(document.getElementById("root")!).render(
 
         {/* Card Database page */}
         <Route path="/cards/database" element={<CardDatabasePage />} />
+
+        {/* Matchup Maker tool */}
+        <Route path="/matchup-maker" element={<MatchupMakerPage />} />
       </Routes>
     </BrowserRouter>
   </KaibaNetProvider>

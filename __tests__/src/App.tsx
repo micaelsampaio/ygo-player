@@ -20,6 +20,7 @@ import theme from "./styles/theme";
 import Card from "./components/UI/Card";
 import Button from "./components/UI/Button";
 import styled from "styled-components";
+import MatchupMakerPage from "./pages/MatchupMakerPage";
 
 // Import CDN URL for card images
 const cdnUrl = String(import.meta.env.VITE_YGO_CDN_URL);
@@ -525,6 +526,9 @@ export function App({ duelLobbyMode }: { duelLobbyMode?: boolean }) {
                   <NavCard to="/rulings">
                     <span className="nav-card-title">Card Rulings</span>
                   </NavCard>
+                  <NavCard to="/matchup-maker">
+                    <span className="nav-card-title">Matchup Maker</span>
+                  </NavCard>
                 </CardNavigation>
               </div>
 
@@ -714,7 +718,9 @@ export function App({ duelLobbyMode }: { duelLobbyMode?: boolean }) {
             onImport={handleImport}
             onImportQR={handleImportQR}
           />
-          <Routes></Routes>
+          <Routes>
+            <Route path="/matchup-maker" element={<MatchupMakerPage />} />
+          </Routes>
         </HomePage>
       </AppLayout>
     </ThemeProvider>

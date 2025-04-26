@@ -173,6 +173,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
     { to: "/duel/lobby", label: "Duel Lobby" },
     { to: "/my/decks", label: "My Decks" },
     { to: "/deckbuilder", label: "Deck Builder" },
+    { to: "/matchup-maker", label: "Matchup Maker" },
     { to: "/cards/database", label: "Card Database" },
     { to: "/rulings", label: "Rulings" },
     { to: "/contact", label: "Contact" },
@@ -216,6 +217,9 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
             <FooterLinksList>
               <FooterLinkItem>
                 <FooterLink to="/deckbuilder">Deck Builder</FooterLink>
+              </FooterLinkItem>
+              <FooterLinkItem>
+                <FooterLink to="/matchup-maker">Matchup Maker</FooterLink>
               </FooterLinkItem>
               <FooterLinkItem>
                 <FooterLink to="/duel">Duel Simulator</FooterLink>
