@@ -657,6 +657,21 @@
 }
 
 .ygo-player-core {
+    .ygo-relative {
+        position: relative;
+    }
+
+    .ygo-text-center {
+        text-align: center;
+    }
+
+    .ygo-text-left {
+        text-align: left;
+    }
+
+    .ygo-text-right {
+        text-align: right;
+    }
 
     .ygo-text-xxs {
         font-size: 11px;
@@ -704,6 +719,50 @@
 
     text-center {
         text-align: center;
+    }
+    
+    .ygo-o-0 {
+        opacity: 0;
+    }
+
+    .ygo-o-10 {
+        opacity: 0.1;
+    }
+
+    .ygo-o-20 {
+        opacity: 0.2;
+    }
+
+    .ygo-o-30 {
+        opacity: 0.3;
+    }
+
+    .ygo-o-40 {
+        opacity: 0.4;
+    }
+
+    .ygo-o-50 {
+        opacity: 0.5;
+    }
+
+    .ygo-o-60 {
+        opacity: 0.6;
+    }
+
+    .ygo-o-70 {
+        opacity: 0.7;
+    }
+
+    .ygo-o-80 {
+        opacity: 0.8;
+    }
+
+    .ygo-o-90 {
+        opacity: 0.9;
+    }
+
+    .ygo-o-100 {
+        opacity: 1;
     }
 }
 

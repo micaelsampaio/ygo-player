@@ -3,10 +3,12 @@ import { YGODuel } from "../../../core/YGODuel";
 import { YGODuelEvents } from "ygo-core";
 import { DefaultLogRow } from "./default-log";
 import { StartHandLogRow } from "./start-hand";
+import { LifePointsLogRow } from "./lp-log";
 import "./duel-log.css";
 
 const COMPONENTS = {
   [YGODuelEvents.LogType.StartHand]: StartHandLogRow,
+  [YGODuelEvents.LogType.LifePoints]: LifePointsLogRow,
   default: DefaultLogRow,
 };
 

@@ -49,6 +49,13 @@
         }
     }
 
+    .ygo-lps-divider {
+        position: absolute;
+        top: 63px;
+        left: 0px;
+        width: 100%;
+        border: 1px solid white;
+    }
 }
 
 .ygo-player-core .ygo-duel-log-container .ygo-logs>* {
