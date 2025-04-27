@@ -35,22 +35,6 @@ export function DeckMenu({ duel, deck }: { duel: YGODuel, deck: Deck, clearActio
     const freeMonsterZones = field.monsterZone.filter((zone: any) => !zone).length;
 
     return <CardMenu menuRef={menuRef}>
-        <button
-            className="ygo-card-item"
-            disabled={freeMonsterZones === 0}
-            type="button"
-            onClick={() => duel.gameActions.createToken({ position: "faceup-attack" })}
-        >
-            Create Token ATK
-        </button>
-        <button
-            className="ygo-card-item"
-            disabled={freeMonsterZones === 0}
-            type="button"
-            onClick={() => duel.gameActions.createToken()}
-        >
-            Create Token DEF
-        </button>
         <div className="ygo-flex ygo-gap-2">
             <div className="ygo-flex-grow-1">
                 <button className="ygo-card-item" disabled={mainDeckSize === 0} type="button" onClick={milFromDeck}>Mil</button>

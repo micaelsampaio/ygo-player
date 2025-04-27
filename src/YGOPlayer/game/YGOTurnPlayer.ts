@@ -48,7 +48,7 @@ export class YGOTurnPlayer extends YGOEntity implements YGOUiElement {
         const fieldTurnHoverMaterial = new THREE.MeshBasicMaterial({ color: 0x0000ff, transparent: true, opacity: 0.5 });
         this.fieldTurnHover.material = fieldTurnHoverMaterial;
         this.fieldTurnHover.visible = false;
-        this.fieldTurnHover.position.set(0, 0, -1.1);
+        this.fieldTurnHover.position.set(0, 0, -1.3);
 
         this.duel.gameController.getComponent<YGOMouseEvents>("mouse_events")?.registerElement(this);
         this.duel.core.scene.add(this.gameObject);

@@ -8,6 +8,7 @@ import { CardMultipleSelectionMenu } from "./card-multiple-selection-menu";
 import { CardStatsDialog } from "./card-stats-dialog";
 import { CardZoneMenu } from "./card-zone-menu";
 import { DeckMenu } from "./deck-menu";
+import { GlobalEventsActionsMenu } from "./global-events-actions-menu";
 
 export const ACTIONS = {
     "card-hand-menu": CardHandMenu,
@@ -20,4 +21,5 @@ export const ACTIONS = {
     "card-deck-menu": CardDeckMenu,
     "card-materials-menu": CardMaterialsMenu,
     "card-stats-dialog-menu": CardStatsDialog,
+    "global-events-menu": GlobalEventsActionsMenu,
 }

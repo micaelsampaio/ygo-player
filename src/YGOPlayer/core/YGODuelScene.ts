@@ -4,6 +4,10 @@ import { YGOTurnPlayer } from "../game/YGOTurnPlayer";
 import { PoolObjects } from "./PoolObjects";
 import { YGODuel } from "./YGODuel";
 import * as THREE from "three";
+import { YGOEntity } from "./YGOEntity";
+import { YGOUiElement } from "../types";
+import { YGOMouseEvents } from "./components/YGOMouseEvents";
+import { ActionUiMenu } from "../actions/ActionUiMenu";
 
 
 export class YGODuelScene {
@@ -99,6 +103,7 @@ export class YGODuelScene {
         this.turnPlayer = new YGOTurnPlayer(this.duel);
 
         this.createEffects();
+        this.createFieldButtons();
     }
 
     private createEffects() {
@@ -119,5 +124,63 @@ export class YGODuelScene {
             }
         });
         this.duel.assets.createPool(destroyPool);
+    }
+
+    private createFieldButtons() {
+
+        const globalMenuAction = new ActionUiMenu(this.duel, {
+            eventType: "global-events-menu",
+            eventData: { duel: this.duel }
+        });
+
+        const btn = new YGOFieldButton(this.duel, new THREE.Vector3(-10, 0, 1), () => {
+            globalMenuAction.eventData.transform = btn.gameObject;
+            this.duel.actionManager.setAction(globalMenuAction);
+        });
+    }
+}
+
+class YGOFieldButton extends YGOEntity implements YGOUiElement {
+
+    private hoverElement!: THREE.Mesh;
+
+    constructor(private duel: YGODuel, private position: THREE.Vector3, private onClick: () => void) {
+        super();
+
+        const fieldObjects = this.duel.assets.models.get(this.duel.createCdnUrl("/models/field_objects.glb"));
+        const buttonsRef = fieldObjects?.scene.children.find(child => child.name === "field_button")!;
+
+        const hiddenClickMaterial = new THREE.MeshBasicMaterial({ color: 0x00555, transparent: true, opacity: 0 });
+        const geometry = new THREE.BoxGeometry(1.65, 1.65, 0.1);
+        const clickElement = new THREE.Mesh(geometry, hiddenClickMaterial);
+        clickElement.position.copy(this.position);
+
+        const btn = buttonsRef.clone();
+        btn.rotation.set(THREE.MathUtils.degToRad(90), 0, 0);
+        btn.position.set(0, 0, 0);
+
+        const hoverMaterial = new THREE.MeshBasicMaterial({ color: 0x0055ff });
+        this.hoverElement = btn.children.find(child => child.name === "hover_effect")! as THREE.Mesh;
+        this.hoverElement.visible = false;
+        this.hoverElement.material = hoverMaterial;
+
+        clickElement.add(btn);
+
+        this.gameObject = clickElement;
+        this.duel.gameController.getComponent<YGOMouseEvents>("mouse_events")?.registerElement(this);
+
+        this.duel.core.scene.add(this.gameObject);
+    }
+
+    onMouseClick(): void {
+        this.onClick();
+    }
+
+    onMouseEnter(): void {
+        this.hoverElement.visible = true;
+    }
+
+    onMouseLeave(): void {
+        this.hoverElement.visible = false;
     }
 }

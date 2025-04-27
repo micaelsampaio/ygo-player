@@ -919,6 +919,23 @@ export class YGOGameActions {
     );
   }
 
+  public destroyAllCards({
+    zone,
+  }: {
+    zone: "monster" | "spell" | "all";
+  }) {
+    this.clearAction();
+
+    const player = this.duel.getActivePlayer();
+
+    this.duel.execCommand(
+      new YGOCommands.DestroyAllCardsOnFieldCommand({
+        player,
+        zone
+      })
+    );
+  }
+
   public targetCard({
     card,
     originZone,
