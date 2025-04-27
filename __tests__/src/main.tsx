@@ -3,7 +3,6 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import debug from "debug";
 import "./index.css";
 import "ygo-player";
-import App from "./App.tsx";
 import Duel from "./Duel.tsx";
 import { DownloadDeck } from "./DownloadDeck.tsx";
 // Import our new pages
@@ -29,6 +28,7 @@ import SharedDeckPage from "./components/MyDecks/SharedDeckPage";
 import HelpPage from "./components/Help";
 import ContactPage from "./pages/ContactPage";
 import MatchupMakerPage from "./pages/MatchupMakerPage";
+import { PageViewerProvider } from "./utils/use-page-view.ts";
 
 debug.enable("ygo:*");
 localStorage.setItem("debug", "ygo:*");
@@ -39,6 +39,7 @@ logger.debug("Application starting...");
 createRoot(document.getElementById("root")!).render(
   <KaibaNetProvider>
     <BrowserRouter>
+      <PageViewerProvider />
       <Routes>
         {/* Use the new LandingPage as the home page */}
         <Route path="/" element={<LandingPage />} />
