@@ -78,11 +78,7 @@ export class YGOSoundController extends YGOComponent {
         audio.currentTime = 0;
         audio.volume = audio.volume * targetLayer.volume;
 
-        try {
-            audio.play();
-        } catch (err) {
-            console.error(`Error playing audio "${key}"`, err);
-        }
+        audio.play().then().catch();
 
         if (!loop) {
             audio.onended = () => {
@@ -191,5 +187,15 @@ export class YGOSoundController extends YGOComponent {
         for (const sound of layer.sounds) {
             sound.element.volume = sound.volume * layer.volume;
         }
+    }
+
+    public onDestroy(): void {
+        this.layers.forEach(layer => {
+            layer.sounds.forEach(sound => {
+                sound.element.pause();
+                sound.element.src = '';
+                sound.element.remove();
+            })
+        });
     }
 }

@@ -70,6 +70,7 @@ export class YGODuel {
     }
 
     this.core = new YGOPlayerCore({ canvas });
+    this.core.timeScale = this.settings.getGameSpeed();
     this.core.renderer.setAnimationLoop(this.update.bind(this));
     this.camera = this.core.camera;
     this.entities = [];
@@ -93,10 +94,12 @@ export class YGODuel {
     this.gameController.addComponent("map-click-zone", new YGOMapClick(this));
     this.actionManager.actions.set("card-hand-menu", new ActionCardHandMenu(this));
     this.actionManager.actions.set("card-zone-menu", new ActionCardZoneMenu(this));
-
     this.gameActions = new YGOGameActions(this);
+
     this.soundController.addLayer({ name: "GAME", volume: this.settings.getGameVolume() });
     this.soundController.addLayer({ name: "GAME_MUSIC", volume: this.settings.getMusicVolume(), useTimeScale: false });
+
+    //this.add(this.gameController);
 
     this.setupVars();
 
@@ -167,8 +170,9 @@ export class YGODuel {
         })
       });
 
-      this.settings.events.on("onGameVolumeChange", (_, value) => this.soundController.setLayerVolume("GAME", value))
-      this.settings.events.on("onMusicVolumeChange", (_, value) => this.soundController.setLayerVolume("GAME_MUSIC", value))
+      this.settings.events.on("onGameVolumeChange", (_, value) => this.soundController.setLayerVolume("GAME", value));
+      this.settings.events.on("onMusicVolumeChange", (_, value) => this.soundController.setLayerVolume("GAME_MUSIC", value));
+      this.settings.events.on("onGameSpeedChange", (_, value) => this.core.setTimeScale(value));
 
       this.core.updateCamera();
     } catch (error) {
@@ -179,11 +183,6 @@ export class YGODuel {
   }
 
   public startDuel() {
-    setTimeout(() => {
-      this.ygo.start();
-      this.updateField();
-    }); // next frame call
-
     this.ygo.events.on("new-log", (command: any) => {
       if (this.commands.isRecovering()) return;
       console.log("-------------- command ------------");
@@ -210,6 +209,16 @@ export class YGODuel {
       this.actionManager.clearAction();
       this.actionManager.actionsEnabled = false;
     });
+
+    setTimeout(() => {
+      try {
+        this.ygo.start();
+        this.updateField();
+      } catch (error) {
+        console.log("ERROR", error);
+        alert("ERROR");
+      }
+    }); // next frame call
   }
 
   public updateField() {
@@ -633,6 +642,7 @@ export class YGODuel {
     this.actionManager.clearAction();
     this.events.dispatch("clear-ui-action");
   }
+
   private setupVars() {
     document.documentElement.style.setProperty('--ygo-player-asset-ui-card-icons', `url('${this.config.cdnUrl}/images/ui/card_icons.png')`);
     document.documentElement.style.setProperty('--ygo-player-asset-ui-game-zones', `url('${this.config.cdnUrl}/images/ui/ic_game_zones.png')`);
@@ -640,5 +650,21 @@ export class YGODuel {
 
   public createCdnUrl(path: string) {
     return `${this.config.cdnUrl}${path}`;
+  }
+
+  public destroyDuelInstance() {
+    try {
+      this.gameController.destroyEntity();
+    } catch (error) { }
+
+    this.entities.forEach(entity => {
+      try {
+        entity.destroyEntity();
+      } catch (error) { }
+    });
+
+    try {
+      this.core.destroy();
+    } catch (error) { }
   }
 }

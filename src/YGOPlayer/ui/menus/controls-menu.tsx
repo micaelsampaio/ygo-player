@@ -7,7 +7,6 @@ export function ControlsMenu({ duel }: { duel: YGODuel }) {
     const hasNextCommand = duel.ygo.hasNextCommand();
 
     const prev = () => {
-
         duel.commands.previousCommand();
     };
 
@@ -24,7 +23,7 @@ export function ControlsMenu({ duel }: { duel: YGODuel }) {
     };
 
     const setTimeScale = useCallback((dt: number) => {
-        duel.core.setTimeScale(dt);
+        duel.settings.setGameSpeed(dt);
     }, [])
 
     return <div className="ygo-card-menu ygo-controls-menu">

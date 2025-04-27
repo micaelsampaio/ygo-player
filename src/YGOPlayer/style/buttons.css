@@ -30,7 +30,12 @@
         background: var(--ygo-border-color);
     }
 
-    .ygo-btn-action:hover {
+    .ygo-btn-action:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .ygo-btn-action:hover:not(:disabled) {
         background: var(--ygo-action-color-dark);
     }
 }

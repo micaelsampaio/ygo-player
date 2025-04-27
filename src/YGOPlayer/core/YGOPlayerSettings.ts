@@ -4,6 +4,7 @@ import { deepMerge, getJsonFromLocalStorage, safeStringify } from "../scripts/ut
 export interface YGOPlayerSettings {
     musicVolume: number
     gameVolume: number
+    gameSpeed: number
     showFaceDownCardsTransparent: boolean
 }
 
@@ -15,12 +16,14 @@ export interface YGOPlayerSettingsEvents {
     onMusicVolumeChange: (oldValue: number, value: number) => void
     onGameVolumeChange: (oldValue: number, value: number) => void
     onShowFaceDownCardsTransparentChange: (oldValue: boolean, value: boolean) => void
+    onGameSpeedChange: (oldValue: number, value: number) => void
     onSettingsChanged: () => void
 }
 
 const DEFAULT_SETTINGS: YGOPlayerSettings = {
     musicVolume: 1,
     gameVolume: 1,
+    gameSpeed: 1,
     showFaceDownCardsTransparent: true
 }
 
@@ -40,6 +43,9 @@ export class YGOPlayerSettingsAdapter {
     loadConfig() {
         const userSettings = getJsonFromLocalStorage(YGO_SETTINGS_KEY);
         const settings = deepMerge<YGOPlayerSettings>(DEFAULT_SETTINGS, userSettings);
+
+        settings.gameSpeed = Math.min(Math.max(0, settings.gameSpeed), 3);
+
         return settings;
     }
 
@@ -74,6 +80,23 @@ export class YGOPlayerSettingsAdapter {
             this.events.dispatch("onSettingsChanged");
         }
     }
+
+    public getGameSpeed() {
+        return this.data.gameSpeed;
+    }
+
+    public setGameSpeed(value: number) {
+        if (value !== this.data.gameSpeed) {
+            const oldValue = this.data.gameSpeed;
+            this.data.gameSpeed = Math.min(Math.max(0, value), 3);
+
+            this.dispatchInternalSave();
+
+            this.events.dispatch("onGameSpeedChange", oldValue, this.data.gameSpeed);
+            this.events.dispatch("onSettingsChanged");
+        }
+    }
+
 
     public getShowFaceDownCardsTransparent() {
         return this.data.showFaceDownCardsTransparent;

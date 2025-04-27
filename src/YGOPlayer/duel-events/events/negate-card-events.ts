@@ -51,6 +51,8 @@ export class NegateCardHandler extends YGOCommandHandler {
     duel.core.scene.add(modal);
     duel.core.enableRenderOverlay();
 
+    this.props.playSound({ key: duel.createCdnUrl(`/sounds/negate.ogg`), volume: 0.7 });
+
     this.props.startTask(
       new YGOTaskSequence(
         new MaterialOpacityTransition({

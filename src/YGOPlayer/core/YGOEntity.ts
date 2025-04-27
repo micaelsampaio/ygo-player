@@ -25,6 +25,19 @@ export abstract class YGOEntity {
         return component;
     }
 
+
+    destroyEntity() {
+        this.onDestroy();
+
+        for (const component of Object.values(this.components)) {
+            component.onDestroy();
+        }
+    }
+
+    onDestroy() {
+
+    }
+
     removeComponent<T = YGOComponent>(component: string | YGOComponent): T | null {
 
         if (typeof component === "string") {

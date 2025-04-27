@@ -128,7 +128,6 @@ export function YGOUiController({ duel }: { duel: YGODuel }) {
         duel.events.on("disable-game-actions", () => {
             setGameConfig(currentGameConfig => ({ ...currentGameConfig, actions: false }));
         });
-
     }, []);
 
     const Action = (ACTIONS as any)[action.type] as any;

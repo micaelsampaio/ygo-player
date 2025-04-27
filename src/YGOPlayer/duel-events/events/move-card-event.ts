@@ -37,7 +37,7 @@ export class MoveCardEventHandler extends YGOCommandHandler {
   }
 
   public start(): void {
-    const { event, startCommandDelay: delay = 0, duel } = this.props;
+    const { event, startCommandDelay: delay = 0, duel, playSound } = this.props;
     const sequence = new YGOTaskSequence();
     const originZoneData = YGOGameUtils.getZoneData(event.originZone)!;
     const zoneData = YGOGameUtils.getZoneData(event.zone)!;
@@ -126,31 +126,8 @@ export class MoveCardEventHandler extends YGOCommandHandler {
       });
     }
 
-    // if (originZoneData.zone === "GY" || originZoneData.zone === "B") {
-    //     // const aboveZonePos = startPosition.clone();
-    //     // aboveZonePos.z += 1;
-
-    //     // card.gameObject.scale.set(0, 0, 0);
-
-    //     // sequence.add(new MultipleTasks(
-    //     //     new PositionTransition({
-    //     //         gameObject: card.gameObject,
-    //     //         position: aboveZonePos,
-    //     //         duration: 0.25 * durationScale
-    //     //     }), new ScaleTransition({
-    //     //         gameObject: card.gameObject,
-    //     //         scale: new THREE.Vector3(1, 1, 1),
-    //     //         duration: 0.5 * durationScale
-    //     //     }))
-    //     // );
-    //     const gy = duel.fields[this.cardReference.originalOwner].graveyard;
-    //     gy.createSendToGraveyardEffect({ card: card.gameObject, sequence });
-    // }
-
-    console.log("TCL:: ", originZoneData?.zone, zoneData.zone);
-
     if (originZoneData?.zone === "H" && (zoneData.zone === "M" || zoneData.zone === "S")) {
-      duel.soundController.playSound({ key: duel.createCdnUrl(`/sounds/card-place-${randomIntFromInterval(1, 4)}.ogg`), volume: 0.7 });
+      playSound({ key: duel.createCdnUrl(`/sounds/card-place-${randomIntFromInterval(1, 4)}.ogg`), volume: 0.7 });
     }
 
     if (

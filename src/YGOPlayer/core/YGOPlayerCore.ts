@@ -151,4 +151,32 @@ export class YGOPlayerCore {
             this.events.dispatch("on-timescale-change", this.timeScale);
         }
     }
+
+    destroy() {
+        this.destroyScene(this.scene);
+        this.destroyScene(this.sceneOverlay);
+    }
+
+    private destroyScene(scene: THREE.Scene) {
+        scene.traverse((object) => {
+            if (object instanceof THREE.Mesh) {
+                if (object.geometry) {
+                    object.geometry.dispose();
+                }
+                if (object.material) {
+                    if (Array.isArray(object.material)) {
+                        object.material.forEach((material) => material.dispose());
+                    } else {
+                        object.material.dispose();
+                    }
+                }
+            }
+        });
+
+        // Remove all children
+        while (scene.children.length > 0) {
+            const child = scene.children[0];
+            scene.remove(child);
+        }
+    }
 }

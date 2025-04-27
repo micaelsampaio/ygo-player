@@ -22,7 +22,14 @@ import { NegateCardHandler } from "./events/negate-card-events";
 export interface DuelEventHandlerProps {
   duel: YGODuel;
   ygo: InstanceType<typeof YGOCore>;
-  onCompleted: Function;
+  onCompleted: () => void;
+  playSound: (options: {
+    key: string;
+    layer?: string;
+    volume?: number;
+    loop?: boolean;
+    onComplete?: () => void;
+  }) => void;
   startTask: (task: YGOTask) => void;
 }
 

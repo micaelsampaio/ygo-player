@@ -5,31 +5,35 @@ import { YGOConfig } from "../core/YGOConfig";
 
 export function YgoDuelApp({ config, bind: onBind, start: onStart }: { bind?: (duel: YGODuel) => void, config: YGOConfig, start?: (duel: YGODuel) => void }) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
-    const [ygo, setYGO] = useState<YGODuel>();
+    const [duel, setDuel] = useState<YGODuel>();
 
     useEffect(() => {
         if (!canvasRef.current) return;
 
+        let duel: YGODuel | undefined;
         const init = async () => {
-            const ygo = new YGODuel({ canvas: canvasRef.current!, config });
-            if (onBind) onBind(ygo);
-            await ygo.load();
-            setYGO(ygo);
+            duel = new YGODuel({ canvas: canvasRef.current!, config });
+            if (onBind) onBind(duel);
+            await duel.load();
+            setDuel(duel);
         }
-
         init();
+
+        return () => {
+            if (duel) duel.destroyDuelInstance();
+        }
     }, [])
 
     useEffect(() => {
-        if (!ygo) return;
-        ygo.startDuel();
-        if (onStart) onStart(ygo);
-    }, [ygo])
+        if (!duel) return;
+        duel.startDuel();
+        if (onStart) onStart(duel);
+    }, [duel])
 
-    return <div className="ygo-player-core" id="ygo-player-core" {...ygo?.mouseEvents.eventsReference}>
+    return <div className="ygo-player-core" id="ygo-player-core" {...duel?.mouseEvents.eventsReference}>
         <canvas id='ygo-canvas' ref={canvasRef} style={{ width: "100%", height: "100%" }}>
         </canvas>
 
-        {ygo && <YGOUiController duel={ygo}></YGOUiController>}
+        {duel && <YGOUiController duel={duel}></YGOUiController>}
     </div>
 }

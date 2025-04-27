@@ -113,9 +113,6 @@ export class YGOMouseEvents extends YGOComponent {
         if (elements.length > 0) {
             const element: any = elementCardInHand?.object || elements[0].object;
 
-            console.log("TCL: CLICK ELEMENT ", element);
-            console.log("TCL: CLICK ELEMENT ", element.uiElementRef);
-
             if (element === this.mouseDownElement) {
                 clickElement = element.uiElementRef as YGOUiElement;
 

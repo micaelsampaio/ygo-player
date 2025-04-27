@@ -26,13 +26,18 @@ export class YGOPlayerComponent extends HTMLElement {
 
   connectedCallback() {
     //const shadowRoot = this.attachShadow({ mode: 'open' });
-    const container = document.createElement("div");
     //shadowRoot.appendChild(container);
+
+    const container = document.createElement("div");
     this.appendChild(container);
     container.style.width = "100%";
     container.style.height = "100%";
 
     this.root = ReactDOM.createRoot(container); // Create a root for React 18
+  }
+
+  disconnectedCallback() {
+    this.destroy();
   }
 
   private bind(duel: YGODuel) {
@@ -136,5 +141,16 @@ export class YGOPlayerComponent extends HTMLElement {
     ...args: Parameters<YGOPlayerComponentEvents[K]>
   ): void {
     this.events.dispatch(event, ...args);
+  }
+
+  destroy() {
+    if (this.root) {
+      this.root.unmount();
+      this.root = undefined;
+    }
+
+    while (this.firstChild) {
+      this.removeChild(this.firstChild);
+    }
   }
 }

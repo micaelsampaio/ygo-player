@@ -129,10 +129,21 @@ export class YGOCommandsController extends YGOComponent {
       });
     };
 
+    const playSound = (options: {
+      key: string;
+      layer?: string;
+      volume?: number;
+      loop?: boolean;
+      onComplete?: () => void;
+    }) => {
+      const sound = this.duel.soundController.playSound(options);
+    }
+
     const props = {
       duel: this.duel,
       ygo: this.duel.ygo,
       event: command,
+      playSound,
       startTask,
       onCompleted,
     };
