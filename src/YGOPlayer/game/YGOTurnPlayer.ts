@@ -21,9 +21,6 @@ export class YGOTurnPlayer extends YGOEntity implements YGOUiElement {
         fieldTurn.rotation.set(THREE.MathUtils.degToRad(90), 0, 0);
         this.fieldTurnHover.rotation.set(THREE.MathUtils.degToRad(90), 0, 0);
 
-        fieldTurnPlaceHolder.position.set(0, 0.01, 0);
-        fieldTurnPlaceHolder.rotation.set(0, 0, 0);
-
         this.textures = [
             this.duel.assets.getTexture(this.duel.createCdnUrl("/images/ui/turn_player_1.png")),
             this.duel.assets.getTexture(this.duel.createCdnUrl("/images/ui/turn_player_2.png")),
@@ -39,14 +36,19 @@ export class YGOTurnPlayer extends YGOEntity implements YGOUiElement {
 
         clickElement.add(fieldTurn);
         clickElement.add(this.fieldTurnHover);
-        fieldTurn.position.set(0, 0, -0.1);
+
+        fieldTurn.position.set(0, 0, -1.4);
+        fieldTurn.position.set(0, 0, -1.4);
+
+        fieldTurnPlaceHolder.position.set(0, 0.01, 0);
+        fieldTurnPlaceHolder.rotation.set(0, 0, 0);
 
         this.gameObject = clickElement;
 
         const fieldTurnHoverMaterial = new THREE.MeshBasicMaterial({ color: 0x0000ff, transparent: true, opacity: 0.5 });
         this.fieldTurnHover.material = fieldTurnHoverMaterial;
         this.fieldTurnHover.visible = false;
-        this.fieldTurnHover.position.set(0, 0, 0);
+        this.fieldTurnHover.position.set(0, 0, -1.1);
 
         this.duel.gameController.getComponent<YGOMouseEvents>("mouse_events")?.registerElement(this);
         this.duel.core.scene.add(this.gameObject);
@@ -54,6 +56,7 @@ export class YGOTurnPlayer extends YGOEntity implements YGOUiElement {
         this.duel.ygo.events.on("set-player", ({ player }) => {
             turnMaterial.map = this.textures[player] || this.textures[0];
             turnMaterial.needsUpdate = true;
+            fieldTurnHoverMaterial.color.setHex(player === 0 ? 0x0000ff : 0xff0000);
         });
     }
 

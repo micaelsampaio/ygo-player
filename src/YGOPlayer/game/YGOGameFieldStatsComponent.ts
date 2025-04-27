@@ -94,13 +94,12 @@ class YGOGameFieldStatsRender {
     this.mesh = new THREE.Mesh(planeGeometry, material);
 
     if (player === 0) {
-      this.mesh.position.set(-8.25, 0.15 - 1.5, 1);
+      this.mesh.position.set(-8.25, 0.15 - 1.5, 2);
     } else {
-      this.mesh.position.set(8.25, 1.5 - 0.15, 1);
+      this.mesh.position.set(8.25, 1.5 - 0.15, 2);
     }
 
     this.canvasTexture = canvasTexture;
-
 
     const heightOffset = new THREE.Vector3(0, 0, 1);
     const gameField = this.duel.fields[this.player];
