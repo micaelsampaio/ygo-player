@@ -1,6 +1,7 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import styled from "styled-components";
 import { ThemeProvider } from "styled-components";
+import { useNavigate, useLocation } from "react-router-dom";
 import theme from "../styles/theme";
 import AppLayout from "../components/Layout/AppLayout";
 import MatchupMatrix from "../components/MatchupMaker/MatchupMatrix";
@@ -57,8 +58,11 @@ const MatchupMakerPage: React.FC = () => {
   const [currentMatchupName, setCurrentMatchupName] =
     useState<string>("New Matchup");
 
+  const navigate = useNavigate();
+  const location = useLocation();
+
   // Load saved matchups from localStorage
-  React.useEffect(() => {
+  useEffect(() => {
     const loadSavedMatchups = () => {
       try {
         const keys = Object.keys(localStorage).filter((key) =>
@@ -89,6 +93,57 @@ const MatchupMakerPage: React.FC = () => {
 
     loadSavedMatchups();
   }, []);
+
+  // Load shared matchup from query parameters
+  useEffect(() => {
+    const queryParams = new URLSearchParams(location.search);
+    const sharedData = queryParams.get("data");
+
+    if (!sharedData) return;
+
+    console.log("=====================================");
+    console.log("SHARED MATCHUP DETECTED IN QUERY PARAMETERS");
+    console.log(
+      "Encoded data:",
+      sharedData.length > 50 ? sharedData.substring(0, 50) + "..." : sharedData
+    );
+    console.log("Data length:", sharedData.length);
+    console.log("=====================================");
+
+    try {
+      // Simple direct base64 decoding
+      const decoded = decodeURIComponent(atob(sharedData));
+      console.log("Successfully decoded base64 data, length:", decoded.length);
+
+      // Parse JSON and validate structure
+      const parsedData = JSON.parse(decoded);
+      console.log("Successfully parsed JSON data");
+
+      if (
+        parsedData &&
+        parsedData.cards &&
+        parsedData.archetypes &&
+        parsedData.ratings
+      ) {
+        console.log(
+          "Valid matchup data found:",
+          `${parsedData.cards.length} cards, ${parsedData.archetypes.length} archetypes`
+        );
+
+        // Set the data in the component state
+        setMatchupData(parsedData);
+        setCurrentMatchupName(
+          `Shared Matchup ${new Date().toLocaleDateString()}`
+        );
+        alert("Shared matchup loaded successfully!");
+      } else {
+        throw new Error("Invalid matchup data structure");
+      }
+    } catch (error) {
+      console.error("Error processing shared matchup:", error);
+      alert("Failed to load shared matchup. The link may be corrupted.");
+    }
+  }, [location.search]);
 
   // Add a card to the X-axis of the matrix
   const handleAddCard = useCallback((card: CardItem) => {
@@ -242,6 +297,42 @@ const MatchupMakerPage: React.FC = () => {
     }
   }, []);
 
+  // Remove a saved matchup
+  const handleDeleteMatchup = useCallback(
+    (name: string) => {
+      if (!confirm(`Are you sure you want to delete the matchup "${name}"?`)) {
+        return;
+      }
+
+      const storageKey = `matchup_${name}`;
+      try {
+        // Remove from localStorage
+        localStorage.removeItem(storageKey);
+
+        // If this was the last selected matchup, clear that reference
+        const lastMatchupKey = localStorage.getItem("last_matchup_key");
+        if (lastMatchupKey === storageKey) {
+          localStorage.removeItem("last_matchup_key");
+        }
+
+        // Update saved matchups list
+        setSavedMatchups((prev) => prev.filter((m) => m.name !== name));
+
+        // If the current matchup was deleted, reset to a new matchup
+        if (currentMatchupName === name) {
+          setMatchupData(INITIAL_MATCHUP);
+          setCurrentMatchupName("New Matchup");
+        }
+
+        alert(`Matchup "${name}" has been deleted`);
+      } catch (error) {
+        console.error("Error deleting matchup:", error);
+        alert("Failed to delete the matchup");
+      }
+    },
+    [currentMatchupName]
+  );
+
   // Create a new matchup
   const handleNewMatchup = useCallback(() => {
     if (matchupData.cards.length > 0 || matchupData.archetypes.length > 0) {
@@ -275,6 +366,129 @@ const MatchupMakerPage: React.FC = () => {
       alert("Failed to export the matchup");
     }
   }, [matchupData, currentMatchupName]);
+
+  // Import matchup from JSON file
+  const handleImportMatchup = useCallback(() => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".json";
+
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const importedData = JSON.parse(event.target?.result as string);
+
+          // Validate that the imported data has the required structure
+          if (
+            !importedData.cards ||
+            !importedData.archetypes ||
+            !importedData.ratings
+          ) {
+            throw new Error("Invalid matchup data format");
+          }
+
+          setMatchupData(importedData);
+          setCurrentMatchupName(
+            `Imported Matchup ${new Date().toLocaleDateString()}`
+          );
+          alert("Matchup data imported successfully!");
+        } catch (error) {
+          console.error("Error importing matchup:", error);
+          alert("Failed to import the matchup. Invalid file format.");
+        }
+      };
+      reader.readAsText(file);
+    };
+
+    input.click();
+  }, []);
+
+  // Share matchup as URL
+  const handleShareMatchup = useCallback(() => {
+    try {
+      console.log("Starting share matchup process...");
+      // Convert matchup data to JSON string
+      const matchupJson = JSON.stringify(matchupData);
+      console.log("Matchup data serialized, length:", matchupJson.length);
+
+      // Encode with base64
+      const base64 = btoa(encodeURIComponent(matchupJson));
+      console.log("Encoded with base64, length:", base64.length);
+
+      // Create the sharing URL with query parameter
+      const shareUrl = `${window.location.origin}/matchup-maker?data=${base64}`;
+      console.log("Generated share URL:", shareUrl.substring(0, 50) + "...");
+
+      // Copy the URL to clipboard
+      navigator.clipboard
+        .writeText(shareUrl)
+        .then(() => {
+          console.log("URL copied to clipboard successfully");
+          alert("Share URL copied to clipboard!");
+        })
+        .catch((err) => {
+          console.error("Failed to copy to clipboard:", err);
+          // If clipboard API fails, just show the URL
+          prompt("Copy this URL to share your matchup:", shareUrl);
+        });
+    } catch (error) {
+      console.error("Error creating share URL:", error);
+      alert(
+        "Failed to create share URL: " +
+          (error instanceof Error ? error.message : String(error))
+      );
+    }
+  }, [matchupData]);
+
+  // Export matchup matrix as image
+  const handleExportAsImage = useCallback(() => {
+    try {
+      // Find the matrix element
+      const matrixElement = document.getElementById("matchup-matrix");
+      if (!matrixElement) {
+        throw new Error("Could not find the matchup matrix element");
+      }
+
+      // Use html2canvas to capture the element (dynamically import to avoid adding dependency if not used)
+      import("html2canvas")
+        .then((html2canvas) => {
+          html2canvas
+            .default(matrixElement, {
+              backgroundColor: theme.colors.background.paper,
+              scale: 2, // Better resolution
+              logging: false,
+              allowTaint: true,
+              useCORS: true,
+            })
+            .then((canvas) => {
+              // Create file name
+              const fileName = `${currentMatchupName.replace(
+                /\s+/g,
+                "_"
+              )}_matrix_${new Date().toISOString().split("T")[0]}.png`;
+
+              // Convert to PNG and download
+              const link = document.createElement("a");
+              link.download = fileName;
+              link.href = canvas.toDataURL("image/png");
+              link.click();
+            });
+        })
+        .catch((err) => {
+          console.error("Error loading html2canvas:", err);
+          alert(
+            "Failed to export as image. Make sure you're online as additional resources need to be loaded."
+          );
+        });
+    } catch (error) {
+      console.error("Error exporting matchup as image:", error);
+      alert("Failed to export the matchup as an image");
+    }
+  }, [matchupData, currentMatchupName, theme.colors.background.paper]);
 
   return (
     <ThemeProvider theme={theme}>
@@ -310,32 +524,53 @@ const MatchupMakerPage: React.FC = () => {
                   <Button onClick={handleNewMatchup} variant="secondary">
                     New
                   </Button>
-                  <Button onClick={handleExportMatchup} variant="secondary">
-                    Export
-                  </Button>
                 </ButtonsGroup>
               </ControlGrid>
-            </ControlSection>
 
-            {savedMatchups.length > 0 && (
-              <ControlSection>
-                <h3>Saved Matchups</h3>
-                <SavedMatchupsList>
-                  {savedMatchups.map((matchup) => (
-                    <SavedMatchupItem key={matchup.name}>
-                      <span>{matchup.name}</span>
-                      <Button
-                        onClick={() => handleLoadMatchup(matchup.name)}
-                        variant="tertiary"
-                        size="sm"
-                      >
-                        Load
-                      </Button>
-                    </SavedMatchupItem>
-                  ))}
-                </SavedMatchupsList>
-              </ControlSection>
-            )}
+              <ButtonsRow>
+                <Button onClick={handleImportMatchup} variant="tertiary">
+                  Import
+                </Button>
+                <Button onClick={handleExportMatchup} variant="tertiary">
+                  Export
+                </Button>
+                <Button onClick={handleShareMatchup} variant="tertiary">
+                  Share URL
+                </Button>
+                <Button onClick={handleExportAsImage} variant="tertiary">
+                  Export as Image
+                </Button>
+              </ButtonsRow>
+
+              {savedMatchups.length > 0 && (
+                <>
+                  <SavedMatchupsHeader>Saved Matchups</SavedMatchupsHeader>
+                  <SavedMatchupsList>
+                    {savedMatchups.map((matchup) => (
+                      <SavedMatchupItem key={matchup.name}>
+                        <span>{matchup.name}</span>
+                        <SavedButtonsGroup>
+                          <Button
+                            onClick={() => handleLoadMatchup(matchup.name)}
+                            variant="tertiary"
+                            size="sm"
+                          >
+                            Load
+                          </Button>
+                          <Button
+                            onClick={() => handleDeleteMatchup(matchup.name)}
+                            variant="danger"
+                            size="sm"
+                          >
+                            Delete
+                          </Button>
+                        </SavedButtonsGroup>
+                      </SavedMatchupItem>
+                    ))}
+                  </SavedMatchupsList>
+                </>
+              )}
+            </ControlSection>
           </ControlPanel>
 
           <MatchupMatrix
@@ -368,6 +603,9 @@ const MatchupMakerPage: React.FC = () => {
                   </li>
                   <li>
                     Export your matchup as a JSON file to share with others
+                  </li>
+                  <li>
+                    Export your matchup matrix as an image for easy sharing
                   </li>
                 </ol>
                 <p>
@@ -459,6 +697,20 @@ const ButtonsGroup = styled.div`
   }
 `;
 
+const ButtonsRow = styled.div`
+  display: flex;
+  gap: ${(props) => props.theme.spacing.sm};
+  margin-top: ${(props) => props.theme.spacing.md};
+
+  @media (max-width: 768px) {
+    flex-wrap: wrap;
+  }
+`;
+
+const SavedMatchupsHeader = styled.h3`
+  margin-top: ${(props) => props.theme.spacing.lg};
+`;
+
 const SavedMatchupsList = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -477,6 +729,11 @@ const SavedMatchupItem = styled.div`
   span {
     font-weight: ${(props) => props.theme.typography.weight.medium};
   }
+`;
+
+const SavedButtonsGroup = styled.div`
+  display: flex;
+  gap: ${(props) => props.theme.spacing.sm};
 `;
 
 const HelpSection = styled.section`

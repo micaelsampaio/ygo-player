@@ -42,6 +42,7 @@
     "jspdf": "^3.0.1",
     "libp2p": "^2.6.2",
     "lucide-react": "^0.475.0",
+    "lz-string": "^1.5.0",
     "multiaddr": "^10.0.1",
     "pako": "^2.1.0",
     "path-browserify": "^1.0.1",

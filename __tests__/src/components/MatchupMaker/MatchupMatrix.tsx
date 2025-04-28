@@ -149,92 +149,99 @@ const MatchupMatrix: React.FC<MatchupMatrixProps> = ({
         </Legend>
       )}
 
-      <MatrixScroll>
-        <MatrixTable>
-          <thead>
-            <tr>
-              <th></th> {/* Empty corner cell */}
-              {matchupData.cards.map((card) => (
-                <th key={card.id}>
-                  <CardHeader>
-                    <CardImage
-                      src={getCardImageUrl(card.id, "small")}
-                      alt={card.name}
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = CARD_BACK_IMAGE;
-                      }}
-                    />
-                    <CardName>{card.name}</CardName>
-                    <RemoveButton
-                      onClick={() => onRemoveCard(card.id)}
-                      title={`Remove ${card.name}`}
-                    >
-                      <Trash2 size={14} />
-                    </RemoveButton>
-                  </CardHeader>
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {matchupData.archetypes.map((archetype) => (
-              <tr key={archetype.id}>
-                <td>
-                  <ArchetypeHeader>
-                    {archetype.imageUrl || archetype.representativeCardId ? (
-                      <ArchetypeImageContainer>
-                        <CardImage 
-                          src={
-                            archetype.imageUrl || 
-                            getCardImageUrl(archetype.representativeCardId, "small")
-                          }
-                          alt={archetype.name}
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).src = CARD_BACK_IMAGE;
-                          }}
-                        />
-                        <ArchetypeName>{archetype.name}</ArchetypeName>
-                      </ArchetypeImageContainer>
-                    ) : (
-                      <ArchetypeName>{archetype.name}</ArchetypeName>
-                    )}
-                    <RemoveButton
-                      onClick={() => onRemoveArchetype(archetype.id)}
-                      title={`Remove ${archetype.name}`}
-                    >
-                      <Trash2 size={14} />
-                    </RemoveButton>
-                  </ArchetypeHeader>
-                </td>
+      <div id="matchup-matrix">
+        <MatrixScroll>
+          <MatrixTable>
+            <thead>
+              <tr>
+                <th></th>
+                {/* Empty corner cell */}
                 {matchupData.cards.map((card) => (
-                  <td
-                    key={`${archetype.id}-${card.id}`}
-                    onClick={() => handleCellClick(archetype.id, card.id)}
-                    onContextMenu={(e) =>
-                      handleCellRightClick(archetype.id, card.id, e)
-                    }
-                    className={
-                      hasNotes(archetype.id, card.id) ? "has-notes" : ""
-                    }
-                  >
-                    <MatrixCell>
-                      {getRatingIcon(
-                        matchupData.ratings[archetype.id]?.[card.id]?.rating ||
-                          ""
-                      )}
-                      {hasNotes(archetype.id, card.id) && (
-                        <NoteIndicator title="Has notes">
-                          <Info size={12} />
-                        </NoteIndicator>
-                      )}
-                    </MatrixCell>
-                  </td>
+                  <th key={card.id}>
+                    <CardHeader>
+                      <CardImage
+                        src={getCardImageUrl(card.id, "small")}
+                        alt={card.name}
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = CARD_BACK_IMAGE;
+                        }}
+                      />
+                      <CardName>{card.name}</CardName>
+                      <RemoveButton
+                        onClick={() => onRemoveCard(card.id)}
+                        title={`Remove ${card.name}`}
+                      >
+                        <Trash2 size={14} />
+                      </RemoveButton>
+                    </CardHeader>
+                  </th>
                 ))}
               </tr>
-            ))}
-          </tbody>
-        </MatrixTable>
-      </MatrixScroll>
+            </thead>
+            <tbody>
+              {matchupData.archetypes.map((archetype) => (
+                <tr key={archetype.id}>
+                  <td>
+                    <ArchetypeHeader>
+                      {archetype.imageUrl || archetype.representativeCardId ? (
+                        <ArchetypeImageContainer>
+                          <CardImage
+                            src={
+                              archetype.imageUrl ||
+                              getCardImageUrl(
+                                archetype.representativeCardId,
+                                "small"
+                              )
+                            }
+                            alt={archetype.name}
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src =
+                                CARD_BACK_IMAGE;
+                            }}
+                          />
+                          <ArchetypeName>{archetype.name}</ArchetypeName>
+                        </ArchetypeImageContainer>
+                      ) : (
+                        <ArchetypeName>{archetype.name}</ArchetypeName>
+                      )}
+                      <RemoveButton
+                        onClick={() => onRemoveArchetype(archetype.id)}
+                        title={`Remove ${archetype.name}`}
+                      >
+                        <Trash2 size={14} />
+                      </RemoveButton>
+                    </ArchetypeHeader>
+                  </td>
+                  {matchupData.cards.map((card) => (
+                    <td
+                      key={`${archetype.id}-${card.id}`}
+                      onClick={() => handleCellClick(archetype.id, card.id)}
+                      onContextMenu={(e) =>
+                        handleCellRightClick(archetype.id, card.id, e)
+                      }
+                      className={
+                        hasNotes(archetype.id, card.id) ? "has-notes" : ""
+                      }
+                    >
+                      <MatrixCell>
+                        {getRatingIcon(
+                          matchupData.ratings[archetype.id]?.[card.id]
+                            ?.rating || ""
+                        )}
+                        {hasNotes(archetype.id, card.id) && (
+                          <NoteIndicator title="Has notes">
+                            <Info size={12} />
+                          </NoteIndicator>
+                        )}
+                      </MatrixCell>
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </MatrixTable>
+        </MatrixScroll>
+      </div>
 
       {(matchupData.cards.length === 0 ||
         matchupData.archetypes.length === 0) && (
@@ -316,9 +323,21 @@ const MatchupMatrix: React.FC<MatchupMatrixProps> = ({
 // Styled Components
 const MatrixContainer = styled.div`
   margin: ${(props) => props.theme.spacing.xl} 0;
+  background-color: ${(props) => props.theme.colors.background.paper};
+  border-radius: ${(props) => props.theme.borderRadius.lg};
+  padding: ${(props) => props.theme.spacing.lg};
+  box-shadow: ${(props) => props.theme.shadows.md};
 
   h2 {
+    margin-top: 0;
     margin-bottom: ${(props) => props.theme.spacing.sm};
+    color: ${(props) => props.theme.colors.text.primary};
+    font-size: ${(props) => props.theme.typography.size.xl};
+  }
+
+  p {
+    color: ${(props) => props.theme.colors.text.secondary};
+    margin-bottom: ${(props) => props.theme.spacing.md};
   }
 `;
 
