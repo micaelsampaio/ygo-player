@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import Button from "../UI/Button";
 import { Logger } from "../../utils/logger";
+import { getCardImageUrl, CARD_BACK_IMAGE } from "../../utils/cardImages";
 
 // Import CDN URL for card images (if needed)
 const cdnUrl = String(import.meta.env.VITE_YGO_CDN_URL);
@@ -45,6 +46,7 @@ interface ArchetypeItem {
   name: string;
   description?: string;
   representativeCardId?: number;
+  imageUrl?: string;
 }
 
 interface ArchetypeSelectorProps {
@@ -84,19 +86,56 @@ const ArchetypeSelector: React.FC<ArchetypeSelectorProps> = ({
               .replace(/\s+/g, "-")
               .replace(/[^a-z0-9-]/g, "");
 
+            // Add a representative card ID if we have one defined
+            const representativeCardId = ARCHETYPE_REPRESENTATIVE_CARDS[name];
+
             return {
               id,
               name,
               // Add description if available, otherwise use a generic one
               description: `${name} archetype`,
               // Add a representative card ID if we have one defined
-              representativeCardId:
-                ARCHETYPE_REPRESENTATIVE_CARDS[name] || undefined,
+              representativeCardId,
             };
           });
 
-          setAllArchetypes(archetypesList);
-          setSearchResults(archetypesList.slice(0, 20)); // Show first 20 archetypes initially
+          // For archetypes without a defined representative card,
+          // find a card from the archetype via API
+          const archetypesWithImages = await Promise.all(
+            archetypesList.map(async (archetype) => {
+              // If we already have a representative card ID, no need to search
+              if (archetype.representativeCardId) {
+                return {
+                  ...archetype,
+                  imageUrl: getCardImageUrl(archetype.representativeCardId, "small"),
+                };
+              }
+
+              // Otherwise, search for a card from this archetype
+              try {
+                const searchResponse = await fetch(
+                  `${API_BASE_URL}/cardinfo.php?archetype=${encodeURIComponent(archetype.name)}&num=1&offset=0`
+                );
+                const searchData = await searchResponse.json();
+
+                if (searchData.data && searchData.data.length > 0) {
+                  const card = searchData.data[0];
+                  return {
+                    ...archetype,
+                    representativeCardId: card.id,
+                    imageUrl: getCardImageUrl(card.id, "small"),
+                  };
+                }
+                return archetype;
+              } catch (error) {
+                logger.error(`Error finding image for ${archetype.name}:`, error);
+                return archetype;
+              }
+            })
+          );
+
+          setAllArchetypes(archetypesWithImages);
+          setSearchResults(archetypesWithImages.slice(0, 20)); // Show first 20 archetypes initially
         }
       } catch (error) {
         logger.error("Error fetching archetypes:", error);
@@ -110,6 +149,7 @@ const ArchetypeSelector: React.FC<ArchetypeSelectorProps> = ({
             name,
             description: `${name} archetype`,
             representativeCardId: cardId,
+            imageUrl: getCardImageUrl(cardId, "small"),
           })
         );
 
@@ -232,14 +272,15 @@ const ArchetypeSelector: React.FC<ArchetypeSelectorProps> = ({
                 key={archetype.id}
                 onClick={() => handleSelectArchetype(archetype)}
               >
-                {archetype.representativeCardId && (
+                {(archetype.imageUrl || archetype.representativeCardId) && (
                   <RepresentativeCard
-                    src={`https://images.ygoprodeck.com/images/cards_small/${archetype.representativeCardId}.jpg`}
+                    src={
+                      archetype.imageUrl || 
+                      getCardImageUrl(archetype.representativeCardId, "small")
+                    }
                     alt={archetype.name}
                     onError={(e) => {
-                      (
-                        e.target as HTMLImageElement
-                      ).src = `https://images.ygoprodeck.com/images/cards_small/back_high.jpg`;
+                      (e.target as HTMLImageElement).src = CARD_BACK_IMAGE;
                     }}
                   />
                 )}
@@ -363,7 +404,8 @@ const ArchetypeItemContainer = styled.div`
 
 const RepresentativeCard = styled.img`
   width: 50px;
-  height: auto;
+  height: 70px;
+  object-fit: cover;
   border-radius: 4px;
 `;
 

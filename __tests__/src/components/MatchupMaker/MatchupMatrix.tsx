@@ -9,6 +9,7 @@ import {
 import CardSelector from "./CardSelector";
 import ArchetypeSelector from "./ArchetypeSelector";
 import { CheckCircle, XCircle, MinusCircle, Trash2, Info } from "react-feather";
+import { getCardImageUrl, CARD_BACK_IMAGE } from "../../utils/cardImages";
 
 interface MatchupMatrixProps {
   matchupData: MatchupData;
@@ -157,11 +158,10 @@ const MatchupMatrix: React.FC<MatchupMatrixProps> = ({
                 <th key={card.id}>
                   <CardHeader>
                     <CardImage
-                      src={`https://images.ygoprodeck.com/images/cards_small/${card.id}.jpg`}
+                      src={getCardImageUrl(card.id, "small")}
                       alt={card.name}
                       onError={(e) => {
-                        (e.target as HTMLImageElement).src =
-                          "https://images.ygoprodeck.com/images/cards_small/back_high.jpg";
+                        (e.target as HTMLImageElement).src = CARD_BACK_IMAGE;
                       }}
                     />
                     <CardName>{card.name}</CardName>
@@ -181,7 +181,23 @@ const MatchupMatrix: React.FC<MatchupMatrixProps> = ({
               <tr key={archetype.id}>
                 <td>
                   <ArchetypeHeader>
-                    <ArchetypeName>{archetype.name}</ArchetypeName>
+                    {archetype.imageUrl || archetype.representativeCardId ? (
+                      <ArchetypeImageContainer>
+                        <CardImage 
+                          src={
+                            archetype.imageUrl || 
+                            getCardImageUrl(archetype.representativeCardId, "small")
+                          }
+                          alt={archetype.name}
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = CARD_BACK_IMAGE;
+                          }}
+                        />
+                        <ArchetypeName>{archetype.name}</ArchetypeName>
+                      </ArchetypeImageContainer>
+                    ) : (
+                      <ArchetypeName>{archetype.name}</ArchetypeName>
+                    )}
                     <RemoveButton
                       onClick={() => onRemoveArchetype(archetype.id)}
                       title={`Remove ${archetype.name}`}
@@ -440,10 +456,24 @@ const ArchetypeHeader = styled.div`
   position: relative;
 `;
 
+const ArchetypeImageContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100px;
+  padding: ${(props) => props.theme.spacing.xs};
+  margin-right: auto;
+`;
+
 const ArchetypeName = styled.div`
-  font-size: ${(props) => props.theme.typography.size.sm};
+  font-size: ${(props) => props.theme.typography.size.xs};
   font-weight: ${(props) => props.theme.typography.weight.medium};
-  text-align: left;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+  margin-top: ${(props) => props.theme.spacing.xs};
 `;
 
 const RemoveButton = styled.button`
