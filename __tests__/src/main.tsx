@@ -29,6 +29,8 @@ import HelpPage from "./components/Help";
 import ContactPage from "./pages/ContactPage";
 import MatchupMakerPage from "./pages/MatchupMakerPage";
 import { PageViewerProvider } from "./utils/use-page-view.ts";
+// Import new tool components
+import { SpinnerWheel, TierList, Randomizer } from "./components/Tools";
 
 debug.enable("ygo:*");
 localStorage.setItem("debug", "ygo:*");
@@ -96,6 +98,11 @@ createRoot(document.getElementById("root")!).render(
 
         {/* Matchup Maker tool */}
         <Route path="/matchup-maker" element={<MatchupMakerPage />} />
+
+        {/* New Tool Routes */}
+        <Route path="/tools/spinner" element={<SpinnerWheel />} />
+        <Route path="/tools/tierlist" element={<TierList />} />
+        <Route path="/tools/randomizer" element={<Randomizer />} />
       </Routes>
     </BrowserRouter>
   </KaibaNetProvider>

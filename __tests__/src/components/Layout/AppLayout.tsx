@@ -79,6 +79,12 @@ const FooterContainer = styled.div`
 
 const FooterContent = styled.div`
   display: flex;
+  flex-direction: column;
+  gap: ${spacing.lg};
+`;
+
+const FooterTop = styled.div`
+  display: flex;
   justify-content: space-between;
   align-items: flex-start;
 
@@ -168,7 +174,7 @@ const Copyright = styled.p`
 `;
 
 const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
-  // Navigation items - updated to include Card Database, Rulings, and Contact
+  // Navigation items - updated to include new tool routes
   const navItems = [
     { to: "/duel/lobby", label: "Duel Lobby" },
     { to: "/my/decks", label: "My Decks" },
@@ -176,6 +182,9 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
     { to: "/matchup-maker", label: "Matchup Maker" },
     { to: "/cards/database", label: "Card Database" },
     { to: "/rulings", label: "Rulings" },
+    { to: "/tools/spinner", label: "Spinner Wheel" },
+    { to: "/tools/tierlist", label: "Tier List" },
+    { to: "/tools/randomizer", label: "Dice & Coin" },
     { to: "/contact", label: "Contact" },
   ];
 
@@ -223,6 +232,30 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
               </FooterLinkItem>
               <FooterLinkItem>
                 <FooterLink to="/duel">Duel Simulator</FooterLink>
+              </FooterLinkItem>
+              <FooterLinkItem>
+                <FooterLink to="/tools/spinner">Spinner Wheel</FooterLink>
+              </FooterLinkItem>
+              <FooterLinkItem>
+                <FooterLink to="/tools/tierlist">Tier List Maker</FooterLink>
+              </FooterLinkItem>
+              <FooterLinkItem>
+                <FooterLink to="/tools/randomizer">Dice & Coin</FooterLink>
+              </FooterLinkItem>
+            </FooterLinksList>
+          </FooterSection>
+
+          <FooterSection>
+            <FooterSectionTitle>Collections</FooterSectionTitle>
+            <FooterLinksList>
+              <FooterLinkItem>
+                <FooterLink to="/my/decks">My Decks</FooterLink>
+              </FooterLinkItem>
+              <FooterLinkItem>
+                <FooterLink to="/my/combos">My Combos</FooterLink>
+              </FooterLinkItem>
+              <FooterLinkItem>
+                <FooterLink to="/my/replays">My Replays</FooterLink>
               </FooterLinkItem>
               <FooterLinkItem>
                 <FooterLink to="/cards">Card Database</FooterLink>

@@ -57,6 +57,7 @@ const MatchupMakerPage: React.FC = () => {
   >([]);
   const [currentMatchupName, setCurrentMatchupName] =
     useState<string>("New Matchup");
+  const [selectedMatchupName, setSelectedMatchupName] = useState<string | null>(null);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -281,7 +282,7 @@ const MatchupMakerPage: React.FC = () => {
     }
   }, [matchupData, currentMatchupName]);
 
-  // Load a saved matchup
+  // Load a saved matchup with enhanced selection
   const handleLoadMatchup = useCallback((name: string) => {
     const storageKey = `matchup_${name}`;
     try {
@@ -289,6 +290,7 @@ const MatchupMakerPage: React.FC = () => {
       if (saved) {
         setMatchupData(JSON.parse(saved));
         setCurrentMatchupName(name);
+        setSelectedMatchupName(null); // Clear selection after loading
         localStorage.setItem("last_matchup_key", storageKey);
       }
     } catch (error) {
@@ -490,6 +492,15 @@ const MatchupMakerPage: React.FC = () => {
     }
   }, [matchupData, currentMatchupName, theme.colors.background.paper]);
 
+  // Function to handle matchup selection
+  const handleSelectMatchup = (name: string) => {
+    if (selectedMatchupName === name) {
+      setSelectedMatchupName(null); // Deselect if already selected
+    } else {
+      setSelectedMatchupName(name); // Select the matchup
+    }
+  };
+
   return (
     <ThemeProvider theme={theme}>
       <AppLayout>
@@ -531,46 +542,64 @@ const MatchupMakerPage: React.FC = () => {
                 <Button onClick={handleImportMatchup} variant="tertiary">
                   Import
                 </Button>
-                <Button onClick={handleExportMatchup} variant="tertiary">
-                  Export
-                </Button>
-                <Button onClick={handleShareMatchup} variant="tertiary">
-                  Share URL
-                </Button>
-                <Button onClick={handleExportAsImage} variant="tertiary">
-                  Export as Image
-                </Button>
+                {/* Only show these buttons if there are saved matchups */}
+                {savedMatchups.length > 0 && (
+                  <>
+                    <Button onClick={handleExportMatchup} variant="tertiary">
+                      Export
+                    </Button>
+                    <Button onClick={handleShareMatchup} variant="tertiary">
+                      Share URL
+                    </Button>
+                    <Button onClick={handleExportAsImage} variant="tertiary">
+                      Export as Image
+                    </Button>
+                  </>
+                )}
               </ButtonsRow>
+            </ControlSection>
 
-              {savedMatchups.length > 0 && (
-                <>
-                  <SavedMatchupsHeader>Saved Matchups</SavedMatchupsHeader>
-                  <SavedMatchupsList>
-                    {savedMatchups.map((matchup) => (
-                      <SavedMatchupItem key={matchup.name}>
-                        <span>{matchup.name}</span>
+            {savedMatchups.length > 0 && (
+              <SavedMatchupsSection>
+                <h2>Saved Matchups</h2>
+                <p>Click on a matchup to select it and view options</p>
+                <SavedMatchupsList>
+                  {savedMatchups.map((matchup) => (
+                    <SavedMatchupItem
+                      key={matchup.name}
+                      isSelected={selectedMatchupName === matchup.name}
+                      onClick={() => handleSelectMatchup(matchup.name)}
+                    >
+                      <MatchupName>{matchup.name}</MatchupName>
+                      {selectedMatchupName === matchup.name && (
                         <SavedButtonsGroup>
                           <Button
-                            onClick={() => handleLoadMatchup(matchup.name)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleLoadMatchup(matchup.name);
+                            }}
                             variant="tertiary"
                             size="sm"
                           >
                             Load
                           </Button>
                           <Button
-                            onClick={() => handleDeleteMatchup(matchup.name)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteMatchup(matchup.name);
+                            }}
                             variant="danger"
                             size="sm"
                           >
                             Delete
                           </Button>
                         </SavedButtonsGroup>
-                      </SavedMatchupItem>
-                    ))}
-                  </SavedMatchupsList>
-                </>
-              )}
-            </ControlSection>
+                      )}
+                    </SavedMatchupItem>
+                  ))}
+                </SavedMatchupsList>
+              </SavedMatchupsSection>
+            )}
           </ControlPanel>
 
           <MatchupMatrix
@@ -663,6 +692,24 @@ const ControlSection = styled.section`
   }
 `;
 
+const SavedMatchupsSection = styled.section`
+  background-color: ${(props) => props.theme.colors.background.card};
+  border-radius: ${(props) => props.theme.borderRadius.lg};
+  padding: ${(props) => props.theme.spacing.lg};
+  margin-top: ${(props) => props.theme.spacing.lg};
+  box-shadow: ${(props) => props.theme.shadows.sm};
+
+  h2 {
+    margin-top: 0;
+    margin-bottom: ${(props) => props.theme.spacing.md};
+  }
+
+  p {
+    margin-bottom: ${(props) => props.theme.spacing.md};
+    color: ${(props) => props.theme.colors.text.secondary};
+  }
+`;
+
 const ControlGrid = styled.div`
   display: grid;
   grid-template-columns: 1fr auto;
@@ -707,28 +754,32 @@ const ButtonsRow = styled.div`
   }
 `;
 
-const SavedMatchupsHeader = styled.h3`
-  margin-top: ${(props) => props.theme.spacing.lg};
-`;
-
 const SavedMatchupsList = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: ${(props) => props.theme.spacing.md};
 `;
 
-const SavedMatchupItem = styled.div`
+const SavedMatchupItem = styled.div<{ isSelected: boolean }>`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: ${(props) => props.theme.colors.background.paper};
+  background-color: ${(props) =>
+    props.isSelected
+      ? props.theme.colors.background.highlight
+      : props.theme.colors.background.paper};
   border-radius: ${(props) => props.theme.borderRadius.md};
   padding: ${(props) => props.theme.spacing.sm};
   box-shadow: ${(props) => props.theme.shadows.xs};
+  cursor: pointer;
 
   span {
     font-weight: ${(props) => props.theme.typography.weight.medium};
   }
+`;
+
+const MatchupName = styled.span`
+  font-weight: ${(props) => props.theme.typography.weight.medium};
 `;
 
 const SavedButtonsGroup = styled.div`
