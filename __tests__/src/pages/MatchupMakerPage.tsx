@@ -57,7 +57,9 @@ const MatchupMakerPage: React.FC = () => {
   >([]);
   const [currentMatchupName, setCurrentMatchupName] =
     useState<string>("New Matchup");
-  const [selectedMatchupName, setSelectedMatchupName] = useState<string | null>(null);
+  const [selectedMatchupName, setSelectedMatchupName] = useState<string | null>(
+    null
+  );
 
   const navigate = useNavigate();
   const location = useLocation();

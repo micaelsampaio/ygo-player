@@ -16,6 +16,7 @@ import CardModal from "./components/CardModal/CardModal.tsx";
 import CardNotification from "./components/CardNotification/CardNotification.tsx";
 import CardSuggestions from "./components/CardSuggestion/CardSuggestions.tsx";
 import DrawSimulator from "./components/DrawSimulator"; // Fix import path
+import DeckNotes from "./components/DeckNotes"; // Import the DeckNotes component
 import DeckSyncModal from "./components/DeckSyncModal/DeckSyncModal";
 import { useDeckStorage } from "./hooks/useDeckStorage";
 import { useDeckGroups } from "./hooks/useDeckGroups"; // New hook for deck groups
@@ -37,7 +38,7 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
   const [deckAnalytics, setDeckAnalytics] = useState<any>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [activeTab, setActiveTab] = useState<
-    "editor" | "simulator" | "analytics"
+    "editor" | "simulator" | "analytics" | "notes"
   >("editor");
   const [targetDeck, setTargetDeck] = useState<"main" | "side">("main");
   const [analyticsCalculated, setAnalyticsCalculated] = useState(false);
@@ -357,7 +358,9 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
     setTimeout(() => setPreviewCard(null), 300);
   };
 
-  const handleTabChange = (tab: "editor" | "simulator" | "analytics") => {
+  const handleTabChange = (
+    tab: "editor" | "simulator" | "analytics" | "notes"
+  ) => {
     setActiveTab(tab);
 
     // Calculate analytics only if switching to analytics tab and they haven't been calculated yet
@@ -405,7 +408,7 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
     const importedDeckName = importedDeck.name.endsWith(" (Imported)")
       ? importedDeck.name
       : importedDeck.name + " (Imported)";
-      
+
     const newDeck = {
       ...importedDeck,
       id: `deck_${importedDeckName}`,
@@ -708,7 +711,7 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
           const importedDeckName = deck.name.endsWith(" (Imported)")
             ? deck.name
             : deck.name + " (Imported)";
-            
+
           const importedDeck = {
             ...deck,
             id: `deck_${importedDeckName}`,
@@ -886,7 +889,7 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
           const importedDeckName = deck.name.endsWith(" (Imported)")
             ? deck.name
             : deck.name + " (Imported)";
-            
+
           const importedDeck = {
             ...deck,
             id: `deck_${importedDeckName}`,
@@ -1050,6 +1053,13 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
                 >
                   Draw Simulator
                 </button>
+                <button
+                  className={activeTab === "notes" ? "active-tab" : ""}
+                  onClick={() => handleTabChange("notes")}
+                  disabled={!selectedDeck}
+                >
+                  Notes
+                </button>
               </div>
             </div>
 
@@ -1097,7 +1107,7 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
                   deck={selectedDeck}
                   onCardSelect={toggleCardPreview}
                 />
-              ) : (
+              ) : activeTab === "analytics" ? (
                 <DeckAnalytics
                   analytics={deckAnalytics}
                   deck={selectedDeck}
@@ -1108,6 +1118,8 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
                     toggleEnhancedAnalysis(newState);
                   }}
                 />
+              ) : (
+                <DeckNotes deck={selectedDeck} updateDeck={updateDeck} />
               )}
             </div>
           </div>

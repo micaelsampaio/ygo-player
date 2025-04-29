@@ -144,6 +144,8 @@ export interface Deck {
   originalCreatedAt?: string; // Creation date of the original deck
   lastModified?: string; // Last time the deck was modified
   groupId?: string; // Reference to the group this deck belongs to
+  notes?: string; // Notes about the deck, strategy, combos, etc.
+  coverCardId?: number; // ID of the card to use as deck cover
 }
 
 // Deck Group structure for organizing decks into folders

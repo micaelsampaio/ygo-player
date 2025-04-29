@@ -38,6 +38,7 @@ const DeckDetailPage = () => {
   const [coverCardId, setCoverCardId] = useState<number | undefined>(undefined);
   const [coverCardDetails, setCoverCardDetails] = useState<any>(null);
   const kaibaNet = useKaibaNet();
+  const [isShowingNotes, setIsShowingNotes] = useState(false);
 
   // Add state for card preview modal
   const [previewCard, setPreviewCard] = useState<any>(null);
@@ -414,15 +415,37 @@ const DeckDetailPage = () => {
 
                 <CardDetailsSection>
                   <CardDetailHeader>
-                    <CardDetailTitle>Cover Card</CardDetailTitle>
-                    <ChangeCoverButton
-                      onClick={() => setIsCoverModalOpen(true)}
-                    >
-                      <Image size={14} /> Change
-                    </ChangeCoverButton>
+                    <CardDetailTitle>
+                      {isShowingNotes ? "Deck Notes" : "Cover Card"}
+                    </CardDetailTitle>
+                    <div>
+                      <ContentToggleButton
+                        onClick={() => setIsShowingNotes(!isShowingNotes)}
+                        $active={isShowingNotes}
+                      >
+                        {isShowingNotes ? "Show Card" : "Show Notes"}
+                      </ContentToggleButton>
+                      {!isShowingNotes && (
+                        <ChangeCoverButton
+                          onClick={() => setIsCoverModalOpen(true)}
+                        >
+                          <Image size={14} /> Change
+                        </ChangeCoverButton>
+                      )}
+                    </div>
                   </CardDetailHeader>
 
-                  {coverCardId && coverCardDetails ? (
+                  {isShowingNotes ? (
+                    <NotesContent>
+                      {deck.notes ? (
+                        <NotesText>{deck.notes}</NotesText>
+                      ) : (
+                        <NoNotesText>
+                          No notes for this deck. Add notes in the deck builder.
+                        </NoNotesText>
+                      )}
+                    </NotesContent>
+                  ) : coverCardId && coverCardDetails ? (
                     <CardDetails>
                       <CardName>{coverCardDetails.name}</CardName>
                       <CardType>
@@ -1018,6 +1041,72 @@ const ChangeCoverButton = styled.button`
     background-color: ${theme.colors.background.card};
     text-decoration: none;
   }
+`;
+
+const ContentToggleButton = styled.button<{ $active: boolean }>`
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: ${theme.spacing.xs};
+  background: ${(props) =>
+    props.$active ? theme.colors.primary.main : "none"};
+  color: ${(props) =>
+    props.$active ? theme.colors.background.light : theme.colors.primary.main};
+  border: none;
+  padding: ${theme.spacing.xs} ${theme.spacing.sm};
+  font-size: ${theme.typography.size.sm};
+  cursor: pointer;
+  transition: color ${theme.transitions.default},
+    background ${theme.transitions.default};
+  border-radius: ${theme.borderRadius.sm};
+  margin-right: ${theme.spacing.sm};
+
+  &:hover {
+    color: ${(props) =>
+      props.$active
+        ? theme.colors.background.light
+        : theme.colors.primary.dark};
+    background-color: ${(props) =>
+      props.$active ? theme.colors.primary.dark : theme.colors.background.card};
+    text-decoration: none;
+  }
+`;
+
+const NotesContent = styled.div`
+  font-size: ${theme.typography.size.sm};
+  color: ${theme.colors.text.primary};
+  line-height: 1.4;
+  padding-top: ${theme.spacing.xs};
+  margin-top: ${theme.spacing.xs};
+  max-height: 120px;
+  overflow-y: auto;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: ${theme.colors.background.light};
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: ${theme.colors.primary.light};
+    border-radius: 4px;
+  }
+`;
+
+const NotesText = styled.div`
+  font-size: ${theme.typography.size.sm};
+  color: ${theme.colors.text.primary};
+`;
+
+const NoNotesText = styled.div`
+  font-size: ${theme.typography.size.md};
+  color: ${theme.colors.text.secondary};
+  text-align: center;
+  padding: ${theme.spacing.md} 0;
+  font-style: italic;
 `;
 
 const ButtonContainer = styled.div`
