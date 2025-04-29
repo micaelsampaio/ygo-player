@@ -8,6 +8,8 @@ import { YGOCardGrid } from "../../UI/YGOCard";
 import { ArrowLeft, Download, Import } from "lucide-react";
 import { getCardImageUrl, CARD_BACK_IMAGE } from "../../../utils/cardImages";
 import { YGODeckToImage } from "ygo-core-images-utils";
+import DeckSocialPreview from "./DeckSocialPreview";
+import { AnalyzerService } from "../../../services/analyzerService";
 
 interface Card {
   id: number;
@@ -43,6 +45,9 @@ const SharedDeckPage: React.FC = () => {
   >("idle");
   const [importMessage, setImportMessage] = useState<string>("");
   const [decodingError, setDecodingError] = useState<string>("");
+  const [fullShareUrl, setFullShareUrl] = useState<string>(
+    window.location.href
+  );
 
   useEffect(() => {
     // Get the YDKE URL from query parameters
@@ -205,46 +210,118 @@ const SharedDeckPage: React.FC = () => {
     const cards: Card[] = [];
     let cardDataMap: Record<number, Card> = {};
 
-    // Try to load card data from cache or fetch it
+    // Try to load card data from different sources
     try {
+      // First try localStorage for previously cached card data
       let cardData = localStorage.getItem("card_data");
 
+      // Check for global cards data
       if (!cardData) {
-        // Try to use the global cards data if available
         const globalData = localStorage.getItem("data/cards.json");
         if (globalData) {
           cardData = globalData;
-        } else {
-          // If no card data is available, try to fetch it
-          try {
-            const response = await fetch("/data/cards.json");
-            if (response.ok) {
-              cardData = await response.text();
-              localStorage.setItem("card_data", cardData);
-            }
-          } catch (err) {
-            console.error("Failed to fetch card data:", err);
-          }
         }
       }
 
+      // Try to build the card data map from cache
       if (cardData) {
-        const parsedData = JSON.parse(cardData);
-        if (Array.isArray(parsedData)) {
-          cardDataMap = parsedData.reduce(
-            (acc: Record<number, Card>, card: Card) => {
-              acc[card.id] = card;
-              return acc;
-            },
-            {}
-          );
+        try {
+          const parsedData = JSON.parse(cardData);
+          if (Array.isArray(parsedData)) {
+            cardDataMap = parsedData.reduce(
+              (acc: Record<number, Card>, card: Card) => {
+                acc[card.id] = card;
+                return acc;
+              },
+              {}
+            );
+          }
+        } catch (parseError) {
+          console.error("Error parsing card data:", parseError);
+        }
+      }
+
+      // For any cards not found in local storage, try fetching using AnalyzerService
+      const missingCardIds = uniqueIds.filter((id) => !cardDataMap[id]);
+
+      if (missingCardIds.length > 0) {
+        try {
+          // Use AnalyzerService to get card data
+          const analyzerService = AnalyzerService.getInstance();
+          await analyzerService.initialize();
+
+          if (analyzerService.cardData) {
+            // The cardData property is private, so we need to use type assertion here
+            // This is safe because we know the actual structure of the service
+            const allCards = (analyzerService as any).cardData;
+            const cardsData = Array.isArray(allCards.data)
+              ? allCards.data
+              : Array.isArray(allCards)
+              ? allCards
+              : [];
+
+            cardsData.forEach((card: Card) => {
+              if (missingCardIds.includes(card.id)) {
+                cardDataMap[card.id] = card;
+              }
+            });
+
+            // Check if there are still missing cards after AnalyzerService fetch
+            const stillMissingIds = missingCardIds.filter(
+              (id) => !cardDataMap[id]
+            );
+
+            // If there are still missing cards, try the YGOProDeck API as a last resort
+            if (stillMissingIds.length > 0) {
+              const YGOPRODECK_API_URL = "https://db.ygoprodeck.com/api/v7";
+              const apiUrl = `${YGOPRODECK_API_URL}/cardinfo.php?id=${stillMissingIds.join(
+                ","
+              )}`;
+              const apiResponse = await fetch(apiUrl);
+
+              if (apiResponse.ok) {
+                const apiData = await apiResponse.json();
+                if (apiData.data && Array.isArray(apiData.data)) {
+                  apiData.data.forEach((card: any) => {
+                    cardDataMap[card.id] = {
+                      id: card.id,
+                      name: card.name,
+                      type: card.type,
+                      attribute: card.attribute,
+                      race: card.race,
+                      level: card.level,
+                      atk: card.atk,
+                      def: card.def,
+                      desc: card.desc,
+                    };
+                  });
+                }
+              }
+            }
+
+            // Update the cache with the new card data
+            try {
+              const existingData = cardData ? JSON.parse(cardData) : [];
+              const newCachedData = [
+                ...existingData,
+                ...Object.values(cardDataMap).filter((card) =>
+                  missingCardIds.includes(card.id)
+                ),
+              ];
+              localStorage.setItem("card_data", JSON.stringify(newCachedData));
+            } catch (cacheError) {
+              console.error("Error updating card data cache:", cacheError);
+            }
+          }
+        } catch (apiError) {
+          console.error("Failed to fetch card data:", apiError);
         }
       }
     } catch (error) {
       console.error("Error loading card data:", error);
     }
 
-    // For each unique ID, get the card data and add it to the deck the correct number of times
+    // For each ID in the original list, get the card data and add it to the deck
     for (let id of ids) {
       const card = cardDataMap[id] || {
         id,
@@ -421,6 +498,14 @@ const SharedDeckPage: React.FC = () => {
 
   return (
     <AppLayout>
+      {deck && (
+        <DeckSocialPreview
+          deck={deck}
+          shareUrl={fullShareUrl}
+          deckId={deckName || "shared-deck"}
+        />
+      )}
+
       <PageContainer>
         <PageHeader>
           <BackButton onClick={goBack}>
