@@ -147,7 +147,7 @@ const ContactPage: React.FC = () => {
                     <ContactInfoIcon>📧</ContactInfoIcon>
                     <ContactInfoText>
                       <strong>Email</strong>
-                      <span>ygo101.com@gmail.com</span>
+                      <span>general@ygo101.com</span>
                     </ContactInfoText>
                   </ContactInfoItem>
 
