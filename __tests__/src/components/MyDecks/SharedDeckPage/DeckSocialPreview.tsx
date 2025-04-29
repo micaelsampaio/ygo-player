@@ -1,6 +1,5 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { Helmet } from "react-helmet";
-import { getCardImageUrl } from "../../../../utils/cardImages";
 
 interface DeckSocialPreviewProps {
   deck: {
@@ -40,7 +39,9 @@ const DeckSocialPreview: React.FC<DeckSocialPreviewProps> = ({
     );
 
     if (firstMonster) {
-      return getCardImageUrl(firstMonster.id);
+      const CDN_URL =
+        import.meta.env.VITE_YGO_CDN_URL || "http://127.0.0.1:8080";
+      return `${CDN_URL}/images/cards/${firstMonster.id}.jpg`;
     }
 
     // If no monster cards, use a default image
