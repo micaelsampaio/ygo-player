@@ -419,12 +419,6 @@ const DeckDetailPage = () => {
                       {isShowingNotes ? "Deck Notes" : "Cover Card"}
                     </CardDetailTitle>
                     <div>
-                      <ContentToggleButton
-                        onClick={() => setIsShowingNotes(!isShowingNotes)}
-                        $active={isShowingNotes}
-                      >
-                        {isShowingNotes ? "Show Card" : "Show Notes"}
-                      </ContentToggleButton>
                       {!isShowingNotes && (
                         <ChangeCoverButton
                           onClick={() => setIsCoverModalOpen(true)}
@@ -498,6 +492,12 @@ const DeckDetailPage = () => {
                   </ActionButton>
                   <ActionButton variant="tertiary" onClick={downloadDeckAsPng}>
                     <Image size={16} /> PNG
+                  </ActionButton>
+                  <ActionButton
+                    variant="tertiary"
+                    onClick={() => setIsShowingNotes(!isShowingNotes)}
+                  >
+                    <Edit size={16} /> {isShowingNotes ? "Show Card" : "Notes"}
                   </ActionButton>
                   <ActionButton variant="ghost" onClick={handleShareDeck}>
                     <ShareButtonContent>
