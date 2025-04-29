@@ -27,6 +27,7 @@ import SettingsPage from "./components/Settings/SettingsPage.tsx";
 import SharedDeckPage from "./components/MyDecks/SharedDeckPage";
 import HelpPage from "./components/Help";
 import ContactPage from "./pages/ContactPage";
+import PrivacyPage from "./pages/PrivacyPage";
 import MatchupMakerPage from "./pages/MatchupMakerPage";
 import { PageViewerProvider } from "./utils/use-page-view.ts";
 // Import new tool components
@@ -67,6 +68,8 @@ createRoot(document.getElementById("root")!).render(
         <Route path="/help" element={<HelpPage />} />
         {/* Contact page route */}
         <Route path="/contact" element={<ContactPage />} />
+        {/* Privacy policy page route */}
+        <Route path="/privacy" element={<PrivacyPage />} />
 
         {/* Routes for deck management */}
         <Route path="/my/decks" element={<MyDecksPage />} />

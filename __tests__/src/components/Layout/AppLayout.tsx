@@ -279,6 +279,9 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
                   <FooterLink to="/contact">Contact</FooterLink>
                 </FooterLinkItem>
                 <FooterLinkItem>
+                  <FooterLink to="/privacy">Privacy Policy</FooterLink>
+                </FooterLinkItem>
+                <FooterLinkItem>
                   <ExternalLink
                     href="https://x.com/ygo101com"
                     target="_blank"
