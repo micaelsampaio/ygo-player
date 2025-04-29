@@ -65,15 +65,17 @@ const DeckDetailPage = () => {
 
         if (storedDeck) {
           const parsedDeck = JSON.parse(storedDeck);
-          
+
           // Debug the loaded deck and specifically check for notes
-          console.log("Loaded deck data:", { 
-            id: parsedDeck.id, 
+          console.log("Loaded deck data:", {
+            id: parsedDeck.id,
             name: parsedDeck.name,
             hasNotes: !!parsedDeck.notes,
-            notes: parsedDeck.notes ? parsedDeck.notes.substring(0, 50) + "..." : "none" 
+            notes: parsedDeck.notes
+              ? parsedDeck.notes.substring(0, 50) + "..."
+              : "none",
           });
-          
+
           setDeck(parsedDeck);
           setCoverCardId(parsedDeck.coverCardId);
           setFileName(deckId.replace(/\s+/g, "_").toLowerCase());
@@ -81,13 +83,15 @@ const DeckDetailPage = () => {
           // If not found, search through all localStorage keys to find a deck with matching ID
           const found = findDeckById(deckId);
           if (found) {
-            console.log("Found deck by ID search:", { 
-              id: found.deck.id, 
+            console.log("Found deck by ID search:", {
+              id: found.deck.id,
               name: found.deck.name,
               hasNotes: !!found.deck.notes,
-              notes: found.deck.notes ? found.deck.notes.substring(0, 50) + "..." : "none" 
+              notes: found.deck.notes
+                ? found.deck.notes.substring(0, 50) + "..."
+                : "none",
             });
-            
+
             setDeck(found.deck);
             setCoverCardId(found.deck.coverCardId);
             setFileName(found.name.replace(/\s+/g, "_").toLowerCase());
@@ -321,21 +325,23 @@ const DeckDetailPage = () => {
     const baseUrl = window.location.origin;
     const ydkeUrl = generateYdkeUrl(deck);
     const encodedName = encodeURIComponent(deck.name || "Shared_Deck");
-    
+
     // Include additional parameters - deck notes and cover card ID
-    let shareUrl = `${baseUrl}/my/decks/public/${encodedName}?data=${encodeURIComponent(ydkeUrl)}`;
-    
+    let shareUrl = `${baseUrl}/my/decks/public/${encodedName}?data=${encodeURIComponent(
+      ydkeUrl
+    )}`;
+
     // Add notes if available - make sure they're properly encoded
-    if (deck.notes && deck.notes.trim() !== '') {
+    if (deck.notes && deck.notes.trim() !== "") {
       // Encode notes properly to handle special characters and line breaks
       const encodedNotes = encodeURIComponent(deck.notes);
       shareUrl += `&notes=${encodedNotes}`;
       console.log("Sharing notes:", {
         original: deck.notes.substring(0, 50) + "...",
-        encoded: encodedNotes.substring(0, 100) + "..."
+        encoded: encodedNotes.substring(0, 100) + "...",
       });
     }
-    
+
     // Add cover card ID if available
     if (deck.coverCardId) {
       shareUrl += `&cover=${deck.coverCardId}`;
@@ -783,7 +789,10 @@ const DeckDetailPage = () => {
                     ) : (
                       <EmptyNotesSection>
                         <p>No notes have been added to this deck.</p>
-                        <EditNotesButton variant="secondary" onClick={handleEdit}>
+                        <EditNotesButton
+                          variant="secondary"
+                          onClick={handleEdit}
+                        >
                           <Edit3 size={16} /> Add Notes in Deck Builder
                         </EditNotesButton>
                       </EmptyNotesSection>

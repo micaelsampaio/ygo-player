@@ -38,7 +38,9 @@ const SharedDeckPage: React.FC = () => {
   const [deck, setDeck] = useState<SharedDeckData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [activeTab, setActiveTab] = useState("main");
-  const [importStatus, setImportStatus] = useState<"idle" | "success" | "error">("idle");
+  const [importStatus, setImportStatus] = useState<
+    "idle" | "success" | "error"
+  >("idle");
   const [importMessage, setImportMessage] = useState<string>("");
   const [decodingError, setDecodingError] = useState<string>("");
 
@@ -65,7 +67,7 @@ const SharedDeckPage: React.FC = () => {
       const searchParams = new URLSearchParams(location.search);
       const notes = searchParams.get("notes");
       const coverCardId = searchParams.get("cover");
-      
+
       // YDKE format: ydke://[main]![extra]![side]!
       let ydkeUrl = ydkeData;
       if (!ydkeUrl.startsWith("ydke://")) {
@@ -92,10 +94,10 @@ const SharedDeckPage: React.FC = () => {
       const extraDeckIds = decodeYdkeData(extraData);
       const sideDeckIds = decodeYdkeData(sideData);
 
-      console.log("Decoded IDs:", { 
-        main: mainDeckIds.length, 
-        extra: extraDeckIds.length, 
-        side: sideDeckIds.length 
+      console.log("Decoded IDs:", {
+        main: mainDeckIds.length,
+        extra: extraDeckIds.length,
+        side: sideDeckIds.length,
       });
 
       // Convert card IDs to card objects
@@ -103,10 +105,10 @@ const SharedDeckPage: React.FC = () => {
       const extraDeck = await getCardsFromIds(extraDeckIds);
       const sideDeck = await getCardsFromIds(sideDeckIds);
 
-      console.log("Decoded cards:", { 
-        main: mainDeck.length, 
-        extra: extraDeck.length, 
-        side: sideDeck.length 
+      console.log("Decoded cards:", {
+        main: mainDeck.length,
+        extra: extraDeck.length,
+        side: sideDeck.length,
       });
 
       const decodedDeck: SharedDeckData = {
@@ -122,7 +124,7 @@ const SharedDeckPage: React.FC = () => {
           // Double decoding to handle potential multiple encoding
           let decodedNotes = decodeURIComponent(notes);
           // Try a second decode if it still looks encoded
-          if (decodedNotes.includes('%')) {
+          if (decodedNotes.includes("%")) {
             try {
               decodedNotes = decodeURIComponent(decodedNotes);
             } catch (e) {
@@ -131,7 +133,10 @@ const SharedDeckPage: React.FC = () => {
             }
           }
           decodedDeck.notes = decodedNotes;
-          console.log("Decoded notes successfully:", decodedDeck.notes?.substring(0, 50) + "...");
+          console.log(
+            "Decoded notes successfully:",
+            decodedDeck.notes?.substring(0, 50) + "..."
+          );
         } catch (e) {
           console.error("Error decoding notes:", e);
         }
@@ -152,7 +157,9 @@ const SharedDeckPage: React.FC = () => {
       setDeck(decodedDeck);
     } catch (error) {
       console.error("Error parsing YDKE URL:", error);
-      setDecodingError(error instanceof Error ? error.message : "Failed to parse deck data");
+      setDecodingError(
+        error instanceof Error ? error.message : "Failed to parse deck data"
+      );
     } finally {
       setLoading(false);
     }
@@ -166,7 +173,7 @@ const SharedDeckPage: React.FC = () => {
       // Decode base64 to binary
       const binary = atob(data);
       const bytes = new Uint8Array(binary.length);
-      
+
       for (let i = 0; i < binary.length; i++) {
         bytes[i] = binary.charCodeAt(i);
       }
@@ -174,7 +181,7 @@ const SharedDeckPage: React.FC = () => {
       // Each card ID is 4 bytes (32 bits)
       const cardIds = [];
       const view = new DataView(bytes.buffer);
-      
+
       for (let i = 0; i < bytes.length; i += 4) {
         if (i + 4 <= bytes.length) {
           // Little-endian integer
@@ -182,7 +189,7 @@ const SharedDeckPage: React.FC = () => {
           cardIds.push(cardId);
         }
       }
-      
+
       return cardIds;
     } catch (error) {
       console.error("Error decoding YDKE data:", error);
@@ -201,7 +208,7 @@ const SharedDeckPage: React.FC = () => {
     // Try to load card data from cache or fetch it
     try {
       let cardData = localStorage.getItem("card_data");
-      
+
       if (!cardData) {
         // Try to use the global cards data if available
         const globalData = localStorage.getItem("data/cards.json");
@@ -210,7 +217,7 @@ const SharedDeckPage: React.FC = () => {
         } else {
           // If no card data is available, try to fetch it
           try {
-            const response = await fetch('/data/cards.json');
+            const response = await fetch("/data/cards.json");
             if (response.ok) {
               cardData = await response.text();
               localStorage.setItem("card_data", cardData);
@@ -220,14 +227,17 @@ const SharedDeckPage: React.FC = () => {
           }
         }
       }
-      
+
       if (cardData) {
         const parsedData = JSON.parse(cardData);
         if (Array.isArray(parsedData)) {
-          cardDataMap = parsedData.reduce((acc: Record<number, Card>, card: Card) => {
-            acc[card.id] = card;
-            return acc;
-          }, {});
+          cardDataMap = parsedData.reduce(
+            (acc: Record<number, Card>, card: Card) => {
+              acc[card.id] = card;
+              return acc;
+            },
+            {}
+          );
         }
       }
     } catch (error) {
@@ -236,14 +246,14 @@ const SharedDeckPage: React.FC = () => {
 
     // For each unique ID, get the card data and add it to the deck the correct number of times
     for (let id of ids) {
-      const card = cardDataMap[id] || { 
+      const card = cardDataMap[id] || {
         id,
         name: `Card #${id}`,
         type: "Unknown",
-        desc: "Card data not available"
+        desc: "Card data not available",
       };
-      
-      cards.push({...card});
+
+      cards.push({ ...card });
     }
 
     return cards;
@@ -266,7 +276,7 @@ const SharedDeckPage: React.FC = () => {
   // Get cover card image, or default to first monster
   const getCoverCardImage = () => {
     const coverCardDetails = getCoverCardDetails();
-    
+
     if (!deck || !coverCardDetails) {
       // Return the first monster card as default if no cover card is set
       const firstMonster = deck?.mainDeck?.find((card: Card) =>
@@ -287,20 +297,22 @@ const SharedDeckPage: React.FC = () => {
     try {
       // Generate a unique ID for the imported deck
       const importId = `deck_imported_${Date.now()}`;
-      
+
       const importedDeck = {
         ...deck,
         id: importId,
         importedAt: new Date().toISOString(),
-        importedFrom: "shared_link"
+        importedFrom: "shared_link",
       };
 
       // Save the deck to localStorage
       localStorage.setItem(importId, JSON.stringify(importedDeck));
-      
+
       setImportStatus("success");
-      setImportMessage(`Deck "${deck.name}" successfully imported to your collection!`);
-      
+      setImportMessage(
+        `Deck "${deck.name}" successfully imported to your collection!`
+      );
+
       // Reset import status after 3 seconds
       setTimeout(() => {
         setImportStatus("idle");
@@ -311,7 +323,7 @@ const SharedDeckPage: React.FC = () => {
       console.error("Error importing deck:", error);
       setImportStatus("error");
       setImportMessage("Failed to import deck. Please try again.");
-      
+
       setTimeout(() => {
         setImportStatus("idle");
       }, 3000);
@@ -370,7 +382,10 @@ const SharedDeckPage: React.FC = () => {
           <Card elevation="medium">
             <Card.Content>
               <EmptyState>
-                <p>Error loading shared deck. {decodingError || "The link may be invalid or expired."}</p>
+                <p>
+                  Error loading shared deck.{" "}
+                  {decodingError || "The link may be invalid or expired."}
+                </p>
                 <Button variant="primary" onClick={goBack}>
                   Go Back
                 </Button>
@@ -387,17 +402,18 @@ const SharedDeckPage: React.FC = () => {
     monsters: deck.mainDeck.filter((card: Card) =>
       card.type?.toLowerCase().includes("monster")
     ),
-    spells: deck.mainDeck.filter((card: Card) => 
+    spells: deck.mainDeck.filter((card: Card) =>
       card.type?.toLowerCase().includes("spell")
     ),
-    traps: deck.mainDeck.filter((card: Card) => 
+    traps: deck.mainDeck.filter((card: Card) =>
       card.type?.toLowerCase().includes("trap")
     ),
-    unknown: deck.mainDeck.filter((card: Card) => 
-      !card.type || 
-      (!card.type.toLowerCase().includes("monster") && 
-       !card.type.toLowerCase().includes("spell") && 
-       !card.type.toLowerCase().includes("trap"))
+    unknown: deck.mainDeck.filter(
+      (card: Card) =>
+        !card.type ||
+        (!card.type.toLowerCase().includes("monster") &&
+          !card.type.toLowerCase().includes("spell") &&
+          !card.type.toLowerCase().includes("trap"))
     ),
     extra: deck.extraDeck || [],
     side: deck.sideDeck || [],
@@ -441,7 +457,7 @@ const SharedDeckPage: React.FC = () => {
                     <span className="deck-shared">Shared Deck</span>
                   </DeckStats>
                 </DeckMetaInfo>
-                
+
                 <CardDetailsSection>
                   <CardDetailHeader>
                     <CardDetailTitle>Cover Card</CardDetailTitle>
@@ -462,7 +478,9 @@ const SharedDeckPage: React.FC = () => {
 
                       {(getCoverCardDetails()?.level ||
                         getCoverCardDetails()?.level === 0) && (
-                        <CardStat>Level: {getCoverCardDetails()?.level}</CardStat>
+                        <CardStat>
+                          Level: {getCoverCardDetails()?.level}
+                        </CardStat>
                       )}
 
                       {(getCoverCardDetails()?.atk !== undefined ||
@@ -507,10 +525,7 @@ const SharedDeckPage: React.FC = () => {
               value={activeTab}
               onChange={(value) => setActiveTab(value)}
             >
-              <Tab
-                value="main"
-                label={`Main Deck (${deck.mainDeck.length})`}
-              />
+              <Tab value="main" label={`Main Deck (${deck.mainDeck.length})`} />
               {cardsByType.extra.length > 0 && (
                 <Tab
                   value="extra"
@@ -523,10 +538,7 @@ const SharedDeckPage: React.FC = () => {
                   label={`Side Deck (${cardsByType.side.length})`}
                 />
               )}
-              <Tab
-                value="notes"
-                label="Notes"
-              />
+              <Tab value="notes" label="Notes" />
             </StyledTabs>
 
             <TabContent>
@@ -554,7 +566,8 @@ const SharedDeckPage: React.FC = () => {
                                     alt={card.name || `Card #${card.id}`}
                                     title={card.name || `Card #${card.id}`}
                                     onError={(e) => {
-                                      const target = e.target as HTMLImageElement;
+                                      const target =
+                                        e.target as HTMLImageElement;
                                       target.src = CARD_BACK_IMAGE;
                                     }}
                                   />
@@ -582,13 +595,16 @@ const SharedDeckPage: React.FC = () => {
                           <YGOCardGrid gap="10px">
                             {cardsByType.spells.map(
                               (card: Card, index: number) => (
-                                <CardContainer key={`spell-${card.id}-${index}`}>
+                                <CardContainer
+                                  key={`spell-${card.id}-${index}`}
+                                >
                                   <CardImage
                                     src={getCardImageUrl(card.id, "small")}
                                     alt={card.name || `Card #${card.id}`}
                                     title={card.name || `Card #${card.id}`}
                                     onError={(e) => {
-                                      const target = e.target as HTMLImageElement;
+                                      const target =
+                                        e.target as HTMLImageElement;
                                       target.src = CARD_BACK_IMAGE;
                                     }}
                                   />
@@ -614,31 +630,34 @@ const SharedDeckPage: React.FC = () => {
                             Traps ({cardsByType.traps.length})
                           </SectionSubtitle>
                           <YGOCardGrid gap="10px">
-                            {cardsByType.traps.map((card: Card, index: number) => (
-                              <CardContainer key={`trap-${card.id}-${index}`}>
-                                <CardImage
-                                  src={getCardImageUrl(card.id, "small")}
-                                  alt={card.name || `Card #${card.id}`}
-                                  title={card.name || `Card #${card.id}`}
-                                  onError={(e) => {
-                                    const target = e.target as HTMLImageElement;
-                                    target.src = CARD_BACK_IMAGE;
-                                  }}
-                                />
-                                <CardCountBadge>
-                                  {
-                                    deck.mainDeck.filter(
-                                      (c: Card) => c.id === card.id
-                                    ).length
-                                  }
-                                  x
-                                </CardCountBadge>
-                              </CardContainer>
-                            ))}
+                            {cardsByType.traps.map(
+                              (card: Card, index: number) => (
+                                <CardContainer key={`trap-${card.id}-${index}`}>
+                                  <CardImage
+                                    src={getCardImageUrl(card.id, "small")}
+                                    alt={card.name || `Card #${card.id}`}
+                                    title={card.name || `Card #${card.id}`}
+                                    onError={(e) => {
+                                      const target =
+                                        e.target as HTMLImageElement;
+                                      target.src = CARD_BACK_IMAGE;
+                                    }}
+                                  />
+                                  <CardCountBadge>
+                                    {
+                                      deck.mainDeck.filter(
+                                        (c: Card) => c.id === card.id
+                                      ).length
+                                    }
+                                    x
+                                  </CardCountBadge>
+                                </CardContainer>
+                              )
+                            )}
                           </YGOCardGrid>
                         </CardTypeSection>
                       )}
-                      
+
                       {/* Unknown Card Types Section */}
                       {cardsByType.unknown.length > 0 && (
                         <CardTypeSection>
@@ -646,27 +665,32 @@ const SharedDeckPage: React.FC = () => {
                             Other Cards ({cardsByType.unknown.length})
                           </SectionSubtitle>
                           <YGOCardGrid gap="10px">
-                            {cardsByType.unknown.map((card: Card, index: number) => (
-                              <CardContainer key={`unknown-${card.id}-${index}`}>
-                                <CardImage
-                                  src={getCardImageUrl(card.id, "small")}
-                                  alt={card.name || `Card #${card.id}`}
-                                  title={card.name || `Card #${card.id}`}
-                                  onError={(e) => {
-                                    const target = e.target as HTMLImageElement;
-                                    target.src = CARD_BACK_IMAGE;
-                                  }}
-                                />
-                                <CardCountBadge>
-                                  {
-                                    deck.mainDeck.filter(
-                                      (c: Card) => c.id === card.id
-                                    ).length
-                                  }
-                                  x
-                                </CardCountBadge>
-                              </CardContainer>
-                            ))}
+                            {cardsByType.unknown.map(
+                              (card: Card, index: number) => (
+                                <CardContainer
+                                  key={`unknown-${card.id}-${index}`}
+                                >
+                                  <CardImage
+                                    src={getCardImageUrl(card.id, "small")}
+                                    alt={card.name || `Card #${card.id}`}
+                                    title={card.name || `Card #${card.id}`}
+                                    onError={(e) => {
+                                      const target =
+                                        e.target as HTMLImageElement;
+                                      target.src = CARD_BACK_IMAGE;
+                                    }}
+                                  />
+                                  <CardCountBadge>
+                                    {
+                                      deck.mainDeck.filter(
+                                        (c: Card) => c.id === card.id
+                                      ).length
+                                    }
+                                    x
+                                  </CardCountBadge>
+                                </CardContainer>
+                              )
+                            )}
                           </YGOCardGrid>
                         </CardTypeSection>
                       )}
@@ -759,7 +783,9 @@ const SharedDeckPage: React.FC = () => {
                   {deck.notes ? (
                     <NotesContent>{deck.notes}</NotesContent>
                   ) : (
-                    <EmptyDeckMessage>No notes available for this deck</EmptyDeckMessage>
+                    <EmptyDeckMessage>
+                      No notes available for this deck
+                    </EmptyDeckMessage>
                   )}
                 </TabSection>
               )}
@@ -817,13 +843,19 @@ const ImportNotification = styled.div<{ $status: string }>`
   padding: ${theme.spacing.md};
   margin-bottom: ${theme.spacing.md};
   background-color: ${(props) =>
-    props.$status === "success" ? theme.colors.success.light : theme.colors.error.light};
+    props.$status === "success"
+      ? theme.colors.success.light
+      : theme.colors.error.light};
   color: ${(props) =>
-    props.$status === "success" ? theme.colors.success.dark : theme.colors.error.dark};
+    props.$status === "success"
+      ? theme.colors.success.dark
+      : theme.colors.error.dark};
   border-radius: ${theme.borderRadius.md};
   border-left: 4px solid
     ${(props) =>
-      props.$status === "success" ? theme.colors.success.main : theme.colors.error.main};
+      props.$status === "success"
+        ? theme.colors.success.main
+        : theme.colors.error.main};
   animation: fadeIn 0.3s ease-in;
 
   @keyframes fadeIn {
