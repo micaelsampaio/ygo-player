@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { Helmet } from "react-helmet";
-import { YGODeckToImage } from "ygo-core-images-utils";
+import { getCardImageUrl } from "../../../../utils/cardImages";
 
 interface DeckSocialPreviewProps {
   deck: {
@@ -9,6 +9,7 @@ interface DeckSocialPreviewProps {
     extraDeck: any[];
     sideDeck?: any[];
     notes?: string;
+    coverCardId?: number;
   };
   shareUrl: string;
   deckId: string;
@@ -16,54 +17,38 @@ interface DeckSocialPreviewProps {
 
 /**
  * Component to handle social media preview meta tags for deck sharing
- * Dynamically generates and sets Open Graph meta tags
  */
 const DeckSocialPreview: React.FC<DeckSocialPreviewProps> = ({
   deck,
   shareUrl,
   deckId,
 }) => {
-  const [previewImageUrl, setPreviewImageUrl] = React.useState<string | null>(
-    null
-  );
+  // Generate a preview image URL that social media platforms can reliably access
+  const getPreviewImageUrl = () => {
+    // If we have a cover card ID, use that card's image directly
+    if (deck.coverCardId) {
+      const CDN_URL =
+        import.meta.env.VITE_YGO_CDN_URL || "http://127.0.0.1:8080";
+      // Use the full-size card image from the CDN since social media platforms prefer larger images
+      return `${CDN_URL}/images/cards/${deck.coverCardId}.jpg`;
+    }
 
-  useEffect(() => {
-    const generatePreview = async () => {
-      if (!deck) return;
+    // Fall back to a default card image
+    // First, check if there's a monster card in the deck to use
+    const firstMonster = deck.mainDeck.find((card) =>
+      card.type?.toLowerCase().includes("monster")
+    );
 
-      try {
-        // Create a canvas element in memory
-        const tempCanvas = document.createElement("canvas");
+    if (firstMonster) {
+      return getCardImageUrl(firstMonster.id);
+    }
 
-        // Use the YGODeckToImage directly to render to the canvas
-        const deckBuilder = new YGODeckToImage({
-          name: deck.name,
-          mainDeck: deck.mainDeck,
-          extraDeck: deck.extraDeck,
-          sideDeck: deck.sideDeck,
-          cdnUrl: import.meta.env.VITE_YGO_CDN_URL,
-          showBranding: true,
-        });
+    // If no monster cards, use a default image
+    const baseUrl = window.location.origin;
+    return `${baseUrl}/images/ygo101-social-preview.jpg`;
+  };
 
-        // Instead of downloading, get the image as a data URL
-        const imageDataUrl = await deckBuilder.toImage({
-          canvas: tempCanvas,
-          download: false,
-          maxWidth: 1200,
-          maxHeight: 630,
-        });
-
-        setPreviewImageUrl(imageDataUrl);
-      } catch (error) {
-        console.error("Failed to generate deck preview image:", error);
-      }
-    };
-
-    generatePreview();
-  }, [deck]);
-
-  const baseUrl = window.location.origin;
-  const defaultImage = `${baseUrl}/images/default-deck-preview.jpg`;
+  const previewImageUrl = getPreviewImageUrl();
 
   return (
     <Helmet>
@@ -87,7 +72,7 @@ const DeckSocialPreview: React.FC<DeckSocialPreviewProps> = ({
         property="og:description"
         content={`Check out this Yu-Gi-Oh! deck on YGO101: ${deck.mainDeck.length} Main | ${deck.extraDeck.length} Extra cards`}
       />
-      <meta property="og:image" content={previewImageUrl || defaultImage} />
+      <meta property="og:image" content={previewImageUrl} />
       <meta property="og:url" content={shareUrl} />
       <meta property="og:site_name" content="YGO101" />
 
@@ -98,11 +83,12 @@ const DeckSocialPreview: React.FC<DeckSocialPreviewProps> = ({
         name="twitter:description"
         content={`Check out this Yu-Gi-Oh! deck on YGO101: ${deck.mainDeck.length} Main | ${deck.extraDeck.length} Extra cards`}
       />
-      <meta name="twitter:image" content={previewImageUrl || defaultImage} />
+      <meta name="twitter:image" content={previewImageUrl} />
 
       {/* Additional Open Graph tags to improve sharing */}
-      <meta property="og:image:width" content="1200" />
-      <meta property="og:image:height" content="630" />
+      <meta property="og:image:width" content="421" />
+      <meta property="og:image:height" content="614" />
+      <meta property="og:image:alt" content={`Yu-Gi-Oh! deck: ${deck.name}`} />
     </Helmet>
   );
 };
