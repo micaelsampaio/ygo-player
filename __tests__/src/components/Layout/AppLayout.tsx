@@ -108,6 +108,8 @@ const FooterTagline = styled.span`
 const FooterLinks = styled.div`
   display: flex;
   gap: ${spacing.xl};
+  justify-content: flex-end;
+  margin-left: auto;
 
   @media (max-width: 768px) {
     width: 100%;
@@ -174,7 +176,7 @@ const Copyright = styled.p`
 `;
 
 const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
-  // Navigation items - updated to include new tool routes
+  // Navigation items - organized into primary categories without tool links in header
   const navItems = [
     { to: "/duel/lobby", label: "Duel Lobby" },
     { to: "/my/decks", label: "My Decks" },
@@ -182,9 +184,6 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
     { to: "/matchup-maker", label: "Matchup Maker" },
     { to: "/cards/database", label: "Card Database" },
     { to: "/rulings", label: "Rulings" },
-    { to: "/tools/spinner", label: "Spinner Wheel" },
-    { to: "/tools/tierlist", label: "Tier List" },
-    { to: "/tools/randomizer", label: "Dice & Coin" },
     { to: "/contact", label: "Contact" },
   ];
 
@@ -214,80 +213,91 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   const footerContent = (
     <FooterContainer>
       <FooterContent>
-        <FooterLogoSection>
-          {/* <LogoText>YGO101</LogoText> */}
-          <LogoImageFooter />
-          <FooterTagline>The ultimate Yu-Gi-Oh! companion app</FooterTagline>
-        </FooterLogoSection>
+        <FooterTop>
+          <FooterLogoSection>
+            {/* <LogoText>YGO101</LogoText> */}
+            <LogoImageFooter />
+            <FooterTagline>The ultimate Yu-Gi-Oh! companion app</FooterTagline>
+          </FooterLogoSection>
 
-        <FooterLinks>
-          <FooterSection>
-            <FooterSectionTitle>Tools</FooterSectionTitle>
-            <FooterLinksList>
-              <FooterLinkItem>
-                <FooterLink to="/deckbuilder">Deck Builder</FooterLink>
-              </FooterLinkItem>
-              <FooterLinkItem>
-                <FooterLink to="/matchup-maker">Matchup Maker</FooterLink>
-              </FooterLinkItem>
-              <FooterLinkItem>
-                <FooterLink to="/duel">Duel Simulator</FooterLink>
-              </FooterLinkItem>
-              <FooterLinkItem>
-                <FooterLink to="/tools/spinner">Spinner Wheel</FooterLink>
-              </FooterLinkItem>
-              <FooterLinkItem>
-                <FooterLink to="/tools/tierlist">Tier List Maker</FooterLink>
-              </FooterLinkItem>
-              <FooterLinkItem>
-                <FooterLink to="/tools/randomizer">Dice & Coin</FooterLink>
-              </FooterLinkItem>
-            </FooterLinksList>
-          </FooterSection>
+          <FooterLinks>
+            <FooterSection>
+              <FooterSectionTitle>Tools</FooterSectionTitle>
+              <FooterLinksList>
+                <FooterLinkItem>
+                  <FooterLink to="/deckbuilder">Deck Builder</FooterLink>
+                </FooterLinkItem>
+                <FooterLinkItem>
+                  <FooterLink to="/matchup-maker">Matchup Maker</FooterLink>
+                </FooterLinkItem>
+                <FooterLinkItem>
+                  <FooterLink to="/duel">Duel Simulator</FooterLink>
+                </FooterLinkItem>
+                <FooterLinkItem>
+                  <FooterLink to="/tools/spinner">Spinner Wheel</FooterLink>
+                </FooterLinkItem>
+                <FooterLinkItem>
+                  <FooterLink to="/tools/tierlist">Tier List Maker</FooterLink>
+                </FooterLinkItem>
+                <FooterLinkItem>
+                  <FooterLink to="/tools/randomizer">Dice & Coin</FooterLink>
+                </FooterLinkItem>
+              </FooterLinksList>
+            </FooterSection>
 
-          <FooterSection>
-            <FooterSectionTitle>Collections</FooterSectionTitle>
-            <FooterLinksList>
-              <FooterLinkItem>
-                <FooterLink to="/my/decks">My Decks</FooterLink>
-              </FooterLinkItem>
-              <FooterLinkItem>
-                <FooterLink to="/my/combos">My Combos</FooterLink>
-              </FooterLinkItem>
-              <FooterLinkItem>
-                <FooterLink to="/my/replays">My Replays</FooterLink>
-              </FooterLinkItem>
-              <FooterLinkItem>
-                <FooterLink to="/cards">Card Database</FooterLink>
-              </FooterLinkItem>
-            </FooterLinksList>
-          </FooterSection>
+            <FooterSection>
+              <FooterSectionTitle>Collections</FooterSectionTitle>
+              <FooterLinksList>
+                <FooterLinkItem>
+                  <FooterLink to="/my/decks">My Decks</FooterLink>
+                </FooterLinkItem>
+                <FooterLinkItem>
+                  <FooterLink to="/my/combos">My Combos</FooterLink>
+                </FooterLinkItem>
+                <FooterLinkItem>
+                  <FooterLink to="/my/replays">My Replays</FooterLink>
+                </FooterLinkItem>
+                <FooterLinkItem>
+                  <FooterLink to="/my/cards/groups">My Card Groups</FooterLink>
+                </FooterLinkItem>
+                <FooterLinkItem>
+                  <FooterLink to="/cards/database">Card Database</FooterLink>
+                </FooterLinkItem>
+              </FooterLinksList>
+            </FooterSection>
 
-          <FooterSection>
-            <FooterSectionTitle>Resources</FooterSectionTitle>
-            <FooterLinksList>
-              <FooterLinkItem>
-                <FooterLink to="/help">Help Center</FooterLink>
-              </FooterLinkItem>
-              <FooterLinkItem>
-                <ExternalLink
-                  href="https://x.com/ygo101com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Twitter
-                </ExternalLink>
-              </FooterLinkItem>
-            </FooterLinksList>
-          </FooterSection>
-        </FooterLinks>
+            <FooterSection>
+              <FooterSectionTitle>Resources</FooterSectionTitle>
+              <FooterLinksList>
+                <FooterLinkItem>
+                  <FooterLink to="/rulings">Rulings</FooterLink>
+                </FooterLinkItem>
+                <FooterLinkItem>
+                  <FooterLink to="/help">Help Center</FooterLink>
+                </FooterLinkItem>
+                <FooterLinkItem>
+                  <FooterLink to="/contact">Contact</FooterLink>
+                </FooterLinkItem>
+                <FooterLinkItem>
+                  <ExternalLink
+                    href="https://x.com/ygo101com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Twitter
+                  </ExternalLink>
+                </FooterLinkItem>
+              </FooterLinksList>
+            </FooterSection>
+          </FooterLinks>
+        </FooterTop>
+
+        <FooterBottom>
+          <Copyright>
+            © {new Date().getFullYear()} YGO101. All rights reserved.
+          </Copyright>
+        </FooterBottom>
       </FooterContent>
-
-      <FooterBottom>
-        <Copyright>
-          © {new Date().getFullYear()} YGO101. All rights reserved.
-        </Copyright>
-      </FooterBottom>
     </FooterContainer>
   );
 
