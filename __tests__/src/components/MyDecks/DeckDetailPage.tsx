@@ -38,9 +38,6 @@ const DeckDetailPage = () => {
   const [coverCardId, setCoverCardId] = useState<number | undefined>(undefined);
   const [coverCardDetails, setCoverCardDetails] = useState<any>(null);
   const kaibaNet = useKaibaNet();
-  const [isShowingNotes, setIsShowingNotes] = useState(false);
-
-  // Add state for card preview modal
   const [previewCard, setPreviewCard] = useState<any>(null);
   const [isCardModalOpen, setIsCardModalOpen] = useState(false);
 
@@ -68,6 +65,15 @@ const DeckDetailPage = () => {
 
         if (storedDeck) {
           const parsedDeck = JSON.parse(storedDeck);
+          
+          // Debug the loaded deck and specifically check for notes
+          console.log("Loaded deck data:", { 
+            id: parsedDeck.id, 
+            name: parsedDeck.name,
+            hasNotes: !!parsedDeck.notes,
+            notes: parsedDeck.notes ? parsedDeck.notes.substring(0, 50) + "..." : "none" 
+          });
+          
           setDeck(parsedDeck);
           setCoverCardId(parsedDeck.coverCardId);
           setFileName(deckId.replace(/\s+/g, "_").toLowerCase());
@@ -75,6 +81,13 @@ const DeckDetailPage = () => {
           // If not found, search through all localStorage keys to find a deck with matching ID
           const found = findDeckById(deckId);
           if (found) {
+            console.log("Found deck by ID search:", { 
+              id: found.deck.id, 
+              name: found.deck.name,
+              hasNotes: !!found.deck.notes,
+              notes: found.deck.notes ? found.deck.notes.substring(0, 50) + "..." : "none" 
+            });
+            
             setDeck(found.deck);
             setCoverCardId(found.deck.coverCardId);
             setFileName(found.name.replace(/\s+/g, "_").toLowerCase());
@@ -308,10 +321,27 @@ const DeckDetailPage = () => {
     const baseUrl = window.location.origin;
     const ydkeUrl = generateYdkeUrl(deck);
     const encodedName = encodeURIComponent(deck.name || "Shared_Deck");
+    
+    // Include additional parameters - deck notes and cover card ID
+    let shareUrl = `${baseUrl}/my/decks/public/${encodedName}?data=${encodeURIComponent(ydkeUrl)}`;
+    
+    // Add notes if available - make sure they're properly encoded
+    if (deck.notes && deck.notes.trim() !== '') {
+      // Encode notes properly to handle special characters and line breaks
+      const encodedNotes = encodeURIComponent(deck.notes);
+      shareUrl += `&notes=${encodedNotes}`;
+      console.log("Sharing notes:", {
+        original: deck.notes.substring(0, 50) + "...",
+        encoded: encodedNotes.substring(0, 100) + "..."
+      });
+    }
+    
+    // Add cover card ID if available
+    if (deck.coverCardId) {
+      shareUrl += `&cover=${deck.coverCardId}`;
+    }
 
-    return `${baseUrl}/my/decks/public/${encodedName}?data=${encodeURIComponent(
-      ydkeUrl
-    )}`;
+    return shareUrl;
   };
 
   const handleShareDeck = async () => {
@@ -415,31 +445,17 @@ const DeckDetailPage = () => {
 
                 <CardDetailsSection>
                   <CardDetailHeader>
-                    <CardDetailTitle>
-                      {isShowingNotes ? "Deck Notes" : "Cover Card"}
-                    </CardDetailTitle>
+                    <CardDetailTitle>Cover Card</CardDetailTitle>
                     <div>
-                      {!isShowingNotes && (
-                        <ChangeCoverButton
-                          onClick={() => setIsCoverModalOpen(true)}
-                        >
-                          <Image size={14} /> Change
-                        </ChangeCoverButton>
-                      )}
+                      <ChangeCoverButton
+                        onClick={() => setIsCoverModalOpen(true)}
+                      >
+                        <Image size={14} /> Change
+                      </ChangeCoverButton>
                     </div>
                   </CardDetailHeader>
 
-                  {isShowingNotes ? (
-                    <NotesContent>
-                      {deck.notes ? (
-                        <NotesText>{deck.notes}</NotesText>
-                      ) : (
-                        <NoNotesText>
-                          No notes for this deck. Add notes in the deck builder.
-                        </NoNotesText>
-                      )}
-                    </NotesContent>
-                  ) : coverCardId && coverCardDetails ? (
+                  {coverCardId && coverCardDetails ? (
                     <CardDetails>
                       <CardName>{coverCardDetails.name}</CardName>
                       <CardType>
@@ -492,12 +508,6 @@ const DeckDetailPage = () => {
                   </ActionButton>
                   <ActionButton variant="tertiary" onClick={downloadDeckAsPng}>
                     <Image size={16} /> PNG
-                  </ActionButton>
-                  <ActionButton
-                    variant="tertiary"
-                    onClick={() => setIsShowingNotes(!isShowingNotes)}
-                  >
-                    <Edit size={16} /> {isShowingNotes ? "Show Card" : "Notes"}
                   </ActionButton>
                   <ActionButton variant="ghost" onClick={handleShareDeck}>
                     <ShareButtonContent>
@@ -552,6 +562,7 @@ const DeckDetailPage = () => {
                   value="side"
                   label={`Side Deck (${cardsByType.side.length})`}
                 />
+                <Tab value="notes" label="Notes" />
               </StyledTabs>
 
               <TabContent>
@@ -758,6 +769,24 @@ const DeckDetailPage = () => {
                           <Edit3 size={16} /> Edit Side Deck
                         </EditSideButton>
                       </EmptySideDeck>
+                    )}
+                  </TabSection>
+                )}
+
+                {/* Notes Section */}
+                {activeTab === "notes" && (
+                  <TabSection>
+                    {deck.notes ? (
+                      <NotesContent>
+                        <NotesText>{deck.notes}</NotesText>
+                      </NotesContent>
+                    ) : (
+                      <EmptyNotesSection>
+                        <p>No notes have been added to this deck.</p>
+                        <EditNotesButton variant="secondary" onClick={handleEdit}>
+                          <Edit3 size={16} /> Add Notes in Deck Builder
+                        </EditNotesButton>
+                      </EmptyNotesSection>
                     )}
                   </TabSection>
                 )}
@@ -1043,42 +1072,17 @@ const ChangeCoverButton = styled.button`
   }
 `;
 
-const ContentToggleButton = styled.button<{ $active: boolean }>`
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  gap: ${theme.spacing.xs};
-  background: ${(props) =>
-    props.$active ? theme.colors.primary.main : "none"};
-  color: ${(props) =>
-    props.$active ? theme.colors.background.light : theme.colors.primary.main};
-  border: none;
-  padding: ${theme.spacing.xs} ${theme.spacing.sm};
-  font-size: ${theme.typography.size.sm};
-  cursor: pointer;
-  transition: color ${theme.transitions.default},
-    background ${theme.transitions.default};
-  border-radius: ${theme.borderRadius.sm};
-  margin-right: ${theme.spacing.sm};
-
-  &:hover {
-    color: ${(props) =>
-      props.$active
-        ? theme.colors.background.light
-        : theme.colors.primary.dark};
-    background-color: ${(props) =>
-      props.$active ? theme.colors.primary.dark : theme.colors.background.card};
-    text-decoration: none;
-  }
-`;
-
 const NotesContent = styled.div`
-  font-size: ${theme.typography.size.sm};
+  padding: ${theme.spacing.md};
+  background-color: ${theme.colors.background.light};
+  border-radius: ${theme.borderRadius.md};
   color: ${theme.colors.text.primary};
-  line-height: 1.4;
-  padding-top: ${theme.spacing.xs};
-  margin-top: ${theme.spacing.xs};
-  max-height: 120px;
+  font-size: ${theme.typography.size.md};
+  line-height: 1.6;
+  white-space: pre-wrap;
+  border: 1px solid ${theme.colors.border.light};
+  box-shadow: ${theme.shadows.xs};
+  max-height: 500px;
   overflow-y: auto;
 
   &::-webkit-scrollbar {
@@ -1097,8 +1101,10 @@ const NotesContent = styled.div`
 `;
 
 const NotesText = styled.div`
-  font-size: ${theme.typography.size.sm};
+  font-size: ${theme.typography.size.md};
   color: ${theme.colors.text.primary};
+  line-height: 1.6;
+  white-space: pre-wrap;
 `;
 
 const NoNotesText = styled.div`
@@ -1107,6 +1113,28 @@ const NoNotesText = styled.div`
   text-align: center;
   padding: ${theme.spacing.md} 0;
   font-style: italic;
+`;
+
+const EmptyNotesSection = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: ${theme.spacing.md};
+  padding: ${theme.spacing.xl} 0;
+  text-align: center;
+
+  p {
+    font-size: ${theme.typography.size.md};
+    color: ${theme.colors.text.secondary};
+    margin-bottom: ${theme.spacing.md};
+  }
+`;
+
+const EditNotesButton = styled(Button)`
+  display: flex;
+  align-items: center;
+  gap: ${theme.spacing.xs};
 `;
 
 const ButtonContainer = styled.div`

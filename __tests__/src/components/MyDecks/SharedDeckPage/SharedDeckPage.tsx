@@ -27,6 +27,8 @@ interface SharedDeckData {
   mainDeck: Card[];
   extraDeck: Card[];
   sideDeck: Card[];
+  notes?: string;
+  coverCardId?: number;
 }
 
 const SharedDeckPage: React.FC = () => {
@@ -59,6 +61,11 @@ const SharedDeckPage: React.FC = () => {
       setLoading(true);
       console.log("Parsing YDKE URL:", ydkeData);
 
+      // Get additional parameters from the URL
+      const searchParams = new URLSearchParams(location.search);
+      const notes = searchParams.get("notes");
+      const coverCardId = searchParams.get("cover");
+      
       // YDKE format: ydke://[main]![extra]![side]!
       let ydkeUrl = ydkeData;
       if (!ydkeUrl.startsWith("ydke://")) {
@@ -108,6 +115,39 @@ const SharedDeckPage: React.FC = () => {
         extraDeck,
         sideDeck,
       };
+
+      // Add notes if present - using decodeURIComponent properly
+      if (notes) {
+        try {
+          // Double decoding to handle potential multiple encoding
+          let decodedNotes = decodeURIComponent(notes);
+          // Try a second decode if it still looks encoded
+          if (decodedNotes.includes('%')) {
+            try {
+              decodedNotes = decodeURIComponent(decodedNotes);
+            } catch (e) {
+              // If second decode fails, keep the first decode result
+              console.log("Second notes decode failed, using first result");
+            }
+          }
+          decodedDeck.notes = decodedNotes;
+          console.log("Decoded notes successfully:", decodedDeck.notes?.substring(0, 50) + "...");
+        } catch (e) {
+          console.error("Error decoding notes:", e);
+        }
+      }
+
+      // Add cover card ID if present
+      if (coverCardId) {
+        try {
+          const coverIdNum = parseInt(coverCardId, 10);
+          if (!isNaN(coverIdNum)) {
+            decodedDeck.coverCardId = coverIdNum;
+          }
+        } catch (e) {
+          console.error("Error parsing cover card ID:", e);
+        }
+      }
 
       setDeck(decodedDeck);
     } catch (error) {
@@ -207,6 +247,38 @@ const SharedDeckPage: React.FC = () => {
     }
 
     return cards;
+  };
+
+  // Get the cover card details
+  const getCoverCardDetails = (): Card | null => {
+    if (!deck || !deck.coverCardId) return null;
+
+    // Find the card in the deck with the matching ID
+    const coverCard = [
+      ...deck.mainDeck,
+      ...(deck.extraDeck || []),
+      ...(deck.sideDeck || []),
+    ].find((card) => card.id === deck.coverCardId);
+
+    return coverCard || null;
+  };
+
+  // Get cover card image, or default to first monster
+  const getCoverCardImage = () => {
+    const coverCardDetails = getCoverCardDetails();
+    
+    if (!deck || !coverCardDetails) {
+      // Return the first monster card as default if no cover card is set
+      const firstMonster = deck?.mainDeck?.find((card: Card) =>
+        card.type?.toLowerCase().includes("monster")
+      );
+
+      return firstMonster
+        ? getCardImageUrl(firstMonster.id)
+        : getCardImageUrl(); // Default card back image
+    }
+
+    return getCardImageUrl(coverCardDetails.id);
   };
 
   const handleImportDeck = () => {
@@ -351,6 +423,17 @@ const SharedDeckPage: React.FC = () => {
         <DeckHeaderCard elevation="medium" margin="0 0 24px 0">
           <Card.Content>
             <DeckHeaderLayout>
+              <CoverCardWrapper>
+                <CoverCardImage
+                  src={getCoverCardImage()}
+                  alt="Cover Card"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.src = getCardImageUrl(); // Default card back image
+                  }}
+                />
+              </CoverCardWrapper>
+
               <DeckInfoSection>
                 <DeckMetaInfo>
                   <DeckStats>
@@ -358,6 +441,52 @@ const SharedDeckPage: React.FC = () => {
                     <span className="deck-shared">Shared Deck</span>
                   </DeckStats>
                 </DeckMetaInfo>
+                
+                <CardDetailsSection>
+                  <CardDetailHeader>
+                    <CardDetailTitle>Cover Card</CardDetailTitle>
+                  </CardDetailHeader>
+
+                  {deck.coverCardId && getCoverCardDetails() ? (
+                    <CardDetails>
+                      <CardName>{getCoverCardDetails()?.name}</CardName>
+                      <CardType>
+                        {getCoverCardDetails()?.type}
+                        {getCoverCardDetails()?.attribute && (
+                          <span> • {getCoverCardDetails()?.attribute}</span>
+                        )}
+                        {getCoverCardDetails()?.race && (
+                          <span> • {getCoverCardDetails()?.race}</span>
+                        )}
+                      </CardType>
+
+                      {(getCoverCardDetails()?.level ||
+                        getCoverCardDetails()?.level === 0) && (
+                        <CardStat>Level: {getCoverCardDetails()?.level}</CardStat>
+                      )}
+
+                      {(getCoverCardDetails()?.atk !== undefined ||
+                        getCoverCardDetails()?.def !== undefined) && (
+                        <CardStats>
+                          {getCoverCardDetails()?.atk !== undefined && (
+                            <span>ATK: {getCoverCardDetails()?.atk}</span>
+                          )}
+                          {getCoverCardDetails()?.def !== undefined && (
+                            <span>DEF: {getCoverCardDetails()?.def}</span>
+                          )}
+                        </CardStats>
+                      )}
+
+                      {getCoverCardDetails()?.desc && (
+                        <CardDescription>
+                          {getCoverCardDetails()?.desc}
+                        </CardDescription>
+                      )}
+                    </CardDetails>
+                  ) : (
+                    <NoCardSelected>No cover card selected</NoCardSelected>
+                  )}
+                </CardDetailsSection>
 
                 <ButtonContainer>
                   <ActionButton variant="primary" onClick={handleImportDeck}>
@@ -394,6 +523,10 @@ const SharedDeckPage: React.FC = () => {
                   label={`Side Deck (${cardsByType.side.length})`}
                 />
               )}
+              <Tab
+                value="notes"
+                label="Notes"
+              />
             </StyledTabs>
 
             <TabContent>
@@ -619,6 +752,17 @@ const SharedDeckPage: React.FC = () => {
                   )}
                 </TabSection>
               )}
+
+              {/* Notes Section */}
+              {activeTab === "notes" && (
+                <TabSection>
+                  {deck.notes ? (
+                    <NotesContent>{deck.notes}</NotesContent>
+                  ) : (
+                    <EmptyDeckMessage>No notes available for this deck</EmptyDeckMessage>
+                  )}
+                </TabSection>
+              )}
             </TabContent>
           </Card.Content>
         </DeckContentCard>
@@ -700,8 +844,32 @@ const DeckHeaderCard = styled(Card)`
 
 const DeckHeaderLayout = styled.div`
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: 250px 1fr;
   gap: ${theme.spacing.lg};
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+const CoverCardWrapper = styled.div`
+  width: 100%;
+  max-width: 250px;
+  border-radius: ${theme.borderRadius.md};
+  overflow: hidden;
+  box-shadow: ${theme.shadows.md};
+`;
+
+const CoverCardImage = styled.img`
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: ${theme.borderRadius.md};
+  transition: transform ${theme.transitions.default};
+
+  &:hover {
+    transform: scale(1.02);
+  }
 `;
 
 const DeckInfoSection = styled.div`
@@ -736,6 +904,66 @@ const DeckStats = styled.div`
     align-items: center;
     gap: ${theme.spacing.xs};
   }
+`;
+
+const CardDetailsSection = styled.div`
+  margin-top: ${theme.spacing.md};
+  padding: ${theme.spacing.md};
+  background-color: ${theme.colors.background.light};
+  border-radius: ${theme.borderRadius.md};
+  box-shadow: ${theme.shadows.xs};
+`;
+
+const CardDetailHeader = styled.div`
+  margin-bottom: ${theme.spacing.md};
+`;
+
+const CardDetailTitle = styled.h3`
+  margin: 0;
+  font-size: ${theme.typography.size.md};
+  color: ${theme.colors.text.primary};
+  font-weight: ${theme.typography.weight.semibold};
+`;
+
+const CardDetails = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: ${theme.spacing.sm};
+`;
+
+const CardName = styled.div`
+  font-size: ${theme.typography.size.lg};
+  font-weight: ${theme.typography.weight.bold};
+  color: ${theme.colors.text.primary};
+`;
+
+const CardType = styled.div`
+  font-size: ${theme.typography.size.md};
+  color: ${theme.colors.text.secondary};
+`;
+
+const CardStat = styled.div`
+  font-size: ${theme.typography.size.md};
+  color: ${theme.colors.text.secondary};
+`;
+
+const CardStats = styled.div`
+  font-size: ${theme.typography.size.md};
+  color: ${theme.colors.text.secondary};
+  display: flex;
+  gap: ${theme.spacing.md};
+`;
+
+const CardDescription = styled.div`
+  font-size: ${theme.typography.size.sm};
+  color: ${theme.colors.text.secondary};
+  white-space: pre-wrap;
+`;
+
+const NoCardSelected = styled.div`
+  font-size: ${theme.typography.size.md};
+  color: ${theme.colors.text.secondary};
+  text-align: center;
 `;
 
 const ButtonContainer = styled.div`
@@ -892,6 +1120,34 @@ const EmptyDeckMessage = styled.div`
   padding: ${theme.spacing.xl};
   color: ${theme.colors.text.secondary};
   font-style: italic;
+`;
+
+const NotesContent = styled.div`
+  padding: ${theme.spacing.md};
+  background-color: ${theme.colors.background.light};
+  border-radius: ${theme.borderRadius.md};
+  color: ${theme.colors.text.primary};
+  font-size: ${theme.typography.size.md};
+  line-height: 1.6;
+  white-space: pre-wrap;
+  border: 1px solid ${theme.colors.border.light};
+  box-shadow: ${theme.shadows.xs};
+  max-height: 500px;
+  overflow-y: auto;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: ${theme.colors.background.light};
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: ${theme.colors.primary.light};
+    border-radius: 4px;
+  }
 `;
 
 export default SharedDeckPage;
