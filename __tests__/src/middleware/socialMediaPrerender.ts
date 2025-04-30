@@ -7,9 +7,23 @@ const CRAWLER_USER_AGENT_PATTERN =
   /facebookexternalhit|Facebot|Twitterbot|Pinterest|Slackbot|TelegramBot|WhatsApp|LinkedInBot|baiduspider|googlebot|instagram|discordbot|vkShare|Embedly|redditbot|SocialFlow/i;
 
 // Define a mapping of card IDs to absolute image URLs
-const getCDNUrl = () => {
-  // Try to use the environment variable, fallback to a production URL
-  return process.env.VITE_YGO_CDN_URL || "https://cdn.ygo101.com";
+const getBaseUrl = (req: Request): string => {
+  // Determine the base URL from the request or environment
+  const protocol = req.headers["x-forwarded-proto"] || req.protocol || "https";
+  const host =
+    req.headers["x-forwarded-host"] || req.get("host") || "ygo101.com";
+  return `${protocol}://${host}`;
+};
+
+const getCDNUrl = (req: Request): string => {
+  // Use environment variable if available, fallback to a constructed URL
+  const envCdnUrl = process.env.VITE_YGO_CDN_URL;
+  if (envCdnUrl && !envCdnUrl.includes("%")) {
+    return envCdnUrl;
+  }
+
+  // If not available or contains placeholders, use a fallback approach
+  return `${getBaseUrl(req)}/cdn`;
 };
 
 interface DeckData {
@@ -75,12 +89,16 @@ const decodeYdkeCount = (data: string): number => {
 const generatePrerenderedHTML = (
   deckData: DeckData,
   coverCardId: number | null,
-  shareUrl: string
+  shareUrl: string,
+  req: Request
 ): string => {
-  const CDN_URL = getCDNUrl();
+  const baseUrl = getBaseUrl(req);
+  const CDN_URL = getCDNUrl(req);
+
+  // Ensure we have absolute URLs for images
   const imageUrl = coverCardId
     ? `${CDN_URL}/images/cards/${coverCardId}.jpg`
-    : `${CDN_URL}/images/ygo101-social-preview.jpg`;
+    : `${baseUrl}/images/ygo101-social-preview.jpg`;
 
   const mainCount = deckData.mainDeck.length;
   const extraCount = deckData.extraDeck.length;
@@ -170,7 +188,8 @@ export const socialMediaPrerenderMiddleware = (
       const html = generatePrerenderedHTML(
         deckData,
         coverCardId,
-        urlObj.toString()
+        urlObj.toString(),
+        req
       );
 
       // Send the prerendered HTML to the crawler
