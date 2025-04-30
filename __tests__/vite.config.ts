@@ -1,6 +1,7 @@
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 import { resolve } from "path";
+import { vitePluginSocialMediaPrerender } from "./src/middleware/socialMediaPrerender";
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
@@ -28,7 +29,10 @@ export default defineConfig(({ mode }) => {
   console.log("Player JS path:", playerJsPath);
 
   return {
-    plugins: [react()],
+    plugins: [
+      react(),
+      vitePluginSocialMediaPrerender(), // Add our custom prerendering plugin
+    ],
     resolve: {
       alias: {
         path: "path-browserify",
@@ -61,6 +65,9 @@ export default defineConfig(({ mode }) => {
       // Add polyfill for process.env to fix "process is not defined" error
       "process.env": {
         DOCKER: JSON.stringify(process.env.DOCKER || env.VITE_DOCKER),
+        VITE_YGO_CDN_URL: JSON.stringify(
+          env.VITE_YGO_CDN_URL || "https://cdn.ygo101.com"
+        ),
       },
       "process.browser": true,
       "process.version": '"16.0.0"',
