@@ -9,7 +9,9 @@
     "build:docker": "VITE_DOCKER=true vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "bootstrap-node": "node src/network/bootstrap-node.js"
+    "bootstrap-node": "node src/network/bootstrap-node.js",
+    "prerender": "node src/middleware/prerenderServer.js",
+    "prerender:dev": "nodemon --watch src/middleware --ext js,ts,json src/middleware/prerenderServer.js"
   },
   "dependencies": {
     "@chainsafe/libp2p-gossipsub": "^14.1.0",
@@ -69,10 +71,14 @@
     "@types/react-dom": "^19.0.3",
     "@vitejs/plugin-basic-ssl": "^2.0.0",
     "@vitejs/plugin-react": "^4.3.4",
+    "dotenv": "^16.5.0",
     "eslint": "^9.19.0",
     "eslint-plugin-react-hooks": "^5.0.0",
     "eslint-plugin-react-refresh": "^0.4.18",
+    "express": "^5.1.0",
     "globals": "^15.14.0",
+    "http-proxy-middleware": "^3.0.5",
+    "nodemon": "^3.1.10",
     "typescript": "~5.7.2",
     "typescript-eslint": "^8.22.0",
     "vite": "^6.1.0"
