@@ -1,0 +1,15 @@
+{
+  "name": "ygo101-prerender-server",
+  "version": "1.0.0",
+  "description": "Prerender server for YGO101 social media sharing",
+  "main": "src/middleware/prerenderServer.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/middleware/prerenderServer.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "http-proxy-middleware": "^2.0.6"
+  }
+}
