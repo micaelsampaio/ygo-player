@@ -65,6 +65,10 @@ export function CardLongPressEffect({ duel }: { duel: YGODuel }) {
 
     useEffect(() => {
         duel.events.on("on-card-mouse-down", ({ event, card }: { event: MouseEvent, card: Card }) => {
+            if (event.type === "mousedown") {
+                if (event.button > 1 || event.button < 0) return;
+            }
+
             startTimerToDelay();
             selectedCard.current = card;
 

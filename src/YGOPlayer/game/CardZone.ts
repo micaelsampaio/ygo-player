@@ -133,7 +133,6 @@ export class CardZone extends YGOEntity implements YGOUiElement {
     }
   }
 
-
   onMouseDown?(event: MouseEvent): void {
     if (this.onClickCb || !this.getCardReference()) return;
     this.startMouseClickTime = Date.now();

@@ -43,6 +43,8 @@ export function Banish({
           <div style={{ position: "relative" }}
             onMouseDown={(event: any) => duel.events.dispatch("on-card-mouse-down", { card, event })}
             onMouseUp={(event: any) => duel.events.dispatch("on-card-mouse-up", { card, event })}
+            onTouchStart={(event: any) => duel.events.dispatch("on-card-mouse-down", { card, event })}
+            onTouchEnd={(event: any) => duel.events.dispatch("on-card-mouse-up", { card, event })}
             onClick={(e) => {
               action.eventData = {
                 duel,

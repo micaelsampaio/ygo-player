@@ -28,6 +28,8 @@ export const StartHandLogRow = memo(function ({
                   <img
                     onMouseDown={(event: any) => duel.events.dispatch("on-card-mouse-down", { card, event })}
                     onMouseUp={(event: any) => duel.events.dispatch("on-card-mouse-up", { card, event })}
+                    onTouchStart={(event: any) => duel.events.dispatch("on-card-mouse-down", { card, event })}
+                    onTouchEnd={(event: any) => duel.events.dispatch("on-card-mouse-up", { card, event })}
                     onClick={() => duel.events.dispatch("set-selected-card", { player: log.player, card })}
                     src={card.images.small_url}
                     style={{ width: "40px" }}
