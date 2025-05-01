@@ -64,7 +64,7 @@ export class ExtraDeck extends YGOEntity implements YGOUiElement {
     updateExtraDeck() {
         const deckSize = this.duel.ygo.getField(this.player).extraDeck.length;
         for (let i = 0; i < this.cards.length; ++i) {
-            this.cards[i].gameObject.visible = i <= deckSize;
+            this.cards[i].gameObject.visible = i < deckSize;
         }
     }
 
