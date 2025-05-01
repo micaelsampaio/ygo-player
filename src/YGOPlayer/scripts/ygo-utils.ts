@@ -10,7 +10,6 @@ import { ExtraDeck } from "../game/ExtraDeck";
 import { Card, FieldZone, FieldZoneData, YGOReplayData } from "ygo-core";
 import { YGOGameUtils } from "ygo-core";
 import { Banish } from "../game/Banish";
-import { YGOGameFieldStatsComponent } from "../game/YGOGameFieldStatsComponent";
 
 type CreateFieldDto = {
   duel: YGODuel;
@@ -18,7 +17,7 @@ type CreateFieldDto = {
 };
 
 export function createFields({ duel, fieldModel }: CreateFieldDto) {
-  const { player: playerGameIndex = 0, showHand = false } = duel.config.options || {};
+  const { player: playerGameIndex = 0, showHand = true } = duel.config.options || {};
   fieldModel.rotation.copy(YGOMath.degToRadEuler(90, 0, 0));
   fieldModel.position.set(0, 0, 0);
 
