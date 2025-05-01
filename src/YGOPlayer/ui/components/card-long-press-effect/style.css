@@ -13,6 +13,7 @@
         justify-content: center;
         border-radius: var(--ygo-border-radius-medium);
         transform: translate(-50%, -50%);
+        z-index: 9000;
 
         .ygo-progress-ring {
             transform: rotate(-90deg);

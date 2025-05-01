@@ -27,7 +27,7 @@ export function CardLongPressEffect({ duel }: { duel: YGODuel }) {
 
         const update = () => {
             const currentTime = Date.now();
-            const maxTime = 1 * 1000;
+            const maxTime = 0.75 * 1000;
             const elapsed = currentTime - startTime;
             const clamped = Math.min(elapsed, maxTime);
             const progress = clamp((clamped / maxTime) * 100, 0, 100);

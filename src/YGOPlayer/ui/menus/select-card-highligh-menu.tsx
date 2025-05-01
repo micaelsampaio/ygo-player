@@ -57,31 +57,31 @@ export function SelectedCardHighlightedMenu({
                 {
                   cardData.isLinkMonster && <div className="ygo-card-stats">
                     <div className="ygo-card-stats-icon ygo-card-stats-icon-link-monster"></div>
-                    <div>{card.linkval}</div>
+                    <div>{card.linkval ?? "0"}</div>
                   </div>
                 }
                 {
                   cardData.isXyzMonster && <div className="ygo-card-stats">
                     <div className="ygo-card-stats-icon ygo-card-stats-icon-rank"></div>
-                    <div>{card.level}</div>
+                    <div>{card.level ?? "0"}</div>
                   </div>
                 }
                 {
                   (!cardData.isLinkMonster && !cardData.isXyzMonster && cardData.isMonster) && <div className="ygo-card-stats">
                     <div className="ygo-card-stats-icon ygo-card-stats-icon-level"></div>
-                    <div>{card.level}</div>
+                    <div>{card.level ?? "0"}</div>
                   </div>
                 }
 
                 <div className="ygo-card-stats">
                   <div className="ygo-card-stats-icon ygo-card-stats-icon-atk"></div>
-                  <div>{card.atk}</div>
+                  <div>{card.atk ?? "0"}</div>
                 </div>
 
                 {!cardData.isLinkMonster && <>
                   <div className="ygo-card-stats">
                     <div className="ygo-card-stats-icon ygo-card-stats-icon-def"></div>
-                    <div>{card.def}</div>
+                    <div>{card.def ?? "0"}</div>
                   </div>
                 </>}
               </div>

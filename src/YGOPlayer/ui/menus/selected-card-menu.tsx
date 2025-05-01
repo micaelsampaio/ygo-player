@@ -93,12 +93,12 @@ export function SelectedCardMenu({
 
               <div className="ygo-card-stats">
                 <div className="ygo-card-stats-icon ygo-card-stats-icon-atk"></div>
-                <div>{card.currentAtk}</div>
+                <div>{card.currentAtk ?? card.atk ?? "0"}</div>
               </div>
               <div>
                 {!cardData.isLinkMonster && <div className="ygo-card-stats">
                   <div className="ygo-card-stats-icon ygo-card-stats-icon-def"></div>
-                  <div>{card.currentDef}</div>
+                  <div>{card.currentDef ?? card.def ?? "0"}</div>
                 </div>}
               </div>
             </>

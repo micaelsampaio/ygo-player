@@ -135,6 +135,8 @@ export function ViewDeckPopup({
             {cardsToShow.map((card: Card) => (
               <img
                 key={card.index}
+                onMouseDown={(event: any) => duel.events.dispatch("on-card-mouse-down", { card, event })}
+                onMouseUp={(event: any) => duel.events.dispatch("on-card-mouse-up", { card, event })}
                 onClick={(e) => onCardClick(e, card)}
                 src={card.images.small_url}
                 className="ygo-card"
