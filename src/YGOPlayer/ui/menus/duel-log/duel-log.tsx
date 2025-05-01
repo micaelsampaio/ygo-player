@@ -24,6 +24,12 @@ export function DuelLogMenu({ duel, menus }: { duel: YGODuel; menus: any[] }) {
     duel.commands.endRecover();
   };
 
+  const scrollToBottom = () => {
+    if (duelLogsContainer.current) {
+      duelLogsContainer.current.scrollTop = duelLogsContainer.current.scrollHeight;
+    }
+  }
+
   const undoByCommand = (logIndex: number) => {
     duel.commands.startRecover();
     for (let i = logs.length - 1; i >= logIndex; --i) {
@@ -47,10 +53,23 @@ export function DuelLogMenu({ duel, menus }: { duel: YGODuel; menus: any[] }) {
 
   useEffect(() => {
     if (isVisible && duelLogsContainer.current) {
-      duelLogsContainer.current.scrollTop = duelLogsContainer.current.scrollHeight;
+      scrollToBottom();
     }
-  }, [isVisible])
+  }, [isVisible]);
 
+  useEffect(() => {
+    if (isVisible && duelLogsContainer.current) {
+      const container = duelLogsContainer.current;
+      const scrollHeight = container.scrollHeight;
+      const scrollTop = container.scrollTop;
+      const clientHeight = container.clientHeight;
+      const isNearBottom = scrollHeight - scrollTop - clientHeight < 150;
+
+      if (isNearBottom) {
+        scrollToBottom();
+      }
+    }
+  }, [isVisible, logs]);
   return (
     <div className={`ygo-duel-log-container ${isVisible ? "" : "ygo-hidden"}`} ref={duelLogsContainer}
       onClick={(e) => {
