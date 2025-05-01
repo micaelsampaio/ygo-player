@@ -37,9 +37,7 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [deckAnalytics, setDeckAnalytics] = useState<any>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [activeTab, setActiveTab] = useState<
-    "editor" | "simulator" | "analytics" | "notes"
-  >("editor");
+  const [activeTab, setActiveTab] = useState<"editor" | "notes">("editor");
   const [targetDeck, setTargetDeck] = useState<"main" | "side">("main");
   const [analyticsCalculated, setAnalyticsCalculated] = useState(false);
   const [useEnhancedAnalysis, setUseEnhancedAnalysis] = useState(false); // Set to false by default
@@ -359,14 +357,9 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
   };
 
   const handleTabChange = (
-    tab: "editor" | "simulator" | "analytics" | "notes"
+    tab: "editor" | "notes"
   ) => {
     setActiveTab(tab);
-
-    // Calculate analytics only if switching to analytics tab and they haven't been calculated yet
-    if (tab === "analytics" && !analyticsCalculated && selectedDeck) {
-      calculateDeckAnalytics();
-    }
   };
 
   // Toggle between enhanced and basic analysis
@@ -1040,20 +1033,6 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
                   Deck Editor
                 </button>
                 <button
-                  className={activeTab === "analytics" ? "active-tab" : ""}
-                  onClick={() => handleTabChange("analytics")}
-                  disabled={!selectedDeck}
-                >
-                  Deck Analytics
-                </button>
-                <button
-                  className={activeTab === "simulator" ? "active-tab" : ""}
-                  onClick={() => handleTabChange("simulator")}
-                  disabled={!selectedDeck}
-                >
-                  Draw Simulator
-                </button>
-                <button
                   className={activeTab === "notes" ? "active-tab" : ""}
                   onClick={() => handleTabChange("notes")}
                   disabled={!selectedDeck}
@@ -1101,22 +1080,6 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
                   onReorderCards={handleReorderCards}
                   onMoveCardBetweenDecks={moveCardBetweenDecks}
                   updateDeck={updateDeck}
-                />
-              ) : activeTab === "simulator" ? (
-                <DrawSimulator
-                  deck={selectedDeck}
-                  onCardSelect={toggleCardPreview}
-                />
-              ) : activeTab === "analytics" ? (
-                <DeckAnalytics
-                  analytics={deckAnalytics}
-                  deck={selectedDeck}
-                  isVisible={activeTab === "analytics"}
-                  isLoading={isAnalyzing}
-                  isEnhanced={useEnhancedAnalysis && !analyzerServiceError}
-                  onToggleEnhanced={(newState) => {
-                    toggleEnhancedAnalysis(newState);
-                  }}
                 />
               ) : (
                 <DeckNotes deck={selectedDeck} updateDeck={updateDeck} />

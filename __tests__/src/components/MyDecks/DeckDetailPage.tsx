@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import styled from "styled-components";
 import { YGODeckToImage } from "ygo-core-images-utils";
@@ -18,9 +18,15 @@ import {
   Image,
   Check,
   Copy,
+  BarChart2,
 } from "lucide-react";
 import CoverCardModal from "../MyDecks/CoverCardModal";
 import CardModal from "../DeckBuilder/components/CardModal/CardModal";
+import DrawSimulator from "../DeckBuilder/components/DrawSimulator";
+import DeckAnalytics from "../DeckBuilder/components/DeckAnalysis";
+import { useDeckAnalytics } from "../DeckBuilder/hooks/useDeckAnalytics";
+import "../DeckBuilder/components/DrawSimulator/DrawSimulator.css";
+import "../DeckBuilder/components/DeckAnalysis/styles/DeckAnalytics.css";
 import { getCardImageUrl, CARD_BACK_IMAGE } from "../../utils/cardImages";
 import { useKaibaNet } from "../../hooks/useKaibaNet";
 import { Logger } from "../../utils/logger";
@@ -45,6 +51,26 @@ const DeckDetailPage = () => {
     "idle"
   );
   const [shareTooltipVisible, setShareTooltipVisible] = useState(false);
+  const [deckAnalytics, setDeckAnalytics] = useState<any>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+
+  const { analyzeDeck } = useDeckAnalytics();
+
+  // Calculate analytics when deck loads or tab changes
+  useEffect(() => {
+    if (deck && activeTab === "analytics" && !deckAnalytics) {
+      setIsAnalyzing(true);
+      try {
+        const analytics = analyzeDeck(deck);
+        console.log("Deck analytics calculated:", analytics);
+        setDeckAnalytics(analytics);
+      } catch (error) {
+        console.error("Error calculating deck analytics:", error);
+      } finally {
+        setIsAnalyzing(false);
+      }
+    }
+  }, [deck, activeTab, analyzeDeck, deckAnalytics]);
 
   const handleCardClick = (card: any) => {
     setPreviewCard(card);
@@ -568,6 +594,8 @@ const DeckDetailPage = () => {
                   value="side"
                   label={`Side Deck (${cardsByType.side.length})`}
                 />
+                <Tab value="simulator" label="Draw Simulator" />
+                <Tab value="analytics" label="Deck Analytics" />
                 <Tab value="notes" label="Notes" />
               </StyledTabs>
 
@@ -776,6 +804,30 @@ const DeckDetailPage = () => {
                         </EditSideButton>
                       </EmptySideDeck>
                     )}
+                  </TabSection>
+                )}
+
+                {/* Draw Simulator Section */}
+                {activeTab === "simulator" && (
+                  <TabSection>
+                    <DrawSimulator
+                      deck={deck}
+                      onCardSelect={handleCardClick}
+                    />
+                  </TabSection>
+                )}
+
+                {/* Analytics Section */}
+                {activeTab === "analytics" && (
+                  <TabSection>
+                    <DeckAnalytics
+                      analytics={deckAnalytics}
+                      deck={deck}
+                      isVisible={activeTab === "analytics"}
+                      isLoading={isAnalyzing}
+                      isEnhanced={false}
+                      onToggleEnhanced={() => {}}
+                    />
                   </TabSection>
                 )}
 
