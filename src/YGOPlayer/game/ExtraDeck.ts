@@ -4,17 +4,16 @@ import { YGOEntity } from "../core/YGOEntity";
 import { YGOUiElement } from "../types";
 import { YGOMouseEvents } from '../core/components/YGOMouseEvents';
 import { GameBackCard } from './GameBackCard';
+import { CARD_HEIGHT_SIZE, CARD_RATIO } from '../constants';
 
 export class ExtraDeck extends YGOEntity implements YGOUiElement {
 
     public isUiElement: boolean = true;
     private duel: YGODuel;
     private player: number;
-    private normalMaterial: THREE.MeshBasicMaterial;
-    private hoverMaterial: THREE.MeshBasicMaterial;
-    private mesh: THREE.Mesh;
     public position: THREE.Vector3;
     public faceDownRotation: THREE.Euler;
+    private hoverGameObject: THREE.Mesh;
     private cards: GameBackCard[];
 
     constructor({ duel, player, position }: { duel: YGODuel, player: number, zone: string, position: THREE.Vector3 }) {
@@ -22,11 +21,19 @@ export class ExtraDeck extends YGOEntity implements YGOUiElement {
         this.duel = duel;
         this.player = player;
 
-        this.normalMaterial = new THREE.MeshBasicMaterial({ color: 0x00555, transparent: true, opacity: 0 });
-        this.hoverMaterial = new THREE.MeshBasicMaterial({ color: 0x00ffff });
+        const material = new THREE.MeshBasicMaterial({ color: 0x00555, transparent: true, opacity: 0 });
+        const hoverMaterial = new THREE.MeshBasicMaterial({ color: player === 0 ? 0x0000ff : 0xff0000, transparent: true, opacity: 0.55 });
 
         const geometry = new THREE.BoxGeometry(4, 4, 0.1);
-        const cube = new THREE.Mesh(geometry, this.normalMaterial);
+        const cube = new THREE.Mesh(geometry, material);
+        this.gameObject = cube;
+        cube.position.copy(position);
+
+        const cardSize = CARD_HEIGHT_SIZE * 1.3;
+        const hoverGeometry = new THREE.PlaneGeometry(cardSize / CARD_RATIO * 1.2, cardSize);
+        this.hoverGameObject = new THREE.Mesh(hoverGeometry, hoverMaterial);
+        this.hoverGameObject.position.set(0, 0, 0.1);
+        this.hoverGameObject.rotation.set(0, 0, THREE.MathUtils.degToRad(-15));
 
         this.position = position.clone();
         cube.position.copy(this.position);
@@ -35,8 +42,7 @@ export class ExtraDeck extends YGOEntity implements YGOUiElement {
         this.faceDownRotation.y += THREE.MathUtils.degToRad(180);
 
         this.duel.core.scene.add(cube);
-        this.gameObject = cube;
-        this.mesh = cube;
+        this.gameObject.add(this.hoverGameObject);
 
         this.duel.gameController.getComponent<YGOMouseEvents>("mouse_events")?.registerElement(this);
 
@@ -49,6 +55,8 @@ export class ExtraDeck extends YGOEntity implements YGOUiElement {
             }
             return card;
         });
+
+        this.hoverGameObject.visible = false;
     }
 
     getCardTransform(): THREE.Object3D {
@@ -76,10 +84,10 @@ export class ExtraDeck extends YGOEntity implements YGOUiElement {
     }
 
     onMouseEnter(): void {
-        this.mesh.material = this.hoverMaterial;
+        this.hoverGameObject.visible = true;
     }
 
     onMouseLeave(): void {
-        this.mesh.material = this.normalMaterial;
+        this.hoverGameObject.visible = false;
     }
 }

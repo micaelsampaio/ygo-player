@@ -133,7 +133,7 @@ export class YGODuelScene {
             eventData: { duel: this.duel }
         });
 
-        const btn = new YGOFieldButton(this.duel, new THREE.Vector3(-10, 0, 1), () => {
+        const btn = new YGOFieldButton(this.duel, new THREE.Vector3(-10, 0, -0.3), () => {
             globalMenuAction.eventData.transform = btn.gameObject;
             this.duel.actionManager.setAction(globalMenuAction);
         });

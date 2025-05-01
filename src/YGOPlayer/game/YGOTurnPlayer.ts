@@ -40,7 +40,7 @@ export class YGOTurnPlayer extends YGOEntity implements YGOUiElement {
         fieldTurn.position.set(0, 0, -1.4);
         fieldTurn.position.set(0, 0, -1.4);
 
-        fieldTurnPlaceHolder.position.set(0, 0.01, 0);
+        fieldTurnPlaceHolder.position.set(0, -0.1, 0);
         fieldTurnPlaceHolder.rotation.set(0, 0, 0);
 
         this.gameObject = clickElement;
