@@ -36,7 +36,7 @@ export const getCardImageUrl = (
         // Use the correct path for small images
         return `${baseUrl}/cards_small/${id}.jpg`;
       case "large":
-        return `${baseUrl}/cards/${id}.jpg`;
+        return `${baseUrl}/cards_large/${id}.jpg`;
       case "normal":
         return `${baseUrl}/cards/${id}.jpg`;
       case "medium":

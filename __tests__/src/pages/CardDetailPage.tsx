@@ -154,24 +154,26 @@ const CardDetailPage: React.FC = () => {
 
     const stats: JSX.Element[] = [];
 
-    // Add Type
+    // Add frame type (Spell Card, Trap Card, or full Monster type like "Effect Monster")
     stats.push(
       <StatItem key="type">
-        <StatLabel>Type:</StatLabel>
+        <StatLabel>Frame:</StatLabel>
         <StatValue>{card.type}</StatValue>
       </StatItem>
     );
 
-    // Add Race/Type
+    // Add Monster Type/Spell-Trap Type (using proper terminology instead of "Race")
     stats.push(
       <StatItem key="race">
-        <StatLabel>Race:</StatLabel>
+        <StatLabel>
+          {card.type.includes("Monster") ? "Monster Type:" : "Card Type:"}
+        </StatLabel>
         <StatValue>{card.race}</StatValue>
       </StatItem>
     );
 
-    // Add Attribute if applicable
-    if (card.attribute) {
+    // Add Attribute if applicable (only for Monster cards)
+    if (card.attribute && card.attribute !== "") {
       stats.push(
         <StatItem key="attribute">
           <StatLabel>Attribute:</StatLabel>
@@ -180,8 +182,8 @@ const CardDetailPage: React.FC = () => {
       );
     }
 
-    // Add Level/Rank if applicable
-    if (card.level) {
+    // Add Level/Rank if applicable (only for Monster cards)
+    if (card.level && card.level > 0) {
       stats.push(
         <StatItem key="level">
           <StatLabel>Level/Rank:</StatLabel>
@@ -190,8 +192,8 @@ const CardDetailPage: React.FC = () => {
       );
     }
 
-    // Add ATK if applicable
-    if (card.atk !== undefined) {
+    // Add ATK if applicable (only for Monster cards)
+    if (card.atk !== undefined && card.atk !== null && card.atk !== 0) {
       stats.push(
         <StatItem key="atk">
           <StatLabel>ATK:</StatLabel>
@@ -200,8 +202,8 @@ const CardDetailPage: React.FC = () => {
       );
     }
 
-    // Add DEF if applicable
-    if (card.def !== undefined) {
+    // Add DEF if applicable (only for Monster cards)
+    if (card.def !== undefined && card.def !== null && card.def !== 0) {
       stats.push(
         <StatItem key="def">
           <StatLabel>DEF:</StatLabel>
@@ -210,8 +212,8 @@ const CardDetailPage: React.FC = () => {
       );
     }
 
-    // Add Scale if applicable
-    if (card.scale !== undefined) {
+    // Add Scale if applicable (only for Pendulum Monster cards)
+    if (card.scale !== undefined && card.scale > 0) {
       stats.push(
         <StatItem key="scale">
           <StatLabel>Pendulum Scale:</StatLabel>
@@ -220,8 +222,8 @@ const CardDetailPage: React.FC = () => {
       );
     }
 
-    // Add Link Rating if applicable
-    if (card.linkval !== undefined) {
+    // Add Link Rating if applicable (only for Link Monster cards)
+    if (card.linkval !== undefined && card.linkval > 0) {
       stats.push(
         <StatItem key="linkval">
           <StatLabel>Link Rating:</StatLabel>
@@ -230,7 +232,7 @@ const CardDetailPage: React.FC = () => {
       );
     }
 
-    // Add Link Markers if applicable
+    // Add Link Markers if applicable (only for Link Monster cards)
     if (card.linkmarkers && card.linkmarkers.length > 0) {
       stats.push(
         <StatItem key="linkmarkers">
@@ -240,8 +242,8 @@ const CardDetailPage: React.FC = () => {
       );
     }
 
-    // Add Archetype if applicable
-    if (card.archetype) {
+    // Add Archetype if applicable (for any card type)
+    if (card.archetype && card.archetype !== "") {
       stats.push(
         <StatItem key="archetype">
           <StatLabel>Archetype:</StatLabel>
@@ -399,15 +401,17 @@ const CardDetailPage: React.FC = () => {
             <Card.Content>
               <CardLayout>
                 <CardImageContainer>
-                  {/* Use the correct card image URL path based on our CDN structure */}
                   <CardArtwork
                     src={
                       card && card.id
-                        ? `${cdnUrl}/images/cards_small/${card.id}.jpg`
+                        ? getCardImageUrl(card.id, "normal")
                         : `${cdnUrl}/images/card_back.png`
                     }
                     alt={card ? card.name : "Card"}
                     onError={(e) => {
+                      console.error(
+                        `Failed to load image for card ID: ${card?.id}`
+                      );
                       const target = e.target as HTMLImageElement;
                       target.src = `${cdnUrl}/images/card_back.png`;
                     }}
