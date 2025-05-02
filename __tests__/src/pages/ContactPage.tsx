@@ -7,6 +7,10 @@ import Card from "../components/UI/Card";
 import Button from "../components/UI/Button";
 import TextField from "../components/UI/TextField";
 
+// API base URL from environment variable
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+
 const ContactPage: React.FC = () => {
   const [formData, setFormData] = useState({
     name: "",
@@ -17,6 +21,7 @@ const ContactPage: React.FC = () => {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -28,21 +33,47 @@ const ContactPage: React.FC = () => {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setError(null);
 
-    // Simulate form submission
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setSubmitted(true);
-      setFormData({
-        name: "",
-        email: "",
-        subject: "",
-        message: "",
+    try {
+      const response = await fetch(`${API_BASE_URL}/feedback`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
       });
-    }, 1000);
+
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      if (data.success) {
+        setSubmitted(true);
+        setFormData({
+          name: "",
+          email: "",
+          subject: "",
+          message: "",
+        });
+      } else {
+        throw new Error(data.message || "Failed to send message");
+      }
+    } catch (err) {
+      console.error("Error sending feedback:", err);
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to send message. Please try again later."
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -75,6 +106,7 @@ const ContactPage: React.FC = () => {
                     </SuccessMessage>
                   ) : (
                     <form onSubmit={handleSubmit}>
+                      {error && <ErrorMessage>{error}</ErrorMessage>}
                       <FormGroup>
                         <Label htmlFor="name">Name</Label>
                         <TextField
@@ -275,6 +307,12 @@ const SuccessMessage = styled.div`
     color: ${({ theme }) => theme.colors.text.secondary};
     margin-bottom: ${({ theme }) => theme.spacing.lg};
   }
+`;
+
+const ErrorMessage = styled.div`
+  color: ${({ theme }) => theme.colors.error.main};
+  margin-bottom: ${({ theme }) => theme.spacing.md};
+  text-align: center;
 `;
 
 const ContactInfoSection = styled.section``;

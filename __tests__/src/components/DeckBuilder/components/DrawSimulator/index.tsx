@@ -605,11 +605,17 @@ const DrawSimulator: React.FC<DrawSimulatorProps> = ({
 
                   // If a card is selected and there's no group selected but groups exist,
                   // automatically select the first group
-                  if (card && selectedGroupId === null && wantedCardGroups.length > 0) {
+                  if (
+                    card &&
+                    selectedGroupId === null &&
+                    wantedCardGroups.length > 0
+                  ) {
                     setSelectedGroupId(0);
                   }
                 }}
-                disabled={selectedGroupId === null && wantedCardGroups.length === 0}
+                disabled={
+                  selectedGroupId === null && wantedCardGroups.length === 0
+                }
               >
                 <option value="">Select a card...</option>
                 {uniqueCards.map((card) => (
@@ -625,8 +631,10 @@ const DrawSimulator: React.FC<DrawSimulatorProps> = ({
                 disabled={!selectedCard || selectedGroupId === null}
                 type="button"
               >
-                {selectedCard 
-                  ? `Add to Group ${selectedGroupId !== null ? selectedGroupId + 1 : ""}`
+                {selectedCard
+                  ? `Add to Group ${
+                      selectedGroupId !== null ? selectedGroupId + 1 : ""
+                    }`
                   : "Select a card"}
               </button>
             </div>
