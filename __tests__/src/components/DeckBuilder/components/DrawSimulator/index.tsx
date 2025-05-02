@@ -135,25 +135,25 @@ const DrawSimulator: React.FC<DrawSimulatorProps> = ({
 
     // Make a deep copy of the selected card to avoid reference issues
     const cardToAdd = { ...selectedCard };
-    
+
     // Create a new array of groups
     const updatedGroups = [...wantedCardGroups];
-    
+
     if (selectedGroupId >= 0 && selectedGroupId < updatedGroups.length) {
       // Add the card to the existing group
       updatedGroups[selectedGroupId] = {
         ...updatedGroups[selectedGroupId],
-        cards: [...updatedGroups[selectedGroupId].cards, cardToAdd]
+        cards: [...updatedGroups[selectedGroupId].cards, cardToAdd],
       };
     } else {
       // Create a new group if somehow the selected group doesn't exist
       updatedGroups.push({
         cards: [cardToAdd],
         copies: wantedCopies,
-        relation: "OR"
+        relation: "OR",
       });
     }
-    
+
     setWantedCardGroups(updatedGroups);
     setSelectedCard(null);
     setWantedCopies(1);
