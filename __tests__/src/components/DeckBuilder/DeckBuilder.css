@@ -11,6 +11,7 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 2rem;
+  position: relative; /* Add position relative for absolute positioning of back button */
 }
 
 .page-header h1 {
@@ -18,6 +19,34 @@
   color: #333;
   font-size: 2rem;
   font-weight: 600;
+  text-align: center;
+  width: 100%; /* Make the title take full width for centering */
+}
+
+/* Style for the back button */
+.back-button {
+  position: absolute;
+  left: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #2196f3; /* Primary color */
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px 12px;
+  font-size: 14px;
+  transition: color 0.3s ease;
+  z-index: 1; /* Ensure it's above other elements */
+}
+
+.back-button:hover {
+  color: #1976d2; /* Darker shade for hover */
+}
+
+.back-button svg {
+  width: 18px;
+  height: 18px;
 }
 
 /* Add styles for search panel view mode toggle */

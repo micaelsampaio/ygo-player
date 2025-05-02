@@ -7,6 +7,7 @@ declare global {
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Card, Deck, DeckBuilderProps, DeckGroup, CardGroup } from "./types";
+import { useNavigate } from "react-router-dom"; // Import useNavigate hook
 import DeckEditor from "./components/DeckEditor/DeckEditor.tsx";
 import SearchPanel from "./components/Search/SearchPanel";
 import CardGroups from "./components/Search/CardGroups";
@@ -17,6 +18,7 @@ import CardSuggestions from "./components/CardSuggestion/CardSuggestions.tsx";
 import DrawSimulator from "./components/DrawSimulator"; // Fix import path
 import DeckNotes from "./components/DeckNotes"; // Import the DeckNotes component
 import DeckSyncModal from "./components/DeckSyncModal/DeckSyncModal";
+import { ArrowLeft } from "lucide-react"; // Import ArrowLeft icon
 import { useDeckStorage } from "./hooks/useDeckStorage";
 import { useDeckGroups } from "./hooks/useDeckGroups"; // New hook for deck groups
 import { useDeckAnalytics } from "./hooks/useDeckAnalytics";
@@ -103,6 +105,8 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
     isLoading: analyzerServiceLoading,
     error: analyzerServiceError,
   } = useAnalyzerService();
+
+  const navigate = useNavigate(); // Initialize useNavigate hook
 
   // Effect to ensure all decks have IDs
   useEffect(() => {
@@ -965,6 +969,13 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
     <AppLayout>
       <div className="deck-builder">
         <div className="page-header">
+          <button
+            className="back-button"
+            onClick={() => navigate(-1)}
+            title="Go back"
+          >
+            <ArrowLeft />
+          </button>
           <h1>Deck Builder</h1>
           <div className="header-actions">
             {/* Removed My Decks and Sync Decks buttons */}
