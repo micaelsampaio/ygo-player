@@ -72,9 +72,17 @@ const DeckDetailPage = () => {
     }
   }, [deck, activeTab, analyzeDeck, deckAnalytics]);
 
-  const handleCardClick = (card: any) => {
-    setPreviewCard(card);
-    setIsCardModalOpen(true);
+  // Handle card click with navigation option
+  const handleCardClick = (card: any, e?: React.MouseEvent) => {
+    // If Ctrl/Cmd key is pressed, navigate to card details
+    if (e && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault();
+      navigate(`/card/${card.id}`);
+    } else {
+      // Otherwise, show the card modal
+      setPreviewCard(card);
+      setIsCardModalOpen(true);
+    }
   };
 
   const handleCloseModal = () => {
@@ -626,7 +634,7 @@ const DeckDetailPage = () => {
                                     const target = e.target as HTMLImageElement;
                                     target.src = CARD_BACK_IMAGE;
                                   }}
-                                  onClick={() => handleCardClick(card)}
+                                  onClick={(e) => handleCardClick(card, e)}
                                 />
                                 <CardCountBadge>
                                   {
@@ -664,7 +672,7 @@ const DeckDetailPage = () => {
                                     const target = e.target as HTMLImageElement;
                                     target.src = CARD_BACK_IMAGE;
                                   }}
-                                  onClick={() => handleCardClick(card)}
+                                  onClick={(e) => handleCardClick(card, e)}
                                 />
                                 <CardCountBadge>
                                   {
@@ -701,7 +709,7 @@ const DeckDetailPage = () => {
                                   const target = e.target as HTMLImageElement;
                                   target.src = CARD_BACK_IMAGE;
                                 }}
-                                onClick={() => handleCardClick(card)}
+                                onClick={(e) => handleCardClick(card, e)}
                               />
                               <CardCountBadge>
                                 {
@@ -740,7 +748,7 @@ const DeckDetailPage = () => {
                               const target = e.target as HTMLImageElement;
                               target.src = CARD_BACK_IMAGE;
                             }}
-                            onClick={() => handleCardClick(card)}
+                            onClick={(e) => handleCardClick(card, e)}
                           />
                           <CardCountBadge>
                             {
@@ -779,7 +787,7 @@ const DeckDetailPage = () => {
                                   const target = e.target as HTMLImageElement;
                                   target.src = CARD_BACK_IMAGE;
                                 }}
-                                onClick={() => handleCardClick(card)}
+                                onClick={(e) => handleCardClick(card, e)}
                               />
                               <CardCountBadge>
                                 {
