@@ -7,9 +7,11 @@ type ImageSize = "small" | "medium" | "large" | "normal";
 
 /**
  * URL to the card back image that can be used as a placeholder or fallback
- * Using our own hosted version of the card back
+ * Using the CDN for the card back image
  */
-export const CARD_BACK_IMAGE = "/assets/images/cards/back.jpg";
+// Get the CDN URL from environment variables
+const cdnUrl = import.meta.env.VITE_YGO_CDN_URL || "http://localhost:8080";
+export const CARD_BACK_IMAGE = `${cdnUrl}/images/card_back.png`;
 
 /**
  * Gets the appropriate URL for a card image by ID
@@ -21,8 +23,8 @@ export const getCardImageUrl = (
   cardId: number | string,
   size: ImageSize = "medium"
 ): string => {
-  // Use our own card image API/CDN instead of direct YGOPro links
-  const baseUrl = "/assets/images/cards";
+  // Use the CDN URL from environment variables
+  const baseUrl = `${cdnUrl}/images/cards`;
 
   // Ensure cardId is a string
   const id = String(cardId);
