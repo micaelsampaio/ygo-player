@@ -198,7 +198,7 @@ const DeckConverter: React.FC<DeckConverterProps> = ({ size = "medium" }) => {
     const loadCardDatabase = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`${cdnUrl}/data/cards.json`);
+        const response = await fetch(`${cdnUrl}/cards.json`);
         if (!response.ok) {
           throw new Error(`Failed to fetch card database: ${response.status}`);
         }
