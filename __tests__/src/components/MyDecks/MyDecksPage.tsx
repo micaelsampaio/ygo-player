@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { YGODeckToImage } from "ygo-core-images-utils";
@@ -8,7 +8,7 @@ import theme from "../../styles/theme";
 import AppLayout from "../Layout/AppLayout";
 import { Button, Card as CardUI, Badge, TextField, Select } from "../UI";
 import DeckSyncModal from "../DeckBuilder/components/DeckSyncModal/DeckSyncModal";
-import DeckActions from "../DeckBuilder/components/DeckList/DeckActions";
+import DeckActions from "../shared/DeckActions";
 import { createPortal } from "react-dom";
 import { createCollectionFromDeck } from "../Collections/contex";
 import { YGOCardGrid } from "../UI/YGOCard";
@@ -150,7 +150,15 @@ const MyDecksPage = () => {
     deleteDeckGroup,
     moveDeckToGroup,
     getDecksInGroup,
+    updateDeckGroup,
   } = useDeckGroups();
+
+  // New state for nested group navigation
+  const [breadcrumbs, setBreadcrumbs] = useState<DeckGroup[]>([]);
+  const [newGroupParentId, setNewGroupParentId] = useState<string | undefined>(
+    undefined
+  );
+  const [showGroupMenu, setShowGroupMenu] = useState<string | null>(null);
 
   const [allDecks, setAllDecks] = useState<Deck[]>([]);
   const [displayedDecks, setDisplayedDecks] = useState<Deck[]>([]);
@@ -251,6 +259,21 @@ const MyDecksPage = () => {
     }
   };
 
+  const handleCreateNestedGroup = () => {
+    if (!newGroupName.trim()) return;
+
+    const newGroup = createDeckGroup(newGroupName);
+    if (newGroup) {
+      if (newGroupParentId) {
+        updateDeckGroup(newGroup.id, { parentId: newGroupParentId });
+      }
+
+      setSelectedDeckGroup(newGroup);
+      setNewGroupName("");
+      setNewGroupParentId(undefined);
+    }
+  };
+
   const handleDeleteGroup = (group: DeckGroup) => {
     if (group.id === "default") {
       alert("Cannot delete the default group");
@@ -271,6 +294,46 @@ const MyDecksPage = () => {
 
   const handleSelectGroup = (group: DeckGroup | null) => {
     setSelectedDeckGroup(group);
+
+    if (!group) {
+      setBreadcrumbs([]);
+    } else {
+      const newBreadcrumbs: DeckGroup[] = [group];
+      let currentGroup = group;
+
+      while (currentGroup.parentId) {
+        const parent = deckGroups.find((g) => g.id === currentGroup.parentId);
+        if (parent) {
+          newBreadcrumbs.unshift(parent);
+          currentGroup = parent;
+        } else {
+          break;
+        }
+      }
+
+      setBreadcrumbs(newBreadcrumbs);
+    }
+  };
+
+  const navigateToParentGroup = (group: DeckGroup | null) => {
+    if (!group || !group.parentId) {
+      setSelectedDeckGroup(null);
+      setBreadcrumbs([]);
+      return;
+    }
+
+    const parentGroup = deckGroups.find((g) => g.id === group.parentId);
+    if (parentGroup) {
+      setSelectedDeckGroup(parentGroup);
+
+      const parentIndex = breadcrumbs.findIndex((g) => g.id === parentGroup.id);
+      if (parentIndex >= 0) {
+        setBreadcrumbs(breadcrumbs.slice(0, parentIndex + 1));
+      }
+    } else {
+      setSelectedDeckGroup(null);
+      setBreadcrumbs([]);
+    }
   };
 
   const toggleDeckSelection = (deckId: string) => {
@@ -479,7 +542,6 @@ const MyDecksPage = () => {
   const getCoverCard = (deck: Deck) => {
     const deckId = deck.id || `deck_${deck.name}`;
 
-    // First priority: Check if the deck has a coverCardId property
     if (deck.coverCardId) {
       const cardFromDeck = [
         ...deck.mainDeck,
@@ -491,7 +553,6 @@ const MyDecksPage = () => {
       }
     }
 
-    // Second priority: Check the separate coverCards storage (backwards compatibility)
     if (coverCards[deckId]) {
       const cardFromCoverCardsStore = [
         ...deck.mainDeck,
@@ -503,7 +564,6 @@ const MyDecksPage = () => {
       }
     }
 
-    // Fallback: Use the default card selection logic
     const allCards = [...deck.mainDeck, ...deck.extraDeck];
     if (allCards.length === 0) return null;
 
@@ -522,13 +582,11 @@ const MyDecksPage = () => {
   };
 
   const setCoverCard = (deckId: string, cardId: number) => {
-    // First update the local state for immediate UI update
     setCoverCards((prev) => ({
       ...prev,
       [deckId]: cardId,
     }));
 
-    // Update the deck object itself to store coverCardId directly in the deck
     try {
       const deckData = localStorage.getItem(deckId);
       if (deckData) {
@@ -537,7 +595,6 @@ const MyDecksPage = () => {
         localStorage.setItem(deckId, JSON.stringify(deck));
       }
 
-      // For backward compatibility, also update the separate cover cards storage
       const storedCoverCards = JSON.parse(
         localStorage.getItem("deck_cover_cards") || "{}"
       );
@@ -599,6 +656,43 @@ const MyDecksPage = () => {
     loadAllDecks();
   };
 
+  const handleGroupDragOver = (
+    e: React.DragEvent<HTMLDivElement>,
+    groupId: string
+  ) => {
+    e.preventDefault();
+    e.currentTarget.classList.add("drag-over");
+  };
+
+  const handleGroupDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.currentTarget.classList.remove("drag-over");
+  };
+
+  const handleGroupDrop = (
+    e: React.DragEvent<HTMLDivElement>,
+    groupId: string
+  ) => {
+    e.preventDefault();
+    e.currentTarget.classList.remove("drag-over");
+    const deckId = e.dataTransfer.getData("text/plain");
+    if (deckId) {
+      moveDeckToGroup(deckId, groupId);
+      loadAllDecks();
+    }
+  };
+
+  const getChildGroups = useCallback(
+    (parentId: string | null) => {
+      return deckGroups.filter((group) =>
+        parentId === null
+          ? !group.parentId &&
+            !(group.id === "default" && group.name === "All Decks")
+          : group.parentId === parentId
+      );
+    },
+    [deckGroups]
+  );
+
   const displayedGroups = deckGroups.filter(
     (group) => !(group.id === "default" && group.name === "All Decks")
   );
@@ -610,7 +704,6 @@ const MyDecksPage = () => {
 
   const handleDuelWithDeck = async (deck: Deck) => {
     try {
-      // Set up the duel data structure
       const duelData = {
         players: [
           {
@@ -620,7 +713,6 @@ const MyDecksPage = () => {
           },
           {
             name: "player2",
-            // Default opponent deck will be set in the duel
             mainDeck: [],
             extraDeck: [],
           },
@@ -630,10 +722,8 @@ const MyDecksPage = () => {
         },
       };
 
-      // Use the createRoom utility function
       const navigationState = await createRoom(kaibaNet, duelData);
 
-      // Navigate to the duel page using the state from createRoom
       navigate(`/duel/${navigationState.roomId}`, {
         state: navigationState,
       });
@@ -653,9 +743,6 @@ const MyDecksPage = () => {
         <PageHeader>
           <h1>My Decks</h1>
           <HeaderActions>
-            <Button variant="primary" onClick={handleCreateNewDeck}>
-              Create New Deck
-            </Button>
             <Button variant="secondary" onClick={handleSyncDecks}>
               Sync Decks
             </Button>
@@ -674,88 +761,194 @@ const MyDecksPage = () => {
           </SyncNotification>
         )}
 
-        <StyledCard>
-          <CardUI.Content>
-            <GroupsHeading>
-              <h2>Deck Groups</h2>
-              {isEditingGroups && (
-                <GroupActions>
-                  <TextField
-                    value={newGroupName}
-                    onChange={(e) => setNewGroupName(e.target.value)}
-                    placeholder="New group name"
-                    variant="outline"
-                  />
-                  <Button
-                    variant="primary"
-                    size="md"
-                    onClick={handleCreateGroup}
-                  >
-                    Create
-                  </Button>
-                </GroupActions>
-              )}
-            </GroupsHeading>
+        {isEditingGroups && selectedDecks.size > 0 && (
+          <MoveToGroupPanel>
+            <span>{selectedDecks.size} deck(s) selected</span>
+            <Select
+              options={deckGroups.map((group) => ({
+                value: group.id,
+                label: group.name,
+              }))}
+              onChange={(value) => {
+                if (value) {
+                  moveSelectedDecksToGroup(value);
+                }
+              }}
+              placeholder="Move to group..."
+            />
+          </MoveToGroupPanel>
+        )}
 
-            <GroupTabsContainer>
-              <GroupTab
-                active={!selectedDeckGroup}
-                onClick={() => handleSelectGroup(null)}
-                onDragOver={(e) => handleDragOver(e, "default")}
-                onDrop={(e) => handleDrop(e, "default")}
-                isDragOver={dragOverGroupId === "default"}
+        <BreadcrumbContainer>
+          <BreadcrumbItem
+            onClick={() => handleSelectGroup(null)}
+            $isActive={!selectedDeckGroup}
+          >
+            All Decks
+          </BreadcrumbItem>
+
+          {breadcrumbs.map((group, index) => (
+            <React.Fragment key={group.id}>
+              <BreadcrumbSeparator>/</BreadcrumbSeparator>
+              <BreadcrumbItem
+                onClick={() => {
+                  handleSelectGroup(group);
+                  setBreadcrumbs(breadcrumbs.slice(0, index + 1));
+                }}
+                $isActive={selectedDeckGroup?.id === group.id}
               >
-                All Decks ({allDecks.length})
-              </GroupTab>
+                {group.name}
+              </BreadcrumbItem>
+            </React.Fragment>
+          ))}
+        </BreadcrumbContainer>
 
-              {displayedGroups.map((group) => (
-                <GroupTab
-                  key={group.id}
-                  active={selectedDeckGroup?.id === group.id}
-                  onClick={() => handleSelectGroup(group)}
-                  onDragOver={(e) => handleDragOver(e, group.id)}
-                  onDrop={(e) => handleDrop(e, group.id)}
-                  isDragOver={dragOverGroupId === group.id}
-                >
-                  {group.name} ({getDecksInGroup(group.id).length})
-                  {isEditingGroups && group.id !== "default" && (
-                    <DeleteGroupButton
+        <DeckFilterBar>
+          <FilterButton
+            active={!selectedDeckGroup}
+            onClick={() => handleSelectGroup(null)}
+            onDragOver={(e) => handleGroupDragOver(e, "default")}
+            onDragLeave={handleGroupDragLeave}
+            onDrop={(e) => handleGroupDrop(e, "default")}
+          >
+            All Decks
+          </FilterButton>
+
+          {getChildGroups(selectedDeckGroup?.id || null).map((group) => (
+            <GroupButton
+              key={group.id}
+              active={selectedDeckGroup?.id === group.id}
+              onClick={() => handleSelectGroup(group)}
+              onDragOver={(e) => handleGroupDragOver(e, group.id)}
+              onDragLeave={handleGroupDragLeave}
+              onDrop={(e) => handleGroupDrop(e, group.id)}
+              onContextMenu={(e) => {
+                e.preventDefault();
+                setShowGroupMenu(showGroupMenu === group.id ? null : group.id);
+              }}
+            >
+              <GroupContent>
+                <GroupName>{group.name}</GroupName>
+                {deckGroups.some((g) => g.parentId === group.id) && (
+                  <NestedIndicator>•••</NestedIndicator>
+                )}
+              </GroupContent>
+
+              {showGroupMenu === group.id && (
+                <GroupContextMenu onClick={(e) => e.stopPropagation()}>
+                  <MenuButton
+                    onClick={() => {
+                      setNewGroupParentId(group.id);
+                      setIsEditingGroups(true);
+                    }}
+                  >
+                    Add Subgroup
+                  </MenuButton>
+                  {group.id !== "default" && (
+                    <MenuButton onClick={() => handleDeleteGroup(group)}>
+                      Delete Group
+                    </MenuButton>
+                  )}
+                </GroupContextMenu>
+              )}
+            </GroupButton>
+          ))}
+
+          {isEditingGroups && (
+            <NewGroupForm>
+              <TextField
+                value={newGroupName}
+                onChange={(e) => setNewGroupName(e.target.value)}
+                placeholder={
+                  newGroupParentId
+                    ? "New subgroup name..."
+                    : "New group name..."
+                }
+                variant="outline"
+              />
+              <Select
+                options={[
+                  { value: "", label: "No parent (root level)" },
+                  ...deckGroups
+                    .filter((g) => g.id !== "default")
+                    .map((g) => ({ value: g.id, label: g.name })),
+                ]}
+                onChange={(value) => setNewGroupParentId(value || undefined)}
+                value={newGroupParentId || ""}
+                placeholder="Select parent group (optional)"
+              />
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={handleCreateNestedGroup}
+                disabled={!newGroupName.trim()}
+              >
+                Create Group
+              </Button>
+            </NewGroupForm>
+          )}
+
+          {selectedDeckGroup?.parentId && (
+            <UpLevelButton
+              onClick={() => navigateToParentGroup(selectedDeckGroup)}
+            >
+              ↑ Up to parent
+            </UpLevelButton>
+          )}
+        </DeckFilterBar>
+
+        <UniformGrid>
+          <UniformCard>
+            <NewDeckCardWrapper onClick={handleCreateNewDeck}>
+              <CardUI.Content>
+                <NewDeckContent>
+                  <PlusIcon>+</PlusIcon>
+                  <NewDeckText>New Deck</NewDeckText>
+                </NewDeckContent>
+              </CardUI.Content>
+            </NewDeckCardWrapper>
+          </UniformCard>
+
+          {getChildGroups(selectedDeckGroup?.id || null).map((group) => (
+            <UniformCard key={`group-${group.id}`}>
+              <GroupCardWrapper 
+                onClick={() => handleSelectGroup(group)}
+                onDragOver={(e) => handleGroupDragOver(e, group.id)}
+                onDragLeave={handleGroupDragLeave}
+                onDrop={(e) => handleGroupDrop(e, group.id)}
+                data-group-id={group.id}
+              >
+                <CardUI.Content>
+                  <GroupCardContent>
+                    <FolderIcon>📁</FolderIcon>
+                    <GroupCardTitle>{group.name}</GroupCardTitle>
+                    <GroupStats>
+                      <GroupStatItem>
+                        {getDecksInGroup(group.id).length} decks
+                      </GroupStatItem>
+                      {deckGroups.some((g) => g.parentId === group.id) && (
+                        <GroupStatItem>Has subgroups</GroupStatItem>
+                      )}
+                    </GroupStats>
+
+                    <ActionButton
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleDeleteGroup(group);
+                        handleSelectGroup(group);
                       }}
                     >
-                      ×
-                    </DeleteGroupButton>
-                  )}
-                </GroupTab>
-              ))}
-            </GroupTabsContainer>
+                      Open Group
+                    </ActionButton>
+                  </GroupCardContent>
+                </CardUI.Content>
+              </GroupCardWrapper>
+            </UniformCard>
+          ))}
 
-            {isEditingGroups && selectedDecks.size > 0 && (
-              <MoveToGroupPanel>
-                <span>{selectedDecks.size} deck(s) selected</span>
-                <Select
-                  options={deckGroups.map((group) => ({
-                    value: group.id,
-                    label: group.name,
-                  }))}
-                  onChange={(value) => {
-                    if (value) {
-                      moveSelectedDecksToGroup(value);
-                    }
-                  }}
-                />
-              </MoveToGroupPanel>
-            )}
-          </CardUI.Content>
-        </StyledCard>
-
-        {displayedDecks.length === 0 ? (
-          <EmptyStateCard>
-            <CardUI.Content>
-              {allDecks.length === 0 ? (
-                <>
+          {displayedDecks.length === 0 && allDecks.length === 0 ? (
+            <UniformCard>
+              <EmptyStateCard>
+                <CardUI.Content>
                   <p>You don't have any decks yet.</p>
                   <Button
                     variant="primary"
@@ -763,139 +956,149 @@ const MyDecksPage = () => {
                   >
                     Create Your First Deck
                   </Button>
-                </>
-              ) : (
-                <p>
-                  No decks in this group. Select a different group or add decks
-                  to this group.
-                </p>
-              )}
-            </CardUI.Content>
-          </EmptyStateCard>
-        ) : (
-          <DeckGrid>
-            {displayedDecks.map((deck) => {
+                </CardUI.Content>
+              </EmptyStateCard>
+            </UniformCard>
+          ) : displayedDecks.length === 0 ? (
+            <UniformCard>
+              <EmptyStateCard>
+                <CardUI.Content>
+                  <p>
+                    No decks in this group. Select a different group or add
+                    decks to this group.
+                  </p>
+                </CardUI.Content>
+              </EmptyStateCard>
+            </UniformCard>
+          ) : (
+            displayedDecks.map((deck) => {
               const coverCard = getCoverCard(deck);
               const deckId = deck.id || `deck_${deck.name}`;
+              const groupName =
+                deck.groupId && deck.groupId !== "default"
+                  ? deckGroups.find((g) => g.id === deck.groupId)?.name
+                  : null;
 
               return (
-                <DeckCardWrapper
-                  key={deckId}
-                  selected={selectedDecks.has(deckId)}
-                  onClick={() =>
-                    isEditingGroups ? toggleDeckSelection(deckId) : null
-                  }
-                  onContextMenu={(e) => handleDeckContextMenu(deck, e)}
-                  draggable
-                  onDragStart={(e) => handleDragStart(e, deck)}
-                  onDragEnd={handleDragEnd}
-                  $isDragging={isDragging === deckId}
-                >
-                  {isEditingGroups && (
-                    <SelectCheckbox
-                      type="checkbox"
-                      checked={selectedDecks.has(deckId)}
-                      onChange={() => toggleDeckSelection(deckId)}
-                      onClick={(e) => e.stopPropagation()}
-                    />
-                  )}
-                  <CardUI.Content>
-                    <DeckInfoContainer>
-                      <div>
-                        <DeckTitle>{deck.name}</DeckTitle>
-                        <DeckMeta>
-                          <MetaItem>Main: {deck.mainDeck.length}</MetaItem>
-                          <MetaItem>Extra: {deck.extraDeck.length}</MetaItem>
-                          {deck.groupId && (
-                            <GroupBadge variant="primary" size="sm" pill>
-                              {deckGroups.find((g) => g.id === deck.groupId)
-                                ?.name || "Unknown Group"}
-                            </GroupBadge>
-                          )}
-                        </DeckMeta>
-                      </div>
+                <UniformCard key={deckId}>
+                  <DeckCardWrapper
+                    selected={selectedDecks.has(deckId)}
+                    onClick={() =>
+                      isEditingGroups ? toggleDeckSelection(deckId) : null
+                    }
+                    onContextMenu={(e) => handleDeckContextMenu(deck, e)}
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, deck)}
+                    onDragEnd={handleDragEnd}
+                    $isDragging={isDragging === deckId}
+                  >
+                    {isEditingGroups && (
+                      <SelectCheckbox
+                        type="checkbox"
+                        checked={selectedDecks.has(deckId)}
+                        onChange={() => toggleDeckSelection(deckId)}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    )}
+                    <CardUI.Content>
+                      <DeckInfoContainer>
+                        <div className="deck-info-text">
+                          <DeckTitle className="ygo-deck-title">
+                            {deck.name}
+                          </DeckTitle>
+                          {groupName && <GroupTag>{groupName}</GroupTag>}
+                          <DeckMeta className="ygo-deck-stats">
+                            <MetaItem className="ygo-deck-stat">
+                              Main: {deck.mainDeck.length}
+                            </MetaItem>
+                            <MetaItem className="ygo-deck-stat">
+                              Extra: {deck.extraDeck.length}
+                            </MetaItem>
+                          </DeckMeta>
+                        </div>
 
-                      {coverCard && (
-                        <DeckCoverContainer>
-                          <DeckCoverCard
-                            src={getCardImageUrl(coverCard.id, "small")}
-                            alt={coverCard.name}
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement;
-                              target.src = CARD_BACK_IMAGE;
-                            }}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              openCoverCardModal(deck);
-                            }}
-                          />
-                          <ChangeCoverButton
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              openCoverCardModal(deck);
-                            }}
-                          >
-                            Change Cover
-                          </ChangeCoverButton>
-                        </DeckCoverContainer>
-                      )}
-                    </DeckInfoContainer>
+                        {coverCard && (
+                          <DeckCoverContainer>
+                            <DeckCoverCard
+                              src={getCardImageUrl(coverCard.id, "small")}
+                              alt={coverCard.name}
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.src = CARD_BACK_IMAGE;
+                              }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openCoverCardModal(deck);
+                              }}
+                            />
+                            <ChangeCoverButton
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openCoverCardModal(deck);
+                              }}
+                            >
+                              Change Cover
+                            </ChangeCoverButton>
+                          </DeckCoverContainer>
+                        )}
+                      </DeckInfoContainer>
 
-                    <ButtonContainer>
-                      <Button
-                        variant="primary"
-                        fullWidth
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate(`/my/decks/${deckId}`);
-                        }}
-                      >
-                        View Details
-                      </Button>
-                      <Button
-                        variant="secondary"
-                        fullWidth
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDuelWithDeck(deck);
-                        }}
-                      >
-                        Duel
-                      </Button>
-                    </ButtonContainer>
+                      <ButtonContainer>
+                        <Button
+                          variant="primary"
+                          fullWidth
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/my/decks/${deckId}`);
+                          }}
+                        >
+                          View Details
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          fullWidth
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDuelWithDeck(deck);
+                          }}
+                        >
+                          Duel
+                        </Button>
+                      </ButtonContainer>
 
-                    <ActionBar>
-                      <ActionButton
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          downloadDeckAsPng(deck);
-                        }}
-                      >
-                        🖼️ PNG
-                      </ActionButton>
-                      <ActionButton
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          downloadDeckAsYdk(deck);
-                        }}
-                      >
-                        📂 YDK
-                      </ActionButton>
-                      <ActionButton
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          deleteDeck(deck);
-                        }}
-                      >
-                        🗑️ Delete
-                      </ActionButton>
-                    </ActionBar>
-                  </CardUI.Content>
-                </DeckCardWrapper>
+                      <ActionBar>
+                        <ActionButton
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            downloadDeckAsPng(deck);
+                          }}
+                        >
+                          🖼️ PNG
+                        </ActionButton>
+                        <ActionButton
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            downloadDeckAsYdk(deck);
+                          }}
+                        >
+                          📂 YDK
+                        </ActionButton>
+                        <ActionButton
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteDeck(deck);
+                          }}
+                        >
+                          🗑️ Delete
+                        </ActionButton>
+                      </ActionBar>
+                    </CardUI.Content>
+                  </DeckCardWrapper>
+                </UniformCard>
               );
-            })}
-          </DeckGrid>
-        )}
+            })
+          )}
+        </UniformGrid>
 
         <DeckSyncModal
           isOpen={isSyncModalOpen}
@@ -1039,85 +1242,6 @@ const SyncNotification = styled.div<{ $success: boolean }>`
   }
 `;
 
-const StyledCard = styled.div`
-  background-color: ${theme.colors.background.paper};
-  border-radius: ${theme.borderRadius.md};
-  box-shadow: ${theme.shadows.sm};
-  margin-bottom: 24px;
-`;
-
-const GroupsHeading = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: ${theme.spacing.md};
-
-  h2 {
-    margin: 0;
-    color: ${theme.colors.text.primary};
-    font-size: ${theme.typography.size.xl};
-  }
-`;
-
-const GroupActions = styled.div`
-  display: flex;
-  align-items: center;
-  gap: ${theme.spacing.md};
-`;
-
-const GroupTabsContainer = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: ${theme.spacing.sm};
-  margin-bottom: ${theme.spacing.md};
-`;
-
-const GroupTab = styled.div<{ active: boolean; isDragOver?: boolean }>`
-  padding: ${theme.spacing.sm} ${theme.spacing.md};
-  background-color: ${(props) =>
-    props.isDragOver
-      ? theme.colors.primary.light
-      : props.active
-      ? theme.colors.primary.main
-      : theme.colors.background.card};
-  color: ${(props) =>
-    props.active || props.isDragOver
-      ? theme.colors.text.inverse
-      : theme.colors.text.primary};
-  border-radius: ${theme.borderRadius.md};
-  cursor: pointer;
-  transition: all ${theme.transitions.default};
-  display: flex;
-  align-items: center;
-  position: relative;
-  border: ${(props) =>
-    props.isDragOver ? `2px dashed ${theme.colors.primary.dark}` : "none"};
-  transform: ${(props) => (props.isDragOver ? "scale(1.05)" : "none")};
-
-  &:hover {
-    background-color: ${(props) =>
-      props.active ? theme.colors.primary.dark : theme.colors.background.dark};
-  }
-`;
-
-const DeleteGroupButton = styled.button`
-  background: none;
-  border: none;
-  color: ${theme.colors.text.inverse};
-  font-size: ${theme.typography.size.md};
-  font-weight: ${theme.typography.weight.bold};
-  margin-left: ${theme.spacing.sm};
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 5px;
-
-  &:hover {
-    color: ${theme.colors.error.main};
-  }
-`;
-
 const MoveToGroupPanel = styled.div`
   display: flex;
   align-items: center;
@@ -1133,10 +1257,284 @@ const MoveToGroupPanel = styled.div`
   }
 `;
 
-const DeckGrid = styled.div`
+const BreadcrumbContainer = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: ${theme.spacing.md};
+  padding: ${theme.spacing.xs} 0;
+`;
+
+const BreadcrumbItem = styled.button<{ $isActive?: boolean }>`
+  background: none;
+  border: none;
+  font-size: ${theme.typography.size.sm};
+  cursor: pointer;
+  color: ${(props) =>
+    props.$isActive ? theme.colors.primary.main : theme.colors.text.secondary};
+  font-weight: ${(props) =>
+    props.$isActive
+      ? theme.typography.weight.bold
+      : theme.typography.weight.regular};
+
+  &:hover {
+    color: ${theme.colors.primary.dark};
+    text-decoration: underline;
+  }
+`;
+
+const BreadcrumbSeparator = styled.span`
+  margin: 0 ${theme.spacing.xs};
+  color: ${theme.colors.text.secondary};
+`;
+
+const DeckFilterBar = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: ${theme.spacing.sm};
+  margin-bottom: ${theme.spacing.lg};
+  border-bottom: 1px solid ${theme.colors.border.light};
+  padding-bottom: ${theme.spacing.md};
+
+  .drag-over {
+    background-color: ${theme.colors.primary.light}20;
+  }
+`;
+
+const FilterButton = styled.button<{ active?: boolean }>`
+  background-color: ${(props) =>
+    props.active ? theme.colors.primary.main : "transparent"};
+  color: ${(props) =>
+    props.active ? theme.colors.text.inverse : theme.colors.text.primary};
+  border: ${(props) =>
+    props.active ? "none" : `1px solid ${theme.colors.border.default}`};
+  border-radius: ${theme.borderRadius.md};
+  padding: ${theme.spacing.xs} ${theme.spacing.md};
+  font-size: ${theme.typography.size.sm};
+  cursor: pointer;
+  transition: all ${theme.transitions.default};
+
+  &:hover {
+    background-color: ${(props) =>
+      props.active ? theme.colors.primary.dark : theme.colors.background.dark};
+  }
+`;
+
+const GroupButton = styled.div<{ active?: boolean }>`
+  position: relative;
+  background-color: ${(props) =>
+    props.active ? theme.colors.primary.main : "transparent"};
+  color: ${(props) =>
+    props.active ? theme.colors.text.inverse : theme.colors.text.primary};
+  border: ${(props) =>
+    props.active ? "none" : `1px solid ${theme.colors.border.default}`};
+  border-radius: ${theme.borderRadius.md};
+  padding: ${theme.spacing.xs} ${theme.spacing.md};
+  font-size: ${theme.typography.size.sm};
+  cursor: pointer;
+  transition: all ${theme.transitions.default};
+  display: flex;
+  align-items: center;
+
+  &:hover {
+    background-color: ${(props) =>
+      props.active ? theme.colors.primary.dark : theme.colors.background.dark};
+  }
+
+  &.drag-over {
+    background-color: ${theme.colors.primary.light}20;
+  }
+`;
+
+const GroupContent = styled.div`
+  display: flex;
+  align-items: center;
+`;
+
+const GroupName = styled.span`
+  white-space: nowrap;
+`;
+
+const NestedIndicator = styled.span`
+  margin-left: ${theme.spacing.sm};
+  font-size: ${theme.typography.size.xs};
+  opacity: 0.7;
+`;
+
+const GroupContextMenu = styled.div`
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background-color: ${theme.colors.background.paper};
+  border: 1px solid ${theme.colors.border.default};
+  border-radius: ${theme.borderRadius.sm};
+  box-shadow: ${theme.shadows.md};
+  z-index: 10;
+  min-width: 150px;
+  margin-top: ${theme.spacing.xs};
+`;
+
+const MenuButton = styled.button`
+  width: 100%;
+  text-align: left;
+  padding: ${theme.spacing.sm};
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: ${theme.colors.text.primary};
+
+  &:hover {
+    background-color: ${theme.colors.background.dark};
+  }
+
+  &:not(:last-child) {
+    border-bottom: 1px solid ${theme.colors.border.light};
+  }
+`;
+
+const NewGroupForm = styled.div`
+  display: flex;
+  gap: ${theme.spacing.xs};
+  align-items: center;
+  margin-left: auto;
+  background-color: ${theme.colors.background.paper};
+  padding: ${theme.spacing.xs};
+  border-radius: ${theme.borderRadius.md};
+  border: 1px dashed ${theme.colors.border.default};
+`;
+
+const UpLevelButton = styled.button`
+  background: none;
+  border: 1px solid ${theme.colors.border.default};
+  color: ${theme.colors.text.secondary};
+  padding: ${theme.spacing.xs} ${theme.spacing.md};
+  border-radius: ${theme.borderRadius.md};
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  font-size: ${theme.typography.size.sm};
+
+  &:hover {
+    background-color: ${theme.colors.background.dark};
+    color: ${theme.colors.text.primary};
+  }
+`;
+
+const UniformGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: ${theme.spacing.lg};
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  grid-auto-rows: 1fr;
+  gap: ${theme.spacing.md};
+`;
+
+const UniformCard = styled.div`
+  display: flex;
+  min-height: 240px;
+`;
+
+const NewDeckCardWrapper = styled.div`
+  position: relative;
+  border: 2px dashed ${theme.colors.primary.main};
+  background-color: ${theme.colors.background.paper};
+  cursor: pointer;
+  transition: transform ${theme.transitions.default},
+    box-shadow ${theme.transitions.default};
+  border-radius: ${theme.borderRadius.md};
+  box-shadow: ${theme.shadows.sm};
+  height: 100%;
+  width: 100%;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: ${theme.shadows.md};
+    background-color: ${theme.colors.primary.light}20;
+  }
+`;
+
+const NewDeckContent = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: ${theme.spacing.md};
+  height: 100%;
+  min-height: 180px;
+`;
+
+const PlusIcon = styled.div`
+  font-size: 36px;
+  font-weight: ${theme.typography.weight.bold};
+  color: ${theme.colors.primary.main};
+  margin-bottom: ${theme.spacing.md};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background-color: ${theme.colors.primary.light}20;
+  transition: all ${theme.transitions.default};
+
+  ${NewDeckCardWrapper}:hover & {
+    background-color: ${theme.colors.primary.light}40;
+    transform: scale(1.1);
+  }
+`;
+
+const NewDeckText = styled.div`
+  font-weight: ${theme.typography.weight.medium};
+  color: ${theme.colors.primary.main};
+  font-size: ${theme.typography.size.lg};
+`;
+
+const GroupCardWrapper = styled.div`
+  position: relative;
+  border: 1px solid ${theme.colors.border.default};
+  background-color: ${theme.colors.background.paper};
+  cursor: pointer;
+  transition: transform ${theme.transitions.default},
+    box-shadow ${theme.transitions.default};
+  border-radius: ${theme.borderRadius.md};
+  box-shadow: ${theme.shadows.sm};
+  height: 100%;
+  width: 100%;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: ${theme.shadows.md};
+  }
+`;
+
+const GroupCardContent = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  height: 100%;
+  padding: ${theme.spacing.md};
+`;
+
+const FolderIcon = styled.div`
+  font-size: 36px;
+  margin-bottom: ${theme.spacing.sm};
+`;
+
+const GroupCardTitle = styled.h3`
+  margin: 0;
+  margin-bottom: ${theme.spacing.xs};
+  font-size: ${theme.typography.size.md};
+  color: ${theme.colors.text.primary};
+`;
+
+const GroupStats = styled.div`
+  margin-bottom: ${theme.spacing.md};
+`;
+
+const GroupStatItem = styled.div`
+  font-size: ${theme.typography.size.xs};
+  color: ${theme.colors.text.secondary};
+  margin: ${theme.spacing.xs} 0;
 `;
 
 const DeckCardWrapper = styled.div<{
@@ -1160,9 +1558,11 @@ const DeckCardWrapper = styled.div<{
   box-shadow: ${theme.shadows.sm};
   opacity: ${(props) => (props.$isDragging ? 0.6 : 1)};
   transform: ${(props) => (props.$isDragging ? "scale(0.98)" : "none")};
+  width: 100%;
+  height: 100%;
 
   &:hover {
-    transform: translateY(-2px);
+    transform: translateY(-4px);
     box-shadow: ${theme.shadows.md};
   }
 `;
@@ -1192,8 +1592,8 @@ const DeckCoverContainer = styled.div`
 `;
 
 const DeckCoverCard = styled.img`
-  width: 70px;
-  height: 102px;
+  width: 60px;
+  height: 87px;
   border-radius: ${theme.borderRadius.sm};
   box-shadow: ${theme.shadows.md};
   transition: transform 0.2s ease;
@@ -1243,8 +1643,18 @@ const MetaItem = styled.span`
   color: ${theme.colors.text.secondary};
 `;
 
-const GroupBadge = styled(Badge)`
-  margin-left: auto;
+const GroupTag = styled.div`
+  display: inline-block;
+  font-size: ${theme.typography.size.xs};
+  color: ${theme.colors.text.secondary};
+  background-color: ${theme.colors.background.card};
+  border-radius: ${theme.borderRadius.sm};
+  padding: 2px 6px;
+  margin-bottom: ${theme.spacing.xs};
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 `;
 
 const ButtonContainer = styled.div`

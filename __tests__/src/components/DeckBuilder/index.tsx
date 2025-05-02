@@ -7,7 +7,6 @@ declare global {
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Card, Deck, DeckBuilderProps, DeckGroup, CardGroup } from "./types";
-import DeckList from "./components/DeckList";
 import DeckEditor from "./components/DeckEditor/DeckEditor.tsx";
 import SearchPanel from "./components/Search/SearchPanel";
 import CardGroups from "./components/Search/CardGroups";
@@ -356,9 +355,7 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
     setTimeout(() => setPreviewCard(null), 300);
   };
 
-  const handleTabChange = (
-    tab: "editor" | "notes"
-  ) => {
+  const handleTabChange = (tab: "editor" | "notes") => {
     setActiveTab(tab);
   };
 
@@ -969,36 +966,28 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
       <div className="deck-builder">
         <div className="page-header">
           <h1>Deck Builder</h1>
+          {/* Add buttons for key deck actions in the header */}
+          <div className="header-actions">
+            {selectedDeck && (
+              <>
+                <button
+                  className="action-btn"
+                  onClick={() => setIsSyncModalOpen(true)}
+                >
+                  Sync Deck
+                </button>
+                <button
+                  className="action-btn"
+                  onClick={() => navigate("/my/decks")}
+                >
+                  My Decks
+                </button>
+              </>
+            )}
+          </div>
         </div>
         <div className="builder-container">
-          <div className="decks-panel">
-            <DeckList
-              decks={decks}
-              selectedDeck={selectedDeck}
-              onSelectDeck={selectDeck}
-              onDeleteDeck={handleDeleteDeck}
-              copyDeck={copyDeck}
-              onCreateDeck={handleCreateDeck}
-              onRenameDeck={handleRenameDeck}
-              onClearDeck={handleClearDeck}
-              onImportDeck={handleImportDeck}
-              onCreateCollection={(deck) => {
-                // Implement createCollection functionality
-                if (deck) {
-                  console.log("Creating collection from deck:", deck.name);
-                  // This would typically interact with your collection system
-                }
-              }}
-              // New props for deck groups
-              deckGroups={deckGroups}
-              selectedGroup={selectedDeckGroup}
-              onSelectGroup={setSelectedDeckGroup}
-              onCreateGroup={createDeckGroup}
-              onUpdateGroup={updateDeckGroup}
-              onDeleteGroup={deleteDeckGroup}
-              onMoveDeckToGroup={handleMoveDeckToGroup}
-            />
-          </div>
+          {/* Removed the decks-panel div that contained the DeckList component */}
 
           <div className="editor-panel">
             <div className="editor-header-container">
@@ -1047,20 +1036,28 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
                 <div className="no-deck-selected">
                   <h3>No Deck Selected</h3>
                   <p>
-                    Select a deck from the left panel or create a new one to
-                    begin.
+                    Create a new deck here or select one from <a href="/my/decks">My Decks</a>.
                   </p>
-                  <button
-                    className="action-btn"
-                    onClick={() =>
-                      handleCreateDeck(
-                        `New Deck ${decks.length + 1}`,
-                        selectedDeckGroup?.id
-                      )
-                    }
-                  >
-                    Create New Deck
-                  </button>
+                  <div className="no-deck-actions">
+                    <button
+                      className="action-btn primary"
+                      onClick={() => {
+                        const newDeckName = `New Deck ${decks.length + 1}`;
+                        const newDeck = handleCreateDeck(newDeckName);
+                        if (newDeck) {
+                          selectDeck(newDeck);
+                        }
+                      }}
+                    >
+                      Create New Deck
+                    </button>
+                    <button
+                      className="action-btn secondary"
+                      onClick={() => navigate("/my/decks")}
+                    >
+                      Go to My Decks
+                    </button>
+                  </div>
                 </div>
               ) : activeTab === "editor" ? (
                 <DeckEditor
@@ -1087,7 +1084,7 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
             </div>
           </div>
 
-          {/* Always render the search panel, regardless of whether a deck is selected */}
+          {/* Search panel remains */}
           <div className="search-panel">
             <div className="view-mode-toggle search-view-toggle">
               <button

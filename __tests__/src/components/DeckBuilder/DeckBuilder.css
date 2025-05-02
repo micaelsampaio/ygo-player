@@ -46,9 +46,34 @@
 
 .builder-container {
   display: grid;
-  grid-template-columns: 300px 1fr 400px; /* Increase right panel width */
+  grid-template-columns: 1fr 400px; /* Changed from three columns to two */
   gap: 20px;
   margin-top: 20px;
+}
+
+/* Add styles for the header actions */
+.header-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.header-actions .action-btn {
+  padding: 8px 16px;
+  background: #2196f3;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+}
+
+.header-actions .action-btn:hover {
+  background: #1976d2;
+  transform: translateY(-2px);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
 .decks-panel,
@@ -161,21 +186,54 @@
   cursor: pointer;
 }
 
-.decks-panel ul {
-  list-style: none;
-  padding: 0;
+.no-deck-selected a {
+  color: #2196f3;
+  text-decoration: none;
+  font-weight: 500;
 }
 
-.decks-panel li {
-  padding: 10px;
+.no-deck-selected a:hover {
+  text-decoration: underline;
+}
+
+.no-deck-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.action-btn.primary {
+  background: #2196f3;
+  color: white;
+  border: none;
   border-radius: 4px;
-  margin-bottom: 5px;
+  padding: 10px 20px;
   cursor: pointer;
-  transition: background 0.2s;
+  font-weight: 500;
+  transition: all 0.2s;
 }
 
-.decks-panel li:hover {
-  background: #e9e9e9;
+.action-btn.primary:hover {
+  background: #1976d2;
+  transform: translateY(-2px);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+}
+
+.action-btn.secondary {
+  background: #f0f0f0;
+  color: #333;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 10px 20px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.action-btn.secondary:hover {
+  background: #e0e0e0;
+  transform: translateY(-2px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .search-controls {
@@ -742,19 +800,11 @@
   .search-panel {
     order: 2;
     max-height: none;
-    margin-top: 20px; /* Add spacing when in column layout */
+    margin-top: 20px;
   }
 
   .editor-panel {
     order: 1;
-  }
-
-  .decks-panel {
-    order: 0;
-  }
-
-  .deck-card-container:hover .remove-card {
-    opacity: 1; /* Always show remove button on touch devices */
   }
 }
 
