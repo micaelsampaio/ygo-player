@@ -24,7 +24,7 @@ export const getCardImageUrl = (
   size: ImageSize = "medium"
 ): string => {
   // Use the CDN URL from environment variables
-  const baseUrl = `${cdnUrl}/images/cards`;
+  const baseUrl = `${cdnUrl}/images`;
 
   // Ensure cardId is a string
   const id = String(cardId);
@@ -33,14 +33,15 @@ export const getCardImageUrl = (
     // Check if we have the image locally first
     switch (size) {
       case "small":
-        return `${baseUrl}/small/${id}.jpg`;
+        // Use the correct path for small images
+        return `${baseUrl}/cards_small/${id}.jpg`;
       case "large":
-        return `${baseUrl}/large/${id}.jpg`;
+        return `${baseUrl}/cards/${id}.jpg`;
       case "normal":
-        return `${baseUrl}/normal/${id}.jpg`;
+        return `${baseUrl}/cards/${id}.jpg`;
       case "medium":
       default:
-        return `${baseUrl}/medium/${id}.jpg`;
+        return `${baseUrl}/cards/${id}.jpg`;
     }
   } catch (error) {
     console.error(`Error loading card image for ID ${id}:`, error);
