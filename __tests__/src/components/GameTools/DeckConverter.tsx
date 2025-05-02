@@ -1,6 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import theme from "../../styles/theme";
+
+// Import CDN URL for card data
+const cdnUrl = String(import.meta.env.VITE_YGO_CDN_URL);
 
 interface DeckConverterProps {
   size?: "small" | "medium" | "large";
@@ -153,207 +156,30 @@ const InfoSection = styled.div`
   border-left: 3px solid ${theme.colors.info.main};
 `;
 
-// Card name to ID mapping
-interface CardDatabase {
-  [key: string]: number;
+// Card database types
+interface CardData {
+  id: number;
+  name: string;
+  desc: string;
+  atk?: number;
+  def?: number;
+  level?: number;
+  race: string;
+  attribute?: string;
+  archetype?: string;
+  scale?: number;
+  linkval?: number;
+  linkmarkers?: string[];
+  type: string;
+  [key: string]: any;
 }
 
-// Sample database with just a few cards for demonstration
-const cardDatabase: CardDatabase = {
-  "Ash Blossom & Joyous Spring": 14558127,
-  "Forbidden Droplet": 24299458,
-  "Triple Tactics Talent": 24224830,
-  "Called by the Grave": 24224830,
-  "Cross-Sheep": 50277973,
-  "Solemn Judgment": 41420027,
-  "Artifact Lancea": 73146473,
-  "Droll & Lock Bird": 94145021,
-  "Mementotlan Angwitch": 57370439,
-  "Mementotlan Tatsunootoshigo": 84696458,
-  "Mementotlan-Horned Dragon": 11328704,
-  "Mementotlan Dark Blade": 47435107,
-  "Mementotlan Shleepy": 83241722,
-  "Mementoal Tecuhtlica - Combined Creation": 19353842,
-  "Mementotlan Goblin": 55520860,
-  "Mementotlan Ghattic": 81005842,
-  "Mementotlan Akihiron": 18532370,
-  "Mementotlan Mace": 44926224,
-  "Mulcharmy Fuwalos": 70371523,
-  "Mulcharmy Meowls": 7755315,
-  "Mementotlan Bone Party": 33854624,
-  "Mementotlan Fusion": 69859135,
-  Mementomictlan: 96334809,
-  "Goblin Biker Grand Breakout": 22637151,
-  "Fiendsmith Engraver": 58238740,
-  "Lacrima the Crimson Tears": 84649310,
-  "Fiendsmith's Tract": 10233922,
-  "Fabled Lurrie": 47346782,
-  "Mementomictlan Tecuhtlica - Creation King": 73341839,
-  "Mementotlan Twin Dragon": 9012916,
-  "S:P Little Knight": 36107810,
-  "Fiendsmith's Desirae": 62050252,
-  "Fiendsmith's Requiem": 98050740,
-  "Proxy F Magician": 25166510,
-  "Fiendsmith's Sequence": 51158153,
-  "Fiendsmith's Agnumday": 87543110,
-  "Necroquip Princess": 14147283,
-  "Aerial Eater": 40177746,
-  "Berfomet the Mythical King of Phantom Beasts": 76573247,
-  "Moon of the Closed Heaven": 3072808,
-  "D/D/D Wave High King Caesar": 39139935,
-  "Chaos Hunter": 97940434,
-  "Mulcharmy Purulia": 23925726,
-};
-
-// Function to convert list format to YDK format
-const convertListToYDK = (listText: string): string => {
-  // Initialize YDK sections
-  let mainDeckIds: number[] = [];
-  let extraDeckIds: number[] = [];
-  let sideDeckIds: number[] = [];
-
-  // Parse the list text
-  let currentSection = "";
-  const lines = listText.split("\n");
-
-  for (const line of lines) {
-    const trimmedLine = line.trim();
-
-    // Identify section headers - use more flexible matching
-    if (/main\s*deck/i.test(trimmedLine)) {
-      currentSection = "main";
-      continue;
-    } else if (/extra\s*deck/i.test(trimmedLine)) {
-      currentSection = "extra";
-      continue;
-    } else if (/side\s*deck/i.test(trimmedLine)) {
-      currentSection = "side";
-      continue;
-    } else if (trimmedLine === "" || /^-+$/i.test(trimmedLine)) {
-      // Match any sequence of hyphens as separators
-      continue;
-    }
-
-    // Only process lines when a section is active
-    if (!currentSection) continue;
-
-    // Parse card entries (e.g., "3x Ash Blossom & Joyous Spring" or "3 Ash Blossom & Joyous Spring")
-    const cardMatch = trimmedLine.match(/^(\d+)(?:x|\s+)(.+)$/i);
-    if (cardMatch) {
-      const [, countStr, cardName] = cardMatch;
-      const count = parseInt(countStr, 10); // Fixed: Define count variable
-      const cleanedCardName = cardName.trim();
-      const cardId = cardDatabase[cleanedCardName];
-
-      if (!cardId) {
-        console.warn(`Card not found in database: ${cleanedCardName}`);
-        continue;
-      }
-
-      // Add card IDs to appropriate section
-      const targetDeck =
-        currentSection === "main"
-          ? mainDeckIds
-          : currentSection === "extra"
-          ? extraDeckIds
-          : sideDeckIds;
-
-      // Add the card ID count times
-      for (let i = 0; i < count; i++) {
-        targetDeck.push(cardId);
-      }
-    }
-  }
-
-  // Log section sizes for debugging
-  console.log(`Main deck: ${mainDeckIds.length} cards`);
-  console.log(`Extra deck: ${extraDeckIds.length} cards`);
-  console.log(`Side deck: ${sideDeckIds.length} cards`);
-
-  // Format YDK string
-  let ydkContent = "#created by YGO Deck Converter\n";
-  ydkContent += "#main\n";
-  mainDeckIds.forEach((id) => (ydkContent += id + "\n"));
-  ydkContent += "#extra\n";
-  extraDeckIds.forEach((id) => (ydkContent += id + "\n"));
-  ydkContent += "!side\n";
-  sideDeckIds.forEach((id) => (ydkContent += id + "\n"));
-
-  return ydkContent;
-};
-
-// Function to convert YDK format to list format
-const convertYDKToList = (ydkText: string): string => {
-  // Parse YDK
-  const lines = ydkText.split("\n");
-  let currentSection = "";
-
-  // Create maps to count card occurrences
-  const mainDeckMap = new Map<number, number>();
-  const extraDeckMap = new Map<number, number>();
-  const sideDeckMap = new Map<number, number>();
-
-  // Track card IDs that are not in our database
-  const unknownCardIds = new Set<number>();
-
-  for (const line of lines) {
-    const trimmedLine = line.trim();
-
-    if (trimmedLine === "#main") {
-      currentSection = "main";
-      continue;
-    } else if (trimmedLine === "#extra") {
-      currentSection = "extra";
-      continue;
-    } else if (trimmedLine === "!side") {
-      currentSection = "side";
-      continue;
-    } else if (trimmedLine === "" || trimmedLine.startsWith("#")) {
-      continue;
-    }
-
-    // Try to parse card ID
-    const cardId = parseInt(trimmedLine, 10);
-    if (isNaN(cardId)) continue;
-
-    // Add to appropriate deck section
-    if (currentSection === "main") {
-      mainDeckMap.set(cardId, (mainDeckMap.get(cardId) || 0) + 1);
-    } else if (currentSection === "extra") {
-      extraDeckMap.set(cardId, (extraDeckMap.get(cardId) || 0) + 1);
-    } else if (currentSection === "side") {
-      sideDeckMap.set(cardId, (sideDeckMap.get(cardId) || 0) + 1);
-    }
-  }
-
-  // Helper function to convert card ID to name
-  const idToName = (id: number): string => {
-    // Find the card name for this ID
-    for (const [name, cardId] of Object.entries(cardDatabase)) {
-      if (cardId === id) return name;
-    }
-    unknownCardIds.add(id);
-    return `Unknown Card (${id})`;
+interface CardDatabase {
+  [key: string]: number; // name -> id mapping
+  byId: {
+    [key: number]: string; // id -> name mapping
   };
-
-  // Generate list text
-  let listText = "Main Deck:\n";
-  mainDeckMap.forEach((count, cardId) => {
-    listText += `${count}x ${idToName(cardId)}\n`;
-  });
-
-  listText += "---------\nExtra Deck:\n";
-  extraDeckMap.forEach((count, cardId) => {
-    listText += `${count}x ${idToName(cardId)}\n`;
-  });
-
-  listText += "---------\nSide Deck:\n";
-  sideDeckMap.forEach((count, cardId) => {
-    listText += `${count}x ${idToName(cardId)}\n`;
-  });
-
-  return listText;
-};
+}
 
 const DeckConverter: React.FC<DeckConverterProps> = ({ size = "medium" }) => {
   const [activeTab, setActiveTab] = useState<"list-to-ydk" | "ydk-to-list">(
@@ -363,11 +189,248 @@ const DeckConverter: React.FC<DeckConverterProps> = ({ size = "medium" }) => {
   const [outputText, setOutputText] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [cardDatabase, setCardDatabase] = useState<CardDatabase>({ byId: {} });
+  const [dbLoaded, setDbLoaded] = useState(false);
+
+  // Load card database from CDN
+  useEffect(() => {
+    const loadCardDatabase = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch(`${cdnUrl}/data/cards.json`);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch card database: ${response.status}`);
+        }
+
+        const cardsData: CardData[] = await response.json();
+
+        // Create name -> id and id -> name mappings
+        const nameToId: { [key: string]: number } = {};
+        const idToName: { [key: number]: string } = {};
+
+        cardsData.forEach((card) => {
+          // Clean up the card name (handle special characters, etc.)
+          const normalizedName = normalizeCardName(card.name);
+          nameToId[normalizedName] = card.id;
+          idToName[card.id] = card.name;
+        });
+
+        setCardDatabase({ ...nameToId, byId: idToName });
+        setDbLoaded(true);
+        setLoading(false);
+        console.log(`Loaded ${Object.keys(nameToId).length} cards from database`);
+      } catch (error) {
+        console.error("Failed to load card database:", error);
+        setError(
+          `Failed to load card database: ${
+            error instanceof Error ? error.message : "Unknown error"
+          }`
+        );
+        setLoading(false);
+      }
+    };
+
+    loadCardDatabase();
+  }, []);
+
+  // Helper function to normalize card names for consistent matching
+  const normalizeCardName = (name: string): string => {
+    return name
+      .replace(/&amp;/g, "&") // Replace HTML entities
+      .replace(/[^\w\s&-]/g, "") // Remove special chars except &, - and spaces
+      .trim()
+      .toLowerCase();
+  };
+
+  // Function to convert list format to YDK format
+  const convertListToYDK = (listText: string): string => {
+    // Initialize YDK sections
+    let mainDeckIds: number[] = [];
+    let extraDeckIds: number[] = [];
+    let sideDeckIds: number[] = [];
+
+    // Keep track of cards not found for error reporting
+    const notFoundCards: string[] = [];
+
+    // Parse the list text
+    let currentSection = "";
+    const lines = listText.split("\n");
+
+    for (const line of lines) {
+      const trimmedLine = line.trim();
+
+      // Identify section headers
+      if (/main\s*deck/i.test(trimmedLine)) {
+        currentSection = "main";
+        continue;
+      } else if (/extra\s*deck/i.test(trimmedLine)) {
+        currentSection = "extra";
+        continue;
+      } else if (/side\s*deck/i.test(trimmedLine)) {
+        currentSection = "side";
+        continue;
+      } else if (trimmedLine === "" || /^-+$/i.test(trimmedLine)) {
+        // Skip empty lines and separators
+        continue;
+      }
+
+      // Only process lines when a section is active
+      if (!currentSection) continue;
+
+      // Parse card entries (formats: "3x Card Name", "3 Card Name")
+      const cardMatch = trimmedLine.match(/^(\d+)(?:x|\s+)(.+)$/i);
+      if (cardMatch) {
+        const [, countStr, cardName] = cardMatch;
+        const count = parseInt(countStr, 10);
+        const cleanedCardName = cardName.trim();
+        const normalizedName = normalizeCardName(cleanedCardName);
+
+        // Look up card ID from database
+        const cardId = cardDatabase[normalizedName];
+
+        if (!cardId) {
+          console.warn(
+            `Card not found in database: "${cleanedCardName}" (normalized: "${normalizedName}")`
+          );
+          notFoundCards.push(cleanedCardName);
+          continue;
+        }
+
+        // Add card IDs to appropriate section
+        const targetDeck =
+          currentSection === "main"
+            ? mainDeckIds
+            : currentSection === "extra"
+            ? extraDeckIds
+            : sideDeckIds;
+
+        // Add the card ID count times
+        for (let i = 0; i < count; i++) {
+          targetDeck.push(cardId);
+        }
+      }
+    }
+
+    // Log section sizes for debugging
+    console.log(`Main deck: ${mainDeckIds.length} cards`);
+    console.log(`Extra deck: ${extraDeckIds.length} cards`);
+    console.log(`Side deck: ${sideDeckIds.length} cards`);
+
+    // Report not found cards if any
+    if (notFoundCards.length > 0) {
+      console.warn(
+        `Could not find ${notFoundCards.length} cards: ${notFoundCards.join(
+          ", "
+        )}`
+      );
+      setError(
+        `Warning: ${notFoundCards.length} cards not found in database. Check console for details.`
+      );
+    }
+
+    // Format YDK string
+    let ydkContent = "#created by YGO Deck Converter\n";
+    ydkContent += "#main\n";
+    mainDeckIds.forEach((id) => (ydkContent += id + "\n"));
+    ydkContent += "#extra\n";
+    extraDeckIds.forEach((id) => (ydkContent += id + "\n"));
+    ydkContent += "!side\n";
+    sideDeckIds.forEach((id) => (ydkContent += id + "\n"));
+
+    return ydkContent;
+  };
+
+  // Function to convert YDK format to list format
+  const convertYDKToList = (ydkText: string): string => {
+    // Parse YDK
+    const lines = ydkText.split("\n");
+    let currentSection = "";
+
+    // Create maps to count card occurrences
+    const mainDeckMap = new Map<number, number>();
+    const extraDeckMap = new Map<number, number>();
+    const sideDeckMap = new Map<number, number>();
+
+    // Track card IDs that are not in our database
+    const unknownCardIds = new Set<number>();
+
+    for (const line of lines) {
+      const trimmedLine = line.trim();
+
+      if (trimmedLine === "#main") {
+        currentSection = "main";
+        continue;
+      } else if (trimmedLine === "#extra") {
+        currentSection = "extra";
+        continue;
+      } else if (trimmedLine === "!side") {
+        currentSection = "side";
+        continue;
+      } else if (trimmedLine === "" || trimmedLine.startsWith("#")) {
+        continue;
+      }
+
+      // Try to parse card ID
+      const cardId = parseInt(trimmedLine, 10);
+      if (isNaN(cardId)) continue;
+
+      // Add to appropriate deck section
+      if (currentSection === "main") {
+        mainDeckMap.set(cardId, (mainDeckMap.get(cardId) || 0) + 1);
+      } else if (currentSection === "extra") {
+        extraDeckMap.set(cardId, (extraDeckMap.get(cardId) || 0) + 1);
+      } else if (currentSection === "side") {
+        sideDeckMap.set(cardId, (sideDeckMap.get(cardId) || 0) + 1);
+      }
+    }
+
+    // Helper function to convert card ID to name
+    const idToName = (id: number): string => {
+      const name = cardDatabase.byId[id];
+      if (!name) {
+        unknownCardIds.add(id);
+        return `Unknown Card (${id})`;
+      }
+      return name;
+    };
+
+    // Generate list text
+    let listText = "Main Deck:\n";
+    mainDeckMap.forEach((count, cardId) => {
+      listText += `${count}x ${idToName(cardId)}\n`;
+    });
+
+    listText += "---------\nExtra Deck:\n";
+    extraDeckMap.forEach((count, cardId) => {
+      listText += `${count}x ${idToName(cardId)}\n`;
+    });
+
+    listText += "---------\nSide Deck:\n";
+    sideDeckMap.forEach((count, cardId) => {
+      listText += `${count}x ${idToName(cardId)}\n`;
+    });
+
+    // Report unknown card IDs if any
+    if (unknownCardIds.size > 0) {
+      console.warn(`Found ${unknownCardIds.size} unknown card IDs`);
+      setError(
+        `Warning: ${unknownCardIds.size} unknown card IDs in the YDK file.`
+      );
+    }
+
+    return listText;
+  };
 
   const handleConvert = () => {
     setError("");
     setSuccess("");
     setOutputText("");
+
+    if (!dbLoaded) {
+      setError("Card database is still loading. Please wait...");
+      return;
+    }
 
     try {
       if (!inputText.trim()) {
@@ -440,6 +503,12 @@ const DeckConverter: React.FC<DeckConverterProps> = ({ size = "medium" }) => {
     <Container $size={size}>
       <Title>Deck Format Converter</Title>
 
+      {loading && (
+        <div style={{ textAlign: "center", margin: theme.spacing.md }}>
+          Loading card database... Please wait.
+        </div>
+      )}
+
       <TabContainer>
         <Tab
           $active={activeTab === "list-to-ydk"}
@@ -457,9 +526,7 @@ const DeckConverter: React.FC<DeckConverterProps> = ({ size = "medium" }) => {
 
       <Section>
         <Label>
-          {activeTab === "list-to-ydk"
-            ? "Paste Deck List:"
-            : "Paste YDK Content:"}
+          {activeTab === "list-to-ydk" ? "Paste Deck List:" : "Paste YDK Content:"}
         </Label>
         <TextArea
           value={inputText}
@@ -469,17 +536,18 @@ const DeckConverter: React.FC<DeckConverterProps> = ({ size = "medium" }) => {
               ? 'Format: "3x Ash Blossom & Joyous Spring" (one card per line, with sections "Main Deck:", "Extra Deck:", "Side Deck:")'
               : "Paste YDK file content here..."
           }
+          disabled={loading}
         />
       </Section>
 
       <ButtonContainer>
-        <Button $primary onClick={handleConvert}>
+        <Button $primary onClick={handleConvert} disabled={loading || !dbLoaded}>
           Convert
         </Button>
-        <Button onClick={handleClear}>Clear</Button>
-        {outputText && (
-          <Button onClick={handleCopyToClipboard}>Copy Result</Button>
-        )}
+        <Button onClick={handleClear} disabled={loading}>
+          Clear
+        </Button>
+        {outputText && <Button onClick={handleCopyToClipboard}>Copy Result</Button>}
         {outputText && activeTab === "list-to-ydk" && (
           <Button onClick={handleDownloadYDK}>Download YDK</Button>
         )}
@@ -496,14 +564,10 @@ const DeckConverter: React.FC<DeckConverterProps> = ({ size = "medium" }) => {
       )}
 
       <InfoSection>
+        <p>This tool uses the official card database to convert between formats.</p>
         <p>
-          Note: This tool currently uses a limited card database for
-          demonstration. In a production environment, it would connect to a
-          complete Yu-Gi-Oh card database.
-        </p>
-        <p>
-          The YDK format is used by many Yu-Gi-Oh simulators like YGOPro,
-          EDOPro, and Dueling Book.
+          The YDK format is used by many Yu-Gi-Oh simulators like YGOPro, EDOPro,
+          and Dueling Book.
         </p>
       </InfoSection>
     </Container>
