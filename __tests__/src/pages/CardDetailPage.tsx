@@ -67,7 +67,7 @@ const CardDetailPage: React.FC = () => {
         setLoading(true);
         // Try to fetch from local storage first
         const cardData = localStorage.getItem(`card_${id}`);
-        
+
         if (cardData) {
           setCard(JSON.parse(cardData));
           setLoading(false);
@@ -76,13 +76,13 @@ const CardDetailPage: React.FC = () => {
 
         // Update the API endpoint to use query parameters instead of path parameters
         const response = await fetch(`${apiBaseUrl}/cards?ids=${id}`);
-        
+
         if (!response.ok) {
           throw new Error(`Failed to fetch card data: ${response.statusText}`);
         }
 
         const data = await response.json();
-        
+
         if (data && (data.data?.[0] || data)) {
           // Handle both YGOProDeck-like response format and our own format
           const cardDetails = data.data?.[0] || data;
@@ -94,7 +94,9 @@ const CardDetailPage: React.FC = () => {
         }
       } catch (err) {
         console.error("Error fetching card:", err);
-        setError(err instanceof Error ? err.message : "An unknown error occurred");
+        setError(
+          err instanceof Error ? err.message : "An unknown error occurred"
+        );
       } finally {
         setLoading(false);
       }
@@ -353,13 +355,13 @@ const CardDetailPage: React.FC = () => {
             <Card.Content>
               <CardLayout>
                 <CardImageContainer>
-                  {/* Use CDN URL for card images */}
+                  {/* Use CDN URL for card images and card back */}
                   <CardArtwork
                     src={`${cdnUrl}/images/cards/${card.id}.jpg`}
                     alt={card.name}
                     onError={(e) => {
                       const target = e.target as HTMLImageElement;
-                      target.src = `${cdnUrl}/images/cards/back_high.jpg`; // Use card back as fallback
+                      target.src = `${cdnUrl}/images/card_back.png`;
                     }}
                   />
                 </CardImageContainer>
