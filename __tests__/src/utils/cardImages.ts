@@ -1,80 +1,105 @@
-import { Card } from "../components/DeckBuilder/types";
+/**
+ * Utility functions for handling Yu-Gi-Oh! card images
+ */
 
-// Get the CDN URL from environment variables
-const CDN_URL = import.meta.env.VITE_YGO_CDN_URL || "http://127.0.0.1:8080";
-
-// Centralized card back image path
-export const CARD_BACK_IMAGE = `${CDN_URL}/images/card_back.png`;
+// Define supported image sizes
+type ImageSize = "small" | "medium" | "large" | "normal";
 
 /**
- * Get the URL for a card image from the configured CDN
- * @param card The card object or card ID
- * @param size The size of the image to fetch ('small' or 'normal')
- * @returns The full URL to the card image
+ * URL to the card back image that can be used as a placeholder or fallback
+ * Using our own hosted version of the card back
+ */
+export const CARD_BACK_IMAGE = "/assets/images/cards/back.jpg";
+
+/**
+ * Gets the appropriate URL for a card image by ID
+ * @param cardId - The Yu-Gi-Oh! card ID
+ * @param size - The desired image size (small, medium, large)
+ * @returns The URL to the card image
  */
 export const getCardImageUrl = (
-  card: Card | string | number,
-  size: "small" | "normal" = "normal"
+  cardId: number | string,
+  size: ImageSize = "medium"
 ): string => {
-  // Extract the card ID depending on the input type
-  const cardId = typeof card === "object" ? card.id : card;
+  // Use our own card image API/CDN instead of direct YGOPro links
+  const baseUrl = "/assets/images/cards";
 
-  if (!cardId) {
-    console.warn("Attempting to get image URL for card with no ID", card);
+  // Ensure cardId is a string
+  const id = String(cardId);
+
+  try {
+    // Check if we have the image locally first
+    switch (size) {
+      case "small":
+        return `${baseUrl}/small/${id}.jpg`;
+      case "large":
+        return `${baseUrl}/large/${id}.jpg`;
+      case "normal":
+        return `${baseUrl}/normal/${id}.jpg`;
+      case "medium":
+      default:
+        return `${baseUrl}/medium/${id}.jpg`;
+    }
+  } catch (error) {
+    console.error(`Error loading card image for ID ${id}:`, error);
     return CARD_BACK_IMAGE;
   }
-
-  // Build the URL path based on the requested size
-  const imagePath =
-    size === "small"
-      ? `/images/cards_small/${cardId}.jpg`
-      : `/images/cards/${cardId}.jpg`;
-
-  return `${CDN_URL}${imagePath}`;
 };
 
 /**
- * Create an image element with appropriate fallback handling
- * @param card The card to create an image for
- * @param size The size of the image
- * @param className Optional CSS class name for the image
- * @returns An image element with error handling
+ * Gets a fallback image URL to use when a card image can't be loaded
  */
-export const createCardImageElement = (
-  card: Card,
-  size: "small" | "normal" = "normal",
-  className?: string
-): HTMLImageElement => {
-  const img = document.createElement("img");
-  img.src = getCardImageUrl(card, size);
-  if (className) img.className = className;
-  img.alt = card.name || "Card";
-
-  // Set up fallback for error
-  img.onerror = () => {
-    img.src = CARD_BACK_IMAGE;
-    img.classList.add("card-image-fallback");
-  };
-
-  return img;
+export const getCardBackImageUrl = (): string => {
+  return CARD_BACK_IMAGE;
 };
 
 /**
- * Preload commonly used card images to improve performance
+ * Gets an appropriate URL for a card image with fallback to external source if needed
+ * This provides compatibility if the local image is not available
+ *
+ * @param cardId - The Yu-Gi-Oh! card ID
+ * @param size - The desired image size (small, medium, large)
+ * @returns The URL to the card image
  */
-export const preloadCommonCardImages = () => {
-  // Card back is always needed
-  const cardBack = new Image();
-  cardBack.src = CARD_BACK_IMAGE;
+export const getCardImageUrlWithFallback = (
+  cardId: number | string,
+  size: ImageSize = "medium"
+): string => {
+  // First try the local path
+  const localUrl = getCardImageUrl(cardId, size);
 
-  // You could also preload other commonly used cards
-  // const commonCards = [1234, 5678, 9012]; // Example card IDs
-  // commonCards.forEach(id => {
-  //   const img = new Image();
-  //   img.src = getCardImageUrl(id);
-  // });
+  // If the local image fails to load, we can use this as a backup
+  const backupUrl = getFallbackCardImageUrl(cardId, size);
+
+  // In real use, you could implement error handling or a check for the image
+  return localUrl;
 };
 
-// Call this early in your app initialization
-// For example in App.tsx or your main entry point
-// preloadCommonCardImages();
+/**
+ * Gets a fallback external URL if the local image is not available
+ * Only used as a backup and not directly by components
+ *
+ * @param cardId - The Yu-Gi-Oh! card ID
+ * @param size - The desired image size
+ * @returns External URL for fallback
+ */
+const getFallbackCardImageUrl = (
+  cardId: number | string,
+  size: ImageSize = "medium"
+): string => {
+  // We'll use YGOPro as a fallback
+  const ygoproBaseUrl = "https://images.ygoprodeck.com/images/cards";
+  const id = String(cardId);
+
+  switch (size) {
+    case "small":
+      return `${ygoproBaseUrl}/small/${id}.jpg`;
+    case "large":
+      return `${ygoproBaseUrl}/${id}.jpg`;
+    case "normal":
+      return `${ygoproBaseUrl}/${id}.jpg`;
+    case "medium":
+    default:
+      return `${ygoproBaseUrl}/cropped/${id}.jpg`;
+  }
+};

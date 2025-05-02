@@ -23,6 +23,7 @@ import MyReplaysPage from "./components/MyReplays/MyReplaysPage.tsx";
 import MyCardGroupsPage from "./components/Cards/MyCardGroupsPage.tsx";
 import DuelLobbyPage from "./components/DuelLobby/DuelLobbyPage.tsx";
 import CardDatabasePage from "./components/Cards/CardDatabasePage.tsx";
+import CardDetailPage from "./pages/CardDetailPage.tsx"; // Import the new card detail page
 import SettingsPage from "./components/Settings/SettingsPage.tsx";
 import SharedDeckPage from "./components/MyDecks/SharedDeckPage";
 import HelpPage from "./components/Help";
@@ -100,6 +101,9 @@ createRoot(document.getElementById("root")!).render(
 
         {/* Card Database page */}
         <Route path="/cards/database" element={<CardDatabasePage />} />
+
+        {/* Card Detail page - Add this route */}
+        <Route path="/cards/database/card/:id" element={<CardDetailPage />} />
 
         {/* Matchup Maker tool */}
         <Route path="/matchup-maker" element={<MatchupMakerPage />} />
