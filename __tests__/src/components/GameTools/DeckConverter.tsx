@@ -202,29 +202,33 @@ const convertListToYDK = (listText: string): string => {
   for (const line of lines) {
     const trimmedLine = line.trim();
     
-    // Identify section headers
-    if (trimmedLine.toLowerCase().includes('main deck')) {
+    // Identify section headers - use more flexible matching
+    if (/main\s*deck/i.test(trimmedLine)) {
       currentSection = 'main';
       continue;
-    } else if (trimmedLine.toLowerCase().includes('extra deck')) {
+    } else if (/extra\s*deck/i.test(trimmedLine)) {
       currentSection = 'extra';
       continue;
-    } else if (trimmedLine.toLowerCase().includes('side deck')) {
+    } else if (/side\s*deck/i.test(trimmedLine)) {
       currentSection = 'side';
       continue;
-    } else if (trimmedLine === '' || trimmedLine === '---------') {
+    } else if (trimmedLine === '' || /^-+$/i.test(trimmedLine)) {
+      // Match any sequence of hyphens as separators
       continue;
     }
     
-    // Parse card entries (e.g., "3x Ash Blossom & Joyous Spring")
-    const cardMatch = trimmedLine.match(/^(\d+)x?\s+(.+)$/i);
+    // Only process lines when a section is active
+    if (!currentSection) continue;
+    
+    // Parse card entries (e.g., "3x Ash Blossom & Joyous Spring" or "3 Ash Blossom & Joyous Spring")
+    const cardMatch = trimmedLine.match(/^(\d+)(?:x|\s+)(.+)$/i);
     if (cardMatch) {
       const [, countStr, cardName] = cardMatch;
-      const count = parseInt(countStr, 10);
-      const cardId = cardDatabase[cardName.trim()];
+      const cleanedCardName = cardName.trim();
+      const cardId = cardDatabase[cleanedCardName];
       
       if (!cardId) {
-        console.warn(`Card not found in database: ${cardName.trim()}`);
+        console.warn(`Card not found in database: ${cleanedCardName}`);
         continue;
       }
       
@@ -239,6 +243,11 @@ const convertListToYDK = (listText: string): string => {
       }
     }
   }
+  
+  // Log section sizes for debugging
+  console.log(`Main deck: ${mainDeckIds.length} cards`);
+  console.log(`Extra deck: ${extraDeckIds.length} cards`);
+  console.log(`Side deck: ${sideDeckIds.length} cards`);
   
   // Format YDK string
   let ydkContent = '#created by YGO Deck Converter\n';
