@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import styled from "styled-components";
 import Timer from "./Timer";
 import LifePointsCounter from "./LifePointsCounter";
+import DeckConverter from "./DeckConverter";
 import theme from "../../styles/theme";
 
 interface GameToolsPanelProps {
@@ -57,6 +58,39 @@ const TimerSection = styled.div`
   align-self: center;
 `;
 
+const ToolSection = styled.div`
+  margin-top: ${theme.spacing.lg};
+  width: 100%;
+`;
+
+const TabContainer = styled.div`
+  display: flex;
+  border-bottom: 1px solid ${theme.colors.border.default};
+  margin-bottom: ${theme.spacing.md};
+`;
+
+const Tab = styled.button<{ $active: boolean }>`
+  padding: ${theme.spacing.sm} ${theme.spacing.md};
+  background: ${(props) =>
+    props.$active ? theme.colors.background.paper : "transparent"};
+  border: none;
+  border-bottom: ${(props) =>
+    props.$active ? `2px solid ${theme.colors.primary.main}` : "none"};
+  color: ${(props) =>
+    props.$active ? theme.colors.primary.main : theme.colors.text.primary};
+  font-weight: ${(props) =>
+    props.$active
+      ? theme.typography.weight.bold
+      : theme.typography.weight.normal};
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: ${theme.colors.background.paper};
+    color: ${theme.colors.primary.main};
+  }
+`;
+
 const FooterControls = styled.div`
   display: flex;
   justify-content: center;
@@ -81,6 +115,8 @@ const Button = styled.button`
   }
 `;
 
+type ActiveToolType = "duel" | "converter";
+
 const GameToolsPanel: React.FC<GameToolsPanelProps> = ({
   initialLifePoints = 8000,
   timerMode = "countup",
@@ -91,13 +127,26 @@ const GameToolsPanel: React.FC<GameToolsPanelProps> = ({
   ],
 }) => {
   const [showAllTools, setShowAllTools] = useState(true);
+  const [activeTool, setActiveTool] = useState<ActiveToolType>("duel");
 
   return (
     <Container>
       <Title>Yu-Gi-Oh Duel Tools</Title>
 
+      <TabContainer>
+        <Tab $active={activeTool === "duel"} onClick={() => setActiveTool("duel")}>
+          Duel Tools
+        </Tab>
+        <Tab
+          $active={activeTool === "converter"}
+          onClick={() => setActiveTool("converter")}
+        >
+          Deck Converter
+        </Tab>
+      </TabContainer>
+
       <ToolsContainer>
-        {showAllTools && (
+        {showAllTools && activeTool === "duel" && (
           <>
             <LifePointsSection>
               <PlayersContainer>
@@ -122,6 +171,12 @@ const GameToolsPanel: React.FC<GameToolsPanelProps> = ({
               />
             </TimerSection>
           </>
+        )}
+
+        {showAllTools && activeTool === "converter" && (
+          <ToolSection>
+            <DeckConverter size="large" />
+          </ToolSection>
         )}
       </ToolsContainer>
 

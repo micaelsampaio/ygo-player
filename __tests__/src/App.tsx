@@ -533,6 +533,9 @@ export function App({ duelLobbyMode }: { duelLobbyMode?: boolean }) {
                   <NavCard to="/game-tools">
                     <span className="nav-card-title">Game Tools</span>
                   </NavCard>
+                  <NavCard to="/deck-converter">
+                    <span className="nav-card-title">Deck Converter</span>
+                  </NavCard>
                 </CardNavigation>
               </div>
 
