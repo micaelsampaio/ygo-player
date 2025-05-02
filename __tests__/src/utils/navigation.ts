@@ -1,11 +1,14 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from "react-router-dom";
 
 /**
  * Navigate to the detail view of a card
  * @param cardId The ID of the card to view
  * @param navigate React Router's navigate function
  */
-export const navigateToCardDetail = (cardId: number | string, navigate: any) => {
+export const navigateToCardDetail = (
+  cardId: number | string,
+  navigate: any
+) => {
   navigate(`/card/${cardId}`);
 };
 
@@ -15,7 +18,7 @@ export const navigateToCardDetail = (cardId: number | string, navigate: any) => 
  */
 export const useCardNavigation = () => {
   const navigate = useNavigate();
-  
+
   return (cardId: number | string) => {
     navigateToCardDetail(cardId, navigate);
   };

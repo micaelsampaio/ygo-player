@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import './DrawSimulator.css';
-import { getCardImageUrl } from '../../../../utils/cardImages';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from "react";
+import "./DrawSimulator.css";
+import { getCardImageUrl } from "../../../../utils/cardImages";
+import { useNavigate } from "react-router-dom";
 
 const DrawSimulator = ({ deck, onCardSelect }) => {
   const [drawnCards, setDrawnCards] = useState([]);
@@ -28,11 +28,13 @@ const DrawSimulator = ({ deck, onCardSelect }) => {
   };
 
   const handleCardClick = (e, card) => {
+    // If Ctrl/Cmd key is pressed, navigate to card details
     if (e.ctrlKey || e.metaKey) {
       e.preventDefault();
-      navigate(`/card/${card.id}`);
+      navigate(`/cards/database/card/${card.id}`);
     } else if (onCardSelect) {
-      onCardSelect(card);
+      // Use the provided card select handler
+      onCardSelect(card, e);
     }
   };
 

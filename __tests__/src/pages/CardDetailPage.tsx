@@ -6,7 +6,15 @@ import theme from "../styles/theme";
 import AppLayout from "../components/Layout/AppLayout";
 import Card from "../components/UI/Card";
 import { getCardImageUrl } from "../utils/cardImages";
-import { ArrowLeft, ExternalLink, Info, DollarSign, Box, Tag, ChevronLeft } from "lucide-react";
+import {
+  ArrowLeft,
+  ExternalLink,
+  Info,
+  DollarSign,
+  Box,
+  Tag,
+  ChevronLeft,
+} from "lucide-react";
 
 interface YugiohCard {
   id: number;
@@ -69,11 +77,14 @@ const CardDetailPage: React.FC = () => {
 
       try {
         setLoading(true);
-        const cachedCardsData = localStorage.getItem('cached_cards');
+        const cachedCardsData = localStorage.getItem("cached_cards");
         const cachedCards = cachedCardsData ? JSON.parse(cachedCardsData) : {};
 
         if (cachedCards[id]) {
-          console.log("Found card data in localStorage cache:", cachedCards[id]);
+          console.log(
+            "Found card data in localStorage cache:",
+            cachedCards[id]
+          );
           setCard(cachedCards[id]);
           setLoading(false);
           return;
@@ -135,26 +146,29 @@ const CardDetailPage: React.FC = () => {
 
         setCard(cardDetails);
 
-        const existingCache = localStorage.getItem('cached_cards');
+        const existingCache = localStorage.getItem("cached_cards");
         const cardCache = existingCache ? JSON.parse(existingCache) : {};
 
         cardCache[id] = cardDetails;
 
         try {
-          localStorage.setItem('cached_cards', JSON.stringify(cardCache));
+          localStorage.setItem("cached_cards", JSON.stringify(cardCache));
         } catch (storageError) {
           console.warn("Failed to cache card in localStorage:", storageError);
 
-          if (storageError instanceof DOMException && 
-              (storageError.name === 'QuotaExceededError' || 
-               storageError.name === 'NS_ERROR_DOM_QUOTA_REACHED')) {
-            
-            console.log("localStorage quota exceeded, clearing cache and storing only current card");
+          if (
+            storageError instanceof DOMException &&
+            (storageError.name === "QuotaExceededError" ||
+              storageError.name === "NS_ERROR_DOM_QUOTA_REACHED")
+          ) {
+            console.log(
+              "localStorage quota exceeded, clearing cache and storing only current card"
+            );
             localStorage.clear();
-            
+
             const newCache = {};
             newCache[id] = cardDetails;
-            localStorage.setItem('cached_cards', JSON.stringify(newCache));
+            localStorage.setItem("cached_cards", JSON.stringify(newCache));
           }
         }
       } catch (err) {
@@ -188,7 +202,11 @@ const CardDetailPage: React.FC = () => {
 
     stats.push(
       <StatItem key="race">
-        <StatLabel>{card.type && card.type.includes("Monster") ? "Monster Type:" : "Card Type:"}</StatLabel>
+        <StatLabel>
+          {card.type && card.type.includes("Monster")
+            ? "Monster Type:"
+            : "Card Type:"}
+        </StatLabel>
         <StatValue>{card.race}</StatValue>
       </StatItem>
     );
@@ -490,10 +508,16 @@ const PageContainer = styled.div`
   margin: 0 auto;
   padding: ${({ theme }) => theme.spacing.lg};
   animation: fadeIn 0.5s ease-out;
-  
+
   @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 `;
 
@@ -517,7 +541,7 @@ const BackButton = styled.button`
   padding: ${({ theme }) => theme.spacing.sm};
   border-radius: ${({ theme }) => theme.borderRadius.md};
   transition: all 0.2s ease;
-  
+
   &:hover {
     background-color: ${({ theme }) => `${theme.colors.primary.main}10`};
     color: ${({ theme }) => theme.colors.primary.dark};
@@ -537,18 +561,18 @@ const StyledCard = styled(Card)`
   transition: all 0.3s ease;
   transform-origin: center;
   animation: cardAppear 0.5s ease-out;
-  
+
   @keyframes cardAppear {
-    from { 
+    from {
       opacity: 0;
       transform: translateY(30px) scale(0.98);
     }
-    to { 
+    to {
       opacity: 1;
       transform: translateY(0) scale(1);
     }
   }
-  
+
   &:hover {
     box-shadow: ${({ theme }) => theme.shadows.lg};
   }
@@ -581,11 +605,11 @@ const CardArtwork = styled.img`
   animation: imageAppear 0.6s ease-out;
 
   @keyframes imageAppear {
-    from { 
+    from {
       opacity: 0;
       transform: scale(0.9);
     }
-    to { 
+    to {
       opacity: 1;
       transform: scale(1);
     }
@@ -611,13 +635,13 @@ const ArchetypeBadge = styled.div`
   gap: 5px;
   backdrop-filter: blur(5px);
   animation: badgeAppear 0.8s ease-out;
-  
+
   @keyframes badgeAppear {
-    from { 
+    from {
       opacity: 0;
       transform: translateX(-50%) translateY(10px);
     }
-    to { 
+    to {
       opacity: 1;
       transform: translateX(-50%) translateY(0);
     }
@@ -638,20 +662,20 @@ const CardHeader = styled.div`
   padding-bottom: ${({ theme }) => theme.spacing.md};
   position: relative;
   animation: slideDown 0.5s ease-out;
-  
+
   @keyframes slideDown {
-    from { 
+    from {
       opacity: 0;
       transform: translateY(-10px);
     }
-    to { 
+    to {
       opacity: 1;
       transform: translateY(0);
     }
   }
-  
+
   &::after {
-    content: '';
+    content: "";
     position: absolute;
     bottom: -1px;
     left: 0;
@@ -690,7 +714,7 @@ const StatItem = styled.div`
   gap: ${({ theme }) => theme.spacing.xs};
   padding: ${({ theme }) => theme.spacing.sm};
   transition: transform 0.2s ease;
-  
+
   &:hover {
     transform: translateY(-2px);
   }
@@ -713,13 +737,13 @@ const SectionHeader = styled.div`
   align-items: center;
   gap: ${({ theme }) => theme.spacing.sm};
   margin-bottom: ${({ theme }) => theme.spacing.sm};
-  
+
   h3 {
     color: ${({ theme }) => theme.colors.text.primary};
     font-size: ${({ theme }) => theme.typography.size.lg};
     margin: 0;
   }
-  
+
   svg {
     color: ${({ theme }) => theme.colors.primary.main};
   }
@@ -765,7 +789,7 @@ const SetItem = styled.div`
   flex-direction: column;
   gap: 2px;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
-  
+
   &:hover {
     transform: translateY(-2px);
     box-shadow: ${({ theme }) => theme.shadows.sm};
@@ -811,7 +835,7 @@ const PriceItem = styled.div`
   gap: 2px;
   position: relative;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
-  
+
   &:hover {
     transform: translateY(-2px);
     box-shadow: ${({ theme }) => theme.shadows.sm};
@@ -824,7 +848,7 @@ const ExternalLinkIcon = styled.a`
   right: ${({ theme }) => theme.spacing.sm};
   color: ${({ theme }) => theme.colors.primary.main};
   transition: transform 0.2s ease;
-  
+
   &:hover {
     transform: scale(1.2);
     color: ${({ theme }) => theme.colors.primary.dark};
@@ -863,13 +887,13 @@ const ActionButton = styled.button`
   cursor: pointer;
   font-weight: ${({ theme }) => theme.typography.weight.medium};
   transition: all 0.2s ease;
-  
+
   &:hover {
     background-color: ${({ theme }) => theme.colors.primary.dark};
     transform: translateY(-2px);
     box-shadow: ${({ theme }) => theme.shadows.sm};
   }
-  
+
   &:active {
     transform: translateY(0);
   }

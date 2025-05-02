@@ -77,7 +77,7 @@ const DeckDetailPage = () => {
     // If Ctrl/Cmd key is pressed, navigate to card details
     if (e && (e.ctrlKey || e.metaKey)) {
       e.preventDefault();
-      navigate(`/card/${card.id}`);
+      navigate(`/cards/database/card/${card.id}`);
     } else {
       // Otherwise, show the card modal
       setPreviewCard(card);
@@ -818,10 +818,7 @@ const DeckDetailPage = () => {
                 {/* Draw Simulator Section */}
                 {activeTab === "simulator" && (
                   <TabSection>
-                    <DrawSimulator
-                      deck={deck}
-                      onCardSelect={handleCardClick}
-                    />
+                    <DrawSimulator deck={deck} onCardSelect={handleCardClick} />
                   </TabSection>
                 )}
 

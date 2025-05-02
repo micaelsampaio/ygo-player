@@ -77,7 +77,7 @@ const CardDatabasePage: React.FC = () => {
                         }}
                       />
                       <CardImageOverlay>
-                        <ViewFullDetailsLink 
+                        <ViewFullDetailsLink
                           href={`/card/${selectedCard.id}`}
                           onClick={(e) => {
                             e.preventDefault();
@@ -114,7 +114,9 @@ const CardDatabasePage: React.FC = () => {
                           {selectedCard.level && (
                             <CardStatItem>
                               <CardStatLabel>Level</CardStatLabel>
-                              <CardStatValue>{selectedCard.level}</CardStatValue>
+                              <CardStatValue>
+                                {selectedCard.level}
+                              </CardStatValue>
                             </CardStatItem>
                           )}
                           {selectedCard.atk !== undefined && (
@@ -146,14 +148,16 @@ const CardDatabasePage: React.FC = () => {
                               .map((set, index) => (
                                 <CardSetItem key={index}>
                                   <CardSetName>{set.set_name}</CardSetName>
-                                  <CardSetRarity>{set.set_rarity}</CardSetRarity>
+                                  <CardSetRarity>
+                                    {set.set_rarity}
+                                  </CardSetRarity>
                                 </CardSetItem>
                               ))}
                             {selectedCard.card_sets.length > 5 && (
                               <CardSetItem>
                                 <CardSetName>
-                                  ...and {selectedCard.card_sets.length - 5} more
-                                  sets
+                                  ...and {selectedCard.card_sets.length - 5}{" "}
+                                  more sets
                                 </CardSetName>
                               </CardSetItem>
                             )}
@@ -192,7 +196,7 @@ const PageHeader = styled.div`
   justify-content: space-between;
   align-items: center;
   margin-bottom: ${theme.spacing.xl};
-  
+
   h1 {
     margin: 0;
     color: ${theme.colors.text.primary};
@@ -222,7 +226,7 @@ const BackButton = styled.button`
   height: 40px;
   cursor: pointer;
   transition: all 0.2s ease;
-  
+
   &:hover {
     background: ${theme.colors.background.dark};
     transform: translateX(-2px);
@@ -289,11 +293,11 @@ const CardImageContainer = styled.div`
   overflow: hidden;
   border-radius: ${theme.borderRadius.md};
   transition: transform 0.3s ease;
-  
+
   &:hover {
     transform: scale(1.02);
     box-shadow: ${theme.shadows.lg};
-    
+
     & > div {
       opacity: 1;
     }
@@ -312,7 +316,11 @@ const CardImageOverlay = styled.div`
   bottom: 0;
   left: 0;
   right: 0;
-  background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 100%);
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.8) 0%,
+    rgba(0, 0, 0, 0) 100%
+  );
   padding: ${theme.spacing.lg} ${theme.spacing.sm} ${theme.spacing.sm};
   opacity: 0;
   transition: opacity 0.3s ease;
@@ -330,11 +338,11 @@ const ViewFullDetailsLink = styled.a`
   font-weight: ${theme.typography.weight.medium};
   padding: ${theme.spacing.xs} ${theme.spacing.sm};
   border-radius: ${theme.borderRadius.full};
-  background-color: rgba(255,255,255,0.2);
+  background-color: rgba(255, 255, 255, 0.2);
   transition: background-color 0.2s ease;
-  
+
   &:hover {
-    background-color: rgba(255,255,255,0.3);
+    background-color: rgba(255, 255, 255, 0.3);
   }
 `;
 
@@ -351,7 +359,7 @@ const CardName = styled.h2`
   border-bottom: 2px solid ${theme.colors.border.default};
   padding-bottom: ${theme.spacing.sm};
   animation: slideInRight 0.5s ease forwards;
-  
+
   @keyframes slideInRight {
     from {
       opacity: 0;
@@ -371,9 +379,11 @@ const CardTypeText = styled.div`
   gap: ${theme.spacing.sm};
   animation: fadeIn 0.5s ease forwards 0.2s;
   opacity: 0;
-  
+
   @keyframes fadeIn {
-    to { opacity: 1; }
+    to {
+      opacity: 1;
+    }
   }
 `;
 
@@ -400,15 +410,23 @@ const AttributeBadge = styled.span<{ attribute: string }>`
   font-size: ${theme.typography.size.sm};
   color: white;
   background-color: ${({ attribute }) => {
-    switch(attribute.toLowerCase()) {
-      case 'dark': return '#6c3c92';
-      case 'light': return '#FFBD00';
-      case 'earth': return '#8D5C38';
-      case 'water': return '#3498DB';
-      case 'fire': return '#E74C3C';
-      case 'wind': return '#2ECC71';
-      case 'divine': return '#FFD700';
-      default: return theme.colors.primary.main;
+    switch (attribute.toLowerCase()) {
+      case "dark":
+        return "#6c3c92";
+      case "light":
+        return "#FFBD00";
+      case "earth":
+        return "#8D5C38";
+      case "water":
+        return "#3498DB";
+      case "fire":
+        return "#E74C3C";
+      case "wind":
+        return "#2ECC71";
+      case "divine":
+        return "#FFD700";
+      default:
+        return theme.colors.primary.main;
     }
   }};
 `;
@@ -465,15 +483,15 @@ const CardDescription = styled.p`
   max-height: 300px;
   overflow-y: auto;
   font-size: ${theme.typography.size.sm};
-  
+
   &::-webkit-scrollbar {
     width: 8px;
   }
-  
+
   &::-webkit-scrollbar-track {
     background: ${theme.colors.background.paper};
   }
-  
+
   &::-webkit-scrollbar-thumb {
     background-color: ${theme.colors.border.default};
     border-radius: 20px;
@@ -504,7 +522,7 @@ const CardSetItem = styled.div`
   padding: ${theme.spacing.xs} ${theme.spacing.sm};
   border-radius: ${theme.borderRadius.sm};
   background-color: ${theme.colors.background.light};
-  
+
   &:nth-child(odd) {
     background-color: ${theme.colors.background.card};
   }

@@ -35,7 +35,8 @@ const CardModal: React.FC<CardModalProps> = ({
   const handleViewFullDetails = (event: React.MouseEvent) => {
     event.preventDefault();
     onClose();
-    navigate(`/card/${card.id}`);
+    // Update the path to the correct format: /cards/database/card/<id>
+    navigate(`/cards/database/card/${card.id}`);
   };
 
   // Function to highlight keywords in card description
