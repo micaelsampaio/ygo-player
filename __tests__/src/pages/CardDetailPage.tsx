@@ -165,9 +165,7 @@ const CardDetailPage: React.FC = () => {
     // Add Monster Type/Spell-Trap Type (using proper terminology instead of "Race")
     stats.push(
       <StatItem key="race">
-        <StatLabel>
-          {card.type.includes("Monster") ? "Monster Type:" : "Card Type:"}
-        </StatLabel>
+        <StatLabel>{card.type && card.type.includes("Monster") ? "Monster Type:" : "Card Type:"}</StatLabel>
         <StatValue>{card.race}</StatValue>
       </StatItem>
     );
