@@ -667,7 +667,7 @@ const DrawSimulator: React.FC<DrawSimulatorProps> = ({
                     {group.cards.map((card) => (
                       <div key={card.id} className="wanted-card">
                         <img
-                          src={getCardImageUrl(card, "small")}
+                          src={getCardImageUrl(card.id, "small")}
                           alt={card.name}
                           className="wanted-card-image"
                           onClick={() => onCardSelect(card)}
@@ -742,7 +742,7 @@ const DrawSimulator: React.FC<DrawSimulatorProps> = ({
                 {statistics.mostCommonHand.cards.map((card, index) => (
                   <img
                     key={index}
-                    src={getCardImageUrl(card, "small")}
+                    src={getCardImageUrl(card.id, "small")}
                     alt={card.name}
                     onClick={() => onCardSelect(card)}
                     className="hand-card"
@@ -772,7 +772,7 @@ const DrawSimulator: React.FC<DrawSimulatorProps> = ({
                               {data.cards.map((card, cardIndex) => (
                                 <img
                                   key={`${data.key}-${cardIndex}`}
-                                  src={getCardImageUrl(card, "small")}
+                                  src={getCardImageUrl(card.id, "small")}
                                   alt={card.name}
                                   onClick={() => onCardSelect(card)}
                                   className="table-card-image"
@@ -817,7 +817,7 @@ const DrawSimulator: React.FC<DrawSimulatorProps> = ({
                   <div className="stat-card-preview">
                     <img
                       src={getCardImageUrl(
-                        statistics.mostSeenCard.card,
+                        statistics.mostSeenCard.card.id,
                         "small"
                       )}
                       alt={statistics.mostSeenCard.card.name}
@@ -855,7 +855,7 @@ const DrawSimulator: React.FC<DrawSimulatorProps> = ({
                   <div className="stat-card-preview">
                     <img
                       src={getCardImageUrl(
-                        statistics.leastSeenCard.card,
+                        statistics.leastSeenCard.card.id,
                         "small"
                       )}
                       alt={statistics.leastSeenCard.card.name}
@@ -901,7 +901,7 @@ const DrawSimulator: React.FC<DrawSimulatorProps> = ({
                             <td>{item.card.name}</td>
                             <td>
                               <img
-                                src={getCardImageUrl(item.card, "small")}
+                                src={getCardImageUrl(item.card.id, "small")}
                                 alt={item.card.name}
                                 onClick={() => onCardSelect(item.card)}
                                 className="table-card-image"
@@ -936,7 +936,7 @@ const DrawSimulator: React.FC<DrawSimulatorProps> = ({
                             <td>{item.card.name}</td>
                             <td>
                               <img
-                                src={getCardImageUrl(item.card, "small")}
+                                src={getCardImageUrl(item.card.id, "small")}
                                 alt={item.card.name}
                                 onClick={() => onCardSelect(item.card)}
                                 className="table-card-image"
@@ -1031,7 +1031,10 @@ const DrawSimulator: React.FC<DrawSimulatorProps> = ({
                                         {combo.cards.map((card, cardIndex) => (
                                           <img
                                             key={`combo-${size}-${index}-${cardIndex}`}
-                                            src={getCardImageUrl(card, "small")}
+                                            src={getCardImageUrl(
+                                              card.id,
+                                              "small"
+                                            )}
                                             alt={card.name}
                                             onClick={() => onCardSelect(card)}
                                             className="table-card-image"
@@ -1084,7 +1087,7 @@ const DrawSimulator: React.FC<DrawSimulatorProps> = ({
                           <td>{item.card.name}</td>
                           <td>
                             <img
-                              src={getCardImageUrl(item.card, "small")}
+                              src={getCardImageUrl(item.card.id, "small")}
                               alt={item.card.name}
                               onClick={() => onCardSelect(item.card)}
                               className="table-card-image"

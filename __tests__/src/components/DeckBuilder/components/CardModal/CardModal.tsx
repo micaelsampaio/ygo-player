@@ -160,7 +160,7 @@ const CardModal: React.FC<CardModalProps> = ({
               src={
                 hasImageFallback
                   ? CARD_BACK_IMAGE
-                  : getCardImageUrl(card, "normal")
+                  : getCardImageUrl(card.id, "normal")
               }
               alt={card.name}
               className={`card-full-image ${

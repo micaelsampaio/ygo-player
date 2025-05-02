@@ -44,7 +44,7 @@ const DrawSimulator = ({ deck, onCardSelect }) => {
         {drawnCards.map((card, index) => (
           <img
             key={index}
-            src={getCardImageUrl(card)}
+            src={getCardImageUrl(card.id)}
             alt={card.name}
             onClick={(e) => handleCardClick(e, card)}
           />

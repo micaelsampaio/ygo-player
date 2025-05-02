@@ -117,7 +117,7 @@ const VirtualizedCardList: React.FC<VirtualizedCardListProps> = ({
             }
           >
             <img
-              src={getCardImageUrl(card, "small")}
+              src={getCardImageUrl(card.id, "small")}
               alt={card.name}
               className="deck-card"
               onClick={() => onCardSelect(card)}

@@ -664,7 +664,7 @@ const DeckEditor: React.FC<DeckEditorProps> = ({
               }
             >
               <img
-                src={getCardImageUrl(card, "small")}
+                src={getCardImageUrl(card.id, "small")}
                 alt={card.name}
                 className="deck-card"
                 onClick={(e) => handleCardClick(e, card)}
@@ -761,7 +761,7 @@ const DeckEditor: React.FC<DeckEditorProps> = ({
               }
             >
               <img
-                src={getCardImageUrl(card, "small")}
+                src={getCardImageUrl(card.id, "small")}
                 alt={card.name}
                 className="deck-card"
                 onClick={(e) => handleCardClick(e, card)}
@@ -860,7 +860,7 @@ const DeckEditor: React.FC<DeckEditorProps> = ({
               onContextMenu={(e) => handleRoleIconClick(e, card.id, index)}
             >
               <img
-                src={getCardImageUrl(card, "small")}
+                src={getCardImageUrl(card.id, "small")}
                 alt={card.name}
                 className="deck-card"
                 onClick={(e) => handleCardClick(e, card)}
