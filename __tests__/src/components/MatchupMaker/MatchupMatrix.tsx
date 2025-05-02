@@ -8,7 +8,7 @@ import {
 } from "../../pages/MatchupMakerPage";
 import CardSelector from "./CardSelector";
 import ArchetypeSelector from "./ArchetypeSelector";
-import { CheckCircle, XCircle, MinusCircle, Trash2, Info } from "react-feather";
+import { CheckCircle, XCircle, MinusCircle, Trash2, Info, Edit, MessageSquare, X } from "react-feather";
 import { getCardImageUrl, CARD_BACK_IMAGE } from "../../utils/cardImages";
 
 interface MatchupMatrixProps {
@@ -37,9 +37,17 @@ const MatchupMatrix: React.FC<MatchupMatrixProps> = ({
   const [activeCell, setActiveCell] = useState<{
     archetypeId: string;
     cardId: number;
+    cardName?: string;
+    archetypeName?: string;
   } | null>(null);
   const [cellNotes, setCellNotes] = useState<string>("");
   const [showLegend, setShowLegend] = useState(true);
+  const [showAllNotes, setShowAllNotes] = useState(false);
+  const [hoveredCell, setHoveredCell] = useState<{
+    archetypeId: string;
+    cardId: number;
+    notes: string;
+  } | null>(null);
 
   const handleCellClick = (archetypeId: string, cardId: number) => {
     const currentRating =
@@ -60,10 +68,12 @@ const MatchupMatrix: React.FC<MatchupMatrixProps> = ({
   const handleCellRightClick = (
     archetypeId: string,
     cardId: number,
+    cardName: string,
+    archetypeName: string,
     event: React.MouseEvent
   ) => {
     event.preventDefault();
-    setActiveCell({ archetypeId, cardId });
+    setActiveCell({ archetypeId, cardId, cardName, archetypeName });
     setCellNotes(matchupData.ratings[archetypeId]?.[cardId]?.notes || "");
   };
 
@@ -87,6 +97,27 @@ const MatchupMatrix: React.FC<MatchupMatrixProps> = ({
     setCellNotes("");
   };
 
+  const openNotesEditor = (
+    archetypeId: string, 
+    cardId: number, 
+    cardName: string,
+    archetypeName: string
+  ) => {
+    setActiveCell({ archetypeId, cardId, cardName, archetypeName });
+    setCellNotes(matchupData.ratings[archetypeId]?.[cardId]?.notes || "");
+  };
+
+  const handleMouseEnter = (archetypeId: string, cardId: number) => {
+    const notes = matchupData.ratings[archetypeId]?.[cardId]?.notes;
+    if (notes && notes.trim()) {
+      setHoveredCell({ archetypeId, cardId, notes });
+    }
+  };
+
+  const handleMouseLeave = () => {
+    setHoveredCell(null);
+  };
+
   const getRatingIcon = (rating: string) => {
     switch (rating) {
       case "effective":
@@ -104,12 +135,44 @@ const MatchupMatrix: React.FC<MatchupMatrixProps> = ({
     return !!matchupData.ratings[archetypeId]?.[cardId]?.notes;
   };
 
+  // Function to collect all notes from the matchup data
+  const getAllNotes = () => {
+    const notes: {
+      archetypeId: string;
+      archetypeName: string;
+      cardId: number;
+      cardName: string;
+      rating: string;
+      notes: string;
+    }[] = [];
+
+    matchupData.archetypes.forEach(archetype => {
+      matchupData.cards.forEach(card => {
+        const cellData = matchupData.ratings[archetype.id]?.[card.id];
+        if (cellData?.notes) {
+          notes.push({
+            archetypeId: archetype.id,
+            archetypeName: archetype.name,
+            cardId: card.id,
+            cardName: card.name,
+            rating: cellData.rating || "",
+            notes: cellData.notes
+          });
+        }
+      });
+    });
+
+    return notes;
+  };
+
+  const allNotes = getAllNotes();
+
   return (
     <MatrixContainer>
       <h2>Matchup Matrix</h2>
       <p>
         Click on cells to mark if a card is effective against a particular
-        archetype.
+        archetype. Right-click or use the notes button to add detailed notes.
       </p>
 
       <ControlsContainer>
@@ -122,6 +185,12 @@ const MatchupMatrix: React.FC<MatchupMatrixProps> = ({
         <LegendToggle onClick={() => setShowLegend(!showLegend)}>
           {showLegend ? "Hide Legend" : "Show Legend"}
         </LegendToggle>
+        {allNotes.length > 0 && (
+          <NotesButton onClick={() => setShowAllNotes(true)}>
+            <MessageSquare size={16} />
+            View All Notes ({allNotes.length})
+          </NotesButton>
+        )}
       </ControlsContainer>
 
       {showLegend && (
@@ -144,7 +213,7 @@ const MatchupMatrix: React.FC<MatchupMatrixProps> = ({
           </LegendItem>
           <LegendItem>
             <Info size={16} />
-            <span>Right-click on a cell to add notes</span>
+            <span>Right-click on a cell or use the notes button to add notes</span>
           </LegendItem>
         </Legend>
       )}
@@ -212,30 +281,85 @@ const MatchupMatrix: React.FC<MatchupMatrixProps> = ({
                       </RemoveButton>
                     </ArchetypeHeader>
                   </td>
-                  {matchupData.cards.map((card) => (
-                    <td
-                      key={`${archetype.id}-${card.id}`}
-                      onClick={() => handleCellClick(archetype.id, card.id)}
-                      onContextMenu={(e) =>
-                        handleCellRightClick(archetype.id, card.id, e)
-                      }
-                      className={
-                        hasNotes(archetype.id, card.id) ? "has-notes" : ""
-                      }
-                    >
-                      <MatrixCell>
-                        {getRatingIcon(
-                          matchupData.ratings[archetype.id]?.[card.id]
-                            ?.rating || ""
-                        )}
-                        {hasNotes(archetype.id, card.id) && (
-                          <NoteIndicator title="Has notes">
-                            <Info size={12} />
-                          </NoteIndicator>
-                        )}
-                      </MatrixCell>
-                    </td>
-                  ))}
+                  {matchupData.cards.map((card) => {
+                    const hasNotesForCell = hasNotes(archetype.id, card.id);
+                    return (
+                      <td
+                        key={`${archetype.id}-${card.id}`}
+                        onClick={() => handleCellClick(archetype.id, card.id)}
+                        onContextMenu={(e) =>
+                          handleCellRightClick(
+                            archetype.id, 
+                            card.id, 
+                            card.name,
+                            archetype.name,
+                            e
+                          )
+                        }
+                        className={hasNotesForCell ? "has-notes" : ""}
+                        onMouseEnter={() => handleMouseEnter(archetype.id, card.id)}
+                        onMouseLeave={handleMouseLeave}
+                      >
+                        <MatrixCell>
+                          {getRatingIcon(
+                            matchupData.ratings[archetype.id]?.[card.id]
+                              ?.rating || ""
+                          )}
+                          {hasNotesForCell && (
+                            <NoteIndicator title="Has notes">
+                              <NotesIcon />
+                            </NoteIndicator>
+                          )}
+                          {hasNotesForCell && (
+                            <NotesButton
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openNotesEditor(
+                                  archetype.id, 
+                                  card.id, 
+                                  card.name,
+                                  archetype.name
+                                );
+                              }}
+                              title="Edit notes"
+                              className="cell-notes-button"
+                            >
+                              <Edit size={14} />
+                            </NotesButton>
+                          )}
+                          {!hasNotesForCell && (
+                            <AddNoteButton
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openNotesEditor(
+                                  archetype.id, 
+                                  card.id, 
+                                  card.name,
+                                  archetype.name
+                                );
+                              }}
+                              title="Add notes"
+                              className="add-note-button"
+                            >
+                              <MessageSquare size={14} />
+                            </AddNoteButton>
+                          )}
+                        </MatrixCell>
+                        
+                        {/* Tooltip for notes preview */}
+                        {hoveredCell && 
+                          hoveredCell.archetypeId === archetype.id && 
+                          hoveredCell.cardId === card.id && (
+                            <NotesTooltip>
+                              <NotesTooltipContent>
+                                {hoveredCell.notes}
+                              </NotesTooltipContent>
+                            </NotesTooltip>
+                          )
+                        }
+                      </td>
+                    );
+                  })}
                 </tr>
               ))}
             </tbody>
@@ -301,19 +425,95 @@ const MatchupMatrix: React.FC<MatchupMatrixProps> = ({
       {activeCell && (
         <SelectorDialog>
           <SelectorContent>
-            <h3>Add Notes</h3>
-            <p>Add detailed notes about this matchup</p>
+            <DialogHeader>
+              <h3>
+                {cellNotes ? "Edit" : "Add"} Notes: {activeCell.cardName} vs {activeCell.archetypeName}
+              </h3>
+              <CloseIcon onClick={handleNotesCancel}>
+                <X size={20} />
+              </CloseIcon>
+            </DialogHeader>
+            
+            <p>Add detailed notes about this matchup situation</p>
             <NotesTextarea
               value={cellNotes}
               onChange={(e) => setCellNotes(e.target.value)}
-              placeholder="Enter your notes here..."
-              rows={5}
+              placeholder="Examples: 
+- How to use this card against the archetype
+- When is it most effective
+- What to negate or disrupt
+- Side deck considerations"
+              rows={8}
             />
             <ButtonsRow>
-              <CloseButton onClick={handleNotesSave}>Save</CloseButton>
-              <CloseButton onClick={handleNotesCancel}>Cancel</CloseButton>
+              <SaveButton onClick={handleNotesSave}>
+                Save Notes
+              </SaveButton>
+              <CancelButton onClick={handleNotesCancel}>
+                Cancel
+              </CancelButton>
             </ButtonsRow>
           </SelectorContent>
+        </SelectorDialog>
+      )}
+
+      {/* All Notes View */}
+      {showAllNotes && (
+        <SelectorDialog>
+          <AllNotesContent>
+            <DialogHeader>
+              <h3>All Matchup Notes</h3>
+              <CloseIcon onClick={() => setShowAllNotes(false)}>
+                <X size={20} />
+              </CloseIcon>
+            </DialogHeader>
+            
+            <p>Comprehensive view of all notes added to your matchup matrix</p>
+            
+            <AllNotesContainer>
+              {allNotes.length > 0 ? (
+                allNotes.map((note, index) => (
+                  <NoteCard key={`${note.archetypeId}-${note.cardId}-${index}`}>
+                    <NoteCardHeader>
+                      <div className="matchup-info">
+                        <strong>{note.cardName}</strong> vs <strong>{note.archetypeName}</strong>
+                      </div>
+                      <div className="rating-badge">
+                        {note.rating === "effective" && <EffectiveBadge>Effective</EffectiveBadge>}
+                        {note.rating === "ineffective" && <IneffectiveBadge>Ineffective</IneffectiveBadge>}
+                        {note.rating === "neutral" && <NeutralBadge>Neutral</NeutralBadge>}
+                        {!note.rating && <UnratedBadge>Not Rated</UnratedBadge>}
+                      </div>
+                    </NoteCardHeader>
+                    <NoteCardContent>
+                      {note.notes}
+                    </NoteCardContent>
+                    <NoteCardFooter>
+                      <EditNoteButton 
+                        onClick={() => {
+                          setShowAllNotes(false);
+                          openNotesEditor(
+                            note.archetypeId,
+                            note.cardId,
+                            note.cardName,
+                            note.archetypeName
+                          );
+                        }}
+                      >
+                        <Edit size={14} /> Edit
+                      </EditNoteButton>
+                    </NoteCardFooter>
+                  </NoteCard>
+                ))
+              ) : (
+                <p>No notes have been added yet.</p>
+              )}
+            </AllNotesContainer>
+            
+            <CloseButton onClick={() => setShowAllNotes(false)}>
+              Close
+            </CloseButton>
+          </AllNotesContent>
         </SelectorDialog>
       )}
     </MatrixContainer>
@@ -418,6 +618,7 @@ const MatrixTable = styled.table`
     padding: ${(props) => props.theme.spacing.sm};
     border: 1px solid ${(props) => props.theme.colors.border.default};
     text-align: center;
+    position: relative;
   }
 
   th {
@@ -436,6 +637,11 @@ const MatrixTable = styled.table`
 
   td.has-notes {
     position: relative;
+    background-color: rgba(25, 118, 210, 0.05); /* Light info color background */
+  }
+
+  td.has-notes:hover {
+    background-color: rgba(25, 118, 210, 0.1); /* Darker on hover */
   }
 `;
 
@@ -517,6 +723,7 @@ const RemoveButton = styled.button`
   }
 `;
 
+// Define MatrixCell first since other components reference it
 const MatrixCell = styled.div`
   display: flex;
   align-items: center;
@@ -530,11 +737,114 @@ const MatrixCell = styled.div`
   }
 `;
 
+// Now define components that reference MatrixCell
+const NotesButton = styled.button`
+  display: flex;
+  align-items: center;
+  gap: ${(props) => props.theme.spacing.xs};
+  background-color: ${(props) => props.theme.colors.info.main};
+  color: white;
+  border: none;
+  border-radius: ${(props) => props.theme.borderRadius.md};
+  padding: ${(props) => props.theme.spacing.sm}
+    ${(props) => props.theme.spacing.md};
+  font-weight: ${(props) => props.theme.typography.weight.medium};
+  cursor: pointer;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: ${(props) => props.theme.colors.info.dark};
+  }
+
+  &.cell-notes-button {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    padding: 4px;
+    border-radius: 50%;
+    opacity: 0;
+    z-index: 5;
+    background-color: ${(props) => props.theme.colors.primary.main};
+  }
+
+  ${MatrixCell}:hover &.cell-notes-button {
+    opacity: 1;
+  }
+`;
+
+const AddNoteButton = styled.button`
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  padding: 4px;
+  border-radius: 50%;
+  opacity: 0;
+  z-index: 5;
+  background-color: ${(props) => props.theme.colors.info.main};
+  color: white;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  ${MatrixCell}:hover &.add-note-button {
+    opacity: 0.7;
+  }
+
+  &:hover {
+    opacity: 1 !important;
+  }
+`;
+
 const NoteIndicator = styled.div`
   position: absolute;
-  bottom: 0;
-  right: 0;
+  bottom: 3px;
+  right: 3px;
   color: ${(props) => props.theme.colors.info.main};
+  z-index: 6;
+  pointer-events: none;
+`;
+
+const NotesIcon = styled.div`
+  width: 10px;
+  height: 10px;
+  background-color: ${(props) => props.theme.colors.info.main};
+  border-radius: 50%;
+  box-shadow: 0 0 3px rgba(0,0,0,0.3);
+`;
+
+const NotesTooltip = styled.div`
+  position: absolute;
+  bottom: calc(100% + 5px);
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: ${props => props.theme.colors.background.paper};
+  border: 1px solid ${props => props.theme.colors.border.default};
+  border-radius: ${props => props.theme.borderRadius.md};
+  box-shadow: ${props => props.theme.shadows.md};
+  z-index: 100;
+  width: 200px;
+  max-height: 150px;
+  overflow-y: auto;
+  pointer-events: auto;
+  
+  &:after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 8px solid transparent;
+    border-top-color: ${props => props.theme.colors.background.paper};
+  }
+`;
+
+const NotesTooltipContent = styled.div`
+  padding: ${props => props.theme.spacing.sm};
+  font-size: ${props => props.theme.typography.size.sm};
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
 `;
 
 const EmptyState = styled.div`
@@ -567,6 +877,36 @@ const SelectorContent = styled.div`
   position: relative;
 `;
 
+const AllNotesContent = styled(SelectorContent)`
+  max-width: 900px;
+`;
+
+const DialogHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: ${(props) => props.theme.spacing.md};
+
+  h3 {
+    margin: 0;
+    font-size: ${(props) => props.theme.typography.size.lg};
+  }
+`;
+
+const CloseIcon = styled.button`
+  background: none;
+  border: none;
+  color: ${(props) => props.theme.colors.text.secondary};
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  &:hover {
+    color: ${(props) => props.theme.colors.text.primary};
+  }
+`;
+
 const CloseButton = styled.button`
   background-color: ${(props) => props.theme.colors.primary.main};
   color: white;
@@ -592,13 +932,129 @@ const NotesTextarea = styled.textarea`
   font-family: ${(props) => props.theme.typography.fontFamily};
   font-size: ${(props) => props.theme.typography.size.base};
   resize: vertical;
+  line-height: 1.5;
 `;
 
 const ButtonsRow = styled.div`
   display: flex;
   justify-content: flex-end;
   gap: ${(props) => props.theme.spacing.md};
+  margin-top: ${(props) => props.theme.spacing.lg};
+`;
+
+const SaveButton = styled(CloseButton)`
+  background-color: ${(props) => props.theme.colors.success.main};
+  
+  &:hover {
+    background-color: ${(props) => props.theme.colors.success.dark};
+  }
+`;
+
+const CancelButton = styled(CloseButton)`
+  background-color: transparent;
+  color: ${(props) => props.theme.colors.text.secondary};
+  border: 1px solid ${(props) => props.theme.colors.border.default};
+  
+  &:hover {
+    background-color: ${(props) => props.theme.colors.background.dark};
+    color: ${(props) => props.theme.colors.text.primary};
+  }
+`;
+
+const AllNotesContainer = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: ${(props) => props.theme.spacing.md};
   margin-top: ${(props) => props.theme.spacing.md};
+  margin-bottom: ${(props) => props.theme.spacing.md};
+`;
+
+const NoteCard = styled.div`
+  background-color: ${(props) => props.theme.colors.background.card};
+  border: 1px solid ${(props) => props.theme.colors.border.default};
+  border-radius: ${(props) => props.theme.borderRadius.md};
+  box-shadow: ${(props) => props.theme.shadows.sm};
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+`;
+
+const NoteCardHeader = styled.div`
+  padding: ${(props) => props.theme.spacing.sm};
+  background-color: ${(props) => props.theme.colors.background.dark};
+  border-bottom: 1px solid ${(props) => props.theme.colors.border.default};
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: ${(props) => props.theme.typography.size.sm};
+  
+  .matchup-info {
+    flex: 1;
+  }
+  
+  .rating-badge {
+    margin-left: ${(props) => props.theme.spacing.sm};
+  }
+`;
+
+const NoteCardContent = styled.div`
+  padding: ${(props) => props.theme.spacing.md};
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: pre-wrap;
+  font-size: ${(props) => props.theme.typography.size.sm};
+  color: ${(props) => props.theme.colors.text.primary};
+  max-height: 150px;
+  overflow-y: auto;
+`;
+
+const NoteCardFooter = styled.div`
+  padding: ${(props) => props.theme.spacing.sm};
+  border-top: 1px solid ${(props) => props.theme.colors.border.default};
+  display: flex;
+  justify-content: flex-end;
+`;
+
+const EditNoteButton = styled.button`
+  display: flex;
+  align-items: center;
+  gap: ${(props) => props.theme.spacing.xs};
+  background-color: transparent;
+  color: ${(props) => props.theme.colors.primary.main};
+  border: 1px solid ${(props) => props.theme.colors.primary.main};
+  border-radius: ${(props) => props.theme.borderRadius.sm};
+  padding: ${(props) => props.theme.spacing.xs} ${(props) => props.theme.spacing.sm};
+  font-size: ${(props) => props.theme.typography.size.xs};
+  font-weight: ${(props) => props.theme.typography.weight.medium};
+  cursor: pointer;
+  
+  &:hover {
+    background-color: ${(props) => props.theme.colors.action.hover};
+  }
+`;
+
+const EffectiveBadge = styled.span`
+  background-color: ${(props) => props.theme.colors.success.main};
+  color: white;
+  border-radius: ${(props) => props.theme.borderRadius.full};
+  padding: 2px 6px;
+  font-size: ${(props) => props.theme.typography.size.xs};
+  font-weight: ${(props) => props.theme.typography.weight.medium};
+`;
+
+const IneffectiveBadge = styled(EffectiveBadge)`
+  background-color: ${(props) => props.theme.colors.error.main};
+`;
+
+const NeutralBadge = styled(EffectiveBadge)`
+  background-color: ${(props) => props.theme.colors.warning.main};
+  color: ${(props) => props.theme.colors.text.primary};
+`;
+
+const UnratedBadge = styled(EffectiveBadge)`
+  background-color: ${(props) => props.theme.colors.background.dark};
+  color: ${(props) => props.theme.colors.text.secondary};
 `;
 
 export default MatchupMatrix;

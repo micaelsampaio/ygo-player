@@ -734,7 +734,8 @@ const ControlGrid = styled.div`
     padding: 6px 12px; /* Match button padding */
     border: 1px solid ${(props) => props.theme.colors.border.default};
     border-radius: ${(props) => props.theme.borderRadius.md};
-    font-size: ${(props) => props.theme.typography.size.sm}; /* Match button font size */
+    font-size: ${(props) =>
+      props.theme.typography.size.sm}; /* Match button font size */
     box-sizing: border-box; /* Ensure padding is included in height */
   }
 `;
