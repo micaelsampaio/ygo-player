@@ -22,6 +22,10 @@ interface YugiohCard {
   scale?: number;
   linkval?: number;
   linkmarkers?: string[];
+  typeline?: string | null;
+  humanReadableCardType?: string;
+  frameType?: string;
+  ygoprodeck_url?: string;
   card_sets?: {
     set_name: string;
     set_code: string;
@@ -33,6 +37,7 @@ interface YugiohCard {
     id: number;
     image_url: string;
     image_url_small: string;
+    image_url_cropped?: string;
   }[];
   card_prices?: {
     cardmarket_price: string;
@@ -65,12 +70,14 @@ const CardDetailPage: React.FC = () => {
 
       try {
         setLoading(true);
-        // Try to fetch from local storage first
-        const cardData = localStorage.getItem(`card_${id}`);
+        // Get all cached cards from localStorage using a single key
+        const cachedCardsData = localStorage.getItem('cached_cards');
+        const cachedCards = cachedCardsData ? JSON.parse(cachedCardsData) : {};
 
-        if (cardData) {
-          console.log("Found card data in localStorage:", JSON.parse(cardData));
-          setCard(JSON.parse(cardData));
+        // Check if this specific card is in the cache
+        if (cachedCards[id]) {
+          console.log("Found card data in localStorage cache:", cachedCards[id]);
+          setCard(cachedCards[id]);
           setLoading(false);
           return;
         }
@@ -109,17 +116,16 @@ const CardDetailPage: React.FC = () => {
           return;
         }
 
+        let cardDetails = null;
+
         if (Array.isArray(data) && data.length > 0) {
           // Handle response format as array - our API returns array
-          const cardDetails = data[0];
+          cardDetails = data[0];
           console.log("Card details from array format:", cardDetails);
           if (!cardDetails) {
             setError("Invalid card data format");
             return;
           }
-          setCard(cardDetails);
-          // Cache the card data in local storage
-          localStorage.setItem(`card_${id}`, JSON.stringify(cardDetails));
         } else if (
           data &&
           data.data &&
@@ -127,14 +133,44 @@ const CardDetailPage: React.FC = () => {
           data.data.length > 0
         ) {
           // Handle YGOProDeck-like response format
-          const cardDetails = data.data[0];
+          cardDetails = data.data[0];
           console.log("Card details from nested data format:", cardDetails);
-          setCard(cardDetails);
-          // Cache the card data in local storage
-          localStorage.setItem(`card_${id}`, JSON.stringify(cardDetails));
         } else {
           console.error("Unexpected API response format:", data);
           setError("Card not found or invalid response format");
+          return;
+        }
+
+        // Set the current card state
+        setCard(cardDetails);
+        
+        // Update the cached cards in localStorage
+        // First get existing cache or create new object
+        const existingCache = localStorage.getItem('cached_cards');
+        const cardCache = existingCache ? JSON.parse(existingCache) : {};
+        
+        // Add/update this card in the cache
+        cardCache[id] = cardDetails;
+        
+        // Save back to localStorage with the single key
+        try {
+          localStorage.setItem('cached_cards', JSON.stringify(cardCache));
+        } catch (storageError) {
+          // Handle potential localStorage quota exceeded errors
+          console.warn("Failed to cache card in localStorage:", storageError);
+          
+          // If storage is full, clear it and try again with just this card
+          if (storageError instanceof DOMException && 
+              (storageError.name === 'QuotaExceededError' || 
+               storageError.name === 'NS_ERROR_DOM_QUOTA_REACHED')) {
+            
+            console.log("localStorage quota exceeded, clearing cache and storing only current card");
+            localStorage.clear();
+            
+            const newCache = {};
+            newCache[id] = cardDetails;
+            localStorage.setItem('cached_cards', JSON.stringify(newCache));
+          }
         }
       } catch (err) {
         console.error("Error fetching card:", err);
