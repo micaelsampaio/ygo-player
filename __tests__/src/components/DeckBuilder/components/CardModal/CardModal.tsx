@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { Card } from "../../types";
 import "./CardModal.css";
 import { getCardImageUrl, CARD_BACK_IMAGE } from "../../../../utils/cardImages";
+import { useNavigate } from "react-router-dom";
+import { ExternalLink } from "lucide-react";
 
 interface CardModalProps {
   card: Card;
@@ -9,6 +11,7 @@ interface CardModalProps {
   onClose: () => void;
   onAddCard?: (card: Card) => void;
   onToggleFavorite?: (card: Card) => void;
+  onAddToCollection?: (card: Card) => void;
 }
 
 const CardModal: React.FC<CardModalProps> = ({
@@ -17,14 +20,23 @@ const CardModal: React.FC<CardModalProps> = ({
   onClose,
   onAddCard,
   onToggleFavorite,
+  onAddToCollection,
 }) => {
   const [hasImageFallback, setHasImageFallback] = useState(false);
+  const navigate = useNavigate();
 
   if (!isOpen) return null;
 
   const handleToggleFavorite = (event: React.MouseEvent) => {
     event.stopPropagation();
     onToggleFavorite?.(card);
+  };
+
+  const handleViewFullDetails = (event: React.MouseEvent) => {
+    event.preventDefault();
+    onClose();
+    // Update the path to the correct format: /cards/database/card/<id>
+    navigate(`/cards/database/card/${card.id}`);
   };
 
   // Function to highlight keywords in card description
@@ -148,7 +160,7 @@ const CardModal: React.FC<CardModalProps> = ({
               src={
                 hasImageFallback
                   ? CARD_BACK_IMAGE
-                  : getCardImageUrl(card, "normal")
+                  : getCardImageUrl(card.id, "normal")
               }
               alt={card.name}
               className={`card-full-image ${
@@ -160,6 +172,15 @@ const CardModal: React.FC<CardModalProps> = ({
                 }
               }}
             />
+            <div className="view-details-button-container">
+              <button
+                className="view-details-button"
+                onClick={handleViewFullDetails}
+              >
+                <ExternalLink size={14} />
+                View Full Details
+              </button>
+            </div>
           </div>
 
           <div className="card-modal-details">
@@ -193,14 +214,25 @@ const CardModal: React.FC<CardModalProps> = ({
               <div className="card-archetype">Archetype: {card.archetype}</div>
             )}
 
-            {onAddCard && (
-              <button
-                className="add-card-button"
-                onClick={() => onAddCard(card)}
-              >
-                Add to Deck
-              </button>
-            )}
+            <div className="card-actions">
+              {onAddCard && (
+                <button
+                  className="add-card-button"
+                  onClick={() => onAddCard(card)}
+                >
+                  Add to Deck
+                </button>
+              )}
+
+              {onAddToCollection && (
+                <button
+                  className="add-to-collection-button"
+                  onClick={() => onAddToCollection(card)}
+                >
+                  Add to Collection
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>

@@ -4,6 +4,7 @@ import { getCardImageUrl } from "../../../../utils/cardImages";
 import { YGOGameUtils } from "ygo-player";
 import RoleManager from "../RoleManager/RoleManager";
 import VirtualizedCardList from "../VirtualizedCardList";
+import { useNavigate } from "react-router-dom";
 import "./DeckEditor.css";
 
 interface DeckEditorProps {
@@ -45,6 +46,7 @@ const DeckEditor: React.FC<DeckEditorProps> = ({
   const [editedName, setEditedName] = useState(deck?.name || "");
   const [showRoleSelector, setShowRoleSelector] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
 
   // Refs for measuring container dimensions if needed, but not actively used by default
   const mainDeckRef = useRef<HTMLDivElement>(null);
@@ -567,6 +569,18 @@ const DeckEditor: React.FC<DeckEditorProps> = ({
     setShowRoleSelector(showRoleSelector === uniqueId ? null : uniqueId);
   };
 
+  // Handle card click with modifier key for navigation
+  const handleCardClick = (e: React.MouseEvent, card: Card) => {
+    // If Ctrl/Cmd key is pressed, navigate to card details
+    if (e.ctrlKey || e.metaKey) {
+      e.preventDefault();
+      navigate(`/card/${card.id}`);
+    } else {
+      // Otherwise, perform regular card select
+      onCardSelect(card);
+    }
+  };
+
   const mainDeckCards =
     deck?.mainDeck.map((card, index) => ({ card, originalIndex: index })) || [];
   const extraDeckCards =
@@ -650,10 +664,10 @@ const DeckEditor: React.FC<DeckEditorProps> = ({
               }
             >
               <img
-                src={getCardImageUrl(card, "small")}
+                src={getCardImageUrl(card.id, "small")}
                 alt={card.name}
                 className="deck-card"
-                onClick={() => onCardSelect(card)}
+                onClick={(e) => handleCardClick(e, card)}
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
                   target.src = `${
@@ -747,10 +761,10 @@ const DeckEditor: React.FC<DeckEditorProps> = ({
               }
             >
               <img
-                src={getCardImageUrl(card, "small")}
+                src={getCardImageUrl(card.id, "small")}
                 alt={card.name}
                 className="deck-card"
-                onClick={() => onCardSelect(card)}
+                onClick={(e) => handleCardClick(e, card)}
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
                   target.src = `${
@@ -846,10 +860,10 @@ const DeckEditor: React.FC<DeckEditorProps> = ({
               onContextMenu={(e) => handleRoleIconClick(e, card.id, index)}
             >
               <img
-                src={getCardImageUrl(card, "small")}
+                src={getCardImageUrl(card.id, "small")}
                 alt={card.name}
                 className="deck-card"
-                onClick={() => onCardSelect(card)}
+                onClick={(e) => handleCardClick(e, card)}
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
                   target.src = `${

@@ -43,7 +43,7 @@ const CardSuggestions: React.FC<CardSuggestionsProps> = ({
     const dragElem = document.createElement("div");
     dragElem.style.width = "60px";
     dragElem.style.height = "88px";
-    dragElem.style.backgroundImage = `url(${getCardImageUrl(card, "small")})`;
+    dragElem.style.backgroundImage = `url(${getCardImageUrl(card.id, "small")})`;
     dragElem.style.backgroundSize = "contain";
     dragElem.style.backgroundRepeat = "no-repeat";
     dragElem.style.position = "absolute";
@@ -171,7 +171,7 @@ const CardSuggestions: React.FC<CardSuggestionsProps> = ({
             onDragStart={(e) => handleDragStart(e, card)}
           >
             <img
-              src={getCardImageUrl(card, "small")}
+              src={getCardImageUrl(card.id, "small")}
               alt={card.name}
               className="suggestion-image"
               onError={(e) => {

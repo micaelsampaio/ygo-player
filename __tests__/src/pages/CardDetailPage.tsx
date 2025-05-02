@@ -1,12 +1,20 @@
 import React, { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { ThemeProvider } from "styled-components";
 import theme from "../styles/theme";
 import AppLayout from "../components/Layout/AppLayout";
 import Card from "../components/UI/Card";
 import { getCardImageUrl } from "../utils/cardImages";
-import { ArrowLeft, ExternalLink } from "react-feather";
+import {
+  ArrowLeft,
+  ExternalLink,
+  Info,
+  DollarSign,
+  Box,
+  Tag,
+  ChevronLeft,
+} from "lucide-react";
 
 interface YugiohCard {
   id: number;
@@ -53,11 +61,10 @@ const CardDetailPage: React.FC = () => {
   const [card, setCard] = useState<YugiohCard | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
 
-  // Get the API base URL from environment variables for API calls
   const apiBaseUrl =
     import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
-  // Get the CDN URL for images only
   const cdnUrl = import.meta.env.VITE_YGO_CDN_URL || "http://localhost:8080";
 
   useEffect(() => {
@@ -70,24 +77,23 @@ const CardDetailPage: React.FC = () => {
 
       try {
         setLoading(true);
-        // Get all cached cards from localStorage using a single key
-        const cachedCardsData = localStorage.getItem('cached_cards');
+        const cachedCardsData = localStorage.getItem("cached_cards");
         const cachedCards = cachedCardsData ? JSON.parse(cachedCardsData) : {};
 
-        // Check if this specific card is in the cache
         if (cachedCards[id]) {
-          console.log("Found card data in localStorage cache:", cachedCards[id]);
+          console.log(
+            "Found card data in localStorage cache:",
+            cachedCards[id]
+          );
           setCard(cachedCards[id]);
           setLoading(false);
           return;
         }
 
-        // Debug logging to verify API call parameters
         console.log(
           `Fetching card with ID: ${id} from ${apiBaseUrl}/cards?ids=${id}`
         );
 
-        // Make the API call with proper query parameter
         const response = await fetch(`${apiBaseUrl}/cards?ids=${id}`, {
           headers: {
             Accept: "application/json",
@@ -110,7 +116,6 @@ const CardDetailPage: React.FC = () => {
         const data = await response.json();
         console.log("API response full data:", data);
 
-        // Check if data is falsy
         if (!data) {
           setError("No data returned from API");
           return;
@@ -119,7 +124,6 @@ const CardDetailPage: React.FC = () => {
         let cardDetails = null;
 
         if (Array.isArray(data) && data.length > 0) {
-          // Handle response format as array - our API returns array
           cardDetails = data[0];
           console.log("Card details from array format:", cardDetails);
           if (!cardDetails) {
@@ -132,7 +136,6 @@ const CardDetailPage: React.FC = () => {
           Array.isArray(data.data) &&
           data.data.length > 0
         ) {
-          // Handle YGOProDeck-like response format
           cardDetails = data.data[0];
           console.log("Card details from nested data format:", cardDetails);
         } else {
@@ -141,35 +144,31 @@ const CardDetailPage: React.FC = () => {
           return;
         }
 
-        // Set the current card state
         setCard(cardDetails);
-        
-        // Update the cached cards in localStorage
-        // First get existing cache or create new object
-        const existingCache = localStorage.getItem('cached_cards');
+
+        const existingCache = localStorage.getItem("cached_cards");
         const cardCache = existingCache ? JSON.parse(existingCache) : {};
-        
-        // Add/update this card in the cache
+
         cardCache[id] = cardDetails;
-        
-        // Save back to localStorage with the single key
+
         try {
-          localStorage.setItem('cached_cards', JSON.stringify(cardCache));
+          localStorage.setItem("cached_cards", JSON.stringify(cardCache));
         } catch (storageError) {
-          // Handle potential localStorage quota exceeded errors
           console.warn("Failed to cache card in localStorage:", storageError);
-          
-          // If storage is full, clear it and try again with just this card
-          if (storageError instanceof DOMException && 
-              (storageError.name === 'QuotaExceededError' || 
-               storageError.name === 'NS_ERROR_DOM_QUOTA_REACHED')) {
-            
-            console.log("localStorage quota exceeded, clearing cache and storing only current card");
+
+          if (
+            storageError instanceof DOMException &&
+            (storageError.name === "QuotaExceededError" ||
+              storageError.name === "NS_ERROR_DOM_QUOTA_REACHED")
+          ) {
+            console.log(
+              "localStorage quota exceeded, clearing cache and storing only current card"
+            );
             localStorage.clear();
-            
+
             const newCache = {};
             newCache[id] = cardDetails;
-            localStorage.setItem('cached_cards', JSON.stringify(newCache));
+            localStorage.setItem("cached_cards", JSON.stringify(newCache));
           }
         }
       } catch (err) {
@@ -185,12 +184,15 @@ const CardDetailPage: React.FC = () => {
     fetchCardData();
   }, [id, apiBaseUrl]);
 
+  const goBack = () => {
+    navigate(-1);
+  };
+
   const renderCardStats = () => {
     if (!card) return null;
 
     const stats: JSX.Element[] = [];
 
-    // Add frame type (Spell Card, Trap Card, or full Monster type like "Effect Monster")
     stats.push(
       <StatItem key="type">
         <StatLabel>Frame:</StatLabel>
@@ -198,15 +200,17 @@ const CardDetailPage: React.FC = () => {
       </StatItem>
     );
 
-    // Add Monster Type/Spell-Trap Type (using proper terminology instead of "Race")
     stats.push(
       <StatItem key="race">
-        <StatLabel>{card.type && card.type.includes("Monster") ? "Monster Type:" : "Card Type:"}</StatLabel>
+        <StatLabel>
+          {card.type && card.type.includes("Monster")
+            ? "Monster Type:"
+            : "Card Type:"}
+        </StatLabel>
         <StatValue>{card.race}</StatValue>
       </StatItem>
     );
 
-    // Add Attribute if applicable (only for Monster cards)
     if (card.attribute && card.attribute !== "") {
       stats.push(
         <StatItem key="attribute">
@@ -216,7 +220,6 @@ const CardDetailPage: React.FC = () => {
       );
     }
 
-    // Add Level/Rank if applicable (only for Monster cards)
     if (card.level && card.level > 0) {
       stats.push(
         <StatItem key="level">
@@ -226,7 +229,6 @@ const CardDetailPage: React.FC = () => {
       );
     }
 
-    // Add ATK if applicable (only for Monster cards)
     if (card.atk !== undefined && card.atk !== null && card.atk !== 0) {
       stats.push(
         <StatItem key="atk">
@@ -236,7 +238,6 @@ const CardDetailPage: React.FC = () => {
       );
     }
 
-    // Add DEF if applicable (only for Monster cards)
     if (card.def !== undefined && card.def !== null && card.def !== 0) {
       stats.push(
         <StatItem key="def">
@@ -246,7 +247,6 @@ const CardDetailPage: React.FC = () => {
       );
     }
 
-    // Add Scale if applicable (only for Pendulum Monster cards)
     if (card.scale !== undefined && card.scale > 0) {
       stats.push(
         <StatItem key="scale">
@@ -256,7 +256,6 @@ const CardDetailPage: React.FC = () => {
       );
     }
 
-    // Add Link Rating if applicable (only for Link Monster cards)
     if (card.linkval !== undefined && card.linkval > 0) {
       stats.push(
         <StatItem key="linkval">
@@ -266,7 +265,6 @@ const CardDetailPage: React.FC = () => {
       );
     }
 
-    // Add Link Markers if applicable (only for Link Monster cards)
     if (card.linkmarkers && card.linkmarkers.length > 0) {
       stats.push(
         <StatItem key="linkmarkers">
@@ -276,7 +274,6 @@ const CardDetailPage: React.FC = () => {
       );
     }
 
-    // Add Archetype if applicable (for any card type)
     if (card.archetype && card.archetype !== "") {
       stats.push(
         <StatItem key="archetype">
@@ -294,7 +291,10 @@ const CardDetailPage: React.FC = () => {
 
     return (
       <CardSetsSection>
-        <h3>Card Sets</h3>
+        <SectionHeader>
+          <Box size={18} />
+          <h3>Card Sets</h3>
+        </SectionHeader>
         <SetsGrid>
           {card.card_sets.map((set, index) => (
             <SetItem key={`${set.set_code}_${index}`}>
@@ -316,62 +316,69 @@ const CardDetailPage: React.FC = () => {
 
     return (
       <PricesSection>
-        <h3>Market Prices</h3>
+        <SectionHeader>
+          <DollarSign size={18} />
+          <h3>Market Prices</h3>
+        </SectionHeader>
         <PricesGrid>
           {prices.tcgplayer_price && Number(prices.tcgplayer_price) > 0 && (
             <PriceItem>
               <PriceLabel>TCGPlayer</PriceLabel>
               <PriceValue>${prices.tcgplayer_price}</PriceValue>
-              <ExternalLink
+              <ExternalLinkIcon
                 href={`https://www.tcgplayer.com/search/yugioh/product?productLineName=yugioh&q=${encodeURIComponent(
                   card.name
                 )}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                size={16}
-              />
+              >
+                <ExternalLink size={16} />
+              </ExternalLinkIcon>
             </PriceItem>
           )}
           {prices.cardmarket_price && Number(prices.cardmarket_price) > 0 && (
             <PriceItem>
               <PriceLabel>Cardmarket</PriceLabel>
               <PriceValue>€{prices.cardmarket_price}</PriceValue>
-              <ExternalLink
+              <ExternalLinkIcon
                 href={`https://www.cardmarket.com/en/YuGiOh/Products/Singles?searchString=${encodeURIComponent(
                   card.name
                 )}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                size={16}
-              />
+              >
+                <ExternalLink size={16} />
+              </ExternalLinkIcon>
             </PriceItem>
           )}
           {prices.ebay_price && Number(prices.ebay_price) > 0 && (
             <PriceItem>
               <PriceLabel>eBay</PriceLabel>
               <PriceValue>${prices.ebay_price}</PriceValue>
-              <ExternalLink
+              <ExternalLinkIcon
                 href={`https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(
                   `yugioh ${card.name}`
                 )}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                size={16}
-              />
+              >
+                <ExternalLink size={16} />
+              </ExternalLinkIcon>
             </PriceItem>
           )}
           {prices.amazon_price && Number(prices.amazon_price) > 0 && (
             <PriceItem>
               <PriceLabel>Amazon</PriceLabel>
               <PriceValue>${prices.amazon_price}</PriceValue>
-              <ExternalLink
+              <ExternalLinkIcon
                 href={`https://www.amazon.com/s?k=${encodeURIComponent(
                   `yugioh ${card.name}`
                 )}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                size={16}
-              />
+              >
+                <ExternalLink size={16} />
+              </ExternalLinkIcon>
             </PriceItem>
           )}
         </PricesGrid>
@@ -426,12 +433,14 @@ const CardDetailPage: React.FC = () => {
       <AppLayout>
         <PageContainer>
           <NavigationBar>
-            <BackLink to="/cards/database">
-              <ArrowLeft size={16} /> Back to Card Database
-            </BackLink>
+            <BackButton onClick={goBack}>
+              <ChevronLeft size={20} />
+              Back
+            </BackButton>
+            <PageTitle>Card Details</PageTitle>
           </NavigationBar>
 
-          <StyledCard elevation="low">
+          <StyledCard elevation="medium">
             <Card.Content>
               <CardLayout>
                 <CardImageContainer>
@@ -450,23 +459,39 @@ const CardDetailPage: React.FC = () => {
                       target.src = `${cdnUrl}/images/card_back.png`;
                     }}
                   />
+                  {card?.archetype && (
+                    <ArchetypeBadge>
+                      <Tag size={14} />
+                      {card.archetype}
+                    </ArchetypeBadge>
+                  )}
                 </CardImageContainer>
 
                 <CardDetailsContainer>
                   <CardHeader>
-                    <CardTitle>{card.name}</CardTitle>
-                    <CardIdText>#{card.id}</CardIdText>
+                    <CardTitle>{card?.name}</CardTitle>
+                    <CardIdText>#{card?.id}</CardIdText>
                   </CardHeader>
 
                   {renderCardStats()}
 
                   <CardDescription>
-                    <h3>Card Text</h3>
-                    <CardText>{card.desc}</CardText>
+                    <SectionHeader>
+                      <Info size={18} />
+                      <h3>Card Text</h3>
+                    </SectionHeader>
+                    <CardText>{card?.desc}</CardText>
                   </CardDescription>
 
                   {renderCardSets()}
                   {renderCardPrices()}
+
+                  <RelatedActions>
+                    <ActionButton onClick={goBack}>
+                      <ChevronLeft size={18} />
+                      Go Back
+                    </ActionButton>
+                  </RelatedActions>
                 </CardDetailsContainer>
               </CardLayout>
             </Card.Content>
@@ -482,29 +507,75 @@ const PageContainer = styled.div`
   max-width: 1200px;
   margin: 0 auto;
   padding: ${({ theme }) => theme.spacing.lg};
+  animation: fadeIn 0.5s ease-out;
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
 `;
 
 const NavigationBar = styled.div`
-  margin-bottom: ${({ theme }) => theme.spacing.md};
+  margin-bottom: ${({ theme }) => theme.spacing.lg};
   display: flex;
   align-items: center;
+  justify-content: space-between;
 `;
 
-const BackLink = styled(Link)`
+const BackButton = styled.button`
   display: flex;
   align-items: center;
   gap: ${({ theme }) => theme.spacing.xs};
   color: ${({ theme }) => theme.colors.primary.main};
-  text-decoration: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: ${({ theme }) => theme.typography.size.md};
   font-weight: ${({ theme }) => theme.typography.weight.medium};
+  padding: ${({ theme }) => theme.spacing.sm};
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  transition: all 0.2s ease;
 
   &:hover {
-    text-decoration: underline;
+    background-color: ${({ theme }) => `${theme.colors.primary.main}10`};
+    color: ${({ theme }) => theme.colors.primary.dark};
+    transform: translateX(-3px);
   }
+`;
+
+const PageTitle = styled.h1`
+  color: ${({ theme }) => theme.colors.text.primary};
+  font-size: ${({ theme }) => theme.typography.size.xl};
+  margin: 0;
 `;
 
 const StyledCard = styled(Card)`
   margin-bottom: ${({ theme }) => theme.spacing.xl};
+  overflow: hidden;
+  transition: all 0.3s ease;
+  transform-origin: center;
+  animation: cardAppear 0.5s ease-out;
+
+  @keyframes cardAppear {
+    from {
+      opacity: 0;
+      transform: translateY(30px) scale(0.98);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  &:hover {
+    box-shadow: ${({ theme }) => theme.shadows.lg};
+  }
 `;
 
 const CardLayout = styled.div`
@@ -521,6 +592,8 @@ const CardImageContainer = styled.div`
   display: flex;
   justify-content: center;
   align-items: flex-start;
+  position: relative;
+  transition: transform 0.3s ease;
 `;
 
 const CardArtwork = styled.img`
@@ -528,23 +601,96 @@ const CardArtwork = styled.img`
   height: auto;
   border-radius: ${({ theme }) => theme.borderRadius.md};
   box-shadow: ${({ theme }) => theme.shadows.md};
+  transition: transform 0.3s ease;
+  animation: imageAppear 0.6s ease-out;
+
+  @keyframes imageAppear {
+    from {
+      opacity: 0;
+      transform: scale(0.9);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  &:hover {
+    transform: scale(1.03);
+  }
+`;
+
+const ArchetypeBadge = styled.div`
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: ${({ theme }) => `${theme.colors.primary.main}CC`};
+  color: white;
+  padding: ${({ theme }) => `${theme.spacing.xs} ${theme.spacing.sm}`};
+  border-radius: ${({ theme }) => theme.borderRadius.full};
+  font-size: ${({ theme }) => theme.typography.size.sm};
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  backdrop-filter: blur(5px);
+  animation: badgeAppear 0.8s ease-out;
+
+  @keyframes badgeAppear {
+    from {
+      opacity: 0;
+      transform: translateX(-50%) translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+  }
 `;
 
 const CardDetailsContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: ${({ theme }) => theme.spacing.lg};
+  padding: ${({ theme }) => theme.spacing.md};
+  background-color: ${({ theme }) => theme.colors.background.paper};
+  border-radius: ${({ theme }) => theme.borderRadius.md};
 `;
 
 const CardHeader = styled.div`
   border-bottom: 1px solid ${({ theme }) => theme.colors.border.default};
   padding-bottom: ${({ theme }) => theme.spacing.md};
+  position: relative;
+  animation: slideDown 0.5s ease-out;
+
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  &::after {
+    content: "";
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    width: 100px;
+    height: 3px;
+    background-color: ${({ theme }) => theme.colors.primary.main};
+    border-radius: 3px;
+  }
 `;
 
 const CardTitle = styled.h1`
   color: ${({ theme }) => theme.colors.text.primary};
-  font-size: ${({ theme }) => theme.typography.size.xl};
+  font-size: ${({ theme }) => theme.typography.size["2xl"]};
   margin-bottom: ${({ theme }) => theme.spacing.xs};
+  font-weight: ${({ theme }) => theme.typography.weight.bold};
 `;
 
 const CardIdText = styled.div`
@@ -556,31 +702,58 @@ const CardStats = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: ${({ theme }) => theme.spacing.md};
+  background-color: ${({ theme }) => `${theme.colors.background.card}`};
+  padding: ${({ theme }) => theme.spacing.md};
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  border-left: 5px solid ${({ theme }) => theme.colors.primary.light};
 `;
 
 const StatItem = styled.div`
   display: flex;
   flex-direction: column;
   gap: ${({ theme }) => theme.spacing.xs};
+  padding: ${({ theme }) => theme.spacing.sm};
+  transition: transform 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+  }
 `;
 
 const StatLabel = styled.div`
   font-size: ${({ theme }) => theme.typography.size.sm};
   color: ${({ theme }) => theme.colors.text.secondary};
-`;
-
-const StatValue = styled.div`
-  font-size: ${({ theme }) => theme.typography.size.md};
-  color: ${({ theme }) => theme.colors.text.primary};
   font-weight: ${({ theme }) => theme.typography.weight.medium};
 `;
 
-const CardDescription = styled.div`
+const StatValue = styled.div`
+  font-size: ${({ theme }) => theme.typography.size.lg};
+  color: ${({ theme }) => theme.colors.text.primary};
+  font-weight: ${({ theme }) => theme.typography.weight.bold};
+`;
+
+const SectionHeader = styled.div`
+  display: flex;
+  align-items: center;
+  gap: ${({ theme }) => theme.spacing.sm};
+  margin-bottom: ${({ theme }) => theme.spacing.sm};
+
   h3 {
     color: ${({ theme }) => theme.colors.text.primary};
     font-size: ${({ theme }) => theme.typography.size.lg};
-    margin-bottom: ${({ theme }) => theme.spacing.sm};
+    margin: 0;
   }
+
+  svg {
+    color: ${({ theme }) => theme.colors.primary.main};
+  }
+`;
+
+const CardDescription = styled.div`
+  background-color: ${({ theme }) => theme.colors.background.card};
+  padding: ${({ theme }) => theme.spacing.md};
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  border-left: 5px solid ${({ theme }) => theme.colors.info.main};
 `;
 
 const CardText = styled.p`
@@ -588,30 +761,39 @@ const CardText = styled.p`
   font-size: ${({ theme }) => theme.typography.size.md};
   line-height: 1.6;
   white-space: pre-wrap;
+  margin: 0;
 `;
 
 const CardSetsSection = styled.div`
-  h3 {
-    color: ${({ theme }) => theme.colors.text.primary};
-    font-size: ${({ theme }) => theme.typography.size.lg};
-    margin-bottom: ${({ theme }) => theme.spacing.sm};
-  }
+  background-color: ${({ theme }) => theme.colors.background.card};
+  padding: ${({ theme }) => theme.spacing.md};
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  border-left: 5px solid ${({ theme }) => theme.colors.success.main};
 `;
 
 const SetsGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: ${({ theme }) => theme.spacing.md};
+  max-height: 300px;
+  overflow-y: auto;
+  padding-right: ${({ theme }) => theme.spacing.sm};
 `;
 
 const SetItem = styled.div`
   padding: ${({ theme }) => theme.spacing.sm};
   border: 1px solid ${({ theme }) => theme.colors.border.default};
   border-radius: ${({ theme }) => theme.borderRadius.md};
-  background-color: ${({ theme }) => theme.colors.background.card};
+  background-color: ${({ theme }) => theme.colors.background.paper};
   display: flex;
   flex-direction: column;
   gap: 2px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: ${({ theme }) => theme.shadows.sm};
+  }
 `;
 
 const SetCode = styled.div`
@@ -631,11 +813,10 @@ const SetRarity = styled.div`
 `;
 
 const PricesSection = styled.div`
-  h3 {
-    color: ${({ theme }) => theme.colors.text.primary};
-    font-size: ${({ theme }) => theme.typography.size.lg};
-    margin-bottom: ${({ theme }) => theme.spacing.sm};
-  }
+  background-color: ${({ theme }) => theme.colors.background.card};
+  padding: ${({ theme }) => theme.spacing.md};
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  border-left: 5px solid ${({ theme }) => theme.colors.warning.main};
 `;
 
 const PricesGrid = styled.div`
@@ -648,17 +829,29 @@ const PriceItem = styled.div`
   padding: ${({ theme }) => theme.spacing.sm};
   border: 1px solid ${({ theme }) => theme.colors.border.default};
   border-radius: ${({ theme }) => theme.borderRadius.md};
-  background-color: ${({ theme }) => theme.colors.background.card};
+  background-color: ${({ theme }) => theme.colors.background.paper};
   display: flex;
   flex-direction: column;
   gap: 2px;
   position: relative;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 
-  svg {
-    position: absolute;
-    top: ${({ theme }) => theme.spacing.sm};
-    right: ${({ theme }) => theme.spacing.sm};
-    color: ${({ theme }) => theme.colors.primary.main};
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: ${({ theme }) => theme.shadows.sm};
+  }
+`;
+
+const ExternalLinkIcon = styled.a`
+  position: absolute;
+  top: ${({ theme }) => theme.spacing.sm};
+  right: ${({ theme }) => theme.spacing.sm};
+  color: ${({ theme }) => theme.colors.primary.main};
+  transition: transform 0.2s ease;
+
+  &:hover {
+    transform: scale(1.2);
+    color: ${({ theme }) => theme.colors.primary.dark};
   }
 `;
 
@@ -672,6 +865,38 @@ const PriceValue = styled.div`
   color: ${({ theme }) => theme.colors.success.main};
   font-weight: ${({ theme }) => theme.typography.weight.bold};
   margin-top: ${({ theme }) => theme.spacing.xs};
+`;
+
+const RelatedActions = styled.div`
+  display: flex;
+  justify-content: flex-start;
+  margin-top: ${({ theme }) => theme.spacing.md};
+  gap: ${({ theme }) => theme.spacing.md};
+  animation: fadeIn 0.7s ease-out;
+`;
+
+const ActionButton = styled.button`
+  display: flex;
+  align-items: center;
+  gap: ${({ theme }) => theme.spacing.xs};
+  padding: ${({ theme }) => `${theme.spacing.sm} ${theme.spacing.md}`};
+  background-color: ${({ theme }) => theme.colors.primary.main};
+  color: white;
+  border: none;
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  cursor: pointer;
+  font-weight: ${({ theme }) => theme.typography.weight.medium};
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: ${({ theme }) => theme.colors.primary.dark};
+    transform: translateY(-2px);
+    box-shadow: ${({ theme }) => theme.shadows.sm};
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
 `;
 
 const LoadingContainer = styled.div`
