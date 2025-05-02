@@ -35,8 +35,8 @@ const SearchResults: React.FC<SearchResultsProps> = ({
   };
 
   const getImageSource = (card: Card) => {
-    // Always use our CDN instead of ygoprodeck.com
-    return getCardImageUrl(card, "small");
+    // Pass the card ID instead of the entire card object
+    return getCardImageUrl(card.id, "small");
   };
 
   // Handle right-click to directly add to the currently selected deck
