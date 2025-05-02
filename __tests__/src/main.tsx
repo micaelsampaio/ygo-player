@@ -29,6 +29,7 @@ import HelpPage from "./components/Help";
 import ContactPage from "./pages/ContactPage";
 import PrivacyPage from "./pages/PrivacyPage";
 import MatchupMakerPage from "./pages/MatchupMakerPage";
+import GameToolsPage from "./pages/GameToolsPage"; // Import our Game Tools page
 import { PageViewerProvider } from "./utils/use-page-view.ts";
 // Import new tool components
 import { SpinnerWheel, TierList, Randomizer } from "./components/Tools";
@@ -101,6 +102,9 @@ createRoot(document.getElementById("root")!).render(
 
         {/* Matchup Maker tool */}
         <Route path="/matchup-maker" element={<MatchupMakerPage />} />
+
+        {/* Game Tools page */}
+        <Route path="/game-tools" element={<GameToolsPage />} />
 
         {/* New Tool Routes */}
         <Route path="/tools/spinner" element={<SpinnerWheel />} />
