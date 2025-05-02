@@ -911,7 +911,7 @@ const MyDecksPage = () => {
 
           {getChildGroups(selectedDeckGroup?.id || null).map((group) => (
             <UniformCard key={`group-${group.id}`}>
-              <GroupCardWrapper 
+              <GroupCardWrapper
                 onClick={() => handleSelectGroup(group)}
                 onDragOver={(e) => handleGroupDragOver(e, group.id)}
                 onDragLeave={handleGroupDragLeave}

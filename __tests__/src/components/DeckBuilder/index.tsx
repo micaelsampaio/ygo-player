@@ -966,24 +966,8 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
       <div className="deck-builder">
         <div className="page-header">
           <h1>Deck Builder</h1>
-          {/* Add buttons for key deck actions in the header */}
           <div className="header-actions">
-            {selectedDeck && (
-              <>
-                <button
-                  className="action-btn"
-                  onClick={() => setIsSyncModalOpen(true)}
-                >
-                  Sync Deck
-                </button>
-                <button
-                  className="action-btn"
-                  onClick={() => navigate("/my/decks")}
-                >
-                  My Decks
-                </button>
-              </>
-            )}
+            {/* Removed My Decks and Sync Decks buttons */}
           </div>
         </div>
         <div className="builder-container">
@@ -1036,7 +1020,8 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
                 <div className="no-deck-selected">
                   <h3>No Deck Selected</h3>
                   <p>
-                    Create a new deck here or select one from <a href="/my/decks">My Decks</a>.
+                    Create a new deck here or select one from{" "}
+                    <a href="/my/decks">My Decks</a>.
                   </p>
                   <div className="no-deck-actions">
                     <button
