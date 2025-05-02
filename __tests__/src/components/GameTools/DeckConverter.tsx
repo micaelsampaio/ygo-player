@@ -199,27 +199,29 @@ const DeckConverter: React.FC<DeckConverterProps> = ({ size = "medium" }) => {
       try {
         setLoading(true);
         console.log(`Fetching cards from: ${cdnUrl}/cards.json`);
-        
+
         const response = await fetch(`${cdnUrl}/cards.json`);
         if (!response.ok) {
           throw new Error(`Failed to fetch card database: ${response.status}`);
         }
-        
+
         const responseData = await response.json();
         console.log("Cards data structure:", typeof responseData);
-        
+
         // Check for the 'data' property containing the array of cards
         if (!responseData.data || !Array.isArray(responseData.data)) {
-          throw new Error('Card data does not have the expected structure with a "data" array');
+          throw new Error(
+            'Card data does not have the expected structure with a "data" array'
+          );
         }
-        
+
         const cardsData = responseData.data;
         console.log(`Found ${cardsData.length} cards in the database`);
-        
+
         // Create name -> id and id -> name mappings
-        const nameToId: {[key: string]: number} = {};
-        const idToName: {[key: number]: string} = {};
-        
+        const nameToId: { [key: string]: number } = {};
+        const idToName: { [key: number]: string } = {};
+
         cardsData.forEach((card: any) => {
           if (card && card.name && card.id) {
             const normalizedName = normalizeCardName(card.name);
@@ -227,23 +229,27 @@ const DeckConverter: React.FC<DeckConverterProps> = ({ size = "medium" }) => {
             idToName[card.id] = card.name;
           }
         });
-        
+
         const cardCount = Object.keys(nameToId).length;
         if (cardCount === 0) {
-          throw new Error('No valid cards found in database');
+          throw new Error("No valid cards found in database");
         }
-        
+
         console.log(`Successfully loaded ${cardCount} cards from database`);
         setCardDatabase({ ...nameToId, byId: idToName });
         setDbLoaded(true);
       } catch (error) {
         console.error("Failed to load card database:", error);
-        setError(`Failed to load card database: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        setError(
+          `Failed to load card database: ${
+            error instanceof Error ? error.message : "Unknown error"
+          }`
+        );
       } finally {
         setLoading(false);
       }
     };
-    
+
     loadCardDatabase();
   }, []);
 
