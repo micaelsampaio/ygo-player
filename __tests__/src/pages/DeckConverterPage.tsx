@@ -1,8 +1,8 @@
-import React from 'react';
-import { DeckConverter } from '../components/GameTools';
-import AppLayout from '../components/Layout/AppLayout';
-import styled from 'styled-components';
-import theme from '../styles/theme';
+import React from "react";
+import { DeckConverter } from "../components/GameTools";
+import AppLayout from "../components/Layout/AppLayout";
+import styled from "styled-components";
+import theme from "../styles/theme";
 
 const PageContainer = styled.div`
   max-width: 1200px;
@@ -33,8 +33,9 @@ const DeckConverterPage: React.FC = () => {
       <PageContainer>
         <Title>Deck Format Converter</Title>
         <Description>
-          Convert your Yu-Gi-Oh decks between readable text list format and YDK files.
-          Simply paste your deck list or YDK content below and convert it to the desired format.
+          Convert your Yu-Gi-Oh decks between readable text list format and YDK
+          files. Simply paste your deck list or YDK content below and convert it
+          to the desired format.
         </Description>
         <DeckConverter size="large" />
       </PageContainer>

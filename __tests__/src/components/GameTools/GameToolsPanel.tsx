@@ -134,7 +134,10 @@ const GameToolsPanel: React.FC<GameToolsPanelProps> = ({
       <Title>Yu-Gi-Oh Duel Tools</Title>
 
       <TabContainer>
-        <Tab $active={activeTool === "duel"} onClick={() => setActiveTool("duel")}>
+        <Tab
+          $active={activeTool === "duel"}
+          onClick={() => setActiveTool("duel")}
+        >
           Duel Tools
         </Tab>
         <Tab
