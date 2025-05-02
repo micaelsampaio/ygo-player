@@ -623,9 +623,11 @@ const DrawSimulator: React.FC<DrawSimulatorProps> = ({
                 className="add-card-btn"
                 onClick={addWantedCard}
                 disabled={!selectedCard || selectedGroupId === null}
+                type="button"
               >
-                Add to Group{" "}
-                {selectedGroupId !== null ? selectedGroupId + 1 : ""}
+                {selectedCard 
+                  ? `Add to Group ${selectedGroupId !== null ? selectedGroupId + 1 : ""}`
+                  : "Select a card"}
               </button>
             </div>
 

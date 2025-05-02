@@ -257,9 +257,13 @@
 
 .wanted-cards-input {
   display: flex;
-  gap: 10px;
+  gap: 12px;
   margin-bottom: 15px;
-  align-items: flex-start;
+  align-items: center;
+  background: #f9f9f9;
+  padding: 12px;
+  border-radius: 6px;
+  border: 1px solid #e0e0e0;
 }
 
 .wanted-cards-input select {
@@ -268,47 +272,96 @@
   border: 1px solid #ddd;
   border-radius: 4px;
   font-size: 0.9rem;
+  background-color: white;
+  height: 40px;
 }
 
-.wanted-cards-input input {
-  width: 80px;
+.wanted-cards-input input[type="number"] {
+  width: 60px;
   padding: 10px;
   border: 1px solid #ddd;
   border-radius: 4px;
   font-size: 0.9rem;
+  text-align: center;
+  height: 40px;
+  background-color: white;
 }
 
 .add-card-btn {
   padding: 10px 20px;
   background: #4caf50;
   color: white;
-  border: 2px solid #2e7d32; /* Add a visible border */
+  border: 2px solid #2e7d32;
   border-radius: 4px;
   cursor: pointer;
   transition: all 0.2s;
-  font-weight: 600; /* Make text bolder */
-  display: block !important;
+  font-weight: 600;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
   z-index: 10;
-  opacity: 1 !important;
   position: relative;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Add shadow for depth */
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3); /* Make text more visible */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+  min-width: 120px;
+  height: 40px;
+  opacity: 1 !important; /* Ensure it's never hidden by inheritance */
 }
 
-.add-card-btn:hover {
+.add-card-btn:hover:not(:disabled) {
   background: #45a049;
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 .add-card-btn:disabled {
-  background: #cccccc; /* Lighter gray when disabled */
+  background: #cccccc !important;
   border-color: #aaaaaa;
-  color: #666666; /* Darker text for better contrast */
+  color: #666666;
   cursor: not-allowed;
   opacity: 0.7 !important;
   box-shadow: none;
   transform: none;
+  pointer-events: none;
+}
+
+.wanted-cards-input .add-card-btn {
+  padding: 10px 20px;
+  background: #4caf50 !important;
+  color: white !important;
+  border: 2px solid #2e7d32;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 600;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  position: relative;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+  min-width: 120px;
+  height: 40px;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.wanted-cards-input .add-card-btn:hover:not(:disabled) {
+  background: #45a049 !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.wanted-cards-input .add-card-btn:disabled {
+  background: #cccccc !important;
+  border-color: #aaaaaa;
+  color: #666666 !important;
+  cursor: not-allowed;
+  opacity: 0.7 !important;
+  box-shadow: none;
+  transform: none;
+  pointer-events: none;
 }
 
 .wanted-cards-list {
@@ -447,13 +500,35 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  background-color: white;
+  padding: 6px 12px;
+  border-radius: 4px;
+  border: 1px solid #e0e0e0;
 }
 
-.relation-control select,
-.copies-control input {
-  padding: 6px;
+.relation-control label,
+.copies-control label {
+  font-weight: 500;
+  color: #333;
+  white-space: nowrap;
+}
+
+.relation-control select {
+  padding: 8px;
   border: 1px solid #ddd;
   border-radius: 4px;
+  background-color: white;
+  min-width: 200px;
+}
+
+.copies-control input {
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  width: 60px;
+  text-align: center;
+  font-size: 0.9rem;
+  appearance: textfield; /* Remove spinner for Firefox */
 }
 
 .wanted-card-group {
