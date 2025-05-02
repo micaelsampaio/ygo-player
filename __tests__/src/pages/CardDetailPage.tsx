@@ -69,6 +69,7 @@ const CardDetailPage: React.FC = () => {
         const cardData = localStorage.getItem(`card_${id}`);
 
         if (cardData) {
+          console.log("Found card data in localStorage:", JSON.parse(cardData));
           setCard(JSON.parse(cardData));
           setLoading(false);
           return;
@@ -80,19 +81,42 @@ const CardDetailPage: React.FC = () => {
         );
 
         // Make the API call with proper query parameter
-        const response = await fetch(`${apiBaseUrl}/cards?ids=${id}`);
+        const response = await fetch(`${apiBaseUrl}/cards?ids=${id}`, {
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+        });
+
+        console.log(
+          "API Response Status:",
+          response.status,
+          response.statusText
+        );
 
         if (!response.ok) {
-          throw new Error(`Failed to fetch card data: ${response.statusText}`);
+          throw new Error(
+            `Failed to fetch card data: ${response.status} ${response.statusText}`
+          );
         }
 
         const data = await response.json();
-        console.log("API response:", data);
+        console.log("API response full data:", data);
 
-        if (data && Array.isArray(data) && data.length > 0) {
+        // Check if data is falsy
+        if (!data) {
+          setError("No data returned from API");
+          return;
+        }
+
+        if (Array.isArray(data) && data.length > 0) {
           // Handle response format as array - our API returns array
           const cardDetails = data[0];
-          console.log("Card details:", cardDetails);
+          console.log("Card details from array format:", cardDetails);
+          if (!cardDetails) {
+            setError("Invalid card data format");
+            return;
+          }
           setCard(cardDetails);
           // Cache the card data in local storage
           localStorage.setItem(`card_${id}`, JSON.stringify(cardDetails));
@@ -104,11 +128,13 @@ const CardDetailPage: React.FC = () => {
         ) {
           // Handle YGOProDeck-like response format
           const cardDetails = data.data[0];
+          console.log("Card details from nested data format:", cardDetails);
           setCard(cardDetails);
           // Cache the card data in local storage
           localStorage.setItem(`card_${id}`, JSON.stringify(cardDetails));
         } else {
-          setError("Card not found");
+          console.error("Unexpected API response format:", data);
+          setError("Card not found or invalid response format");
         }
       } catch (err) {
         console.error("Error fetching card:", err);
@@ -373,11 +399,11 @@ const CardDetailPage: React.FC = () => {
             <Card.Content>
               <CardLayout>
                 <CardImageContainer>
-                  {/* Fix the card image URL to ensure ID is defined */}
+                  {/* Use the correct card image URL path based on our CDN structure */}
                   <CardArtwork
                     src={
                       card && card.id
-                        ? `${cdnUrl}/images/cards/${card.id}.jpg`
+                        ? `${cdnUrl}/images/cards_small/${card.id}.jpg`
                         : `${cdnUrl}/images/card_back.png`
                     }
                     alt={card ? card.name : "Card"}
