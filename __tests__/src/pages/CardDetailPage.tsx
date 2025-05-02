@@ -74,7 +74,12 @@ const CardDetailPage: React.FC = () => {
           return;
         }
 
-        // Update the API endpoint to use query parameters instead of path parameters
+        // Debug logging to verify API call parameters
+        console.log(
+          `Fetching card with ID: ${id} from ${apiBaseUrl}/cards?ids=${id}`
+        );
+
+        // Make the API call with proper query parameter
         const response = await fetch(`${apiBaseUrl}/cards?ids=${id}`);
 
         if (!response.ok) {
@@ -82,10 +87,23 @@ const CardDetailPage: React.FC = () => {
         }
 
         const data = await response.json();
+        console.log("API response:", data);
 
-        if (data && (data.data?.[0] || data)) {
-          // Handle both YGOProDeck-like response format and our own format
-          const cardDetails = data.data?.[0] || data;
+        if (data && Array.isArray(data) && data.length > 0) {
+          // Handle response format as array - our API returns array
+          const cardDetails = data[0];
+          console.log("Card details:", cardDetails);
+          setCard(cardDetails);
+          // Cache the card data in local storage
+          localStorage.setItem(`card_${id}`, JSON.stringify(cardDetails));
+        } else if (
+          data &&
+          data.data &&
+          Array.isArray(data.data) &&
+          data.data.length > 0
+        ) {
+          // Handle YGOProDeck-like response format
+          const cardDetails = data.data[0];
           setCard(cardDetails);
           // Cache the card data in local storage
           localStorage.setItem(`card_${id}`, JSON.stringify(cardDetails));
@@ -355,10 +373,14 @@ const CardDetailPage: React.FC = () => {
             <Card.Content>
               <CardLayout>
                 <CardImageContainer>
-                  {/* Use CDN URL for card images and card back */}
+                  {/* Fix the card image URL to ensure ID is defined */}
                   <CardArtwork
-                    src={`${cdnUrl}/images/cards/${card.id}.jpg`}
-                    alt={card.name}
+                    src={
+                      card && card.id
+                        ? `${cdnUrl}/images/cards/${card.id}.jpg`
+                        : `${cdnUrl}/images/card_back.png`
+                    }
+                    alt={card ? card.name : "Card"}
                     onError={(e) => {
                       const target = e.target as HTMLImageElement;
                       target.src = `${cdnUrl}/images/card_back.png`;
