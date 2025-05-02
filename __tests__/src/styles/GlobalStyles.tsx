@@ -70,9 +70,227 @@ const GlobalStyles = createGlobalStyle`
 
   button {
     cursor: pointer;
+    font-family: inherit;
+    font-size: inherit;
+    border: none;
+    border-radius: ${theme.borderRadius.md};
+    transition: all ${theme.transitions.default};
   }
 
-  input, select, textarea, button {
+  /* Global button styles */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 12px;
+    font-weight: ${theme.typography.weight.medium};
+    border-radius: ${theme.borderRadius.sm};
+    cursor: pointer;
+    transition: all ${theme.transitions.default};
+    text-decoration: none;
+    border: 1px solid transparent;
+    font-size: ${theme.typography.size.sm};
+  }
+
+  /* Button sizes */
+  .btn-sm {
+    padding: 4px 8px;
+    font-size: ${theme.typography.size.xs};
+    border-radius: ${theme.borderRadius.sm};
+  }
+
+  .btn-md {
+    padding: 6px 12px;
+    font-size: ${theme.typography.size.sm};
+  }
+
+  .btn-lg {
+    padding: ${theme.spacing.xs} ${theme.spacing.md};
+    font-size: ${theme.typography.size.base};
+    border-radius: ${theme.borderRadius.md};
+  }
+
+  /* Button variants */
+  .btn-primary {
+    background-color: ${theme.colors.primary.main};
+    color: ${theme.colors.text.inverse};
+    
+    &:hover:not(:disabled) {
+      background-color: ${theme.colors.primary.dark};
+      transform: translateY(-2px);
+      box-shadow: ${theme.shadows.md};
+    }
+    
+    &:active:not(:disabled) {
+      transform: translateY(0);
+      box-shadow: ${theme.shadows.sm};
+    }
+  }
+
+  .btn-secondary {
+    background-color: ${theme.colors.secondary.main};
+    color: ${theme.colors.text.inverse};
+    
+    &:hover:not(:disabled) {
+      background-color: ${theme.colors.secondary.dark};
+      transform: translateY(-2px);
+      box-shadow: ${theme.shadows.md};
+    }
+    
+    &:active:not(:disabled) {
+      transform: translateY(0);
+      box-shadow: ${theme.shadows.sm};
+    }
+  }
+
+  .btn-tertiary {
+    background-color: transparent;
+    color: ${theme.colors.primary.main};
+    border: 1px solid ${theme.colors.border.default};
+    
+    &:hover:not(:disabled) {
+      background-color: ${theme.colors.background.card};
+      border-color: ${theme.colors.primary.main};
+      transform: translateY(-2px);
+    }
+    
+    &:active:not(:disabled) {
+      transform: translateY(0);
+    }
+  }
+
+  .btn-danger {
+    background-color: ${theme.colors.error.main};
+    color: ${theme.colors.text.inverse};
+    
+    &:hover:not(:disabled) {
+      background-color: ${theme.colors.error.dark};
+      transform: translateY(-2px);
+      box-shadow: ${theme.shadows.md};
+    }
+    
+    &:active:not(:disabled) {
+      transform: translateY(0);
+      box-shadow: ${theme.shadows.sm};
+    }
+  }
+
+  .btn-success {
+    background-color: ${theme.colors.success.main};
+    color: ${theme.colors.text.inverse};
+    
+    &:hover:not(:disabled) {
+      background-color: ${theme.colors.success.dark};
+      transform: translateY(-2px);
+      box-shadow: ${theme.shadows.md};
+    }
+    
+    &:active:not(:disabled) {
+      transform: translateY(0);
+      box-shadow: ${theme.shadows.sm};
+    }
+  }
+
+  .btn-warning {
+    background-color: ${theme.colors.warning.main};
+    color: ${theme.colors.text.primary};
+    
+    &:hover:not(:disabled) {
+      background-color: ${theme.colors.warning.dark};
+      transform: translateY(-2px);
+      box-shadow: ${theme.shadows.md};
+    }
+    
+    &:active:not(:disabled) {
+      transform: translateY(0);
+      box-shadow: ${theme.shadows.sm};
+    }
+  }
+
+  /* Button states */
+  .btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none !important;
+  }
+
+  .btn-full-width {
+    width: 100%;
+  }
+
+  .btn-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: ${theme.spacing.xs};
+  }
+
+  /* For icon-only buttons */
+  .btn-icon-only {
+    padding: ${theme.spacing.xs};
+    width: 36px;
+    height: 36px;
+    
+    &.btn-sm {
+      padding: ${theme.spacing.xs};
+      width: 28px;
+      height: 28px;
+    }
+    
+    &.btn-lg {
+      padding: ${theme.spacing.sm};
+      width: 44px;
+      height: 44px;
+    }
+  }
+
+  /* YGO legacy class compatibility */
+  .ygo-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: ${theme.spacing.sm} ${theme.spacing.md};
+    font-weight: ${theme.typography.weight.medium};
+    border-radius: ${theme.borderRadius.md};
+    cursor: pointer;
+    transition: all ${theme.transitions.default};
+    border: none;
+  }
+
+  .ygo-btn-primary {
+    background-color: var(--ygo-primary-color);
+    color: var(--ygo-text-light-color);
+    
+    &:hover:not(:disabled) {
+      background-color: var(--ygo-primary-color-dark);
+    }
+  }
+
+  .ygo-btn-secondary {
+    background-color: var(--ygo-border-color);
+    color: var(--ygo-text-color);
+    
+    &:hover:not(:disabled) {
+      background-color: var(--ygo-action-color-dark);
+    }
+  }
+
+  .ygo-btn-action {
+    background-color: var(--ygo-border-color);
+    color: var(--ygo-text-color);
+    
+    &:hover:not(:disabled) {
+      background-color: var(--ygo-action-color-dark);
+    }
+    
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  input, select, textarea {
     font-family: inherit;
     font-size: inherit;
   }

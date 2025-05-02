@@ -743,13 +743,22 @@ const MyDecksPage = () => {
         <PageHeader>
           <h1>My Decks</h1>
           <HeaderActions>
-            <Button variant="secondary" onClick={handleSyncDecks}>
+            <Button
+              variant="primary"
+              size="md"
+              onClick={handleSyncDecks}
+              className="btn-icon"
+            >
+              <SyncIcon>↻</SyncIcon>
               Sync Decks
             </Button>
             <Button
-              variant={isEditingGroups ? "primary" : "secondary"}
+              variant={isEditingGroups ? "primary" : "tertiary"}
+              size="md"
               onClick={() => setIsEditingGroups(!isEditingGroups)}
+              className="btn-icon"
             >
+              <GroupsIcon>📁</GroupsIcon>
               {isEditingGroups ? "Done" : "Manage Groups"}
             </Button>
           </HeaderActions>
@@ -1925,6 +1934,19 @@ const EmptyMessage = styled.div`
   text-align: center;
   color: ${theme.colors.text.secondary};
   font-size: ${theme.typography.size.md};
+`;
+
+const SyncIcon = styled.span`
+  display: inline-flex;
+  margin-right: ${theme.spacing.xs};
+  font-size: 1.1em;
+  font-weight: ${theme.typography.weight.bold};
+`;
+
+const GroupsIcon = styled.span`
+  display: inline-flex;
+  margin-right: ${theme.spacing.xs};
+  font-size: 1.1em;
 `;
 
 export default MyDecksPage;

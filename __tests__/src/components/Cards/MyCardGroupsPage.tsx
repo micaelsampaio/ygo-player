@@ -100,9 +100,12 @@ const MyCardGroupsPage = () => {
         <PageHeader>
           <h1>My Card Groups</h1>
           <Button
-            variant={isEditingGroups ? "primary" : "secondary"}
+            variant={isEditingGroups ? "primary" : "tertiary"}
+            size="md"
+            className="btn-icon"
             onClick={() => setIsEditingGroups(!isEditingGroups)}
           >
+            <GroupsIcon>📁</GroupsIcon>
             {isEditingGroups ? "Done" : "Manage Groups"}
           </Button>
         </PageHeader>
@@ -444,6 +447,10 @@ const EmptyState = styled.div`
   p {
     margin: ${theme.spacing.xs} 0;
   }
+`;
+
+const GroupsIcon = styled.span`
+  margin-right: ${theme.spacing.xs};
 `;
 
 export default MyCardGroupsPage;

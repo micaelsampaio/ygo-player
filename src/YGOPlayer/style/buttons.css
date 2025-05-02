@@ -1,41 +1,95 @@
 .ygo-player-core {
-    .ygo-btn {
-        background: var(--ygo-background-color);
-        border: none;
-        font-weight: bold;
-        border-radius: var(--ygo-border-radius-small);
-        color: #FFF;
-        font-size: 16px;
-        padding: 8px 14px;
-        cursor: pointer;
+  .ygo-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--ygo-background-color);
+    border: none;
+    font-weight: 500;
+    border-radius: var(--ygo-border-radius-small);
+    color: #fff;
+    font-size: 16px;
+    padding: 8px 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .ygo-btn-primary {
+    background: var(--ygo-primary-color);
+
+    &:hover:not(:disabled) {
+      background-color: var(--ygo-primary-color-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2);
     }
 
-    .ygo-btn-primary {
-        background: var(--ygo-primary-color);
+    &:active:not(:disabled) {
+      transform: translateY(0);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    }
+  }
 
-        &:hover {
-            background-color: var(--ygo-primary-hover-color);
-        }
+  .ygo-btn-secondary {
+    background: var(--ygo-border-color);
+
+    &:hover:not(:disabled) {
+      background-color: var(--ygo-action-color-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2);
     }
 
-    .ygo-btn-secondary {
-        background: var(--ygo-border-color);
+    &:active:not(:disabled) {
+      transform: translateY(0);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    }
+  }
 
-        &:hover {
-            background-color: var(--ygo-action-color-dark);
-        }
+  .ygo-btn-action {
+    background: var(--ygo-border-color);
+
+    &:hover:not(:disabled) {
+      background: var(--ygo-action-color-dark);
+      transform: translateY(-2px);
     }
 
-    .ygo-btn-action {
-        background: var(--ygo-border-color);
+    &:active:not(:disabled) {
+      transform: translateY(0);
     }
+  }
 
-    .ygo-btn-action:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-    }
+  .ygo-btn-danger {
+    background: var(--ygo-error-color);
+    color: #fff;
 
-    .ygo-btn-action:hover:not(:disabled) {
-        background: var(--ygo-action-color-dark);
+    &:hover:not(:disabled) {
+      background: color-mod(var(--ygo-error-color) shade(15%));
     }
+  }
+
+  .ygo-btn-success {
+    background: var(--ygo-success-color);
+    color: #fff;
+
+    &:hover:not(:disabled) {
+      background: color-mod(var(--ygo-success-color) shade(15%));
+    }
+  }
+
+  .ygo-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none !important;
+  }
+
+  /* Button sizes */
+  .ygo-btn-sm {
+    padding: 4px 10px;
+    font-size: 14px;
+  }
+
+  .ygo-btn-lg {
+    padding: 12px 20px;
+    font-size: 18px;
+  }
 }

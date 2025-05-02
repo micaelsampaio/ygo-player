@@ -716,7 +716,7 @@ const ControlGrid = styled.div`
   display: grid;
   grid-template-columns: 1fr auto;
   gap: ${(props) => props.theme.spacing.lg};
-  align-items: center;
+  align-items: flex-end; /* Align both elements at the bottom */
 
   @media (max-width: 768px) {
     grid-template-columns: 1fr;
@@ -730,16 +730,20 @@ const ControlGrid = styled.div`
 
   input {
     width: 100%;
-    padding: ${(props) => props.theme.spacing.sm};
+    height: 32px; /* Specify exact height to match buttons */
+    padding: 6px 12px; /* Match button padding */
     border: 1px solid ${(props) => props.theme.colors.border.default};
     border-radius: ${(props) => props.theme.borderRadius.md};
-    font-size: ${(props) => props.theme.typography.size.base};
+    font-size: ${(props) => props.theme.typography.size.sm}; /* Match button font size */
+    box-sizing: border-box; /* Ensure padding is included in height */
   }
 `;
 
 const ButtonsGroup = styled.div`
   display: flex;
   gap: ${(props) => props.theme.spacing.sm};
+  align-items: flex-end; /* Align buttons at the bottom */
+  justify-content: flex-end; /* Align buttons to the right */
 
   @media (max-width: 768px) {
     justify-content: flex-start;
