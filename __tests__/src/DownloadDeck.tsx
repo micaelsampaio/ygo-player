@@ -30,8 +30,9 @@ export function DownloadDeck() {
       window.localStorage.setItem(
         `deck_${deckName}`,
         JSON.stringify({
-          name: deckName,
+          id: String(Date.now()),
           ...deck,
+          name: deckName,
         })
       );
       setDownloadState({ status: "idle", message: `deck downloaded` });
