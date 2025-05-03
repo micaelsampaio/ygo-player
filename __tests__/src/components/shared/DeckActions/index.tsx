@@ -94,11 +94,13 @@ const DeckActions: React.FC<DeckActionsProps> = ({
         players: [
           {
             name: "player1",
+            deckId: deck.id,
             mainDeck: [...deck.mainDeck],
             extraDeck: deck.extraDeck,
           },
           {
             name: "player2",
+            deckId: undefined,
             // Default opponent deck will be set in the duel
             mainDeck: [],
             extraDeck: [],

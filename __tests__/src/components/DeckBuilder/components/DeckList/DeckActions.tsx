@@ -89,11 +89,13 @@ const DeckActions: React.FC<DeckActionsProps> = ({
         players: [
           {
             name: "player1",
+            deckId: deck.id,
             mainDeck: [...deck.mainDeck],
             extraDeck: deck.extraDeck,
           },
           {
             name: "player2",
+            deckId: undefined,
             // Default opponent deck will be set in the duel
             mainDeck: [],
             extraDeck: [],
@@ -117,8 +119,7 @@ const DeckActions: React.FC<DeckActionsProps> = ({
     } catch (error) {
       logger.error("Failed to start duel with deck:", error);
       alert(
-        `Failed to start duel: ${
-          error instanceof Error ? error.message : "Unknown error"
+        `Failed to start duel: ${error instanceof Error ? error.message : "Unknown error"
         }`
       );
     }
@@ -313,8 +314,7 @@ const DeckActions: React.FC<DeckActionsProps> = ({
           } catch (error) {
             console.error("YDK import error:", error);
             alert(
-              `Failed to import YDK deck: ${
-                error instanceof Error ? error.message : "Unknown error"
+              `Failed to import YDK deck: ${error instanceof Error ? error.message : "Unknown error"
               }`
             );
             setImportProgress({
@@ -330,8 +330,7 @@ const DeckActions: React.FC<DeckActionsProps> = ({
       } catch (error) {
         console.error("Import error:", error);
         alert(
-          `Failed to import deck. Make sure the file is valid: ${
-            error instanceof Error ? error.message : "Unknown error"
+          `Failed to import deck. Make sure the file is valid: ${error instanceof Error ? error.message : "Unknown error"
           }`
         );
         setImportProgress({
@@ -536,9 +535,8 @@ const DeckActions: React.FC<DeckActionsProps> = ({
                       <button
                         key={group.id}
                         onClick={() => handleMoveDeckToGroup(group.id)}
-                        className={`group-option ${
-                          deck?.groupId === group.id ? "current-group" : ""
-                        }`}
+                        className={`group-option ${deck?.groupId === group.id ? "current-group" : ""
+                          }`}
                         disabled={deck?.groupId === group.id}
                       >
                         <span className="group-icon">📁</span>
@@ -620,11 +618,10 @@ const DeckActions: React.FC<DeckActionsProps> = ({
               <div
                 className="progress-bar"
                 style={{
-                  width: `${
-                    importProgress.total
-                      ? (importProgress.progress / importProgress.total) * 100
-                      : 0
-                  }%`,
+                  width: `${importProgress.total
+                    ? (importProgress.progress / importProgress.total) * 100
+                    : 0
+                    }%`,
                 }}
               ></div>
             </div>

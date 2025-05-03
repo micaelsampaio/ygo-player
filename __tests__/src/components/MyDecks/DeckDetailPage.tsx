@@ -240,11 +240,13 @@ const DeckDetailPage = () => {
         players: [
           {
             name: "player1",
+            deckId: deck.id,
             mainDeck: [...deck.mainDeck],
             extraDeck: deck.extraDeck || [],
           },
           {
             name: "player2",
+            deckId: undefined,
             mainDeck: [],
             extraDeck: [],
           },
