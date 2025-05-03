@@ -72,13 +72,13 @@ export function GameSettingsDialog({ duel }: { duel: YGODuel, card: Card, origin
                         Replay
                     </div>
 
-                    <div className="ygo-flex">
+                    <div className="ygo-flex ygo-mt-2">
                         <button className="ygo-btn ygo-btn-action ygo-px-0 ygo-flex-grow-1" onClick={saveReplay}>Save Replay</button>
                     </div>
                 </>}
 
-                <div className="mt-4">Game Music Volume</div>
-                <div>
+                <div className="ygo-mt-4">Game Music Volume</div>
+                <div className="ygo-mt-2">
                     <input type="range" id="volume" name="volume" step="0.1" min="0.0" max="1.0" value={gameMusicVolume} onChange={setGameMusicVolume} onInput={setGameMusicVolume} />
                 </div>
                 <div>Game Sounds Volume</div>
@@ -86,8 +86,8 @@ export function GameSettingsDialog({ duel }: { duel: YGODuel, card: Card, origin
                     <input type="range" id="volume" name="volume" step="0.1" min="0.0" max="1.0" value={gameSoundsVolume} onChange={setGameSoundsVolume} onInput={setGameSoundsVolume} />
                 </div>
 
-                <div className="mt-4">Card Transparents</div>
-                <div className="ygo-flex">
+                <div className="ygo-mt-4">Card Transparents</div>
+                <div className="ygo-flex ygo-mt-2">
                     <input
                         style={{ display: "inline-block", width: "auto" }}
                         type="checkbox"
@@ -102,7 +102,7 @@ export function GameSettingsDialog({ duel }: { duel: YGODuel, card: Card, origin
                 <div className="ygo-mt-4">
                     <div>Game Speed</div>
 
-                    <div className="ygo-flex ygo-gap-1">
+                    <div className="ygo-flex ygo-gap-1 ygo-mt-2">
                         <button disabled={gameSpeed === 1} type="button" className="ygo-btn ygo-btn-action ygo-px-0 ygo-flex-grow-1" onClick={() => setTimeScale(1)}>
                             1x
                         </button>
