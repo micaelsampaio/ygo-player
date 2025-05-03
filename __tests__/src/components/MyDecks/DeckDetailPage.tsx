@@ -29,8 +29,8 @@ import "../DeckBuilder/components/DrawSimulator/DrawSimulator.css";
 import "../DeckBuilder/components/DeckAnalysis/styles/DeckAnalytics.css";
 import { getCardImageUrl, CARD_BACK_IMAGE } from "../../utils/cardImages";
 import { useKaibaNet } from "../../hooks/useKaibaNet";
-import { Logger } from "../../utils/logger";
 import { createRoom } from "../../utils/roomUtils";
+import { APIService } from "../../services/api-service";
 
 const DeckDetailPage = () => {
   const navigate = useNavigate();
@@ -92,49 +92,60 @@ const DeckDetailPage = () => {
   useEffect(() => {
     // Load the deck data
     if (deckId) {
-      setLoading(true);
-      try {
-        // First try direct access with the key
-        const storedDeck = localStorage.getItem(`deck_${deckId}`);
 
-        if (storedDeck) {
-          const parsedDeck = JSON.parse(storedDeck);
+      const loadDeck = async () => {
+        setLoading(true);
+        try {
+          // First try direct access with the key
+          let deckData = localStorage.getItem(`deck_${deckId}`);
+          let parsedDeck = null;
 
-          // Debug the loaded deck and specifically check for notes
-          console.log("Loaded deck data:", {
-            id: parsedDeck.id,
-            name: parsedDeck.name,
-            hasNotes: !!parsedDeck.notes,
-            notes: parsedDeck.notes
-              ? parsedDeck.notes.substring(0, 50) + "..."
-              : "none",
-          });
+          if (deckData) {
+            parsedDeck = JSON.parse(deckData);
+          } else {
+            parsedDeck = await APIService.getDeckByIdWithCardsData(deckId);
+          }
 
-          setDeck(parsedDeck);
-          setCoverCardId(parsedDeck.coverCardId);
-          setFileName(deckId.replace(/\s+/g, "_").toLowerCase());
-        } else {
-          // If not found, search through all localStorage keys to find a deck with matching ID
-          const found = findDeckById(deckId);
-          if (found) {
-            console.log("Found deck by ID search:", {
-              id: found.deck.id,
-              name: found.deck.name,
-              hasNotes: !!found.deck.notes,
-              notes: found.deck.notes
-                ? found.deck.notes.substring(0, 50) + "..."
+          if (parsedDeck) {
+            // Debug the loaded deck and specifically check for notes
+            console.log("Loaded deck data:", {
+              id: parsedDeck.id,
+              name: parsedDeck.name,
+              hasNotes: !!parsedDeck.notes,
+              notes: parsedDeck.notes
+                ? parsedDeck.notes.substring(0, 50) + "..."
                 : "none",
             });
 
-            setDeck(found.deck);
-            setCoverCardId(found.deck.coverCardId);
-            setFileName(found.name.replace(/\s+/g, "_").toLowerCase());
+            setDeck(parsedDeck);
+            setCoverCardId(parsedDeck.coverCardId);
+            setFileName(deckId.replace(/\s+/g, "_").toLowerCase());
+          } else {
+            // If not found, search through all localStorage keys to find a deck with matching ID
+            const found = findDeckById(deckId);
+            if (found) {
+              console.log("Found deck by ID search:", {
+                id: found.deck.id,
+                name: found.deck.name,
+                hasNotes: !!found.deck.notes,
+                notes: found.deck.notes
+                  ? found.deck.notes.substring(0, 50) + "..."
+                  : "none",
+              });
+
+              setDeck(found.deck);
+              setCoverCardId(found.deck.coverCardId);
+              setFileName(found.name.replace(/\s+/g, "_").toLowerCase());
+            }
           }
+        } catch (error) {
+          console.error("Error loading deck:", error);
         }
-      } catch (error) {
-        console.error("Error loading deck:", error);
+        setLoading(false);
+
       }
-      setLoading(false);
+
+      loadDeck();
     }
   }, [deckId]);
 
@@ -253,8 +264,7 @@ const DeckDetailPage = () => {
     } catch (error) {
       console.error("Failed to start duel with deck:", error);
       alert(
-        `Failed to start duel: ${
-          error instanceof Error ? error.message : "Unknown error"
+        `Failed to start duel: ${error instanceof Error ? error.message : "Unknown error"
         }`
       );
     }
@@ -271,9 +281,8 @@ const DeckDetailPage = () => {
     const extraCount = deck.extraDeck?.length || 0;
     const sideCount = deck.sideDeck?.length || 0;
 
-    return `${mainCount} Main | ${extraCount} Extra${
-      sideCount > 0 ? ` | ${sideCount} Side` : ""
-    }`;
+    return `${mainCount} Main | ${extraCount} Extra${sideCount > 0 ? ` | ${sideCount} Side` : ""
+      }`;
   };
 
   const handleSelectCoverCard = (cardId: number) => {
@@ -510,20 +519,20 @@ const DeckDetailPage = () => {
 
                       {(coverCardDetails.level ||
                         coverCardDetails.level === 0) && (
-                        <CardStat>Level: {coverCardDetails.level}</CardStat>
-                      )}
+                          <CardStat>Level: {coverCardDetails.level}</CardStat>
+                        )}
 
                       {(coverCardDetails.atk !== undefined ||
                         coverCardDetails.def !== undefined) && (
-                        <CardStats>
-                          {coverCardDetails.atk !== undefined && (
-                            <span>ATK: {coverCardDetails.atk}</span>
-                          )}
-                          {coverCardDetails.def !== undefined && (
-                            <span>DEF: {coverCardDetails.def}</span>
-                          )}
-                        </CardStats>
-                      )}
+                          <CardStats>
+                            {coverCardDetails.atk !== undefined && (
+                              <span>ATK: {coverCardDetails.atk}</span>
+                            )}
+                            {coverCardDetails.def !== undefined && (
+                              <span>DEF: {coverCardDetails.def}</span>
+                            )}
+                          </CardStats>
+                        )}
 
                       {coverCardDetails.desc && (
                         <CardDescription>
@@ -831,7 +840,7 @@ const DeckDetailPage = () => {
                       isVisible={activeTab === "analytics"}
                       isLoading={isAnalyzing}
                       isEnhanced={false}
-                      onToggleEnhanced={() => {}}
+                      onToggleEnhanced={() => { }}
                     />
                   </TabSection>
                 )}
@@ -1412,9 +1421,9 @@ const ShareTooltip = styled.div<{ status: string }>`
     border-width: 5px;
     border-style: solid;
     border-color: ${(props) =>
-        props.status === "copied"
-          ? theme.colors.success.main
-          : theme.colors.error.main}
+    props.status === "copied"
+      ? theme.colors.success.main
+      : theme.colors.error.main}
       transparent transparent transparent;
   }
 

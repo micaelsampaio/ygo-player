@@ -27,13 +27,14 @@ export function DownloadDeck() {
           },
         },
       });
+      const deckDataToStore = {
+        id: String(Date.now()),
+        ...deck,
+        name: deckName,
+      };
       window.localStorage.setItem(
         `deck_${deckName}`,
-        JSON.stringify({
-          id: String(Date.now()),
-          ...deck,
-          name: deckName,
-        })
+        JSON.stringify(deckDataToStore)
       );
       setDownloadState({ status: "idle", message: `deck downloaded` });
     } catch (error: any) {
