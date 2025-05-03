@@ -55,6 +55,9 @@ export interface YGOPlayerStartEditorProps {
   players: YGOPlayerData[];
   commands: any[];
   options: YGOPropsOptions;
+  actions?: {
+    saveReplay?: (replay: YGOReplayData) => Promise<void>
+  }
 }
 
 export interface YGOPlayerStartReplayProps {
@@ -62,6 +65,9 @@ export interface YGOPlayerStartReplayProps {
   decks: YGOReplayDeckData[];
   replay: YGOReplayData;
   options: YGOPropsOptions;
+  actions?: {
+
+  }
 }
 
 export interface YGOAudioLayer {

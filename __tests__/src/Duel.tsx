@@ -5,6 +5,7 @@ import { useKaibaNet } from "./hooks/useKaibaNet";
 import Chat from "./components/Chat/Chat";
 import { LoadingOverlay } from "./components/LoadingOverlay";
 import { Logger } from "./utils/logger";
+import axios from "axios";
 
 interface DuelProps {
   roomId?: string;
@@ -15,11 +16,16 @@ let SEND_COMMAND_ALLOWED = true;
 
 const logger = Logger.createLogger("Duel");
 
+enum DUEL_VIEW {
+  DUEL,
+  END_DUEL
+}
 export default function Duel({
   roomId: roomIdProp,
   playerId: playerIdProp,
 }: DuelProps) {
   const kaibaNet = useKaibaNet();
+  const [VIEW, setView] = useState<DUEL_VIEW>(DUEL_VIEW.DUEL);
   const [isLoading, setIsLoading] = useState(true);
   const [loadingStatus, setLoadingStatus] = useState("Initializing duel...");
   const [loadingProgress, setLoadingProgress] = useState<number | undefined>(
@@ -120,6 +126,9 @@ export default function Duel({
         cdnUrl: String(import.meta.env.VITE_YGO_CDN_URL),
         commands: duelData.commands,
         options: duelData.options || {},
+        actions: {
+          saveReplay
+        }
       };
 
       console.log("TCL:: OPTIONS", config);
@@ -331,24 +340,40 @@ export default function Duel({
     };
   }, [kaibaNet]);
 
-  const saveReplay = () => {
-    const duel = (window as any).YGODuel;
-    if (!duel) return alert("no duel");
-    const duelData = JSON.parse(window.localStorage.getItem("duel-data")!);
-    const replay = duel.ygo.getReplayData();
+  const saveReplay = async (replayData: any) => {
 
-    const replayName = prompt("Give name to the replay", "")!
-      .replace(/[^a-zA-Z ]/g, "")
-      .replace(/ /g, "-") as string;
-    const replayData = {
-      players: duelData.players,
-      replay,
-    };
+    await axios.request({
+      url: `${import.meta.env.VITE_API_BASE_URL}/replays`,
+      method: "POST",
+      data: replayData
+    });
 
-    window.localStorage.setItem(
-      `replay_${replayName}_${Date.now()}`,
-      JSON.stringify(replayData)
-    );
+    const ygo: YGOPlayerComponent = document.querySelector(
+      "ygo-player"
+    )! as any;
+
+    ygo.destroy();
+
+    setView(DUEL_VIEW.END_DUEL);
+
+
+    // const duel = (window as any).YGODuel;
+    // if (!duel) return alert("no duel");
+    // const duelData = JSON.parse(window.localStorage.getItem("duel-data")!);
+    // const replay = duel.ygo.getReplayData();
+
+    // const replayName = prompt("Give name to the replay", "")!
+    //   .replace(/[^a-zA-Z ]/g, "")
+    //   .replace(/ /g, "-") as string;
+    // const replayData = {
+    //   players: duelData.players,
+    //   replay,
+    // };
+
+    // window.localStorage.setItem(
+    //   `replay_${replayName}_${Date.now()}`,
+    //   JSON.stringify(replayData)
+    // );
   };
 
   const commandMessageToCommand = (message: string) => {
@@ -457,6 +482,12 @@ export default function Duel({
     kaibaNet.setPlaybackMuted(muted);
   };
 
+  if (VIEW === DUEL_VIEW.END_DUEL) {
+    return <>
+      <h1>DUEL is over close this tab</h1>
+    </>
+  }
+
   return (
     <div
       style={{
@@ -485,11 +516,11 @@ export default function Duel({
         onAudioMuteToggle={handleAudioMuteToggle}
         analyser={analyser}
       />
-      <div
+      {/* <div
         style={{ position: "fixed", top: "200px", right: "10px", zIndex: 4 }}
       >
         <button className="btn-btn-action" onClick={saveReplay}>Save Replay</button>
-      </div>
+      </div> */}
     </div>
   );
 }

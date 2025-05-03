@@ -72,6 +72,7 @@ export class YGOPlayerComponent extends HTMLElement {
       commands: props.commands,
       players: props.players,
       options: props.options,
+      actions: props.actions,
     };
     console.log("------- CONFIG ------");
     console.log(config);
@@ -115,6 +116,7 @@ export class YGOPlayerComponent extends HTMLElement {
       commands: props.replay.commands,
       options: props.options || {},
       cdnUrl: props.cdnUrl,
+      actions: props.actions,
     };
 
     config.options.shuffleDecks = false;

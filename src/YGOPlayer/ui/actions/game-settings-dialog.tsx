@@ -42,6 +42,18 @@ export function GameSettingsDialog({ duel }: { duel: YGODuel, card: Card, origin
         setGameSpeed(settings.getGameSpeed());
     }, [settings])
 
+    const saveReplay = useCallback(async () => {
+        if (!duel.config.actions?.saveReplay) return;
+
+        try {
+            const replayData = duel.ygo.getReplayData();
+            await duel.config.actions.saveReplay(replayData);
+
+        } catch (error) {
+
+        }
+    }, [duel]);
+
     const close = () => {
         duel.events.dispatch("close-ui-menu", { type: "settings-menu" });
     }
@@ -54,7 +66,18 @@ export function GameSettingsDialog({ duel }: { duel: YGODuel, card: Card, origin
         </Modal.Header>
         <Modal.Body>
             <div>
-                <div>Game Music Volume</div>
+
+                {duel.config.actions?.saveReplay && <>
+                    <div>
+                        Replay
+                    </div>
+
+                    <div className="ygo-flex">
+                        <button className="ygo-btn ygo-btn-action ygo-px-0 ygo-flex-grow-1" onClick={saveReplay}>Save Replay</button>
+                    </div>
+                </>}
+
+                <div className="mt-4">Game Music Volume</div>
                 <div>
                     <input type="range" id="volume" name="volume" step="0.1" min="0.0" max="1.0" value={gameMusicVolume} onChange={setGameMusicVolume} onInput={setGameMusicVolume} />
                 </div>
