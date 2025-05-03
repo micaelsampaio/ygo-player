@@ -121,6 +121,9 @@ export class YGOPlayerComponent extends HTMLElement {
 
     config.options.shuffleDecks = false;
 
+    console.log("------- CONFIG ---------");
+    console.log(JSON.stringify(config));
+
     this.start(config);
   }
 

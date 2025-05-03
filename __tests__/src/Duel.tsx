@@ -341,6 +341,11 @@ export default function Duel({
   }, [kaibaNet]);
 
   const saveReplay = async (replayData: any) => {
+    const deckId = duelData.players[0].deckId;
+
+    if (deckId) {
+      replayData.players[0].deckId = deckId;
+    }
 
     await axios.request({
       url: `${import.meta.env.VITE_API_BASE_URL}/replays`,

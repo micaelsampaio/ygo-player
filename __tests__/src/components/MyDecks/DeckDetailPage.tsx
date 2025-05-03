@@ -31,6 +31,7 @@ import { getCardImageUrl, CARD_BACK_IMAGE } from "../../utils/cardImages";
 import { useKaibaNet } from "../../hooks/useKaibaNet";
 import { createRoom } from "../../utils/roomUtils";
 import { APIService } from "../../services/api-service";
+import { DeckReplaysTab } from "./DeckReplaysTab";
 
 const DeckDetailPage = () => {
   const navigate = useNavigate();
@@ -423,6 +424,8 @@ const DeckDetailPage = () => {
     }
   };
 
+  const isReplaysTabVisible = activeTab === "replays";
+
   if (!deck || !deckId) {
     return (
       <AppLayout>
@@ -616,6 +619,7 @@ const DeckDetailPage = () => {
                 <Tab value="simulator" label="Draw Simulator" />
                 <Tab value="analytics" label="Deck Analytics" />
                 <Tab value="notes" label="Notes" />
+                <Tab value="replays" label="Replays" />
               </StyledTabs>
 
               <TabContent>
@@ -867,6 +871,16 @@ const DeckDetailPage = () => {
                     )}
                   </TabSection>
                 )}
+
+                {/* Replays Section */}
+
+                <TabSection style={{ display: isReplaysTabVisible ? "block" : "none" }}>
+                  <DeckReplaysTab
+                    visible={isReplaysTabVisible}
+                    deckId={deck?.id}
+                  />
+                </TabSection>
+
               </TabContent>
             </Card.Content>
           </DeckContentCard>
