@@ -7,6 +7,53 @@ const LOCAL_API_URL =
   import.meta.env.VITE_YGO_CDN_URL || "http://localhost:8080";
 const YGOPRODECK_API_URL = "https://db.ygoprodeck.com/api/v7";
 
+type Task = {
+  resolve: (cards: any[]) => void;
+  reject: (error: Error) => void;
+};
+
+const localCardsManager = {
+  status: "idle" as "idle" | "download",
+  cards: null as any[] | null,
+  tasks: [] as Task[],
+};
+
+async function fetchCardsJsonTask(): Promise<any[]> {
+  if (localCardsManager.cards) {
+    return localCardsManager.cards;
+  }
+
+  if (localCardsManager.status === "idle") {
+    localCardsManager.status = "download";
+
+    try {
+      const response = await fetch(`${LOCAL_API_URL}/cards.json`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch cards.json");
+      }
+
+      const data = await response.json();
+      localCardsManager.cards = data;
+      localCardsManager.tasks.forEach(task => task.resolve(data));
+      localCardsManager.tasks = [];
+
+      return data;
+    } catch (error) {
+      const err = new Error("Failed to fetch cards.json");
+      localCardsManager.tasks.forEach(task => task.reject(err));
+      localCardsManager.tasks = [];
+      throw err;
+    } finally {
+      localCardsManager.status = "idle";
+    }
+  }
+
+  return new Promise((resolve, reject) => {
+    localCardsManager.tasks.push({ resolve, reject });
+  });
+}
+
+
 /**
  * Import a deck from a YDK file
  */
@@ -32,18 +79,16 @@ export const importDeckFromOmegaUrl = async (
 export async function getCard(id: number) {
   try {
     // First try to get card from local API
-    const localResponse = await fetch(`${LOCAL_API_URL}/cards.json`);
-    if (localResponse.ok) {
-      const allCards = await localResponse.json();
-      const card = Array.isArray(allCards.data)
-        ? allCards.data.find((card: any) => card.id === id)
-        : Array.isArray(allCards)
+    const allCards = await fetchCardsJsonTask() as any;
+
+    const card = Array.isArray(allCards.data)
+      ? allCards.data.find((card: any) => card.id === id)
+      : Array.isArray(allCards)
         ? allCards.find((card: any) => card.id === id)
         : null;
 
-      if (card) {
-        return card;
-      }
+    if (card) {
+      return card;
     }
   } catch (error) {
     console.warn(`Failed to fetch card ${id} from local API:`, error);
@@ -75,14 +120,14 @@ export async function downloadDeck(
     deckName,
   }:
     | {
-        events?: {
-          onProgess: (args: {
-            cardDownloaded: number;
-            totalCards: number;
-          }) => void;
-        };
-        deckName?: string;
-      }
+      events?: {
+        onProgess: (args: {
+          cardDownloaded: number;
+          totalCards: number;
+        }) => void;
+      };
+      deckName?: string;
+    }
     | undefined = {}
 ) {
   const mainDeckArray = Array.isArray(deckData.mainDeck)
