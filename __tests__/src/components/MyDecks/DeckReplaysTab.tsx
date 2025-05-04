@@ -75,9 +75,9 @@ function ReplayEntry({ data: replay, openReplay }: { data: any, openReplay: (rep
 
   const data = useMemo(() => {
 
-    const { endField = [] } = replay;
+    const { initialField = [], endField = [] } = replay;
 
-    const initialFieldData = endField.reduce((acc: any, row: any) => {
+    const initialFieldData = initialField.reduce((acc: any, row: any) => {
 
       const zoneData = YGOGameUtils.getZoneData(row.zone);
       let id = 0;
