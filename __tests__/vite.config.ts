@@ -76,5 +76,8 @@ export default defineConfig(({ mode }) => {
       "process.browser": true,
       "process.version": '"16.0.0"',
     },
+    optimizeDeps: {
+      include: ['js-cookie'],
+    },
   };
 });

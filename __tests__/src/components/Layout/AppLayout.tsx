@@ -175,6 +175,8 @@ const Copyright = styled.p`
   margin: 0;
 `;
 
+const globalWindow = (window as any);
+
 const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   // Navigation items - organized into primary categories without tool links in header
   const navItems = [
@@ -202,6 +204,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
       />
 
       <UserControlsContainer>
+        <UserData />
         <SettingsIconLink to="/settings" title="Settings">
           <span className="icon">⚙️</span>
         </SettingsIconLink>
@@ -270,7 +273,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
               <FooterSectionTitle>Resources</FooterSectionTitle>
               <FooterLinksList>
                 <FooterLinkItem>
-                  <FooterLink to="/rulings">Rulings</FooterLink>
+                  <FooterLink tglobalWindowo="/rulings">Rulings</FooterLink>
                 </FooterLinkItem>
                 <FooterLinkItem>
                   <FooterLink to="/help">Help Center</FooterLink>
@@ -314,5 +317,20 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
     </Layout>
   );
 };
+
+function UserData() {
+
+  const tokenData = globalWindow.ygo101_token_data;
+
+  if (tokenData) {
+    return <div>
+      {tokenData.name}
+    </div>
+  }
+
+  return <div>
+    <a href={`${import.meta.env.VITE_API_BASE_URL}/auth/login`}>Login</a>
+  </div>
+}
 
 export default AppLayout;

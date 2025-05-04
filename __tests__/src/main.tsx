@@ -35,12 +35,16 @@ import DeckConverterPage from "./pages/DeckConverterPage"; // Import the new pag
 import { PageViewerProvider } from "./utils/use-page-view.ts";
 // Import new tool components
 import { SpinnerWheel, TierList, Randomizer } from "./components/Tools";
+import { LoginWithSuccessPage } from "./pages/LoginWithSuccess.tsx";
+import { registerTokenInWindow } from "./utils/token-utils.ts";
 
 debug.enable("ygo:*");
 localStorage.setItem("debug", "ygo:*");
 
 const logger = Logger.createLogger("Main");
 logger.debug("Application starting...");
+
+registerTokenInWindow();
 
 createRoot(document.getElementById("root")!).render(
   <KaibaNetProvider>
@@ -118,6 +122,7 @@ createRoot(document.getElementById("root")!).render(
         <Route path="/tools/spinner" element={<SpinnerWheel />} />
         <Route path="/tools/tierlist" element={<TierList />} />
         <Route path="/tools/randomizer" element={<Randomizer />} />
+        <Route path="/login/success" element={<LoginWithSuccessPage />} />
       </Routes>
     </BrowserRouter>
   </KaibaNetProvider>
