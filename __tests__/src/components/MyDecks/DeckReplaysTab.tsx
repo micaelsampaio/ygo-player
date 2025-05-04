@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { APIService } from "../../services/api-service";
 import axios from "axios";
 import { YGOGameUtils } from "ygo-core";
 import { useNavigate } from "react-router-dom";
+import { StoreService } from "../../services/store-service";
 
 interface ReplayDataDto {
 
@@ -18,24 +18,28 @@ export function DeckReplaysTab({ deckId, visible = true }: { deckId: string, vis
   const navigate = useNavigate();
 
   const openReplay = async (replay: any) => {
-    const players = await Promise.all(replay.players.map(async (player: any) => {
-      const deck = await APIService.getDeckFromDeckWithCardIds(player);
-      return {
-        ...player,
-        ...deck
+    try {
+      const players = await Promise.all(replay.players.map(async (player: any) => {
+        const deck = await StoreService.getDeckFromDeckWithCardIds(player);
+        return {
+          ...player,
+          ...deck
+        }
+      }));
+
+      const replayData = {
+        players,
+        replay
       }
-    }));
 
-    const replayData = {
-      players,
-      replay
+      console.log("NEW REPLAY ", replayData);
+
+      localStorage.setItem("duel-data", JSON.stringify(replayData));
+
+      navigate("/duel");
+    } catch (error) {
+
     }
-
-    console.log("NEW REPLAY ", replayData);
-
-    localStorage.setItem("duel-data", JSON.stringify(replayData));
-
-    navigate("/duel");
   }
 
   useEffect(() => {
@@ -46,7 +50,7 @@ export function DeckReplaysTab({ deckId, visible = true }: { deckId: string, vis
 
     const loadData = async () => {
       try {
-        const data = await APIService.loadReplaysFromDeckId(deckId, abortController.signal);
+        const data = await StoreService.loadReplaysFromDeckId(deckId, abortController.signal);
         request.current = true;
         setReplays(data);
       } catch (error: any) {
@@ -73,6 +77,21 @@ function ReplayEntry({ data: replay, openReplay }: { data: any, openReplay: (rep
 
     const { endField = [] } = replay;
 
+    const initialFieldData = endField.reduce((acc: any, row: any) => {
+
+      const zoneData = YGOGameUtils.getZoneData(row.zone);
+      let id = 0;
+
+      if (zoneData.player === 0 && zoneData.zone === "H") {
+        const newData = {
+          key: `initial_Field_${++id}`,
+          ...row
+        }
+        acc.push(newData);
+      }
+      return acc;
+    }, [])
+
     const endFieldData = endField.reduce((acc: any, row: any) => {
 
       const zoneData = YGOGameUtils.getZoneData(row.zone);
@@ -91,6 +110,7 @@ function ReplayEntry({ data: replay, openReplay }: { data: any, openReplay: (rep
     //const { endField: replay.endField } = replay;
 
     return {
+      initialFieldData: initialFieldData,
       endField: endFieldData
     }
 
@@ -101,6 +121,10 @@ function ReplayEntry({ data: replay, openReplay }: { data: any, openReplay: (rep
       {replay.id}
     </div>
     <div>
+      <div>Start Hand</div>
+      <div>
+        {data.initialFieldData.map((card: any) => <img key={card.key} src={`${cdnUrl}/images/cards_small/${card.id}.jpg`} style={{ height: "100px" }} />)}
+      </div>
       <div>End board</div>
       <div>
         {data.endField.map((card: any) => <img key={card.key} src={`${cdnUrl}/images/cards_small/${card.id}.jpg`} style={{ height: "100px" }} />)}

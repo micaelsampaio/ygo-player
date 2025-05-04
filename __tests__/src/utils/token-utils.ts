@@ -17,3 +17,15 @@ export function registerTokenInWindow() {
     globalWindow.ygo101_token_data = null;
   }
 }
+
+export function isUserLoggedIn() {
+  return !!getUserToken();
+}
+
+export function getUserToken(): string | null {
+  return globalWindow.ygo101_token ?? null;
+}
+
+export function getUserTokenData(): any | null {
+  return globalWindow.ygo101_token_data ?? null;
+}

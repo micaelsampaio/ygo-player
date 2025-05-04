@@ -5,7 +5,7 @@ import { useKaibaNet } from "./hooks/useKaibaNet";
 import Chat from "./components/Chat/Chat";
 import { LoadingOverlay } from "./components/LoadingOverlay";
 import { Logger } from "./utils/logger";
-import axios from "axios";
+import { StoreService } from "./services/store-service";
 
 interface DuelProps {
   roomId?: string;
@@ -341,25 +341,26 @@ export default function Duel({
   }, [kaibaNet]);
 
   const saveReplay = async (replayData: any) => {
-    const deckId = duelData.players[0].deckId;
+    try {
+      const deckId = duelData.players[0].deckId;
 
-    if (deckId) {
-      replayData.players[0].deckId = deckId;
+      if (deckId) {
+        replayData.players[0].deckId = deckId;
+      }
+
+      await StoreService.saveReplay(replayData);
+
+      const ygo: YGOPlayerComponent = document.querySelector(
+        "ygo-player"
+      )! as any;
+
+      ygo.destroy();
+
+      setView(DUEL_VIEW.END_DUEL);
+
+    } catch (error) {
+      console.log(error);
     }
-
-    await axios.request({
-      url: `${import.meta.env.VITE_API_BASE_URL}/replays`,
-      method: "POST",
-      data: replayData
-    });
-
-    const ygo: YGOPlayerComponent = document.querySelector(
-      "ygo-player"
-    )! as any;
-
-    ygo.destroy();
-
-    setView(DUEL_VIEW.END_DUEL);
 
 
     // const duel = (window as any).YGODuel;

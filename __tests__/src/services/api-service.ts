@@ -24,6 +24,7 @@ HTTP.interceptors.request.use(
 export const EMPTY_ID = "000000000000000000000000";
 
 export class APIService {
+
   static async getDeckById(deckId: string) {
     const { data } = await HTTP.request({
       url: `/decks/${deckId}`,
@@ -90,6 +91,16 @@ export class APIService {
       url: `/replays/deck/${id}`,
       method: "GET",
       signal
+    });
+
+    return data;
+  }
+
+  static async saveReplay(replayData: any) {
+    const { data } = await HTTP.request({
+      url: '/replays',
+      method: "POST",
+      data: replayData
     });
 
     return data;
