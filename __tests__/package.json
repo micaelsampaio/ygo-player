@@ -38,6 +38,7 @@
     "@multiformats/multiaddr": "^12.3.5",
     "@types/pako": "^2.0.3",
     "@types/react-router-dom": "^5.3.3",
+    "axios": "^1.6.7",
     "debug": "^4.4.0",
     "html2canvas": "^1.4.1",
     "html5-qrcode": "^2.3.8",

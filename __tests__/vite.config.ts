@@ -59,6 +59,10 @@ export default defineConfig(({ mode }) => {
       sourcemap: true,
       // Set environment variables explicitly for the build
       envPrefix: ["VITE_", "DOCKER"],
+      rollupOptions: {
+        // Explicitly make axios external - this tells Rollup not to try to bundle it
+        external: ["axios"],
+      },
     },
     // Properly expose env variables to the client
     define: {
