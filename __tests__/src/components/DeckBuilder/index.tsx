@@ -17,6 +17,7 @@ import CardNotification from "./components/CardNotification/CardNotification.tsx
 import CardSuggestions from "./components/CardSuggestion/CardSuggestions.tsx";
 import DrawSimulator from "./components/DrawSimulator"; // Fix import path
 import DeckNotes from "./components/DeckNotes"; // Import the DeckNotes component
+import SidePatternsTool from "./components/SidePatternsTool"; // Import the SidePatternsTool component
 import DeckSyncModal from "./components/DeckSyncModal/DeckSyncModal";
 import { ArrowLeft } from "lucide-react"; // Import ArrowLeft icon
 import { useDeckStorage } from "./hooks/useDeckStorage";
@@ -38,7 +39,7 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [deckAnalytics, setDeckAnalytics] = useState<any>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [activeTab, setActiveTab] = useState<"editor" | "notes">("editor");
+  const [activeTab, setActiveTab] = useState<"editor" | "notes" | "sidePatterns">("editor");
   const [targetDeck, setTargetDeck] = useState<"main" | "side">("main");
   const [analyticsCalculated, setAnalyticsCalculated] = useState(false);
   const [useEnhancedAnalysis, setUseEnhancedAnalysis] = useState(false); // Set to false by default
@@ -359,7 +360,7 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
     setTimeout(() => setPreviewCard(null), 300);
   };
 
-  const handleTabChange = (tab: "editor" | "notes") => {
+  const handleTabChange = (tab: "editor" | "notes" | "sidePatterns") => {
     setActiveTab(tab);
   };
 
@@ -1023,6 +1024,13 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
                 >
                   Notes
                 </button>
+                <button
+                  className={activeTab === "sidePatterns" ? "active-tab" : ""}
+                  onClick={() => handleTabChange("sidePatterns")}
+                  disabled={!selectedDeck}
+                >
+                  Side Patterns Tool
+                </button>
               </div>
             </div>
 
@@ -1074,8 +1082,10 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
                   onMoveCardBetweenDecks={moveCardBetweenDecks}
                   updateDeck={updateDeck}
                 />
-              ) : (
+              ) : activeTab === "notes" ? (
                 <DeckNotes deck={selectedDeck} updateDeck={updateDeck} />
+              ) : (
+                <SidePatternsTool deck={selectedDeck} onUpdateDeck={updateDeck} />
               )}
             </div>
           </div>

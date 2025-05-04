@@ -106,8 +106,13 @@ export interface Card {
   atk?: number;
   def?: number;
   level?: number;
-  race: string;
-  attribute?: CardAttribute;
+  attribute?: string;
+  race?: string;
+  scale?: number;
+  linkval?: number;
+  linkmarkers?: string[];
+  imageUrl?: string;
+  banStatus?: "banned" | "limited" | "semi-limited" | "unlimited";
   archetype?: string;
   card_sets?: Array<{
     set_name: string;
@@ -118,9 +123,6 @@ export interface Card {
   }>;
   card_images: CardImage[];
   card_prices: CardPriceInfo[];
-  linkval?: number;
-  linkmarkers?: string[];
-  scale?: number;
   roleInfo?: CardRoleInfo;
   isFavorite?: boolean;
   banlist_info?: {
@@ -132,11 +134,12 @@ export interface Card {
 
 // Deck structure
 export interface Deck {
-  id?: string; // Adding ID field for better uniqueness guarantee
+  id: string;
   name: string;
   mainDeck: Card[];
   extraDeck: Card[];
-  sideDeck: Card[]; // Adding side deck support
+  sideDeck: Card[];
+  storageKey?: string;
   createdAt?: string; // ISO string date when the deck was created
   importedAt?: string; // ISO string date when the deck was imported
   copiedAt?: string; // ISO string date when the deck was copied
@@ -154,7 +157,7 @@ export interface DeckGroup {
   name: string;
   description?: string;
   createdAt: string;
-  lastModified?: string;
+  updatedAt?: string;
   icon?: string; // Optional icon identifier
   color?: string; // Optional color for UI display
   parentId?: string; // For nested groups (optional)
@@ -181,6 +184,18 @@ export interface SearchFilters {
   level: string;
   race: string;
   text: string;
+}
+
+// Side deck pattern for different matchups
+export interface SidingPattern {
+  id: string;
+  name: string;
+  description?: string;
+  matchup: string;
+  cardsToRemove: Card[];
+  cardsToAdd: Card[];
+  createdAt: number;
+  updatedAt: number;
 }
 
 // Unified DeckAnalytics type

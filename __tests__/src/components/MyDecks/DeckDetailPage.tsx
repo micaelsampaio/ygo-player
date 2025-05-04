@@ -19,14 +19,17 @@ import {
   Check,
   Copy,
   BarChart2,
+  Shuffle,
 } from "lucide-react";
 import CoverCardModal from "../MyDecks/CoverCardModal";
 import CardModal from "../DeckBuilder/components/CardModal/CardModal";
 import DrawSimulator from "../DeckBuilder/components/DrawSimulator";
 import DeckAnalytics from "../DeckBuilder/components/DeckAnalysis";
+import ViewSidePatterns from "../DeckBuilder/components/ViewSidePatterns"; // Import the ViewSidePatterns component
 import { useDeckAnalytics } from "../DeckBuilder/hooks/useDeckAnalytics";
 import "../DeckBuilder/components/DrawSimulator/DrawSimulator.css";
 import "../DeckBuilder/components/DeckAnalysis/styles/DeckAnalytics.css";
+import "../DeckBuilder/components/ViewSidePatterns/ViewSidePatterns.css"; // Import the CSS for ViewSidePatterns
 import { getCardImageUrl, CARD_BACK_IMAGE } from "../../utils/cardImages";
 import { useKaibaNet } from "../../hooks/useKaibaNet";
 import { createRoom } from "../../utils/roomUtils";
@@ -620,6 +623,7 @@ const DeckDetailPage = () => {
                 <Tab value="analytics" label="Deck Analytics" />
                 <Tab value="notes" label="Notes" />
                 <Tab value="replays" label="Replays" />
+                <Tab value="sidePatterns" label="Side Patterns" /> {/* Add Side Patterns tab */}
               </StyledTabs>
 
               <TabContent>
@@ -873,7 +877,6 @@ const DeckDetailPage = () => {
                 )}
 
                 {/* Replays Section */}
-
                 <TabSection style={{ display: isReplaysTabVisible ? "block" : "none" }}>
                   <DeckReplaysTab
                     visible={isReplaysTabVisible}
@@ -881,6 +884,12 @@ const DeckDetailPage = () => {
                   />
                 </TabSection>
 
+                {/* Side Patterns Section */}
+                {activeTab === "sidePatterns" && (
+                  <TabSection>
+                    <ViewSidePatterns deck={deck} />
+                  </TabSection>
+                )}
               </TabContent>
             </Card.Content>
           </DeckContentCard>
