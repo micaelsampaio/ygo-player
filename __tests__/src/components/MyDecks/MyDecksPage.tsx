@@ -542,6 +542,7 @@ const MyDecksPage = () => {
   const getCoverCard = (deck: Deck) => {
     const deckId = deck.id || `deck_${deck.name}`;
 
+    // Check if deck has a manually set cover card ID
     if (deck.coverCardId) {
       const cardFromDeck = [
         ...deck.mainDeck,
@@ -553,6 +554,7 @@ const MyDecksPage = () => {
       }
     }
 
+    // Check if there's a cover card in local storage
     if (coverCards[deckId]) {
       const cardFromCoverCardsStore = [
         ...deck.mainDeck,
@@ -565,8 +567,13 @@ const MyDecksPage = () => {
     }
 
     const allCards = [...deck.mainDeck, ...deck.extraDeck];
-    if (allCards.length === 0) return null;
+    
+    // If deck is empty, return a special placeholder object
+    if (allCards.length === 0) {
+      return { isPlaceholder: true, id: 0, name: "Empty Deck" };
+    }
 
+    // Otherwise find a good card to use as cover
     const monsterCards = allCards.filter(
       (card) => card.type && card.type.toLowerCase().includes("monster")
     );
@@ -917,6 +924,22 @@ const MyDecksPage = () => {
                   <NewDeckText>New Deck</NewDeckText>
                 </NewDeckContent>
               </CardUI.Content>
+              
+              <DeckOptionsButton
+                onClick={(e) => {
+                  e.stopPropagation();
+                  // Position for the new deck options menu
+                  const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
+                  contextMenuRef.current = { 
+                    x: Math.min(rect.right + 10, window.innerWidth - 300),
+                    y: rect.top
+                  };
+                  setActiveDeckContextMenu("new_deck_options");
+                }}
+                title="New deck options"
+              >
+                ⋮
+              </DeckOptionsButton>
             </NewDeckCardWrapper>
           </UniformCard>
 
@@ -1014,7 +1037,7 @@ const MyDecksPage = () => {
                     <CardUI.Content>
                       <DeckInfoContainer>
                         <div className="deck-info-text">
-                          <DeckTitle className="ygo-deck-title">
+                          <DeckTitle className={`ygo-deck-title ${deck.mainDeck.length === 0 && deck.extraDeck.length === 0 ? 'empty-deck' : ''}`}>
                             {deck.name}
                           </DeckTitle>
                           {groupName && <GroupTag>{groupName}</GroupTag>}
@@ -1028,10 +1051,14 @@ const MyDecksPage = () => {
                           </DeckMeta>
                         </div>
 
-                        {coverCard && (
+                        {coverCard && (deck.mainDeck.length > 0 || deck.extraDeck.length > 0) && (
                           <DeckCoverContainer>
                             <DeckCoverCard
-                              src={getCardImageUrl(coverCard.id, "small")}
+                              src={
+                                coverCard.isPlaceholder
+                                  ? CARD_BACK_IMAGE
+                                  : getCardImageUrl(coverCard.id, "small")
+                              }
                               alt={coverCard.name}
                               onError={(e) => {
                                 const target = e.target as HTMLImageElement;
@@ -1053,6 +1080,17 @@ const MyDecksPage = () => {
                           </DeckCoverContainer>
                         )}
                       </DeckInfoContainer>
+
+                      {/* Add options button */}
+                      <DeckOptionsButton
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeckContextMenu(deck, e);
+                        }}
+                        title="Deck options"
+                      >
+                        ⋮
+                      </DeckOptionsButton>
 
                       <ButtonContainer>
                         <Button
@@ -1153,36 +1191,90 @@ const MyDecksPage = () => {
           >
             <DeckActions
               deck={
-                displayedDecks.find(
-                  (d) => (d.id || `deck_${d.name}`) === activeDeckContextMenu
-                )!
+                activeDeckContextMenu === "new_deck_options"
+                  ? {
+                      id: "new_deck_template",
+                      name: "New Deck",
+                      mainDeck: [],
+                      extraDeck: [],
+                      sideDeck: [],
+                    }
+                  : displayedDecks.find(
+                      (d) => (d.id || `deck_${d.name}`) === activeDeckContextMenu
+                    )!
               }
               onRenameDeck={(name) => {
+                if (activeDeckContextMenu === "new_deck_options") {
+                  const newDeckName = name;
+                  const newDeckId = `deck_${newDeckName}`;
+                  navigate(`/deckbuilder?name=${encodeURIComponent(newDeckName)}&id=${newDeckId}`);
+                  setActiveDeckContextMenu(null);
+                  return;
+                }
+                
                 const deck = displayedDecks.find(
                   (d) => (d.id || `deck_${d.name}`) === activeDeckContextMenu
                 )!;
                 handleRenameDeck(deck, name);
               }}
               onClearDeck={() => {
+                if (activeDeckContextMenu === "new_deck_options") {
+                  handleCreateNewDeck();
+                  setActiveDeckContextMenu(null);
+                  return;
+                }
+                
                 const deck = displayedDecks.find(
                   (d) => (d.id || `deck_${d.name}`) === activeDeckContextMenu
                 )!;
                 handleClearDeck(deck);
               }}
-              onImportDeck={handleImportDeck}
+              onImportDeck={(importedDeck) => {
+                if (activeDeckContextMenu === "new_deck_options") {
+                  navigate("/deck-converter");
+                  setActiveDeckContextMenu(null);
+                  return;
+                }
+                
+                handleImportDeck(importedDeck);
+              }}
               onCopyDeck={() => {
+                if (activeDeckContextMenu === "new_deck_options") {
+                  // Create a starter deck template
+                  const newDeckName = `Starter Deck ${allDecks.length + 1}`;
+                  const newDeckId = `deck_${newDeckName}`;
+                  navigate(`/deckbuilder?template=starter&name=${encodeURIComponent(newDeckName)}&id=${newDeckId}`);
+                  setActiveDeckContextMenu(null);
+                  return;
+                }
+                
                 const deck = displayedDecks.find(
                   (d) => (d.id || `deck_${d.name}`) === activeDeckContextMenu
                 )!;
                 handleCopyDeck(deck);
               }}
               onDeleteDeck={() => {
+                if (activeDeckContextMenu === "new_deck_options") {
+                  // Create a structure deck template
+                  const newDeckName = `Structure Deck ${allDecks.length + 1}`;
+                  const newDeckId = `deck_${newDeckName}`;
+                  navigate(`/deckbuilder?template=structure&name=${encodeURIComponent(newDeckName)}&id=${newDeckId}`);
+                  setActiveDeckContextMenu(null);
+                  return;
+                }
+                
                 const deck = displayedDecks.find(
                   (d) => (d.id || `deck_${d.name}`) === activeDeckContextMenu
                 )!;
                 deleteDeck(deck);
               }}
               onCreateCollection={() => {
+                if (activeDeckContextMenu === "new_deck_options") {
+                  // No equivalent action for new deck options
+                  setActiveDeckContextMenu(null);
+                  return;
+                }
+                
                 const deck = displayedDecks.find(
                   (d) => (d.id || `deck_${d.name}`) === activeDeckContextMenu
                 )!;
@@ -1191,11 +1283,42 @@ const MyDecksPage = () => {
               showDropdownImmediately={true}
               deckGroups={deckGroups}
               onMoveDeckToGroup={(groupId) => {
+                if (activeDeckContextMenu === "new_deck_options") {
+                  // Create a new deck in the selected group
+                  const newDeckName = `New Deck ${allDecks.length + 1}`;
+                  const newDeckId = `deck_${newDeckName}`;
+                  const newDeck = {
+                    id: newDeckId,
+                    name: newDeckName,
+                    mainDeck: [],
+                    extraDeck: [],
+                    sideDeck: [],
+                    createdAt: new Date().toISOString(),
+                    groupId: groupId,
+                  };
+                  localStorage.setItem(newDeckId, JSON.stringify(newDeck));
+                  navigate(`/deckbuilder?edit=${newDeckId}`);
+                  setActiveDeckContextMenu(null);
+                  return;
+                }
+                
                 const deck = displayedDecks.find(
                   (d) => (d.id || `deck_${d.name}`) === activeDeckContextMenu
                 )!;
                 handleMoveDeckToGroup(deck, groupId);
               }}
+              labels={
+                activeDeckContextMenu === "new_deck_options"
+                  ? {
+                      clearDeck: "Empty Deck",
+                      importDeck: "Import Deck",
+                      copyDeck: "Starter Deck Template",
+                      deleteDeck: "Structure Deck Template",
+                      renameDeck: "Custom Name...",
+                      moveToGroup: "Create In Group"
+                    }
+                  : undefined
+              }
             />
           </ContextMenuContainer>,
           document.body
@@ -1467,7 +1590,7 @@ const NewDeckContent = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: ${theme.spacing.md};
+  padding: ${theme.spacing.xl};
   height: 100%;
   min-height: 180px;
 `;
@@ -1594,6 +1717,8 @@ const DeckInfoContainer = styled.div`
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: ${theme.spacing.md};
+  flex-direction: row-reverse; /* Reverse the direction to put cover on the left */
+  gap: ${theme.spacing.md}; /* Add gap between image and text */
 `;
 
 const DeckCoverContainer = styled.div`
@@ -1636,10 +1761,35 @@ const ChangeCoverButton = styled.button`
   }
 `;
 
+const DeckOptionsButton = styled.button`
+  position: absolute;
+  top: ${theme.spacing.md};
+  right: ${theme.spacing.md};
+  background-color: ${theme.colors.background.light};
+  border: 1px solid ${theme.colors.border.light};
+  color: ${theme.colors.text.primary};
+  font-size: ${theme.typography.size.lg};
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: ${theme.borderRadius.full};
+  cursor: pointer;
+  z-index: 5;
+  transition: all ${theme.transitions.default};
+
+  &:hover {
+    background-color: ${theme.colors.background.dark};
+    color: ${theme.colors.primary.main};
+  }
+`;
+
 const DeckTitle = styled.h3`
   margin: 0 0 ${theme.spacing.sm} 0;
   color: ${theme.colors.text.primary};
   font-size: ${theme.typography.size.lg};
+  text-align: ${props => props.className?.includes('empty-deck') ? 'center' : 'left'};
 `;
 
 const DeckMeta = styled.div`
