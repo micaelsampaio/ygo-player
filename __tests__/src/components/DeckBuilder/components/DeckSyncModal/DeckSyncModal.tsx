@@ -163,19 +163,22 @@ const DeckSyncModal: React.FC<DeckSyncModalProps> = ({
       // Update decks with imported data
       if (imported.length > 0) {
         imported.forEach((deck) => {
-          // Add custom import suffix to avoid name collisions
+          // Add custom import suffix while preserving the original name
           const importedDeckName = deck.name.endsWith(" (Imported)")
             ? deck.name
             : deck.name + " (Imported)";
             
           const importedDeck = {
             ...deck,
-            id: `deck_${importedDeckName}`,
+            id: crypto.randomUUID(), // Generate proper UUID without 'deck_' prefix
             name: importedDeckName,
             importedAt: new Date().toISOString(),
             groupId: selectedDeckGroupId,
           };
-          updateDeck(importedDeck);
+          // Use the deck name for the storage key
+          const storageKey = `deck_${importedDeckName}`;
+          // Store with key based on name
+          localStorage.setItem(storageKey, JSON.stringify(importedDeck));
         });
       }
 
@@ -240,19 +243,22 @@ const DeckSyncModal: React.FC<DeckSyncModalProps> = ({
       // Import any new decks
       if (result.imported.length > 0) {
         result.imported.forEach((deck) => {
-          // Add custom import suffix to avoid name collisions
+          // Add custom import suffix while preserving the original name
           const importedDeckName = deck.name.endsWith(" (Imported)")
             ? deck.name
             : deck.name + " (Imported)";
             
           const importedDeck = {
             ...deck,
-            id: `deck_${importedDeckName}`,
+            id: crypto.randomUUID(), // Generate proper UUID without 'deck_' prefix
             name: importedDeckName,
             importedAt: new Date().toISOString(),
             groupId: selectedDeckGroupId,
           };
-          updateDeck(importedDeck);
+          // Use the deck name for the storage key
+          const storageKey = `deck_${importedDeckName}`;
+          // Store with key based on name
+          localStorage.setItem(storageKey, JSON.stringify(importedDeck));
         });
       }
 
