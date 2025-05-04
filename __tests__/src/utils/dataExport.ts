@@ -190,12 +190,15 @@ export const importAllData = async (file: File | Blob) => {
 /**
  * Import data from file or text input (YDKE URLs)
  */
-export async function importDeckFromYdke(ydkeUrl: string, deckName: string): Promise<boolean> {
+export async function importDeckFromYdke(
+  ydkeUrl: string,
+  deckName: string
+): Promise<boolean> {
   try {
     const deckData = ydkeToJson(ydkeUrl);
     const importedDeckData = await downloadDeck(deckData);
     const deckId = crypto.randomUUID();
-    
+
     localStorage.setItem(
       `deck_${deckId}`,
       JSON.stringify({

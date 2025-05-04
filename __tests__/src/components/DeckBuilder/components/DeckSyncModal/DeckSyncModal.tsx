@@ -170,7 +170,7 @@ const DeckSyncModal: React.FC<DeckSyncModalProps> = ({
 
           // Ensure the imported deck has a UUID
           const deckId = deck.id || crypto.randomUUID();
-          
+
           const importedDeck = {
             ...deck,
             id: deckId,
@@ -178,10 +178,10 @@ const DeckSyncModal: React.FC<DeckSyncModalProps> = ({
             importedAt: new Date().toISOString(),
             groupId: selectedDeckGroupId,
           };
-          
+
           // Use the proper deck ID for the storage key
           const storageKey = `deck_${deckId}`;
-          
+
           // Store with key based on ID
           localStorage.setItem(storageKey, JSON.stringify(importedDeck));
         });
@@ -255,7 +255,7 @@ const DeckSyncModal: React.FC<DeckSyncModalProps> = ({
 
           // Generate a unique ID for the deck
           const deckId = deck.id || crypto.randomUUID();
-          
+
           const importedDeck = {
             ...deck,
             id: deckId,
@@ -263,10 +263,10 @@ const DeckSyncModal: React.FC<DeckSyncModalProps> = ({
             importedAt: new Date().toISOString(),
             groupId: selectedDeckGroupId,
           };
-          
+
           // Use the consistent deck_${deckId} format for storage key
           const storageKey = `deck_${deckId}`;
-          
+
           // Store with key based on ID
           localStorage.setItem(storageKey, JSON.stringify(importedDeck));
         });

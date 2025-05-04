@@ -454,15 +454,15 @@ const MyDecksPage = () => {
     const deckId = crypto.randomUUID();
     // Create storage key with consistent deck_${deckId} format
     const storageKey = `deck_${deckId}`;
-    
+
     // Update the deck with proper ID
     const updatedDeck = {
       ...importedDeck,
       id: deckId,
       importedAt: new Date().toISOString(),
-      groupId: selectedDeckGroup?.id || "default"
+      groupId: selectedDeckGroup?.id || "default",
     };
-    
+
     localStorage.setItem(storageKey, JSON.stringify(updatedDeck));
     loadAllDecks();
     setActiveDeckContextMenu(null);
