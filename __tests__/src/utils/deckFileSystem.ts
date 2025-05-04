@@ -120,6 +120,12 @@ export const processFiles = async (
             if (!deck.name) {
               deck.name = fileName;
             }
+            
+            // Ensure the deck has a unique UUID
+            if (!deck.id) {
+              deck.id = crypto.randomUUID();
+            }
+            
             imported.push(deck);
           } else {
             errors.push(`Invalid deck format in ${file.name}`);
@@ -141,12 +147,16 @@ export const processFiles = async (
             const extraDeckArray = Array.isArray(deckData.extraDeck)
               ? deckData.extraDeck
               : [];
+            const sideDeckArray = Array.isArray(deckData.sideDeck)
+              ? deckData.sideDeck
+              : [];
 
             // Call downloadDeck with the correct parameters
             const deck = await downloadDeck(
               {
                 mainDeck: mainDeckArray,
                 extraDeck: extraDeckArray,
+                sideDeck: sideDeckArray
               },
               {
                 events: {
@@ -165,12 +175,17 @@ export const processFiles = async (
               }
             );
 
+            // Generate a unique ID for the imported deck
+            const deckId = crypto.randomUUID();
+
             // Create proper deck object
             const importedDeck = {
+              id: deckId,
               name: fileName,
               mainDeck: deck.mainDeck || [],
               extraDeck: deck.extraDeck || [],
-              sideDeck: [], // Initialize empty side deck
+              sideDeck: deck.sideDeck || [], 
+              importedAt: new Date().toISOString(),
             };
 
             imported.push(importedDeck);

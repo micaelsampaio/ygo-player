@@ -132,13 +132,17 @@ export const importAllData = async (file: File | Blob) => {
       try {
         const deckData = ydkeToJson(ydkeUrl as string);
         const importedDeckData = await downloadDeck(deckData);
+        const deckId = crypto.randomUUID();
 
         localStorage.setItem(
-          key,
+          `deck_${deckId}`,
           JSON.stringify({
+            id: deckId,
             name: key,
             mainDeck: importedDeckData.mainDeck || [],
             extraDeck: importedDeckData.extraDeck || [],
+            sideDeck: importedDeckData.sideDeck || [],
+            importedAt: new Date().toISOString(),
           })
         );
       } catch (err) {
@@ -182,3 +186,30 @@ export const importAllData = async (file: File | Blob) => {
     throw new Error("Failed to import data. Make sure the file is valid.");
   }
 };
+
+/**
+ * Import data from file or text input (YDKE URLs)
+ */
+export async function importDeckFromYdke(ydkeUrl: string, deckName: string): Promise<boolean> {
+  try {
+    const deckData = ydkeToJson(ydkeUrl);
+    const importedDeckData = await downloadDeck(deckData);
+    const deckId = crypto.randomUUID();
+    
+    localStorage.setItem(
+      `deck_${deckId}`,
+      JSON.stringify({
+        id: deckId,
+        name: deckName,
+        mainDeck: importedDeckData.mainDeck || [],
+        extraDeck: importedDeckData.extraDeck || [],
+        sideDeck: importedDeckData.sideDeck || [],
+        importedAt: new Date().toISOString(),
+      })
+    );
+    return true;
+  } catch (err) {
+    console.error(`Error importing deck ${deckName}:`, err);
+    return false;
+  }
+}

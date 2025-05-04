@@ -140,7 +140,7 @@ const DeckList: React.FC<DeckListProps> = ({
         `Are you sure you want to delete "${deck.name}"? This action cannot be undone.`
       )
     ) {
-      const storageKey = `deck_${deck.name}`;
+      const storageKey = deck.id ? `deck_${deck.id}` : `deck_${deck.name}`;
       localStorage.removeItem(storageKey);
       onDeleteDeck(deck);
     }

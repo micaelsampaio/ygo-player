@@ -102,7 +102,11 @@ export function useDeckStorage() {
     if (deck.storageKey) {
       return deck.storageKey;
     }
-    // Otherwise, use the deck name with the "deck_" prefix
+    // Use the deck ID as the primary identifier with the "deck_" prefix
+    if (deck.id) {
+      return `deck_${deck.id}`;
+    }
+    // Fallback to the name if no ID exists
     return `deck_${deck.name}`;
   };
 
@@ -242,8 +246,8 @@ export function useDeckStorage() {
       createdAt: new Date().toISOString(), // Store creation date
     };
 
-    // Save to localStorage using the name as the key
-    const storageKey = `deck_${name}`;
+    // Save to localStorage using the ID as the key
+    const storageKey = `deck_${newDeck.id}`;
     newDeck.storageKey = storageKey;
 
     try {
@@ -273,12 +277,12 @@ export function useDeckStorage() {
     }
 
     try {
-      // If name changed, we need to handle the storage key change
+      // If ID changed, we need to handle the storage key change
       const oldDeck = decks.find((deck) => deck.id === updatedDeck.id);
-      const oldStorageKey = oldDeck?.storageKey || `deck_${oldDeck?.name}`;
-      const newStorageKey = `deck_${updatedDeck.name}`;
+      const oldStorageKey = oldDeck?.storageKey || `deck_${oldDeck?.id}`;
+      const newStorageKey = `deck_${updatedDeck.id}`;
 
-      // If the name changed, remove the old entry
+      // If the ID changed, remove the old entry
       if (oldStorageKey !== newStorageKey) {
         localStorage.removeItem(oldStorageKey);
       }
@@ -389,11 +393,11 @@ export function useDeckStorage() {
     importedDeck.id = uuidv4();
 
     // Set the storage key
-    const storageKey = `deck_${importedDeck.name}`;
+    const storageKey = `deck_${importedDeck.id}`;
     importedDeck.storageKey = storageKey;
 
     try {
-      // Save to localStorage with name-based key
+      // Save to localStorage with ID-based key
       localStorage.setItem(storageKey, JSON.stringify(importedDeck));
 
       // Update decks list
@@ -438,8 +442,8 @@ export function useDeckStorage() {
       groupId: deckToCopy.groupId || undefined,
     };
 
-    // Generate storage key based on name
-    const storageKey = `deck_${finalName}`;
+    // Generate storage key based on ID
+    const storageKey = `deck_${newDeck.id}`;
     newDeck.storageKey = storageKey;
 
     // Save to localStorage and update state

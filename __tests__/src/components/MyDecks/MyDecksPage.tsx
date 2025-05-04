@@ -415,7 +415,7 @@ const MyDecksPage = () => {
 
   const handleCreateNewDeck = () => {
     const newDeckName = `New Deck ${allDecks.length + 1}`;
-    const newDeckId = `deck_${newDeckName}`;
+    const newDeckId = crypto.randomUUID();
 
     const newDeck = {
       id: newDeckId,
@@ -427,7 +427,7 @@ const MyDecksPage = () => {
       groupId: selectedDeckGroup?.id || "default",
     };
 
-    localStorage.setItem(newDeckId, JSON.stringify(newDeck));
+    localStorage.setItem(`deck_${newDeckId}`, JSON.stringify(newDeck));
     navigate(`/deckbuilder?edit=${newDeckId}`);
   };
 
@@ -452,11 +452,18 @@ const MyDecksPage = () => {
   const handleImportDeck = (importedDeck: Deck) => {
     // Generate a proper unique ID without 'deck_' prefix
     const deckId = crypto.randomUUID();
-    // Create storage key based on the name
-    const storageKey = `deck_${importedDeck.name}`;
-    importedDeck.id = deckId;
-    importedDeck.importedAt = new Date().toISOString();
-    localStorage.setItem(storageKey, JSON.stringify(importedDeck));
+    // Create storage key with consistent deck_${deckId} format
+    const storageKey = `deck_${deckId}`;
+    
+    // Update the deck with proper ID
+    const updatedDeck = {
+      ...importedDeck,
+      id: deckId,
+      importedAt: new Date().toISOString(),
+      groupId: selectedDeckGroup?.id || "default"
+    };
+    
+    localStorage.setItem(storageKey, JSON.stringify(updatedDeck));
     loadAllDecks();
     setActiveDeckContextMenu(null);
   };
@@ -1249,12 +1256,7 @@ const MyDecksPage = () => {
                 handleClearDeck(deck);
               }}
               onImportDeck={(importedDeck) => {
-                if (activeDeckContextMenu === "new_deck_options") {
-                  navigate("/deck-converter");
-                  setActiveDeckContextMenu(null);
-                  return;
-                }
-
+                // Always use the direct import functionality, regardless of context menu source
                 handleImportDeck(importedDeck);
               }}
               onCopyDeck={() => {

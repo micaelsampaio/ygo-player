@@ -167,17 +167,22 @@ const DeckSyncModal: React.FC<DeckSyncModalProps> = ({
           const importedDeckName = deck.name.endsWith(" (Imported)")
             ? deck.name
             : deck.name + " (Imported)";
-            
+
+          // Ensure the imported deck has a UUID
+          const deckId = deck.id || crypto.randomUUID();
+          
           const importedDeck = {
             ...deck,
-            id: crypto.randomUUID(), // Generate proper UUID without 'deck_' prefix
+            id: deckId,
             name: importedDeckName,
             importedAt: new Date().toISOString(),
             groupId: selectedDeckGroupId,
           };
-          // Use the deck name for the storage key
-          const storageKey = `deck_${importedDeckName}`;
-          // Store with key based on name
+          
+          // Use the proper deck ID for the storage key
+          const storageKey = `deck_${deckId}`;
+          
+          // Store with key based on ID
           localStorage.setItem(storageKey, JSON.stringify(importedDeck));
         });
       }
@@ -247,17 +252,22 @@ const DeckSyncModal: React.FC<DeckSyncModalProps> = ({
           const importedDeckName = deck.name.endsWith(" (Imported)")
             ? deck.name
             : deck.name + " (Imported)";
-            
+
+          // Generate a unique ID for the deck
+          const deckId = deck.id || crypto.randomUUID();
+          
           const importedDeck = {
             ...deck,
-            id: crypto.randomUUID(), // Generate proper UUID without 'deck_' prefix
+            id: deckId,
             name: importedDeckName,
             importedAt: new Date().toISOString(),
             groupId: selectedDeckGroupId,
           };
-          // Use the deck name for the storage key
-          const storageKey = `deck_${importedDeckName}`;
-          // Store with key based on name
+          
+          // Use the consistent deck_${deckId} format for storage key
+          const storageKey = `deck_${deckId}`;
+          
+          // Store with key based on ID
           localStorage.setItem(storageKey, JSON.stringify(importedDeck));
         });
       }
