@@ -4,16 +4,18 @@ import styled from "styled-components";
 import theme from "../../styles/theme";
 import AppLayout from "../Layout/AppLayout";
 import { Button, Card, Badge } from "../UI";
+import { StoreService } from "../../services/store-service";
 
 interface Replay {
-  id: string;
+  replayId: string;
   date: string;
   players: {
     name: string;
+    deckId: string;
     mainDeck: any[];
     extraDeck: any[];
   }[];
-  data?: any;
+  isLocal?: boolean;
 }
 
 const MyReplaysPage = () => {
@@ -22,67 +24,52 @@ const MyReplaysPage = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Load all replays from localStorage
-    const loadReplays = () => {
-      const allKeys = Object.keys(localStorage);
-      const replayKeys = allKeys.filter((key) => key.startsWith("replay_"));
+    // Load all replays using StoreService
+    const loadReplays = async () => {
+      try {
+        const replayList = await StoreService.getAllReplays();
 
-      const replayList: Replay[] = [];
+        // Sort by date (most recent first)
+        replayList.sort((a, b) => {
+          return (b.replayId || 0) - (a.replayId || 0);
+        });
 
-      for (const key of replayKeys) {
-        try {
-          const replayData = JSON.parse(localStorage.getItem(key) || "{}");
-
-          // Format date from replay key (replay_YYYY-MM-DD-HHMMSS)
-          const dateString = key.replace("replay_", "");
-          const formattedDate = new Date(dateString).toLocaleDateString(
-            undefined,
-            {
-              year: "numeric",
-              month: "short",
-              day: "numeric",
-              hour: "2-digit",
-              minute: "2-digit",
-            }
-          );
-
-          replayList.push({
-            id: key,
-            date: formattedDate || dateString,
-            players: replayData.players || [],
-            data: replayData,
-          });
-        } catch (error) {
-          console.error(`Error parsing replay ${key}:`, error);
-        }
+        setReplays(replayList);
+      } catch (error) {
+        console.error("Error loading replays:", error);
+        setReplays([]);
+      } finally {
+        setIsLoading(false);
       }
-
-      // Sort by date (most recent first)
-      replayList.sort((a, b) => {
-        return b.id.localeCompare(a.id);
-      });
-
-      setReplays(replayList);
-      setIsLoading(false);
     };
 
     loadReplays();
   }, []);
 
-  const deleteReplay = (replayId: string) => {
+  const deleteReplay = async (replay: Replay) => {
     if (confirm(`Are you sure you want to delete this replay?`)) {
-      localStorage.removeItem(replayId);
-      setReplays((prevReplays) => prevReplays.filter((r) => r.id !== replayId));
+      try {
+        const success = await StoreService.deleteReplay(replay);
+        if (success) {
+          setReplays((prevReplays) =>
+            prevReplays.filter((r) => r.replayId !== replay.replayId)
+          );
+        } else {
+          console.error("Failed to delete replay");
+        }
+      } catch (error) {
+        console.error("Error deleting replay:", error);
+      }
     }
   };
 
-  const watchReplay = (replayId: string) => {
-    localStorage.setItem("duel-data", localStorage.getItem(replayId) || "");
+  const watchReplay = (replay: Replay) => {
+    localStorage.setItem("duel-data", JSON.stringify(replay));
     navigate("/duel");
   };
 
   const createSpreadsheet = (replay: Replay) => {
-    localStorage.setItem("duel-data", JSON.stringify(replay.data));
+    localStorage.setItem("duel-data", JSON.stringify(replay));
     navigate("/spreadsheet");
   };
 
@@ -90,6 +77,18 @@ const MyReplaysPage = () => {
     if (!deck) return "Unknown Deck";
     if (deck.startsWith("deck_")) return deck.replace("deck_", "");
     return deck;
+  };
+
+  const formatDate = (timestamp: number | string) => {
+    if (!timestamp) return "Unknown Date";
+    const date = new Date(Number(timestamp));
+    return date.toLocaleDateString(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   };
 
   return (
@@ -120,14 +119,14 @@ const MyReplaysPage = () => {
         ) : (
           <ReplayList>
             {replays.map((replay) => (
-              <ReplayItem key={replay.id} elevation="low">
+              <ReplayItem key={replay.replayId} elevation="low">
                 <Card.Content>
                   <ReplayContentWrapper>
                     <ReplayInfo>
                       <ReplayHeader>
                         <ReplayTitle>Duel Replay</ReplayTitle>
                         <Badge variant="info" size="sm">
-                          {replay.date}
+                          {formatDate(replay.replayId || replay.date)}
                         </Badge>
                       </ReplayHeader>
 
@@ -161,7 +160,7 @@ const MyReplaysPage = () => {
                     <ReplayActions>
                       <Button
                         variant="primary"
-                        onClick={() => watchReplay(replay.id)}
+                        onClick={() => watchReplay(replay)}
                       >
                         Watch Replay
                       </Button>
@@ -173,7 +172,7 @@ const MyReplaysPage = () => {
                       </Button>
                       <Button
                         variant="danger"
-                        onClick={() => deleteReplay(replay.id)}
+                        onClick={() => deleteReplay(replay)}
                       >
                         Delete
                       </Button>

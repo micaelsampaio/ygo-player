@@ -27,7 +27,7 @@ export class StoreService {
         if (!data) return [];
 
         const replaysData = JSON.parse(data);
-        replaysData.replays.forEach((replay: any) => replay.isLocal = true)
+        replaysData.replays.forEach((replay: any) => (replay.isLocal = true));
 
         return replaysData.replays;
       } catch (error) {
@@ -44,11 +44,11 @@ export class StoreService {
         const allReplaysData = getLocalStorageDataFromPrefix("replays_");
         const replays: any[] = [];
 
-        allReplaysData.forEach(replayData => {
+        allReplaysData.forEach((replayData) => {
           replays.push(...replayData.replays);
         });
 
-        replays.forEach(replay => replay.isLocal = true);
+        replays.forEach((replay) => (replay.isLocal = true));
 
         return replays;
       } catch (error) {
@@ -76,13 +76,33 @@ export class StoreService {
       } else {
         replaysInStore = {
           deckId: deckId,
-          replays: []
-        }
+          replays: [],
+        };
       }
 
       replaysInStore.replays.push(replayData);
 
-      window.localStorage.setItem(replayDeckKey, JSON.stringify(replaysInStore));
+      window.localStorage.setItem(
+        replayDeckKey,
+        JSON.stringify(replaysInStore)
+      );
+    }
+  }
+
+  static async deleteReplay(replay: any) {
+    if (isUserLoggedIn()) {
+      throw new Error("not implemented");
+    } else {
+      try {
+        if (!replay || !replay.replayId) return false;
+        
+        // Simply remove the replay's key from localStorage
+        window.localStorage.removeItem(`replay_${replay.replayId}`);
+        return true;
+      } catch (error) {
+        console.error("Error deleting replay:", error);
+        return false;
+      }
     }
   }
 
@@ -95,30 +115,37 @@ export class StoreService {
   }
 }
 
-function getLocalStorageKeysFromPrefix(prefix: string, invalidPrefixes?: string[] | undefined) {
+function getLocalStorageKeysFromPrefix(
+  prefix: string,
+  invalidPrefixes?: string[] | undefined
+) {
   const allKeys = Object.keys(localStorage);
   const keys = allKeys.filter((key) => {
-    if (invalidPrefixes && invalidPrefixes.some(p => key.startsWith(p))) return false;
+    if (invalidPrefixes && invalidPrefixes.some((p) => key.startsWith(p)))
+      return false;
     return key.startsWith(prefix);
   });
   return keys;
 }
 
-function getLocalStorageDataFromPrefix(prefix: string, args: { invalidPrefixes?: string[], json?: boolean } = {}) {
-
+function getLocalStorageDataFromPrefix(
+  prefix: string,
+  args: { invalidPrefixes?: string[]; json?: boolean } = {}
+) {
   const { json = true } = args;
 
   const keys = getLocalStorageKeysFromPrefix(prefix, args.invalidPrefixes);
 
-
   if (json) {
     try {
-      const result = keys.map(key => JSON.parse(window.localStorage.getItem(key)!));
+      const result = keys.map((key) =>
+        JSON.parse(window.localStorage.getItem(key)!)
+      );
       return result;
     } catch (error) {
       return [];
     }
   }
-  const result = keys.map(data => window.localStorage.getItem(data)!);
+  const result = keys.map((data) => window.localStorage.getItem(data)!);
   return result;
 }
