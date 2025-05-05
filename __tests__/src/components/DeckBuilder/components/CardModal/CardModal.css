@@ -147,17 +147,35 @@
   font-size: 1.4rem;
   margin: 0 0 5px 0;
   color: #333;
+  /* Ensuring there's no flex-grow causing space issues */
+  flex-grow: 0;
+  height: auto;
+  line-height: 1.2;
+}
+
+.card-modal .card-name {
+  font-size: 1.4rem;
+  margin: 0 0 5px 0;
+  color: #333;
+  /* Explicitly override any other styles that might be causing the extra space */
+  flex-grow: 0 !important;
+  height: auto !important;
+  line-height: 1.2 !important;
+  /* Reset these properties that might be coming from elsewhere */
+  white-space: normal !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
 }
 
 .card-type {
   font-size: 0.9rem;
   color: #666;
-  margin-bottom: 15px;
+  margin-bottom: 5px; /* Reduced from 15px to 5px to decrease the gap */
 }
 
 .card-level,
 .card-stats {
-  margin-bottom: 10px;
+  margin-bottom: 5px; /* Reduced from 10px to 5px to decrease the gap */
   font-size: 0.95rem;
 }
 
@@ -222,6 +240,66 @@
 
 .add-to-collection-button:hover {
   background-color: #388e3c;
+}
+
+/* Add styles for the group dropdown */
+.add-to-group-container {
+  flex: 1;
+}
+
+.group-select {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 6px;
+  border: 2px solid #4caf50;
+  background-color: white;
+  color: #333;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%234CAF50%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px top 50%;
+  background-size: 12px auto;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.group-select:hover {
+  border-color: #45a049;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
+}
+
+.group-select:focus {
+  outline: none;
+  border-color: #388e3c;
+  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.3), 0 3px 8px rgba(0, 0, 0, 0.1);
+}
+
+.group-select option {
+  padding: 10px;
+  font-weight: 500;
+}
+
+.add-to-group-button {
+  padding: 12px 15px;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.3s ease;
+  flex: 1;
+  background-color: #4caf50;
+  width: 100%;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.add-to-group-button:hover {
+  background-color: #45a049;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
 }
 
 .keyword-summon {

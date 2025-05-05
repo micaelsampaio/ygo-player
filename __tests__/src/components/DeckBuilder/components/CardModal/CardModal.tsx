@@ -1,9 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card } from "../../types";
 import "./CardModal.css";
 import { getCardImageUrl, CARD_BACK_IMAGE } from "../../../../utils/cardImages";
 import { useNavigate } from "react-router-dom";
 import { ExternalLink } from "lucide-react";
+
+interface Group {
+  id: string;
+  name: string;
+}
 
 interface CardModalProps {
   card: Card;
@@ -11,7 +16,8 @@ interface CardModalProps {
   onClose: () => void;
   onAddCard?: (card: Card) => void;
   onToggleFavorite?: (card: Card) => void;
-  onAddToCollection?: (card: Card) => void;
+  onAddToCollection?: (card: Card, groupId?: string) => void;
+  groups?: Group[];
 }
 
 const CardModal: React.FC<CardModalProps> = ({
@@ -21,6 +27,7 @@ const CardModal: React.FC<CardModalProps> = ({
   onAddCard,
   onToggleFavorite,
   onAddToCollection,
+  groups,
 }) => {
   const [hasImageFallback, setHasImageFallback] = useState(false);
   const navigate = useNavigate();
@@ -225,12 +232,31 @@ const CardModal: React.FC<CardModalProps> = ({
               )}
 
               {onAddToCollection && (
-                <button
-                  className="add-to-collection-button"
-                  onClick={() => onAddToCollection(card)}
-                >
-                  Add to Collection
-                </button>
+                <div className="add-to-group-container">
+                  {groups && groups.length > 0 ? (
+                    <select
+                      className="group-select"
+                      onChange={(e) => onAddToCollection(card, e.target.value)}
+                      defaultValue=""
+                    >
+                      <option value="" disabled>
+                        Select a Group
+                      </option>
+                      {groups.map((group) => (
+                        <option key={group.id} value={group.id}>
+                          {group.name}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <button
+                      className="add-to-group-button"
+                      onClick={() => onAddToCollection(card)}
+                    >
+                      Add to Collection
+                    </button>
+                  )}
+                </div>
               )}
             </div>
           </div>

@@ -260,86 +260,87 @@
   gap: 10px;
 }
 
+/* Collection card and button positioning */
 .collection-card {
   position: relative;
   border-radius: 5px;
-  overflow: hidden;
-  transition: transform 0.2s;
+  overflow: visible;
+  margin-top: 10px;
+  margin-bottom: 10px;
 }
 
-.collection-card:hover {
-  transform: scale(1.05);
-  z-index: 1;
-}
-
+/* Only transform the image, not the buttons */
 .collection-card img {
   width: 100%;
   height: auto;
   display: block;
   border-radius: 5px;
   cursor: pointer;
+  transition: transform 0.2s;
 }
 
-/* Card action buttons container */
-.card-action-buttons {
-  position: absolute;
-  top: 3px;
-  right: 3px;
-  display: flex;
-  gap: 3px;
+.collection-card:hover img {
+  transform: scale(1.05);
 }
 
 /* Add card button styles */
 .add-card-btn {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: rgba(76, 175, 80, 0.8);
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(
+    -50%
+  ) !important; /* Force this transform with !important */
+  min-width: 1em !important;
+  height: 10px !important;
+  border-radius: 50px;
+  background: #4caf50;
   color: white;
-  border: none;
+  border: 1px solid white;
   font-size: 14px;
-  line-height: 1;
+  font-weight: bold;
+  line-height: 0;
   padding: 0;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  opacity: 0;
-  transition: opacity 0.2s;
+  opacity: 1;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  z-index: 10;
 }
 
 .add-card-btn:hover {
-  background: rgba(76, 175, 80, 1);
+  background: #388e3c;
 }
 
+/* Remove button styles */
 .remove-card-btn {
-  position: relative;
-  top: auto;
-  right: auto;
+  position: absolute;
+  top: -10px;
+  right: -10px;
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: rgba(255, 0, 0, 0.7);
+  background: #f44336;
   color: white;
-  border: none;
-  font-size: 14px;
-  line-height: 1;
+  border: 1px solid white;
+  font-size: 16px;
+  font-weight: bold;
+  line-height: 0;
   padding: 0;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  opacity: 0;
-  transition: opacity 0.2s;
-}
-
-.collection-card:hover .add-card-btn,
-.collection-card:hover .remove-card-btn {
   opacity: 1;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  z-index: 10;
+  transform: none !important; /* Force no transform with !important */
 }
 
 .remove-card-btn:hover {
-  background: rgba(255, 0, 0, 1);
+  background: #d32f2f;
 }
 
 /* Card Groups Context Menu */

@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { CardGroup, Card } from "../../types";
 import { useNavigate } from "react-router-dom";
 import "./CardGroups.css";
+import { getCardImageUrl, CARD_BACK_IMAGE } from "../../../../utils/cardImages";
 
 interface CardGroupsProps {
   cardGroups: CardGroup[];
@@ -77,9 +78,10 @@ const CardGroups: React.FC<CardGroupsProps> = ({
     const dragElem = document.createElement("div");
     dragElem.style.width = "60px";
     dragElem.style.height = "88px";
-    dragElem.style.backgroundImage = `url(${
-      card.card_images?.[0]?.image_url_small || ""
-    })`;
+    dragElem.style.backgroundImage = `url(${getCardImageUrl(
+      card.id,
+      "small"
+    )})`;
     dragElem.style.backgroundSize = "contain";
     dragElem.style.backgroundRepeat = "no-repeat";
     dragElem.style.position = "absolute";
@@ -246,35 +248,34 @@ const CardGroups: React.FC<CardGroupsProps> = ({
                             onDragStart={(e) => handleDragStart(e, card)}
                           >
                             <img
-                              src={card.card_images[0]?.image_url_small || ""}
+                              src={getCardImageUrl(card.id, "small")}
                               alt={card.name}
                               onClick={() => onCardSelect(card)}
                               onError={(e) => {
                                 (e.target as HTMLImageElement).src =
-                                  "/card-images/card-back.jpg";
+                                  CARD_BACK_IMAGE;
                               }}
                             />
-                            <div className="card-action-buttons">
-                              <button
-                                className="add-card-btn"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  onAddCardToDeck(card);
-                                }}
-                                title="Add to deck"
-                              >
-                                +
-                              </button>
-                              <button
-                                className="remove-card-btn"
-                                onClick={() =>
-                                  handleRemoveCard(group.id, card.id)
-                                }
-                                title="Remove from group"
-                              >
-                                ×
-                              </button>
-                            </div>
+                            {/* Replace the card action buttons container with individual buttons */}
+                            <button
+                              className="add-card-btn"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onAddCardToDeck(card);
+                              }}
+                              title="Add to deck"
+                            >
+                              +
+                            </button>
+                            <button
+                              className="remove-card-btn"
+                              onClick={() =>
+                                handleRemoveCard(group.id, card.id)
+                              }
+                              title="Remove from group"
+                            >
+                              ×
+                            </button>
                           </div>
                         ))}
                       </div>

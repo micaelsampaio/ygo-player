@@ -39,7 +39,9 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [deckAnalytics, setDeckAnalytics] = useState<any>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [activeTab, setActiveTab] = useState<"editor" | "notes" | "sidePatterns">("editor");
+  const [activeTab, setActiveTab] = useState<
+    "editor" | "notes" | "sidePatterns"
+  >("editor");
   const [targetDeck, setTargetDeck] = useState<"main" | "side">("main");
   const [analyticsCalculated, setAnalyticsCalculated] = useState(false);
   const [useEnhancedAnalysis, setUseEnhancedAnalysis] = useState(false); // Set to false by default
@@ -468,8 +470,12 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
     }
   };
 
-  const handleAddCardToCollection = (card: Card) => {
-    if (selectedCardGroup) {
+  const handleAddCardToCollection = (card: Card, groupId?: string) => {
+    if (groupId) {
+      // If a group ID is provided from the dropdown selection, use it directly
+      addCardToGroup(groupId, card);
+    } else if (selectedCardGroup) {
+      // If no group ID is provided but a group is selected in the UI, use that
       addCardToGroup(selectedCardGroup.id, card);
     } else {
       // If no collection is selected, offer to create one
@@ -1085,7 +1091,10 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
               ) : activeTab === "notes" ? (
                 <DeckNotes deck={selectedDeck} updateDeck={updateDeck} />
               ) : (
-                <SidePatternsTool deck={selectedDeck} onUpdateDeck={updateDeck} />
+                <SidePatternsTool
+                  deck={selectedDeck}
+                  onUpdateDeck={updateDeck}
+                />
               )}
             </div>
           </div>
@@ -1153,6 +1162,7 @@ const DeckBuilder: React.FC<DeckBuilderProps> = ({ initialDecks = [] }) => {
             onAddCard={selectedDeck ? handleAddCard : undefined}
             onToggleFavorite={handleToggleFavorite}
             onAddToCollection={handleAddCardToCollection}
+            groups={cardGroups}
           />
         )}
 
