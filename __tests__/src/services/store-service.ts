@@ -16,14 +16,40 @@ export class StoreService {
     }
   }
 
-  static async loadReplaysFromDeckId(deckId: string, signal?: any) {
+  static async getReplaysFromDeckId(deckId: string, signal?: any) {
     if (isUserLoggedIn()) {
       return APIService.loadReplaysFromDeckId(deckId, signal);
     } else {
       try {
-        const replays = getLocalStorageDataFromPrefix(`deckreplay_${deckId}_`);
-        console.log("REPLAYS ", replays);
+        const replayDeckKey = `replays_${deckId}`;
+        const data = window.localStorage.getItem(replayDeckKey);
+
+        if (!data) return [];
+
+        const replaysData = JSON.parse(data);
+        replaysData.replays.forEach((replay: any) => replay.isLocal = true)
+
+        return replaysData.replays;
+      } catch (error) {
+        return [];
+      }
+    }
+  }
+
+  static async getAllReplays() {
+    if (isUserLoggedIn()) {
+      throw new Error("not implemented");
+    } else {
+      try {
+        const allReplaysData = getLocalStorageDataFromPrefix("replays_");
+        const replays: any[] = [];
+
+        allReplaysData.forEach(replayData => {
+          replays.push(...replayData.replays);
+        });
+
         replays.forEach(replay => replay.isLocal = true);
+
         return replays;
       } catch (error) {
         return [];
@@ -38,9 +64,25 @@ export class StoreService {
       const deckId = replayData.players[0].deckId;
       const replayId = replayData.replayId ?? Date.now();
       replayData.replayId = replayId;
-      if (deckId) {
-        window.localStorage.setItem(`deckreplay_${deckId}_${replayId}`, JSON.stringify(replayData));
+
+      if (!deckId) return;
+
+      const replayDeckKey = `replays_${deckId}`;
+
+      const currentDeckReplaysRaw = window.localStorage.getItem(replayDeckKey);
+      let replaysInStore;
+      if (currentDeckReplaysRaw) {
+        replaysInStore = JSON.parse(currentDeckReplaysRaw);
+      } else {
+        replaysInStore = {
+          deckId: deckId,
+          replays: []
+        }
       }
+
+      replaysInStore.replays.push(replayData);
+
+      window.localStorage.setItem(replayDeckKey, JSON.stringify(replaysInStore));
     }
   }
 
@@ -68,7 +110,6 @@ function getLocalStorageDataFromPrefix(prefix: string, args: { invalidPrefixes?:
 
   const keys = getLocalStorageKeysFromPrefix(prefix, args.invalidPrefixes);
 
-  console.log("KEYS: ", keys);
 
   if (json) {
     try {
@@ -81,3 +122,5 @@ function getLocalStorageDataFromPrefix(prefix: string, args: { invalidPrefixes?:
   const result = keys.map(data => window.localStorage.getItem(data)!);
   return result;
 }
+
+(window as any).store = StoreService;
