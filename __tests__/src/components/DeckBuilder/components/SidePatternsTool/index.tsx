@@ -63,8 +63,8 @@ const SidePatternsTool: React.FC<SidePatternsToolProps> = ({
       setPatternName(selectedPattern.name);
       setMatchup(selectedPattern.matchup);
       setDescription(selectedPattern.description || "");
-      setCardsToRemove([...selectedPattern.cardsToRemove]);
-      setCardsToAdd([...selectedPattern.cardsToAdd]);
+      setCardsToRemove(selectedPattern.cardsToRemove || []);
+      setCardsToAdd(selectedPattern.cardsToAdd || []);
     }
   }, [selectedPattern, formMode]);
 
@@ -144,6 +144,15 @@ const SidePatternsTool: React.FC<SidePatternsToolProps> = ({
     });
 
     return Array.from(countMap.values());
+  };
+
+  // Format date for display
+  const formatDate = (timestamp: number): string => {
+    return new Date(timestamp).toLocaleDateString(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
   };
 
   // New handlers for card count adjustments
@@ -320,12 +329,14 @@ const SidePatternsTool: React.FC<SidePatternsToolProps> = ({
         deck.sideDeck || []
       );
 
-      // Create updated deck object
+      // Create updated deck object, preserving the sidePatterns property
       const updatedDeck = {
         ...deck,
         mainDeck: result.mainDeck,
         extraDeck: result.extraDeck,
         sideDeck: result.sideDeck,
+        // Ensure side patterns are preserved
+        sidePatterns: sidePatterns,
       };
 
       // Update the deck in the parent component
@@ -375,7 +386,10 @@ const SidePatternsTool: React.FC<SidePatternsToolProps> = ({
 
   if (isLoading) {
     return (
-      <div className="side-patterns-loading">Loading side patterns...</div>
+      <div className="side-patterns-loading">
+        <div className="loading-spinner"></div>
+        Loading side patterns...
+      </div>
     );
   }
 
@@ -675,15 +689,11 @@ const SidePatternsTool: React.FC<SidePatternsToolProps> = ({
               <div className="pattern-info">
                 <div className="info-row">
                   <div className="info-label">Created:</div>
-                  <div>
-                    {new Date(selectedPattern.createdAt).toLocaleDateString()}
-                  </div>
+                  <div>{formatDate(selectedPattern.createdAt)}</div>
                 </div>
                 <div className="info-row">
                   <div className="info-label">Last updated:</div>
-                  <div>
-                    {new Date(selectedPattern.updatedAt).toLocaleDateString()}
-                  </div>
+                  <div>{formatDate(selectedPattern.updatedAt)}</div>
                 </div>
                 <div className="info-row">
                   <div className="info-label">Cards swapped:</div>

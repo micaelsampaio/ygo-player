@@ -25,7 +25,10 @@ const ViewSidePatterns: React.FC<ViewSidePatternsProps> = ({ deck }) => {
 
   if (isLoading) {
     return (
-      <div className="view-side-patterns-loading">Loading side patterns...</div>
+      <div className="view-side-patterns-loading">
+        <div className="loading-spinner"></div>
+        Loading side patterns...
+      </div>
     );
   }
 
@@ -45,6 +48,15 @@ const ViewSidePatterns: React.FC<ViewSidePatternsProps> = ({ deck }) => {
 
     // Old format, just count the array length
     return cards.length;
+  };
+
+  // Format date for display
+  const formatDate = (timestamp: number): string => {
+    return new Date(timestamp).toLocaleDateString(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
   };
 
   return (
@@ -76,6 +88,10 @@ const ViewSidePatterns: React.FC<ViewSidePatternsProps> = ({ deck }) => {
                 >
                   <div className="pattern-name">{pattern.name}</div>
                   <div className="pattern-matchup">vs. {pattern.matchup}</div>
+                  <div className="pattern-cards-count">
+                    {getTotalCardCount(pattern.cardsIn || pattern.cardsToAdd)}{" "}
+                    cards
+                  </div>
                 </div>
               ))}
             </div>
@@ -90,6 +106,15 @@ const ViewSidePatterns: React.FC<ViewSidePatternsProps> = ({ deck }) => {
                 </div>
               </div>
 
+              <div className="pattern-meta">
+                <div className="pattern-created">
+                  <span>Created:</span> {formatDate(selectedPattern.createdAt)}
+                </div>
+                <div className="pattern-updated">
+                  <span>Updated:</span> {formatDate(selectedPattern.updatedAt)}
+                </div>
+              </div>
+
               {selectedPattern.description && (
                 <div className="pattern-description">
                   <p>{selectedPattern.description}</p>
@@ -98,12 +123,12 @@ const ViewSidePatterns: React.FC<ViewSidePatternsProps> = ({ deck }) => {
 
               <div className="side-cards-container">
                 <div className="side-cards-section">
-                  <h4>
-                    Side Out (
-                    {getTotalCardCount(
+                  <h4
+                    data-count={getTotalCardCount(
                       selectedPattern.cardsOut || selectedPattern.cardsToRemove
                     )}
-                    )
+                  >
+                    Side Out
                   </h4>
                   <div className="cards-grid">
                     {selectedPattern.cardsOut &&
@@ -114,6 +139,7 @@ const ViewSidePatterns: React.FC<ViewSidePatternsProps> = ({ deck }) => {
                             src={`https://images.ygoprodeck.com/images/cards_small/${card.id}.jpg`}
                             alt={card.name}
                             title={card.name}
+                            loading="lazy"
                           />
                           {card.count > 1 && (
                             <div className="card-count-badge">
@@ -142,6 +168,7 @@ const ViewSidePatterns: React.FC<ViewSidePatternsProps> = ({ deck }) => {
                               src={`https://images.ygoprodeck.com/images/cards_small/${cardId}.jpg`}
                               alt={card?.name || `Card #${cardId}`}
                               title={card?.name || `Card #${cardId}`}
+                              loading="lazy"
                             />
                             {count > 1 && (
                               <div className="card-count-badge">{count}x</div>
@@ -156,12 +183,12 @@ const ViewSidePatterns: React.FC<ViewSidePatternsProps> = ({ deck }) => {
                 </div>
 
                 <div className="side-cards-section">
-                  <h4>
-                    Side In (
-                    {getTotalCardCount(
+                  <h4
+                    data-count={getTotalCardCount(
                       selectedPattern.cardsIn || selectedPattern.cardsToAdd
                     )}
-                    )
+                  >
+                    Side In
                   </h4>
                   <div className="cards-grid">
                     {selectedPattern.cardsIn &&
@@ -172,6 +199,7 @@ const ViewSidePatterns: React.FC<ViewSidePatternsProps> = ({ deck }) => {
                             src={`https://images.ygoprodeck.com/images/cards_small/${card.id}.jpg`}
                             alt={card.name}
                             title={card.name}
+                            loading="lazy"
                           />
                           {card.count > 1 && (
                             <div className="card-count-badge">
@@ -200,6 +228,7 @@ const ViewSidePatterns: React.FC<ViewSidePatternsProps> = ({ deck }) => {
                               src={`https://images.ygoprodeck.com/images/cards_small/${cardId}.jpg`}
                               alt={card?.name || `Card #${cardId}`}
                               title={card?.name || `Card #${cardId}`}
+                              loading="lazy"
                             />
                             {count > 1 && (
                               <div className="card-count-badge">{count}x</div>

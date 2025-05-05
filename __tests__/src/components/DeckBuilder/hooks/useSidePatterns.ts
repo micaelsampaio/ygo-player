@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
-import { v4 as uuidv4 } from "uuid";
 import { SidingPattern, Card, Deck, CardWithCount } from "../types";
 
-// Local storage key format for side patterns
-// Will be deprecated in favor of storing inside deck object
-const getSidePatternKey = (deckId: string) => `ygo_side_patterns_${deckId}`;
+// Adding uuid function if we don't have the library
+const generateUniqueId = () => {
+  return (
+    "pattern-" + Date.now() + "-" + Math.random().toString(36).substr(2, 9)
+  );
+};
 
 // Helper function to convert array of cards to CardWithCount array
 const convertToCardWithCount = (cards: Card[]): CardWithCount[] => {
@@ -52,7 +54,7 @@ export const useSidePatterns = (deckId?: string) => {
   );
   const [isLoading, setIsLoading] = useState(true);
 
-  // Load side patterns from local storage
+  // Load side patterns from deck object in local storage
   useEffect(() => {
     if (!deckId) {
       setSidePatterns([]);
@@ -63,89 +65,87 @@ export const useSidePatterns = (deckId?: string) => {
 
     try {
       setIsLoading(true);
-      // First try from the deck object (new format)
+
+      // Get the deck data from localStorage - try both with and without prefix
       let deck: Deck | null = null;
+      let migratedPatterns: SidingPattern[] = [];
+
+      // First try with the key as provided
+      const directKey = deckId;
+      // Then try with deck_ prefix if not already present
+      const prefixedKey = deckId.startsWith("deck_")
+        ? deckId
+        : `deck_${deckId}`;
+
       try {
-        const deckData = localStorage.getItem(deckId);
+        let deckData = localStorage.getItem(directKey);
+
+        // If not found with direct key, try with prefixed key
+        if (!deckData && directKey !== prefixedKey) {
+          deckData = localStorage.getItem(prefixedKey);
+          console.log(
+            "Tried alternate key format for loading side patterns:",
+            prefixedKey
+          );
+        }
+
         if (deckData) {
           deck = JSON.parse(deckData);
+          console.log(
+            "Found deck for side patterns in localStorage:",
+            deck.name
+          );
+
+          // Check if patterns are already in deck object
           if (deck.sidePatterns) {
             // New format - patterns stored in deck object
-            const migratedPatterns = deck.sidePatterns.map(migratePattern);
-            setSidePatterns(migratedPatterns);
-
-            if (migratedPatterns.length > 0) {
-              setSelectedPattern(migratedPatterns[0]);
-            } else {
-              setSelectedPattern(null);
-            }
-            setIsLoading(false);
-            return;
+            migratedPatterns = deck.sidePatterns.map(migratePattern);
+            console.log(
+              `Loaded ${migratedPatterns.length} side patterns from deck`
+            );
+          } else {
+            // No patterns found anywhere
+            migratedPatterns = [];
+            console.log("No side patterns found in deck");
           }
+
+          // Update state with the patterns
+          setSidePatterns(migratedPatterns);
+
+          // Select the first pattern if available
+          if (migratedPatterns.length > 0) {
+            setSelectedPattern(migratedPatterns[0]);
+          } else {
+            setSelectedPattern(null);
+          }
+        } else {
+          // No deck found with either key format
+          console.error(
+            `Deck not found in localStorage with either key: ${directKey} or ${prefixedKey}`
+          );
+          setSidePatterns([]);
+          setSelectedPattern(null);
         }
       } catch (error) {
-        console.error("Error loading side patterns from deck:", error);
-      }
-
-      // Fall back to old format if not found in deck object
-      const storedPatterns = localStorage.getItem(getSidePatternKey(deckId));
-      if (storedPatterns) {
-        const parsedPatterns = JSON.parse(storedPatterns) as SidingPattern[];
-
-        // Migrate patterns to new format if needed
-        const migratedPatterns = parsedPatterns.map(migratePattern);
-
-        setSidePatterns(migratedPatterns);
-
-        // Select the first pattern if available
-        if (migratedPatterns.length > 0) {
-          setSelectedPattern(migratedPatterns[0]);
-        } else {
-          setSelectedPattern(null); // Ensure null if no patterns
-        }
-
-        // If we have deck and patterns, save to new format
-        if (deck && migratedPatterns.length > 0) {
-          try {
-            const updatedDeck = {
-              ...deck,
-              sidePatterns: migratedPatterns,
-            };
-            localStorage.setItem(deckId, JSON.stringify(updatedDeck));
-            // Remove old format storage
-            localStorage.removeItem(getSidePatternKey(deckId));
-            console.log("Migrated side patterns to deck object");
-          } catch (error) {
-            console.error(
-              "Error migrating side patterns to deck object:",
-              error
-            );
-          }
-        }
-      } else {
-        // Initialize with empty array if no patterns found
+        console.error("Error loading side patterns:", error);
         setSidePatterns([]);
         setSelectedPattern(null);
       }
-    } catch (error) {
-      console.error("Error loading side patterns:", error);
-      // Initialize with empty state on error
-      setSidePatterns([]);
-      setSelectedPattern(null);
     } finally {
       setIsLoading(false);
     }
   }, [deckId]);
 
-  // Save patterns to local storage - now saves in the deck object
+  // Save patterns to deck object in local storage
   const savePatterns = (patterns: SidingPattern[]) => {
     if (!deckId) return;
 
     try {
-      console.log("Saving patterns:", patterns);
+      // Get the storage key - ensure we use deck_prefix if it's not already there
+      const storageKey = deckId.startsWith("deck_") ? deckId : `deck_${deckId}`;
 
       // Get the deck from localStorage
-      const deckData = localStorage.getItem(deckId);
+      const deckData = localStorage.getItem(storageKey);
       if (deckData) {
         const deck = JSON.parse(deckData);
         const updatedDeck = {
@@ -154,19 +154,11 @@ export const useSidePatterns = (deckId?: string) => {
         };
 
         // Save back to localStorage
-        localStorage.setItem(deckId, JSON.stringify(updatedDeck));
-        console.log("Saved side patterns to deck object");
-
-        // Also save to old format for backward compatibility
-        localStorage.setItem(
-          getSidePatternKey(deckId),
-          JSON.stringify(patterns)
-        );
+        localStorage.setItem(storageKey, JSON.stringify(updatedDeck));
+        console.log("Saved side patterns to deck object:", storageKey);
       } else {
-        // Fall back to old method if deck not found
-        localStorage.setItem(
-          getSidePatternKey(deckId),
-          JSON.stringify(patterns)
+        console.error(
+          `Cannot save side patterns: Deck not found in localStorage at key ${storageKey}`
         );
       }
     } catch (error) {
@@ -180,7 +172,7 @@ export const useSidePatterns = (deckId?: string) => {
 
     // Ensure the pattern has required fields and convert to new format
     const newPattern: SidingPattern = {
-      id: patternData.id || uuidv4(),
+      id: patternData.id || generateUniqueId(),
       name: patternData.name,
       matchup: patternData.matchup,
       description: patternData.description || "",
@@ -194,11 +186,13 @@ export const useSidePatterns = (deckId?: string) => {
         (patternData.cardsToRemove
           ? convertToCardWithCount(patternData.cardsToRemove)
           : []),
+      // For backward compatibility, keep these fields too
+      cardsToAdd: patternData.cardsToAdd || [],
+      cardsToRemove: patternData.cardsToRemove || [],
       createdAt: patternData.createdAt || Date.now(),
       updatedAt: patternData.updatedAt || Date.now(),
     };
 
-    console.log("Creating new pattern:", newPattern);
     const updatedPatterns = [...sidePatterns, newPattern];
     setSidePatterns(updatedPatterns);
     savePatterns(updatedPatterns);
@@ -261,13 +255,6 @@ export const useSidePatterns = (deckId?: string) => {
     sideDeck: Card[]
   ) => {
     if (!pattern) return { mainDeck, extraDeck, sideDeck };
-
-    console.log("Applying side pattern:", pattern);
-    console.log("Current decks:", {
-      mainDeck: mainDeck.length,
-      extraDeck: extraDeck.length,
-      sideDeck: sideDeck.length,
-    });
 
     // Create copies of the decks to avoid mutation
     const newMainDeck = [...mainDeck];
@@ -342,11 +329,6 @@ export const useSidePatterns = (deckId?: string) => {
       }
     }
 
-    console.log("Updated decks:", {
-      mainDeck: newMainDeck.length,
-      extraDeck: newExtraDeck.length,
-      sideDeck: newSideDeck.length,
-    });
     return {
       mainDeck: newMainDeck,
       extraDeck: newExtraDeck,
