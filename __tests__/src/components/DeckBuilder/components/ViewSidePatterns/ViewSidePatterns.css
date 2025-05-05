@@ -214,16 +214,16 @@
   .view-side-patterns-container {
     grid-template-columns: 1fr;
   }
-  
+
   .patterns-list {
     max-height: 200px;
     overflow-y: auto;
   }
-  
+
   .patterns-scroll {
     max-height: 150px;
   }
-  
+
   .side-cards-container {
     grid-template-columns: 1fr;
   }

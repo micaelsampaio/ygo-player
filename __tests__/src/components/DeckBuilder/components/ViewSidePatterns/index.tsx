@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { Card, Deck, SidingPattern, CardWithCount } from '../../types';
-import { useSidePatterns } from '../../hooks/useSidePatterns';
-import './ViewSidePatterns.css';
+import React, { useState, useEffect } from "react";
+import { Card, Deck, SidingPattern, CardWithCount } from "../../types";
+import { useSidePatterns } from "../../hooks/useSidePatterns";
+import "./ViewSidePatterns.css";
 
 interface ViewSidePatternsProps {
   deck: Deck;
@@ -13,7 +13,7 @@ const ViewSidePatterns: React.FC<ViewSidePatternsProps> = ({ deck }) => {
     selectedPattern,
     isLoading,
     selectPattern,
-    setSelectedPattern
+    setSelectedPattern,
   } = useSidePatterns(deck.id);
 
   // Reset selected pattern when deck changes
@@ -24,18 +24,25 @@ const ViewSidePatterns: React.FC<ViewSidePatternsProps> = ({ deck }) => {
   }, [sidePatterns, selectedPattern, setSelectedPattern]);
 
   if (isLoading) {
-    return <div className="view-side-patterns-loading">Loading side patterns...</div>;
+    return (
+      <div className="view-side-patterns-loading">Loading side patterns...</div>
+    );
   }
 
   // Helper function to get total card count
-  const getTotalCardCount = (cards: CardWithCount[] | Card[] | undefined): number => {
+  const getTotalCardCount = (
+    cards: CardWithCount[] | Card[] | undefined
+  ): number => {
     if (!cards || cards.length === 0) return 0;
-    
+
     // Check if it's the new format with counts
-    if ('count' in cards[0]) {
-      return (cards as CardWithCount[]).reduce((sum, card) => sum + card.count, 0);
+    if ("count" in cards[0]) {
+      return (cards as CardWithCount[]).reduce(
+        (sum, card) => sum + card.count,
+        0
+      );
     }
-    
+
     // Old format, just count the array length
     return cards.length;
   };
@@ -45,8 +52,14 @@ const ViewSidePatterns: React.FC<ViewSidePatternsProps> = ({ deck }) => {
       {sidePatterns.length === 0 ? (
         <div className="no-patterns-message">
           <h3>No Side Patterns Found</h3>
-          <p>This deck doesn't have any side patterns defined. Side patterns help you quickly swap cards for different matchups.</p>
-          <p>You can create side patterns in the Deck Builder by clicking the "Edit" button above.</p>
+          <p>
+            This deck doesn't have any side patterns defined. Side patterns help
+            you quickly swap cards for different matchups.
+          </p>
+          <p>
+            You can create side patterns in the Deck Builder by clicking the
+            "Edit" button above.
+          </p>
         </div>
       ) : (
         <div className="view-side-patterns-container">
@@ -54,9 +67,11 @@ const ViewSidePatterns: React.FC<ViewSidePatternsProps> = ({ deck }) => {
             <h3>Side Patterns</h3>
             <div className="patterns-scroll">
               {sidePatterns.map((pattern) => (
-                <div 
-                  key={pattern.id} 
-                  className={`pattern-item ${selectedPattern?.id === pattern.id ? 'selected' : ''}`}
+                <div
+                  key={pattern.id}
+                  className={`pattern-item ${
+                    selectedPattern?.id === pattern.id ? "selected" : ""
+                  }`}
                   onClick={() => selectPattern(pattern.id)}
                 >
                   <div className="pattern-name">{pattern.name}</div>
@@ -65,97 +80,133 @@ const ViewSidePatterns: React.FC<ViewSidePatternsProps> = ({ deck }) => {
               ))}
             </div>
           </div>
-          
+
           {selectedPattern && (
             <div className="pattern-details">
               <div className="pattern-header">
                 <h3>{selectedPattern.name}</h3>
-                <div className="matchup-label">vs. {selectedPattern.matchup}</div>
+                <div className="matchup-label">
+                  vs. {selectedPattern.matchup}
+                </div>
               </div>
-              
+
               {selectedPattern.description && (
                 <div className="pattern-description">
                   <p>{selectedPattern.description}</p>
                 </div>
               )}
-              
+
               <div className="side-cards-container">
                 <div className="side-cards-section">
-                  <h4>Side Out ({getTotalCardCount(selectedPattern.cardsOut || selectedPattern.cardsToRemove)})</h4>
+                  <h4>
+                    Side Out (
+                    {getTotalCardCount(
+                      selectedPattern.cardsOut || selectedPattern.cardsToRemove
+                    )}
+                    )
+                  </h4>
                   <div className="cards-grid">
-                    {(selectedPattern.cardsOut && selectedPattern.cardsOut.length > 0) ? (
+                    {selectedPattern.cardsOut &&
+                    selectedPattern.cardsOut.length > 0 ? (
                       selectedPattern.cardsOut.map((card) => (
                         <div key={`remove-${card.id}`} className="card-item">
-                          <img 
+                          <img
                             src={`https://images.ygoprodeck.com/images/cards_small/${card.id}.jpg`}
                             alt={card.name}
                             title={card.name}
                           />
                           {card.count > 1 && (
-                            <div className="card-count-badge">{card.count}x</div>
+                            <div className="card-count-badge">
+                              {card.count}x
+                            </div>
                           )}
                         </div>
                       ))
-                    ) : selectedPattern.cardsToRemove && selectedPattern.cardsToRemove.length > 0 ? (
+                    ) : selectedPattern.cardsToRemove &&
+                      selectedPattern.cardsToRemove.length > 0 ? (
                       // Legacy support for old format
-                      Array.from(new Set(selectedPattern.cardsToRemove.map(card => card.id)))
-                        .map(cardId => {
-                          const card = selectedPattern.cardsToRemove!.find(c => c.id === cardId);
-                          const count = selectedPattern.cardsToRemove!.filter(c => c.id === cardId).length;
-                          return (
-                            <div key={`remove-${cardId}`} className="card-item">
-                              <img 
-                                src={`https://images.ygoprodeck.com/images/cards_small/${cardId}.jpg`}
-                                alt={card?.name || `Card #${cardId}`}
-                                title={card?.name || `Card #${cardId}`}
-                              />
-                              {count > 1 && (
-                                <div className="card-count-badge">{count}x</div>
-                              )}
-                            </div>
-                          );
-                        })
+                      Array.from(
+                        new Set(
+                          selectedPattern.cardsToRemove.map((card) => card.id)
+                        )
+                      ).map((cardId) => {
+                        const card = selectedPattern.cardsToRemove!.find(
+                          (c) => c.id === cardId
+                        );
+                        const count = selectedPattern.cardsToRemove!.filter(
+                          (c) => c.id === cardId
+                        ).length;
+                        return (
+                          <div key={`remove-${cardId}`} className="card-item">
+                            <img
+                              src={`https://images.ygoprodeck.com/images/cards_small/${cardId}.jpg`}
+                              alt={card?.name || `Card #${cardId}`}
+                              title={card?.name || `Card #${cardId}`}
+                            />
+                            {count > 1 && (
+                              <div className="card-count-badge">{count}x</div>
+                            )}
+                          </div>
+                        );
+                      })
                     ) : (
                       <p className="no-cards">No cards to side out</p>
                     )}
                   </div>
                 </div>
-                
+
                 <div className="side-cards-section">
-                  <h4>Side In ({getTotalCardCount(selectedPattern.cardsIn || selectedPattern.cardsToAdd)})</h4>
+                  <h4>
+                    Side In (
+                    {getTotalCardCount(
+                      selectedPattern.cardsIn || selectedPattern.cardsToAdd
+                    )}
+                    )
+                  </h4>
                   <div className="cards-grid">
-                    {(selectedPattern.cardsIn && selectedPattern.cardsIn.length > 0) ? (
+                    {selectedPattern.cardsIn &&
+                    selectedPattern.cardsIn.length > 0 ? (
                       selectedPattern.cardsIn.map((card) => (
                         <div key={`add-${card.id}`} className="card-item">
-                          <img 
+                          <img
                             src={`https://images.ygoprodeck.com/images/cards_small/${card.id}.jpg`}
                             alt={card.name}
                             title={card.name}
                           />
                           {card.count > 1 && (
-                            <div className="card-count-badge">{card.count}x</div>
+                            <div className="card-count-badge">
+                              {card.count}x
+                            </div>
                           )}
                         </div>
                       ))
-                    ) : selectedPattern.cardsToAdd && selectedPattern.cardsToAdd.length > 0 ? (
+                    ) : selectedPattern.cardsToAdd &&
+                      selectedPattern.cardsToAdd.length > 0 ? (
                       // Legacy support for old format
-                      Array.from(new Set(selectedPattern.cardsToAdd.map(card => card.id)))
-                        .map(cardId => {
-                          const card = selectedPattern.cardsToAdd!.find(c => c.id === cardId);
-                          const count = selectedPattern.cardsToAdd!.filter(c => c.id === cardId).length;
-                          return (
-                            <div key={`add-${cardId}`} className="card-item">
-                              <img 
-                                src={`https://images.ygoprodeck.com/images/cards_small/${cardId}.jpg`}
-                                alt={card?.name || `Card #${cardId}`}
-                                title={card?.name || `Card #${cardId}`}
-                              />
-                              {count > 1 && (
-                                <div className="card-count-badge">{count}x</div>
-                              )}
-                            </div>
-                          );
-                        })
+                      Array.from(
+                        new Set(
+                          selectedPattern.cardsToAdd.map((card) => card.id)
+                        )
+                      ).map((cardId) => {
+                        const card = selectedPattern.cardsToAdd!.find(
+                          (c) => c.id === cardId
+                        );
+                        const count = selectedPattern.cardsToAdd!.filter(
+                          (c) => c.id === cardId
+                        ).length;
+                        return (
+                          <div key={`add-${cardId}`} className="card-item">
+                            <img
+                              src={`https://images.ygoprodeck.com/images/cards_small/${cardId}.jpg`}
+                              alt={card?.name || `Card #${cardId}`}
+                              title={card?.name || `Card #${cardId}`}
+                            />
+                            {count > 1 && (
+                              <div className="card-count-badge">{count}x</div>
+                            )}
+                          </div>
+                        );
+                      })
                     ) : (
                       <p className="no-cards">No cards to side in</p>
                     )}

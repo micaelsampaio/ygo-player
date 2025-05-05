@@ -199,8 +199,8 @@ export interface SidingPattern {
   name: string;
   description?: string;
   matchup: string;
-  cardsOut: CardWithCount[];  // Cards to remove with count
-  cardsIn: CardWithCount[];   // Cards to add with count
+  cardsOut: CardWithCount[]; // Cards to remove with count
+  cardsIn: CardWithCount[]; // Cards to add with count
   // Keeping old fields for backward compatibility during migration
   cardsToRemove?: Card[];
   cardsToAdd?: Card[];
