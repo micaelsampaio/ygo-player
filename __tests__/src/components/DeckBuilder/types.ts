@@ -187,13 +187,23 @@ export interface SearchFilters {
 }
 
 // Side deck pattern for different matchups
+export interface CardWithCount {
+  id: number;
+  name: string;
+  count: number;
+  type?: string;
+}
+
 export interface SidingPattern {
   id: string;
   name: string;
   description?: string;
   matchup: string;
-  cardsToRemove: Card[];
-  cardsToAdd: Card[];
+  cardsOut: CardWithCount[];  // Cards to remove with count
+  cardsIn: CardWithCount[];   // Cards to add with count
+  // Keeping old fields for backward compatibility during migration
+  cardsToRemove?: Card[];
+  cardsToAdd?: Card[];
   createdAt: number;
   updatedAt: number;
 }

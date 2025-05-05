@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Deck, SidingPattern } from '../../types';
+import { Card, Deck, SidingPattern, CardWithCount } from '../../types';
 import { useSidePatterns } from '../../hooks/useSidePatterns';
 import './ViewSidePatterns.css';
 
@@ -26,6 +26,19 @@ const ViewSidePatterns: React.FC<ViewSidePatternsProps> = ({ deck }) => {
   if (isLoading) {
     return <div className="view-side-patterns-loading">Loading side patterns...</div>;
   }
+
+  // Helper function to get total card count
+  const getTotalCardCount = (cards: CardWithCount[] | Card[] | undefined): number => {
+    if (!cards || cards.length === 0) return 0;
+    
+    // Check if it's the new format with counts
+    if ('count' in cards[0]) {
+      return (cards as CardWithCount[]).reduce((sum, card) => sum + card.count, 0);
+    }
+    
+    // Old format, just count the array length
+    return cards.length;
+  };
 
   return (
     <div className="view-side-patterns">
@@ -68,18 +81,40 @@ const ViewSidePatterns: React.FC<ViewSidePatternsProps> = ({ deck }) => {
               
               <div className="side-cards-container">
                 <div className="side-cards-section">
-                  <h4>Side Out ({selectedPattern.cardsToRemove.length})</h4>
+                  <h4>Side Out ({getTotalCardCount(selectedPattern.cardsOut || selectedPattern.cardsToRemove)})</h4>
                   <div className="cards-grid">
-                    {selectedPattern.cardsToRemove.length > 0 ? (
-                      selectedPattern.cardsToRemove.map((card) => (
+                    {(selectedPattern.cardsOut && selectedPattern.cardsOut.length > 0) ? (
+                      selectedPattern.cardsOut.map((card) => (
                         <div key={`remove-${card.id}`} className="card-item">
                           <img 
-                            src={card.card_images?.[0]?.image_url_small || `https://images.ygoprodeck.com/images/cards_small/${card.id}.jpg`}
+                            src={`https://images.ygoprodeck.com/images/cards_small/${card.id}.jpg`}
                             alt={card.name}
                             title={card.name}
                           />
+                          {card.count > 1 && (
+                            <div className="card-count-badge">{card.count}x</div>
+                          )}
                         </div>
                       ))
+                    ) : selectedPattern.cardsToRemove && selectedPattern.cardsToRemove.length > 0 ? (
+                      // Legacy support for old format
+                      Array.from(new Set(selectedPattern.cardsToRemove.map(card => card.id)))
+                        .map(cardId => {
+                          const card = selectedPattern.cardsToRemove!.find(c => c.id === cardId);
+                          const count = selectedPattern.cardsToRemove!.filter(c => c.id === cardId).length;
+                          return (
+                            <div key={`remove-${cardId}`} className="card-item">
+                              <img 
+                                src={`https://images.ygoprodeck.com/images/cards_small/${cardId}.jpg`}
+                                alt={card?.name || `Card #${cardId}`}
+                                title={card?.name || `Card #${cardId}`}
+                              />
+                              {count > 1 && (
+                                <div className="card-count-badge">{count}x</div>
+                              )}
+                            </div>
+                          );
+                        })
                     ) : (
                       <p className="no-cards">No cards to side out</p>
                     )}
@@ -87,18 +122,40 @@ const ViewSidePatterns: React.FC<ViewSidePatternsProps> = ({ deck }) => {
                 </div>
                 
                 <div className="side-cards-section">
-                  <h4>Side In ({selectedPattern.cardsToAdd.length})</h4>
+                  <h4>Side In ({getTotalCardCount(selectedPattern.cardsIn || selectedPattern.cardsToAdd)})</h4>
                   <div className="cards-grid">
-                    {selectedPattern.cardsToAdd.length > 0 ? (
-                      selectedPattern.cardsToAdd.map((card) => (
+                    {(selectedPattern.cardsIn && selectedPattern.cardsIn.length > 0) ? (
+                      selectedPattern.cardsIn.map((card) => (
                         <div key={`add-${card.id}`} className="card-item">
                           <img 
-                            src={card.card_images?.[0]?.image_url_small || `https://images.ygoprodeck.com/images/cards_small/${card.id}.jpg`}
+                            src={`https://images.ygoprodeck.com/images/cards_small/${card.id}.jpg`}
                             alt={card.name}
                             title={card.name}
                           />
+                          {card.count > 1 && (
+                            <div className="card-count-badge">{card.count}x</div>
+                          )}
                         </div>
                       ))
+                    ) : selectedPattern.cardsToAdd && selectedPattern.cardsToAdd.length > 0 ? (
+                      // Legacy support for old format
+                      Array.from(new Set(selectedPattern.cardsToAdd.map(card => card.id)))
+                        .map(cardId => {
+                          const card = selectedPattern.cardsToAdd!.find(c => c.id === cardId);
+                          const count = selectedPattern.cardsToAdd!.filter(c => c.id === cardId).length;
+                          return (
+                            <div key={`add-${cardId}`} className="card-item">
+                              <img 
+                                src={`https://images.ygoprodeck.com/images/cards_small/${cardId}.jpg`}
+                                alt={card?.name || `Card #${cardId}`}
+                                title={card?.name || `Card #${cardId}`}
+                              />
+                              {count > 1 && (
+                                <div className="card-count-badge">{count}x</div>
+                              )}
+                            </div>
+                          );
+                        })
                     ) : (
                       <p className="no-cards">No cards to side in</p>
                     )}

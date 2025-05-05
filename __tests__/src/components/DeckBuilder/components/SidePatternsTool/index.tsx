@@ -389,7 +389,12 @@ const SidePatternsTool: React.FC<SidePatternsToolProps> = ({ deck, onUpdateDeck 
                   <div className="pattern-name">{pattern.name}</div>
                   <div className="pattern-matchup">vs. {pattern.matchup}</div>
                   <div className="pattern-cards-count">
-                    {pattern.cardsToAdd.length} cards ↔ {pattern.cardsToRemove.length} cards
+                    {(pattern.cardsIn ? 
+                      pattern.cardsIn.reduce((total, card) => total + (card.count || 0), 0) : 
+                      (pattern.cardsToAdd ? pattern.cardsToAdd.length : 0))} cards ↔ {
+                    (pattern.cardsOut ? 
+                      pattern.cardsOut.reduce((total, card) => total + (card.count || 0), 0) : 
+                      (pattern.cardsToRemove ? pattern.cardsToRemove.length : 0))} cards
                   </div>
                 </div>
               ))}
@@ -584,38 +589,85 @@ const SidePatternsTool: React.FC<SidePatternsToolProps> = ({ deck, onUpdateDeck 
                 </div>
                 <div className="info-row">
                   <div className="info-label">Cards swapped:</div>
-                  <div>{selectedPattern.cardsToAdd.length}</div>
+                  <div>{selectedPattern.cardsIn ? 
+                    selectedPattern.cardsIn.reduce((total, card) => total + (card.count || 0), 0) : 
+                    (selectedPattern.cardsToAdd ? selectedPattern.cardsToAdd.length : 0)}
+                  </div>
                 </div>
               </div>
               
               <div className="pattern-cards">
                 <div className="pattern-cards-section">
-                  <h4>Side Out ({selectedPattern.cardsToRemove.length})</h4>
+                  <h4>Side Out ({selectedPattern.cardsOut ? 
+                    selectedPattern.cardsOut.reduce((total, card) => total + (card.count || 0), 0) :
+                    (selectedPattern.cardsToRemove ? selectedPattern.cardsToRemove.length : 0)})
+                  </h4>
                   <div className="cards-grid">
-                    {selectedPattern.cardsToRemove.map((card, index) => (
-                      <div key={`remove-detail-${card.id}-${index}`} className="card-item">
-                        <img 
-                          src={card.card_images?.[0]?.image_url_small || `https://images.ygoprodeck.com/images/cards_small/${card.id}.jpg`}
-                          alt={card.name}
-                          title={card.name}
-                        />
-                      </div>
-                    ))}
+                    {selectedPattern.cardsOut ? (
+                      // New format with counts
+                      selectedPattern.cardsOut.map((card) => (
+                        <div key={`remove-detail-${card.id}`} className="card-item">
+                          <img 
+                            src={`https://images.ygoprodeck.com/images/cards_small/${card.id}.jpg`}
+                            alt={card.name}
+                            title={card.name}
+                          />
+                          {card.count > 1 && (
+                            <div className="card-count-badge">{card.count}x</div>
+                          )}
+                        </div>
+                      ))
+                    ) : selectedPattern.cardsToRemove ? (
+                      // Old format
+                      selectedPattern.cardsToRemove.map((card, index) => (
+                        <div key={`remove-detail-${card.id}-${index}`} className="card-item">
+                          <img 
+                            src={card.card_images?.[0]?.image_url_small || `https://images.ygoprodeck.com/images/cards_small/${card.id}.jpg`}
+                            alt={card.name}
+                            title={card.name}
+                          />
+                        </div>
+                      ))
+                    ) : (
+                      <div className="no-cards">No cards to side out</div>
+                    )}
                   </div>
                 </div>
                 
                 <div className="pattern-cards-section">
-                  <h4>Side In ({selectedPattern.cardsToAdd.length})</h4>
+                  <h4>Side In ({selectedPattern.cardsIn ? 
+                    selectedPattern.cardsIn.reduce((total, card) => total + (card.count || 0), 0) :
+                    (selectedPattern.cardsToAdd ? selectedPattern.cardsToAdd.length : 0)})
+                  </h4>
                   <div className="cards-grid">
-                    {selectedPattern.cardsToAdd.map((card, index) => (
-                      <div key={`add-detail-${card.id}-${index}`} className="card-item">
-                        <img 
-                          src={card.card_images?.[0]?.image_url_small || `https://images.ygoprodeck.com/images/cards_small/${card.id}.jpg`}
-                          alt={card.name}
-                          title={card.name}
-                        />
-                      </div>
-                    ))}
+                    {selectedPattern.cardsIn ? (
+                      // New format with counts
+                      selectedPattern.cardsIn.map((card) => (
+                        <div key={`add-detail-${card.id}`} className="card-item">
+                          <img 
+                            src={`https://images.ygoprodeck.com/images/cards_small/${card.id}.jpg`}
+                            alt={card.name}
+                            title={card.name}
+                          />
+                          {card.count > 1 && (
+                            <div className="card-count-badge">{card.count}x</div>
+                          )}
+                        </div>
+                      ))
+                    ) : selectedPattern.cardsToAdd ? (
+                      // Old format
+                      selectedPattern.cardsToAdd.map((card, index) => (
+                        <div key={`add-detail-${card.id}-${index}`} className="card-item">
+                          <img 
+                            src={card.card_images?.[0]?.image_url_small || `https://images.ygoprodeck.com/images/cards_small/${card.id}.jpg`}
+                            alt={card.name}
+                            title={card.name}
+                          />
+                        </div>
+                      ))
+                    ) : (
+                      <div className="no-cards">No cards to side in</div>
+                    )}
                   </div>
                 </div>
               </div>
