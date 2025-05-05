@@ -18,7 +18,7 @@ export class StoreService {
 
   static async getReplaysFromDeckId(deckId: string, signal?: any) {
     if (isUserLoggedIn()) {
-      return APIService.loadReplaysFromDeckId(deckId, signal);
+      return APIService.getReplaysFromDeckId(deckId, signal);
     } else {
       try {
         const replayDeckKey = `replays_${deckId}`;

@@ -86,7 +86,7 @@ export class APIService {
     return data;
   }
 
-  static async loadReplaysFromDeckId(id: string, signal?: any) {
+  static async getReplaysFromDeckId(id: string, signal?: any) {
     const { data } = await HTTP.request({
       url: `/replays/deck/${id}`,
       method: "GET",

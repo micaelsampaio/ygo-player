@@ -50,7 +50,7 @@ export function DeckReplaysTab({ deckId, visible = true }: { deckId: string, vis
 
     const loadData = async () => {
       try {
-        const data = await StoreService.loadReplaysFromDeckId(deckId, abortController.signal);
+        const data = await StoreService.getReplaysFromDeckId(deckId, abortController.signal);
         request.current = true;
         setReplays(data);
       } catch (error: any) {
