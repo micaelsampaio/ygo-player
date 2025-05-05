@@ -94,11 +94,42 @@ export class StoreService {
       throw new Error("not implemented");
     } else {
       try {
-        if (!replay || !replay.replayId) return false;
-        
-        // Simply remove the replay's key from localStorage
-        window.localStorage.removeItem(`replay_${replay.replayId}`);
-        return true;
+        if (!replay.replayId) {
+          console.error("Missing replayId for deletion");
+          return false;
+        }
+
+        // Get all keys that store replays
+        const replayKeys = getLocalStorageKeysFromPrefix("replays_");
+
+        // Iterate through each key
+        for (const key of replayKeys) {
+          const replayDataRaw = window.localStorage.getItem(key);
+          if (!replayDataRaw) continue;
+
+          const replayData = JSON.parse(replayDataRaw);
+
+          // Find if this storage key contains the replay we want to delete
+          const replayIndex = replayData.replays.findIndex(
+            (r: any) => r.replayId === replay.replayId
+          );
+
+          // If found, remove it and update storage
+          if (replayIndex >= 0) {
+            replayData.replays.splice(replayIndex, 1);
+
+            if (replayData.replays.length > 0) {
+              window.localStorage.setItem(key, JSON.stringify(replayData));
+            } else {
+              window.localStorage.removeItem(key);
+            }
+
+            return true;
+          }
+        }
+
+        console.error(`No replay found with ID ${replay.replayId}`);
+        return false;
       } catch (error) {
         console.error("Error deleting replay:", error);
         return false;
