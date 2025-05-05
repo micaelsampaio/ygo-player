@@ -122,5 +122,3 @@ function getLocalStorageDataFromPrefix(prefix: string, args: { invalidPrefixes?:
   const result = keys.map(data => window.localStorage.getItem(data)!);
   return result;
 }
-
-(window as any).store = StoreService;
