@@ -465,52 +465,63 @@ const DrawSimulator: React.FC<DrawSimulatorProps> = ({
   // Calculate theoretical probability for specific card groups
   const theoreticalGroupProbability = useMemo(() => {
     if (!deck || wantedCardGroups.length === 0) return null;
-    
+
     const deckSize = deck.mainDeck.length;
-    
-    const groupProbabilities = wantedCardGroups.map(group => {
+
+    const groupProbabilities = wantedCardGroups.map((group) => {
       let probability = 0;
-      
+
       if (group.relation === "AND") {
         // For AND relations, we need all cards to be drawn
-        const individualProbs = group.cards.map(card => {
+        const individualProbs = group.cards.map((card) => {
           // Find the total copies of this card in the deck
-          const totalCardCopies = deck.mainDeck.filter(c => c.id === card.id).length;
+          const totalCardCopies = deck.mainDeck.filter(
+            (c) => c.id === card.id
+          ).length;
           // Calculate probability of drawing at least the required copies
-          return calculateDrawAtLeastXCopies(deckSize, totalCardCopies, handSize, group.copies) / 100;
+          return (
+            calculateDrawAtLeastXCopies(
+              deckSize,
+              totalCardCopies,
+              handSize,
+              group.copies
+            ) / 100
+          );
         });
-        
+
         // For AND relation, multiply all individual probabilities
-        probability = individualProbs.reduce((acc, prob) => acc * prob, 1) * 100;
+        probability =
+          individualProbs.reduce((acc, prob) => acc * prob, 1) * 100;
       } else if (group.relation === "OR") {
         // For OR relations, we need at least one of the cards to be drawn
-        const cardIds = new Set(group.cards.map(card => card.id));
+        const cardIds = new Set(group.cards.map((card) => card.id));
         const totalCopies = Array.from(cardIds).reduce((total, cardId) => {
-          return total + deck.mainDeck.filter(c => c.id === cardId).length;
+          return total + deck.mainDeck.filter((c) => c.id === cardId).length;
         }, 0);
-        
+
         // Calculate probability of drawing at least the required copies from any of these cards
         probability = calculateDrawProbability(deckSize, totalCopies, handSize);
       }
-      
+
       return {
         groupId: wantedCardGroups.indexOf(group),
         cards: group.cards,
         copies: group.copies,
         relation: group.relation,
-        probability
+        probability,
       };
     });
-    
+
     // Calculate overall probability (all groups must succeed)
-    const overallProbability = groupProbabilities.reduce(
-      (acc, group) => acc * (group.probability / 100), 
-      1
-    ) * 100;
-    
+    const overallProbability =
+      groupProbabilities.reduce(
+        (acc, group) => acc * (group.probability / 100),
+        1
+      ) * 100;
+
     return {
       groups: groupProbabilities,
-      overallProbability
+      overallProbability,
     };
   }, [deck, wantedCardGroups, handSize]);
 
@@ -1204,7 +1215,8 @@ const DrawSimulator: React.FC<DrawSimulatorProps> = ({
                   {theoreticalGroupProbability.overallProbability.toFixed(4)}%
                 </p>
                 <p className="hand-size-info">
-                  Calculation based on deck size: {deck.mainDeck.length} cards, hand size: {handSize} cards
+                  Calculation based on deck size: {deck.mainDeck.length} cards,
+                  hand size: {handSize} cards
                 </p>
               </div>
             </div>
