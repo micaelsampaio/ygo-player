@@ -1,34 +1,63 @@
-import { useState } from "react";
-import { YGOCore } from "ygo-core";
+import { useEffect, useRef, useState } from "react";
 import { YgoReplayToImage } from "ygo-core-images-utils";
+import { StoreService } from "../../services/store-service";
+import { APIService } from "../../services/api-service";
+import { YGOCore } from "ygo-core";
 
-export function useReplayUtils(): YgoReplayToImage {
-  const [replayUtils] = useState(() => {
-    const replayData = JSON.parse(localStorage.getItem("duel-data")!);
+export function useReplayUtils(replayId: string): { replayUtils: YgoReplayToImage, isLoading: boolean } {
+  const [isLoading, setIsLoading] = useState(true);
+  const replayUtils = useRef<YgoReplayToImage>(null);
 
-    const props = {
-      players: replayData.players as any,
-      commands: replayData.replay.commands,
-      options: {
-        fieldState: replayData.replay.initialField ? replayData.replay.initialField : undefined,
-        execCommands: true,
-        shuffleDecks: false,
-      },
-    };
+  useEffect(() => {
 
-    const ygo = new YGOCore(props);
+    setIsLoading(true);
 
-    ygo.start();
+    const init = (replayData: any) => {
 
-    const replayUtils = new YgoReplayToImage({
-      cdnUrl: String(import.meta.env.VITE_YGO_CDN_URL),
-      translations: {}
-    });
+      const props = {
+        players: replayData.players as any,
+        commands: replayData.replay.commands,
+        options: {
+          fieldState: replayData.replay.initialField ? replayData.replay.initialField : undefined,
+          execCommands: true,
+          shuffleDecks: false,
+        },
+      };
 
-    replayUtils.setYGO(ygo);
+      const ygo = new YGOCore(props);
 
-    return replayUtils;
-  });
+      ygo.start();
 
-  return replayUtils;
+      replayUtils.current = new YgoReplayToImage({
+        cdnUrl: String(import.meta.env.VITE_YGO_CDN_URL),
+        translations: {}
+      });
+
+      replayUtils.current.setYGO(ygo);
+    }
+
+    const loadData = async () => {
+      try {
+        const replay = await StoreService.getReplayFromId(replayId);
+        const decks = await Promise.all([APIService.getDeckFromDeckWithCardIds(replay.players[0]), APIService.getDeckFromDeckWithCardIds(replay.players[1])])
+        const replayData = {
+          players: decks,
+          replay
+        }
+
+        init(replayData);
+        setIsLoading(false);
+      } catch (error) {
+        console.log("TCL: ERROR: ", error);
+      }
+    }
+
+    loadData();
+
+  }, [replayId])
+
+  return {
+    isLoading,
+    replayUtils: replayUtils.current!,
+  };
 }

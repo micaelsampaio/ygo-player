@@ -9,9 +9,10 @@ import { useParams } from 'react-router-dom';
 import AppLayout from '../components/Layout/AppLayout';
 
 export function SpreadsheetBuilder() {
+    const { replayId = "" } = useParams();
     const { collectionId, comboId } = useParams();
     const history = useActionsHistory();
-    const replayUtils = useReplayUtils();
+    const { replayUtils, isLoading } = useReplayUtils(replayId);
     const comboMaker = useComboMaker({ history });
 
     const createImage = async () => {
@@ -59,15 +60,19 @@ export function SpreadsheetBuilder() {
         <AppLayout>
             <Page>
                 <Context.Provider value={{ replayUtils, comboMaker, history, createImage, addToCollection, collectionId, comboId }}>
-                    <Container>
-                        <div className="flex items-center justify-stretch sm:flex-col"></div>
-                        <LogsContainer>
-                            <Logs replayUtils={replayUtils} />
-                        </LogsContainer>
-                        <ContentContainer>
-                            <ComboMakerData />
-                        </ContentContainer>
-                    </Container>
+
+                    {isLoading && <div>Loading</div>}
+                    {!isLoading && <>
+                        <Container>
+                            <div className="flex items-center justify-stretch sm:flex-col"></div>
+                            <LogsContainer>
+                                <Logs replayUtils={replayUtils} />
+                            </LogsContainer>
+                            <ContentContainer>
+                                <ComboMakerData />
+                            </ContentContainer>
+                        </Container>
+                    </>}
                 </Context.Provider>
             </Page>
         </AppLayout>

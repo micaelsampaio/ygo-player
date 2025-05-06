@@ -59,7 +59,7 @@ createRoot(document.getElementById("root")!).render(
         <Route path="/duel/:roomId" element={<Duel />} />
         <Route path="/deck" element={<DownloadDeck />} />
         <Route path="/deckbuilder" element={<DeckBuilder />} />
-        <Route path="/spreadsheet" element={<SpreadsheetBuilder />} />
+        <Route path="/create-combo/replay/:replayId" element={<SpreadsheetBuilder />} />
         <Route
           path="/spreadsheet/collection/:collectionId/:comboId"
           element={<SpreadsheetBuilder />}

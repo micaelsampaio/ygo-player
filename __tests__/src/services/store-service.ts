@@ -36,6 +36,22 @@ export class StoreService {
     }
   }
 
+  static async getReplayFromId(replayId: string) {
+    if (isUserLoggedIn()) {
+      throw new Error("not implemented");
+    } else {
+      const deckReplays = getLocalStorageKeysFromPrefix("replays_");
+      for (const key of deckReplays) {
+        const data = JSON.parse(window.localStorage.getItem(key)!);
+        const replay = data.replays.find((replay: any) => String(replay.replayId === replayId || replay.id === replayId));
+        return replay;
+      }
+
+      throw new Error("not found")
+
+    }
+  }
+
   static async getAllReplays() {
     if (isUserLoggedIn()) {
       throw new Error("not implemented");
@@ -62,8 +78,8 @@ export class StoreService {
       return await APIService.saveReplay(replayData);
     } else {
       const deckId = replayData.players[0].deckId;
-      const replayId = replayData.replayId ?? Date.now();
-      replayData.replayId = replayId;
+      const replayId = replayData.id ?? Date.now();
+      replayData.id = String(replayId);
 
       if (!deckId) return;
 

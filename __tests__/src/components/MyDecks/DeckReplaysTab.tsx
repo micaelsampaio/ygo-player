@@ -32,8 +32,6 @@ export function DeckReplaysTab({ deckId, visible = true }: { deckId: string, vis
         replay
       }
 
-      console.log("NEW REPLAY ", replayData);
-
       localStorage.setItem("duel-data", JSON.stringify(replayData));
 
       navigate("/duel");
@@ -71,7 +69,7 @@ export function DeckReplaysTab({ deckId, visible = true }: { deckId: string, vis
   </div>
 }
 
-function ReplayEntry({ data: replay, openReplay }: { data: any, openReplay: (replay: any) => void }) {
+function ReplayEntry({ data: replay, openReplay }: {  data: any, openReplay: (replay: any) => void }) {
 
   const data = useMemo(() => {
 
@@ -118,7 +116,7 @@ function ReplayEntry({ data: replay, openReplay }: { data: any, openReplay: (rep
 
   return <div>
     <div>
-      {replay.id}
+      {replay.id || replay.replayId}
     </div>
     <div>
       <div>Start Hand</div>
@@ -134,6 +132,7 @@ function ReplayEntry({ data: replay, openReplay }: { data: any, openReplay: (rep
           e.preventDefault();
           openReplay(replay);
         }}>View Replay</a>
+        <a href={`/create-combo/replay/${replay.id || replay.replayId}`}>Create Combo</a>
       </div>
     </div>
   </div>
