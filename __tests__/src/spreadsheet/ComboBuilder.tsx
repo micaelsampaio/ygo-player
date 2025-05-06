@@ -7,6 +7,7 @@ import styled from 'styled-components';
 import { useActionsHistory } from './hooks/use-history';
 import { useParams } from 'react-router-dom';
 import AppLayout from '../components/Layout/AppLayout';
+import { StoreService } from '../services/store-service';
 
 export function ComboBuilder() {
     const { replayId = "" } = useParams();
@@ -31,6 +32,21 @@ export function ComboBuilder() {
 
         setTimeout(() => URL.revokeObjectURL(url), 10000);
     };
+
+    const saveCombo = async () => {
+        try {
+            const comboData = {
+                logs: comboMaker.createMatrix()
+            }
+
+            await StoreService.saveCombo(replayId, comboData);
+
+            document.body.innerHTML = "<h1>Combo is saved close the tab</h1>";
+
+        } catch (error) {
+
+        }
+    }
 
     const addToCollection = () => {
         const logs = comboMaker.createMatrix();
@@ -62,16 +78,13 @@ export function ComboBuilder() {
         const index = collectionComboIndex >= 0 ? collectionComboIndex : collection.combos.length;
         collection.combos[index] = collectionCombo;
 
-        console.log("TCL: ", collection);
-        console.log("TCL: INDEX", index);
-
         window.localStorage.setItem(collectionKey, JSON.stringify(collection));
     }
 
     return (
         <AppLayout>
             <Page>
-                <Context.Provider value={{ replayUtils, comboMaker, history, createImage, createImageNewTab, addToCollection, collectionId, comboId }}>
+                <Context.Provider value={{ replayUtils, comboMaker, history, saveCombo, createImage, createImageNewTab, addToCollection, collectionId, comboId }}>
 
                     {isLoading && <div>Loading</div>}
                     {!isLoading && <>

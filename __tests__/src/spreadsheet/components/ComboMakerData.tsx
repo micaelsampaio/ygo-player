@@ -69,7 +69,6 @@ function Row({ row, rowIndex, canAddElements }: { row: ComboRow, rowIndex: numbe
 
 
 const Col = memo(function ColComponent(props: { rowIndex: number, colIndex: number, col: ComboCol }) {
-    const { replayUtils } = useAppContext();
     const [showControls, setShowControls] = useState(false);
 
     return <div
@@ -80,7 +79,6 @@ const Col = memo(function ColComponent(props: { rowIndex: number, colIndex: numb
         <ColRender {...props} />
 
         {showControls && <LogCardControls colIndex={props.colIndex} rowIndex={props.rowIndex} />}
-        <LogCardControls colIndex={props.colIndex} rowIndex={props.rowIndex} />
     </div>
 })
 
