@@ -20,6 +20,18 @@ export function ComboBuilder() {
         await replayUtils.createImage({ logs, download: true });
     }
 
+    const createImageNewTab = async () => {
+        const logs = comboMaker.createMatrix();
+        const blob = await replayUtils.createImage({ logs, download: false });
+
+        if (!blob) return;
+
+        const url = URL.createObjectURL(blob);
+        window.open(url, '_blank');
+
+        setTimeout(() => URL.revokeObjectURL(url), 10000);
+    };
+
     const addToCollection = () => {
         const logs = comboMaker.createMatrix();
         const collectionKey = `c_${collectionId}`;
@@ -59,12 +71,12 @@ export function ComboBuilder() {
     return (
         <AppLayout>
             <Page>
-                <Context.Provider value={{ replayUtils, comboMaker, history, createImage, addToCollection, collectionId, comboId }}>
+                <Context.Provider value={{ replayUtils, comboMaker, history, createImage, createImageNewTab, addToCollection, collectionId, comboId }}>
 
                     {isLoading && <div>Loading</div>}
                     {!isLoading && <>
                         <Container>
-                            <LogsContainer className='flex-shrink-0'>
+                            <LogsContainer className='shrink-0 w-[200px] max-w-[200px] min-w-[200px]'>
                                 <Logs replayUtils={replayUtils} />
                             </LogsContainer>
                             <ContentContainer>
@@ -156,6 +168,10 @@ const Page = styled.div`
         width: 35px;
     }
 
+    .next-log-row .s-card-image.no-image {
+        background-color: black;
+    }
+
     .next-log-row.player-1 .s-card-image {
         border: 2px solid red;
     }
@@ -182,34 +198,6 @@ const Page = styled.div`
     gap: 10px;
     border-bottom: 1px solid #EFEFEF;
     }
-
-    .log-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    }
-
-    .log-actions button {
-    width: 100%;    
-    padding: 10px 5px;
-    outline: none;
-    border: 0px;
-    border-radius: 5px;
-    background-color: #444;
-    color: #FFF;
-    font-weight: bold;
-    text-align: center;
-    }
-
-    .log-actions button:hover:not(:disabled) {
-    background-color: #555;
-    cursor: pointer;
-    }
-
-    .log-actions button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    }
 `
 
 const Container = styled.div`
@@ -219,7 +207,7 @@ const Container = styled.div`
 `
 
 const LogsContainer = styled.div`
-    flex-shrink: 1;
+    flex-shrink: 0;
     min-width: 200px;
     width: 200px;
     height: 100%;

@@ -2,15 +2,20 @@ import { useState } from 'react';
 import { YgoReplayToImage } from 'ygo-core-images-utils';
 import { useAppContext } from '../context';
 import { HistoryCommand } from '../hooks/use-history';
+import { Button } from '../../components/UI';
 
 const cdnUrl = String(import.meta.env.VITE_YGO_CDN_URL);
 
 export function Logs({ replayUtils }: { replayUtils: YgoReplayToImage }) {
-    const { history, comboMaker } = useAppContext();
+    const { history, comboMaker, createImageNewTab } = useAppContext();
     const [, render] = useState(Date.now());
 
     const removeLog = (log: any) => {
-        replayUtils.removeLog(log);
+        const historyCommand = new HistoryCommand({
+            exec: () => replayUtils.removeLog(log),
+            undo: () => replayUtils.insertLogAtHead(log),
+        });
+        history.append(historyCommand);
         render(Date.now());
     }
 
@@ -36,6 +41,7 @@ export function Logs({ replayUtils }: { replayUtils: YgoReplayToImage }) {
     const minLog = logs.length > 1 ? 1 : 0;
     const maxLog = Math.min(3, logs.length - 1);
     const nextLogs = [];
+    const hasLogs = replayUtils.logs.length > 0;
 
     for (let i = minLog; i <= maxLog; ++i) {
         const log = logs[i];
@@ -69,13 +75,9 @@ export function Logs({ replayUtils }: { replayUtils: YgoReplayToImage }) {
         }
     }
 
-    return <div>
-        <div className='log-rows'>
+    return <div className='log-rows h-full flex flex-col gap-2'>
 
-            <div className='flex mb-5'>
-                <button className='grow' disabled={!history.hasUndo} onClick={history.undo}>Undo</button>
-                <button className='grow' disabled={!history.hasRedo} onClick={history.redo}>Redo</button>
-            </div>
+        <div className="h-86">
 
             {currentLog && currentLog.id && card && <>
                 <div className={`current-log player-${currentLog.player}`}>
@@ -110,11 +112,43 @@ export function Logs({ replayUtils }: { replayUtils: YgoReplayToImage }) {
                 {nextLogs}
             </div>
 
-            <div className='log-actions'>
-                <button disabled={comboMaker.rows.length === 0} onClick={() => addCol(currentLog)}>Add to Column</button>
-                <button onClick={() => addRow(currentLog)}>Add new Row</button>
-                <button onClick={() => removeLog(currentLog)}>Delete</button>
-            </div>
+        </div>
+
+        <div className='flex mb-6 gap-2'>
+            <Button
+                className='grow'
+                variant="secondary"
+                size="md"
+                disabled={!history.hasUndo}
+                onClick={history.undo}
+            >
+                ⬅️ Undo
+            </Button>
+
+            <Button
+                className='grow'
+                variant="secondary"
+                size="md"
+                disabled={!history.hasRedo}
+                onClick={history.redo}
+            >
+                Redo ➡️
+            </Button>
+        </div>
+        <div className='flex flex-col gap-2'>
+            <Button className='grow'
+                variant="primary"
+                size="md"
+                disabled={!hasLogs || comboMaker.rows.length === 0} onClick={() => addCol(currentLog)}>
+                Add to Column
+            </Button>
+            <Button disabled={!hasLogs} onClick={() => addRow(currentLog)}>Add new Row</Button>
+            <Button disabled={!hasLogs} className='mt-6' variant='danger' onClick={() => removeLog(currentLog)}>Delete Log</Button>
+        </div>
+
+        <div className="grow flex flex-col gap-2 justify-end">
+            <Button onClick={createImageNewTab}>Create Image</Button>
+            <Button onClick={() => addRow(currentLog)}>Save Combo in Replay</Button>
         </div>
     </div>
 }

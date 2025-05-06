@@ -22,6 +22,7 @@ export interface ComboMaker {
         log: any,
         cmd?: HistoryCommand
     }) => void
+    removeCol: ({ rowIndex, colIndex }: { rowIndex: number, colIndex: number }) => void
     createMatrix: () => any
 }
 let IDS = 0;
@@ -105,17 +106,59 @@ export function useComboMaker({ history }: { history: UseActionsHistory }): Comb
         history.append(historyCommand);
     };
 
+    const removeCol = ({ rowIndex, colIndex }: { rowIndex: number, colIndex: number }) => {
+        let colRef: any; // optionally type this if you have a Col type
+
+        const historyCommand = new HistoryCommand({
+            exec: () => {
+                setRows(rows => {
+                    if (!rows[rowIndex]) return rows;
+
+                    const updatedRows = [...rows];
+                    const cols = [...updatedRows[rowIndex].cols];
+
+                    colRef = cols.splice(colIndex, 1)[0]; // remove and store
+                    updatedRows[rowIndex] = {
+                        ...updatedRows[rowIndex],
+                        cols
+                    };
+
+                    return updatedRows;
+                });
+            },
+            undo: () => {
+                setRows(rows => {
+                    if (!rows[rowIndex] || !colRef) return rows;
+
+                    const updatedRows = [...rows];
+                    const cols = [...updatedRows[rowIndex].cols];
+
+                    cols.splice(colIndex, 0, colRef); // re-insert at original position
+                    updatedRows[rowIndex] = {
+                        ...updatedRows[rowIndex],
+                        cols
+                    };
+
+                    return updatedRows;
+                });
+            }
+        });
+
+        history.append(historyCommand);
+    };
+
+
     const createMatrix = (): any => {
         return rows.map(row => {
             return row.cols.map(col => col.log);
         })
     }
 
-
     return {
         rows,
         addRow,
         addCol,
+        removeCol,
         createMatrix
     }
 }

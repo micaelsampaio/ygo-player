@@ -134,7 +134,8 @@ function ReplayEntry({ data: replay, openReplay }: { data: any, openReplay: (rep
           e.preventDefault();
           openReplay(replay);
         }}>View Replay</a>
-        <a href={`/create-combo/replay/${replay.id || replay.replayId}`}>Create Combo</a>
+
+        <a href={`/create-combo/replay/${replay.id || replay.replayId}`} target="_blank">Create Combo</a>
       </div>
     </div>
   </div>

@@ -10,6 +10,7 @@ export interface AppContext {
     comboMaker: ComboMaker
     history: UseActionsHistory
     createImage: () => Promise<void>
+    createImageNewTab: () => Promise<void>
     addToCollection: () => void
 }
 
