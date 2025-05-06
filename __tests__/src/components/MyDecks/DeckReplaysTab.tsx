@@ -3,6 +3,7 @@ import axios from "axios";
 import { YGOGameUtils } from "ygo-core";
 import { useNavigate } from "react-router-dom";
 import { StoreService } from "../../services/store-service";
+import { APIService } from "../../services/api-service";
 
 interface ReplayDataDto {
 
@@ -20,7 +21,7 @@ export function DeckReplaysTab({ deckId, visible = true }: { deckId: string, vis
   const openReplay = async (replay: any) => {
     try {
       const players = await Promise.all(replay.players.map(async (player: any) => {
-        const deck = await StoreService.getDeckFromDeckWithCardIds(player);
+        const deck = await APIService.getDeckFromDeckWithCardIds(player);
         return {
           ...player,
           ...deck
@@ -32,11 +33,12 @@ export function DeckReplaysTab({ deckId, visible = true }: { deckId: string, vis
         replay
       }
 
+      console.log("DATA: ", replayData)
       localStorage.setItem("duel-data", JSON.stringify(replayData));
 
       navigate("/duel");
     } catch (error) {
-
+      console.log("ERROR ", error);
     }
   }
 
@@ -69,7 +71,7 @@ export function DeckReplaysTab({ deckId, visible = true }: { deckId: string, vis
   </div>
 }
 
-function ReplayEntry({ data: replay, openReplay }: {  data: any, openReplay: (replay: any) => void }) {
+function ReplayEntry({ data: replay, openReplay }: { data: any, openReplay: (replay: any) => void }) {
 
   const data = useMemo(() => {
 

@@ -23,6 +23,8 @@ export function useReplayUtils(replayId: string): { replayUtils: YgoReplayToImag
         },
       };
 
+      console.log(props);
+
       const ygo = new YGOCore(props);
 
       ygo.start();

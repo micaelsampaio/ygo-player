@@ -12,7 +12,7 @@ import TestingPage from "./pages/TestingPage";
 import DeckBuilder from "./components/DeckBuilder";
 import { KaibaNetProvider } from "./hooks/useKaibaNet";
 import { Logger } from "./utils/logger";
-import { SpreadsheetBuilder } from "./spreadsheet/SpreadsheetBuilder.tsx";
+import { ComboBuilder } from "./spreadsheet/ComboBuilder.tsx";
 import { CollectionsPage } from "./components/Collections/CollectionsPage.tsx";
 import RulingsPage from "./components/Rulings/RulingsPage.tsx";
 // Import other pages
@@ -59,10 +59,10 @@ createRoot(document.getElementById("root")!).render(
         <Route path="/duel/:roomId" element={<Duel />} />
         <Route path="/deck" element={<DownloadDeck />} />
         <Route path="/deckbuilder" element={<DeckBuilder />} />
-        <Route path="/create-combo/replay/:replayId" element={<SpreadsheetBuilder />} />
+        <Route path="/create-combo/replay/:replayId" element={<ComboBuilder />} />
         <Route
           path="/spreadsheet/collection/:collectionId/:comboId"
-          element={<SpreadsheetBuilder />}
+          element={<ComboBuilder />}
         />
         <Route path="/collections" element={<CollectionsPage />} />
         <Route
