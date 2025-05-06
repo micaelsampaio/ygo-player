@@ -4,12 +4,12 @@ import theme from "../../styles/theme";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?:
-    | "primary"
-    | "secondary"
-    | "tertiary"
-    | "danger"
-    | "success"
-    | "warning";
+  | "primary"
+  | "secondary"
+  | "tertiary"
+  | "danger"
+  | "success"
+  | "warning";
   size?: "sm" | "md" | "lg";
   fullWidth?: boolean;
   icon?: ReactNode;
@@ -20,6 +20,7 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   isLoading?: boolean;
   disabled?: boolean;
   className?: string;
+  target?: string;
 }
 
 // Button variants
@@ -170,10 +171,9 @@ const StyledButton = styled.button<ButtonProps>`
     `
     width: ${size === "sm" ? "28px" : size === "lg" ? "44px" : "36px"};
     height: ${size === "sm" ? "28px" : size === "lg" ? "44px" : "36px"};
-    padding: ${
-      size === "sm"
-        ? theme.spacing.xs
-        : size === "lg"
+    padding: ${size === "sm"
+      ? theme.spacing.xs
+      : size === "lg"
         ? theme.spacing.sm
         : theme.spacing.xs
     };
@@ -189,15 +189,13 @@ const Button = ({
   isLoading = false,
   disabled = false,
   className = "",
-  type="button",
+  type = "button",
   children,
   ...rest
 }: ButtonProps) => {
-  const buttonClass = `btn btn-${variant} ${
-    size !== "md" ? `btn-${size}` : ""
-  } ${fullWidth ? "btn-full-width" : ""} ${
-    icon && !iconOnly ? "btn-icon" : ""
-  } ${iconOnly ? "btn-icon-only" : ""} ${className}`.trim();
+  const buttonClass = `btn btn-${variant} ${size !== "md" ? `btn-${size}` : ""
+    } ${fullWidth ? "btn-full-width" : ""} ${icon && !iconOnly ? "btn-icon" : ""
+    } ${iconOnly ? "btn-icon-only" : ""} ${className}`.trim();
 
   return (
     <StyledButton

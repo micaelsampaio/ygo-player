@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import axios from "axios";
-import { YGOGameUtils } from "ygo-core";
+import { YGOCore, YGOGameUtils } from "ygo-core";
 import { useNavigate } from "react-router-dom";
 import { StoreService } from "../../services/store-service";
 import { APIService } from "../../services/api-service";
+import { Button } from "../UI";
+import { YgoReplayToImage } from "ygo-core-images-utils";
 
 interface ReplayDataDto {
 
@@ -107,8 +109,6 @@ function ReplayEntry({ data: replay, openReplay }: { data: any, openReplay: (rep
       return acc;
     }, [])
 
-    //const { endField: replay.endField } = replay;
-
     return {
       initialFieldData: initialFieldData,
       endField: endFieldData
@@ -129,14 +129,65 @@ function ReplayEntry({ data: replay, openReplay }: { data: any, openReplay: (rep
       <div>
         {data.endField.map((card: any) => <img key={card.key} src={`${cdnUrl}/images/cards_small/${card.id}.jpg`} style={{ height: "100px" }} />)}
       </div>
-      <div>
-        <a href="#" onClick={(e) => {
-          e.preventDefault();
-          openReplay(replay);
-        }}>View Replay</a>
+      <div className="flex gap-2 mt-4">
 
-        <a href={`/create-combo/replay/${replay.id || replay.replayId}`} target="_blank">Create Combo</a>
+        <Button onClick={() => openReplay(replay)}>
+          View Replay
+        </Button>
+
+        <Button as="a" href={`/create-combo/replay/${replay.id || replay.replayId}`} target="_blank">Create Combo</Button>
+
+        {
+          Array.isArray(replay.combos) && replay.combos.map((combo: any) => <Combo data={combo} replay={replay} key={combo.id} />)
+        }
       </div>
     </div>
   </div>
+}
+
+function Combo({ replay, data }: { data: any, replay: any }) {
+
+  const createImage = async () => {
+    try {
+      console.log(data);
+
+      const players = await Promise.all(replay.players.map(async (player: any) => {
+        const deck = await APIService.getDeckFromDeckWithCardIds(player);
+        return {
+          ...player,
+          ...deck
+        }
+      }));
+
+      const props = {
+        players,
+        options: {
+          shuffleDecks: false,
+        },
+      }
+
+      const YGO = new YGOCore(props);
+      YGO.start();
+
+      const utils = new YgoReplayToImage({ cdnUrl, translations: {} });
+      utils.setYGO(YGO);
+
+      const blob = await utils.createImage({ logs: data.logs, download: false });
+
+      if (!blob) return;
+
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank');
+
+      setTimeout(() => URL.revokeObjectURL(url), 10000);
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  return <>
+    <Button onClick={createImage} variant="success">
+      View Combo Image
+    </Button>
+  </>
 }

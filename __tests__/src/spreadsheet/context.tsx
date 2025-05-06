@@ -12,6 +12,7 @@ export interface AppContext {
     createImage: () => Promise<void>
     createImageNewTab: () => Promise<void>
     addToCollection: () => void
+    saveCombo: () => Promise<void>
 }
 
 export const Context = React.createContext<AppContext>({} as any);

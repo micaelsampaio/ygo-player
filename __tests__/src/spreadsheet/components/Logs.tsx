@@ -7,7 +7,7 @@ import { Button } from '../../components/UI';
 const cdnUrl = String(import.meta.env.VITE_YGO_CDN_URL);
 
 export function Logs({ replayUtils }: { replayUtils: YgoReplayToImage }) {
-    const { history, comboMaker, createImageNewTab } = useAppContext();
+    const { history, comboMaker, createImageNewTab, saveCombo } = useAppContext();
     const [, render] = useState(Date.now());
 
     const removeLog = (log: any) => {
@@ -148,7 +148,7 @@ export function Logs({ replayUtils }: { replayUtils: YgoReplayToImage }) {
 
         <div className="grow flex flex-col gap-2 justify-end">
             <Button onClick={createImageNewTab}>Create Image</Button>
-            <Button onClick={() => addRow(currentLog)}>Save Combo in Replay</Button>
+            <Button onClick={saveCombo}>Save Combo in Replay</Button>
         </div>
     </div>
 }

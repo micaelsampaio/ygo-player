@@ -163,6 +163,30 @@ export class StoreService {
       return await this.getDeckById(deckId);
     }
   }
+
+  static async saveCombo(replayId: string, comboData: any) {
+    if (isUserLoggedIn()) {
+      throw new Error("not implemented");
+    } else {
+      const deckReplays = getLocalStorageKeysFromPrefix("replays_");
+
+      for (const key of deckReplays) {
+        const storedData = JSON.parse(window.localStorage.getItem(key)!);
+        const replay = storedData.replays.find((replay: any) => String(replay.replayId || replay.id) === replayId);
+
+        if (replay) {
+          comboData.id = String(Date.now());
+          replay.combos = replay.combos ?? [];
+          replay.combos.push(comboData);
+
+          window.localStorage.setItem(key, JSON.stringify(storedData));
+          return replay;
+        }
+      }
+
+      throw new Error("Replay not found in local storage");
+    }
+  }
 }
 
 function getLocalStorageKeysFromPrefix(
