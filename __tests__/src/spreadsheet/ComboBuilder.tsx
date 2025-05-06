@@ -8,7 +8,7 @@ import { useActionsHistory } from './hooks/use-history';
 import { useParams } from 'react-router-dom';
 import AppLayout from '../components/Layout/AppLayout';
 
-export function SpreadsheetBuilder() {
+export function ComboBuilder() {
     const { replayId = "" } = useParams();
     const { collectionId, comboId } = useParams();
     const history = useActionsHistory();
@@ -64,8 +64,7 @@ export function SpreadsheetBuilder() {
                     {isLoading && <div>Loading</div>}
                     {!isLoading && <>
                         <Container>
-                            <div className="flex items-center justify-stretch sm:flex-col"></div>
-                            <LogsContainer>
+                            <LogsContainer className='flex-shrink-0'>
                                 <Logs replayUtils={replayUtils} />
                             </LogsContainer>
                             <ContentContainer>
@@ -82,67 +81,92 @@ export function SpreadsheetBuilder() {
 const Page = styled.div`
     margin: 0;
     padding: 0;
-    max-height: 100dvh;
+    height: calc(100dvh - 150px);    
 
     .log-row {
-    padding: 10px;
-    border-bottom: 1px solid #EFEFEF;
+        padding: 10px;
+        border-bottom: 1px solid #EFEFEF;
     }
 
     .current-log {
-    text-align: center;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding-bottom: 20px;
     }
 
     .current-log .log-type {
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow: hidden;
     }
 
     .current-log .s-card-image {
-    height: 200px;
-    border-radius: 5px;
+        height: 200px;
+        border-radius: 6px;
+        border: 2px solid transparent;
     }
+    
+    .current-log.player-1 .s-card-image {
+        border: 2px solid red;
+    }
+
     .current-log .s-card-image.no-image {
-    background-color: black;
-    width: 150px;
-    border:1px solid #444;
+        background-color: black;
+        width: 150px;
     }
 
     .next-logs {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 10px;
-    align-items: center;
-    justify-content: center;
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 10px;
+        align-items: center;
+        justify-content: center;
+        padding-bottom: 20px;
+        flex-grow: 1;
+        overflow: hidden;
     }
 
     .next-log-row {
-    text-align: center;
-    overflow: hidden;
-    width: 100%;
-    text-align: center;
-    font-size: 10px;
+        text-align: center;
+        overflow: hidden;
+        width: 100%;
+        text-align: center;
+        font-size: 10px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
     }
 
     .next-log-row .log-type {
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow: hidden;
     }
 
     .next-log-row .s-card-image {
-    height: 50px;
-    border-radius: 5px;
+        height: 50px;
+        border-radius: 5px;
+        border: 2px solid transparent;
+    }
+
+    .next-log-row .s-card-image {
+        height: 50px;
+        width: 35px;
+    }
+
+    .next-log-row.player-1 .s-card-image {
+        border: 2px solid red;
     }
 
 
     .content {
-    flex-grow: 1;
-    width: 100%;
-    height: 100%;
-    overflow-y: auto;
-    overflow-x: auto;
+        flex-grow: 1;
+        width: 100%;
+        height: 100%;
+        overflow-y: auto;
+        overflow-x: auto;
     }
 
     .content .item {
@@ -196,12 +220,18 @@ const Container = styled.div`
 
 const LogsContainer = styled.div`
     flex-shrink: 1;
+    min-width: 200px;
     width: 200px;
     height: 100%;
     overflow-y: hidden;
     padding: 10px;
-    background-color: rgba(0, 0, 0, 0.8);
-    color: #FFF;
+    background-color: #ffffff;
+    border-radius: 0.5rem;
+    border: none;
+    width: auto;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1),0 1px 2px rgba(0, 0, 0, 0.06);
+    transition: box-shadow 0.2s ease;
+    color: #222;
 `
 
 const ContentContainer = styled.div`

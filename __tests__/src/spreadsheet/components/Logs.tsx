@@ -39,12 +39,13 @@ export function Logs({ replayUtils }: { replayUtils: YgoReplayToImage }) {
 
     for (let i = minLog; i <= maxLog; ++i) {
         const log = logs[i];
+        const player = log.player;
 
         if (log.id) {
             const card = replayUtils.getCardData(log.id);
             nextLogs.push(<>
-                <div className='next-log-row'>
-                    <div className="log-type">
+                <div className={`next-log-row player-${player}`}>
+                    <div className="log-type font-bold">
                         {log.type}
                     </div>
                     {card.id > 99999900 ? <>
@@ -58,7 +59,7 @@ export function Logs({ replayUtils }: { replayUtils: YgoReplayToImage }) {
             </>)
         } else {
             nextLogs.push(<>
-                <div className='next-log-row'>
+                <div className={`next-log-row player-${player}`}>
                     <div className="log-type">
                         {log.type}
                     </div>
@@ -71,14 +72,14 @@ export function Logs({ replayUtils }: { replayUtils: YgoReplayToImage }) {
     return <div>
         <div className='log-rows'>
 
-            <div>
-                <button disabled={!history.hasUndo} onClick={history.undo}>Undo</button>
-                <button disabled={!history.hasRedo} onClick={history.redo}>Redo</button>
+            <div className='flex mb-5'>
+                <button className='grow' disabled={!history.hasUndo} onClick={history.undo}>Undo</button>
+                <button className='grow' disabled={!history.hasRedo} onClick={history.redo}>Redo</button>
             </div>
 
             {currentLog && currentLog.id && card && <>
-                <div className='current-log'>
-                    <div className="log-type">
+                <div className={`current-log player-${currentLog.player}`}>
+                    <div className="log-type font-bold">
                         {currentLog.type}
                     </div>
 
@@ -94,7 +95,7 @@ export function Logs({ replayUtils }: { replayUtils: YgoReplayToImage }) {
             </>}
 
             {currentLog && !card && <>
-                <div className='current-log'>
+                <div className={`current-log player-${currentLog.player}`}>
                     <div className="log-type">
                         {currentLog.type}
                     </div>
@@ -114,24 +115,6 @@ export function Logs({ replayUtils }: { replayUtils: YgoReplayToImage }) {
                 <button onClick={() => addRow(currentLog)}>Add new Row</button>
                 <button onClick={() => removeLog(currentLog)}>Delete</button>
             </div>
-
-
-
-            {/* {replayUtils.logs && replayUtils.logs.map(log => {
-                if (!log.id) return null;
-                const card = replayUtils.getCardData(log.id);
-                return <div className='log-row'>
-                    {log.type} - {card.name}
-                    <br />
-                    <img src={`http://localhost:8080/images/cards_small/${card.id}.jpg`} style={{ width: '100px' }} />
-                    <br />
-
-                    <div>
-                        <button onClick={() => removeLog(log)}>delete</button>
-                    </div>
-                </div>
-            })} */}
-
         </div>
     </div>
 }
