@@ -1,3 +1,4 @@
+import { relative } from "path";
 import { isUserLoggedIn } from "../utils/token-utils";
 import { APIService } from "./api-service";
 
@@ -43,8 +44,10 @@ export class StoreService {
       const deckReplays = getLocalStorageKeysFromPrefix("replays_");
       for (const key of deckReplays) {
         const data = JSON.parse(window.localStorage.getItem(key)!);
-        const replay = data.replays.find((replay: any) => String(replay.replayId === replayId || replay.id === replayId));
-        return replay;
+        const replay = data.replays.find((replay: any) => String(replay.replayId || replay.id) === replayId);
+        if (replay) {
+          return replay;
+        }
       }
 
       throw new Error("not found")

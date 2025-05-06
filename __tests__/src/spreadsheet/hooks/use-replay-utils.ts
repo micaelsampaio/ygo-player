@@ -13,7 +13,6 @@ export function useReplayUtils(replayId: string): { replayUtils: YgoReplayToImag
     setIsLoading(true);
 
     const init = (replayData: any) => {
-
       const props = {
         players: replayData.players as any,
         commands: replayData.replay.commands,
