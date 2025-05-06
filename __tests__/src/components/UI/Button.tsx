@@ -189,6 +189,7 @@ const Button = ({
   isLoading = false,
   disabled = false,
   className = "",
+  type="button",
   children,
   ...rest
 }: ButtonProps) => {
@@ -207,6 +208,7 @@ const Button = ({
       isLoading={isLoading}
       disabled={disabled || isLoading}
       className={buttonClass}
+      type={type}
       {...rest}
     >
       {icon && icon}
