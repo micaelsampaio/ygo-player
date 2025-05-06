@@ -462,6 +462,58 @@ const DrawSimulator: React.FC<DrawSimulatorProps> = ({
     return cardProbabilities.sort((a, b) => b.probability - a.probability);
   }, [deck, handSize, uniqueCards]);
 
+  // Calculate theoretical probability for specific card groups
+  const theoreticalGroupProbability = useMemo(() => {
+    if (!deck || wantedCardGroups.length === 0) return null;
+    
+    const deckSize = deck.mainDeck.length;
+    
+    const groupProbabilities = wantedCardGroups.map(group => {
+      let probability = 0;
+      
+      if (group.relation === "AND") {
+        // For AND relations, we need all cards to be drawn
+        const individualProbs = group.cards.map(card => {
+          // Find the total copies of this card in the deck
+          const totalCardCopies = deck.mainDeck.filter(c => c.id === card.id).length;
+          // Calculate probability of drawing at least the required copies
+          return calculateDrawAtLeastXCopies(deckSize, totalCardCopies, handSize, group.copies) / 100;
+        });
+        
+        // For AND relation, multiply all individual probabilities
+        probability = individualProbs.reduce((acc, prob) => acc * prob, 1) * 100;
+      } else if (group.relation === "OR") {
+        // For OR relations, we need at least one of the cards to be drawn
+        const cardIds = new Set(group.cards.map(card => card.id));
+        const totalCopies = Array.from(cardIds).reduce((total, cardId) => {
+          return total + deck.mainDeck.filter(c => c.id === cardId).length;
+        }, 0);
+        
+        // Calculate probability of drawing at least the required copies from any of these cards
+        probability = calculateDrawProbability(deckSize, totalCopies, handSize);
+      }
+      
+      return {
+        groupId: wantedCardGroups.indexOf(group),
+        cards: group.cards,
+        copies: group.copies,
+        relation: group.relation,
+        probability
+      };
+    });
+    
+    // Calculate overall probability (all groups must succeed)
+    const overallProbability = groupProbabilities.reduce(
+      (acc, group) => acc * (group.probability / 100), 
+      1
+    ) * 100;
+    
+    return {
+      groups: groupProbabilities,
+      overallProbability
+    };
+  }, [deck, wantedCardGroups, handSize]);
+
   useEffect(() => {
     if (statistics && Object.keys(statistics.cardCombinations).length > 0) {
       const combinationsExpanded = {};
@@ -594,50 +646,49 @@ const DrawSimulator: React.FC<DrawSimulatorProps> = ({
               </div>
             )}
 
-            <div className="wanted-cards-input">
-              <select
-                value={selectedCard?.id || ""}
-                onChange={(e) => {
-                  const card = uniqueCards.find(
-                    (c) => c.id.toString() === e.target.value
-                  );
-                  setSelectedCard(card || null);
+            {wantedCardGroups.length > 0 && (
+              <div className="wanted-cards-input">
+                <select
+                  value={selectedCard?.id || ""}
+                  onChange={(e) => {
+                    const card = uniqueCards.find(
+                      (c) => c.id.toString() === e.target.value
+                    );
+                    setSelectedCard(card || null);
 
-                  // If a card is selected and there's no group selected but groups exist,
-                  // automatically select the first group
-                  if (
-                    card &&
-                    selectedGroupId === null &&
-                    wantedCardGroups.length > 0
-                  ) {
-                    setSelectedGroupId(0);
-                  }
-                }}
-                disabled={
-                  selectedGroupId === null && wantedCardGroups.length === 0
-                }
-              >
-                <option value="">Select a card...</option>
-                {uniqueCards.map((card) => (
-                  <option key={card.id} value={card.id}>
-                    {card.name} ({card.totalCopies}x)
-                  </option>
-                ))}
-              </select>
+                    // If a card is selected and there's no group selected but groups exist,
+                    // automatically select the first group
+                    if (
+                      card &&
+                      selectedGroupId === null &&
+                      wantedCardGroups.length > 0
+                    ) {
+                      setSelectedGroupId(0);
+                    }
+                  }}
+                  disabled={selectedGroupId === null}
+                >
+                  <option value="">Select a card...</option>
+                  {uniqueCards.map((card) => (
+                    <option key={card.id} value={card.id}>
+                      {card.name} ({card.totalCopies}x)
+                    </option>
+                  ))}
+                </select>
 
-              <button
-                className="add-card-btn"
-                onClick={addWantedCard}
-                disabled={!selectedCard || selectedGroupId === null}
-                type="button"
-              >
-                {selectedCard
-                  ? `Add to Group ${
-                      selectedGroupId !== null ? selectedGroupId + 1 : ""
-                    }`
-                  : "Select a card"}
-              </button>
-            </div>
+                {selectedCard && selectedGroupId !== null && (
+                  <div className="add-card-btn-container">
+                    <button
+                      className="add-card-btn"
+                      onClick={addWantedCard}
+                      type="button"
+                    >
+                      Add to Group {selectedGroupId + 1}
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
 
             <div className="wanted-cards-list">
               {wantedCardGroups.map((group, groupId) => (
@@ -731,7 +782,7 @@ const DrawSimulator: React.FC<DrawSimulatorProps> = ({
                 <h3>
                   Most Common Opening Hand (
                   {statistics.mostCommonHand.frequency} times -{" "}
-                  {statistics.mostCommonHand.percentage.toFixed(1)}%)
+                  {statistics.mostCommonHand.percentage.toFixed(3)}%)
                   <span className="toggle-indicator">
                     {expandedTables.commonHand ? "▲" : "▼"}
                   </span>
@@ -796,7 +847,7 @@ const DrawSimulator: React.FC<DrawSimulatorProps> = ({
                   <h4>Wanted Cards</h4>
                   <p>
                     Probability of drawing all wanted cards:{" "}
-                    {statistics.wantedCardsSuccessRate.toFixed(1)}% (
+                    {statistics.wantedCardsSuccessRate.toFixed(3)}% (
                     {statistics.wantedCardsSuccessCount} in{" "}
                     {statistics.totalSimulations} hands)
                   </p>
@@ -1094,13 +1145,67 @@ const DrawSimulator: React.FC<DrawSimulatorProps> = ({
                             />
                           </td>
                           <td>{item.card.totalCopies}</td>
-                          <td>{item.probability.toFixed(1)}%</td>
-                          <td>{item.exactOneProb.toFixed(1)}%</td>
-                          <td>{item.atLeastTwoProb.toFixed(1)}%</td>
+                          <td>{item.probability.toFixed(4)}%</td>
+                          <td>{item.exactOneProb.toFixed(4)}%</td>
+                          <td>{item.atLeastTwoProb.toFixed(4)}%</td>
                         </tr>
                       ))}
                   </tbody>
                 </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {theoreticalGroupProbability && (
+          <div className="statistics-section">
+            <h3>Theoretical Group Probabilities</h3>
+            <div className="card-statistics-tables">
+              <div className="card-statistics-table">
+                <h4>Group Probabilities</h4>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Group</th>
+                      <th>Relation</th>
+                      <th>Copies Needed</th>
+                      <th>Probability</th>
+                      <th>Cards</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {theoreticalGroupProbability.groups.map((group, index) => (
+                      <tr key={`group-${index}`}>
+                        <td>Group {group.groupId + 1}</td>
+                        <td>{group.relation}</td>
+                        <td>{group.copies}</td>
+                        <td>{group.probability.toFixed(4)}%</td>
+                        <td className="hand-cards-preview">
+                          {group.cards.map((card, cardIndex) => (
+                            <img
+                              key={`group-${index}-${cardIndex}`}
+                              src={getCardImageUrl(card.id, "small")}
+                              alt={card.name}
+                              onClick={() => onCardSelect(card)}
+                              className="table-card-image"
+                              title={card.name}
+                            />
+                          ))}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div className="overall-probability">
+                <h4>Overall Probability</h4>
+                <p>
+                  Probability of drawing all groups successfully:{" "}
+                  {theoreticalGroupProbability.overallProbability.toFixed(4)}%
+                </p>
+                <p className="hand-size-info">
+                  Calculation based on deck size: {deck.mainDeck.length} cards, hand size: {handSize} cards
+                </p>
               </div>
             </div>
           </div>

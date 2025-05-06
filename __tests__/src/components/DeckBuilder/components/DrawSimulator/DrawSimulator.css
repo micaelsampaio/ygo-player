@@ -857,3 +857,49 @@
     flex-direction: column;
   }
 }
+
+/* Overall probability section */
+.overall-probability {
+  margin-top: 20px;
+  padding: 15px;
+  background: #f5f5f5;
+  border-radius: 8px;
+  border-left: 4px solid #2196f3;
+}
+
+.overall-probability h4 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  color: #333;
+}
+
+/* Highlight for simulation vs theoretical comparison */
+.probability-comparison {
+  margin-top: 16px;
+  padding: 12px;
+  background-color: #e8f5e9;
+  border-radius: 6px;
+  border-left: 4px solid #4caf50;
+}
+
+.probability-comparison h4 {
+  margin-top: 0;
+  margin-bottom: 8px;
+  color: #2e7d32;
+}
+
+/* Diff highlighting for comparing theoretical vs simulation */
+.probability-higher {
+  color: #4caf50;
+  font-weight: 500;
+}
+
+.probability-lower {
+  color: #f44336;
+  font-weight: 500;
+}
+
+.probability-similar {
+  color: #ff9800;
+  font-weight: 500;
+}
