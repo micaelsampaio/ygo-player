@@ -1,5 +1,6 @@
 @import "ygo-player/style.css";
 @import "ygo-core-images-utils/style.css";
+@import "tailwindcss";
 
 body {
   margin: 0;

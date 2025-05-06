@@ -6,6 +6,7 @@ import { ComboMakerData } from './components/ComboMakerData';
 import styled from 'styled-components';
 import { useActionsHistory } from './hooks/use-history';
 import { useParams } from 'react-router-dom';
+import AppLayout from '../components/Layout/AppLayout';
 
 export function SpreadsheetBuilder() {
     const { collectionId, comboId } = useParams();
@@ -55,18 +56,21 @@ export function SpreadsheetBuilder() {
     }
 
     return (
-        <Page>
-            <Context.Provider value={{ replayUtils, comboMaker, history, createImage, addToCollection, collectionId, comboId }}>
-                <Container>
-                    <LogsContainer>
-                        <Logs replayUtils={replayUtils} />
-                    </LogsContainer>
-                    <ContentContainer>
-                        <ComboMakerData />
-                    </ContentContainer>
-                </Container>
-            </Context.Provider>
-        </Page>
+        <AppLayout>
+            <Page>
+                <Context.Provider value={{ replayUtils, comboMaker, history, createImage, addToCollection, collectionId, comboId }}>
+                    <Container>
+                        <div className="flex items-center justify-stretch sm:flex-col"></div>
+                        <LogsContainer>
+                            <Logs replayUtils={replayUtils} />
+                        </LogsContainer>
+                        <ContentContainer>
+                            <ComboMakerData />
+                        </ContentContainer>
+                    </Container>
+                </Context.Provider>
+            </Page>
+        </AppLayout>
     )
 }
 
