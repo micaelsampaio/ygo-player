@@ -240,7 +240,7 @@ export class YGOGameActions {
       card.originalOwner
     ].extraDeck.findIndex((c: any) => c === card);
     const zones = getMonstersZones(this.duel, [card.originalOwner]).filter(
-      (zone) => YGOGameUtils.isFaceUp(zone.getCardReference()!)
+      (zone) => !YGOGameUtils.isToken(zone.getCardReference()!) && YGOGameUtils.isFaceUp(zone.getCardReference()!)
     );
 
     this.cardSelection.startMultipleSelection({
@@ -301,7 +301,7 @@ export class YGOGameActions {
       card.originalOwner
     ].extraDeck.findIndex((c: any) => c === card);
     const zones = getMonstersZones(this.duel, [card.originalOwner]).filter(
-      (zone) => YGOGameUtils.isFaceUp(zone.getCardReference()!)
+      (zone) => !YGOGameUtils.isToken(zone.getCardReference()!) && YGOGameUtils.isFaceUp(zone.getCardReference()!)
     );
 
     this.cardSelection.startMultipleSelection({
