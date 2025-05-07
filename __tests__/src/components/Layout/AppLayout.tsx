@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import styled from "styled-components";
+import styled, { css } from "styled-components";
 import theme from "../../styles/theme";
 import Navigation from "../UI/Navigation";
 import Layout from "../UI/Layout";
@@ -26,8 +26,7 @@ const LogoText = styled.span`
 `;
 
 const LogoImage = styled.div`
-  background-image: url("${import.meta.env
-    .VITE_YGO_CDN_URL}/images/logo_dark.png");
+  background-image: url("${import.meta.env.VITE_YGO_CDN_URL}/images/logo_dark.png");
   background-size: contain;
   background-position: left center;
   background-repeat: no-repeat;
@@ -35,8 +34,7 @@ const LogoImage = styled.div`
   height: 40px;
 `;
 const LogoImageFooter = styled.div`
-  background-image: url("${import.meta.env
-    .VITE_YGO_CDN_URL}/images/logo_dark.png");
+  background-image: url("${import.meta.env.VITE_YGO_CDN_URL}/images/logo_dark.png");
   background-size: contain;
   background-position: left center;
   background-repeat: no-repeat;
@@ -50,7 +48,7 @@ const UserControlsContainer = styled.div`
   gap: ${spacing.md};
 `;
 
-const SettingsIconLink = styled(Link)`
+const SettingsIconLink = styled(Link) <{ active?: boolean }>`
   color: ${colors.text.primary};
   padding: ${spacing.xs};
   border-radius: 50%;
@@ -58,10 +56,26 @@ const SettingsIconLink = styled(Link)`
   display: flex;
   align-items: center;
   justify-content: center;
+  font-size: 18px;
 
   &:hover {
     background-color: ${colors.background.card};
+    color: ${theme.colors.primary.main};
   }
+
+  & .icon {
+    transition: transform 0.25s ease-in-out, color 0.25s ease-in-out;
+  }
+
+  &:hover .icon {
+    transform: rotate(180deg);
+  }
+
+  ${props => props.active && css`
+    & .icon {
+      color: ${theme.colors.primary.main};
+  }
+  `}
 `;
 
 const HeaderContainer = styled.div`
@@ -199,14 +213,17 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
 
       <Navigation
         items={navItems}
+        size="sm"
         orientation="horizontal"
         variant="secondary"
       />
 
       <UserControlsContainer>
         <UserData />
-        <SettingsIconLink to="/settings" title="Settings">
-          <span className="icon">⚙️</span>
+        <SettingsIconLink active={location.pathname.includes(`/settings`)} to="/settings" title="Settings">
+          <span className="icon">
+            <i className="fa fa-cog" aria-hidden="true"></i>
+          </span>
         </SettingsIconLink>
       </UserControlsContainer>
     </HeaderContainer>
@@ -273,7 +290,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
               <FooterSectionTitle>Resources</FooterSectionTitle>
               <FooterLinksList>
                 <FooterLinkItem>
-                  <FooterLink tglobalWindowo="/rulings">Rulings</FooterLink>
+                  <FooterLink to="/rulings">Rulings</FooterLink>
                 </FooterLinkItem>
                 <FooterLinkItem>
                   <FooterLink to="/help">Help Center</FooterLink>
@@ -320,17 +337,19 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
 
 function UserData() {
 
-  const tokenData = globalWindow.ygo101_token_data;
+  return null;
+  // TODO
+  // const tokenData = globalWindow.ygo101_token_data;
 
-  if (tokenData) {
-    return <div>
-      {tokenData.name}
-    </div>
-  }
+  // if (tokenData) {
+  //   return <div>
+  //     {tokenData.name}
+  //   </div>
+  // }
 
-  return <div>
-    <a href={`${import.meta.env.VITE_API_BASE_URL}/auth/login`}>Login</a>
-  </div>
+  // return <div>
+  //   <a href={`${import.meta.env.VITE_API_BASE_URL}/auth/login`}>Login</a>
+  // </div>
 }
 
 export default AppLayout;

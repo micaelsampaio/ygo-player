@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import styled, { css } from "styled-components";
 import theme from "../../styles/theme";
@@ -24,16 +24,16 @@ const getActiveStyles = (variant: string) => {
   const activeMap = {
     primary: css`
       color: ${theme.colors.primary.main};
+      font-weight: ${theme.typography.weight.medium};
       border-color: ${theme.colors.primary.main};
       background-color: rgba(0, 120, 212, 0.05);
-
       &::before {
         opacity: 1;
       }
     `,
     secondary: css`
-      color: ${theme.colors.text.primary};
-      font-weight: ${theme.typography.weight.semibold};
+      color: ${theme.colors.primary.main};
+      font-weight: ${theme.typography.weight.medium};
 
       &::after {
         transform: scaleX(1);
@@ -41,7 +41,7 @@ const getActiveStyles = (variant: string) => {
     `,
   };
 
-  return activeMap[variant];
+  return (activeMap as any)[variant];
 };
 
 const NavContainer = styled.nav<{
@@ -92,10 +92,10 @@ const getSizeStyles = (size: string) => {
     `,
   };
 
-  return sizeMap[size];
+  return (sizeMap as any)[size];
 };
 
-const StyledNavLink = styled(Link)<{
+const StyledNavLink = styled(Link) <{
   orientation: "horizontal" | "vertical";
   variant: "primary" | "secondary";
   active: boolean;
@@ -107,16 +107,17 @@ const StyledNavLink = styled(Link)<{
   align-items: center;
   gap: ${theme.spacing.sm};
   text-decoration: none;
-  color: ${theme.colors.text.secondary};
+  color: #AAA;
   border-radius: ${({ orientation, variant }) =>
     orientation === "vertical" && variant === "primary"
       ? theme.borderRadius.md
       : orientation === "horizontal"
-      ? "0"
-      : "0"};
+        ? "0"
+        : "0"};
   transition: all ${theme.transitions.default};
   position: relative;
   white-space: nowrap;
+  font-weight: ${theme.typography.weight.medium};
 
   ${({ size }) => getSizeStyles(size)}
 
@@ -134,11 +135,12 @@ const StyledNavLink = styled(Link)<{
         bottom: 0;
         left: 0;
         width: 100%;
-        height: 2px;
+        height: 3px;
         background-color: ${theme.colors.primary.main};
         transform: scaleX(0);
         transition: transform 0.2s ease-in-out;
         transform-origin: center;
+        border-radius: 3px;
       }
 
       &:hover::after {
@@ -176,13 +178,13 @@ const StyledNavLink = styled(Link)<{
   
   &:hover {
     color: ${({ variant }) =>
-      variant === "primary"
-        ? theme.colors.primary.main
-        : theme.colors.text.primary};
+    variant === "primary"
+      ? theme.colors.primary.main
+      : theme.colors.text.primary};
     background-color: ${({ orientation, variant }) =>
-      orientation === "vertical" && variant === "primary"
-        ? "rgba(0, 120, 212, 0.05)"
-        : "transparent"};
+    orientation === "vertical" && variant === "primary"
+      ? "rgba(0, 120, 212, 0.05)"
+      : "transparent"};
   }
 `;
 
