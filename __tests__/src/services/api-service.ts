@@ -1,4 +1,5 @@
 import axios from "axios";
+import { CacheService } from "./cache-service";
 
 const API_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -56,13 +57,34 @@ export class APIService {
         mainDeck: [],
         extraDeck: [],
         sideDeck: [],
-      }
+      };
     }
 
-    const cardArray = await this.getCardsDataById(Array.from(ids));
+    const cardIds = Array.from(ids);
+    const cacheHits: Record<number, any> = {};
+    const cacheMisses: number[] = [];
+
+    await Promise.all(
+      cardIds.map(async (id) => {
+        const cached = await CacheService.getCardById(id);
+        if (cached) {
+          cacheHits[id] = cached;
+        } else {
+          cacheMisses.push(id);
+        }
+      })
+    );
+
+    let fetchedCards: any[] = [];
+    if (cacheMisses.length > 0) {
+      fetchedCards = await this.getCardsDataById(cacheMisses);
+      await Promise.all(fetchedCards.map((card) => CacheService.saveCardById(card.id, card)));
+    }
+
+    const allCards = [...Object.values(cacheHits), ...fetchedCards];
 
     const cardMap = new Map<number, any>(
-      cardArray.map((card: any) => [card.id, card])
+      allCards.map((card: any) => [card.id, card])
     );
 
     const mainDeck = deck.mainDeck.map((id: number) => cardMap.get(id));
