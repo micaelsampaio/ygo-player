@@ -61,27 +61,7 @@ export class APIService {
     }
 
     const cardIds = Array.from(ids);
-    const cacheHits: Record<number, any> = {};
-    const cacheMisses: number[] = [];
-
-    await Promise.all(
-      cardIds.map(async (id) => {
-        const cached = await CacheService.getCardById(id);
-        if (cached) {
-          cacheHits[id] = cached;
-        } else {
-          cacheMisses.push(id);
-        }
-      })
-    );
-
-    let fetchedCards: any[] = [];
-    if (cacheMisses.length > 0) {
-      fetchedCards = await this.getCardsDataById(cacheMisses);
-      await Promise.all(fetchedCards.map((card) => CacheService.saveCardById(card.id, card)));
-    }
-
-    const allCards = [...Object.values(cacheHits), ...fetchedCards];
+    const allCards = await this.getCardsDataById(cardIds);
 
     const cardMap = new Map<number, any>(
       allCards.map((card: any) => [card.id, card])
@@ -99,13 +79,37 @@ export class APIService {
     };
   }
 
-  static async getCardsDataById(ids: number[]) {
-    const { data } = await HTTP.request({
-      url: `/cards?ids=${ids.join(",")}`,
-      method: "GET",
-    });
 
-    return data;
+  static async getCardsDataById(ids: number[]) {
+    const cacheHits: Record<number, any> = {};
+    const cacheMisses: number[] = [];
+
+    await Promise.all(
+      ids.map(async (id) => {
+        const cached = await CacheService.getCardById(id);
+        if (cached) {
+          cacheHits[id] = cached;
+        } else {
+          cacheMisses.push(id);
+        }
+      })
+    );
+
+    let fetchedCards: any[] = [];
+    if (cacheMisses.length > 0) {
+      const { data } = await HTTP.request({
+        url: `/cards?ids=${cacheMisses.join(",")}`,
+        method: "GET",
+      });
+
+      fetchedCards = data;
+
+      await Promise.all(
+        fetchedCards.map((card) => CacheService.saveCardById(card.id, card))
+      );
+    }
+
+    return [...Object.values(cacheHits), ...fetchedCards];
   }
 
   static async getReplaysFromDeckId(id: string, signal?: any) {

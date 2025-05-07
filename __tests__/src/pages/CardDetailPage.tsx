@@ -15,6 +15,9 @@ import {
   Tag,
   ChevronLeft,
 } from "lucide-react";
+import { CardData } from "ygo-core";
+import { CacheService } from "../services/cache-service";
+import { APIService } from "../services/api-service";
 
 interface YugiohCard {
   id: number;
@@ -94,32 +97,8 @@ const CardDetailPage: React.FC = () => {
           `Fetching card with ID: ${id} from ${apiBaseUrl}/cards?ids=${id}`
         );
 
-        const response = await fetch(`${apiBaseUrl}/cards?ids=${id}`, {
-          headers: {
-            Accept: "application/json",
-            "Content-Type": "application/json",
-          },
-        });
 
-        console.log(
-          "API Response Status:",
-          response.status,
-          response.statusText
-        );
-
-        if (!response.ok) {
-          throw new Error(
-            `Failed to fetch card data: ${response.status} ${response.statusText}`
-          );
-        }
-
-        const data = await response.json();
-        console.log("API response full data:", data);
-
-        if (!data) {
-          setError("No data returned from API");
-          return;
-        }
+        const data = await APIService.getCardsDataById([Number(id)]);
 
         let cardDetails = null;
 
@@ -132,11 +111,10 @@ const CardDetailPage: React.FC = () => {
           }
         } else if (
           data &&
-          data.data &&
-          Array.isArray(data.data) &&
-          data.data.length > 0
+          Array.isArray(data) &&
+          data.length > 0
         ) {
-          cardDetails = data.data[0];
+          cardDetails = data[0];
           console.log("Card details from nested data format:", cardDetails);
         } else {
           console.error("Unexpected API response format:", data);
@@ -166,7 +144,7 @@ const CardDetailPage: React.FC = () => {
             );
             localStorage.clear();
 
-            const newCache = {};
+            const newCache: any = {};
             newCache[id] = cardDetails;
             localStorage.setItem("cached_cards", JSON.stringify(newCache));
           }
