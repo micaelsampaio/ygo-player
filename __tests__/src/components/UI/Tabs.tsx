@@ -78,17 +78,14 @@ const TabButton = styled.button<{ $active: boolean }>`
     ${(props) => (props.$active ? theme.colors.primary.main : "transparent")};
   color: ${(props) =>
     props.$active ? theme.colors.primary.main : theme.colors.text.secondary};
-  font-weight: ${(props) =>
-    props.$active
-      ? theme.typography.weight.semibold
-      : theme.typography.weight.medium};
+  font-weight: ${theme.typography.weight.medium};
   cursor: pointer;
   transition: all ${theme.transitions.default};
   white-space: nowrap;
 
   &:hover {
     color: ${(props) =>
-      props.$active ? theme.colors.primary.dark : theme.colors.text.primary};
+    props.$active ? theme.colors.primary.dark : theme.colors.text.primary};
   }
 `;
 

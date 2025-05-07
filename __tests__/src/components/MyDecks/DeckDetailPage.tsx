@@ -1262,6 +1262,8 @@ const DeckContentCard = styled(Card)`
 `;
 
 const StyledTabs = styled(Tabs)`
+  display: flex;
+  flex-wrap: wrap;
   margin-bottom: ${theme.spacing.md};
 `;
 
