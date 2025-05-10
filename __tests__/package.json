@@ -37,7 +37,7 @@
     "@libp2p/websockets": "^9.1.5",
     "@libp2p/webtransport": "^5.0.27",
     "@multiformats/multiaddr": "^12.3.5",
-    "@tailwindcss/vite": "^4.1.5",
+    "@tailwindcss/vite": "^4.1.6",
     "@types/pako": "^2.0.3",
     "@types/react-router-dom": "^5.3.3",
     "axios": "^1.6.7",

@@ -9,6 +9,7 @@ const { colors, typography, spacing } = theme;
 
 interface AppLayoutProps {
   children: React.ReactNode;
+  padding?: boolean;
 }
 
 const Logo = styled(Link)`
@@ -191,7 +192,7 @@ const Copyright = styled.p`
 
 const globalWindow = (window as any);
 
-const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
+const AppLayout: React.FC<AppLayoutProps> = ({ padding, children }) => {
   // Navigation items - organized into primary categories without tool links in header
   const navItems = [
     { to: "/duel/lobby", label: "Duel Lobby" },
@@ -326,6 +327,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
 
   return (
     <Layout
+      padding={padding}
       header={headerContent}
       footer={footerContent}
       contentMaxWidth="1800px"

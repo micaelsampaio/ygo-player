@@ -6,8 +6,7 @@ import { StoreService } from "../../services/store-service";
 import { APIService } from "../../services/api-service";
 import { Button } from "../UI";
 import { YgoReplayToImage } from "ygo-core-images-utils";
-import { contain } from "three/src/extras/TextureUtils.js";
-import { MoreHorizontal, MoreVertical } from "lucide-react";
+import { MoreVertical } from "lucide-react";
 
 interface ReplayDataDto {
 
@@ -184,6 +183,7 @@ function ReplayField({ data }: { data: any }) {
 
   const board: any = useMemo(() => {
     const board = {
+      fieldSpell: null as any,
       monsterZones: [null, null, null, null, null] as any,
       spellZones: [null, null, null, null, null] as any,
       extraMonsterZones: [null, null] as any,
@@ -199,7 +199,8 @@ function ReplayField({ data }: { data: any }) {
 
     data.endField.forEach((row: any) => {
       const zoneData = YGOGameUtils.getZoneData(row.zone);
-      if (zoneData.player === 0 && (zoneData.zone === "M" || zoneData.zone === "S" || zoneData.zone === "EMZ")) {
+      if (zoneData.player === 0 && (zoneData.zone === "F" || zoneData.zone === "M" || zoneData.zone === "S" || zoneData.zone === "EMZ")) {
+        if (zoneData.zone === "F") board.fieldSpell = row;
         if (zoneData.zone === "M") board.monsterZones[zoneData.zoneIndex - 1] = row;
         if (zoneData.zone === "S") board.spellZones[zoneData.zoneIndex - 1] = row;
         if (zoneData.zone === "EMZ") board.extraMonsterZones[zoneData.zoneIndex - 1] = row;
@@ -211,7 +212,7 @@ function ReplayField({ data }: { data: any }) {
 
   const renderZone = (key: string, cardData: any | null) => (
     <div key={key} className="col-span-1 aspect-square flex flex-col items-center justify-center text-xs relative">
-      <div className="h-full w-[80%] border-2 border-blue-500/50 rounded-sm" />
+      <div className="h-full w-[80%] border-2 border-blue-300/50 border-dotted" />
 
       {cardData && (
         <img
@@ -275,22 +276,23 @@ function ReplayField({ data }: { data: any }) {
     };
   }, [board.hand.length]);
 
-
   return (
-    <div className="w-full h-full bg-gray-100 p-4 flex flex-col justify-center items-center rounded" ref={containerRef}>
-      <div className="grid grid-cols-5 gap-1 w-full">
+    <div className="w-full h-full bg-gray-800 p-4 flex flex-col justify-center items-center rounded" ref={containerRef}>
+      <div className="grid grid-cols-6 gap-2 w-full">
+        <div className="col-span-1" />
         <div className="col-span-1" />
         {renderZone("emz-1", board.extraMonsterZones[0])}
         <div className="col-span-1" />
         {renderZone("emz-2", board.extraMonsterZones[1])}
         <div className="col-span-1" />
+        {renderZone("f", board.fieldSpell)}
         {board.monsterZones.map((cardData: any, index: number) => renderZone("m" + index, cardData))}
+        <div className="col-span-1" />
         {board.spellZones.map((cardData: any, index: number) => renderZone("s" + index, cardData))}
       </div>
-
       <div
         ref={handContainerRef}
-        className="col-span-5 flex items-center justify-center gap-1 relative relative w-full"
+        className="col-span-6 flex items-center justify-center gap-1 relative w-full"
       >
         {board.hand.map((cardData: any, index: number) => {
           return <img

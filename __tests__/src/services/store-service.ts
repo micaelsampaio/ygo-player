@@ -1,4 +1,3 @@
-import { relative } from "path";
 import { isUserLoggedIn } from "../utils/token-utils";
 import { APIService } from "./api-service";
 
@@ -8,6 +7,7 @@ export class StoreService {
       return APIService.getDeckById(deckId);
     } else {
       try {
+        if (!deckId.startsWith("deck_")) deckId = `deck_${deckId}`;
         const deck = JSON.parse(window.localStorage.getItem(deckId)!);
         deck.isLocal = true;
         return deck;

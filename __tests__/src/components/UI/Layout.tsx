@@ -1,5 +1,5 @@
 import React from "react";
-import styled from "styled-components";
+import styled, { css } from "styled-components";
 import theme from "../../styles/theme";
 
 interface LayoutProps {
@@ -8,6 +8,7 @@ interface LayoutProps {
   header?: React.ReactNode;
   footer?: React.ReactNode;
   contentMaxWidth?: string;
+  padding?: boolean;
 }
 
 const LayoutContainer = styled.div`
@@ -23,9 +24,9 @@ const MainContent = styled.main<{ hasSidebar: boolean }>`
   width: 100%;
 `;
 
-const ContentWrapper = styled.div<{ maxWidth?: string }>`
+const ContentWrapper = styled.div<{ maxWidth?: string, padding: boolean }>`
   flex: 1;
-  padding: ${theme.spacing.lg};
+  ${props => props.padding && css`padding: ${theme.spacing.lg};`}
   max-width: ${(props) => props.maxWidth || "none"};
   margin: 0 auto;
   width: 100%;
@@ -92,6 +93,7 @@ export const Layout: React.FC<LayoutProps> = ({
   header,
   footer,
   contentMaxWidth,
+  padding = true,
 }) => {
   return (
     <LayoutContainer>
@@ -99,7 +101,7 @@ export const Layout: React.FC<LayoutProps> = ({
 
       <MainContent hasSidebar={!!sidebar}>
         {sidebar && <SidebarWrapper>{sidebar}</SidebarWrapper>}
-        <ContentWrapper maxWidth={contentMaxWidth}>{children}</ContentWrapper>
+        <ContentWrapper padding={padding} maxWidth={contentMaxWidth}>{children}</ContentWrapper>
       </MainContent>
 
       {footer && <FooterWrapper>{footer}</FooterWrapper>}

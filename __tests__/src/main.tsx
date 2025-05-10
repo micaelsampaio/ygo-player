@@ -37,6 +37,7 @@ import { PageViewerProvider } from "./utils/use-page-view.ts";
 import { SpinnerWheel, TierList, Randomizer } from "./components/Tools";
 import { LoginWithSuccessPage } from "./pages/LoginWithSuccess.tsx";
 import { registerTokenInWindow } from "./utils/token-utils.ts";
+import { PreDuelLobbyPage } from "./components/PreDuelLobby/PreDuelLobby.tsx";
 
 debug.enable("ygo:*");
 localStorage.setItem("debug", "ygo:*");
@@ -56,6 +57,7 @@ createRoot(document.getElementById("root")!).render(
         {/* Move the old App to /tests */}
         <Route path="/tests" element={<TestingPage />} />
         <Route path="/duel" element={<Duel />} />
+        <Route path="/pre-duel" element={<PreDuelLobbyPage />} />
         <Route path="/duel/:roomId" element={<Duel />} />
         <Route path="/deck" element={<DownloadDeck />} />
         <Route path="/deckbuilder" element={<DeckBuilder />} />
