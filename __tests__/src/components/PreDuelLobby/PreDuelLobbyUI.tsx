@@ -17,7 +17,7 @@ export function PreDuelLobbyUI() {
         <PreGameBoard />
       </div>
       <div className="shrink-0 w-[350px] h-full bg-red-950">
-        {/* <PlayerLobby player={1} /> */}
+        <PlayerLobby player={1} />
       </div>
     </div>
 

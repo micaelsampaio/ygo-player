@@ -7,6 +7,7 @@ import { APIService } from "../../services/api-service";
 import { Button } from "../UI";
 import { YgoReplayToImage } from "ygo-core-images-utils";
 import { MoreVertical } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../ui/dropdown-menu";
 
 interface ReplayDataDto {
 
@@ -84,19 +85,39 @@ function ReplayEntry({ data: replay, openReplay }: { data: any, openReplay: (rep
         <div className="text-lg font-semibold">
           {replay.name || replay.id}
         </div>
-        <div className="text-gray-500">
-          <ThreeDotsMenu>
-            <a
-              className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer truncate"
-              href={`/create-combo/replay/${replay.id || replay.replayId}`}
-              target="_blank"
-            >
-              Create Combo
-            </a>
-            <div className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer truncate">
-              Delete Replay
-            </div>
-          </ThreeDotsMenu>
+        <div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="text-gray-500">
+                <MoreVertical className="w-5 h-5" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem asChild>
+                <a
+                  href={`/create-combo/replay/${replay.id || replay.replayId}`}
+                  target="_blank"
+                  className="truncate"
+                >
+                  Create Combo
+                </a>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <a href={`/pre-duel?replayId=${replay.id || replay.replayId}&vs=0`}>
+                  Play vs EndBoard
+                </a>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="text-destructive cursor-pointer"
+                onSelect={(e) => {
+                  e.preventDefault()
+                  // Call your delete function here
+                }}
+              >
+                Delete Replay
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
       </div>
@@ -118,63 +139,6 @@ function ReplayEntry({ data: replay, openReplay }: { data: any, openReplay: (rep
     </div>
   );
 }
-
-
-interface ThreeDotsMenuProps {
-  children: React.ReactNode;
-}
-
-
-const ThreeDotsMenu: React.FC<ThreeDotsMenuProps> = ({ children }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement | null>(null);  // Reference to the menu
-  const buttonRef = useRef<HTMLDivElement | null>(null); // Reference to the button
-
-  const toggleMenu = () => {
-    setIsOpen(prevState => !prevState);
-  };
-
-  const closeMenu = () => {
-    setIsOpen(false);
-  };
-
-  // Click outside the menu to close it
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        menuRef.current && !menuRef.current.contains(event.target as Node) &&
-        buttonRef.current && !buttonRef.current.contains(event.target as Node)
-      ) {
-        closeMenu();
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
-
-  return (
-    <div className="relative" ref={buttonRef}>
-      <div
-        onClick={toggleMenu}
-        className="text-gray-500 cursor-pointer hover:text-gray-700"
-      >
-        <MoreVertical />
-      </div>
-      {isOpen && (
-        <div
-          ref={menuRef}
-          className="absolute right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-md z-10 min-w-[150px]"
-        >
-          {children}
-        </div>
-      )}
-    </div>
-  );
-};
 
 
 function ReplayField({ data }: { data: any }) {

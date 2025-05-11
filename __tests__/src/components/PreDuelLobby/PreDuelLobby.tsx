@@ -5,6 +5,7 @@ import { PreDuelLobbyUI } from "./PreDuelLobbyUI";
 import { useSearchParams } from "react-router-dom";
 import { StoreService } from "../../services/store-service";
 import { Card, FieldZone, FieldZoneData, YGOGameUtils, YGOProps } from "ygo-core";
+import { APIService } from "@/services/api-service";
 
 let lobbyCardIndex = 0;
 
@@ -176,12 +177,36 @@ export function PreDuelLobbyPage() {
       try {
 
         const deckIds = [searchParams.get("deck1"), searchParams.get("deck2")];
+        const replayId = searchParams.get("replayId");
+        const playVs = searchParams.get("vs");
+
+        let replayData: any;
+
+        if (replayId) {
+          replayData = await StoreService.getReplayFromId(replayId);
+        }
 
         const players = await Promise.all([0, 1].map(async (playerIndex) => {
 
           const deckId = deckIds[playerIndex] as string;
 
-          const deckData = await getDeckData(deckId as string);
+          let deckData;
+          let initialField;
+
+          if (playVs === "0" && playerIndex === 1) {
+            const deckFromReplay = {
+              id: undefined,
+              name: undefined,
+              mainDeck: replayData.players[0].mainDeck,
+              extraDeck: replayData.players[0].extraDeck,
+            }
+            initialField = replayData.endField || [];
+
+            deckData = await APIService.getDeckFromDeckWithCardIds(deckFromReplay);
+          } else {
+            deckData = await getDeckData(deckId as string);
+          }
+
           setupDeck(playerIndex, deckData);
 
           const player: PreDuelLobbyPlayerGameData = {
@@ -207,6 +232,7 @@ export function PreDuelLobbyPage() {
             }
           }
 
+          setupInitialField(player, initialField);
           return player;
         }))
 
@@ -324,4 +350,55 @@ function setupDeck(playerIndex: number, deck: { mainDeck: Card[], extraDeck: Car
   });
 
   return deck;
+}
+
+function setupInitialField(player: PreDuelLobbyPlayerGameData, initialField: any) {
+
+  if (Array.isArray(initialField)) {
+    const getCardFromDeck = (id: number) => {
+      const mainIndex = player.mainDeck.findIndex(card => card.id === id);
+
+      if (mainIndex !== -1) {
+        const cardRemoved = player.mainDeck.splice(mainIndex, 1)[0];
+        return cardRemoved;
+      }
+
+      const extraIndex = player.extraDeck.findIndex(card => card.id === id);
+
+      if (extraIndex !== -1) {
+        const cardRemoved = player.extraDeck.splice(extraIndex, 1)[0];
+        return cardRemoved;
+      }
+
+      return null;
+    }
+
+    initialField.forEach(cardData => {
+      const { id, zone, position } = cardData;
+      const zoneData = YGOGameUtils.getZoneData(zone);
+
+      const card = getCardFromDeck(id)
+
+      if (card) {
+        if (position) card.position = position;
+
+        if (zoneData.zone === "M") {
+          player.field.monsterZones[zoneData.zoneIndex - 1] = card;
+        } else if (zoneData.zone === "S") {
+          player.field.spellZones[zoneData.zoneIndex - 1] = card;
+        } else if (zoneData.zone === "EMZ") {
+          player.field.extraMonsterZones[zoneData.zoneIndex - 1] = card;
+        } else if (zoneData.zone === "H") {
+          player.field.hand.push(card);
+        } else if (zoneData.zone === "GY") {
+          player.field.graveyard.push(card);
+        } else if (zoneData.zone === "B") {
+          player.field.banishedZone.push(card);
+        } else if (zoneData.zone === "F") {
+          player.field.fieldSpell = card;
+        }
+      }
+    })
+  }
+
 }
