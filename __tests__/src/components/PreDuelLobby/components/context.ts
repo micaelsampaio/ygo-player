@@ -35,6 +35,8 @@ export interface PreDuelLobbyContext {
   players: PreDuelLobbyPlayerGameData[]
   loading: boolean
   action: PreDuelLobbyAction | null,
+  setPlayers: React.Dispatch<React.SetStateAction<PreDuelLobbyPlayerGameData[]>>
+  updateFieldCards: () => void,
   setLoading: (value: boolean) => void
   setPlayerDeck: (playerIndex: number, deckId: string) => Promise<void>
   setAction: (action: PreDuelLobbyAction | null) => void

@@ -1,8 +1,9 @@
+import path from "path"
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 import { resolve } from "path";
 import { vitePluginSocialMediaPrerender } from "./src/middleware/socialMediaPrerender";
-import tailwindcss from '@tailwindcss/vite'
+import tailwindcss from "@tailwindcss/vite"
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
@@ -55,6 +56,7 @@ export default defineConfig(({ mode }) => {
         "ygo-core": isDocker
           ? resolve(__dirname, "./node_modules/ygo-core/index.js")
           : resolve(__dirname, "../../ygo-core/dist/index.js"),
+        "@": path.resolve(__dirname, "./src"),
       },
     },
     build: {

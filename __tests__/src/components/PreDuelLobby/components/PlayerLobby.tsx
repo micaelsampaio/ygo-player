@@ -4,6 +4,7 @@ import { usePreDuelLobbyContext } from "./context"
 import { Card } from "ygo-core";
 import { PRE_GAME_ACTIONS_TYPES } from "../actions";
 import { Button } from "../../UI";
+import { Select, SelectContent, SelectTrigger, SelectValue, SelectItem } from "@/components/ui/select";
 
 export function PlayerLobby({ player: playerIndex }: { player: number }) {
   const { deckNames, players, action, startDuel, setAction, setPlayerDeck } = usePreDuelLobbyContext();
@@ -36,47 +37,53 @@ export function PlayerLobby({ player: playerIndex }: { player: number }) {
     const mainDeckContainer = container.querySelector<HTMLDivElement>(".main-deck-container")!;
     const extraDeckContainer = container.querySelector<HTMLDivElement>(".extra-deck-container")!;
 
-    const getCardSize = (parent: HTMLDivElement, minRows: number, maxNumberOfCards: number): number => {
-      if (maxNumberOfCards === 0) return 0;
+    const getCardSize = (
+      parent: HTMLDivElement,
+      minRows: number,
+      maxNumberOfCards: number
+    ): number => {
+      if (maxNumberOfCards <= 0) return 0;
 
       const containerWidth = parent.offsetWidth;
       const containerHeight = parent.offsetHeight;
       const aspectRatio = 1.45;
-      const minCols = 5;
-      const minAcceptableRows = 2;
+      const minCols = Math.min(5, maxNumberOfCards);
 
       let bestCardHeight = 0;
 
-      for (let rows = Math.max(minRows, minAcceptableRows); rows <= Math.min(Math.ceil(maxNumberOfCards / minCols), 10); rows++) {
-        const cols = Math.ceil(maxNumberOfCards / rows);
+      for (let cols = minCols; cols <= Math.min(maxNumberOfCards, 20); cols++) {
+        const rows = Math.ceil(maxNumberOfCards / cols);
 
-        if (cols < minCols) {
-          continue;
-        }
+        if (rows < minRows) continue;
 
-        const maxCardWidth = containerWidth / cols;
-        const maxCardHeight = containerHeight / rows;
+        const availableWidthPerCard = containerWidth / cols;
+        const heightBasedOnWidth = availableWidthPerCard / aspectRatio;
 
-        let cardHeight;
-        const heightIfUsingFullWidth = maxCardWidth * aspectRatio;
+        const availableHeightPerCard = containerHeight / rows;
 
-        if (heightIfUsingFullWidth <= maxCardHeight) {
-          cardHeight = heightIfUsingFullWidth;
-        } else {
-          cardHeight = maxCardHeight;
-        }
+        const cardHeight = Math.min(heightBasedOnWidth, availableHeightPerCard);
+        const cardWidth = cardHeight * aspectRatio;
 
-        if (cardHeight > bestCardHeight) {
+        if (cardWidth * cols <= containerWidth &&
+          cardHeight * rows <= containerHeight &&
+          cardHeight > bestCardHeight) {
           bestCardHeight = cardHeight;
         }
+      }
+
+      if (bestCardHeight === 0) {
+        const cols = Math.min(minCols, maxNumberOfCards);
+        const cardWidth = containerWidth / cols;
+        bestCardHeight = cardWidth / aspectRatio;
       }
 
       return bestCardHeight;
     };
 
+
     const sizes = {
       mainDeck: getCardSize(mainDeckContainer, 4, player.mainDeck.length) + "px",
-      extraDeck: getCardSize(extraDeckContainer, 2, player.extraDeck.length) + "px",
+      extraDeck: getCardSize(mainDeckContainer, 4, player.mainDeck.length) + "px",
     };
 
     setCardsSize(sizes);
@@ -87,11 +94,22 @@ export function PlayerLobby({ player: playerIndex }: { player: number }) {
 
   return <div className="h-full p-4 text-white" ref={containerRef}>
     <div>
-      <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Choose your deck</label>
-      <select className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" value={deckId} onChange={e => changeDeck(e.target.value)}>
-        <option value="">Choose your deck</option>
-        {deckNames.map(deckName => <option key={deckName} value={deckName}>{deckName}</option>)}
-      </select>
+      <div className="mb-3">
+        <label className="text-md font-bold">Choose deck</label>
+      </div>
+      <Select value={deckId || ""} onValueChange={changeDeck}>
+        <SelectTrigger className="w-full bg-white text-gray-800 placeholder:text-gray-500">
+          <SelectValue placeholder="Select a deck" />
+        </SelectTrigger>
+        <SelectContent>
+          {deckNames?.map(deckName => (
+            <SelectItem key={deckName} value={deckName}>
+              {deckName}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
     </div>
     <div className="text-sm font-bold mt-4 mb-1">
       Main deck

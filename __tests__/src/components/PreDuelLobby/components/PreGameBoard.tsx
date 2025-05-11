@@ -2,18 +2,31 @@ import styled, { css, keyframes } from "styled-components";
 import { usePreDuelLobbyContext } from "./context";
 import { Card, FieldZone, YGOGameUtils } from "ygo-core";
 import { getCardImageUrl } from "../../../utils/cardImages";
+import { PRE_GAME_ACTIONS_TYPES } from "../actions";
 const cdnUrl = String(import.meta.env.VITE_YGO_CDN_URL);
 
 const FACE_DOWN_CARD_URL = `${cdnUrl}/images/card_back.png`;
 
 export function PreGameBoard() {
 
-  const { action, players, clearAction, setCardInCardZone } = usePreDuelLobbyContext();
+  const { action, players, setAction, clearAction, setCardInCardZone } = usePreDuelLobbyContext();
 
   const isCardSelectionActive = action?.name === "select_card_zone";
 
+  const onCardZoneClick = (zone: FieldZone, card: Card | null) => {
 
-  const onCardZoneClick = (zone: FieldZone) => {
+    if (!action && card) {
+      setAction({
+        name: PRE_GAME_ACTIONS_TYPES.update_card_zone,
+        data: {
+          card,
+          zoneData: YGOGameUtils.getZoneData(zone)
+        }
+      });
+
+      return;
+    }
+
     if (action?.data?.card) {
       setCardInCardZone(zone, action?.data.card);
     }
@@ -31,7 +44,7 @@ export function PreGameBoard() {
     return <CardZoneContainer
       ygo-zone={zone}
       key={zone}
-      onClick={() => onCardZoneClick(zone)}
+      onClick={() => onCardZoneClick(zone, card)}
     >
       <CardZone
         className="h-[90%] aspect-[0.714] border-2 border-dotted border-gray-500/50 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
@@ -57,7 +70,7 @@ export function PreGameBoard() {
       <div className="w-full max-w-[90vmin] aspect-square p-2">
         <div className="grid h-full w-full grid-rows-7 grid-cols-7">
           <div className="col-span-7 flex py-4">
-            <div className="w-full h-full border-2 border-dotted border-gray-500/50 flex items-center justify-center gap-4" onClick={() => onCardZoneClick("H2")}>
+            <div className="w-full h-full border-2 border-dotted border-gray-500/50 flex items-center justify-center gap-4" onClick={() => onCardZoneClick("H2", null)}>
               {players[1].field.hand.map((card) => <img src={getCardImageUrl(card!.id)} className="h-[80%] aspect-[0.714]" />)}
             </div>
           </div>
@@ -83,22 +96,28 @@ export function PreGameBoard() {
 
           {renderZone(0, "F", -1, players[0].field.fieldSpell)}
           {players[0].field.monsterZones.map((card, zoneIndex) => renderZone(0, "M", zoneIndex + 1, card))}
-          <div className="flex align-middle justify-center">
-            <div className="aspect-square w-3/4 m-auto rounded-full border-2 border-gray-500/50 border-dotted">
-              B
+          <div className="flex items-center justify-center">
+            <div
+              className="aspect-square w-3/4 m-auto rounded-full border-2 border-gray-500/50 border-dotted flex items-center justify-center"
+              onClick={() => onCardZoneClick("B", null)}
+            >
+              B ({players[0].field.banishedZone.length})
             </div>
           </div>
           <div className="col-span-1" />
           {players[0].field.spellZones.map((card, zoneIndex) => renderZone(0, "S", zoneIndex + 1, card))}
-          <div className="flex align-middle justify-center">
-            <div className="aspect-square w-3/4 m-auto rounded-full border-2 border-gray-500/50 border-dotted" >
-              GY
+          <div className="flex items-center justify-center">
+            <div
+              className="aspect-square w-3/4 m-auto rounded-full border-2 border-gray-500/50 border-dotted flex items-center justify-center"
+              onClick={() => onCardZoneClick("GY", null)}
+            >
+              GY ({players[0].field.graveyard.length})
             </div>
           </div>
 
           {/* Bottom Row */}
           <div className="col-span-7 flex py-4">
-            <div className="w-full h-full border-2 border-dotted border-gray-500/50 flex items-center justify-center gap-4" onClick={() => onCardZoneClick("H")}>
+            <div className="w-full h-full border-2 border-dotted border-gray-500/50 flex items-center justify-center gap-4" onClick={() => onCardZoneClick("H", null)}>
               {players[0].field.hand.map((card) => <img src={getCardImageUrl(card!.id)} className="h-[80%] aspect-[0.714]" />)}
             </div>
           </div>

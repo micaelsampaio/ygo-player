@@ -57,6 +57,7 @@ export function PreDuelLobbyPage() {
             return {
               ...player,
               ...deckData,
+              deckId,
               field: {
                 hand: [],
                 fieldSpell: null,
@@ -75,6 +76,10 @@ export function PreDuelLobbyPage() {
       });
     } catch (error) {
     }
+  }
+
+  const updateFieldCards = () => {
+    setPlayers(players => players.map(p => p));
   }
 
   const startDuel = () => {
@@ -226,12 +231,14 @@ export function PreDuelLobbyPage() {
       players,
       loading,
       action,
+      setPlayers,
       setLoading,
       setPlayerDeck,
       setAction,
       clearAction,
       startDuel,
       setCardInCardZone,
+      updateFieldCards,
     }}>
       <PreDuelLobbyUI />
     </PreDuelLobbyContextRef.Provider>
@@ -306,12 +313,14 @@ function setupDeck(playerIndex: number, deck: { mainDeck: Card[], extraDeck: Car
     card.index = ++lobbyCardIndex;
     card.originalOwner = playerIndex
     card.position = "faceup-attack";
+    card.isMainDeckCard = true;
   });
 
   deck.extraDeck.forEach((card: any) => {
     card.index = ++lobbyCardIndex;
     card.originalOwner = playerIndex
     card.position = "faceup-attack";
+    card.isMainDeckCard = false;
   });
 
   return deck;
