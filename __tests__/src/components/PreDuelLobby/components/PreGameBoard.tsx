@@ -2,6 +2,9 @@ import styled, { css, keyframes } from "styled-components";
 import { usePreDuelLobbyContext } from "./context";
 import { Card, FieldZone, YGOGameUtils } from "ygo-core";
 import { getCardImageUrl } from "../../../utils/cardImages";
+const cdnUrl = String(import.meta.env.VITE_YGO_CDN_URL);
+
+const FACE_DOWN_CARD_URL = `${cdnUrl}/images/card_back.png`;
 
 export function PreGameBoard() {
 
@@ -20,11 +23,15 @@ export function PreGameBoard() {
 
   const renderZone = (playerIndex: number, fieldZone: string, zoneIndex: number, card: Card | null) => {
     const zone = YGOGameUtils.createZone(fieldZone as any, playerIndex, zoneIndex);
-    return <div
+
+    const isDefense = !!(card && !fieldZone.startsWith("S") && YGOGameUtils.isDefense(card));
+    const rotationClass = getCardRotation(playerIndex, isDefense);
+    const hasFacedownCard = card && YGOGameUtils.isFaceDown(card);
+
+    return <CardZoneContainer
       ygo-zone={zone}
       key={zone}
       onClick={() => onCardZoneClick(zone)}
-      className={`relative`}
     >
       <CardZone
         className="h-[90%] aspect-[0.714] border-2 border-dotted border-gray-500/50 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
@@ -33,13 +40,16 @@ export function PreGameBoard() {
 
       {
         card && (
-          <div className={`absolute top-1/2 left-1/2 h-[80%] aspect-[0.714] -translate-x-1/2 -translate-y-1/2 ${playerIndex === 1 ? "rotate-180" : ""}`}>
+          <div className={`absolute top-1/2 left-1/2 h-[80%] aspect-[0.714] -translate-x-1/2 -translate-y-1/2 ${rotationClass}`}>
             <img src={getCardImageUrl(card.id)} className="w-full h-full" />
+
+            {
+              hasFacedownCard && <img className="absolute bg-black/50 top-0 left-0 w-full h-full opacity-70 card-face-down" src={FACE_DOWN_CARD_URL} />
+            }
           </div>
         )
       }
-
-    </div>
+    </CardZoneContainer>
   }
 
   return (
@@ -114,3 +124,26 @@ const CardZone = styled.div<{ blink: boolean }>`
     animation: ${blinkAnimation} 1s ease-in-out infinite;
   `}
 `;
+
+function getCardRotation(playerIndex: number, isDefense: boolean) {
+  if (playerIndex === 1) {
+    if (isDefense) {
+      return "rotate-90";
+    }
+    return "rotate-180";
+  }
+
+  if (isDefense) {
+    return "-rotate-90"
+  }
+
+  return "";
+
+}
+
+const CardZoneContainer = styled.div`
+  position: relative;
+  &:hover .card-face-down {
+    opacity: 0.3;
+  }
+`

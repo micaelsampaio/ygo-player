@@ -6,16 +6,22 @@ export interface PreDuelLobbyPlayerGameData {
   name: string,
   deckId: string,
   deckName: string
-  mainDeck: Card[],
-  mainDeckSize: number,
-  extraDeck: Card[],
-  extraDeckSize: number,
+  mainDeck: Card[]
+  mainDeckSize: number
+  extraDeck: Card[]
+  extraDeckSize: number
+  deckData: {
+    mainDeck: Card[],
+    extraDeck: Card[],
+  }
   field: {
     hand: (Card | null)[]
     fieldSpell: Card | null
     monsterZones: (Card | null)[]
     spellZones: (Card | null)[]
     extraMonsterZones: (Card | null)[]
+    graveyard: (Card | null)[],
+    banishedZone: (Card | null)[],
   }
 }
 
