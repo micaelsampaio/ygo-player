@@ -25,9 +25,13 @@ export function YgoDuelApp({ config, bind: onBind, start: onStart }: { bind?: (d
     }, [])
 
     useEffect(() => {
-        if (!duel) return;
-        duel.startDuel();
-        if (onStart) onStart(duel);
+        try {
+            if (!duel) return;
+            duel.startDuel();
+            if (onStart) onStart(duel);
+        } catch (error) {
+            alert("ERROR");
+        }
     }, [duel])
 
     return <div className="ygo-player-core" id="ygo-player-core" {...duel?.mouseEvents.eventsReference}>

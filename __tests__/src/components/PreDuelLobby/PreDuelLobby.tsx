@@ -2,14 +2,16 @@ import { useEffect, useState } from "react";
 import AppLayout from "../Layout/AppLayout";
 import { PreDuelLobbyAction, PreDuelLobbyContextRef, PreDuelLobbyPlayerGameData } from "./components/context";
 import { PreDuelLobbyUI } from "./PreDuelLobbyUI";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { StoreService } from "../../services/store-service";
-import { Card, FieldZone, FieldZoneData, YGOGameUtils, YGOProps } from "ygo-core";
+import { Card, FieldZone, YGOGameUtils, YGOProps } from "ygo-core";
 import { APIService } from "@/services/api-service";
 
 let lobbyCardIndex = 0;
 
 export function PreDuelLobbyPage() {
+  const navigate = useNavigate();
+
   const [searchParams] = useSearchParams();
   const [ready, setReady] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -58,6 +60,10 @@ export function PreDuelLobbyPage() {
             return {
               ...player,
               ...deckData,
+              deckData: {
+                mainDeck: JSON.parse(JSON.stringify(deckData.mainDeck)),
+                extraDeck: JSON.parse(JSON.stringify(deckData.extraDeck)),
+              },
               deckId,
               field: {
                 hand: [],
@@ -83,9 +89,12 @@ export function PreDuelLobbyPage() {
     setPlayers(players => players.map(p => p));
   }
 
-  const startDuel = () => {
+  const startDuel = async () => {
     const duelData = parseStateYGOCoreProps({ players });
-    console.log("TCL:: duelData", duelData);
+    console.log("DUEL DATA: ", duelData);
+    localStorage.setItem("duel-data", JSON.stringify(duelData));
+
+    navigate(`/duel/offline-${Date.now()}`);
   }
 
   const setCardInCardZone = (zone: FieldZone, card: Card | null) => {
@@ -319,6 +328,7 @@ function parseStateYGOCoreProps({ players: playersData }: { players: PreDuelLobb
     field.hand.forEach((card) => addCardToFieldState(playerIndex, YGOGameUtils.createZone("H", playerIndex, -1), card));
     field.monsterZones.forEach((card, zoneIndex) => addCardToFieldState(playerIndex, YGOGameUtils.createZone("M", playerIndex, zoneIndex + 1), card));
     field.spellZones.forEach((card, zoneIndex) => addCardToFieldState(playerIndex, YGOGameUtils.createZone("S", playerIndex, zoneIndex + 1), card));
+    field.extraMonsterZones.forEach((card, zoneIndex) => addCardToFieldState(playerIndex, YGOGameUtils.createZone("EMZ", playerIndex, zoneIndex + 1), card));
     field.graveyard.forEach((card, zoneIndex) => addCardToFieldState(playerIndex, YGOGameUtils.createZone("GY", playerIndex, zoneIndex + 1), card));
     field.banishedZone.forEach((card, zoneIndex) => addCardToFieldState(playerIndex, YGOGameUtils.createZone("B", playerIndex, zoneIndex + 1), card));
     addCardToFieldState(playerIndex, YGOGameUtils.createZone("F", playerIndex, -1), field.fieldSpell);
@@ -379,7 +389,7 @@ function setupInitialField(player: PreDuelLobbyPlayerGameData, initialField: any
 
       const card = getCardFromDeck(id)
 
-      if (card) {
+      if (card && zoneData.player === 0) {
         if (position) card.position = position;
 
         if (zoneData.zone === "M") {

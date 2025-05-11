@@ -17,7 +17,7 @@ export interface YGOPlayerComponentEvents {
 export class YGOPlayerComponent extends HTMLElement {
   private root: ReactDOM.Root | undefined;
   public duel!: YGODuel;
-  public events: EventBus<YGOPlayerComponentEvents>;
+  private events: EventBus<YGOPlayerComponentEvents>;
 
   constructor() {
     super();
@@ -50,7 +50,8 @@ export class YGOPlayerComponent extends HTMLElement {
       this.dispatch("command-executed", data);
     });
 
-    this.events.dispatch("init", { instance: this, duel });
+
+    this.dispatch("init", { instance: this, duel });
   }
 
   private start(config: YGOConfig) {
@@ -59,8 +60,9 @@ export class YGOPlayerComponent extends HTMLElement {
     this.root.render(
       createElement(YgoDuelApp, {
         bind: this.bind.bind(this),
-        start: (duel) =>
-          this.events.dispatch("start", { instance: this, duel }),
+        start: (duel) => {
+          this.dispatch("start", { instance: this, duel })
+        },
         config,
       })
     );
