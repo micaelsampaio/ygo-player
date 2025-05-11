@@ -318,6 +318,7 @@ function parseStateYGOCoreProps({ players: playersData }: { players: PreDuelLobb
   const players = playersData.map((player) => {
     return {
       name: player.name,
+      deckId: player.deckId,
       mainDeck: player.deckData.mainDeck,
       extraDeck: player.deckData.extraDeck,
     }

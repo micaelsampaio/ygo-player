@@ -10,7 +10,7 @@ import { MoreVertical } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../ui/dropdown-menu";
 
 interface ReplayDataDto {
-
+  id: string
 }
 
 const cdnUrl = String(import.meta.env.VITE_YGO_CDN_URL);
@@ -46,6 +46,15 @@ export function DeckReplaysTab({ deckId, visible = true }: { deckId: string, vis
     }
   }
 
+  const deleteReplay = async (replay: any) => {
+    try {
+      await StoreService.deleteReplay(replay.id);
+      setReplays(currentReplays => currentReplays.filter(replayData => replayData.id !== replay.id));
+    } catch (error) {
+
+    }
+  }
+
   useEffect(() => {
     if (request.current) return;
     if (!deckId || !visible) return;
@@ -72,12 +81,12 @@ export function DeckReplaysTab({ deckId, visible = true }: { deckId: string, vis
 
   return <div>
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-      {replays.map((replay: any) => <ReplayEntry key={replay.id} data={replay} openReplay={openReplay} />)}
+      {replays.map((replay: any) => <ReplayEntry key={replay.id} data={replay} openReplay={openReplay} deleteReplay={deleteReplay} />)}
     </div>
   </div>
 }
 
-function ReplayEntry({ data: replay, openReplay }: { data: any, openReplay: (replay: any) => void }) {
+function ReplayEntry({ data: replay, openReplay, deleteReplay }: { data: any, openReplay: (replay: any) => void, deleteReplay: (replay: any) => void }) {
 
   return (
     <div className="bg-white rounded-xl shadow p-4 flex flex-col justify-between">
@@ -109,10 +118,7 @@ function ReplayEntry({ data: replay, openReplay }: { data: any, openReplay: (rep
               </DropdownMenuItem>
               <DropdownMenuItem
                 className="text-destructive cursor-pointer"
-                onSelect={(e) => {
-                  e.preventDefault()
-                  // Call your delete function here
-                }}
+                onSelect={() => deleteReplay(replay)}
               >
                 Delete Replay
               </DropdownMenuItem>

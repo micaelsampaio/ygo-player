@@ -108,30 +108,26 @@ export class StoreService {
     }
   }
 
-  static async deleteReplay(replay: any) {
+  static async deleteReplay(replayId: string) {
     if (isUserLoggedIn()) {
       throw new Error("not implemented");
     } else {
       try {
-        if (!replay.replayId) {
+        if (!replayId) {
           console.error("Missing replayId for deletion");
           return false;
         }
-
-        // Get all keys that store replays
+        console.log("TCL: ID", replayId);
         const replayKeys = getLocalStorageKeysFromPrefix("replays_");
 
-        // Iterate through each key
         for (const key of replayKeys) {
+          console.log("TCL: REPLAY", key)
           const replayDataRaw = window.localStorage.getItem(key);
           if (!replayDataRaw) continue;
 
           const replayData = JSON.parse(replayDataRaw);
 
-          // Find if this storage key contains the replay we want to delete
-          const replayIndex = replayData.replays.findIndex(
-            (r: any) => r.replayId === replay.replayId
-          );
+          const replayIndex = replayData.replays.findIndex((r: any) => r.id === replayId);
 
           // If found, remove it and update storage
           if (replayIndex >= 0) {
@@ -147,7 +143,7 @@ export class StoreService {
           }
         }
 
-        console.error(`No replay found with ID ${replay.replayId}`);
+        console.error(`No replay found with ID ${replayId}`);
         return false;
       } catch (error) {
         console.error("Error deleting replay:", error);
