@@ -1,5 +1,6 @@
 import axios from "axios";
 import { CacheService } from "./cache-service";
+import { cloneObject } from "@/utils/utils";
 
 const API_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -67,9 +68,9 @@ export class APIService {
       allCards.map((card: any) => [card.id, card])
     );
 
-    const mainDeck = deck.mainDeck.map((id: number) => cardMap.get(id));
-    const extraDeck = deck.extraDeck.map((id: number) => cardMap.get(id));
-    const sideDeck = deck.sideDeck?.map((id: number) => cardMap.get(id)) || [];
+    const mainDeck = deck.mainDeck.map((id: number) => cloneObject(cardMap.get(id)));
+    const extraDeck = deck.extraDeck.map((id: number) => cloneObject(cardMap.get(id)));
+    const sideDeck = deck.sideDeck?.map((id: number) => cloneObject(cardMap.get(id))) || [];
 
     return {
       ...deck,

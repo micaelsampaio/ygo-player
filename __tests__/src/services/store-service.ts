@@ -183,6 +183,52 @@ export class StoreService {
       throw new Error("Replay not found in local storage");
     }
   }
+
+  static async getMyDecksWithGroups(): Promise<DecksDetailsGroupedResult> {
+    const groupsJson = window.localStorage.getItem("deck_groups") || "[]";
+    let groups: { id: string; name: string }[] = [];
+
+    try {
+      groups = JSON.parse(groupsJson);
+    } catch {
+      groups = [];
+    }
+
+    const groupsMap = new Map<string, DeckGroupDetails>();
+    for (const group of groups) {
+      groupsMap.set(group.id, {
+        ...group,
+        decks: [],
+      });
+    }
+
+    const decks: DeckDetails[] = getLocalStorageDataFromPrefix("deck_", { invalidPrefixes: ["deck_groups"] }) as any;
+    const decksWithoutGroup: DeckDetails[] = [];
+
+    for (const deck of decks) {
+      const deckData: DeckDetails = {
+        id: deck.id,
+        name: deck.name,
+        groupId: deck.groupId,
+      };
+
+      if (deck.groupId && deck.groupId !== "default" && groupsMap.has(deck.groupId)) {
+        groupsMap.get(deck.groupId)?.decks.push(deckData);
+      } else {
+        decksWithoutGroup.push(deckData);
+      }
+    }
+
+    const groupsWithDecks = Array.from(groupsMap.values()).filter(group => group.decks.length > 0).sort((a, b) =>
+      a.name.localeCompare(b.name)
+    );
+
+    decksWithoutGroup.sort((a, b) => a.name.localeCompare(b.name));
+
+    const result = [...groupsWithDecks, ...decksWithoutGroup];
+    console.log("TCL: MY DECKS: ", result);
+    return result;
+  }
 }
 
 function getLocalStorageKeysFromPrefix(
@@ -219,3 +265,17 @@ function getLocalStorageDataFromPrefix(
   const result = keys.map((data) => window.localStorage.getItem(data)!);
   return result;
 }
+
+type DeckDetails = {
+  id: string;
+  name: string;
+  groupId?: string;
+};
+
+type DeckGroupDetails = {
+  id: string;
+  name: string;
+  decks: DeckDetails[];
+};
+
+export type DecksDetailsGroupedResult = (DeckDetails | DeckGroupDetails)[];
