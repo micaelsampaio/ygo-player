@@ -3,7 +3,7 @@ import AppLayout from "../Layout/AppLayout";
 import { PreDuelLobbyAction, PreDuelLobbyContextRef, PreDuelLobbyPlayerGameData } from "./components/context";
 import { PreDuelLobbyUI } from "./PreDuelLobbyUI";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { StoreService } from "../../services/store-service";
+import { DecksDetailsGroupedResult, StoreService } from "../../services/store-service";
 import { Card, FieldZone, YGOGameUtils, YGOProps } from "ygo-core";
 import { APIService } from "@/services/api-service";
 
@@ -15,11 +15,7 @@ export function PreDuelLobbyPage() {
   const [searchParams] = useSearchParams();
   const [ready, setReady] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [deckNames] = useState(() => {
-    const allKeys = Object.keys(localStorage);
-    const decks = allKeys.filter((key) => key.startsWith("deck_")).map(deck => deck.replace("deck_", ""));
-    return decks;
-  });
+  const [decks, setDecks] = useState<DecksDetailsGroupedResult>([]);
   const [players, setPlayers] = useState<PreDuelLobbyPlayerGameData[]>([]);
   const [action, setAction] = useState<PreDuelLobbyAction | null>(null);
 
@@ -195,6 +191,9 @@ export function PreDuelLobbyPage() {
           replayData = await StoreService.getReplayFromId(replayId);
         }
 
+        const myDecksWithGroups = await StoreService.getMyDecksWithGroups();
+        console.log(myDecksWithGroups);
+
         const players = await Promise.all([0, 1].map(async (playerIndex) => {
 
           const deckId = deckIds[playerIndex] as string;
@@ -245,7 +244,10 @@ export function PreDuelLobbyPage() {
           return player;
         }))
 
+        console.log("TCL: decks", myDecksWithGroups);
+
         setPlayers(players);
+        setDecks(myDecksWithGroups);
         setReady(true);
 
       } catch (error) {
@@ -262,7 +264,7 @@ export function PreDuelLobbyPage() {
 
   return <AppLayout padding={false}>
     <PreDuelLobbyContextRef.Provider value={{
-      deckNames,
+      decks,
       players,
       loading,
       action,

@@ -5,12 +5,13 @@ import { Card } from "ygo-core";
 import { PRE_GAME_ACTIONS_TYPES } from "../actions";
 import { Button } from "../../UI";
 import { Select, SelectContent, SelectTrigger, SelectValue, SelectItem } from "../../../lib/components/ui/select";
+import { getCardSize } from "@/utils/utils";
 
 export function PlayerLobby({ player: playerIndex }: { player: number }) {
-  const { deckNames, players, action, startDuel, setAction, setPlayerDeck } = usePreDuelLobbyContext();
+  const { decks, players, action, startDuel, setAction, setPlayerDeck } = usePreDuelLobbyContext();
   const player = players[playerIndex];
   const { deckId } = player;
-  const [cardsSize, setCardsSize] = useState({ mainDeck: "0px", extraDeck: "0px" });
+  const [cardsSize, setCardsSize] = useState({ mainDeck: { width: "0px", height: "0px" }, extraDeck: { width: "0px", height: "0px" } });
   const containerRef = useRef<HTMLDivElement>(null);
 
   const changeDeck = useCallback((deckId: string) => {
@@ -37,59 +38,19 @@ export function PlayerLobby({ player: playerIndex }: { player: number }) {
     const mainDeckContainer = container.querySelector<HTMLDivElement>(".main-deck-container")!;
     const extraDeckContainer = container.querySelector<HTMLDivElement>(".extra-deck-container")!;
 
-    const getCardSize = (
-      parent: HTMLDivElement,
-      minRows: number,
-      maxNumberOfCards: number
-    ): number => {
-      if (maxNumberOfCards <= 0) return 0;
-
-      const containerWidth = parent.offsetWidth;
-      const containerHeight = parent.offsetHeight;
-      const aspectRatio = 1.45;
-      const minCols = Math.min(5, maxNumberOfCards);
-
-      let bestCardHeight = 0;
-
-      for (let cols = minCols; cols <= Math.min(maxNumberOfCards, 20); cols++) {
-        const rows = Math.ceil(maxNumberOfCards / cols);
-
-        if (rows < minRows) continue;
-
-        const availableWidthPerCard = containerWidth / cols;
-        const heightBasedOnWidth = availableWidthPerCard / aspectRatio;
-
-        const availableHeightPerCard = containerHeight / rows;
-
-        const cardHeight = Math.min(heightBasedOnWidth, availableHeightPerCard);
-        const cardWidth = cardHeight * aspectRatio;
-
-        if (cardWidth * cols <= containerWidth &&
-          cardHeight * rows <= containerHeight &&
-          cardHeight > bestCardHeight) {
-          bestCardHeight = cardHeight;
-        }
-      }
-
-      if (bestCardHeight === 0) {
-        const cols = Math.min(minCols, maxNumberOfCards);
-        const cardWidth = containerWidth / cols;
-        bestCardHeight = cardWidth / aspectRatio;
-      }
-
-      return bestCardHeight;
-    };
+    const mainDeckSize = getCardSize(mainDeckContainer, Math.max(10, player.mainDeck.length));
+    const extraDeckSize = getCardSize(extraDeckContainer, Math.max(10, player.extraDeck.length));
 
     const sizes = {
-      mainDeck: getCardSize(mainDeckContainer, 4, player.mainDeck.length) + "px",
-      extraDeck: getCardSize(extraDeckContainer, 2, player.mainDeck.length) + "px",
+      mainDeck: { width: mainDeckSize.width + "px", height: mainDeckSize.height + "px" },
+      extraDeck: { width: extraDeckSize.width + "px", height: extraDeckSize.height + "px" },
     };
 
     setCardsSize(sizes);
   }, [player.mainDeck.length, player.extraDeck.length]);
 
-  const mainDeckCardStyle = { height: cardsSize.mainDeck };
-  const extraDeckCardStyle = { height: cardsSize.extraDeck };
+  const mainDeckCardStyle = cardsSize.mainDeck;
+  const extraDeckCardStyle = cardsSize.extraDeck;
 
   return <div className="h-full p-4 text-white" ref={containerRef}>
     <div>
@@ -101,12 +62,28 @@ export function PlayerLobby({ player: playerIndex }: { player: number }) {
           <SelectValue placeholder="Select a deck" />
         </SelectTrigger>
         <SelectContent>
-          {deckNames?.map(deckName => (
-            <SelectItem key={deckName} value={deckName}>
-              {deckName}
-            </SelectItem>
-          ))}
+          {decks?.map((deck: any) => {
+            if (Array.isArray(deck.decks)) {
+              return (
+                <div key={deck.id || deck.name} className="px-2 py-1">
+                  <div className="text-xs text-gray-500 uppercase mb-1">{deck.name}</div>
+                  {deck.decks.map((subdeck: any) => (
+                    <SelectItem key={subdeck.id} value={subdeck.id}>
+                      {subdeck.name}
+                    </SelectItem>
+                  ))}
+                </div>
+              );
+            }
+
+            return (
+              <SelectItem key={deck.id} value={deck.id}>
+                {deck.name}
+              </SelectItem>
+            );
+          })}
         </SelectContent>
+
       </Select>
 
     </div>
@@ -125,7 +102,6 @@ export function PlayerLobby({ player: playerIndex }: { player: number }) {
               src={`${getCardImageUrl(card.id, "small")}`}
               className="w-full h-full"
               onClick={() => onCardClick(card)}
-              alt={`Card ${card.id}`}
             />
           </div>
         ))}
@@ -146,7 +122,6 @@ export function PlayerLobby({ player: playerIndex }: { player: number }) {
               src={`${getCardImageUrl(card.id, "small")}`}
               className="w-full h-full"
               onClick={() => onCardClick(card)}
-              alt={`Card ${card.id}`}
             />
           </div>
         ))}

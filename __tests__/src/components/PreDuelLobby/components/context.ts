@@ -1,6 +1,7 @@
 import React from "react";
 import { Card, FieldZone } from "ygo-core";
 import { PRE_GAME_ACTIONS_TYPES } from "../actions";
+import { DecksDetailsGroupedResult } from "@/services/store-service";
 
 export interface PreDuelLobbyPlayerGameData {
   name: string,
@@ -31,7 +32,7 @@ export interface PreDuelLobbyAction {
 }
 
 export interface PreDuelLobbyContext {
-  deckNames: string[]
+  decks: DecksDetailsGroupedResult
   players: PreDuelLobbyPlayerGameData[]
   loading: boolean
   action: PreDuelLobbyAction | null,
