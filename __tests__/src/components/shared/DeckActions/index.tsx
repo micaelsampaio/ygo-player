@@ -412,14 +412,17 @@ const DeckActions: React.FC<DeckActionsProps> = ({
 
   return (
     <div className="deck-actions" ref={actionsRef}>
-      <button
-        className="actions-toggle"
-        onClick={() => setIsActionsOpen(!isActionsOpen)}
-        title="Click to open deck options"
-      >
-        <span>Deck Options</span>
-        <span className="toggle-icon">{isActionsOpen ? "▲" : "▼"}</span>
-      </button>
+      {/* Only show the toggle button if showDropdownImmediately is false */}
+      {!showDropdownImmediately && (
+        <button
+          className="actions-toggle"
+          onClick={() => setIsActionsOpen(!isActionsOpen)}
+          title="Click to open deck options"
+        >
+          <span>Deck Options</span>
+          <span className="toggle-icon">{isActionsOpen ? "▲" : "▼"}</span>
+        </button>
+      )}
 
       {isActionsOpen && (
         <div className="actions-dropdown">

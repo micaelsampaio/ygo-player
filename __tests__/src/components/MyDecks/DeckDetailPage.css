@@ -391,6 +391,107 @@
   overflow-y: auto;
 }
 
+/* Styling for DeckActions dropdown in context menu */
+.deck-context-menu .deck-actions {
+  width: 100%;
+}
+
+.deck-context-menu .actions-dropdown {
+  position: relative;
+  right: auto;
+  top: auto;
+  margin-top: 0;
+  width: 100%;
+  display: block;
+  box-shadow: none;
+  animation: none;
+  max-height: 80vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.deck-context-menu .actions-dropdown::-webkit-scrollbar {
+  width: 8px;
+}
+
+.deck-context-menu .actions-dropdown::-webkit-scrollbar-track {
+  background: var(--color-bg-secondary);
+  border-radius: 4px;
+}
+
+.deck-context-menu .actions-dropdown::-webkit-scrollbar-thumb {
+  background: var(--color-primary);
+  border-radius: 4px;
+}
+
+/* Same context menu styling from MyDecksPage */
+.deck-context-menu .deck-actions {
+  margin-bottom: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.deck-context-menu .actions-toggle {
+  display: none;
+}
+
+.deck-context-menu .actions-dropdown {
+  position: relative;
+  right: auto;
+  top: auto;
+  animation: none;
+  box-shadow: none;
+  margin-top: 0;
+  width: 100%;
+  display: block;
+  max-height: 80vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.deck-context-menu .actions-dropdown::-webkit-scrollbar {
+  width: 8px;
+}
+
+.deck-context-menu .actions-dropdown::-webkit-scrollbar-track {
+  background: var(--color-bg-secondary);
+  border-radius: 4px;
+}
+
+.deck-context-menu .actions-dropdown::-webkit-scrollbar-thumb {
+  background: var(--color-primary);
+  border-radius: 4px;
+}
+
+.deck-context-menu .actions-group .group-header {
+  position: sticky;
+  top: 0;
+  background-color: white;
+  z-index: 1;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  box-shadow: 0 1px 0 var(--color-border-light);
+}
+
+.deck-context-menu .actions-group {
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.deck-context-menu .actions-group:last-child {
+  border-bottom: none;
+}
+
+/* Add sticky headers for long menus */
+.deck-context-menu .actions-group .group-header {
+  position: sticky;
+  top: 0;
+  background-color: white;
+  z-index: 10;
+  padding-top: 8px;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .deck-header-layout {

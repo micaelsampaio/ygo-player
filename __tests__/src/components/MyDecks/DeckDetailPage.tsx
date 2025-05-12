@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useMemo } from "react";
-import { useNavigate, useParams, useLocation } from "react-router-dom";
+import React, { useState, useEffect, useRef } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import styled from "styled-components";
 import { YGODeckToImage } from "ygo-core-images-utils";
 import theme from "../../styles/theme";
@@ -9,17 +9,11 @@ import { YGOCardGrid } from "../UI/YGOCard";
 import {
   ArrowLeft,
   Share2,
-  Edit,
   Download,
   Edit3,
   Zap,
-  Clock,
-  Users,
   Image,
   Check,
-  Copy,
-  BarChart2,
-  Shuffle,
 } from "lucide-react";
 import CoverCardModal from "../MyDecks/CoverCardModal";
 import CardModal from "../DeckBuilder/components/CardModal/CardModal";
@@ -27,6 +21,8 @@ import DrawSimulator from "../DeckBuilder/components/DrawSimulator";
 import DeckAnalytics from "../DeckBuilder/components/DeckAnalysis";
 import ViewSidePatterns from "../DeckBuilder/components/ViewSidePatterns"; // Import the ViewSidePatterns component
 import { useDeckAnalytics } from "../DeckBuilder/hooks/useDeckAnalytics";
+import DeckActions from "../shared/DeckActions"; // Fixed import path
+import { createPortal } from "react-dom"; // Import createPortal
 import "../DeckBuilder/components/DrawSimulator/DrawSimulator.css";
 import "../DeckBuilder/components/DeckAnalysis/styles/DeckAnalytics.css";
 import "../DeckBuilder/components/ViewSidePatterns/ViewSidePatterns.css"; // Import the CSS for ViewSidePatterns
@@ -35,10 +31,10 @@ import { useKaibaNet } from "../../hooks/useKaibaNet";
 import { createRoom } from "../../utils/roomUtils";
 import { APIService } from "../../services/api-service";
 import { DeckReplaysTab } from "./DeckReplaysTab";
+import { useDeckGroups } from "../DeckBuilder/hooks/useDeckGroups";
 
 const DeckDetailPage = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const { deckId } = useParams();
   const [deck, setDeck] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -60,21 +56,30 @@ const DeckDetailPage = () => {
 
   const { analyzeDeck } = useDeckAnalytics();
 
-  // Calculate analytics when deck loads or tab changes
+  const [isDeckMenuVisible, setIsDeckMenuVisible] = useState(false);
+  const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
+  const deckActionsRef = useRef<HTMLDivElement>(null);
+  const { deckGroups, moveDeckToGroup, createDeckGroup, updateDeckGroup } =
+    useDeckGroups();
+  const [isMoveGroupMenuOpen, setIsMoveGroupMenuOpen] = useState(false);
+
+  // Close the menu when clicking outside
   useEffect(() => {
-    if (deck && activeTab === "analytics" && !deckAnalytics) {
-      setIsAnalyzing(true);
-      try {
-        const analytics = analyzeDeck(deck);
-        console.log("Deck analytics calculated:", analytics);
-        setDeckAnalytics(analytics);
-      } catch (error) {
-        console.error("Error calculating deck analytics:", error);
-      } finally {
-        setIsAnalyzing(false);
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        deckActionsRef.current &&
+        !deckActionsRef.current.contains(e.target as Node) &&
+        isDeckMenuVisible
+      ) {
+        setIsDeckMenuVisible(false);
       }
-    }
-  }, [deck, activeTab, analyzeDeck, deckAnalytics]);
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isDeckMenuVisible]);
 
   // Handle card click with navigation option
   const handleCardClick = (card: any, e?: React.MouseEvent) => {
@@ -96,7 +101,6 @@ const DeckDetailPage = () => {
   useEffect(() => {
     // Load the deck data
     if (deckId) {
-
       const loadDeck = async () => {
         setLoading(true);
         try {
@@ -146,8 +150,7 @@ const DeckDetailPage = () => {
           console.error("Error loading deck:", error);
         }
         setLoading(false);
-
-      }
+      };
 
       loadDeck();
     }
@@ -270,7 +273,8 @@ const DeckDetailPage = () => {
     } catch (error) {
       console.error("Failed to start duel with deck:", error);
       alert(
-        `Failed to start duel: ${error instanceof Error ? error.message : "Unknown error"
+        `Failed to start duel: ${
+          error instanceof Error ? error.message : "Unknown error"
         }`
       );
     }
@@ -287,8 +291,9 @@ const DeckDetailPage = () => {
     const extraCount = deck.extraDeck?.length || 0;
     const sideCount = deck.sideDeck?.length || 0;
 
-    return `${mainCount} Main | ${extraCount} Extra${sideCount > 0 ? ` | ${sideCount} Side` : ""
-      }`;
+    return `${mainCount} Main | ${extraCount} Extra${
+      sideCount > 0 ? ` | ${sideCount} Side` : ""
+    }`;
   };
 
   const handleSelectCoverCard = (cardId: number) => {
@@ -325,7 +330,7 @@ const DeckDetailPage = () => {
 
       return firstMonster
         ? getCardImageUrl(firstMonster.id)
-        : getCardImageUrl(); // Default card back image
+        : getCardImageUrl(0); // Default card back image with ID 0
     }
 
     return getCardImageUrl(coverCardId);
@@ -479,7 +484,7 @@ const DeckDetailPage = () => {
                   alt="Cover Card"
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
-                    target.src = getCardImageUrl(); // Default card back image
+                    target.src = getCardImageUrl(0); // Default card back image with ID 0
                   }}
                 />
               </CoverCardWrapper>
@@ -487,23 +492,41 @@ const DeckDetailPage = () => {
               <DeckInfoSection>
                 <DeckMetaInfo>
                   <DeckStats>
-                    <span className="deck-count">{getCardCountString()}</span>
+                    <div className="deck-count-wrapper">
+                      <span className="deck-count">{getCardCountString()}</span>
+                      <DeckOptionsButton
+                        onClick={(e) => {
+                          e.stopPropagation();
+
+                          // Calculate the correct position for the context menu
+                          const rect = e.currentTarget.getBoundingClientRect();
+                          setMenuPosition({
+                            x: Math.min(
+                              rect.right + 10,
+                              window.innerWidth - 300
+                            ),
+                            y: rect.top,
+                          });
+
+                          setIsDeckMenuVisible(true);
+                        }}
+                        title="Deck options"
+                      >
+                        ⋮
+                      </DeckOptionsButton>
+                    </div>
                     {deck.createdAt && (
                       <span className="deck-created">
                         Created: {new Date(deck.createdAt).toLocaleDateString()}
                       </span>
                     )}
                   </DeckStats>
-                  <DeckTags>
-                    {deck.archetype && <DeckTag>{deck.archetype}</DeckTag>}
-                    {deck.type && <DeckTag>{deck.type}</DeckTag>}
-                  </DeckTags>
                 </DeckMetaInfo>
 
                 <CardDetailsSection>
                   <CardDetailHeader>
                     <CardDetailTitle>Cover Card</CardDetailTitle>
-                    <div>
+                    <div style={{ display: "flex", alignItems: "center" }}>
                       <ChangeCoverButton
                         onClick={() => setIsCoverModalOpen(true)}
                       >
@@ -527,20 +550,20 @@ const DeckDetailPage = () => {
 
                       {(coverCardDetails.level ||
                         coverCardDetails.level === 0) && (
-                          <CardStat>Level: {coverCardDetails.level}</CardStat>
-                        )}
+                        <CardStat>Level: {coverCardDetails.level}</CardStat>
+                      )}
 
                       {(coverCardDetails.atk !== undefined ||
                         coverCardDetails.def !== undefined) && (
-                          <CardStats>
-                            {coverCardDetails.atk !== undefined && (
-                              <span>ATK: {coverCardDetails.atk}</span>
-                            )}
-                            {coverCardDetails.def !== undefined && (
-                              <span>DEF: {coverCardDetails.def}</span>
-                            )}
-                          </CardStats>
-                        )}
+                        <CardStats>
+                          {coverCardDetails.atk !== undefined && (
+                            <span>ATK: {coverCardDetails.atk}</span>
+                          )}
+                          {coverCardDetails.def !== undefined && (
+                            <span>DEF: {coverCardDetails.def}</span>
+                          )}
+                        </CardStats>
+                      )}
 
                       {coverCardDetails.desc && (
                         <CardDescription>
@@ -623,7 +646,8 @@ const DeckDetailPage = () => {
                 <Tab value="analytics" label="Deck Analytics" />
                 <Tab value="notes" label="Notes" />
                 <Tab value="replays" label="Replays" />
-                <Tab value="sidePatterns" label="Side Patterns" /> {/* Add Side Patterns tab */}
+                <Tab value="sidePatterns" label="Side Patterns" />{" "}
+                {/* Add Side Patterns tab */}
               </StyledTabs>
 
               <TabContent>
@@ -850,7 +874,7 @@ const DeckDetailPage = () => {
                       isVisible={activeTab === "analytics"}
                       isLoading={isAnalyzing}
                       isEnhanced={false}
-                      onToggleEnhanced={() => { }}
+                      onToggleEnhanced={() => {}}
                     />
                   </TabSection>
                 )}
@@ -877,7 +901,9 @@ const DeckDetailPage = () => {
                 )}
 
                 {/* Replays Section */}
-                <TabSection style={{ display: isReplaysTabVisible ? "block" : "none" }}>
+                <TabSection
+                  style={{ display: isReplaysTabVisible ? "block" : "none" }}
+                >
                   <DeckReplaysTab
                     visible={isReplaysTabVisible}
                     deckId={deck?.id}
@@ -911,6 +937,94 @@ const DeckDetailPage = () => {
         onClose={handleCloseModal}
         card={previewCard}
       />
+
+      {/* Deck Actions Context Menu */}
+      {isDeckMenuVisible &&
+        deck &&
+        createPortal(
+          <ContextMenuContainer
+            className="deck-context-menu"
+            style={{
+              top: `${menuPosition.y}px`,
+              left: `${menuPosition.x}px`,
+            }}
+            ref={deckActionsRef}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Use the DeckActions component directly without its button */}
+            <DeckActions
+              deck={deck}
+              onImportDeck={(importedDeck) => {
+                setDeck(importedDeck);
+                localStorage.setItem(
+                  `deck_${deckId}`,
+                  JSON.stringify(importedDeck)
+                );
+                setIsDeckMenuVisible(false);
+              }}
+              onRenameDeck={(newName) => {
+                const updatedDeck = { ...deck, name: newName };
+                localStorage.setItem(
+                  `deck_${deckId}`,
+                  JSON.stringify(updatedDeck)
+                );
+                setDeck(updatedDeck);
+                setIsDeckMenuVisible(false);
+              }}
+              onClearDeck={() => {
+                const clearedDeck = {
+                  ...deck,
+                  mainDeck: [],
+                  extraDeck: [],
+                  sideDeck: [],
+                };
+                localStorage.setItem(
+                  `deck_${deckId}`,
+                  JSON.stringify(clearedDeck)
+                );
+                setDeck(clearedDeck);
+                setIsDeckMenuVisible(false);
+              }}
+              onCopyDeck={(deckToCopy) => {
+                const copyName = `${deck.name} (Copy)`;
+                const newDeck = {
+                  ...deck,
+                  id: `deck_${copyName.replace(/\s+/g, "_").toLowerCase()}`,
+                  name: copyName,
+                };
+
+                localStorage.setItem(
+                  `deck_${copyName.replace(/\s+/g, "_").toLowerCase()}`,
+                  JSON.stringify(newDeck)
+                );
+                navigate(`/my/decks/${newDeck.id}`);
+                setIsDeckMenuVisible(false);
+              }}
+              onDeleteDeck={(deckToDelete) => {
+                localStorage.removeItem(`deck_${deckId}`);
+                navigate("/my/decks");
+                setIsDeckMenuVisible(false);
+              }}
+              onCreateCollection={(deck) => {
+                // Create a collection from this deck
+                alert("Collection creation from deck is not implemented yet");
+                setIsDeckMenuVisible(false);
+              }}
+              showDropdownImmediately={true}
+              deckGroups={deckGroups}
+              onMoveDeckToGroup={(groupId) => {
+                const updatedDeck = { ...deck, groupId };
+                localStorage.setItem(
+                  `deck_${deckId}`,
+                  JSON.stringify(updatedDeck)
+                );
+                setDeck(updatedDeck);
+                setIsDeckMenuVisible(false);
+              }}
+            />
+          </ContextMenuContainer>,
+          document.body
+        )}
     </AppLayout>
   );
 };
@@ -977,6 +1091,7 @@ const CoverCardWrapper = styled.div`
   border-radius: ${theme.borderRadius.md};
   overflow: hidden;
   box-shadow: ${theme.shadows.md};
+  position: relative;
 `;
 
 const CoverCardImage = styled.img`
@@ -988,6 +1103,21 @@ const CoverCardImage = styled.img`
 
   &:hover {
     transform: scale(1.02);
+  }
+`;
+
+const DeckOptionsButton = styled.button`
+  background: none;
+  border: none;
+  color: ${theme.colors.text.primary};
+  font-size: ${theme.typography.size.lg};
+  cursor: pointer;
+  padding: ${theme.spacing.xs};
+  border-radius: ${theme.borderRadius.sm};
+  transition: background-color ${theme.transitions.default};
+
+  &:hover {
+    background-color: ${theme.colors.background.card};
   }
 `;
 
@@ -1017,7 +1147,7 @@ const DeckTags = styled.div`
 `;
 
 const DeckTag = styled.span`
-  background-color: ${theme.colors.background.light};
+  background-color: ${theme.colors.background.paper};
   color: ${theme.colors.text.secondary};
   border-radius: ${theme.borderRadius.full};
   padding: ${theme.spacing.xs} ${theme.spacing.sm};
@@ -1028,6 +1158,12 @@ const DeckTag = styled.span`
 const DeckStats = styled.div`
   display: flex;
   flex-direction: column;
+
+  .deck-count-wrapper {
+    display: flex;
+    align-items: center;
+    gap: ${theme.spacing.sm};
+  }
 
   .deck-count {
     font-size: ${theme.typography.size.lg};
@@ -1046,7 +1182,7 @@ const CardDetailsSection = styled.div`
   display: flex;
   flex-direction: column;
   padding: ${theme.spacing.md};
-  background-color: ${theme.colors.background.light};
+  background-color: ${theme.colors.background.paper};
   border-radius: ${theme.borderRadius.md};
   margin-bottom: ${theme.spacing.md};
   box-shadow: ${theme.shadows.xs};
@@ -1089,8 +1225,8 @@ const CardType = styled.div`
 const CardStat = styled.div`
   font-size: ${theme.typography.size.sm};
   color: ${theme.colors.text.primary};
-  background-color: ${theme.colors.background.light};
-  padding: ${theme.spacing.xxs} ${theme.spacing.xs};
+  background-color: ${theme.colors.background.paper};
+  padding: ${theme.spacing.xs} ${theme.spacing.xs};
   border-radius: ${theme.borderRadius.sm};
   display: inline-block;
   margin-right: ${theme.spacing.xs};
@@ -1107,9 +1243,9 @@ const CardStats = styled.div`
   margin-bottom: ${theme.spacing.xs};
 
   span {
-    background-color: ${theme.colors.background.light};
+    background-color: ${theme.colors.background.paper};
     color: ${theme.colors.text.primary};
-    padding: ${theme.spacing.xxs} ${theme.spacing.xs};
+    padding: ${theme.spacing.xs} ${theme.spacing.xs};
     border-radius: ${theme.borderRadius.sm};
     font-weight: ${theme.typography.weight.medium};
     border: 1px solid ${theme.colors.border.light};
@@ -1131,7 +1267,7 @@ const CardDescription = styled.div`
   }
 
   &::-webkit-scrollbar-track {
-    background: ${theme.colors.background.light};
+    background: ${theme.colors.background.paper};
     border-radius: 4px;
   }
 
@@ -1174,7 +1310,7 @@ const ChangeCoverButton = styled.button`
 
 const NotesContent = styled.div`
   padding: ${theme.spacing.md};
-  background-color: ${theme.colors.background.light};
+  background-color: ${theme.colors.background.paper};
   border-radius: ${theme.borderRadius.md};
   color: ${theme.colors.text.primary};
   font-size: ${theme.typography.size.md};
@@ -1190,7 +1326,7 @@ const NotesContent = styled.div`
   }
 
   &::-webkit-scrollbar-track {
-    background: ${theme.colors.background.light};
+    background: ${theme.colors.background.paper};
     border-radius: 4px;
   }
 
@@ -1448,9 +1584,9 @@ const ShareTooltip = styled.div<{ status: string }>`
     border-width: 5px;
     border-style: solid;
     border-color: ${(props) =>
-    props.status === "copied"
-      ? theme.colors.success.main
-      : theme.colors.error.main}
+        props.status === "copied"
+          ? theme.colors.success.main
+          : theme.colors.error.main}
       transparent transparent transparent;
   }
 
@@ -1468,6 +1604,16 @@ const ShareTooltip = styled.div<{ status: string }>`
       opacity: 0;
     }
   }
+`;
+
+const ContextMenuContainer = styled.div`
+  position: absolute;
+  z-index: 1000;
+  background: ${theme.colors.background.paper};
+  border-radius: ${theme.borderRadius.md};
+  box-shadow: ${theme.shadows.md};
+  padding: ${theme.spacing.md};
+  border: 1px solid ${theme.colors.border.light};
 `;
 
 export default DeckDetailPage;
