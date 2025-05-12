@@ -363,47 +363,106 @@ export const exportDeckAnalysisToPdf = async (
 
     // === CARD COMBINATIONS SECTION ===
     // Process each combination size
-    for (const [size, combinations] of Object.entries(statistics.cardCombinations)) {
+    for (const [size, combinations] of Object.entries(
+      statistics.cardCombinations
+    )) {
       // Always start a new page for each card combination size as requested
       pdf.addPage();
       yPos = 20;
-      
+
       pdf.setFillColor(240, 240, 240);
       pdf.rect(margin, yPos, contentWidth, 10, "F");
       pdf.setFontSize(14);
-      pdf.text(`Card Combinations (${size}-Card)`, pageWidth / 2, yPos + 7, { align: "center" });
+      pdf.text(`Card Combinations (${size}-Card)`, pageWidth / 2, yPos + 7, {
+        align: "center",
+      });
       yPos += 15;
-      
+
       // Combination size header
       pdf.setFontSize(12);
-      pdf.setFont(undefined, 'bold');
+      pdf.setFont(undefined, "bold");
       pdf.text(`Most Common ${size}-Card Combinations`, margin, yPos);
-      pdf.setFont(undefined, 'normal');
+      pdf.setFont(undefined, "normal");
       yPos += 10;
-      
+
       // Table header
       pdf.setFillColor(220, 220, 220);
       pdf.rect(margin, yPos, contentWidth, tableHeaderHeight, "F");
       pdf.setFontSize(10);
       pdf.text("Frequency", margin + 5, yPos + 5);
       pdf.text("Percentage", margin + 35, yPos + 5);
-      pdf.text("Cards", margin + 65, yPos + 5);
+      pdf.text("Probability", margin + 70, yPos + 5); // Add probability column
+      pdf.text("Cards", margin + 110, yPos + 5);
       yPos += 10;
-      
+
       // Enhanced combinations display with card images
       const comboCardWidth = 15;
       const comboCardHeight = comboCardWidth * 1.46;
       const comboCardGap = 2;
-      
+
       // Table rows for combinations
       for (const combo of combinations) {
+        // Calculate probability for this combination
+        let combinationProbability = 0;
+        if (deck && deck.mainDeck) {
+          const deckSize = deck.mainDeck.length;
+          // Get all unique cards in this combination
+          const uniqueCards = new Map();
+          combo.cards.forEach((card) => {
+            if (!uniqueCards.has(card.id)) {
+              const totalCopies = deck.mainDeck.filter(
+                (c) => c.id === card.id
+              ).length;
+              uniqueCards.set(card.id, {
+                card,
+                totalCopies,
+                copiesInCombo: 1,
+              });
+            } else {
+              const cardInfo = uniqueCards.get(card.id);
+              cardInfo.copiesInCombo++;
+              uniqueCards.set(card.id, cardInfo);
+            }
+          });
+
+          // Calculate probability of drawing this exact combination
+          let probability = 1;
+          let totalProb = 0;
+
+          // For combinations, we use a different approach -
+          // probability of drawing each card independently
+          if (Number(size) <= 3) {
+            // For small combinations
+            uniqueCards.forEach((cardInfo) => {
+              const p =
+                calculateDrawProbability(
+                  deckSize,
+                  cardInfo.totalCopies,
+                  handSize
+                ) / 100; // Convert from percentage to fraction
+              probability *= p;
+            });
+            totalProb = probability * 100; // Convert back to percentage
+          } else {
+            // For larger combinations, use approximation
+            totalProb = Math.pow(0.5, Number(size) - 1) * 100;
+          }
+
+          combinationProbability = totalProb;
+        }
+
         const comboRowStartY = yPos;
         pdf.text(`${combo.count} times`, margin + 5, yPos + 5);
         pdf.text(`${combo.percentage.toFixed(1)}%`, margin + 35, yPos + 5);
-        
+        pdf.text(
+          `${combinationProbability.toFixed(4)}%`,
+          margin + 70,
+          yPos + 5
+        ); // Add the calculated probability
+
         // Add card images in a horizontal row
-        let cardX = margin + 65;
-        
+        let cardX = margin + 110;
+
         for (const card of combo.cards) {
           await addCardImageToPdf(
             card,
@@ -412,25 +471,29 @@ export const exportDeckAnalysisToPdf = async (
             comboCardWidth,
             comboCardHeight
           );
-          
+
           cardX += comboCardWidth + comboCardGap;
-          
+
           // If we're getting close to the right margin, stop adding images
           if (cardX + comboCardWidth > pageWidth - margin) {
             break;
           }
         }
-        
+
         // Also add card names below the images for clarity
-        const cardNames = combo.cards.map(card => card.name).join(", ");
+        const cardNames = combo.cards.map((card) => card.name).join(", ");
         pdf.setFontSize(8);
-        pdf.text(cardNames.substring(0, 80), margin + 65, yPos + comboCardHeight + 4);
+        pdf.text(
+          cardNames.substring(0, 80),
+          margin + 110,
+          yPos + comboCardHeight + 4
+        );
         pdf.setFontSize(10);
-        
+
         // Update yPos based on the height of the combination row
         yPos += comboCardHeight + 12;
       }
-      
+
       yPos += 10;
     }
 
@@ -438,42 +501,64 @@ export const exportDeckAnalysisToPdf = async (
     pdf.setFillColor(240, 240, 240);
     pdf.rect(margin, yPos, contentWidth, 10, "F");
     pdf.setFontSize(14);
-    pdf.text("Card Draw Probabilities", pageWidth / 2, yPos + 7, { align: "center" });
+    pdf.text("Card Draw Probabilities", pageWidth / 2, yPos + 7, {
+      align: "center",
+    });
     yPos += 15;
-    
+
     // Add explanatory text about theoretical probabilities
     pdf.setFontSize(12);
-    pdf.text("The theoretical probability of drawing specific cards in the opening hand is", margin, yPos);
+    pdf.text(
+      "The theoretical probability of drawing specific cards in the opening hand is",
+      margin,
+      yPos
+    );
     yPos += 8;
-    pdf.text("calculated using hypergeometric probability distribution.", margin, yPos);
+    pdf.text(
+      "calculated using hypergeometric probability distribution.",
+      margin,
+      yPos
+    );
     yPos += 15;
-    
+
     // Add formula explanation (simplified)
-    pdf.text("Formula: P(X = k) = [C(K,k) × C(N-K,n-k)] / C(N,n)", margin, yPos);
+    pdf.text(
+      "Formula: P(X = k) = [C(K,k) × C(N-K,n-k)] / C(N,n)",
+      margin,
+      yPos
+    );
     yPos += 8;
     pdf.text("Where:", margin, yPos);
     yPos += 8;
     pdf.text("- N is the deck size", margin + 10, yPos);
     yPos += 8;
-    pdf.text("- K is the number of copies of the card in the deck", margin + 10, yPos);
+    pdf.text(
+      "- K is the number of copies of the card in the deck",
+      margin + 10,
+      yPos
+    );
     yPos += 8;
     pdf.text("- n is the hand size", margin + 10, yPos);
     yPos += 8;
     pdf.text("- k is the number of copies you want to draw", margin + 10, yPos);
     yPos += 8;
-    pdf.text("- C(n,k) is the binomial coefficient (combinations formula)", margin + 10, yPos);
+    pdf.text(
+      "- C(n,k) is the binomial coefficient (combinations formula)",
+      margin + 10,
+      yPos
+    );
     yPos += 20;
-    
+
     // Extract theoreticalProbabilities from the component's state
     const theoreticalProbabilities = statistics.theoreticalProbabilities || [];
-    
+
     if (theoreticalProbabilities && theoreticalProbabilities.length > 0) {
       pdf.setFontSize(12);
-      pdf.setFont(undefined, 'bold');
+      pdf.setFont(undefined, "bold");
       pdf.text("Card Probabilities", margin, yPos);
-      pdf.setFont(undefined, 'normal');
+      pdf.setFont(undefined, "normal");
       yPos += 10;
-      
+
       // Table header
       pdf.setFillColor(220, 220, 220);
       pdf.rect(margin, yPos, contentWidth, tableHeaderHeight, "F");
@@ -485,39 +570,54 @@ export const exportDeckAnalysisToPdf = async (
       pdf.text("Exactly 1", pageWidth - margin - 40, yPos + 5);
       pdf.text("2+ Copies", pageWidth - margin - 15, yPos + 5);
       yPos += 10;
-      
+
       // Show all cards instead of just the top 10
       const probCardWidth = 15;
       const probCardHeight = probCardWidth * 1.46;
       const probRowHeight = probCardHeight + 5;
-      
+
       // Use all cards, not just top 10
       const cardsToShow = theoreticalProbabilities;
-      
+
       for (const prob of cardsToShow) {
         // Add card image
         await addCardImageToPdf(
-          prob.card, 
-          margin + 5, 
-          yPos, 
-          probCardWidth, 
+          prob.card,
+          margin + 5,
+          yPos,
+          probCardWidth,
           probCardHeight
         );
-        
+
         // Add card info
         pdf.text(prob.card.name.substring(0, 20), margin + 25, yPos + 8);
         pdf.text(String(prob.card.totalCopies || "-"), margin + 100, yPos + 8);
-        pdf.text(`${prob.probability.toFixed(2)}%`, pageWidth - margin - 70, yPos + 8);
-        pdf.text(`${prob.exactOneProb?.toFixed(2) || "-"}%`, pageWidth - margin - 40, yPos + 8);
-        pdf.text(`${prob.atLeastTwoProb?.toFixed(2) || "-"}%`, pageWidth - margin - 15, yPos + 8);
-        
+        pdf.text(
+          `${prob.probability.toFixed(2)}%`,
+          pageWidth - margin - 70,
+          yPos + 8
+        );
+        pdf.text(
+          `${prob.exactOneProb?.toFixed(2) || "-"}%`,
+          pageWidth - margin - 40,
+          yPos + 8
+        );
+        pdf.text(
+          `${prob.atLeastTwoProb?.toFixed(2) || "-"}%`,
+          pageWidth - margin - 15,
+          yPos + 8
+        );
+
         yPos += probRowHeight;
-        
+
         // Check if we need a new page
-        if (yPos + probRowHeight > pageHeight - margin && prob !== cardsToShow[cardsToShow.length - 1]) {
+        if (
+          yPos + probRowHeight > pageHeight - margin &&
+          prob !== cardsToShow[cardsToShow.length - 1]
+        ) {
           pdf.addPage();
           yPos = 20;
-          
+
           // Re-add the table header
           pdf.setFillColor(220, 220, 220);
           pdf.rect(margin, yPos, contentWidth, tableHeaderHeight, "F");
@@ -533,9 +633,13 @@ export const exportDeckAnalysisToPdf = async (
       }
     } else {
       // If there's no theoretical probabilities data
-      pdf.text("No theoretical probability data available for this deck.", margin, yPos);
+      pdf.text(
+        "No theoretical probability data available for this deck.",
+        margin,
+        yPos
+      );
     }
-    
+
     yPos += 15;
 
     // Add metadata
@@ -600,15 +704,15 @@ async function addComponentToPdf(
 
     // Create a deep clone of the element to modify its styles without affecting the original
     const clonedElement = element.cloneNode(true) as HTMLElement;
-    
+
     // Process the cloned element to replace problematic CSS color functions
     processElementStyles(clonedElement);
-    
+
     // Temporarily append cloned element to the document
-    const tempContainer = document.createElement('div');
-    tempContainer.style.position = 'fixed';
-    tempContainer.style.left = '-9999px';
-    tempContainer.style.top = '0';
+    const tempContainer = document.createElement("div");
+    tempContainer.style.position = "fixed";
+    tempContainer.style.left = "-9999px";
+    tempContainer.style.top = "0";
     tempContainer.appendChild(clonedElement);
     document.body.appendChild(tempContainer);
 
@@ -650,7 +754,7 @@ async function addComponentToPdf(
     element.style.position = originalPosition;
     element.style.height = originalHeight;
     element.style.width = originalWidth;
-    
+
     // Clean up the temporary container
     if (document.body.contains(tempContainer)) {
       document.body.removeChild(tempContainer);
@@ -692,10 +796,10 @@ function processElementStyles(element: HTMLElement) {
   if (element.style) {
     convertOklchColors(element);
   }
-  
+
   // Process all child elements recursively
-  const children = element.querySelectorAll('*');
-  children.forEach(child => {
+  const children = element.querySelectorAll("*");
+  children.forEach((child) => {
     if (child instanceof HTMLElement) {
       convertOklchColors(child);
     }
@@ -705,23 +809,27 @@ function processElementStyles(element: HTMLElement) {
 // Function to replace oklch colors with hex colors
 function convertOklchColors(element: HTMLElement) {
   const styleProps = [
-    'color', 'backgroundColor', 'borderColor', 
-    'borderLeftColor', 'borderRightColor', 
-    'borderTopColor', 'borderBottomColor'
+    "color",
+    "backgroundColor",
+    "borderColor",
+    "borderLeftColor",
+    "borderRightColor",
+    "borderTopColor",
+    "borderBottomColor",
   ];
-  
-  styleProps.forEach(prop => {
+
+  styleProps.forEach((prop) => {
     const value = element.style[prop as any];
-    if (value && value.includes('oklch')) {
+    if (value && value.includes("oklch")) {
       // Replace oklch with a safe fallback color
       element.style[prop as any] = getFallbackColor(prop);
     }
   });
-  
+
   // Also check box-shadow, text-shadow etc.
   const boxShadow = element.style.boxShadow;
-  if (boxShadow && boxShadow.includes('oklch')) {
-    element.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.2)';
+  if (boxShadow && boxShadow.includes("oklch")) {
+    element.style.boxShadow = "0 2px 4px rgba(0, 0, 0, 0.2)";
   }
 }
 
@@ -729,18 +837,18 @@ function convertOklchColors(element: HTMLElement) {
 function getFallbackColor(prop: string): string {
   // Choose appropriate fallback colors based on property
   switch (prop) {
-    case 'color':
-      return '#333333'; // Dark gray for text
-    case 'backgroundColor':
-      return '#ffffff'; // White for backgrounds
-    case 'borderColor':
-    case 'borderLeftColor':
-    case 'borderRightColor':
-    case 'borderTopColor':
-    case 'borderBottomColor':
-      return '#e0e0e0'; // Light gray for borders
+    case "color":
+      return "#333333"; // Dark gray for text
+    case "backgroundColor":
+      return "#ffffff"; // White for backgrounds
+    case "borderColor":
+    case "borderLeftColor":
+    case "borderRightColor":
+    case "borderTopColor":
+    case "borderBottomColor":
+      return "#e0e0e0"; // Light gray for borders
     default:
-      return '#000000'; // Black as general fallback
+      return "#000000"; // Black as general fallback
   }
 }
 
@@ -757,8 +865,10 @@ export const exportDrawSimulationToPdf = async (
   statistics: any
 ) => {
   try {
-    console.log("Starting Draw Simulator PDF export with direct PDF generation");
-    
+    console.log(
+      "Starting Draw Simulator PDF export with direct PDF generation"
+    );
+
     // Create PDF document
     const pdf = new jsPDF({
       orientation: "portrait",
@@ -786,7 +896,11 @@ export const exportDrawSimulationToPdf = async (
     pdf.setFontSize(12);
     pdf.text(`Total Simulations: ${statistics.totalSimulations}`, margin, yPos);
     yPos += 8;
-    pdf.text(`Hand Size: ${simulationResults[0]?.hand?.length || 5}`, margin, yPos);
+    pdf.text(
+      `Hand Size: ${simulationResults[0]?.hand?.length || 5}`,
+      margin,
+      yPos
+    );
     yPos += 15;
 
     // Helper function to load and process card images
@@ -814,14 +928,14 @@ export const exportDrawSimulationToPdf = async (
       try {
         const img = await loadCardImage(card);
         if (img.complete && img.naturalWidth > 0) {
-          const canvas = document.createElement('canvas');
+          const canvas = document.createElement("canvas");
           canvas.width = img.naturalWidth;
           canvas.height = img.naturalHeight;
-          const ctx = canvas.getContext('2d');
+          const ctx = canvas.getContext("2d");
           if (ctx) {
             ctx.drawImage(img, 0, 0);
-            const imgData = canvas.toDataURL('image/jpeg');
-            pdf.addImage(imgData, 'JPEG', x, y, width, height);
+            const imgData = canvas.toDataURL("image/jpeg");
+            pdf.addImage(imgData, "JPEG", x, y, width, height);
           }
         }
       } catch (err) {
@@ -835,34 +949,127 @@ export const exportDrawSimulationToPdf = async (
     pdf.setFontSize(14);
     pdf.setTextColor(33, 33, 33);
     pdf.text(
-      `Most Common Opening Hand (${statistics.mostCommonHand.frequency} times - ${statistics.mostCommonHand.percentage.toFixed(2)}%)`, 
-      pageWidth / 2, 
-      yPos + 7, 
+      `Most Common Opening Hand (${
+        statistics.mostCommonHand.frequency
+      } times - ${statistics.mostCommonHand.percentage.toFixed(2)}%)`,
+      pageWidth / 2,
+      yPos + 7,
       { align: "center" }
     );
     yPos += 15;
-    
+
     // Calculate spacing for cards in the hand
     const cardWidth = 30; // in mm
     const cardHeight = cardWidth * 1.46; // maintain aspect ratio
     const cardGap = 5;
-    const totalCardsWidth = statistics.mostCommonHand.cards.length * cardWidth + 
-                            (statistics.mostCommonHand.cards.length - 1) * cardGap;
+    const totalCardsWidth =
+      statistics.mostCommonHand.cards.length * cardWidth +
+      (statistics.mostCommonHand.cards.length - 1) * cardGap;
     let startX = (pageWidth - totalCardsWidth) / 2;
-    
+
     // Draw the card images
     for (const card of statistics.mostCommonHand.cards) {
       await addCardImageToPdf(card, startX, yPos, cardWidth, cardHeight);
       startX += cardWidth + cardGap;
     }
-    
+
     yPos += cardHeight + 15;
-    
+
     // Check if we need a new page for statistics
-    if (yPos > pageHeight - 100) { // Leave some space for at least the section header
+    if (yPos > pageHeight - 100) {
+      // Leave some space for at least the section header
       pdf.addPage();
       yPos = 20;
     }
+
+    // === MOST COMMON HANDS TABLE ===
+    pdf.setFontSize(12);
+    pdf.setFont(undefined, "bold");
+    pdf.text("Most Common Opening Hands", margin, yPos);
+    pdf.setFont(undefined, "normal");
+    yPos += 8;
+
+    // Table header
+    pdf.setFillColor(220, 220, 220);
+    pdf.rect(margin, yPos, contentWidth, tableHeaderHeight, "F");
+    pdf.setFontSize(10);
+    pdf.text("Frequency", margin + 5, yPos + 5);
+    pdf.text("Percentage", margin + 45, yPos + 5);
+    pdf.text("Probability", margin + 85, yPos + 5); // Add probability column
+    pdf.text("Hand", margin + 125, yPos + 5);
+    yPos += tableHeaderHeight;
+
+    // Table rows
+    for (const hand of statistics.handFrequency) {
+      const handRowStartY = yPos;
+
+      // Calculate probability for this exact hand
+      let probability = 1;
+      if (deck) {
+        const deckSize = deck.mainDeck.length;
+        const cardCopies = hand.cards.reduce((counts, card) => {
+          if (!counts[card.id]) counts[card.id] = 0;
+          counts[card.id]++;
+          return counts;
+        }, {});
+
+        let remainingCards = deckSize;
+        let remainingHandSize = handSize;
+
+        // For each unique card in the hand
+        Object.entries(cardCopies).forEach(([cardId, count]) => {
+          const totalCardCopies = deck.mainDeck.filter(
+            (c) => c.id === parseInt(cardId)
+          ).length;
+
+          // Calculate probability of drawing exactly 'count' copies of this card
+          for (let i = 0; i < count; i++) {
+            probability *= (totalCardCopies - i) / (remainingCards - i);
+            remainingHandSize--;
+          }
+          remainingCards -= count;
+        });
+
+        // Calculate probability for remaining slots to be filled with other cards
+        if (remainingHandSize > 0) {
+          for (let i = 0; i < remainingHandSize; i++) {
+            probability *= (remainingCards - i) / (deckSize - handSize + i + 1);
+          }
+        }
+
+        // Convert to percentage
+        probability *= 100;
+      }
+
+      pdf.text(`${hand.count} times`, margin + 5, yPos + 5);
+      pdf.text(`${hand.percentage.toFixed(1)}%`, margin + 45, yPos + 5);
+      pdf.text(`${probability.toFixed(6)}%`, margin + 85, yPos + 5); // Add the calculated probability
+
+      // Add hand preview with small card images
+      let cardX = margin + 125;
+      const cardY = yPos;
+
+      for (const card of hand.cards) {
+        await addCardImageToPdf(
+          card,
+          cardX,
+          cardY,
+          cardMiniWidth,
+          cardMiniHeight
+        );
+
+        cardX += cardMiniWidth + cardGap;
+
+        // If we're getting close to the right margin, stop adding images
+        if (cardX + cardMiniWidth > pageWidth - margin) {
+          break;
+        }
+      }
+
+      yPos += cardMiniHeight + 5;
+    }
+
+    yPos += 15;
 
     // === DRAW STATISTICS SECTION ===
     pdf.setFillColor(240, 240, 240);
@@ -870,73 +1077,78 @@ export const exportDrawSimulationToPdf = async (
     pdf.setFontSize(14);
     pdf.text("Draw Statistics", pageWidth / 2, yPos + 7, { align: "center" });
     yPos += 15;
-    
+
     // Most seen card with image
     const mostSeenCardImgWidth = 20;
     const mostSeenCardImgHeight = mostSeenCardImgWidth * 1.46;
-    
+
     pdf.setFontSize(12);
-    pdf.setFont(undefined, 'bold');
+    pdf.setFont(undefined, "bold");
     pdf.text("Most Seen Card:", margin, yPos);
-    pdf.setFont(undefined, 'normal');
-    
+    pdf.setFont(undefined, "normal");
+
     // Add card image
     await addCardImageToPdf(
-      statistics.mostSeenCard.card, 
-      margin, 
-      yPos + 2, 
-      mostSeenCardImgWidth, 
+      statistics.mostSeenCard.card,
+      margin,
+      yPos + 2,
+      mostSeenCardImgWidth,
       mostSeenCardImgHeight
     );
-    
+
     // Add card info
     pdf.text(
-      `${statistics.mostSeenCard.card.name} (${statistics.mostSeenCard.appearances} times - ${statistics.mostSeenCard.percentage.toFixed(1)}%)`, 
-      margin + mostSeenCardImgWidth + 5, 
+      `${statistics.mostSeenCard.card.name} (${
+        statistics.mostSeenCard.appearances
+      } times - ${statistics.mostSeenCard.percentage.toFixed(1)}%)`,
+      margin + mostSeenCardImgWidth + 5,
       yPos + 10
     );
-    
+
     yPos += mostSeenCardImgHeight + 10;
-    
+
     // Least seen card with image
-    pdf.setFont(undefined, 'bold');
+    pdf.setFont(undefined, "bold");
     pdf.text("Least Seen Card:", margin, yPos);
-    pdf.setFont(undefined, 'normal');
-    
+    pdf.setFont(undefined, "normal");
+
     // Add card image
     await addCardImageToPdf(
-      statistics.leastSeenCard.card, 
-      margin, 
-      yPos + 2, 
-      mostSeenCardImgWidth, 
+      statistics.leastSeenCard.card,
+      margin,
+      yPos + 2,
+      mostSeenCardImgWidth,
       mostSeenCardImgHeight
     );
-    
+
     // Add card info
     pdf.text(
-      `${statistics.leastSeenCard.card.name} (${statistics.leastSeenCard.appearances} times - ${statistics.leastSeenCard.percentage.toFixed(1)}%)`, 
-      margin + mostSeenCardImgWidth + 5, 
+      `${statistics.leastSeenCard.card.name} (${
+        statistics.leastSeenCard.appearances
+      } times - ${statistics.leastSeenCard.percentage.toFixed(1)}%)`,
+      margin + mostSeenCardImgWidth + 5,
       yPos + 10
     );
-    
+
     yPos += mostSeenCardImgHeight + 10;
-    
+
     // Check available space for table
     const rowHeight = 20; // Increased to accommodate card images
     const tableHeaderHeight = 8;
-    const tableNeededHeight = tableHeaderHeight + (statistics.mostSeenCards.length * rowHeight) + 30;
-    
+    const tableNeededHeight =
+      tableHeaderHeight + statistics.mostSeenCards.length * rowHeight + 30;
+
     if (yPos + tableNeededHeight > pageHeight - margin) {
       pdf.addPage();
       yPos = 20;
     }
-    
+
     // Top cards table
-    pdf.setFont(undefined, 'bold');
+    pdf.setFont(undefined, "bold");
     pdf.text("Top 5 Most Seen Cards", margin, yPos);
-    pdf.setFont(undefined, 'normal');
+    pdf.setFont(undefined, "normal");
     yPos += 8;
-    
+
     // Table header
     pdf.setFillColor(220, 220, 220);
     pdf.rect(margin, yPos, contentWidth, tableHeaderHeight, "F");
@@ -945,129 +1157,200 @@ export const exportDrawSimulationToPdf = async (
     pdf.text("Appearances", pageWidth - margin - 60, yPos + 5);
     pdf.text("Percentage", pageWidth - margin - 25, yPos + 5);
     yPos += 10;
-    
+
     // Table rows with images
     const cardThumbWidth = 15;
     const cardThumbHeight = cardThumbWidth * 1.46;
-    
+
     for (const item of statistics.mostSeenCards) {
       // Add card image
       await addCardImageToPdf(
-        item.card, 
-        margin + 5, 
-        yPos, 
-        cardThumbWidth, 
+        item.card,
+        margin + 5,
+        yPos,
+        cardThumbWidth,
         cardThumbHeight
       );
-      
+
       // Add card info
       pdf.text(item.card.name.substring(0, 25), margin + 25, yPos + 8);
       pdf.text(item.appearances.toString(), pageWidth - margin - 60, yPos + 8);
-      pdf.text(`${item.percentage.toFixed(1)}%`, pageWidth - margin - 25, yPos + 8);
-      
+      pdf.text(
+        `${item.percentage.toFixed(1)}%`,
+        pageWidth - margin - 25,
+        yPos + 8
+      );
+
       yPos += rowHeight;
     }
-    
+
     yPos += 15;
 
     // === ROLE STATISTICS SECTION ===
-    // Check if we need a new page 
+    // Check if we need a new page
     if (yPos + 50 > pageHeight - margin) {
       pdf.addPage();
       yPos = 20;
     }
-    
+
     pdf.setFillColor(240, 240, 240);
     pdf.rect(margin, yPos, contentWidth, 10, "F");
     pdf.setFontSize(14);
     pdf.text("Role Statistics", pageWidth / 2, yPos + 7, { align: "center" });
     yPos += 15;
-    
+
     pdf.setFontSize(12);
-    
+
     // Get all role entries
     const roleEntries = Object.entries(statistics.roleStatistics);
-    
+
     // Split roles into columns for better layout
     const rolesPerColumn = Math.ceil(roleEntries.length / 2);
     const columnWidth = (contentWidth - 10) / 2;
-    
+
     for (let i = 0; i < roleEntries.length; i++) {
       const [role, stats] = roleEntries[i];
       const column = Math.floor(i / rolesPerColumn);
-      const xStart = margin + (column * (columnWidth + 10));
-      
+      const xStart = margin + column * (columnWidth + 10);
+
       // Calculate Y position within column
       const rowInColumn = i % rolesPerColumn;
-      const rowYPos = yPos + (rowInColumn * 20);
-      
+      const rowYPos = yPos + rowInColumn * 20;
+
       // Check if we need a new page
       if (rowYPos + 20 > pageHeight - margin) {
         pdf.addPage();
         yPos = 20;
         // Reset counter to put remaining roles on the new page
-        i = (column * rolesPerColumn) - 1; // Will be incremented to start at the right position
+        i = column * rolesPerColumn - 1; // Will be incremented to start at the right position
         continue;
       }
-      
+
       // Role header
       pdf.setFontSize(12);
-      pdf.setFont(undefined, 'bold');
+      pdf.setFont(undefined, "bold");
       pdf.text(role, xStart, rowYPos);
-      pdf.setFont(undefined, 'normal');
-      
+      pdf.setFont(undefined, "normal");
+
       // Role stats
       pdf.setFontSize(10);
-      pdf.text(`At least one: ${stats.percentage.toFixed(1)}%`, xStart, rowYPos + 6);
-      pdf.text(`Average per hand: ${stats.averagePerHand.toFixed(2)}`, xStart, rowYPos + 12);
+      pdf.text(
+        `At least one: ${stats.percentage.toFixed(1)}%`,
+        xStart,
+        rowYPos + 6
+      );
+      pdf.text(
+        `Average per hand: ${stats.averagePerHand.toFixed(2)}`,
+        xStart,
+        rowYPos + 12
+      );
     }
-    
+
     // Update yPos to be after all role statistics
     yPos += Math.min(rolesPerColumn, roleEntries.length) * 20 + 10;
 
     // === CARD COMBINATIONS SECTION ===
     // Process each combination size
-    for (const [size, combinations] of Object.entries(statistics.cardCombinations)) {
+    for (const [size, combinations] of Object.entries(
+      statistics.cardCombinations
+    )) {
       // Always start a new page for each card combination size as requested
       pdf.addPage();
       yPos = 20;
-      
+
       pdf.setFillColor(240, 240, 240);
       pdf.rect(margin, yPos, contentWidth, 10, "F");
       pdf.setFontSize(14);
-      pdf.text(`Card Combinations (${size}-Card)`, pageWidth / 2, yPos + 7, { align: "center" });
+      pdf.text(`Card Combinations (${size}-Card)`, pageWidth / 2, yPos + 7, {
+        align: "center",
+      });
       yPos += 15;
-      
+
       // Combination size header
       pdf.setFontSize(12);
-      pdf.setFont(undefined, 'bold');
+      pdf.setFont(undefined, "bold");
       pdf.text(`Most Common ${size}-Card Combinations`, margin, yPos);
-      pdf.setFont(undefined, 'normal');
+      pdf.setFont(undefined, "normal");
       yPos += 10;
-      
+
       // Table header
       pdf.setFillColor(220, 220, 220);
       pdf.rect(margin, yPos, contentWidth, tableHeaderHeight, "F");
       pdf.setFontSize(10);
       pdf.text("Frequency", margin + 5, yPos + 5);
       pdf.text("Percentage", margin + 35, yPos + 5);
-      pdf.text("Cards", margin + 65, yPos + 5);
+      pdf.text("Probability", margin + 70, yPos + 5); // Add probability column
+      pdf.text("Cards", margin + 110, yPos + 5);
       yPos += 10;
-      
+
       // Enhanced combinations display with card images
       const comboCardWidth = 15;
       const comboCardHeight = comboCardWidth * 1.46;
       const comboCardGap = 2;
-      
+
       // Table rows for combinations
       for (const combo of combinations) {
+        // Calculate probability for this combination
+        let combinationProbability = 0;
+        if (deck && deck.mainDeck) {
+          const deckSize = deck.mainDeck.length;
+          // Get all unique cards in this combination
+          const uniqueCards = new Map();
+          combo.cards.forEach((card) => {
+            if (!uniqueCards.has(card.id)) {
+              const totalCopies = deck.mainDeck.filter(
+                (c) => c.id === card.id
+              ).length;
+              uniqueCards.set(card.id, {
+                card,
+                totalCopies,
+                copiesInCombo: 1,
+              });
+            } else {
+              const cardInfo = uniqueCards.get(card.id);
+              cardInfo.copiesInCombo++;
+              uniqueCards.set(card.id, cardInfo);
+            }
+          });
+
+          // Calculate probability of drawing this exact combination
+          let probability = 1;
+          let totalProb = 0;
+
+          // For combinations, we use a different approach -
+          // probability of drawing each card independently
+          if (Number(size) <= 3) {
+            // For small combinations
+            uniqueCards.forEach((cardInfo) => {
+              const p =
+                calculateDrawProbability(
+                  deckSize,
+                  cardInfo.totalCopies,
+                  handSize
+                ) / 100; // Convert from percentage to fraction
+              probability *= p;
+            });
+            totalProb = probability * 100; // Convert back to percentage
+          } else {
+            // For larger combinations, use approximation
+            totalProb = Math.pow(0.5, Number(size) - 1) * 100;
+          }
+
+          combinationProbability = totalProb;
+        }
+
         const comboRowStartY = yPos;
         pdf.text(`${combo.count} times`, margin + 5, yPos + 5);
         pdf.text(`${combo.percentage.toFixed(1)}%`, margin + 35, yPos + 5);
-        
+        pdf.text(
+          `${combinationProbability.toFixed(4)}%`,
+          margin + 70,
+          yPos + 5
+        ); // Add the calculated probability
+
         // Add card images in a horizontal row
-        let cardX = margin + 65;
-        
+        let cardX = margin + 110;
+
         for (const card of combo.cards) {
           await addCardImageToPdf(
             card,
@@ -1076,25 +1359,29 @@ export const exportDrawSimulationToPdf = async (
             comboCardWidth,
             comboCardHeight
           );
-          
+
           cardX += comboCardWidth + comboCardGap;
-          
+
           // If we're getting close to the right margin, stop adding images
           if (cardX + comboCardWidth > pageWidth - margin) {
             break;
           }
         }
-        
+
         // Also add card names below the images for clarity
-        const cardNames = combo.cards.map(card => card.name).join(", ");
+        const cardNames = combo.cards.map((card) => card.name).join(", ");
         pdf.setFontSize(8);
-        pdf.text(cardNames.substring(0, 80), margin + 65, yPos + comboCardHeight + 4);
+        pdf.text(
+          cardNames.substring(0, 80),
+          margin + 110,
+          yPos + comboCardHeight + 4
+        );
         pdf.setFontSize(10);
-        
+
         // Update yPos based on the height of the combination row
         yPos += comboCardHeight + 12;
       }
-      
+
       yPos += 10;
     }
 
@@ -1102,46 +1389,68 @@ export const exportDrawSimulationToPdf = async (
     // Always add a page for theoretical probabilities
     pdf.addPage();
     yPos = 20;
-    
+
     pdf.setFillColor(240, 240, 240);
     pdf.rect(margin, yPos, contentWidth, 10, "F");
     pdf.setFontSize(14);
-    pdf.text("Card Draw Probabilities", pageWidth / 2, yPos + 7, { align: "center" });
+    pdf.text("Card Draw Probabilities", pageWidth / 2, yPos + 7, {
+      align: "center",
+    });
     yPos += 15;
-    
+
     // Add explanatory text about theoretical probabilities
     pdf.setFontSize(12);
-    pdf.text("The theoretical probability of drawing specific cards in the opening hand is", margin, yPos);
+    pdf.text(
+      "The theoretical probability of drawing specific cards in the opening hand is",
+      margin,
+      yPos
+    );
     yPos += 8;
-    pdf.text("calculated using hypergeometric probability distribution.", margin, yPos);
+    pdf.text(
+      "calculated using hypergeometric probability distribution.",
+      margin,
+      yPos
+    );
     yPos += 15;
-    
+
     // Add formula explanation (simplified)
-    pdf.text("Formula: P(X = k) = [C(K,k) × C(N-K,n-k)] / C(N,n)", margin, yPos);
+    pdf.text(
+      "Formula: P(X = k) = [C(K,k) × C(N-K,n-k)] / C(N,n)",
+      margin,
+      yPos
+    );
     yPos += 8;
     pdf.text("Where:", margin, yPos);
     yPos += 8;
     pdf.text("- N is the deck size", margin + 10, yPos);
     yPos += 8;
-    pdf.text("- K is the number of copies of the card in the deck", margin + 10, yPos);
+    pdf.text(
+      "- K is the number of copies of the card in the deck",
+      margin + 10,
+      yPos
+    );
     yPos += 8;
     pdf.text("- n is the hand size", margin + 10, yPos);
     yPos += 8;
     pdf.text("- k is the number of copies you want to draw", margin + 10, yPos);
     yPos += 8;
-    pdf.text("- C(n,k) is the binomial coefficient (combinations formula)", margin + 10, yPos);
+    pdf.text(
+      "- C(n,k) is the binomial coefficient (combinations formula)",
+      margin + 10,
+      yPos
+    );
     yPos += 20;
-    
+
     // Extract theoreticalProbabilities from the component's state
     const theoreticalProbabilities = statistics.theoreticalProbabilities || [];
-    
+
     if (theoreticalProbabilities && theoreticalProbabilities.length > 0) {
       pdf.setFontSize(12);
-      pdf.setFont(undefined, 'bold');
+      pdf.setFont(undefined, "bold");
       pdf.text("Card Probabilities", margin, yPos);
-      pdf.setFont(undefined, 'normal');
+      pdf.setFont(undefined, "normal");
       yPos += 10;
-      
+
       // Table header
       pdf.setFillColor(220, 220, 220);
       pdf.rect(margin, yPos, contentWidth, tableHeaderHeight, "F");
@@ -1153,39 +1462,54 @@ export const exportDrawSimulationToPdf = async (
       pdf.text("Exactly 1", pageWidth - margin - 40, yPos + 5);
       pdf.text("2+ Copies", pageWidth - margin - 15, yPos + 5);
       yPos += 10;
-      
+
       // Show all cards instead of just the top 10
       const probCardWidth = 15;
       const probCardHeight = probCardWidth * 1.46;
       const probRowHeight = probCardHeight + 5;
-      
+
       // Use all cards, not just top 10
       const cardsToShow = theoreticalProbabilities;
-      
+
       for (const prob of cardsToShow) {
         // Add card image
         await addCardImageToPdf(
-          prob.card, 
-          margin + 5, 
-          yPos, 
-          probCardWidth, 
+          prob.card,
+          margin + 5,
+          yPos,
+          probCardWidth,
           probCardHeight
         );
-        
+
         // Add card info
         pdf.text(prob.card.name.substring(0, 20), margin + 25, yPos + 8);
         pdf.text(String(prob.card.totalCopies || "-"), margin + 100, yPos + 8);
-        pdf.text(`${prob.probability.toFixed(2)}%`, pageWidth - margin - 70, yPos + 8);
-        pdf.text(`${prob.exactOneProb?.toFixed(2) || "-"}%`, pageWidth - margin - 40, yPos + 8);
-        pdf.text(`${prob.atLeastTwoProb?.toFixed(2) || "-"}%`, pageWidth - margin - 15, yPos + 8);
-        
+        pdf.text(
+          `${prob.probability.toFixed(2)}%`,
+          pageWidth - margin - 70,
+          yPos + 8
+        );
+        pdf.text(
+          `${prob.exactOneProb?.toFixed(2) || "-"}%`,
+          pageWidth - margin - 40,
+          yPos + 8
+        );
+        pdf.text(
+          `${prob.atLeastTwoProb?.toFixed(2) || "-"}%`,
+          pageWidth - margin - 15,
+          yPos + 8
+        );
+
         yPos += probRowHeight;
-        
+
         // Check if we need a new page
-        if (yPos + probRowHeight > pageHeight - margin && prob !== cardsToShow[cardsToShow.length - 1]) {
+        if (
+          yPos + probRowHeight > pageHeight - margin &&
+          prob !== cardsToShow[cardsToShow.length - 1]
+        ) {
           pdf.addPage();
           yPos = 20;
-          
+
           // Re-add the table header
           pdf.setFillColor(220, 220, 220);
           pdf.rect(margin, yPos, contentWidth, tableHeaderHeight, "F");
@@ -1201,11 +1525,15 @@ export const exportDrawSimulationToPdf = async (
       }
     } else {
       // If there's no theoretical probabilities data
-      pdf.text("No theoretical probability data available for this deck.", margin, yPos);
+      pdf.text(
+        "No theoretical probability data available for this deck.",
+        margin,
+        yPos
+      );
     }
-    
+
     yPos += 15;
-    
+
     // Add group probabilities if available
     if (statistics.theoreticalGroupProbability) {
       // Check if we need a new page
@@ -1213,15 +1541,15 @@ export const exportDrawSimulationToPdf = async (
         pdf.addPage();
         yPos = 20;
       }
-      
+
       pdf.setFontSize(12);
-      pdf.setFont(undefined, 'bold');
+      pdf.setFont(undefined, "bold");
       pdf.text("Group Probabilities", margin, yPos);
-      pdf.setFont(undefined, 'normal');
+      pdf.setFont(undefined, "normal");
       yPos += 10;
-      
+
       const groups = statistics.theoreticalGroupProbability.groups || [];
-      
+
       if (groups.length > 0) {
         // Table header
         pdf.setFillColor(220, 220, 220);
@@ -1233,67 +1561,83 @@ export const exportDrawSimulationToPdf = async (
         pdf.text("Probability", margin + 90, yPos + 5);
         pdf.text("Cards", margin + 130, yPos + 5);
         yPos += 10;
-        
+
         for (const group of groups) {
           pdf.text(`Group ${group.groupId + 1}`, margin + 5, yPos + 8);
           pdf.text(group.relation, margin + 25, yPos + 8);
           pdf.text(String(group.copies), margin + 60, yPos + 8);
           pdf.text(`${group.probability.toFixed(2)}%`, margin + 90, yPos + 8);
-          
+
           // Show card names
-          const cardNames = group.cards.map(card => card.name).join(", ");
+          const cardNames = group.cards.map((card) => card.name).join(", ");
           pdf.text(cardNames.substring(0, 50), margin + 130, yPos + 8);
-          
+
           yPos += 15;
         }
-        
+
         // Overall probability
         yPos += 5;
-        pdf.setFont(undefined, 'bold');
+        pdf.setFont(undefined, "bold");
         pdf.text("Overall Probability:", margin, yPos);
-        pdf.setFont(undefined, 'normal');
-        pdf.text(`${statistics.theoreticalGroupProbability.overallProbability.toFixed(2)}%`, margin + 50, yPos);
+        pdf.setFont(undefined, "normal");
+        pdf.text(
+          `${statistics.theoreticalGroupProbability.overallProbability.toFixed(
+            2
+          )}%`,
+          margin + 50,
+          yPos
+        );
       }
     }
-    
+
     // Add a new page for all simulation hands
     pdf.addPage();
     yPos = 20;
-    
+
     pdf.setFontSize(16);
     pdf.text("All Simulated Hands", pageWidth / 2, yPos, { align: "center" });
     yPos += 15;
-    
+
     // Show each simulated hand with its cards
     const cardWidth2 = 25; // slightly smaller for all hands section
     const cardHeight2 = cardWidth2 * 1.46;
     const cardGap2 = 5;
-    const cardsPerRow = Math.floor((contentWidth + cardGap2) / (cardWidth2 + cardGap2));
-    
+    const cardsPerRow = Math.floor(
+      (contentWidth + cardGap2) / (cardWidth2 + cardGap2)
+    );
+
     // Calculate maximum cards per page (this will control pagination)
     const sectionTitleHeight = 8; // Height of the "Simulation #X" header
     const handMargin = 15; // Bottom margin after each hand
-    
+
     for (let i = 0; i < simulationResults.length; i++) {
       const handCards = simulationResults[i].hand;
-      
+
       // Calculate how many rows this hand will need
       const numRows = Math.ceil(handCards.length / cardsPerRow);
-      
+
       // Check if this hand will fit on current page
-      if (yPos + sectionTitleHeight + (numRows * (cardHeight2 + cardGap2)) + handMargin > pageHeight - margin) {
+      if (
+        yPos +
+          sectionTitleHeight +
+          numRows * (cardHeight2 + cardGap2) +
+          handMargin >
+        pageHeight - margin
+      ) {
         // Not enough space for this hand, add a new page
         pdf.addPage();
         yPos = 20;
       }
-      
+
       // Hand title
       pdf.setFillColor(245, 245, 245);
       pdf.rect(margin, yPos, contentWidth, sectionTitleHeight, "F");
       pdf.setFontSize(12);
-      pdf.text(`Simulation #${i + 1}`, pageWidth / 2, yPos + 6, { align: "center" });
+      pdf.text(`Simulation #${i + 1}`, pageWidth / 2, yPos + 6, {
+        align: "center",
+      });
       yPos += 12;
-      
+
       // Draw cards in rows
       for (let j = 0; j < handCards.length; j++) {
         const card = handCards[j];
@@ -1301,13 +1645,13 @@ export const exportDrawSimulationToPdf = async (
         const colIndex = j % cardsPerRow;
         const x = margin + colIndex * (cardWidth2 + cardGap2);
         const y = yPos + rowIndex * (cardHeight2 + cardGap2);
-        
+
         await addCardImageToPdf(card, x, y, cardWidth2, cardHeight2);
       }
-      
+
       // Update yPos for the next hand
       const rows = Math.ceil(handCards.length / cardsPerRow);
-      yPos += (rows * (cardHeight2 + cardGap2)) + handMargin;
+      yPos += rows * (cardHeight2 + cardGap2) + handMargin;
     }
 
     // Add metadata
@@ -1320,9 +1664,10 @@ export const exportDrawSimulationToPdf = async (
     });
 
     // Save the PDF
-    pdf.save(`${deck.name.replace(/[/\\?%*:|"<>]/g, "-")}_simulation_results.pdf`);
+    pdf.save(
+      `${deck.name.replace(/[/\\?%*:|"<>]/g, "-")}_simulation_results.pdf`
+    );
     console.log("PDF export complete");
-
   } catch (error) {
     console.error("Error during PDF export:", error);
     alert("There was an error generating the PDF. Please try again.");

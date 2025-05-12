@@ -171,11 +171,11 @@ const DrawSimulator: React.FC<DrawSimulatorProps> = ({
     mostSeen: false,
     leastSeen: false,
     commonHand: false,
-    combinationsPanel: false, // Main panel collapsed by default
+    combinationsPanel: false,
     combinations: {}, // We'll initialize this dynamically
-    theoreticalProb: true, // Changed from false to true to show by default
-    showAllCards: false, // Add this line to control showing all cards
-    allHands: false, // Add this line for all simulated hands
+    theoreticalProb: false, // Changed from true to false to be collapsed by default
+    showAllCards: false,
+    allHands: false,
   });
 
   const uniqueCards = useMemo(() => {
@@ -481,8 +481,8 @@ const DrawSimulator: React.FC<DrawSimulatorProps> = ({
       },
       leastSeenCard: {
         card: leastSeenCard.card,
-        appearances: leastSeenCard.count,
-        percentage: (leastSeenCard.count / totalSims) * 100,
+        appearances: mostSeenCard.count,
+        percentage: (mostSeenCard.count / totalSims) * 100,
       },
       mostSeenCards,
       leastSeenCards,
@@ -612,672 +612,537 @@ const DrawSimulator: React.FC<DrawSimulatorProps> = ({
   }
 
   return (
-    <div className="draw-simulator">
-      <div className="simulator-controls">
-        <div className="simulation-mode-toggle">
-          <button
-            className={simulationMode === "random" ? "active" : ""}
-            onClick={() => setSimulationMode("random")}
-          >
-            Random Draw
-          </button>
-          <button
-            className={simulationMode === "specific" ? "active" : ""}
-            onClick={() => setSimulationMode("specific")}
-          >
-            Specific Cards
-          </button>
-        </div>
+    <>
+      <div className="draw-simulator">
+        <div className="simulator-controls">
+          <div className="simulation-mode-toggle">
+            <button
+              className={simulationMode === "random" ? "active" : ""}
+              onClick={() => setSimulationMode("random")}
+            >
+              Random Draw
+            </button>
+            <button
+              className={simulationMode === "specific" ? "active" : ""}
+              onClick={() => setSimulationMode("specific")}
+            >
+              Specific Cards
+            </button>
+          </div>
 
-        <div className="control-group">
-          <label>
-            Hand Size:
-            <input
-              type="number"
-              min="1"
-              max={deck?.mainDeck.length || 40}
-              value={handSize}
-              onChange={(e) => setHandSize(Number(e.target.value))}
-            />
-          </label>
-          <label>
-            Number of Simulations:
-            <input
-              type="number"
-              min="1"
-              max="10000"
-              value={simulations}
-              onChange={(e) => setSimulations(Number(e.target.value))}
-            />
-          </label>
-        </div>
+          <div className="control-group">
+            <label>
+              Hand Size:
+              <input
+                type="number"
+                min="1"
+                max={deck?.mainDeck.length || 40}
+                value={handSize}
+                onChange={(e) => setHandSize(Number(e.target.value))}
+              />
+            </label>
+            <label>
+              Number of Simulations:
+              <input
+                type="number"
+                min="1"
+                max="10000"
+                value={simulations}
+                onChange={(e) => setSimulations(Number(e.target.value))}
+              />
+            </label>
+          </div>
 
-        {simulationMode === "specific" && (
-          <div className="wanted-cards-section">
-            <h4>Select Cards to Draw</h4>
+          {simulationMode === "specific" && (
+            <div className="wanted-cards-section">
+              <h4>Select Cards to Draw</h4>
 
-            <div className="group-controls">
-              <button
-                className="new-group-btn"
-                onClick={() => {
-                  setWantedCardGroups([
-                    ...wantedCardGroups,
-                    { cards: [], copies: 1, relation: "OR" },
-                  ]);
-                  setSelectedGroupId(wantedCardGroups.length);
-                  setCurrentGroupId(currentGroupId + 1);
-                }}
-              >
-                New Card Group
-              </button>
-
-              <div className="group-tabs">
-                {wantedCardGroups.map((group, idx) => (
-                  <button
-                    key={idx}
-                    className={`group-tab ${
-                      selectedGroupId === idx ? "active" : ""
-                    }`}
-                    onClick={() => setSelectedGroupId(idx)}
-                  >
-                    Group {idx + 1} ({group.relation})
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {selectedGroupId !== null && (
-              <div className="active-group-controls">
-                <div className="relation-control">
-                  <label>Relation:</label>
-                  <select
-                    value={wantedCardGroups[selectedGroupId]?.relation || "AND"}
-                    onChange={(e) => {
-                      const updatedGroups = [...wantedCardGroups];
-                      updatedGroups[selectedGroupId].relation = e.target
-                        .value as "AND" | "OR";
-                      setWantedCardGroups(updatedGroups);
-                    }}
-                  >
-                    <option value="AND">AND (need all cards)</option>
-                    <option value="OR">OR (need any card)</option>
-                  </select>
-                </div>
-
-                <div className="copies-control">
-                  <label>Copies needed:</label>
-                  <input
-                    type="number"
-                    min="1"
-                    max="3"
-                    value={wantedCardGroups[selectedGroupId]?.copies || 1}
-                    onChange={(e) => {
-                      const updatedGroups = [...wantedCardGroups];
-                      updatedGroups[selectedGroupId].copies = Number(
-                        e.target.value
-                      );
-                      setWantedCardGroups(updatedGroups);
-                    }}
-                  />
-                </div>
-              </div>
-            )}
-
-            {wantedCardGroups.length > 0 && (
-              <div className="wanted-cards-input">
-                <select
-                  value={selectedCard?.id || ""}
-                  onChange={(e) => {
-                    const card = uniqueCards.find(
-                      (c) => c.id.toString() === e.target.value
-                    );
-                    setSelectedCard(card || null);
-
-                    // If a card is selected and there's no group selected but groups exist,
-                    // automatically select the first group
-                    if (
-                      card &&
-                      selectedGroupId === null &&
-                      wantedCardGroups.length > 0
-                    ) {
-                      setSelectedGroupId(0);
-                    }
+              <div className="group-controls">
+                <button
+                  className="new-group-btn"
+                  onClick={() => {
+                    setWantedCardGroups([
+                      ...wantedCardGroups,
+                      { cards: [], copies: 1, relation: "OR" },
+                    ]);
+                    setSelectedGroupId(wantedCardGroups.length);
+                    setCurrentGroupId(currentGroupId + 1);
                   }}
-                  disabled={selectedGroupId === null}
                 >
-                  <option value="">Select a card...</option>
-                  {uniqueCards.map((card) => (
-                    <option key={card.id} value={card.id}>
-                      {card.name} ({card.totalCopies}x)
-                    </option>
-                  ))}
-                </select>
+                  New Card Group
+                </button>
 
-                {selectedCard && selectedGroupId !== null && (
-                  <div className="add-card-btn-container">
+                <div className="group-tabs">
+                  {wantedCardGroups.map((group, idx) => (
                     <button
-                      className="add-card-btn"
-                      onClick={addWantedCard}
-                      type="button"
+                      key={idx}
+                      className={`group-tab ${
+                        selectedGroupId === idx ? "active" : ""
+                      }`}
+                      onClick={() => setSelectedGroupId(idx)}
                     >
-                      Add to Group {selectedGroupId + 1}
+                      Group {idx + 1} ({group.relation})
                     </button>
+                  ))}
+                </div>
+
+                {selectedGroupId !== null && (
+                  <div className="active-group-controls">
+                    <div className="relation-control">
+                      <label>Relation:</label>
+                      <select
+                        value={
+                          wantedCardGroups[selectedGroupId]?.relation || "AND"
+                        }
+                        onChange={(e) => {
+                          const updatedGroups = [...wantedCardGroups];
+                          updatedGroups[selectedGroupId].relation = e.target
+                            .value as "AND" | "OR";
+                          setWantedCardGroups(updatedGroups);
+                        }}
+                      >
+                        <option value="AND">AND (need all cards)</option>
+                        <option value="OR">OR (need any card)</option>
+                      </select>
+                    </div>
+
+                    <div className="copies-control">
+                      <label>Copies needed:</label>
+                      <input
+                        type="number"
+                        min="1"
+                        max="3"
+                        value={wantedCardGroups[selectedGroupId]?.copies || 1}
+                        onChange={(e) => {
+                          const updatedGroups = [...wantedCardGroups];
+                          updatedGroups[selectedGroupId].copies = Number(
+                            e.target.value
+                          );
+                          setWantedCardGroups(updatedGroups);
+                        }}
+                      />
+                    </div>
                   </div>
                 )}
-              </div>
-            )}
 
-            <div className="wanted-cards-list">
-              {wantedCardGroups.map((group, groupId) => (
-                <div
-                  key={groupId}
-                  className={`wanted-card-group ${
-                    selectedGroupId === groupId ? "active" : ""
-                  }`}
-                >
-                  <div className="group-header">
-                    <h5>
-                      Group {groupId + 1} ({group.relation})
-                    </h5>
-                    <span className="copies-label">
-                      Need {group.copies}{" "}
-                      {group.relation === "AND" ? "of each" : "of any"}
-                    </span>
-                    <button
-                      className="edit-group-btn"
-                      onClick={() => setSelectedGroupId(groupId)}
+                {wantedCardGroups.length > 0 && (
+                  <div className="wanted-cards-input">
+                    <select
+                      value={selectedCard?.id || ""}
+                      onChange={(e) => {
+                        const card = uniqueCards.find(
+                          (c) => c.id.toString() === e.target.value
+                        );
+                        setSelectedCard(card || null);
+
+                        // If a card is selected and there's no group selected but groups exist,
+                        // automatically select the first group
+                        if (
+                          card &&
+                          selectedGroupId === null &&
+                          wantedCardGroups.length > 0
+                        ) {
+                          setSelectedGroupId(0);
+                        }
+                      }}
+                      disabled={selectedGroupId === null}
                     >
-                      Edit
-                    </button>
-                  </div>
+                      <option value="">Select a card...</option>
+                      {uniqueCards.map((card) => (
+                        <option key={card.id} value={card.id}>
+                          {card.name} ({card.totalCopies}x)
+                        </option>
+                      ))}
+                    </select>
 
-                  <div className="cards-container">
-                    {group.cards.map((card) => (
-                      <div key={card.id} className="wanted-card">
-                        <img
-                          src={getCardImageUrl(card.id, "small")}
-                          alt={card.name}
-                          className="wanted-card-image"
-                          onClick={() => onCardSelect(card)}
-                        />
-                        <div className="wanted-card-info">
-                          <span className="wanted-card-name">{card.name}</span>
-                        </div>
+                    {selectedCard && selectedGroupId !== null && (
+                      <div className="add-card-btn-container">
                         <button
-                          className="remove-card-btn"
-                          onClick={() => removeWantedCard(groupId, card.id)}
-                          title="Remove card"
+                          className="add-card-btn"
+                          onClick={addWantedCard}
+                          type="button"
                         >
-                          ×
+                          Add to Group {selectedGroupId + 1}
                         </button>
-                      </div>
-                    ))}
-
-                    {group.cards.length === 0 && (
-                      <div className="empty-group-message">
-                        No cards added to this group yet
                       </div>
                     )}
                   </div>
-                </div>
-              ))}
-
-              {wantedCardGroups.length === 0 && (
-                <div className="no-groups-message">
-                  Click "New Card Group" to start building your simulation
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        <div className="simulation-buttons">
-          <button
-            onClick={simulateDraws}
-            disabled={
-              isSimulating ||
-              (simulationMode === "specific" && wantedCardGroups.length === 0)
-            }
-            className="simulate-button"
-          >
-            {isSimulating ? "Simulating..." : "Simulate Draws"}
-          </button>
-
-          {statistics && results.length > 0 && (
-            <>
-              <button
-                onClick={() =>
-                  exportToCSV(results, deck?.name || "Unknown Deck")
-                }
-                className="export-csv-button"
-              >
-                Export CSV
-              </button>
-              <button
-                onClick={() =>
-                  exportDrawSimulationToPdf(deck, results, {
-                    ...statistics,
-                    theoreticalProbabilities: theoreticalProbabilities || [], // Include the full theoretical probabilities data
-                    showAllTheoreticalProbabilities: true // Force showing all probabilities in PDF
-                  })
-                }
-                className="export-pdf-button"
-              >
-                Export PDF
-              </button>
-            </>
-          )}
-        </div>
-      </div>
-
-      <div className="simulation-results">
-        {statistics && (
-          <>
-            <div className="statistics-section">
-              <div
-                className="hand-header clickable"
-                onClick={() =>
-                  setExpandedTables({
-                    ...expandedTables,
-                    commonHand: !expandedTables.commonHand,
-                  })
-                }
-              >
-                <h3>
-                  Most Common Opening Hand (
-                  {statistics.mostCommonHand.frequency} times -{" "}
-                  {statistics.mostCommonHand.percentage.toFixed(3)}%)
-                  <span className="toggle-indicator">
-                    {expandedTables.commonHand ? "▲" : "▼"}
-                  </span>
-                </h3>
-              </div>
-
-              <div className="hand-preview">
-                {statistics.mostCommonHand.cards.map((card, index) => (
-                  <img
-                    key={index}
-                    src={getCardImageUrl(card.id, "small")}
-                    alt={card.name}
-                    onClick={() => onCardSelect(card)}
-                    className="hand-card"
-                  />
-                ))}
-              </div>
-
-              {/* New expanded table for most common hands */}
-              {expandedTables.commonHand && (
-                <div className="card-statistics-tables">
-                  <div className="card-statistics-table">
-                    <h4>Most Common Opening Hands</h4>
-                    <table>
-                      <thead>
-                        <tr>
-                          <th>Frequency</th>
-                          <th>Percentage</th>
-                          <th>Cards</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {statistics.handFrequency.map((data, index) => (
-                          <tr key={`hand-${index}`}>
-                            <td>{data.count} times</td>
-                            <td>{data.percentage.toFixed(1)}%</td>
-                            <td className="hand-cards-preview">
-                              {data.cards.map((card, cardIndex) => (
-                                <img
-                                  key={`${data.key}-${cardIndex}`}
-                                  src={getCardImageUrl(card.id, "small")}
-                                  alt={card.name}
-                                  onClick={() => onCardSelect(card)}
-                                  className="table-card-image"
-                                  title={card.name}
-                                />
-                              ))}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="statistics-section">
-              <h3>Draw Statistics</h3>
-              {wantedCardGroups.length > 0 && (
-                <div className="wanted-cards-stats">
-                  <h4>Wanted Cards</h4>
-                  <p>
-                    Probability of drawing all wanted cards:{" "}
-                    {statistics.wantedCardsSuccessRate.toFixed(3)}% (
-                    {statistics.wantedCardsSuccessCount} in{" "}
-                    {statistics.totalSimulations} hands)
-                  </p>
-                </div>
-              )}
-
-              <div className="stat-grid">
-                <div
-                  className="stat-box clickable"
-                  onClick={() =>
-                    setExpandedTables({
-                      ...expandedTables,
-                      mostSeen: !expandedTables.mostSeen,
-                    })
-                  }
-                >
-                  <h4>Most Seen Card</h4>
-                  <div className="stat-card-preview">
-                    <img
-                      src={getCardImageUrl(
-                        statistics.mostSeenCard.card.id,
-                        "small"
-                      )}
-                      alt={statistics.mostSeenCard.card.name}
-                      className="stat-card-image"
-                      onClick={(e) => {
-                        e.stopPropagation(); // Prevent toggle when clicking directly on image
-                        onCardSelect(statistics.mostSeenCard.card);
-                      }}
-                    />
-                    <div className="stat-card-info">
-                      <p className="stat-card-name">
-                        {statistics.mostSeenCard.card.name}
-                      </p>
-                      <p className="stat-card-frequency">
-                        {statistics.mostSeenCard.appearances} times (
-                        {statistics.mostSeenCard.percentage.toFixed(1)}%)
-                      </p>
-                    </div>
-                    <span className="toggle-indicator">
-                      {expandedTables.mostSeen ? "▲" : "▼"}
-                    </span>
-                  </div>
-                </div>
-
-                <div
-                  className="stat-box clickable"
-                  onClick={() =>
-                    setExpandedTables({
-                      ...expandedTables,
-                      leastSeen: !expandedTables.leastSeen,
-                    })
-                  }
-                >
-                  <h4>Least Seen Card</h4>
-                  <div className="stat-card-preview">
-                    <img
-                      src={getCardImageUrl(
-                        statistics.leastSeenCard.card.id,
-                        "small"
-                      )}
-                      alt={statistics.leastSeenCard.card.name}
-                      className="stat-card-image"
-                      onClick={(e) => {
-                        e.stopPropagation(); // Prevent toggle when clicking directly on image
-                        onCardSelect(statistics.leastSeenCard.card);
-                      }}
-                    />
-                    <div className="stat-card-info">
-                      <p className="stat-card-name">
-                        {statistics.leastSeenCard.card.name}
-                      </p>
-                      <p className="stat-card-frequency">
-                        {statistics.leastSeenCard.appearances} times (
-                        {statistics.leastSeenCard.percentage.toFixed(1)}%)
-                      </p>
-                    </div>
-                    <span className="toggle-indicator">
-                      {expandedTables.leastSeen ? "▲" : "▼"}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Collapsible tables */}
-              {expandedTables.mostSeen && (
-                <div className="card-statistics-tables">
-                  <div className="card-statistics-table">
-                    <h4>Top Cards by Frequency</h4>
-                    <table>
-                      <thead>
-                        <tr>
-                          <th>Card</th>
-                          <th>Image</th>
-                          <th>Appearances</th>
-                          <th>Percentage</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {statistics.mostSeenCards.map((item, index) => (
-                          <tr key={`most-${index}`}>
-                            <td>{item.card.name}</td>
-                            <td>
-                              <img
-                                src={getCardImageUrl(item.card.id, "small")}
-                                alt={item.card.name}
-                                onClick={() => onCardSelect(item.card)}
-                                className="table-card-image"
-                              />
-                            </td>
-                            <td>{item.appearances}</td>
-                            <td>{item.percentage.toFixed(1)}%</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-
-              {expandedTables.leastSeen && (
-                <div className="card-statistics-tables">
-                  <div className="card-statistics-table">
-                    <h4>Least Common Cards</h4>
-                    <table>
-                      <thead>
-                        <tr>
-                          <th>Card</th>
-                          <th>Image</th>
-                          <th>Appearances</th>
-                          <th>Percentage</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {statistics.leastSeenCards.map((item, index) => (
-                          <tr key={`least-${index}`}>
-                            <td>{item.card.name}</td>
-                            <td>
-                              <img
-                                src={getCardImageUrl(item.card.id, "small")}
-                                alt={item.card.name}
-                                onClick={() => onCardSelect(item.card)}
-                                className="table-card-image"
-                              />
-                            </td>
-                            <td>{item.appearances}</td>
-                            <td>{item.percentage.toFixed(1)}%</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="statistics-section">
-              <h3>Role Statistics</h3>
-              <div className="role-stats">
-                {Object.entries(statistics.roleStatistics).map(
-                  ([role, stats]) => (
-                    <div key={role} className="role-stat-item">
-                      <h4>{role}</h4>
-                      <p>At least one: {stats.percentage.toFixed(1)}%</p>
-                      <p>Average per hand: {stats.averagePerHand.toFixed(2)}</p>
-                    </div>
-                  )
                 )}
-              </div>
-            </div>
 
-            <div className="statistics-section">
-              <div
-                className="hand-header clickable"
-                onClick={() =>
-                  setExpandedTables({
-                    ...expandedTables,
-                    combinationsPanel: !expandedTables.combinationsPanel,
-                  })
-                }
-              >
-                <h3>Card Combinations</h3>
-                <span className="toggle-indicator">
-                  {expandedTables.combinationsPanel ? "▲" : "▼"}
-                </span>
-              </div>
-              {expandedTables.combinationsPanel && (
-                <>
-                  <p>
-                    Most common card combinations appearing in opening hands:
-                  </p>
-                  {Object.entries(statistics.cardCombinations).map(
-                    ([size, combinations]) => (
-                      <div
-                        key={`combo-size-${size}`}
-                        className="card-statistics-table"
-                      >
-                        <div
-                          className="hand-header clickable"
-                          onClick={() =>
-                            setExpandedTables({
-                              ...expandedTables,
-                              combinations: {
-                                ...expandedTables.combinations,
-                                [size]: !expandedTables.combinations[size],
-                              },
-                            })
-                          }
+                <div className="wanted-cards-list">
+                  {wantedCardGroups.map((group, groupId) => (
+                    <div
+                      key={groupId}
+                      className={`wanted-card-group ${
+                        selectedGroupId === groupId ? "active" : ""
+                      }`}
+                    >
+                      <div className="group-header">
+                        <h5>
+                          Group {groupId + 1} ({group.relation})
+                        </h5>
+                        <span className="copies-label">
+                          Need {group.copies}{" "}
+                          {group.relation === "AND" ? "of each" : "of any"}
+                        </span>
+                        <button
+                          className="edit-group-btn"
+                          onClick={() => setSelectedGroupId(groupId)}
                         >
-                          <h4>Most Common {size}-Card Combinations</h4>
-                          <span className="toggle-indicator">
-                            {expandedTables.combinations[size] ? "▲" : "▼"}
-                          </span>
-                        </div>
-                        {expandedTables.combinations[size] && (
-                          <>
-                            {combinations.length > 0 ? (
-                              <table>
-                                <thead>
-                                  <tr>
-                                    <th>Frequency</th>
-                                    <th>Percentage</th>
-                                    <th>Cards</th>
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  {combinations.map((combo, index) => (
-                                    <tr key={`combo-${size}-${index}`}>
-                                      <td>{combo.count} times</td>
-                                      <td>{combo.percentage.toFixed(1)}%</td>
-                                      <td className="hand-cards-preview">
-                                        {combo.cards.map((card, cardIndex) => (
-                                          <img
-                                            key={`combo-${size}-${index}-${cardIndex}`}
-                                            src={getCardImageUrl(
-                                              card.id,
-                                              "small"
-                                            )}
-                                            alt={card.name}
-                                            onClick={() => onCardSelect(card)}
-                                            className="table-card-image"
-                                            title={card.name}
-                                          />
-                                        ))}
-                                      </td>
-                                    </tr>
-                                  ))}
-                                </tbody>
-                              </table>
-                            ) : (
-                              <p>
-                                No data available for {size}-card combinations
-                              </p>
-                            )}
-                          </>
+                          Edit
+                        </button>
+                      </div>
+
+                      <div className="cards-container">
+                        {group.cards.map((card) => (
+                          <div key={card.id} className="wanted-card">
+                            <img
+                              src={getCardImageUrl(card.id, "small")}
+                              alt={card.name}
+                              className="wanted-card-image"
+                              onClick={() => onCardSelect(card)}
+                            />
+                            <div className="wanted-card-info">
+                              <span className="wanted-card-name">
+                                {card.name}
+                              </span>
+                            </div>
+                            <button
+                              className="remove-card-btn"
+                              onClick={() => removeWantedCard(groupId, card.id)}
+                              title="Remove card"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        ))}
+
+                        {group.cards.length === 0 && (
+                          <div className="empty-group-message">
+                            No cards added to this group yet
+                          </div>
                         )}
                       </div>
-                    )
-                  )}
-                </>
-              )}
-            </div>
+                    </div>
+                  ))}
 
-            {/* Card Draw Probabilities Section */}
-            <div className="statistics-section">
-              <div
-                className="hand-header clickable"
-                onClick={() =>
-                  setExpandedTables({
-                    ...expandedTables,
-                    theoreticalProb: !expandedTables.theoreticalProb,
-                  })
-                }
-              >
-                <h3>Card Draw Probabilities</h3>
-                <span className="toggle-indicator">
-                  {expandedTables.theoreticalProb ? "▲" : "▼"}
-                </span>
+                  {wantedCardGroups.length === 0 && (
+                    <div className="no-groups-message">
+                      Click "New Card Group" to start building your simulation
+                    </div>
+                  )}
+                </div>
               </div>
-              
-              {/* Always show the explanation even when collapsed */}
-              <div className="probability-explanation">
-                <p>
-                  The theoretical probability of drawing specific cards in the opening hand is
-                  calculated using hypergeometric probability distribution.
-                </p>
-              </div>
-              
-              {expandedTables.theoreticalProb && (
-                <>
-                  <div className="probability-formula">
-                    <h4>Formula</h4>
-                    <p>P(X = k) = [C(K,k) × C(N-K,n-k)] / C(N,n)</p>
-                    <ul>
-                      <li>N is the deck size</li>
-                      <li>K is the number of copies of the card in the deck</li>
-                      <li>n is the hand size</li>
-                      <li>k is the number of copies you want to draw</li>
-                      <li>C(n,k) is the binomial coefficient (combinations formula)</li>
-                    </ul>
-                  </div>
-                
+            </div>
+          )}
+
+          <div className="simulation-buttons">
+            <button
+              onClick={simulateDraws}
+              disabled={
+                isSimulating ||
+                (simulationMode === "specific" && wantedCardGroups.length === 0)
+              }
+              className="simulate-button"
+            >
+              {isSimulating ? "Simulating..." : "Simulate Draws"}
+            </button>
+
+            {statistics && results.length > 0 && (
+              <>
+                <button
+                  onClick={() =>
+                    exportToCSV(results, deck?.name || "Unknown Deck")
+                  }
+                  className="export-csv-button"
+                >
+                  Export CSV
+                </button>
+                <button
+                  onClick={() =>
+                    exportDrawSimulationToPdf(deck, results, {
+                      ...statistics,
+                      theoreticalProbabilities: theoreticalProbabilities || [], // Include the full theoretical probabilities data
+                      showAllTheoreticalProbabilities: true, // Force showing all probabilities in PDF
+                    })
+                  }
+                  className="export-pdf-button"
+                >
+                  Export PDF
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+
+        <div className="simulation-results">
+          {statistics && (
+            <>
+              <div className="statistics-section">
+                <div
+                  className="hand-header clickable"
+                  onClick={() =>
+                    setExpandedTables({
+                      ...expandedTables,
+                      commonHand: !expandedTables.commonHand,
+                    })
+                  }
+                >
+                  <h3>
+                    Most Common Opening Hand (
+                    {statistics.mostCommonHand.frequency} times -{" "}
+                    {statistics.mostCommonHand.percentage.toFixed(3)}%)
+                    <span className="toggle-indicator">
+                      {expandedTables.commonHand ? "▲" : "▼"}
+                    </span>
+                  </h3>
+                </div>
+
+                {/* Add explanation for the Most Common Hand section */}
+                <div className="probability-explanation">
+                  <p>
+                    This section shows the most frequently drawn hand in your
+                    simulations. It helps identify which card combinations
+                    appear together most often.
+                  </p>
+                </div>
+
+                <div className="hand-preview">
+                  {statistics.mostCommonHand.cards.map((card, index) => (
+                    <img
+                      key={index}
+                      src={getCardImageUrl(card.id, "small")}
+                      alt={card.name}
+                      onClick={() => onCardSelect(card)}
+                      className="hand-card"
+                    />
+                  ))}
+                </div>
+
+                {/* New expanded table for most common hands */}
+                {expandedTables.commonHand && (
                   <div className="card-statistics-tables">
                     <div className="card-statistics-table">
-                      <h4>Card Draw Probabilities</h4>
+                      <h4>Most Common Opening Hands</h4>
+                      <table>
+                        <thead>
+                          <tr>
+                            <th>Hand</th>
+                            <th>Frequency</th>
+                            <th>Percentage</th>
+                            <th>Probability</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {statistics.handFrequency.map((handData, index) => {
+                            // Calculate theoretical probability for this exact hand
+                            let probability = 0;
+                            if (deck) {
+                              const deckSize = deck.mainDeck.length;
+                              const cardCopies = handData.cards.reduce(
+                                (counts, card) => {
+                                  if (!counts[card.id]) counts[card.id] = 0;
+                                  counts[card.id]++;
+                                  return counts;
+                                },
+                                {}
+                              );
+
+                              let exactHandProb = 1;
+                              const handSize = handData.cards.length;
+                              let remainingCards = deckSize;
+                              let remainingHandSize = handSize;
+
+                              // For each unique card in the hand
+                              Object.entries(cardCopies).forEach(
+                                ([cardId, count]) => {
+                                  const totalCardCopies = deck.mainDeck.filter(
+                                    (c) => c.id === parseInt(cardId)
+                                  ).length;
+
+                                  for (let i = 0; i < count; i++) {
+                                    exactHandProb *=
+                                      (totalCardCopies - i) /
+                                      (remainingCards - i);
+                                    remainingHandSize--;
+                                  }
+                                  remainingCards -= count;
+                                }
+                              );
+
+                              // Calculate probability for remaining slots
+                              if (remainingHandSize > 0) {
+                                for (let i = 0; i < remainingHandSize; i++) {
+                                  exactHandProb *=
+                                    (remainingCards - i) /
+                                    (deckSize - handSize + i + 1);
+                                }
+                              }
+
+                              probability = exactHandProb * 100; // Convert to percentage
+                            }
+
+                            return (
+                              <tr key={`hand-${index}`}>
+                                <td className="hand-cards-preview">
+                                  {handData.cards.map((card, cardIndex) => (
+                                    <img
+                                      key={`hand-card-${index}-${cardIndex}`}
+                                      src={getCardImageUrl(card.id, "small")}
+                                      alt={card.name}
+                                      onClick={() => onCardSelect(card)}
+                                      className="table-card-image"
+                                      title={card.name}
+                                    />
+                                  ))}
+                                </td>
+                                <td>{handData.count} times</td>
+                                <td>{handData.percentage.toFixed(1)}%</td>
+                                <td>{probability.toFixed(6)}%</td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="statistics-section">
+                <h3>Draw Statistics</h3>
+                {wantedCardGroups.length > 0 && (
+                  <div className="wanted-cards-stats">
+                    <h4>Wanted Cards</h4>
+                    <p>
+                      Probability of drawing all wanted cards:{" "}
+                      {statistics.wantedCardsSuccessRate.toFixed(3)}% (
+                      {statistics.wantedCardsSuccessCount} in{" "}
+                      {statistics.totalSimulations} hands)
+                    </p>
+                  </div>
+                )}
+
+                <div className="stat-grid">
+                  <div
+                    className="stat-box clickable"
+                    onClick={() =>
+                      setExpandedTables({
+                        ...expandedTables,
+                        mostSeen: !expandedTables.mostSeen,
+                      })
+                    }
+                  >
+                    <h4>Most Seen Card</h4>
+                    <div className="stat-card-preview">
+                      <img
+                        src={getCardImageUrl(
+                          statistics.mostSeenCard.card.id,
+                          "small"
+                        )}
+                        alt={statistics.mostSeenCard.card.name}
+                        className="stat-card-image"
+                        onClick={(e) => {
+                          e.stopPropagation(); // Prevent toggle when clicking directly on image
+                          onCardSelect(statistics.mostSeenCard.card);
+                        }}
+                      />
+                      <div className="stat-card-info">
+                        <p className="stat-card-name">
+                          {statistics.mostSeenCard.card.name}
+                        </p>
+                        <p className="stat-card-frequency">
+                          {statistics.mostSeenCard.appearances} times (
+                          {statistics.mostSeenCard.percentage.toFixed(1)}%)
+                        </p>
+                      </div>
+                      <span className="toggle-indicator">
+                        {expandedTables.mostSeen ? "▲" : "▼"}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div
+                    className="stat-box clickable"
+                    onClick={() =>
+                      setExpandedTables({
+                        ...expandedTables,
+                        leastSeen: !expandedTables.leastSeen,
+                      })
+                    }
+                  >
+                    <h4>Least Seen Card</h4>
+                    <div className="stat-card-preview">
+                      <img
+                        src={getCardImageUrl(
+                          statistics.leastSeenCard.card.id,
+                          "small"
+                        )}
+                        alt={statistics.leastSeenCard.card.name}
+                        className="stat-card-image"
+                        onClick={(e) => {
+                          e.stopPropagation(); // Prevent toggle when clicking directly on image
+                          onCardSelect(statistics.leastSeenCard.card);
+                        }}
+                      />
+                      <div className="stat-card-info">
+                        <p className="stat-card-name">
+                          {statistics.leastSeenCard.card.name}
+                        </p>
+                        <p className="stat-card-frequency">
+                          {statistics.leastSeenCard.appearances} times (
+                          {statistics.leastSeenCard.percentage.toFixed(1)}%)
+                        </p>
+                      </div>
+                      <span className="toggle-indicator">
+                        {expandedTables.leastSeen ? "▲" : "▼"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Collapsible tables */}
+                {expandedTables.mostSeen && (
+                  <div className="card-statistics-tables">
+                    <div className="card-statistics-table">
+                      <h4>Top Cards by Frequency</h4>
+                      {/* Add explanation for Most Seen Cards section */}
+                      <div className="probability-explanation">
+                        <p>
+                          This section shows which cards appear most frequently
+                          in your opening hands. Higher appearance rates than
+                          theoretical probability may indicate biases in your
+                          deck structure.
+                        </p>
+                      </div>
                       <table>
                         <thead>
                           <tr>
                             <th>Card</th>
                             <th>Image</th>
-                            <th>Copies</th>
-                            <th>Any Copy</th>
-                            <th>Exactly 1</th>
-                            <th>2+ Copies</th>
+                            <th>Appearances</th>
+                            <th>Percentage</th>
+                            <th>Probability</th>
                           </tr>
                         </thead>
                         <tbody>
-                          {theoreticalProbabilities
-                            .slice(
-                              0,
-                              expandedTables.showAllCards
-                                ? theoreticalProbabilities.length
-                                : 10
-                            )
-                            .map((item, index) => (
-                              <tr key={`prob-${index}`}>
+                          {statistics.mostSeenCards.map((item, index) => {
+                            // Calculate the theoretical probability
+                            let probability = 0;
+                            if (deck && item.card) {
+                              const deckSize = deck.mainDeck.length;
+                              const totalCopies = deck.mainDeck.filter(
+                                (c) => c.id === item.card.id
+                              ).length;
+                              probability = calculateDrawProbability(
+                                deckSize,
+                                totalCopies,
+                                handSize
+                              );
+                            }
+
+                            return (
+                              <tr key={index}>
                                 <td>{item.card.name}</td>
                                 <td>
                                   <img
@@ -1287,131 +1152,501 @@ const DrawSimulator: React.FC<DrawSimulatorProps> = ({
                                     className="table-card-image"
                                   />
                                 </td>
-                                <td>{item.card.totalCopies}</td>
-                                <td>{item.probability.toFixed(4)}%</td>
-                                <td>{item.exactOneProb.toFixed(4)}%</td>
-                                <td>{item.atLeastTwoProb.toFixed(4)}%</td>
+                                <td>{item.appearances}</td>
+                                <td>{item.percentage.toFixed(1)}%</td>
+                                <td>{probability.toFixed(2)}%</td>
                               </tr>
-                            ))}
+                            );
+                          })}
                         </tbody>
                       </table>
                     </div>
                   </div>
-                  <button
-                    onClick={() =>
-                      setExpandedTables((prev) => ({
-                        ...prev,
-                        showAllCards: !prev.showAllCards,
-                      }))
-                    }
-                    className="show-all-cards-button"
-                  >
-                    {expandedTables.showAllCards ? "Show Less" : "Show All"}
-                  </button>
-                </>
-              )}
-            </div>
+                )}
 
-            {theoreticalGroupProbability && (
-              <div className="statistics-section">
-                <h3>Theoretical Group Probabilities</h3>
-                <div className="card-statistics-tables">
-                  <div className="card-statistics-table">
-                    <h4>Group Probabilities</h4>
-                    <table>
-                      <thead>
-                        <tr>
-                          <th>Group</th>
-                          <th>Relation</th>
-                          <th>Copies Needed</th>
-                          <th>Probability</th>
-                          <th>Cards</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {theoreticalGroupProbability.groups.map((group, index) => (
-                          <tr key={`group-${index}`}>
-                            <td>Group {group.groupId + 1}</td>
-                            <td>{group.relation}</td>
-                            <td>{group.copies}</td>
-                            <td>{group.probability.toFixed(4)}%</td>
-                            <td className="hand-cards-preview">
-                              {group.cards.map((card, cardIndex) => (
-                                <img
-                                  key={`group-${index}-${cardIndex}`}
-                                  src={getCardImageUrl(card.id, "small")}
-                                  alt={card.name}
-                                  onClick={() => onCardSelect(card)}
-                                  className="table-card-image"
-                                  title={card.name}
-                                />
-                              ))}
-                            </td>
+                {expandedTables.leastSeen && (
+                  <div className="card-statistics-tables">
+                    <div className="card-statistics-table">
+                      <h4>Least Common Cards</h4>
+                      {/* Add explanation for Least Seen Cards section */}
+                      <div className="probability-explanation">
+                        <p>
+                          This section shows which cards appear least frequently
+                          in your opening hands. Lower rates may indicate
+                          potential bottlenecks in accessing key cards.
+                        </p>
+                      </div>
+                      <table>
+                        <thead>
+                          <tr>
+                            <th>Card</th>
+                            <th>Image</th>
+                            <th>Appearances</th>
+                            <th>Percentage</th>
+                            <th>Probability</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                        </thead>
+                        <tbody>
+                          {statistics.leastSeenCards.map((item, index) => {
+                            // Calculate the theoretical probability
+                            let probability = 0;
+                            if (deck && item.card) {
+                              const deckSize = deck.mainDeck.length;
+                              const totalCopies = deck.mainDeck.filter(
+                                (c) => c.id === item.card.id
+                              ).length;
+                              probability = calculateDrawProbability(
+                                deckSize,
+                                totalCopies,
+                                handSize
+                              );
+                            }
+
+                            return (
+                              <tr key={`least-${index}`}>
+                                <td>{item.card.name}</td>
+                                <td>
+                                  <img
+                                    src={getCardImageUrl(item.card.id, "small")}
+                                    alt={item.card.name}
+                                    onClick={() => onCardSelect(item.card)}
+                                    className="table-card-image"
+                                  />
+                                </td>
+                                <td>{item.appearances}</td>
+                                <td>{item.percentage.toFixed(1)}%</td>
+                                <td>{probability.toFixed(2)}%</td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
-                  <div className="overall-probability">
-                    <h4>Overall Probability</h4>
-                    <p>
-                      Probability of drawing all groups successfully:{" "}
-                      {theoreticalGroupProbability.overallProbability.toFixed(4)}%
-                    </p>
-                    <p className="hand-size-info">
-                      Calculation based on deck size: {deck.mainDeck.length} cards,
-                      hand size: {handSize} cards
-                    </p>
-                  </div>
+                )}
+              </div>
+
+              <div className="statistics-section">
+                <h3>Role Statistics</h3>
+                {/* Add explanation for Role Statistics section */}
+                <div className="probability-explanation">
+                  <p>
+                    This section analyzes the probability of drawing cards with
+                    specific roles in your opening hand, helping you evaluate
+                    the balance of different card functions in your deck.
+                  </p>
+                </div>
+                <div className="role-stats">
+                  {Object.entries(statistics.roleStatistics).map(
+                    ([role, stats]) => (
+                      <div key={role} className="role-stat-item">
+                        <h4>{role}</h4>
+                        <p>At least one: {stats.percentage.toFixed(1)}%</p>
+                        <p>
+                          Average per hand: {stats.averagePerHand.toFixed(2)}
+                        </p>
+                      </div>
+                    )
+                  )}
                 </div>
               </div>
-            )}
 
-            {/* All Simulated Hands Section - Now at the end as per PDF export */}
-            <div className="statistics-section all-simulated-hands-section">
-              <div
-                className="hand-header clickable"
-                onClick={() =>
-                  setExpandedTables({
-                    ...expandedTables,
-                    allHands: !expandedTables.allHands,
-                  })
-                }
-              >
-                <h3>
-                  All Simulated Hands
+              <div className="statistics-section">
+                <div
+                  className="hand-header clickable"
+                  onClick={() =>
+                    setExpandedTables({
+                      ...expandedTables,
+                      combinationsPanel: !expandedTables.combinationsPanel,
+                    })
+                  }
+                >
+                  <h3>Card Combinations</h3>
                   <span className="toggle-indicator">
-                    {expandedTables.allHands ? "▲" : "▼"}
+                    {expandedTables.combinationsPanel ? "▲" : "▼"}
                   </span>
-                </h3>
+                </div>
+                {/* Always show the explanation even when collapsed */}
+                <div className="probability-explanation">
+                  <p>
+                    This section analyzes which specific card combinations
+                    appear together most frequently in your opening hands,
+                    helping you identify synergistic patterns.
+                  </p>
+                </div>
+                {expandedTables.combinationsPanel && (
+                  <>
+                    <p>
+                      Most common card combinations appearing in opening hands:
+                    </p>
+                    {Object.entries(statistics.cardCombinations).map(
+                      ([size, combinations]) => (
+                        <div
+                          key={`combo-size-${size}`}
+                          className="card-statistics-table"
+                        >
+                          <div
+                            className="hand-header clickable"
+                            onClick={() =>
+                              setExpandedTables({
+                                ...expandedTables,
+                                combinations: {
+                                  ...expandedTables.combinations,
+                                  [size]: !expandedTables.combinations[size],
+                                },
+                              })
+                            }
+                          >
+                            <h4>Most Common {size}-Card Combinations</h4>
+                            <span className="toggle-indicator">
+                              {expandedTables.combinations[size] ? "▲" : "▼"}
+                            </span>
+                          </div>
+                          {expandedTables.combinations[size] && (
+                            <>
+                              {combinations.length > 0 ? (
+                                <table>
+                                  <thead>
+                                    <tr>
+                                      <th>Frequency</th>
+                                      <th>Percentage</th>
+                                      <th>Probability</th>
+                                      <th>Cards</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {combinations.map((combo, index) => {
+                                      // Calculate the theoretical probability for this combination
+                                      let combinationProbability = 0;
+
+                                      if (deck) {
+                                        const deckSize = deck.mainDeck.length;
+                                        // Get all unique cards in this combination
+                                        const uniqueCards = new Map();
+                                        combo.cards.forEach((card) => {
+                                          if (!uniqueCards.has(card.id)) {
+                                            const totalCopies =
+                                              deck.mainDeck.filter(
+                                                (c) => c.id === card.id
+                                              ).length;
+                                            uniqueCards.set(card.id, {
+                                              card,
+                                              totalCopies,
+                                              copiesInCombo: 1,
+                                            });
+                                          } else {
+                                            const cardInfo = uniqueCards.get(
+                                              card.id
+                                            );
+                                            cardInfo.copiesInCombo++;
+                                            uniqueCards.set(
+                                              cardInfo.card.id,
+                                              cardInfo
+                                            );
+                                          }
+                                        });
+
+                                        // Calculate probability of drawing this exact combination
+                                        // This is a simplified approximation that doesn't account for order
+                                        let probability = 1;
+                                        let totalProb = 0;
+
+                                        // For combinations, we use a different approach -
+                                        // probability of drawing each card independently
+                                        if (Number(size) <= 3) {
+                                          // For small combinations
+                                          uniqueCards.forEach((cardInfo) => {
+                                            const p =
+                                              calculateDrawProbability(
+                                                deckSize,
+                                                cardInfo.totalCopies,
+                                                handSize
+                                              ) / 100; // Convert from percentage to fraction
+                                            probability *= p;
+                                          });
+                                          totalProb = probability * 100; // Convert back to percentage
+                                        } else {
+                                          // For larger combinations, use approximation
+                                          totalProb =
+                                            Math.pow(0.5, Number(size) - 1) *
+                                            100;
+                                        }
+
+                                        combinationProbability = totalProb;
+                                      }
+
+                                      return (
+                                        <tr key={`combo-${size}-${index}`}>
+                                          <td>{combo.count} times</td>
+                                          <td>
+                                            {combo.percentage.toFixed(1)}%
+                                          </td>
+                                          <td>
+                                            {combinationProbability.toFixed(4)}%
+                                          </td>
+                                          <td className="hand-cards-preview">
+                                            {combo.cards.map(
+                                              (card, cardIndex) => (
+                                                <img
+                                                  key={`combo-${size}-${index}-${cardIndex}`}
+                                                  src={getCardImageUrl(
+                                                    card.id,
+                                                    "small"
+                                                  )}
+                                                  alt={card.name}
+                                                  onClick={() =>
+                                                    onCardSelect(card)
+                                                  }
+                                                  className="table-card-image"
+                                                  title={card.name}
+                                                />
+                                              )
+                                            )}
+                                          </td>
+                                        </tr>
+                                      );
+                                    })}
+                                  </tbody>
+                                </table>
+                              ) : (
+                                <p>
+                                  No data available for {size}-card combinations
+                                </p>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      )
+                    )}
+                  </>
+                )}
               </div>
-              
-              {expandedTables.allHands && (
-                <div className="all-hands-container">
-                  {results.map((result, index) => (
-                    <div key={`simulation-${index}`} className="simulation-hand-container">
-                      <h4 className="simulation-hand-title">Simulation #{index + 1}</h4>
-                      <div className="hand-preview simulation-hand-preview">
-                        {result.hand.map((card, cardIndex) => (
-                          <img
-                            key={`hand-${index}-card-${cardIndex}`}
-                            src={getCardImageUrl(card.id, "small")}
-                            alt={card.name}
-                            onClick={() => onCardSelect(card)}
-                            className="hand-card"
-                            title={card.name}
-                          />
-                        ))}
+
+              {/* Card Draw Probabilities Section */}
+              <div className="statistics-section">
+                <div
+                  className="hand-header clickable"
+                  onClick={() =>
+                    setExpandedTables({
+                      ...expandedTables,
+                      theoreticalProb: !expandedTables.theoreticalProb,
+                    })
+                  }
+                >
+                  <h3>Card Draw Probabilities</h3>
+                  <span className="toggle-indicator">
+                    {expandedTables.theoreticalProb ? "▲" : "▼"}
+                  </span>
+                </div>
+
+                {/* Always show the explanation even when collapsed */}
+                <div className="probability-explanation">
+                  <p>
+                    The theoretical probability of drawing specific cards in the
+                    opening hand is calculated using hypergeometric probability
+                    distribution.
+                  </p>
+                </div>
+
+                {expandedTables.theoreticalProb && (
+                  <>
+                    <div className="probability-formula">
+                      <h4>Formula</h4>
+                      <p>P(X = k) = [C(K,k) × C(N-K,n-k)] / C(N,n)</p>
+                      <ul>
+                        <li>N is the deck size</li>
+                        <li>
+                          K is the number of copies of the card in the deck
+                        </li>
+                        <li>n is the hand size</li>
+                        <li>k is the number of copies you want to draw</li>
+                        <li>
+                          C(n,k) is the binomial coefficient (combinations
+                          formula)
+                        </li>
+                      </ul>
+                    </div>
+
+                    <div className="card-statistics-tables">
+                      <div className="card-statistics-table">
+                        <h4>Card Draw Probabilities</h4>
+                        <table>
+                          <thead>
+                            <tr>
+                              <th>Card</th>
+                              <th>Image</th>
+                              <th>Copies</th>
+                              <th>Any Copy</th>
+                              <th>Exactly 1</th>
+                              <th>2+ Copies</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {theoreticalProbabilities
+                              .slice(
+                                0,
+                                expandedTables.showAllCards
+                                  ? theoreticalProbabilities.length
+                                  : 10
+                              )
+                              .map((item, index) => (
+                                <tr key={`prob-${index}`}>
+                                  <td>{item.card.name}</td>
+                                  <td>
+                                    <img
+                                      src={getCardImageUrl(
+                                        item.card.id,
+                                        "small"
+                                      )}
+                                      alt={item.card.name}
+                                      onClick={() => onCardSelect(item.card)}
+                                      className="table-card-image"
+                                    />
+                                  </td>
+                                  <td>{item.card.totalCopies}</td>
+                                  <td>{item.probability.toFixed(4)}%</td>
+                                  <td>{item.exactOneProb.toFixed(4)}%</td>
+                                  <td>{item.atLeastTwoProb.toFixed(4)}%</td>
+                                </tr>
+                              ))}
+                          </tbody>
+                        </table>
                       </div>
                     </div>
-                  ))}
+                    <button
+                      onClick={() =>
+                        setExpandedTables((prev) => ({
+                          ...prev,
+                          showAllCards: !prev.showAllCards,
+                        }))
+                      }
+                      className="show-all-cards-button"
+                    >
+                      {expandedTables.showAllCards ? "Show Less" : "Show All"}
+                    </button>
+                  </>
+                )}
+              </div>
+
+              {theoreticalGroupProbability && (
+                <div className="statistics-section">
+                  <h3>Theoretical Group Probabilities</h3>
+                  <div className="card-statistics-tables">
+                    <div className="card-statistics-table">
+                      <h4>Group Probabilities</h4>
+                      <table>
+                        <thead>
+                          <tr>
+                            <th>Group</th>
+                            <th>Relation</th>
+                            <th>Copies Needed</th>
+                            <th>Probability</th>
+                            <th>Cards</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {theoreticalGroupProbability.groups.map(
+                            (group, index) => (
+                              <tr key={`group-${index}`}>
+                                <td>Group {group.groupId + 1}</td>
+                                <td>{group.relation}</td>
+                                <td>{group.copies}</td>
+                                <td>{group.probability.toFixed(4)}%</td>
+                                <td className="hand-cards-preview">
+                                  {group.cards.map((card, cardIndex) => (
+                                    <img
+                                      key={`group-${index}-${cardIndex}`}
+                                      src={getCardImageUrl(card.id, "small")}
+                                      alt={card.name}
+                                      onClick={() => onCardSelect(card)}
+                                      className="table-card-image"
+                                      title={card.name}
+                                    />
+                                  ))}
+                                </td>
+                              </tr>
+                            )
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                    <div className="overall-probability">
+                      <h4>Overall Probability</h4>
+                      <p>
+                        Probability of drawing all groups successfully:{" "}
+                        {theoreticalGroupProbability.overallProbability.toFixed(
+                          4
+                        )}
+                        %
+                      </p>
+                      <p className="hand-size-info">
+                        Calculation based on deck size: {deck.mainDeck.length}{" "}
+                        cards, hand size: {handSize} cards
+                      </p>
+                    </div>
+                  </div>
                 </div>
               )}
-            </div>
-          </>
-        )}
+
+              {/* All Simulated Hands Section - Now at the end as per PDF export */}
+              <div className="statistics-section all-simulated-hands-section">
+                <div
+                  className="hand-header clickable"
+                  onClick={() =>
+                    setExpandedTables({
+                      ...expandedTables,
+                      allHands: !expandedTables.allHands,
+                    })
+                  }
+                >
+                  <h3>
+                    All Simulated Hands
+                    <span className="toggle-indicator">
+                      {expandedTables.allHands ? "▲" : "▼"}
+                    </span>
+                  </h3>
+                </div>
+
+                {/* Add explanation for All Simulated Hands section */}
+                <div className="probability-explanation">
+                  <p>
+                    This section displays all the hands drawn during your simulation, allowing you to
+                    examine each individual hand in detail and identify patterns across multiple draws.
+                  </p>
+                </div>
+
+                {expandedTables.allHands && (
+                  <div className="all-hands-container">
+                    {results.map((result, index) => (
+                      <div
+                        key={`simulation-${index}`}
+                        className="simulation-hand-container"
+                      >
+                        <h4 className="simulation-hand-title">
+                          Simulation #{index + 1}
+                        </h4>
+                        <div className="hand-preview simulation-hand-preview">
+                          {result.hand.map((card, cardIndex) => (
+                            <img
+                              key={`hand-${index}-card-${cardIndex}`}
+                              src={getCardImageUrl(card.id, "small")}
+                              alt={card.name}
+                              onClick={() => onCardSelect(card)}
+                              className="hand-card"
+                              title={card.name}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 
