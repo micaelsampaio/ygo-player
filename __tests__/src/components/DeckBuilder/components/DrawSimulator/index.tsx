@@ -7,6 +7,7 @@ import {
   calculateDrawAtLeastXCopies,
   calculateComboHandProbability,
 } from "../../utils/probabilityUtils";
+import { exportDrawSimulationToPdf } from "../../utils/pdfExport";
 import "./DrawSimulator.css";
 
 interface DrawSimulatorProps {
@@ -86,6 +87,68 @@ interface WantedCardGroup {
   relation: "AND" | "OR";
 }
 
+// Function to export simulation data to CSV
+const exportToCSV = (allHands: SimulationResult[], deckName: string) => {
+  if (allHands.length === 0) return;
+
+  console.log("Exporting CSV for", allHands.length, "simulated hands");
+
+  // Get a set of all unique card names across all hands
+  const uniqueCardNames = new Set<string>();
+  allHands.forEach((result) => {
+    result.hand.forEach((card) => {
+      uniqueCardNames.add(card.name);
+    });
+  });
+
+  // Convert to array and sort alphabetically for consistent column order
+  const cardNamesArray = Array.from(uniqueCardNames).sort();
+
+  // Build CSV content
+  let csvContent = "Simulation #," + cardNamesArray.join(",") + "\r\n";
+
+  // Create a row for each simulation
+  allHands.forEach((result, index) => {
+    // Start with simulation number
+    let row = `${index + 1},`;
+
+    // For each card in our master list, check if it's in this hand
+    cardNamesArray.forEach((cardName) => {
+      // Count how many copies of this card are in the hand
+      const count = result.hand.filter((card) => card.name === cardName).length;
+      row += (count > 0 ? count : "") + ",";
+    });
+
+    // Remove trailing comma and add new line
+    csvContent += row.slice(0, -1) + "\r\n";
+  });
+
+  // Use Blob instead of data URI for better browser support with larger files
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+
+  // Create a URL for the blob
+  const url = window.URL.createObjectURL(blob);
+
+  // Create a link to download the file
+  const link = document.createElement("a");
+  const filename = `${deckName.replace(
+    /[/\\?%*:|"<>]/g,
+    "-"
+  )}_simulation_matrix.csv`;
+
+  link.setAttribute("href", url);
+  link.setAttribute("download", filename);
+  link.style.visibility = "hidden";
+
+  // Append to document, trigger download, and clean up
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  window.URL.revokeObjectURL(url);
+
+  console.log("CSV export complete");
+};
+
 const DrawSimulator: React.FC<DrawSimulatorProps> = ({
   deck,
   onCardSelect,
@@ -110,6 +173,9 @@ const DrawSimulator: React.FC<DrawSimulatorProps> = ({
     commonHand: false,
     combinationsPanel: false, // Main panel collapsed by default
     combinations: {}, // We'll initialize this dynamically
+    theoreticalProb: true, // Changed from false to true to show by default
+    showAllCards: false, // Add this line to control showing all cards
+    allHands: false, // Add this line for all simulated hands
   });
 
   const uniqueCards = useMemo(() => {
@@ -765,16 +831,43 @@ const DrawSimulator: React.FC<DrawSimulatorProps> = ({
           </div>
         )}
 
-        <button
-          onClick={simulateDraws}
-          disabled={
-            isSimulating ||
-            (simulationMode === "specific" && wantedCardGroups.length === 0)
-          }
-          className="simulate-button"
-        >
-          {isSimulating ? "Simulating..." : "Simulate Draws"}
-        </button>
+        <div className="simulation-buttons">
+          <button
+            onClick={simulateDraws}
+            disabled={
+              isSimulating ||
+              (simulationMode === "specific" && wantedCardGroups.length === 0)
+            }
+            className="simulate-button"
+          >
+            {isSimulating ? "Simulating..." : "Simulate Draws"}
+          </button>
+
+          {statistics && results.length > 0 && (
+            <>
+              <button
+                onClick={() =>
+                  exportToCSV(results, deck?.name || "Unknown Deck")
+                }
+                className="export-csv-button"
+              >
+                Export CSV
+              </button>
+              <button
+                onClick={() =>
+                  exportDrawSimulationToPdf(deck, results, {
+                    ...statistics,
+                    theoreticalProbabilities: theoreticalProbabilities || [], // Include the full theoretical probabilities data
+                    showAllTheoreticalProbabilities: true // Force showing all probabilities in PDF
+                  })
+                }
+                className="export-pdf-button"
+              >
+                Export PDF
+              </button>
+            </>
+          )}
+        </div>
       </div>
 
       <div className="simulation-results">
@@ -1121,106 +1214,201 @@ const DrawSimulator: React.FC<DrawSimulatorProps> = ({
                 </>
               )}
             </div>
-          </>
-        )}
 
-        {statistics && theoreticalProbabilities && (
-          <div className="statistics-section">
-            <h3>Theoretical Probabilities</h3>
-            <div className="card-statistics-tables">
-              <div className="card-statistics-table">
-                <h4>Card Draw Probabilities</h4>
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Card</th>
-                      <th>Image</th>
-                      <th>Copies</th>
-                      <th>Any Copy</th>
-                      <th>Exactly 1</th>
-                      <th>2+ Copies</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {theoreticalProbabilities
-                      .slice(0, 10)
-                      .map((item, index) => (
-                        <tr key={`prob-${index}`}>
-                          <td>{item.card.name}</td>
-                          <td>
-                            <img
-                              src={getCardImageUrl(item.card.id, "small")}
-                              alt={item.card.name}
-                              onClick={() => onCardSelect(item.card)}
-                              className="table-card-image"
-                            />
-                          </td>
-                          <td>{item.card.totalCopies}</td>
-                          <td>{item.probability.toFixed(4)}%</td>
-                          <td>{item.exactOneProb.toFixed(4)}%</td>
-                          <td>{item.atLeastTwoProb.toFixed(4)}%</td>
-                        </tr>
-                      ))}
-                  </tbody>
-                </table>
+            {/* Card Draw Probabilities Section */}
+            <div className="statistics-section">
+              <div
+                className="hand-header clickable"
+                onClick={() =>
+                  setExpandedTables({
+                    ...expandedTables,
+                    theoreticalProb: !expandedTables.theoreticalProb,
+                  })
+                }
+              >
+                <h3>Card Draw Probabilities</h3>
+                <span className="toggle-indicator">
+                  {expandedTables.theoreticalProb ? "▲" : "▼"}
+                </span>
               </div>
-            </div>
-          </div>
-        )}
-
-        {theoreticalGroupProbability && (
-          <div className="statistics-section">
-            <h3>Theoretical Group Probabilities</h3>
-            <div className="card-statistics-tables">
-              <div className="card-statistics-table">
-                <h4>Group Probabilities</h4>
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Group</th>
-                      <th>Relation</th>
-                      <th>Copies Needed</th>
-                      <th>Probability</th>
-                      <th>Cards</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {theoreticalGroupProbability.groups.map((group, index) => (
-                      <tr key={`group-${index}`}>
-                        <td>Group {group.groupId + 1}</td>
-                        <td>{group.relation}</td>
-                        <td>{group.copies}</td>
-                        <td>{group.probability.toFixed(4)}%</td>
-                        <td className="hand-cards-preview">
-                          {group.cards.map((card, cardIndex) => (
-                            <img
-                              key={`group-${index}-${cardIndex}`}
-                              src={getCardImageUrl(card.id, "small")}
-                              alt={card.name}
-                              onClick={() => onCardSelect(card)}
-                              className="table-card-image"
-                              title={card.name}
-                            />
-                          ))}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              <div className="overall-probability">
-                <h4>Overall Probability</h4>
+              
+              {/* Always show the explanation even when collapsed */}
+              <div className="probability-explanation">
                 <p>
-                  Probability of drawing all groups successfully:{" "}
-                  {theoreticalGroupProbability.overallProbability.toFixed(4)}%
-                </p>
-                <p className="hand-size-info">
-                  Calculation based on deck size: {deck.mainDeck.length} cards,
-                  hand size: {handSize} cards
+                  The theoretical probability of drawing specific cards in the opening hand is
+                  calculated using hypergeometric probability distribution.
                 </p>
               </div>
+              
+              {expandedTables.theoreticalProb && (
+                <>
+                  <div className="probability-formula">
+                    <h4>Formula</h4>
+                    <p>P(X = k) = [C(K,k) × C(N-K,n-k)] / C(N,n)</p>
+                    <ul>
+                      <li>N is the deck size</li>
+                      <li>K is the number of copies of the card in the deck</li>
+                      <li>n is the hand size</li>
+                      <li>k is the number of copies you want to draw</li>
+                      <li>C(n,k) is the binomial coefficient (combinations formula)</li>
+                    </ul>
+                  </div>
+                
+                  <div className="card-statistics-tables">
+                    <div className="card-statistics-table">
+                      <h4>Card Draw Probabilities</h4>
+                      <table>
+                        <thead>
+                          <tr>
+                            <th>Card</th>
+                            <th>Image</th>
+                            <th>Copies</th>
+                            <th>Any Copy</th>
+                            <th>Exactly 1</th>
+                            <th>2+ Copies</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {theoreticalProbabilities
+                            .slice(
+                              0,
+                              expandedTables.showAllCards
+                                ? theoreticalProbabilities.length
+                                : 10
+                            )
+                            .map((item, index) => (
+                              <tr key={`prob-${index}`}>
+                                <td>{item.card.name}</td>
+                                <td>
+                                  <img
+                                    src={getCardImageUrl(item.card.id, "small")}
+                                    alt={item.card.name}
+                                    onClick={() => onCardSelect(item.card)}
+                                    className="table-card-image"
+                                  />
+                                </td>
+                                <td>{item.card.totalCopies}</td>
+                                <td>{item.probability.toFixed(4)}%</td>
+                                <td>{item.exactOneProb.toFixed(4)}%</td>
+                                <td>{item.atLeastTwoProb.toFixed(4)}%</td>
+                              </tr>
+                            ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() =>
+                      setExpandedTables((prev) => ({
+                        ...prev,
+                        showAllCards: !prev.showAllCards,
+                      }))
+                    }
+                    className="show-all-cards-button"
+                  >
+                    {expandedTables.showAllCards ? "Show Less" : "Show All"}
+                  </button>
+                </>
+              )}
             </div>
-          </div>
+
+            {theoreticalGroupProbability && (
+              <div className="statistics-section">
+                <h3>Theoretical Group Probabilities</h3>
+                <div className="card-statistics-tables">
+                  <div className="card-statistics-table">
+                    <h4>Group Probabilities</h4>
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Group</th>
+                          <th>Relation</th>
+                          <th>Copies Needed</th>
+                          <th>Probability</th>
+                          <th>Cards</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {theoreticalGroupProbability.groups.map((group, index) => (
+                          <tr key={`group-${index}`}>
+                            <td>Group {group.groupId + 1}</td>
+                            <td>{group.relation}</td>
+                            <td>{group.copies}</td>
+                            <td>{group.probability.toFixed(4)}%</td>
+                            <td className="hand-cards-preview">
+                              {group.cards.map((card, cardIndex) => (
+                                <img
+                                  key={`group-${index}-${cardIndex}`}
+                                  src={getCardImageUrl(card.id, "small")}
+                                  alt={card.name}
+                                  onClick={() => onCardSelect(card)}
+                                  className="table-card-image"
+                                  title={card.name}
+                                />
+                              ))}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="overall-probability">
+                    <h4>Overall Probability</h4>
+                    <p>
+                      Probability of drawing all groups successfully:{" "}
+                      {theoreticalGroupProbability.overallProbability.toFixed(4)}%
+                    </p>
+                    <p className="hand-size-info">
+                      Calculation based on deck size: {deck.mainDeck.length} cards,
+                      hand size: {handSize} cards
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* All Simulated Hands Section - Now at the end as per PDF export */}
+            <div className="statistics-section all-simulated-hands-section">
+              <div
+                className="hand-header clickable"
+                onClick={() =>
+                  setExpandedTables({
+                    ...expandedTables,
+                    allHands: !expandedTables.allHands,
+                  })
+                }
+              >
+                <h3>
+                  All Simulated Hands
+                  <span className="toggle-indicator">
+                    {expandedTables.allHands ? "▲" : "▼"}
+                  </span>
+                </h3>
+              </div>
+              
+              {expandedTables.allHands && (
+                <div className="all-hands-container">
+                  {results.map((result, index) => (
+                    <div key={`simulation-${index}`} className="simulation-hand-container">
+                      <h4 className="simulation-hand-title">Simulation #{index + 1}</h4>
+                      <div className="hand-preview simulation-hand-preview">
+                        {result.hand.map((card, cardIndex) => (
+                          <img
+                            key={`hand-${index}-card-${cardIndex}`}
+                            src={getCardImageUrl(card.id, "small")}
+                            alt={card.name}
+                            onClick={() => onCardSelect(card)}
+                            className="hand-card"
+                            title={card.name}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </>
         )}
       </div>
     </div>
