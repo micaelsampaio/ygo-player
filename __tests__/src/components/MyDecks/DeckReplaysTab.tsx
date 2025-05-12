@@ -7,7 +7,7 @@ import { APIService } from "../../services/api-service";
 import { Button } from "../UI";
 import { YgoReplayToImage } from "ygo-core-images-utils";
 import { MoreVertical } from "lucide-react";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../../lib/components/ui/dropdown-menu";
 
 interface ReplayDataDto {
   id: string

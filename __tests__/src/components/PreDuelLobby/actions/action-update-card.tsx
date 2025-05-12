@@ -1,12 +1,12 @@
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/lib/components/ui/dialog";
 import { Card, CardPosition, FieldZoneData, YGOGameUtils } from "ygo-core";
 import { usePreDuelLobbyContext } from "../components/context";
 import { useEffect, useMemo, useState } from "react";
 import { getCardImageUrl } from "@/utils/cardImages";
 // @ts-ignore
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/lib/components/ui/select";
 // @ts-ignore
-import { Button } from "@/components/ui/button";
+import { Button } from "@/lib/components/ui/button";
 
 interface PositionItem {
   value: CardPosition

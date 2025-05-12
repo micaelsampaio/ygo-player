@@ -4,7 +4,7 @@ import { usePreDuelLobbyContext } from "./context"
 import { Card } from "ygo-core";
 import { PRE_GAME_ACTIONS_TYPES } from "../actions";
 import { Button } from "../../UI";
-import { Select, SelectContent, SelectTrigger, SelectValue, SelectItem } from "../../ui/select";
+import { Select, SelectContent, SelectTrigger, SelectValue, SelectItem } from "../../../lib/components/ui/select";
 
 export function PlayerLobby({ player: playerIndex }: { player: number }) {
   const { deckNames, players, action, startDuel, setAction, setPlayerDeck } = usePreDuelLobbyContext();
