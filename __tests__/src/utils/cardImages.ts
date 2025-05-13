@@ -3,7 +3,7 @@
  */
 
 // Define supported image sizes
-type ImageSize = "small" | "medium" | "large" | "normal";
+type ImageSize = "small" | "medium" | "large" | "normal" | "cropped";
 
 /**
  * URL to the card back image that can be used as a placeholder or fallback
@@ -20,14 +20,20 @@ export const CARD_BACK_IMAGE = `${cdnUrl}/images/card_back.png`;
  * @returns The URL to the card image
  */
 export const getCardImageUrl = (
-  cardId: number | string,
+  cardId: number | string | any,
   size: ImageSize = "medium"
 ): string => {
   // Use the CDN URL from environment variables
   const baseUrl = `${cdnUrl}/images`;
 
-  // Ensure cardId is a string
-  const id = String(cardId);
+  // Check if cardId is an object (like a card object with id property)
+  // This handles cases where a full card object is passed instead of just the ID
+  let id;
+  if (cardId && typeof cardId === "object" && cardId.id) {
+    id = String(cardId.id);
+  } else {
+    id = String(cardId);
+  }
 
   try {
     // Check if we have the image locally first
@@ -39,6 +45,8 @@ export const getCardImageUrl = (
         return `${baseUrl}/cards_large/${id}.jpg`;
       case "normal":
         return `${baseUrl}/cards/${id}.jpg`;
+      case "cropped":
+        return `${baseUrl}/cards_cropped/${id}.jpg`;
       case "medium":
       default:
         return `${baseUrl}/cards/${id}.jpg`;
@@ -101,6 +109,8 @@ const getFallbackCardImageUrl = (
       return `${ygoproBaseUrl}/${id}.jpg`;
     case "normal":
       return `${ygoproBaseUrl}/${id}.jpg`;
+    case "cropped":
+      return `${ygoproBaseUrl}/cropped/${id}.jpg`;
     case "medium":
     default:
       return `${ygoproBaseUrl}/cropped/${id}.jpg`;
