@@ -31,6 +31,7 @@ export interface DeckActionsProps {
   onCopyDeck: (deck: Deck) => void;
   onDeleteDeck: (deck: Deck) => void;
   onCreateCollection: (deck: Deck) => void;
+  onEditDeck?: (deck: Deck) => void; // New prop for edit functionality
   showDropdownImmediately?: boolean; // New prop
   deckGroups?: DeckGroup[];
   onMoveDeckToGroup?: (groupId: string) => void;
@@ -44,6 +45,7 @@ const DeckActions: React.FC<DeckActionsProps> = ({
   onCopyDeck,
   onDeleteDeck,
   onCreateCollection,
+  onEditDeck, // New prop
   showDropdownImmediately = false, // Default to false
   deckGroups = [], // Default to empty array
   onMoveDeckToGroup,
@@ -571,6 +573,20 @@ const DeckActions: React.FC<DeckActionsProps> = ({
               <span className="action-icon">📚</span>
               <span className="action-text">Create Collection</span>
             </button>
+
+            {onEditDeck && (
+              <button
+                onClick={() => {
+                  onEditDeck(deck);
+                  setIsActionsOpen(false);
+                }}
+                title="Edit this deck"
+                className="action-button"
+              >
+                <span className="action-icon">✏️</span>
+                <span className="action-text">Edit Deck</span>
+              </button>
+            )}
 
             <button
               onClick={confirmClearDeck}

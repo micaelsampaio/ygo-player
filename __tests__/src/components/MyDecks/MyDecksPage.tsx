@@ -1140,6 +1140,14 @@ const MyDecksPage = () => {
                         <ActionButton
                           onClick={(e) => {
                             e.stopPropagation();
+                            navigate(`/deckbuilder?edit=${deckId}`);
+                          }}
+                        >
+                          ✏️ Edit
+                        </ActionButton>
+                        <ActionButton
+                          onClick={(e) => {
+                            e.stopPropagation();
                             downloadDeckAsPng(deck);
                           }}
                         >
@@ -1155,7 +1163,7 @@ const MyDecksPage = () => {
                         </ActionButton>
                         <ActionButton
                           onClick={(e) => {
-                            e.stopPropagation();
+                            e.preventDefault();
                             deleteDeck(deck);
                           }}
                         >
@@ -1296,6 +1304,11 @@ const MyDecksPage = () => {
                   (d) => (d.id || `deck_${d.name}`) === activeDeckContextMenu
                 )!;
                 deleteDeck(deck);
+              }}
+              onEditDeck={(deck) => {
+                const deckId = deck.id || `deck_${deck.name}`;
+                navigate(`/deckbuilder?edit=${deckId}`);
+                setActiveDeckContextMenu(null);
               }}
               onCreateCollection={() => {
                 if (activeDeckContextMenu === "new_deck_options") {
