@@ -1,4 +1,5 @@
 import { YGODeckToImage } from "ygo-core-images-utils";
+import { getCardImageUrl } from "./cardImages";
 
 const cardImagesUrl = String(import.meta.env.VITE_YGO_CDN_URL);
 
@@ -128,9 +129,7 @@ export async function generateDeckPreviewImage(
         img.crossOrigin = "Anonymous";
         const cardUrl =
           card.card_images?.[0]?.image_url_small ||
-          `${
-            cardImagesUrl || "https://images.ygoprodeck.com/images/cards_small"
-          }/${card.id}.jpg`;
+          getCardImageUrl(card.id, "small");
 
         await new Promise((resolve, reject) => {
           img.onload = resolve;

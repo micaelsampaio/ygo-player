@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Card, Deck, SidingPattern, CardWithCount } from "../../types";
 import { useSidePatterns } from "../../hooks/useSidePatterns";
+import { getCardImageUrl } from "../../../../utils/cardImages";
 import "./ViewSidePatterns.css";
 
 interface ViewSidePatternsProps {
@@ -136,7 +137,7 @@ const ViewSidePatterns: React.FC<ViewSidePatternsProps> = ({ deck }) => {
                       selectedPattern.cardsOut.map((card) => (
                         <div key={`remove-${card.id}`} className="card-item">
                           <img
-                            src={`https://images.ygoprodeck.com/images/cards_small/${card.id}.jpg`}
+                            src={getCardImageUrl(card.id)}
                             alt={card.name}
                             title={card.name}
                             loading="lazy"
@@ -165,7 +166,7 @@ const ViewSidePatterns: React.FC<ViewSidePatternsProps> = ({ deck }) => {
                         return (
                           <div key={`remove-${cardId}`} className="card-item">
                             <img
-                              src={`https://images.ygoprodeck.com/images/cards_small/${cardId}.jpg`}
+                              src={getCardImageUrl(cardId)}
                               alt={card?.name || `Card #${cardId}`}
                               title={card?.name || `Card #${cardId}`}
                               loading="lazy"
@@ -196,7 +197,7 @@ const ViewSidePatterns: React.FC<ViewSidePatternsProps> = ({ deck }) => {
                       selectedPattern.cardsIn.map((card) => (
                         <div key={`add-${card.id}`} className="card-item">
                           <img
-                            src={`https://images.ygoprodeck.com/images/cards_small/${card.id}.jpg`}
+                            src={getCardImageUrl(card.id)}
                             alt={card.name}
                             title={card.name}
                             loading="lazy"
@@ -225,7 +226,7 @@ const ViewSidePatterns: React.FC<ViewSidePatternsProps> = ({ deck }) => {
                         return (
                           <div key={`add-${cardId}`} className="card-item">
                             <img
-                              src={`https://images.ygoprodeck.com/images/cards_small/${cardId}.jpg`}
+                              src={getCardImageUrl(cardId)}
                               alt={card?.name || `Card #${cardId}`}
                               title={card?.name || `Card #${cardId}`}
                               loading="lazy"

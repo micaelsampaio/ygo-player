@@ -7,6 +7,7 @@ import { useCardGroups } from "./hooks/useCardGroups";
 import theme from "../../styles/theme";
 import AppLayout from "../Layout/AppLayout";
 import { Button, Card, TextField, Badge } from "../UI";
+import { getCardImageUrl, getCardBackImageUrl } from "../../utils/cardImages";
 
 const MyCardGroupsPage = () => {
   const navigate = useNavigate();
@@ -187,14 +188,13 @@ const MyCardGroupsPage = () => {
                           <CardImage
                             src={
                               card.card_images?.[0]?.image_url ||
-                              `https://images.ygoprodeck.com/images/cards/${card.id}.jpg`
+                              getCardImageUrl(card.id, "normal")
                             }
                             alt={card.name}
                             className="deck-card"
                             onError={(e) => {
                               const target = e.target as HTMLImageElement;
-                              target.src =
-                                "https://images.ygoprodeck.com/images/cards_small/back_high.jpg";
+                              target.src = getCardBackImageUrl();
                             }}
                             onClick={() => handleCardSelect(card)}
                           />

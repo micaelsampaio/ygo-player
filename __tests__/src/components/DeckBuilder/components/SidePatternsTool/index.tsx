@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Card, Deck, SidingPattern } from "../../types";
 import { useSidePatterns } from "../../hooks/useSidePatterns";
+import { getCardImageUrl } from "../../../../utils/cardImages";
 import "./SidePatternsTool.css";
 
 // Interface to track card counts
@@ -545,7 +546,7 @@ const SidePatternsTool: React.FC<SidePatternsToolProps> = ({
                             src={
                               cardCount.card.card_images?.[0]
                                 ?.image_url_small ||
-                              `https://images.ygoprodeck.com/images/cards_small/${cardCount.card.id}.jpg`
+                              getCardImageUrl(cardCount.card.id, "small")
                             }
                             alt={cardCount.card.name}
                             title={cardCount.card.name}
@@ -606,7 +607,7 @@ const SidePatternsTool: React.FC<SidePatternsToolProps> = ({
                             src={
                               cardCount.card.card_images?.[0]
                                 ?.image_url_small ||
-                              `https://images.ygoprodeck.com/images/cards_small/${cardCount.card.id}.jpg`
+                              getCardImageUrl(cardCount.card.id, "small")
                             }
                             alt={cardCount.card.name}
                             title={cardCount.card.name}
@@ -733,7 +734,7 @@ const SidePatternsTool: React.FC<SidePatternsToolProps> = ({
                           className="card-item"
                         >
                           <img
-                            src={`https://images.ygoprodeck.com/images/cards_small/${card.id}.jpg`}
+                            src={getCardImageUrl(card.id, "small")}
                             alt={card.name}
                             title={card.name}
                           />
@@ -754,7 +755,7 @@ const SidePatternsTool: React.FC<SidePatternsToolProps> = ({
                           <img
                             src={
                               card.card_images?.[0]?.image_url_small ||
-                              `https://images.ygoprodeck.com/images/cards_small/${card.id}.jpg`
+                              getCardImageUrl(card.id, "small")
                             }
                             alt={card.name}
                             title={card.name}
@@ -789,7 +790,7 @@ const SidePatternsTool: React.FC<SidePatternsToolProps> = ({
                           className="card-item"
                         >
                           <img
-                            src={`https://images.ygoprodeck.com/images/cards_small/${card.id}.jpg`}
+                            src={getCardImageUrl(card.id, "small")}
                             alt={card.name}
                             title={card.name}
                           />
@@ -810,7 +811,7 @@ const SidePatternsTool: React.FC<SidePatternsToolProps> = ({
                           <img
                             src={
                               card.card_images?.[0]?.image_url_small ||
-                              `https://images.ygoprodeck.com/images/cards_small/${card.id}.jpg`
+                              getCardImageUrl(card.id, "small")
                             }
                             alt={card.name}
                             title={card.name}

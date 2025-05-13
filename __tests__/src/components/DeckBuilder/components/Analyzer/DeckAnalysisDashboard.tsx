@@ -34,6 +34,7 @@ import CardReplacementSuggester from "./CardReplacementSuggester";
 import { DeckEvolutionAdvisor } from "./DeckEvolutionAdvisor";
 import { MetaAnalysisChart } from "./MetaAnalysisChart";
 import { YgoCard } from "../types/cards";
+import { getCardImageUrl } from "../../../../utils/cardImages";
 
 interface DeckAnalysisData {
   deckName: string;
@@ -351,9 +352,7 @@ const DeckAnalysisDashboard: React.FC<DeckAnalysisDashboardProps> = ({
                       key={index}
                       label={card.name}
                       avatar={
-                        <Avatar
-                          src={`https://images.ygoprodeck.com/images/cards_small/${card.id}.jpg`}
-                        />
+                        <Avatar src={getCardImageUrl(card.id, "small")} />
                       }
                       sx={{ mb: 1 }}
                     />

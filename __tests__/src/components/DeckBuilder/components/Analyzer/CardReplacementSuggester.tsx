@@ -30,6 +30,7 @@ import RemoveCircleIcon from "@mui/icons-material/RemoveCircle";
 import InfoIcon from "@mui/icons-material/Info";
 import { AnalyzerApi } from "../network/analyzerApi";
 import { YgoCard } from "../types/cards";
+import { getCardImageUrl } from "../../../../utils/cardImages";
 
 interface CardReplacementSuggesterProps {
   deck: {
@@ -289,7 +290,10 @@ const CardReplacementSuggester: React.FC<CardReplacementSuggesterProps> = ({
                         </Typography>
 
                         <Avatar
-                          src={`https://images.ygoprodeck.com/images/cards/${suggestion.cardToReplace.id}.jpg`}
+                          src={getCardImageUrl(
+                            suggestion.cardToReplace.id,
+                            "large"
+                          )}
                           variant="rounded"
                           sx={{ width: 100, height: 146, mb: 1 }}
                         />
@@ -361,7 +365,7 @@ const CardReplacementSuggester: React.FC<CardReplacementSuggesterProps> = ({
                                 <ListItemAvatar>
                                   <Avatar
                                     variant="rounded"
-                                    src={`https://images.ygoprodeck.com/images/cards_small/${card.id}.jpg`}
+                                    src={getCardImageUrl(card.id, "small")}
                                   />
                                 </ListItemAvatar>
                                 <ListItemText

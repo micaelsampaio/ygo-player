@@ -7,6 +7,7 @@ import theme from "../../styles/theme";
 import Card from "../UI/Card";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Info, ExternalLink } from "lucide-react";
+import { getCardImageUrl, getCardBackImageUrl } from "../../utils/cardImages";
 
 const CardDatabasePage: React.FC = () => {
   const [selectedCard, setSelectedCard] = useState<CardType | null>(null);
@@ -67,13 +68,12 @@ const CardDatabasePage: React.FC = () => {
                       <CardImage
                         src={
                           selectedCard.card_images?.[0]?.image_url ||
-                          `https://images.ygoprodeck.com/images/cards/${selectedCard.id}.jpg`
+                          getCardImageUrl(selectedCard.id, "normal")
                         }
                         alt={selectedCard.name}
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
-                          target.src =
-                            "https://images.ygoprodeck.com/images/cards_small/back_high.jpg";
+                          target.src = getCardBackImageUrl();
                         }}
                       />
                       <CardImageOverlay>
