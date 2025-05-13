@@ -25,6 +25,8 @@ const SpinnerWheel: React.FC = () => {
     "Option F",
   ]);
   const [newOption, setNewOption] = useState("");
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [editValue, setEditValue] = useState("");
   const wheelRef = useRef<HTMLDivElement>(null);
   const confettiRef = useRef<HTMLDivElement>(null);
   const [result, setResult] = useState<string | null>(null);
@@ -89,10 +91,28 @@ const SpinnerWheel: React.FC = () => {
     setOptions(options.filter((_, i) => i !== index));
   };
 
+  const editOption = (index: number) => {
+    setEditingIndex(index);
+    setEditValue(options[index]);
+  };
+
+  const saveEditOption = () => {
+    if (editingIndex === null || editValue.trim() === "") return;
+    const updatedOptions = [...options];
+    updatedOptions[editingIndex] = editValue.trim();
+    setOptions(updatedOptions);
+    setEditingIndex(null);
+    setEditValue("");
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       e.preventDefault();
-      addOption();
+      if (editingIndex !== null) {
+        saveEditOption();
+      } else {
+        addOption();
+      }
     }
   };
 
@@ -223,14 +243,26 @@ const SpinnerWheel: React.FC = () => {
                 <AddOptionForm>
                   <Input
                     type="text"
-                    value={newOption}
-                    onChange={(e) => setNewOption(e.target.value)}
-                    placeholder="New option"
+                    value={editingIndex !== null ? editValue : newOption}
+                    onChange={(e) =>
+                      editingIndex !== null
+                        ? setEditValue(e.target.value)
+                        : setNewOption(e.target.value)
+                    }
+                    placeholder={
+                      editingIndex !== null ? "Edit option" : "New option"
+                    }
                     onKeyDown={handleKeyDown}
                   />
-                  <Button onClick={addOption} variant="primary">
-                    Add
-                  </Button>
+                  {editingIndex !== null ? (
+                    <Button onClick={saveEditOption} variant="primary">
+                      Save
+                    </Button>
+                  ) : (
+                    <Button onClick={addOption} variant="primary">
+                      Add
+                    </Button>
+                  )}
                 </AddOptionForm>
 
                 <OptionsList>
@@ -242,6 +274,7 @@ const SpinnerWheel: React.FC = () => {
                       <OptionItem
                         key={index}
                         $color={getColorForSegment(index, options.length)}
+                        onClick={() => editOption(index)}
                       >
                         <OptionColor
                           $background={getColorForSegment(
@@ -251,7 +284,12 @@ const SpinnerWheel: React.FC = () => {
                         />
                         <OptionIdentifier>{optionIdentifier}</OptionIdentifier>
                         <OptionLabel>{option}</OptionLabel>
-                        <RemoveButton onClick={() => removeOption(index)}>
+                        <RemoveButton 
+                          onClick={(e) => {
+                            e.stopPropagation(); // Prevent triggering the parent's onClick
+                            removeOption(index);
+                          }}
+                        >
                           ✕
                         </RemoveButton>
                       </OptionItem>
@@ -802,10 +840,12 @@ const OptionItem = styled.div<{ $color: string }>`
   border-radius: ${theme.borderRadius.sm};
   border-left: 4px solid ${(props) => props.$color};
   transition: all 0.2s ease;
+  cursor: pointer; /* Added cursor pointer to indicate clickable */
 
   &:hover {
     transform: translateX(2px);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    background-color: ${theme.colors.background.hover}; /* Added hover effect */
   }
 `;
 
