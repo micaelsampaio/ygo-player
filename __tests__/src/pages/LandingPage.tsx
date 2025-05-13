@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import styled, { ThemeProvider } from "styled-components";
 import theme from "../styles/theme";
 import AppLayout from "../components/Layout/AppLayout";
+import { CardMouseHover } from "@/components/Cards/CardMouseHover";
 
 const LandingPage: React.FC = () => {
   const [isLocalhost, setIsLocalhost] = useState(false);
@@ -43,7 +44,7 @@ const LandingPage: React.FC = () => {
 
           <FeaturesSection>
             <SectionTitle>Features</SectionTitle>
-            <Features>
+            {/* <Features>
               <FeatureCard>
                 <FeatureIcon>🃏</FeatureIcon>
                 <FeatureTitle>Deck Builder</FeatureTitle>
@@ -92,7 +93,80 @@ const LandingPage: React.FC = () => {
                   View Collections →
                 </FeatureLink>
               </FeatureCard>
-            </Features>
+            </Features> */}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 gap-y-8 justify-center justify-items-center">
+
+              <Link to={"/my/decks"}>
+                <CardMouseHover.Wrapper
+                  backgroundImage="/images/features-cards/my_decks.png"
+                  gradientColor="from-black/50 to-blue-500/70"
+                >
+                  <CardMouseHover.Content>
+                    <CardMouseHover.Icon iconUrl="/images/features-cards/ic_deck_analysis.png" />
+                    <CardMouseHover.Title title="My Decks" />
+                  </CardMouseHover.Content>
+                </CardMouseHover.Wrapper>
+              </Link>
+
+              <Link to={"/deckbuilder"}>
+                <CardMouseHover.Wrapper
+                  backgroundImage="/images/features-cards/deck_builder.png"
+                  gradientColor="from-black/50 to-purple-500/70"
+                >
+                  <CardMouseHover.Content>
+                    <CardMouseHover.Icon iconUrl="/images/features-cards/ic_deck_analysis.png" />
+                    <CardMouseHover.Title title="Deck Builder" />
+                  </CardMouseHover.Content>
+                </CardMouseHover.Wrapper>
+              </Link>
+              <Link to={"/my/replays"}>
+                <CardMouseHover.Wrapper
+                  backgroundImage="/images/features-cards/replays.png"
+                  gradientColor="from-black/50 to-yellow-500/70"
+                >
+                  <CardMouseHover.Content>
+                    <CardMouseHover.Icon iconUrl="/images/features-cards/ic_deck_analysis.png" />
+                    <CardMouseHover.Title title="My Replays" />
+                  </CardMouseHover.Content>
+                </CardMouseHover.Wrapper>
+              </Link>
+              <Link to={"/cards/database"}>
+                <CardMouseHover.Wrapper
+                  backgroundImage="/images/features-cards/cards_database.png"
+                  gradientColor="from-black/50 to-pink-500/70"
+                >
+                  <CardMouseHover.Content>
+                    <CardMouseHover.Icon iconUrl="/images/features-cards/ic_deck_analysis.png" />
+                    <CardMouseHover.Title title="Cards Database" />
+                  </CardMouseHover.Content>
+                </CardMouseHover.Wrapper>
+              </Link>
+
+              <Link to={"/rulings"}>
+                <CardMouseHover.Wrapper
+                  backgroundImage="/images/features-cards/rulings.png"
+                  gradientColor="from-black/50 to-violet-500/70"
+                >
+                  <CardMouseHover.Content>
+                    <CardMouseHover.Icon iconUrl="/images/features-cards/ic_deck_analysis.png" />
+                    <CardMouseHover.Title title="Ruling" />
+                  </CardMouseHover.Content>
+                </CardMouseHover.Wrapper>
+              </Link>
+
+              <Link to={"/my/cards/groups"}>
+                <CardMouseHover.Wrapper
+                  backgroundImage="/images/features-cards/matchup_maker.png"
+                  gradientColor="from-black/50 to-green-500/70"
+                >
+                  <CardMouseHover.Content>
+                    <CardMouseHover.Icon iconUrl="/images/features-cards/ic_deck_analysis.png" />
+                    <CardMouseHover.Title title="Matchup Maker" />
+                  </CardMouseHover.Content>
+                </CardMouseHover.Wrapper>
+              </Link>
+            </div>
           </FeaturesSection>
 
           <ResourcesSection>
@@ -213,7 +287,7 @@ const SecondaryButton = styled.a`
 `;
 
 const FeaturesSection = styled.section`
-  padding: 5rem 2rem;
+  padding: 5rem 0rem;
   max-width: 1200px;
   margin: 0 auto;
 `;
