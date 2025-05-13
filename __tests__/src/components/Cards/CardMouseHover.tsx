@@ -20,7 +20,7 @@ type CardMouseHoverTitleProps = {
 
 function Wrapper({ backgroundImage, gradientColor, children }: CardMouseHoverWrapperProps) {
   return (
-    <div className="relative overflow-hidden group w-64 h-64 rounded-md shadow-md cursor-pointer">
+    <div className="relative overflow-hidden group w-64 h-64 rounded-2xl shadow-md cursor-pointer">
       {/* Zoomable Background Image */}
       <div
         className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-110"
