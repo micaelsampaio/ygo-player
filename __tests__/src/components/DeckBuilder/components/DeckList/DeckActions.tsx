@@ -458,11 +458,11 @@ const DeckActions: React.FC<DeckActionsProps> = ({
 
             <button
               onClick={exportDeckAsJSON}
-              title="Export deck as JSON for backup or sharing"
+              title="Export deck data as JSON for backup or sharing"
               className="action-button"
             >
               <span className="action-icon">📋</span>
-              <span className="action-text">Export as JSON</span>
+              <span className="action-text">Export Data</span>
             </button>
 
             <button
@@ -479,19 +479,19 @@ const DeckActions: React.FC<DeckActionsProps> = ({
             <div className="group-header">Manage</div>
             <button
               onClick={importDeck}
-              title="Import a deck from YDK or JSON file"
+              title="Import a deck from file (YDK, YDKE or JSON format)"
               className="action-button"
             >
               <span className="action-icon">📥</span>
-              <span className="action-text">Import Deck</span>
+              <span className="action-text">Import</span>
             </button>
 
             <button
               onClick={importFromClipboard}
-              title="Import a deck from clipboard (YDK or JSON format)"
+              title="Import a deck from clipboard (YDK, YDKE, or JSON format)"
               className="action-button"
             >
-              <span className="action-icon">📥</span>
+              <span className="action-icon">📋</span>
               <span className="action-text">Import from Clipboard</span>
             </button>
 
