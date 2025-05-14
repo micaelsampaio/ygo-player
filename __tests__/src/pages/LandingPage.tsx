@@ -109,14 +109,14 @@ const LandingPage: React.FC = () => {
                 </CardMouseHover.Wrapper>
               </Link>
 
-              <Link to={"/deckbuilder"}>
+              <Link to={"/pre-duel"}>
                 <CardMouseHover.Wrapper
                   backgroundImage="/images/features-cards/deck_builder.png"
                   gradientColor="from-black/50 to-purple-500/70"
                 >
                   <CardMouseHover.Content>
                     <CardMouseHover.Icon iconUrl="/images/features-cards/ic_deck_analysis.png" />
-                    <CardMouseHover.Title title="Deck Builder" />
+                    <CardMouseHover.Title title="Duel Practice" />
                   </CardMouseHover.Content>
                 </CardMouseHover.Wrapper>
               </Link>

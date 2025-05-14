@@ -1,9 +1,12 @@
 // src/hooks/usePageView.ts
+import userScrollRouter from "@/hooks/userScrollRouter";
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 
 export function usePageView() {
     const location = useLocation();
+
+    userScrollRouter();
 
     useEffect(() => {
         const globalWindow = window as any;
@@ -14,6 +17,7 @@ export function usePageView() {
             });
         }
     }, [location]);
+
 }
 
 export function PageViewerProvider() {
