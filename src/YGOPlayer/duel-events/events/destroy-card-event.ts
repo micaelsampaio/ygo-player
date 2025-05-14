@@ -109,8 +109,7 @@ export class DestroyCardEventHandler extends YGOCommandHandler {
     spreadMesh.position.z += 0.5;
     duel.core.scene.add(spreadMesh);
 
-    //light_02
-    //star_02
+    this.props.playSound({ key: duel.createCdnUrl(`/sounds/crack.ogg`), volume: 0.5 });
 
     this.props.startTask(
       new MultipleTasks(
