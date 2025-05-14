@@ -869,6 +869,12 @@ export const exportDrawSimulationToPdf = async (
       "Starting Draw Simulator PDF export with direct PDF generation"
     );
 
+    // Define constants needed throughout the function
+    const tableHeaderHeight = 8;
+    const handSize = simulationResults[0]?.hand?.length || 5;
+    const cardMiniWidth = 12;
+    const cardMiniHeight = cardMiniWidth * 1.46;
+
     // Create PDF document
     const pdf = new jsPDF({
       orientation: "portrait",
@@ -883,25 +889,6 @@ export const exportDrawSimulationToPdf = async (
     const margin = 10;
     const contentWidth = pageWidth - 2 * margin;
     let yPos = 20;
-
-    // Add title and basic info
-    pdf.setFontSize(18);
-    pdf.setTextColor(33, 33, 33);
-    pdf.text(`${deck.name} - Draw Simulation Results`, pageWidth / 2, yPos, {
-      align: "center",
-    });
-    yPos += 15;
-
-    // Add simulation info
-    pdf.setFontSize(12);
-    pdf.text(`Total Simulations: ${statistics.totalSimulations}`, margin, yPos);
-    yPos += 8;
-    pdf.text(
-      `Hand Size: ${simulationResults[0]?.hand?.length || 5}`,
-      margin,
-      yPos
-    );
-    yPos += 15;
 
     // Helper function to load and process card images
     const loadCardImage = async (card: any): Promise<HTMLImageElement> => {
@@ -941,6 +928,56 @@ export const exportDrawSimulationToPdf = async (
       } catch (err) {
         console.error(`Error adding card image to PDF: ${card.name}`, err);
       }
+    };
+
+    // Calculate draw probability function for use in the PDF generation
+    const calculateDrawProbability = (
+      deckSize: number,
+      copies: number,
+      handSize: number
+    ): number => {
+      // Hypergeometric probability calculation
+      let probability = 0;
+      // Calculate probability of drawing at least 1 copy
+      for (let i = 1; i <= Math.min(copies, handSize); i++) {
+        // Calculate: (C(copies,i) * C(deckSize-copies,handSize-i)) / C(deckSize,handSize)
+        let numerator = 1;
+        let denominator = 1;
+
+        // Calculate C(copies,i)
+        for (let j = 0; j < i; j++) {
+          numerator *= copies - j;
+          denominator *= j + 1;
+        }
+        const combination1 = numerator / denominator;
+
+        // Reset for next calculation
+        numerator = 1;
+        denominator = 1;
+
+        // Calculate C(deckSize-copies,handSize-i)
+        for (let j = 0; j < handSize - i; j++) {
+          numerator *= deckSize - copies - j;
+          denominator *= j + 1;
+        }
+        const combination2 = numerator / denominator;
+
+        // Reset for next calculation
+        numerator = 1;
+        denominator = 1;
+
+        // Calculate C(deckSize,handSize)
+        for (let j = 0; j < handSize; j++) {
+          numerator *= deckSize - j;
+          denominator *= j + 1;
+        }
+        const combination3 = numerator / denominator;
+
+        // Add this term to the probability
+        probability += (combination1 * combination2) / combination3;
+      }
+
+      return probability * 100; // Convert to percentage
     };
 
     // === MOST COMMON HAND SECTION ===
@@ -1134,7 +1171,6 @@ export const exportDrawSimulationToPdf = async (
 
     // Check available space for table
     const rowHeight = 20; // Increased to accommodate card images
-    const tableHeaderHeight = 8;
     const tableNeededHeight =
       tableHeaderHeight + statistics.mostSeenCards.length * rowHeight + 30;
 
