@@ -72,7 +72,7 @@ export function ViewDeckPopup({
       }}
     >
       <div
-        className="game-popup-dialog ygo-menu-view-main-deck"
+        className="game-popup-dialog ygo-menu-view-main-deck ygo-main-deck-popup"
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
