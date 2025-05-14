@@ -3,6 +3,7 @@ import { YGODuel } from "../core/YGODuel";
 import { YGOEntity } from "../core/YGOEntity";
 import { GameCardHand } from "./GameCardHand";
 import * as THREE from "three";
+import { CARD_HEIGHT_SIZE } from "../constants";
 
 export class GameHand extends YGOEntity {
   private duel: YGODuel;
@@ -54,22 +55,55 @@ export class GameHand extends YGOEntity {
     }
   }
 
-  render() {
-    const gameField = this.duel.fields[this.player];
+  private getCardHandPivot() {
+    const cardHeight = CARD_HEIGHT_SIZE;
     const camera = this.duel.camera;
-    const cardWidth = 10;
-    const cardSpacing = 2.7;
-    const totalCards = gameField.hand.cards.length;
-    const fov = ((camera as any).fov * Math.PI) / 180;
     const distance = camera.position.z;
-    const handDistribution = 22;
     const baseHandZ = 6;
+    const fov = ((camera as any).fov * Math.PI) / 180;
     const visibleHeightAtZ = 2 * Math.tan(fov / 2) * Math.abs(distance - baseHandZ);
     const screenEdgeOffset = 0.15;
-    const handY = this.player === 0 ? -visibleHeightAtZ / 2 + screenEdgeOffset : visibleHeightAtZ / 2 - screenEdgeOffset;
+    const minVisibleHeight = cardHeight * 0.1;
+
+    let handY = 0;
+
+    if (this.player === 0) {
+      handY = -visibleHeightAtZ / 2 + screenEdgeOffset;
+
+      if (handY < -visibleHeightAtZ / 2 + minVisibleHeight) {
+        handY = -visibleHeightAtZ / 2 + minVisibleHeight;
+      }
+
+      if (handY < -12.5) {
+        handY = -12.5;
+      }
+    } else {
+      handY = visibleHeightAtZ / 2 - screenEdgeOffset;
+
+      if (handY > visibleHeightAtZ / 2 - minVisibleHeight) {
+        handY = visibleHeightAtZ / 2 - minVisibleHeight;
+      }
+
+      if (handY > 12.5) {
+        handY = 12.5;
+      }
+    }
+
+    return handY;
+  }
+
+
+  render() {
+    const gameField = this.duel.fields[this.player];
+    const cardWidth = 10;
+    const cardSpacing = 2.7;
+    const baseHandZ = 6;
+    const totalCards = gameField.hand.cards.length;
+    const handDistribution = 22;
+    const handY = this.getCardHandPivot();
     const normalHandWidth = (totalCards - 1) * cardSpacing + cardWidth;
     const needsCompression = normalHandWidth > handDistribution;
-    const showHand = this.player === 0;
+
     let actualSpacing = cardSpacing;
     let actualWidth = normalHandWidth;
 
