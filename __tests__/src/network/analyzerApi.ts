@@ -104,9 +104,9 @@ export class AnalyzerApi {
     try {
       // Count occurrences of each archetype
       const archetypeCounts: Record<string, number> = {};
-      
+
       // Only count cards with defined archetypes
-      cards.forEach(card => {
+      cards.forEach((card) => {
         if (card.archetype) {
           if (!archetypeCounts[card.archetype]) {
             archetypeCounts[card.archetype] = 0;
@@ -114,18 +114,18 @@ export class AnalyzerApi {
           archetypeCounts[card.archetype]++;
         }
       });
-      
+
       // Find the archetype with the most occurrences
       let dominantArchetype: string | null = null;
       let maxCount = 0;
-      
+
       Object.entries(archetypeCounts).forEach(([archetype, count]) => {
         if (count > maxCount) {
           maxCount = count;
           dominantArchetype = archetype;
         }
       });
-      
+
       // Only return if we have a minimum threshold (at least 2 cards from same archetype)
       return maxCount >= 2 ? dominantArchetype : null;
     } catch (error) {

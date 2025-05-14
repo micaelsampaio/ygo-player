@@ -29,7 +29,8 @@ const SearchPanel: React.FC<SearchPanelProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<"search" | "favorites">("search");
   const [favoriteCards, setFavoriteCards] = useState<Card[]>([]);
-  const [showingArchetypeCards, setShowingArchetypeCards] = useState<boolean>(false);
+  const [showingArchetypeCards, setShowingArchetypeCards] =
+    useState<boolean>(false);
 
   useEffect(() => {
     // Load favorites from localStorage
@@ -85,7 +86,8 @@ const SearchPanel: React.FC<SearchPanelProps> = ({
     const archetypeCounts: Record<string, number> = {};
     results.forEach((card) => {
       if (card.archetype) {
-        archetypeCounts[card.archetype] = (archetypeCounts[card.archetype] || 0) + 1;
+        archetypeCounts[card.archetype] =
+          (archetypeCounts[card.archetype] || 0) + 1;
       }
     });
 
@@ -269,7 +271,14 @@ const SearchPanel: React.FC<SearchPanelProps> = ({
 
           {dominantArchetype && !showingArchetypeCards && (
             <div className="archetype-info">
-              <span><span className="archetype-name">{dominantArchetype}</span> ({results.filter(card => card.archetype === dominantArchetype).length})</span>
+              <span>
+                <span className="archetype-name">{dominantArchetype}</span> (
+                {
+                  results.filter((card) => card.archetype === dominantArchetype)
+                    .length
+                }
+                )
+              </span>
               <button
                 className="archetype-button"
                 onClick={handleShowArchetypeCards}
@@ -278,10 +287,14 @@ const SearchPanel: React.FC<SearchPanelProps> = ({
               </button>
             </div>
           )}
-          
+
           {showingArchetypeCards && dominantArchetype && (
             <div className="archetype-info">
-              <span>Showing all <span className="archetype-name">{dominantArchetype}</span> cards</span>
+              <span>
+                Showing all{" "}
+                <span className="archetype-name">{dominantArchetype}</span>{" "}
+                cards
+              </span>
               <button
                 className="archetype-button"
                 onClick={() => {

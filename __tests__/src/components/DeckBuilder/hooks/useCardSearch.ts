@@ -19,18 +19,21 @@ export function useCardSearch() {
   // Perform search with debounce in SearchPanel component
   const performSearch = useCallback(
     async (
-      searchParams: SearchFilters | { fname?: string, archetype?: string },
+      searchParams: SearchFilters | { fname?: string; archetype?: string },
       isAdvancedSearch: boolean
     ) => {
       // For archetype searches, we don't need the minimum length check
-      const isArchetypeSearch = 'archetype' in searchParams && searchParams.archetype;
-      
+      const isArchetypeSearch =
+        "archetype" in searchParams && searchParams.archetype;
+
       if (
-        !isArchetypeSearch && 
+        !isArchetypeSearch &&
         ((!isAdvancedSearch &&
-          (!("fname" in searchParams) || !searchParams.fname || searchParams.fname.length < 3)) ||
-        (isAdvancedSearch &&
-          !Object.values(searchParams).some((v) => v && v.length >= 3)))
+          (!("fname" in searchParams) ||
+            !searchParams.fname ||
+            searchParams.fname.length < 3)) ||
+          (isAdvancedSearch &&
+            !Object.values(searchParams).some((v) => v && v.length >= 3)))
       ) {
         setResults([]);
         setIsEmptySearch(false);
@@ -100,25 +103,35 @@ export function useCardSearch() {
                 match &&
                 card.desc.toLowerCase().includes(filters.text.toLowerCase());
             }
-            
+
             // Handle archetype search
-            if ('archetype' in filters && filters.archetype) {
-              match = match && 
-                !!card.archetype && 
-                card.archetype.toLowerCase() === filters.archetype.toLowerCase();
+            if ("archetype" in filters && filters.archetype) {
+              match =
+                match &&
+                !!card.archetype &&
+                card.archetype.toLowerCase() ===
+                  filters.archetype.toLowerCase();
             }
 
             return match;
           });
         } else {
           // Handle basic search (by name or archetype)
-          if ('archetype' in searchParams && searchParams.archetype) {
-            filteredCards = data.cards.filter((card: Card) => 
-              card.archetype?.toLowerCase() === searchParams.archetype?.toLowerCase()
+          if ("archetype" in searchParams && searchParams.archetype) {
+            filteredCards = data.cards.filter(
+              (card: Card) =>
+                card.archetype?.toLowerCase() ===
+                searchParams.archetype?.toLowerCase()
             );
-          } else if ('fname' in searchParams && searchParams.fname && searchParams.fname.length >= 3) {
+          } else if (
+            "fname" in searchParams &&
+            searchParams.fname &&
+            searchParams.fname.length >= 3
+          ) {
             filteredCards = data.cards.filter((card: Card) =>
-              card.name.toLowerCase().includes(searchParams.fname?.toLowerCase() || '')
+              card.name
+                .toLowerCase()
+                .includes(searchParams.fname?.toLowerCase() || "")
             );
           }
         }
