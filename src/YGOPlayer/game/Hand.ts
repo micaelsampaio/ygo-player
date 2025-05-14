@@ -20,6 +20,10 @@ export class GameHand extends YGOEntity {
     this.cards = [];
     this.selectedCard = undefined;
     this.showHand = showHand;
+
+    this.duel.core.events.on("resize", () => {
+      this.render();
+    });
   }
 
   public disableHand() { }

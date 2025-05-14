@@ -31,6 +31,7 @@ export class YGOPlayerCore {
     // internal
     private previousFrame: number;
     private isOverlayEnabled: boolean;
+    private eventsController: AbortController;
 
     // globals
     public globalUniforms = globalUniforms;
@@ -62,8 +63,16 @@ export class YGOPlayerCore {
 
         this.scene.add(this.mapBounds);
 
-        // (this as any).controls = new OrbitControls(this.camera, this.renderer.domElement);
+        this.eventsController = new AbortController();
 
+        window.addEventListener("resize", () => {
+            this.camera.aspect = window.innerWidth / window.innerHeight;
+            this.camera.updateProjectionMatrix();
+            this.renderer.setSize(window.innerWidth, window.innerHeight);
+            this.render();
+            this.updateCamera();
+            this.events.dispatch("resize");
+        }, { signal: this.eventsController.signal });
     }
 
     public render() {
@@ -153,6 +162,7 @@ export class YGOPlayerCore {
     }
 
     destroy() {
+        this.eventsController.abort();
         this.destroyScene(this.scene);
         this.destroyScene(this.sceneOverlay);
     }
