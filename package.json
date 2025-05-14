@@ -11,7 +11,8 @@
   "dependencies": {
     "axios": "^1.8.4",
     "three": "^0.170.0",
-    "ygo-core": "file:../ygo-core"
+    "ygo-core": "file:../ygo-core",
+    "papaparse": "^5.4.1"
   },
   "devDependencies": {
     "@types/react": "^18.3.12",

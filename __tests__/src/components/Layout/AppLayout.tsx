@@ -4,6 +4,7 @@ import styled, { css } from "styled-components";
 import theme from "../../styles/theme";
 import Navigation from "../UI/Navigation";
 import Layout from "../UI/Layout";
+import { isUserLoggedIn, simulateLogin } from "../../utils/token-utils";
 
 const { colors, typography, spacing } = theme;
 
@@ -27,7 +28,8 @@ const LogoText = styled.span`
 `;
 
 const LogoImage = styled.div`
-  background-image: url("${import.meta.env.VITE_YGO_CDN_URL}/images/logo_dark.png");
+  background-image: url("${import.meta.env
+    .VITE_YGO_CDN_URL}/images/logo_dark.png");
   background-size: contain;
   background-position: left center;
   background-repeat: no-repeat;
@@ -35,7 +37,8 @@ const LogoImage = styled.div`
   height: 40px;
 `;
 const LogoImageFooter = styled.div`
-  background-image: url("${import.meta.env.VITE_YGO_CDN_URL}/images/logo_dark.png");
+  background-image: url("${import.meta.env
+    .VITE_YGO_CDN_URL}/images/logo_dark.png");
   background-size: contain;
   background-position: left center;
   background-repeat: no-repeat;
@@ -49,7 +52,7 @@ const UserControlsContainer = styled.div`
   gap: ${spacing.md};
 `;
 
-const SettingsIconLink = styled(Link) <{ active?: boolean }>`
+const SettingsIconLink = styled(Link)<{ active?: boolean }>`
   color: ${colors.text.primary};
   padding: ${spacing.xs};
   border-radius: 50%;
@@ -72,11 +75,13 @@ const SettingsIconLink = styled(Link) <{ active?: boolean }>`
     transform: rotate(180deg);
   }
 
-  ${props => props.active && css`
-    & .icon {
-      color: ${theme.colors.primary.main};
-  }
-  `}
+  ${(props) =>
+    props.active &&
+    css`
+      & .icon {
+        color: ${theme.colors.primary.main};
+      }
+    `}
 `;
 
 const HeaderContainer = styled.div`
@@ -190,14 +195,49 @@ const Copyright = styled.p`
   margin: 0;
 `;
 
-const globalWindow = (window as any);
+const UserInfoWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  gap: ${theme.spacing.sm};
+`;
+
+const UserName = styled.span`
+  font-size: ${theme.typography.size.sm};
+  font-weight: ${theme.typography.weight.medium};
+  color: ${theme.colors.text.inverse};
+`;
+
+const LoginLink = styled.a`
+  color: ${theme.colors.text.inverse};
+  text-decoration: none;
+  font-size: ${theme.typography.size.sm};
+  padding: ${theme.spacing.xs} ${theme.spacing.sm};
+  background-color: ${theme.colors.primary.main};
+  border-radius: ${theme.borderRadius.md};
+  transition: background-color 0.2s ease;
+
+  &:hover {
+    background-color: ${theme.colors.primary.dark};
+    text-decoration: none;
+    color: ${theme.colors.text.inverse};
+  }
+`;
+
+const globalWindow = window as any;
 
 const AppLayout: React.FC<AppLayoutProps> = ({ padding, children }) => {
+  // Check if user is logged in to conditionally show the TCG Collection link
+  const userLoggedIn = isUserLoggedIn();
+
   // Navigation items - organized into primary categories without tool links in header
   const navItems = [
     { to: "/duel/lobby", label: "Duel Lobby" },
     { to: "/my/decks", label: "My Decks" },
     { to: "/deckbuilder", label: "Deck Builder" },
+    // Only show TCG Collection link if user is logged in
+    ...(userLoggedIn
+      ? [{ to: "/my/cards/collection", label: "TCG Collection" }]
+      : []),
     { to: "/matchup-maker", label: "Matchup Maker" },
     { to: "/cards/database", label: "Card Database" },
     { to: "/rulings", label: "Rulings" },
@@ -221,7 +261,11 @@ const AppLayout: React.FC<AppLayoutProps> = ({ padding, children }) => {
 
       <UserControlsContainer>
         <UserData />
-        <SettingsIconLink active={location.pathname.includes(`/settings`)} to="/settings" title="Settings">
+        <SettingsIconLink
+          active={location.pathname.includes(`/settings`)}
+          to="/settings"
+          title="Settings"
+        >
           <span className="icon">
             <i className="fa fa-cog" aria-hidden="true"></i>
           </span>
@@ -281,6 +325,13 @@ const AppLayout: React.FC<AppLayoutProps> = ({ padding, children }) => {
                 <FooterLinkItem>
                   <FooterLink to="/my/cards/groups">My Card Groups</FooterLink>
                 </FooterLinkItem>
+                {userLoggedIn && (
+                  <FooterLinkItem>
+                    <FooterLink to="/my/cards/collection">
+                      TCG Collection
+                    </FooterLink>
+                  </FooterLinkItem>
+                )}
                 <FooterLinkItem>
                   <FooterLink to="/cards/database">Card Database</FooterLink>
                 </FooterLinkItem>
@@ -338,20 +389,37 @@ const AppLayout: React.FC<AppLayoutProps> = ({ padding, children }) => {
 };
 
 function UserData() {
+  const isLoggedIn = isUserLoggedIn();
+  const tokenData = isLoggedIn ? globalWindow.ygo101_token_data : null;
+  const isLocalhost =
+    window.location.hostname === "localhost" ||
+    window.location.hostname === "127.0.0.1";
 
-  return null;
-  // TODO
-  // const tokenData = globalWindow.ygo101_token_data;
+  const handleLogin = (e: React.MouseEvent) => {
+    // If on localhost, use simulated login
+    if (isLocalhost) {
+      e.preventDefault();
+      simulateLogin();
+    }
+    // Otherwise the default href behavior will work
+  };
 
-  // if (tokenData) {
-  //   return <div>
-  //     {tokenData.name}
-  //   </div>
-  // }
+  if (tokenData) {
+    return (
+      <UserInfoWrapper>
+        <UserName>{tokenData.name || "User"}</UserName>
+      </UserInfoWrapper>
+    );
+  }
 
-  // return <div>
-  //   <a href={`${import.meta.env.VITE_API_BASE_URL}/auth/login`}>Login</a>
-  // </div>
+  return (
+    <LoginLink
+      href={`${import.meta.env.VITE_API_BASE_URL}/auth/login`}
+      onClick={handleLogin}
+    >
+      Login
+    </LoginLink>
+  );
 }
 
 export default AppLayout;

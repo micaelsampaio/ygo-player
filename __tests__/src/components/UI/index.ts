@@ -17,3 +17,4 @@ export {
 export { default as YGOCard, YGOCardGrid } from "./YGOCard";
 export { default as Navigation } from "./Navigation";
 export { default as Tabs, Tab } from "./Tabs";
+export { default as Tooltip } from "./Tooltip";

@@ -32,6 +32,8 @@ import PrivacyPage from "./pages/PrivacyPage";
 import MatchupMakerPage from "./pages/MatchupMakerPage";
 import GameToolsPage from "./pages/GameToolsPage"; // Import our Game Tools page
 import DeckConverterPage from "./pages/DeckConverterPage"; // Import the new page
+import CardCollectionPage from "./components/CardCollection/CardCollectionPage"; // Import the new TCG Card Collection page
+import TargetDetailsPage from "./components/CardCollection/TargetDetailsPage"; // Import the Target Details page
 import { PageViewerProvider } from "./utils/use-page-view.ts";
 // Import new tool components
 import { SpinnerWheel, TierList, Randomizer } from "./components/Tools";
@@ -61,7 +63,10 @@ createRoot(document.getElementById("root")!).render(
         <Route path="/duel/:roomId" element={<Duel />} />
         <Route path="/deck" element={<DownloadDeck />} />
         <Route path="/deckbuilder" element={<DeckBuilder />} />
-        <Route path="/create-combo/replay/:replayId" element={<ComboBuilder />} />
+        <Route
+          path="/create-combo/replay/:replayId"
+          element={<ComboBuilder />}
+        />
         <Route
           path="/spreadsheet/collection/:collectionId/:comboId"
           element={<ComboBuilder />}
@@ -101,6 +106,13 @@ createRoot(document.getElementById("root")!).render(
 
         {/* Route for card groups */}
         <Route path="/my/cards/groups" element={<MyCardGroupsPage />} />
+
+        {/* Advanced TCG Card Collection */}
+        <Route path="/my/cards/collection" element={<CardCollectionPage />} />
+        <Route
+          path="/my/cards/collection/targets/:targetId"
+          element={<TargetDetailsPage />}
+        />
 
         {/* Updated route for duel lobby */}
         <Route path="/duel/lobby" element={<DuelLobbyPage />} />
