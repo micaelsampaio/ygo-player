@@ -16,6 +16,7 @@ import { MultipleTasks } from "../utils/multiple-tasks";
 import { ScaleTransition } from "../utils/scale-transition";
 import { createSquareWithTopMiddlePivot } from "../../game/meshes/mesh-utils";
 import { YGOAnimationObject } from "../../game/YGOAnimationObject";
+import { MaterialOpacityTransition } from "../utils/material-opacity";
 
 interface DestroyEventHandlerProps extends DuelEventHandlerProps {
   event: YGODuelEvents.Destroy;
@@ -59,17 +60,16 @@ export class DestroyCardEventHandler extends YGOCommandHandler {
 
     startPosition.z += 0.05;
 
+    // moving light
     const PlaneGeometry = new THREE.PlaneGeometry(1, 1);
-    const texture = duel.assets.getTexture(
-      `${duel.config.cdnUrl}/images/particles/light_01.png`
-    );
+    const texture = duel.assets.getTexture(`${duel.config.cdnUrl}/images/particles/light_01.png`);
     const material = new THREE.MeshBasicMaterial({
       map: texture,
       transparent: true,
-      color: 0xffff00,
+      color: 0xADD8E6,
     });
     const mesh = new THREE.Mesh(PlaneGeometry, material);
-    mesh.scale.set(1, 1, 1);
+    mesh.scale.set(2, 2, 2);
     mesh.rotation.set(0, 0, 0);
     mesh.position.copy(startPosition);
     duel.core.scene.add(mesh);
@@ -80,8 +80,70 @@ export class DestroyCardEventHandler extends YGOCommandHandler {
     const trailMat = new THREE.MeshBasicMaterial({
       map: trailTexture,
       transparent: true,
-      color: 0xffff00,
+      color: 0xADD8E6,
     });
+
+    // FLASH 
+    const flashTexture = duel.assets.getTexture(`${duel.config.cdnUrl}/images/particles/star_09.png`);
+    const flashMaterial = new THREE.MeshBasicMaterial({
+      map: flashTexture,
+      transparent: true,
+      color: 0xffffff,
+      opacity: 1,
+    });
+    const flashMesh = new THREE.Mesh(new THREE.PlaneGeometry(15, 15), flashMaterial);
+
+    flashMesh.position.copy(card.gameObject.position);
+    flashMesh.position.z += 1;
+    duel.core.scene.add(flashMesh);
+
+    const spreadTexture = duel.assets.getTexture(`${duel.config.cdnUrl}/images/particles/light_03.png`);
+    const spreadMaterial = new THREE.MeshBasicMaterial({
+      map: spreadTexture,
+      transparent: true,
+      color: 0xADD8E6,
+    });
+    const spreadMesh = new THREE.Mesh(new THREE.PlaneGeometry(5, 5), spreadMaterial);
+
+    spreadMesh.position.copy(card.gameObject.position);
+    spreadMesh.position.z += 0.5;
+    duel.core.scene.add(spreadMesh);
+
+    //light_02
+    //star_02
+
+    this.props.startTask(
+      new MultipleTasks(
+        new MaterialOpacityTransition({
+          material: flashMaterial,
+          opacity: 0,
+          duration: 0.2,
+        }),
+        new ScaleTransition({
+          gameObject: flashMesh,
+          scale: new THREE.Vector3(.5, .5, .5),
+          duration: 0.2,
+        })
+      )
+    );
+
+    this.props.startTask(
+      new MultipleTasks(
+        new MaterialOpacityTransition({
+          material: spreadMaterial,
+          opacity: 0,
+          duration: 0.4,
+        }),
+        new ScaleTransition({
+          gameObject: spreadMesh,
+          scale: new THREE.Vector3(3, 3, 3),
+          duration: 0.4,
+        })
+      )
+    );
+
+
+
     const trailMesh = createSquareWithTopMiddlePivot(3, 3, trailMat);
     duel.core.scene.add(trailMesh);
 
@@ -95,7 +157,7 @@ export class DestroyCardEventHandler extends YGOCommandHandler {
     const destroyEffect = pool.get<YGOAnimationObject>();
 
     destroyEffect.gameObject.position.copy(card.gameObject.position);
-    destroyEffect.gameObject.rotation.copy(card.gameObject.rotation);
+    destroyEffect.gameObject.rotation.set(THREE.MathUtils.degToRad(90), 0, 0);
     destroyEffect.gameObject.visible = true;
     destroyEffect.playAll();
     destroyEffect.enable();
