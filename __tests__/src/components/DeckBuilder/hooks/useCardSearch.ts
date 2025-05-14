@@ -19,14 +19,18 @@ export function useCardSearch() {
   // Perform search with debounce in SearchPanel component
   const performSearch = useCallback(
     async (
-      searchParams: SearchFilters | { fname: string },
+      searchParams: SearchFilters | { fname?: string, archetype?: string },
       isAdvancedSearch: boolean
     ) => {
+      // For archetype searches, we don't need the minimum length check
+      const isArchetypeSearch = 'archetype' in searchParams && searchParams.archetype;
+      
       if (
-        (!isAdvancedSearch &&
-          (!("fname" in searchParams) || searchParams.fname.length < 3)) ||
+        !isArchetypeSearch && 
+        ((!isAdvancedSearch &&
+          (!("fname" in searchParams) || !searchParams.fname || searchParams.fname.length < 3)) ||
         (isAdvancedSearch &&
-          !Object.values(searchParams).some((v) => v && v.length >= 3))
+          !Object.values(searchParams).some((v) => v && v.length >= 3)))
       ) {
         setResults([]);
         setIsEmptySearch(false);
@@ -96,21 +100,34 @@ export function useCardSearch() {
                 match &&
                 card.desc.toLowerCase().includes(filters.text.toLowerCase());
             }
+            
+            // Handle archetype search
+            if ('archetype' in filters && filters.archetype) {
+              match = match && 
+                !!card.archetype && 
+                card.archetype.toLowerCase() === filters.archetype.toLowerCase();
+            }
 
             return match;
           });
         } else {
-          // Handle basic search (by name)
-          const searchName = "fname" in searchParams ? searchParams.fname : "";
-          if (searchName && searchName.length >= 3) {
+          // Handle basic search (by name or archetype)
+          if ('archetype' in searchParams && searchParams.archetype) {
+            filteredCards = data.cards.filter((card: Card) => 
+              card.archetype?.toLowerCase() === searchParams.archetype?.toLowerCase()
+            );
+          } else if ('fname' in searchParams && searchParams.fname && searchParams.fname.length >= 3) {
             filteredCards = data.cards.filter((card: Card) =>
-              card.name.toLowerCase().includes(searchName.toLowerCase())
+              card.name.toLowerCase().includes(searchParams.fname?.toLowerCase() || '')
             );
           }
         }
 
-        // Limit results to prevent performance issues
-        filteredCards = filteredCards.slice(0, 30);
+        // For archetype searches, don't limit results
+        if (!isArchetypeSearch) {
+          // Limit results to prevent performance issues
+          filteredCards = filteredCards.slice(0, 30);
+        }
 
         setResults(filteredCards);
         setIsEmptySearch(filteredCards.length === 0);
@@ -136,9 +153,12 @@ export function useCardSearch() {
     searchFilters,
     setSearchFilters,
     results,
+    setResults,
     isSearching,
+    setIsSearching,
     isEmptySearch,
     error,
+    setError,
     performSearch,
   };
 }

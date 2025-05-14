@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Card, SearchFilters } from "../../types";
 import BasicSearch from "./BasicSearch";
 import AdvancedSearch from "./AdvancedSearch";
@@ -29,6 +29,7 @@ const SearchPanel: React.FC<SearchPanelProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<"search" | "favorites">("search");
   const [favoriteCards, setFavoriteCards] = useState<Card[]>([]);
+  const [showingArchetypeCards, setShowingArchetypeCards] = useState<boolean>(false);
 
   useEffect(() => {
     // Load favorites from localStorage
@@ -67,11 +68,41 @@ const SearchPanel: React.FC<SearchPanelProps> = ({
     searchFilters,
     setSearchFilters,
     results,
+    setResults,
     isSearching,
+    setIsSearching,
     isEmptySearch,
     error,
+    setError,
     performSearch,
   } = useCardSearch();
+
+  // Calculate the dominant archetype directly from results
+  const dominantArchetype = useMemo(() => {
+    if (!results || results.length === 0) return null;
+
+    // Count archetypes
+    const archetypeCounts: Record<string, number> = {};
+    results.forEach((card) => {
+      if (card.archetype) {
+        archetypeCounts[card.archetype] = (archetypeCounts[card.archetype] || 0) + 1;
+      }
+    });
+
+    // Find the most common archetype
+    let maxCount = 0;
+    let dominantArchetype: string | null = null;
+
+    Object.entries(archetypeCounts).forEach(([archetype, count]) => {
+      if (count > maxCount) {
+        maxCount = count;
+        dominantArchetype = archetype;
+      }
+    });
+
+    // Only return if we have at least 2 cards from the same archetype
+    return maxCount >= 2 ? dominantArchetype : null;
+  }, [results]);
 
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm);
   const [debouncedFilters, setDebouncedFilters] = useState(searchFilters);
@@ -125,6 +156,16 @@ const SearchPanel: React.FC<SearchPanelProps> = ({
       performSearch(searchFilters, true);
     } else {
       performSearch({ fname: searchTerm }, false);
+    }
+  };
+
+  const handleShowArchetypeCards = () => {
+    if (dominantArchetype) {
+      setShowingArchetypeCards(true);
+      setIsSearching(true);
+
+      // Search for all cards with the same archetype
+      performSearch({ archetype: dominantArchetype }, true);
     }
   };
 
@@ -225,6 +266,37 @@ const SearchPanel: React.FC<SearchPanelProps> = ({
               <span className="search-error">{error}</span>
             )}
           </div>
+
+          {dominantArchetype && !showingArchetypeCards && (
+            <div className="archetype-info">
+              <span><span className="archetype-name">{dominantArchetype}</span> ({results.filter(card => card.archetype === dominantArchetype).length})</span>
+              <button
+                className="archetype-button"
+                onClick={handleShowArchetypeCards}
+              >
+                View All
+              </button>
+            </div>
+          )}
+          
+          {showingArchetypeCards && dominantArchetype && (
+            <div className="archetype-info">
+              <span>Showing all <span className="archetype-name">{dominantArchetype}</span> cards</span>
+              <button
+                className="archetype-button"
+                onClick={() => {
+                  setShowingArchetypeCards(false);
+                  if (isAdvancedSearch) {
+                    performSearch(searchFilters, true);
+                  } else {
+                    performSearch({ fname: searchTerm }, false);
+                  }
+                }}
+              >
+                Back
+              </button>
+            </div>
+          )}
 
           <SearchResults
             results={results.map((card) => ({

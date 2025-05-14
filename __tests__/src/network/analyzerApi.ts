@@ -90,10 +90,47 @@ export class AnalyzerApi {
         (card: any) => card.archetype?.toLowerCase() === archetype.toLowerCase()
       );
 
-      return { cards: filteredCards };
+      return filteredCards;
     } catch (error) {
       console.error("Error fetching cards by archetype:", error);
       throw error;
+    }
+  }
+
+  /**
+   * Determine the most dominant archetype in a set of cards
+   */
+  static async getDominantArchetype(cards: any[]) {
+    try {
+      // Count occurrences of each archetype
+      const archetypeCounts: Record<string, number> = {};
+      
+      // Only count cards with defined archetypes
+      cards.forEach(card => {
+        if (card.archetype) {
+          if (!archetypeCounts[card.archetype]) {
+            archetypeCounts[card.archetype] = 0;
+          }
+          archetypeCounts[card.archetype]++;
+        }
+      });
+      
+      // Find the archetype with the most occurrences
+      let dominantArchetype: string | null = null;
+      let maxCount = 0;
+      
+      Object.entries(archetypeCounts).forEach(([archetype, count]) => {
+        if (count > maxCount) {
+          maxCount = count;
+          dominantArchetype = archetype;
+        }
+      });
+      
+      // Only return if we have a minimum threshold (at least 2 cards from same archetype)
+      return maxCount >= 2 ? dominantArchetype : null;
+    } catch (error) {
+      console.error("Error determining dominant archetype:", error);
+      return null;
     }
   }
 
