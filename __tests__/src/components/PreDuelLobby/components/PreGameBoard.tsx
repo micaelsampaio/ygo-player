@@ -34,6 +34,13 @@ export function PreGameBoard() {
     clearAction();
   }
 
+  const onCardZoneRightClick = (e: any, zone: FieldZone) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setCardInCardZone(zone, null);
+    clearAction();
+  }
+
   const renderZone = (playerIndex: number, fieldZone: string, zoneIndex: number, card: Card | null) => {
     const zone = YGOGameUtils.createZone(fieldZone as any, playerIndex, zoneIndex);
 
@@ -45,10 +52,12 @@ export function PreGameBoard() {
       ygo-zone={zone}
       key={zone}
       onClick={() => onCardZoneClick(zone, card)}
+      onContextMenu={(e) => onCardZoneRightClick(e, zone)}
     >
       <CardZone
         className={`h-[90%] aspect-[0.714] border-2 border-dotted border-${playerIndex === 0 ? "blue" : playerIndex === 1 ? "red" : "gray"}-500/50 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2`}
         blink={isCardSelectionActive && (action?.data?.player === playerIndex || playerIndex === -1)}>
+
       </CardZone>
 
       {
@@ -132,7 +141,10 @@ export function PreGameBoard() {
           {/* Bottom Row */}
           <div className="col-span-7 flex py-4">
             <div className="w-full h-full border-2 border-dotted border-blue-500/50 flex items-center justify-center gap-4" onClick={() => onCardZoneClick("H", null)}>
-              {players[0].field.hand.map((card) => <img src={getCardImageUrl(card!.id)} className="h-[80%] aspect-[0.714]" />)}
+              {players[0].field.hand.map((card, cardIndex) => <img
+                src={getCardImageUrl(card!.id)}
+                className="h-[80%] aspect-[0.714]"
+                onContextMenu={(e) => onCardZoneRightClick(e, YGOGameUtils.createZone("H", 0, cardIndex + 1))} />)}
             </div>
           </div>
         </div>

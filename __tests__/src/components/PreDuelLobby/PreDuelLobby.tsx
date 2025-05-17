@@ -92,12 +92,20 @@ export function PreDuelLobbyPage() {
 
     navigate(`/duel/offline-${Date.now()}`);
   }
-
   const setCardInCardZone = (zone: FieldZone, card: Card | null) => {
     const zoneData = YGOGameUtils.getZoneData(zone);
 
     setPlayers((players) => {
       let cardWasMoved = false;
+
+      const addCardToDeck = (card: Card | null) => {
+        if (!card) return;
+
+        cardWasMoved = true;
+
+        if (!card.isMainDeckCard) players[card.originalOwner].extraDeck.push(card);
+        else players[card.originalOwner].mainDeck.push(card);
+      }
 
       const updatedPlayers = players.map((player, index) => {
         if (index !== zoneData.player) return player;
@@ -109,12 +117,20 @@ export function PreDuelLobbyPage() {
 
         switch (zoneType) {
           case "H":
-            updatedField.hand = [...updatedField.hand, card];
-            cardWasMoved = true;
+            if (!card) {
+              addCardToDeck(updatedField.hand.find((_, index) => index + 1 === zoneData.zoneIndex)!);
+              updatedField.hand = updatedField.hand.filter((_, index) => index + 1 !== zoneData.zoneIndex);
+              cardWasMoved = true;
+            } else {
+              updatedField.hand = [...updatedField.hand, card];
+              cardWasMoved = true;
+            }
             break;
-
           case "M":
-            if (!updatedField.monsterZones[targetIndex]) {
+            if (!card) {
+              addCardToDeck(updatedField.monsterZones[targetIndex]);
+              updatedField.monsterZones[targetIndex] = null;
+            } else if (!updatedField.monsterZones[targetIndex]) {
               updatedField.monsterZones[targetIndex] = card;
               updatedField.monsterZones = [...updatedField.monsterZones];
               cardWasMoved = true;
@@ -122,7 +138,10 @@ export function PreDuelLobbyPage() {
             break;
 
           case "S":
-            if (!updatedField.spellZones[targetIndex]) {
+            if (!card) {
+              addCardToDeck(updatedField.spellZones[targetIndex]);
+              updatedField.spellZones[targetIndex] = null;
+            } else if (!updatedField.spellZones[targetIndex]) {
               if (card) {
                 if (YGOGameUtils.isSpellTrap(card)) {
                   card.position = "facedown";
@@ -136,7 +155,10 @@ export function PreDuelLobbyPage() {
             break;
 
           case "EMZ":
-            if (
+            if (!card) {
+              addCardToDeck(updatedField.extraMonsterZones[targetIndex]);
+              updatedField.extraMonsterZones[targetIndex] = null;
+            } else if (
               !players[0].field.extraMonsterZones[targetIndex] &&
               !players[1].field.extraMonsterZones[targetIndex]
             ) {
@@ -146,6 +168,10 @@ export function PreDuelLobbyPage() {
             }
             break;
           case "F":
+            if (!card) {
+              addCardToDeck(updatedField.fieldSpell);
+              updatedField.fieldSpell = null;
+            }
             if (!updatedField.fieldSpell) {
               updatedField.fieldSpell = card;
               cardWasMoved = true;
