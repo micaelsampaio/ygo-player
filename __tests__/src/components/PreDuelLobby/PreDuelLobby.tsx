@@ -6,11 +6,14 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { DecksDetailsGroupedResult, StoreService } from "../../services/store-service";
 import { Card, FieldZone, YGOGameUtils, YGOProps } from "ygo-core";
 import { APIService } from "@/services/api-service";
+import { useKaibaNet } from "@/hooks/useKaibaNet";
+import { createRoom } from "@/utils/roomUtils";
 
 let lobbyCardIndex = 0;
 
 export function PreDuelLobbyPage() {
   const navigate = useNavigate();
+  const kaibaNet = useKaibaNet();
 
   const [searchParams] = useSearchParams();
   const [ready, setReady] = useState(false);
@@ -87,10 +90,14 @@ export function PreDuelLobbyPage() {
 
   const startDuel = async () => {
     const duelData = parseStateYGOCoreProps({ players });
-    console.log("DUEL DATA: ", duelData);
+
     localStorage.setItem("duel-data", JSON.stringify(duelData));
 
-    navigate(`/duel/offline-${Date.now()}`);
+    const navigationState = await createRoom(kaibaNet, duelData);
+
+    navigate(`/duel/${navigationState.roomId}`, {
+      state: navigationState,
+    });
   }
   const setCardInCardZone = (zone: FieldZone, card: Card | null) => {
     const zoneData = YGOGameUtils.getZoneData(zone);

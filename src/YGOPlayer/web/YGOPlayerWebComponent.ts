@@ -6,6 +6,7 @@ import { CardData, Command } from "ygo-core";
 import { YGOConfig } from "../core/YGOConfig";
 import { YGODuel } from "../core/YGODuel";
 import { EventBus } from "../scripts/event-bus";
+import { YGOPropsOptions } from "ygo-core";
 
 export interface YGOPlayerComponentEvents {
   init: (args: { instance: YGOPlayerComponent; duel: YGODuel }) => void;
@@ -82,6 +83,9 @@ export class YGOPlayerComponent extends HTMLElement {
   }
 
   replay(props: YGOPlayerStartReplayProps) {
+
+    const options: YGOPropsOptions = {};
+
     const players = props.replay.players.map(
       (playerData: any, playerIndex: any) => {
         const mainDeck: CardData[] = playerData.mainDeck.map((id: any) => {
@@ -113,10 +117,15 @@ export class YGOPlayerComponent extends HTMLElement {
         };
       }
     );
+
+    options.fieldState = [
+      ...props.replay.initialField || []
+    ];
+
     const config = {
       players,
       commands: props.replay.commands,
-      options: props.options || {},
+      options,
       cdnUrl: props.cdnUrl,
       actions: props.actions,
     };

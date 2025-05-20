@@ -27,8 +27,6 @@ import "../DeckBuilder/components/DrawSimulator/DrawSimulator.css";
 import "../DeckBuilder/components/DeckAnalysis/styles/DeckAnalytics.css";
 import "../DeckBuilder/components/ViewSidePatterns/ViewSidePatterns.css"; // Import the CSS for ViewSidePatterns
 import { getCardImageUrl, CARD_BACK_IMAGE } from "../../utils/cardImages";
-import { useKaibaNet } from "../../hooks/useKaibaNet";
-import { createRoom } from "../../utils/roomUtils";
 import { APIService } from "../../services/api-service";
 import { DeckReplaysTab } from "./DeckReplaysTab";
 import { useDeckGroups } from "../DeckBuilder/hooks/useDeckGroups";
@@ -43,7 +41,6 @@ const DeckDetailPage = () => {
   const [isCoverModalOpen, setIsCoverModalOpen] = useState(false);
   const [coverCardId, setCoverCardId] = useState<number | undefined>(undefined);
   const [coverCardDetails, setCoverCardDetails] = useState<any>(null);
-  const kaibaNet = useKaibaNet();
   const [previewCard, setPreviewCard] = useState<any>(null);
   const [isCardModalOpen, setIsCardModalOpen] = useState(false);
 
@@ -243,38 +240,11 @@ const DeckDetailPage = () => {
 
   const handleDuel = async () => {
     try {
-      const duelData = {
-        players: [
-          {
-            name: "player1",
-            deckId: deck.id,
-            mainDeck: [...deck.mainDeck],
-            extraDeck: deck.extraDeck || [],
-          },
-          {
-            name: "player2",
-            deckId: undefined,
-            mainDeck: [],
-            extraDeck: [],
-          },
-        ],
-        options: {
-          shuffleDecks: true,
-        },
-      };
-
-      // Use the createRoom utility function
-      const navigationState = await createRoom(kaibaNet, duelData);
-
-      // Navigate to the duel page using the state from createRoom
-      navigate(`/duel/${navigationState.roomId}`, {
-        state: navigationState,
-      });
+      navigate(`/pre-duel?deck1=${deckId}`);
     } catch (error) {
       console.error("Failed to start duel with deck:", error);
       alert(
-        `Failed to start duel: ${
-          error instanceof Error ? error.message : "Unknown error"
+        `Failed to start duel: ${error instanceof Error ? error.message : "Unknown error"
         }`
       );
     }
@@ -291,9 +261,8 @@ const DeckDetailPage = () => {
     const extraCount = deck.extraDeck?.length || 0;
     const sideCount = deck.sideDeck?.length || 0;
 
-    return `${mainCount} Main | ${extraCount} Extra${
-      sideCount > 0 ? ` | ${sideCount} Side` : ""
-    }`;
+    return `${mainCount} Main | ${extraCount} Extra${sideCount > 0 ? ` | ${sideCount} Side` : ""
+      }`;
   };
 
   const handleSelectCoverCard = (cardId: number) => {
@@ -550,20 +519,20 @@ const DeckDetailPage = () => {
 
                       {(coverCardDetails.level ||
                         coverCardDetails.level === 0) && (
-                        <CardStat>Level: {coverCardDetails.level}</CardStat>
-                      )}
+                          <CardStat>Level: {coverCardDetails.level}</CardStat>
+                        )}
 
                       {(coverCardDetails.atk !== undefined ||
                         coverCardDetails.def !== undefined) && (
-                        <CardStats>
-                          {coverCardDetails.atk !== undefined && (
-                            <span>ATK: {coverCardDetails.atk}</span>
-                          )}
-                          {coverCardDetails.def !== undefined && (
-                            <span>DEF: {coverCardDetails.def}</span>
-                          )}
-                        </CardStats>
-                      )}
+                          <CardStats>
+                            {coverCardDetails.atk !== undefined && (
+                              <span>ATK: {coverCardDetails.atk}</span>
+                            )}
+                            {coverCardDetails.def !== undefined && (
+                              <span>DEF: {coverCardDetails.def}</span>
+                            )}
+                          </CardStats>
+                        )}
 
                       {coverCardDetails.desc && (
                         <CardDescription>
@@ -874,7 +843,7 @@ const DeckDetailPage = () => {
                       isVisible={activeTab === "analytics"}
                       isLoading={isAnalyzing}
                       isEnhanced={false}
-                      onToggleEnhanced={() => {}}
+                      onToggleEnhanced={() => { }}
                     />
                   </TabSection>
                 )}
@@ -1584,9 +1553,9 @@ const ShareTooltip = styled.div<{ status: string }>`
     border-width: 5px;
     border-style: solid;
     border-color: ${(props) =>
-        props.status === "copied"
-          ? theme.colors.success.main
-          : theme.colors.error.main}
+    props.status === "copied"
+      ? theme.colors.success.main
+      : theme.colors.error.main}
       transparent transparent transparent;
   }
 
