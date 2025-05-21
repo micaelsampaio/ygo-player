@@ -293,6 +293,8 @@ const CardImageContainer = styled.div`
   overflow: hidden;
   border-radius: ${theme.borderRadius.md};
   transition: transform 0.3s ease;
+  height: 340px; /* Fixed height to match the image */
+  width: 100%;
 
   &:hover {
     transform: scale(1.02);
@@ -306,7 +308,8 @@ const CardImageContainer = styled.div`
 
 const CardImage = styled.img`
   max-width: 100%;
-  height: auto;
+  height: 340px; /* Fixed height */
+  object-fit: contain; /* Maintain aspect ratio */
   border-radius: ${theme.borderRadius.md};
   box-shadow: ${theme.shadows.md};
 `;

@@ -911,6 +911,7 @@ const CardItem = styled(Link)`
   overflow: hidden;
   text-decoration: none;
   transition: transform 0.2s, box-shadow 0.2s;
+  height: 320px; /* Fixed height for consistent card sizing */
 
   &:hover {
     transform: translateY(-5px);
@@ -920,9 +921,10 @@ const CardItem = styled(Link)`
 
 const CardImage = styled.img`
   width: 100%;
-  aspect-ratio: 3/4;
-  object-fit: contain;
+  height: 220px; /* Fixed height for the image */
+  object-fit: contain; /* Ensure image maintains aspect ratio */
   background-color: ${({ theme }) => theme.colors.background.card};
+  flex-shrink: 0; /* Prevent image from shrinking */
 `;
 
 const CardName = styled.h3`
@@ -931,6 +933,7 @@ const CardName = styled.h3`
   margin: ${({ theme }) => theme.spacing.xs};
   text-align: center;
   font-weight: ${({ theme }) => theme.typography.weight.medium};
+  height: 50px; /* Fixed height for card name */
   /* Display 2 lines max and add ellipsis if it exceeds */
   overflow: hidden;
   text-overflow: ellipsis;
@@ -945,6 +948,10 @@ const CardType = styled.div`
   margin: 0 ${({ theme }) => theme.spacing.xs}
     ${({ theme }) => theme.spacing.xs};
   text-align: center;
+  height: 25px; /* Fixed height for card type */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 `;
 
 const Pagination = styled.div`

@@ -324,8 +324,8 @@ const CardItemContainer = styled.div`
 const CardImage = styled.img`
   width: 100%;
   height: auto;
-  aspect-ratio: 3/4;
-  object-fit: cover;
+  aspect-ratio: 3/4.4; /* Updated to match Yu-Gi-Oh card dimensions more accurately */
+  object-fit: contain; /* Using contain ensures the image maintains its aspect ratio */
 `;
 
 const CardDetails = styled.div`
