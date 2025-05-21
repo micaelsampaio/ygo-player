@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { Card, SearchFilters } from "../types";
 
 export function useCardSearch() {
@@ -25,16 +25,17 @@ export function useCardSearch() {
       // For archetype searches, we don't need the minimum length check
       const isArchetypeSearch =
         "archetype" in searchParams && searchParams.archetype;
+        
+      console.log("Search params:", searchParams, "isAdvancedSearch:", isAdvancedSearch);
 
+      // Allow searching with any filters, even if not all conditions are met
+      // The only time we don't search is if there are absolutely no filters applied
       if (
         !isArchetypeSearch &&
-        ((!isAdvancedSearch &&
-          (!("fname" in searchParams) ||
-            !searchParams.fname ||
-            searchParams.fname.length < 3)) ||
-          (isAdvancedSearch &&
-            !Object.values(searchParams).some((v) => v && v.length >= 3)))
+        !isAdvancedSearch &&
+        (!("fname" in searchParams) || !searchParams.fname)
       ) {
+        // Only clear results if there's absolutely no search criteria
         setResults([]);
         setIsEmptySearch(false);
         return;
@@ -66,13 +67,16 @@ export function useCardSearch() {
         if (isAdvancedSearch) {
           // Handle advanced search
           filteredCards = data.cards.filter((card: Card) => {
-            const filters = searchParams as SearchFilters;
+            const filters = searchParams as any; // Use 'any' to accommodate different property names
             let match = true;
 
-            if (filters.name && filters.name.length >= 3) {
-              match =
-                match &&
-                card.name.toLowerCase().includes(filters.name.toLowerCase());
+            // Apply name filter if provided (always check this first)
+            // Support both 'name' and 'fname' for compatibility
+            const nameQuery = filters.name || filters.fname || "";
+            if (nameQuery && nameQuery.length > 0) {
+              match = card.name.toLowerCase().includes(nameQuery.toLowerCase());
+              // If name doesn't match, return false immediately
+              if (!match) return false;
             }
 
             if (filters.type && filters.type.length >= 1) {
@@ -89,26 +93,31 @@ export function useCardSearch() {
             }
 
             if (filters.level && filters.level.length >= 1) {
-              match = match && card.level?.toString() === filters.level;
+              match =
+                match &&
+                (card.level?.toString() === filters.level ||
+                  card.linkval?.toString() === filters.level);
             }
 
             if (filters.race && filters.race.length >= 1) {
               match =
                 match &&
-                card.race?.toLowerCase().includes(filters.race.toLowerCase());
+                !!card.race &&
+                card.race.toLowerCase().includes(filters.race.toLowerCase());
             }
 
-            if (filters.text && filters.text.length >= 3) {
+            if (filters.text && filters.text.length > 0) {
               match =
                 match &&
                 card.desc.toLowerCase().includes(filters.text.toLowerCase());
             }
 
             // Handle archetype search
-            if ("archetype" in filters && filters.archetype) {
+            if ("archetype" in filters && filters.archetype && typeof filters.archetype === 'string') {
               match =
                 match &&
                 !!card.archetype &&
+                typeof card.archetype === 'string' &&
                 card.archetype.toLowerCase() ===
                   filters.archetype.toLowerCase();
             }
@@ -120,28 +129,60 @@ export function useCardSearch() {
           if ("archetype" in searchParams && searchParams.archetype) {
             filteredCards = data.cards.filter(
               (card: Card) =>
-                card.archetype?.toLowerCase() ===
-                searchParams.archetype?.toLowerCase()
+                !!card.archetype &&
+                typeof card.archetype === 'string' &&
+                card.archetype.toLowerCase() ===
+                  searchParams.archetype?.toLowerCase()
             );
-          } else if (
-            "fname" in searchParams &&
-            searchParams.fname &&
-            searchParams.fname.length >= 3
-          ) {
+          } else if ("fname" in searchParams && searchParams.fname) {
+            // Basic name search
+            const nameQuery = searchParams.fname.toLowerCase();
             filteredCards = data.cards.filter((card: Card) =>
-              card.name
-                .toLowerCase()
-                .includes(searchParams.fname?.toLowerCase() || "")
+              card.name.toLowerCase().includes(nameQuery)
             );
           }
         }
 
-        // For archetype searches, don't limit results
-        if (!isArchetypeSearch) {
-          // Limit results to prevent performance issues
-          filteredCards = filteredCards.slice(0, 30);
-        }
+        // No longer limiting results to 30 cards
+        // Removed the 30-card limit to show all matching results
 
+        // Sort cards by frame type (card type)
+        filteredCards.sort((a, b) => {
+          // Define the order of card types
+          const typeOrder: { [key: string]: number } = {
+            "Normal Monster": 1,
+            "Effect Monster": 2,
+            "Ritual Monster": 3,
+            "Fusion Monster": 4,
+            "Synchro Monster": 5,
+            "Xyz Monster": 6,
+            "Pendulum Effect Monster": 7,
+            "Link Monster": 8,
+            "Spell Card": 9,
+            "Trap Card": 10
+          };
+          
+          // Extract the base type (ignoring subtypes)
+          const getBaseType = (type: string): string => {
+            if (type.includes("Monster")) return type;
+            if (type.includes("Spell")) return "Spell Card";
+            if (type.includes("Trap")) return "Trap Card";
+            return type;
+          };
+          
+          const typeA = getBaseType(a.type);
+          const typeB = getBaseType(b.type);
+          
+          // Get the order value (default to 99 if not found)
+          const orderA = typeOrder[typeA] || 99;
+          const orderB = typeOrder[typeB] || 99;
+          
+          // Sort by type order
+          return orderA - orderB;
+        });
+
+        console.log(`Found ${filteredCards.length} cards matching criteria`);
+        
         setResults(filteredCards);
         setIsEmptySearch(filteredCards.length === 0);
       } catch (error) {
