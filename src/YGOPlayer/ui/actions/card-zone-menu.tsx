@@ -138,6 +138,7 @@ export function CardZoneMenu({
   const zoneData = YGOGameUtils.getZoneData(zone);
   const field = duel.ygo.state.fields[player];
   const isToken = YGOGameUtils.isToken(card);
+  const isPendulum = YGOGameUtils.isPendulumCard(card);
   const isXYZ = YGOGameUtils.isXYZMonster(card);
   const isFaceUp = YGOGameUtils.isFaceUp(card);
   const isLink = YGOGameUtils.isLinkMonster(card);
@@ -353,7 +354,7 @@ export function CardZoneMenu({
                   className="ygo-card-item"
                   onClick={changeBattleToATK}
                 >
-                  TO ATK
+                  To ATK
                 </button>
               )}
               {isAttack && (
@@ -362,7 +363,7 @@ export function CardZoneMenu({
                   className="ygo-card-item"
                   onClick={changeBattleToDEF}
                 >
-                  TO DEF
+                  To DEF
                 </button>
               )}
             </>
@@ -370,6 +371,12 @@ export function CardZoneMenu({
 
         </>
       )}
+
+      {isPendulum && <>
+        <button type="button" className="ygo-card-item" onClick={toExtraDeck}>
+          To Extra Deck
+        </button>
+      </>}
 
       <button type="button" className="ygo-card-item" onClick={sendToGY}>
         Send To GY

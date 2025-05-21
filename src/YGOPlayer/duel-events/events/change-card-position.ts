@@ -29,7 +29,6 @@ export class ChangeCardPositionHandler extends YGOCommandHandler {
 
   public start(): void {
     const event = this.props.event as YGODuelEvents.MoveCard;
-    console.log("START CHANGE BATTLE POSITION 1111 ", event);
     if (event.originZone && event.zone) {
       this.startMoveCommand();
     } else {
@@ -57,7 +56,6 @@ export class ChangeCardPositionHandler extends YGOCommandHandler {
   private startChangePositionCommand() {
     const { ygo, duel, startTask } = this.props;
     const event = this.props.event as YGODuelEvents.ChangeCardPosition;
-    console.log("START CHANGE BATTLE POSITION", event);
     const cardReference = ygo.state.getCardById(event.id, event.originZone);
     const zoneData = YGOGameUtils.getZoneData(event.originZone);
     const cardZone = getGameZone(duel, zoneData);

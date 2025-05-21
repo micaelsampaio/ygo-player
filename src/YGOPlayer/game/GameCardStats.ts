@@ -43,10 +43,7 @@ export class GameCardStats {
     this.ctx = this.canvas.getContext("2d")!;
 
     this.texture = new THREE.Texture(this.canvas);
-    const material = new THREE.MeshBasicMaterial({
-      map: this.texture,
-      transparent: true,
-    });
+    const material = new THREE.MeshBasicMaterial({ map: this.texture, transparent: true, });
     this.mesh = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 3.2), material);
 
     this.parent.add(this.mesh);
@@ -54,8 +51,7 @@ export class GameCardStats {
     this.mesh.visible = false;
 
     this.texture.colorSpace = THREE.SRGBColorSpace;
-    this.texture.anisotropy =
-      this.duel.core.renderer.capabilities.getMaxAnisotropy();
+    this.texture.anisotropy = this.duel.core.renderer.capabilities.getMaxAnisotropy();
 
     // document.body.appendChild(this.canvas);
     // this.canvas.style.position = "fixed";
@@ -94,6 +90,7 @@ export class GameCardStats {
   }
 
   render() {
+    if (!this.canvas) return;
     if (!this.needsUpdate()) return;
 
     const isPlayer1 = this.card.owner === 0;

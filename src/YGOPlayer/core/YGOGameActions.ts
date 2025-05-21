@@ -735,7 +735,7 @@ export class YGOGameActions {
     this.clearAction();
     const player = this.duel.getActivePlayer();
 
-    if (card.isMainDeckCard) {
+    if (card.isMainDeckCard && !YGOGameUtils.isPendulumCard(card)) {
       this.toHand({ card, originZone });
     } else {
       const zoneData = YGOGameUtils.getZoneData(originZone);

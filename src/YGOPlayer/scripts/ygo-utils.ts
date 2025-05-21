@@ -267,7 +267,11 @@ export function getCardRotationFromFieldZoneData(
   if (zoneData.zone === "GY" || zoneData.zone === "H") {
     // GY do nothig let go as default rotation
   } else if (zoneData.zone === "ED") {
-    rotation = field.extraDeck.getCardTransform().rotation;
+    if (card.isMainDeckCard) {
+      rotation = new THREE.Euler(0, 0, THREE.MathUtils.degToRad(-15));
+    } else {
+      rotation = field.extraDeck.getCardTransform().rotation;
+    }
   } else if (zoneData.zone === "D") {
     rotation = field.mainDeck.getCardTransform().rotation;
   } else if (zoneData.zone === "B") {

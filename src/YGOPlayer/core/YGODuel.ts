@@ -106,12 +106,12 @@ export class YGODuel {
     this.core.events.on("on-timescale-change", (timeScale: number) => this.soundController.setTimeScale(timeScale));
 
     // this.config.options = {
-    //     ...this.config.options || {},
-    //     fieldState: [
-    //         { id: 72270339, zone: "M-1" },
-    //         { id: 9674034, zone: "M-2" },
-    //         { id: 33854624, zone: "GY" },
-    //     ]
+    //   ...this.config.options || {},
+    //   fieldState: [
+    //     { id: 1225009, zone: "M-1" },
+    //     { id: 1225009, zone: "M-2" },
+    //     { id: 1225009, zone: "M-3" },
+    //   ]
     // }
     this.ygo = new YGOCore(this.config);
 
@@ -239,6 +239,7 @@ export class YGODuel {
       }
 
       this.updateHand(playerIndex);
+      this.updateExtraDeck(playerIndex);
 
       const fieldZoneCard = gameField.fieldZone;
       const fieldZoneCardZone = duelField.fieldZone;
@@ -247,14 +248,8 @@ export class YGODuel {
     }
 
     for (let i = 0; i < 2; ++i) {
-      const player = this.ygo.state.fields[0].extraMonsterZone[i]
-        ? 0
-        : this.ygo.state.fields[1].extraMonsterZone[i]
-          ? 1
-          : 0;
-      const cardFromPlayer =
-        this.ygo.state.fields[0].extraMonsterZone[i] ??
-        this.ygo.state.fields[1].extraMonsterZone[i];
+      const player = this.ygo.state.fields[0].extraMonsterZone[i] ? 0 : this.ygo.state.fields[1].extraMonsterZone[i] ? 1 : 0;
+      const cardFromPlayer = this.ygo.state.fields[0].extraMonsterZone[i] ?? this.ygo.state.fields[1].extraMonsterZone[i];
       const cardZone = this.fields[player].extraMonsterZone[i];
       cardZone.setCard(cardFromPlayer);
     }
@@ -294,6 +289,30 @@ export class YGODuel {
       }
       gameField.hand.cards[i].handIndex = i;
     }
+  }
+
+  public updateExtraDeck(playerIndex: number) {
+    const gameField = this.fields[playerIndex];
+    const duelField = this.ygo.state.fields[playerIndex];
+    const extraDeck = gameField.extraDeck;
+
+    extraDeck.faceUpCards.forEach(card => card.destroy());
+
+    // TODO IMPROVE THE LOOPS AND ARRAY CREATIONS
+    const extraDeckCards: Array<GameCard> = [];
+
+    for (let i = 0; i < duelField.extraDeck.length; ++i) {
+      //const cardZone = gameField.hand.getCardFromReference(duelField.hand[i]);
+      const card = duelField.extraDeck[i];
+      if (card.isMainDeckCard) {
+        const gameCard = new GameCard({ card, duel: this });
+        gameCard.hideCardStats();
+        extraDeckCards.push(gameCard);
+      }
+    }
+
+    extraDeck.faceUpCards = extraDeckCards.reverse();
+    extraDeck.updateExtraDeck();
   }
 
   public renderHand(playerIndex: number) {

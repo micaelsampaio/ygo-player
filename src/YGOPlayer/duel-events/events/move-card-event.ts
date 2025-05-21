@@ -37,6 +37,9 @@ export class MoveCardEventHandler extends YGOCommandHandler {
   }
 
   public start(): void {
+    let scale = new THREE.Vector3(1, 1, 1);
+    let card: GameCard | undefined = undefined;
+
     const { event, startCommandDelay: delay = 0, duel, playSound } = this.props;
     const sequence = new YGOTaskSequence();
     const originZoneData = YGOGameUtils.getZoneData(event.originZone)!;
@@ -57,7 +60,17 @@ export class MoveCardEventHandler extends YGOCommandHandler {
     }
 
     if (originZoneData.zone === "ED") {
-      duel.fields[originZoneData.player].extraDeck.updateExtraDeck();
+      const field = duel.fields[originZoneData.player];
+      field.extraDeck.updateExtraDeck();
+      const gameCard = field.extraDeck.getGameCard(this.cardReference);
+
+      card = new GameCard({ card: gameCard.cardReference!, duel });
+      card.hideCardStats();
+      card.gameObject.position.copy(gameCard.gameObject.position);
+      card.gameObject.rotation.copy(gameCard.gameObject.rotation);
+      card.gameObject.scale.copy(gameCard.gameObject.scale);
+
+      field.extraDeck.destroyGameCard(this.cardReference);
     }
 
     if (zoneData.zone === "H") {
@@ -82,14 +95,15 @@ export class MoveCardEventHandler extends YGOCommandHandler {
       this.cardReference,
       zoneData
     );
-    let scale = new THREE.Vector3(1, 1, 1);
-    let card: GameCard | undefined = undefined;
 
-    if (originCardZone) {
+    if (originCardZone && !card) {
       card = originCardZone.getGameCard()!;
+      originCardZone.removeCard();
+    }
+
+    if (card) {
       startPosition = card.gameObject.position.clone();
       startRotation = card.gameObject.rotation.clone();
-      originCardZone.removeCard();
     }
 
     if (cardZone) {
@@ -161,8 +175,7 @@ export class MoveCardEventHandler extends YGOCommandHandler {
         gy.createSendToGraveyardEffect({ card: card.gameObject, sequence });
       }
       if (zoneData.zone === "B") {
-        const banish =
-          duel.fields[this.cardReference.originalOwner].banishedZone;
+        const banish = duel.fields[this.cardReference.originalOwner].banishedZone;
         banish.createBanishCardEffect({ card: card.gameObject, sequence });
       }
     } else {
@@ -195,12 +208,8 @@ export class MoveCardEventHandler extends YGOCommandHandler {
           cardZone.setGameCard(card);
         }
 
-        if (zoneData.zone === "H") {
-          duel.updateHand(event.player);
-          duel.renderHand(event.player);
-        }
-
         duel.updateHand(event.player);
+        duel.updateExtraDeck(event.player);
 
         this.props.onCompleted();
       })

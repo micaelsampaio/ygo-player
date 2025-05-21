@@ -5,6 +5,8 @@ import { YGOUiElement } from "../types";
 import { YGOMouseEvents } from '../core/components/YGOMouseEvents';
 import { GameBackCard } from './GameBackCard';
 import { CARD_HEIGHT_SIZE, CARD_RATIO } from '../constants';
+import { GameCard } from './GameCard';
+import { Card } from 'ygo-core';
 
 export class ExtraDeck extends YGOEntity implements YGOUiElement {
 
@@ -15,6 +17,7 @@ export class ExtraDeck extends YGOEntity implements YGOUiElement {
     public faceDownRotation: THREE.Euler;
     private hoverGameObject: THREE.Mesh;
     private cards: GameBackCard[];
+    public faceUpCards: GameCard[];
 
     constructor({ duel, player, position }: { duel: YGODuel, player: number, zone: string, position: THREE.Vector3 }) {
         super();
@@ -48,18 +51,23 @@ export class ExtraDeck extends YGOEntity implements YGOUiElement {
 
         this.cards = Array.from(new Array(60)).map((_, index) => {
             const card = new GameBackCard({ duel: this.duel });
-            card.gameObject.position.set(cube.position.x, cube.position.y, cube.position.z + index * 0.02);
+            card.gameObject.position.set(this.gameObject.position.x, this.gameObject.position.y, this.gameObject.position.z + index * 0.02);
             card.gameObject.rotation.set(0, THREE.MathUtils.degToRad(180), THREE.MathUtils.degToRad(15));
-            if (player === 1) {
+            if (this.player === 1) {
                 card.gameObject.rotateZ(THREE.MathUtils.degToRad(180));
             }
             return card;
         });
 
+        this.faceUpCards = [];
         this.hoverGameObject.visible = false;
     }
 
     getCardTransform(): THREE.Object3D {
+        if (this.faceUpCards.length > 0) {
+            return this.faceUpCards[this.faceUpCards.length - 1].gameObject;
+        }
+
         for (let i = this.cards.length - 1; i >= 0; --i) {
             if (this.cards[i].gameObject.visible) {
                 return this.cards[i].gameObject;
@@ -71,9 +79,39 @@ export class ExtraDeck extends YGOEntity implements YGOUiElement {
 
     updateExtraDeck() {
         const deckSize = this.duel.ygo.getField(this.player).extraDeck.length;
+
         for (let i = 0; i < this.cards.length; ++i) {
             this.cards[i].gameObject.visible = i < deckSize;
         }
+
+        for (let i = 0; i < this.faceUpCards.length; ++i) {
+            const card = this.faceUpCards[i];
+            const index = deckSize + i + 1;
+            card.gameObject.position.set(this.gameObject.position.x, this.gameObject.position.y, this.gameObject.position.z + index * 0.02);
+            card.gameObject.rotation.set(0, 0, THREE.MathUtils.degToRad(-15));
+            if (this.player === 1) {
+                card.gameObject.rotateZ(THREE.MathUtils.degToRad(180));
+            }
+        }
+    }
+
+    getGameCard(card: Card): GameCard {
+        for (let i = 0; i < this.faceUpCards.length; ++i) {
+            if (card === this.faceUpCards[i].cardReference) {
+                return this.faceUpCards[i]
+            }
+        }
+        return null!;
+    }
+
+    destroyGameCard(card: Card) {
+        this.faceUpCards = this.faceUpCards.filter(c => {
+            if (c.cardReference === card) {
+                c.destroy();
+                return false;
+            }
+            return true;
+        })
     }
 
     onMouseClick(event: MouseEvent): void {
