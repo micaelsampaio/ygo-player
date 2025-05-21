@@ -147,12 +147,12 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
 
       <div className="filter-row">
         <div className="filter-field">
-          <label>Level/Rank</label>
+          <label>Level/Rank/Link</label>
           <select
             value={searchFilters.level}
             onChange={(e) => onFilterChange("level", e.target.value)}
           >
-            <option value="">Any Level</option>
+            <option value="">Any Level/Link</option>
             {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((level) => (
               <option key={level} value={level.toString()}>
                 {level}
