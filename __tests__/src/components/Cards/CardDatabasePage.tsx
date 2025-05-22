@@ -78,10 +78,10 @@ const CardDatabasePage: React.FC = () => {
                       />
                       <CardImageOverlay>
                         <ViewFullDetailsLink
-                          href={`/card/${selectedCard.id}`}
+                          href={`/cards/database/card/${selectedCard.id}`}
                           onClick={(e) => {
                             e.preventDefault();
-                            navigate(`/card/${selectedCard.id}`);
+                            navigate(`/cards/database/card/${selectedCard.id}`);
                           }}
                         >
                           <ExternalLink size={16} />
