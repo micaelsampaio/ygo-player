@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { YGOPlayerCore } from "./YGOPlayerCore";
 import { GameFieldLocation, YGODuelState, YGOUiElement } from "../types";
-import { JSONCommand, YGOCore } from "ygo-core";
+import { JSONCommand, YGOCore, YGOGameUtils } from "ygo-core";
 import { YGOEntity } from "./YGOEntity";
 import { GameController } from "../game/GameController";
 import { EventBus } from "../scripts/event-bus";
@@ -99,20 +99,9 @@ export class YGODuel {
     this.soundController.addLayer({ name: "GAME", volume: this.settings.getGameVolume() });
     this.soundController.addLayer({ name: "GAME_MUSIC", volume: this.settings.getMusicVolume(), useTimeScale: false });
 
-    //this.add(this.gameController);
-
     this.setupVars();
 
     this.core.events.on("on-timescale-change", (timeScale: number) => this.soundController.setTimeScale(timeScale));
-
-    // this.config.options = {
-    //   ...this.config.options || {},
-    //   fieldState: [
-    //     { id: 1225009, zone: "M-1" },
-    //     { id: 1225009, zone: "M-2" },
-    //     { id: 1225009, zone: "M-3" },
-    //   ]
-    // }
     this.ygo = new YGOCore(this.config);
 
     (window as any).YGODuel = this;
@@ -295,23 +284,34 @@ export class YGODuel {
     const gameField = this.fields[playerIndex];
     const duelField = this.ygo.state.fields[playerIndex];
     const extraDeck = gameField.extraDeck;
+    const extraDeckCards: Array<GameCard | null> = [];
 
-    extraDeck.faceUpCards.forEach(card => card.destroy());
-
-    // TODO IMPROVE THE LOOPS AND ARRAY CREATIONS
-    const extraDeckCards: Array<GameCard> = [];
-
+    // store cards in the array
     for (let i = 0; i < duelField.extraDeck.length; ++i) {
-      //const cardZone = gameField.hand.getCardFromReference(duelField.hand[i]);
       const card = duelField.extraDeck[i];
-      if (card.isMainDeckCard) {
-        const gameCard = new GameCard({ card, duel: this });
-        gameCard.hideCardStats();
-        extraDeckCards.push(gameCard);
+      if (YGOGameUtils.isPendulumCard(card)) {
+        extraDeckCards[i] = extraDeck.faceUpCards.find(c => c.cardReference === card) ?? null;
       }
     }
 
-    extraDeck.faceUpCards = extraDeckCards.reverse();
+    // delete unused cards
+    extraDeck.faceUpCards.forEach((card) => {
+      if (card && !extraDeckCards.includes(card)) {
+        card.destroy();
+      }
+    });
+
+    // create cards missing
+    for (let i = 0; i < duelField.extraDeck.length; ++i) {
+      const card = duelField.extraDeck[i];
+      if (YGOGameUtils.isPendulumCard(card)) {
+        if (!extraDeckCards[i]) {
+          extraDeckCards[i] = new GameCard({ card, duel: this, stats: false });
+        }
+      }
+    }
+
+    extraDeck.faceUpCards = extraDeckCards.reverse() as any;
     extraDeck.updateExtraDeck();
   }
 

@@ -45,7 +45,7 @@ export function ActionUpdateCardDetails({
       if (card.originalOwner === playerIndex) {
         card.position = "faceup-attack";
 
-        if (!card.isMainDeckCard) {
+        if (YGOGameUtils.isPendulumCard(card)) {
           player.extraDeck = [...player.extraDeck, card];
         } else {
           player.mainDeck = [...player.mainDeck, card];

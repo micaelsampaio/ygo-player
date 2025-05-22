@@ -710,7 +710,7 @@ export class YGOGameActions {
   public toHand({ card, originZone }: { card: Card; originZone: FieldZone }) {
     this.clearAction();
 
-    const player = this.duel.getActivePlayer();
+    const player = this.duel.getActivePlayer();    
 
     if (card.isMainDeckCard) {
       this.duel.execCommand(

@@ -267,7 +267,7 @@ export function getCardRotationFromFieldZoneData(
   if (zoneData.zone === "GY" || zoneData.zone === "H") {
     // GY do nothig let go as default rotation
   } else if (zoneData.zone === "ED") {
-    if (card.isMainDeckCard) {
+    if (YGOGameUtils.isPendulumCard(card)) {
       rotation = new THREE.Euler(0, 0, THREE.MathUtils.degToRad(-15));
     } else {
       rotation = field.extraDeck.getCardTransform().rotation;
@@ -360,7 +360,8 @@ export function getZonePositionFromZoneData(
   } else if (zoneData.zone === "D") {
     position = field.mainDeck.getCardTransform().position;
   } else if (zoneData.zone === "ED") {
-    position = field.extraDeck.getCardTransform().position;
+    position = field.extraDeck.getCardTransform().position.clone();
+    position.z += 0.2;
   } else if (zoneData.zone === "F") {
     position = field.fieldZone.gameObject.position;
   } else {
