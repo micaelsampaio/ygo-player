@@ -96,7 +96,6 @@ const LandingPage: React.FC = () => {
             </Features> */}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 gap-y-8 justify-center justify-items-center">
-
               <Link to={"/my/decks"}>
                 <CardMouseHover.Wrapper
                   backgroundImage="/images/features-cards/my_decks.png"
@@ -168,30 +167,6 @@ const LandingPage: React.FC = () => {
               </Link>
             </div>
           </FeaturesSection>
-
-          <ResourcesSection>
-            <SectionTitle>Quick Access</SectionTitle>
-            <ResourceGrid>
-              <ResourceCard as={Link} to="/my/decks">
-                <ResourceTitle>My Decks</ResourceTitle>
-              </ResourceCard>
-              <ResourceCard as={Link} to="/my/combos">
-                <ResourceTitle>My Combos</ResourceTitle>
-              </ResourceCard>
-              <ResourceCard as={Link} to="/my/replays">
-                <ResourceTitle>My Replays</ResourceTitle>
-              </ResourceCard>
-              <ResourceCard as={Link} to="/cards/database">
-                <ResourceTitle>Card Database</ResourceTitle>
-              </ResourceCard>
-              <ResourceCard as={Link} to="/rulings">
-                <ResourceTitle>Card Rulings</ResourceTitle>
-              </ResourceCard>
-              <ResourceCard as={Link} to="/my/cards/groups">
-                <ResourceTitle>Card Groups</ResourceTitle>
-              </ResourceCard>
-            </ResourceGrid>
-          </ResourcesSection>
         </LandingContainer>
       </AppLayout>
     </ThemeProvider>

@@ -498,9 +498,6 @@ export function App({ duelLobbyMode }: { duelLobbyMode?: boolean }) {
                   <NavCard to="/my/cards/groups">
                     <span className="nav-card-title">My Card Groups</span>
                   </NavCard>
-                  <NavCard to="/my/combos">
-                    <span className="nav-card-title">My Combos</span>
-                  </NavCard>
                   <NavCard to="/my/replays">
                     <span className="nav-card-title">My Replays</span>
                   </NavCard>
