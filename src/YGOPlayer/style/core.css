@@ -105,6 +105,8 @@
         /* aspect: 1.44 */
         width: 80px;
         height: 115px;
+        max-width: 80px;
+        max-height: 115px;
         cursor: pointer;
         border: 2px solid transparent;
         border-radius: 4px;
@@ -154,6 +156,7 @@
         margin: 20px;
         display: flex;
         flex-direction: column;
+        width: 100%;
     }
 
     .ygo-main-deck-popup {
@@ -461,10 +464,11 @@
 
 }
 
-
 .ygo-player-core .ygo-card {
     width: 200px;
     height: 288px;
+    max-width: 200px;
+    max-height: 288px;
 }
 
 /* TODO FIX THIS  */

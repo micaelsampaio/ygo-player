@@ -15,6 +15,7 @@ import { ScaleTransition } from "../utils/scale-transition";
 import {
   CardEmptyMesh,
   createCardPopSummonEffectSequence,
+  GameModalOverlayMesh,
 } from "../../game/meshes/mesh-utils";
 import { MaterialOpacityTransition } from "../utils/material-opacity";
 
@@ -86,6 +87,22 @@ export class FusionSummonEventHandler extends YGOCommandHandler {
 
       return cardOverlay;
     }).filter(c => c) as any;
+
+
+    const modal = GameModalOverlayMesh();
+    duel.core.scene.add(modal);
+
+    startTask(
+      new YGOTaskSequence(
+        new WaitForSeconds(0.3),
+        new MaterialOpacityTransition({
+          material: modal.material,
+          opacity: 0.7,
+          duration: 0.25,
+        }),
+        new WaitForSeconds(1.25)
+      )
+    );
 
     duel.updateHand(event.player);
     duel.fields[event.player].mainDeck.updateDeck();
@@ -288,9 +305,15 @@ export class FusionSummonEventHandler extends YGOCommandHandler {
           gameObject: fusionCardEffect,
           rotation: endRotation,
           duration: 0.5,
+        }),
+        new MaterialOpacityTransition({
+          material: modal.material,
+          opacity: 0,
+          duration: 0.15,
         })
       ),
       new CallbackTransition(() => {
+        duel.core.scene.remove(modal);
         cardZone?.setGameCard(fusionCard);
         cardZone?.updateCard();
         duel.core.clearSceneOverlay();
