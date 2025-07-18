@@ -64,11 +64,13 @@ export class MoveCardEventHandler extends YGOCommandHandler {
       field.extraDeck.updateExtraDeck();
       const gameCard = field.extraDeck.getGameCard(this.cardReference);
 
-      card = new GameCard({ card: gameCard.cardReference!, duel });
-      card.hideCardStats();
-      card.gameObject.position.copy(gameCard.gameObject.position);
-      card.gameObject.rotation.copy(gameCard.gameObject.rotation);
-      card.gameObject.scale.copy(gameCard.gameObject.scale);
+      if (gameCard) {
+        card = new GameCard({ card: gameCard.cardReference!, duel });
+        card.hideCardStats();
+        card.gameObject.position.copy(gameCard.gameObject.position);
+        card.gameObject.rotation.copy(gameCard.gameObject.rotation);
+        card.gameObject.scale.copy(gameCard.gameObject.scale);
+      }
 
       field.extraDeck.destroyGameCard(this.cardReference);
     }
