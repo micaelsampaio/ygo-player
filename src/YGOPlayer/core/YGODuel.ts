@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { YGOPlayerCore } from "./YGOPlayerCore";
 import { GameFieldLocation, YGODuelState, YGOUiElement } from "../types";
-import { JSONCommand, YGOCore, YGOGameUtils } from "ygo-core";
+import { JSONCommand, YGOCommands, YGOCore, YGOGameUtils } from "ygo-core";
 import { YGOEntity } from "./YGOEntity";
 import { GameController } from "../game/GameController";
 import { EventBus } from "../scripts/event-bus";
@@ -252,6 +252,10 @@ export class YGODuel {
     const gameField = this.fields[playerIndex];
     const duelField = this.ygo.state.fields[playerIndex];
 
+    console.log("TCL: ------------------------");
+    console.log("TCL: FIELD HAND", gameField.hand.cards.map(c => c.card?.name + " > " + c.gameObject.visible));
+    console.log("TCL: DUEL HAND", duelField.hand.map(c => c?.name));
+
     // TODO IMPROVE THE LOOPS AND ARRAY CREATIONS
     const hand: Array<GameCardHand | null> = [];
 
@@ -276,6 +280,7 @@ export class YGODuel {
       } else {
         gameField.hand.cards[i] = hand[i]!;
       }
+      gameField.hand.cards[i].gameObject.visible = true;
       gameField.hand.cards[i].handIndex = i;
     }
   }
