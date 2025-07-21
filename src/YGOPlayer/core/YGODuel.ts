@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { YGOPlayerCore } from "./YGOPlayerCore";
-import { GameFieldLocation, YGODuelState, YGOUiElement } from "../types";
-import { JSONCommand, YGOCommands, YGOCore, YGOGameUtils } from "ygo-core";
+import { YGODuelState, YGOUiElement } from "../types";
+import { JSONCommand, YGOCore, YGOGameUtils } from "ygo-core";
 import { YGOEntity } from "./YGOEntity";
 import { GameController } from "../game/GameController";
 import { EventBus } from "../scripts/event-bus";
@@ -30,6 +30,7 @@ import { YGOMapClick } from "./YGOMapClick";
 import { YGOGameFieldStatsComponent } from "../game/YGOGameFieldStatsComponent";
 import { YGOSoundController } from "./YGOSoundController";
 import { YGOPlayerSettingsAdapter } from "./YGOPlayerSettings";
+import { HotKeyManager } from "../scripts/hotkey-manager";
 
 export class YGODuel {
   public ygo!: InstanceType<typeof YGOCore>;
@@ -53,7 +54,7 @@ export class YGODuel {
   public config: YGOConfig;
   public duelScene: YGODuelScene;
   public settings: YGOPlayerSettingsAdapter;
-
+  public globalHotKeysManager: HotKeyManager;
   constructor({
     canvas,
     config,
@@ -84,6 +85,59 @@ export class YGODuel {
     this.mouseEvents = new YGOMouseEvents(this);
     this.assets = new YGOAssets(this);
     this.events = new EventBus();
+
+    this.globalHotKeysManager = new HotKeyManager([{
+      keys: "c",
+      action: "toggleControls"
+    }, {
+      keys: "d",
+      action: "toggleDuelLogs"
+    }, {
+      keys: "a",
+      action: "previousCommand"
+    }, {
+      keys: "d",
+      action: "nextCommand"
+    }, {
+      keys: "p",
+      action: "togglePlayPause"
+    }]);
+
+    this.globalHotKeysManager.on("toggleControls", () => {
+      this.events.dispatch("toggle-ui-menu", { group: "game-overlay", type: "controls-menu" });
+    });
+
+    this.globalHotKeysManager.on("toggleDuelLogs", () => {
+      this.events.dispatch("toggle-ui-menu", { group: "game-overlay", type: "duel-log" });
+    });
+
+    this.globalHotKeysManager.on("previousCommand", () => {
+      this.commands.previousCommand();
+    });
+
+    this.globalHotKeysManager.on("nextCommand", () => {
+      this.commands.nextCommand();
+    });
+
+    this.globalHotKeysManager.on("togglePlayPause", () => {
+      this.commands.play();
+    });
+
+    // const toggleDuelLogs = useCallback(() => {
+
+    //     }, [duel]);
+
+    //     const toggleGameReplayControls = useCallback(() => {
+    //         duel.events.dispatch("toggle-ui-menu", { group: "game-overlay", type: "controls-menu" });
+    //     }, [duel]);
+
+    //     const toggleSettings = useCallback(() => {
+    //         duel.events.dispatch("toggle-ui-menu", { group: "game-overlay", type: "settings-menu" });
+    //     }, [duel]);
+
+    //     const showGameStats = useCallback(() => {
+    //         duel.events.dispatch("close-ui-menu", { group: "game-overlay" });
+    //         duel.fieldStats.show();
 
     this.gameController.addComponent("mouse_events", this.mouseEvents);
     this.gameController.addComponent("sound_controller", this.soundController);
@@ -690,5 +744,7 @@ export class YGODuel {
     try {
       this.core.destroy();
     } catch (error) { }
+
+    this.globalHotKeysManager?.clear();
   }
 }
