@@ -14,5 +14,11 @@ export interface YGOConfig extends YGOProps {
   options: YGOConfigOptions
   actions?: {
     saveReplay?: (replay: YGOReplayData) => Promise<void>
+    reportBug?: (bugReportData: YGOBugReportData) => Promise<void>
   }
+}
+
+export interface YGOBugReportData {
+  data: YGOReplayData,
+  errors: string[],
 }
