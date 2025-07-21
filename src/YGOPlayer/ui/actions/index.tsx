@@ -9,6 +9,7 @@ import { CardStatsDialog } from "./card-stats-dialog";
 import { CardZoneMenu } from "./card-zone-menu";
 import { DeckMenu } from "./deck-menu";
 import { GlobalEventsActionsMenu } from "./global-events-actions-menu";
+import { TimerEventsActionsMenu } from "./timer-events-menu";
 
 export const ACTIONS = {
     "card-hand-menu": CardHandMenu,
@@ -22,4 +23,5 @@ export const ACTIONS = {
     "card-materials-menu": CardMaterialsMenu,
     "card-stats-dialog-menu": CardStatsDialog,
     "global-events-menu": GlobalEventsActionsMenu,
+    "timer-events-menu": TimerEventsActionsMenu,
 }

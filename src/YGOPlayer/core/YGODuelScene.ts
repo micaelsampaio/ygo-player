@@ -8,6 +8,7 @@ import { YGOEntity } from "./YGOEntity";
 import { YGOUiElement } from "../types";
 import { YGOMouseEvents } from "./components/YGOMouseEvents";
 import { ActionUiMenu } from "../actions/ActionUiMenu";
+import { YGOTimer } from "../game/YGOTimer";
 
 
 export class YGODuelScene {
@@ -15,6 +16,7 @@ export class YGODuelScene {
     public handPlaceholder!: THREE.Object3D;
     public gameFields: YGOGameFieldObject[];
     public turnPlayer!: YGOTurnPlayer;
+    public timer!: YGOTimer;
 
     constructor(private duel: YGODuel) {
         this.gameFields = [];
@@ -133,10 +135,24 @@ export class YGODuelScene {
             eventData: { duel: this.duel }
         });
 
-        const btn = new YGOFieldButton(this.duel, new THREE.Vector3(-10, 0, -0.3), () => {
+        const timerMenuAction = new ActionUiMenu(this.duel, {
+            eventType: "timer-events-menu",
+            eventData: { duel: this.duel }
+        });
+
+        const btn = new YGOFieldButton(this.duel, new THREE.Vector3(-8, 0, -0.3), () => {
             globalMenuAction.eventData.transform = btn.gameObject;
             this.duel.actionManager.setAction(globalMenuAction);
         });
+
+        const btnTimerPosition = new THREE.Vector3(-10.5, 0, -0.3);
+        const btnTimer = new YGOFieldButton(this.duel, btnTimerPosition, () => {
+            timerMenuAction.eventData.transform = btnTimer.gameObject;
+            this.duel.actionManager.setAction(timerMenuAction);
+        });
+        btnTimer.gameObject.scale.set(2.5, 2.5, 1);
+
+        this.timer = new YGOTimer(this.duel, btnTimerPosition);
     }
 }
 
