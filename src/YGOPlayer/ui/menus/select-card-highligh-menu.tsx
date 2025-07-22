@@ -24,7 +24,9 @@ export function SelectedCardHighlightedMenu({
   if (!card) return null;
   if (!cardData) return null;
 
-  return <Modal.Dialog close={closeDialog} visible>
+  return <Modal.Dialog close={closeDialog} visible onContextMenu={() => {
+    duel.events.dispatch("close-ui-menu", { type: "selected-card-highlight" });
+  }}>
     <Modal.Body>
       <div className="ygo-card-highlight ygo-flex ygo-gap-4">
         <div>

@@ -21,14 +21,24 @@ function Dialog({
     renderHidden = false,
     size,
     close,
+    onContextMenu,
     children,
 }: {
     visible: boolean;
     renderHidden?: boolean;
     size?: "sm" | "md" | "xl" | "xxl"
     close: () => void;
+    onContextMenu?: () => void,
     children: React.ReactNode;
 }) {
+
+    const onContextClick = (e: React.MouseEvent<HTMLDivElement>) => {
+        if (e.target === e.currentTarget) {
+            e.preventDefault();
+            e.stopPropagation();
+            onContextMenu?.();
+        }
+    }
 
     const closeModal = (e: React.MouseEvent) => {
         if (e) {
@@ -42,6 +52,7 @@ function Dialog({
     return (
         <ModalContext.Provider value={{ visible, close: closeModal as any }}>
             <div className={`ygo-player-dialog-container ${visible ? 'ygo-show' : ''}`}
+                onContextMenu={onContextClick}
                 onClick={close}
                 onMouseMove={cancelMouseEventsCallback}
             >

@@ -70,6 +70,13 @@ export function ViewDeckPopup({
         e.stopPropagation();
         close();
       }}
+      onContextMenu={(e) => {
+        if (e.currentTarget === e.target) {
+          e.preventDefault();
+          e.stopPropagation();
+          close();
+        }
+      }}
     >
       <div
         className="game-popup-dialog ygo-menu-view-main-deck ygo-main-deck-popup"

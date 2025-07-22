@@ -1,6 +1,6 @@
 import { YGODuel } from "../../core/YGODuel";
 import { Card } from "ygo-core";
-import { useLayoutEffect, useMemo, useRef } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import { getTransformFromCamera } from "../../scripts/ygo-utils";
 import { YGOGameUtils } from "ygo-core";
 
@@ -14,6 +14,7 @@ export function SelectedCardMenu({
   visible: boolean;
 }) {
   const menuRef = useRef<HTMLDivElement>(null);
+  const cardDescriptionRef = useRef<HTMLDivElement>(null);
 
   const openCardHighlighted = () => {
     duel.events.dispatch("toggle-ui-menu", {
@@ -31,11 +32,20 @@ export function SelectedCardMenu({
     const placeholder = duel.duelScene.selectedCardPlaceholder;
     const container = menuRef.current!;
     const { x, y, width, height } = getTransformFromCamera(duel, placeholder);
+    const maxWidth = x + width;
+    const newWidth = Math.min(300, maxWidth);
+
     container.style.top = y + "px";
     container.style.left = 0 + "px";
-    container.style.width = width + "px";
+    container.style.width = newWidth + "px";
     container.style.maxHeight = height + "px";
   }, [visible, menuRef.current, card, duel.duelScene.selectedCardPlaceholder]);
+
+  useEffect(() => {
+    if (cardDescriptionRef.current) {
+      cardDescriptionRef.current.scrollTop = 0;
+    }
+  }, [card]);
 
   const cardData = useMemo(() => parseSelectedCard(card), [card]);
 
@@ -54,6 +64,13 @@ export function SelectedCardMenu({
       onClick={(e) => {
         e.preventDefault();
         e.stopPropagation();
+      }}
+
+      onContextMenu={e => {
+        e.preventDefault();
+        e.stopPropagation();
+        duel.events.dispatch("clear-ui-action");
+        duel.events.dispatch("set-selected-card", { card: null });
       }}
     >
       <div
@@ -115,7 +132,7 @@ export function SelectedCardMenu({
 
       <div className={`mb-2 ygo-text-sm ygo-text-bold ${cardData.colorClassName} ygo-p-1`} >{cardData.type}</div>
 
-      <div className="ygo-scroll-y ygo-grow ygo-text-md ygo-card-description">
+      <div className="ygo-scroll-y ygo-grow ygo-text-md ygo-card-description" ref={cardDescriptionRef}>
         {cardData.cardDescription}
       </div>
     </div>

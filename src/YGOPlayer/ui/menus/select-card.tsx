@@ -176,6 +176,11 @@ export function SelectCardPopup({
         e.preventDefault();
         e.stopPropagation();
       }}
+      onContextMenu={(e) => {
+        if (e.currentTarget === e.target) {
+          close(e);
+        }
+      }}
       onClick={close}
     >
       <div

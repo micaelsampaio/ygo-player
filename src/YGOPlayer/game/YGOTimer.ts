@@ -1,6 +1,9 @@
 import * as THREE from 'three';
 import { YGOEntity } from "../core/YGOEntity";
 import { YGODuel } from '../core/YGODuel';
+import { YGOTaskSequence } from '../core/components/tasks/YGOTaskSequence';
+import { ScaleTransition } from '../duel-events/utils/scale-transition';
+import { WaitForSeconds } from '../duel-events/utils/wait-for-seconds';
 
 export class YGOTimer extends YGOEntity {
   private time: number = 0; // time in seconds now
@@ -26,7 +29,7 @@ export class YGOTimer extends YGOEntity {
     this.texture = new THREE.Texture(this.canvas);
     const material = new THREE.MeshBasicMaterial({ map: this.texture, transparent: true });
     this.mesh = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 3.2), material);
-    this.mesh.position.copy(position);
+    this.mesh.position.copy(this.position);
     this.mesh.position.z += 0.42;
     this.duel.core.scene.add(this.mesh);
     this.duel.add(this);
@@ -62,6 +65,26 @@ export class YGOTimer extends YGOEntity {
     const currentStr = this.toString();
 
     if (timeChanged && currentStr !== this.lastTimeString) {
+
+      if (this.countingDown && this.time < 10) {
+        this.duel.tasks.startTask(
+          new YGOTaskSequence(
+
+            new ScaleTransition({
+              gameObject: this.mesh,
+              scale: new THREE.Vector3(2, 2, 2),
+              duration: 0.15
+            }),
+            new WaitForSeconds(0.1),
+            new ScaleTransition({
+              gameObject: this.mesh,
+              scale: new THREE.Vector3(1, 1, 1),
+              duration: 0.1
+            })
+          )
+        )
+      }
+
       this.drawText(currentStr);
       this.lastTimeString = currentStr;
     }

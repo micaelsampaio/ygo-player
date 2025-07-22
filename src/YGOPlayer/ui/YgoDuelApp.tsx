@@ -37,7 +37,6 @@ export function YgoDuelApp({ config, bind: onBind, start: onStart }: { bind?: (d
     return <div className="ygo-player-core" id="ygo-player-core" {...duel?.mouseEvents.eventsReference}>
         <canvas id='ygo-canvas' ref={canvasRef} style={{ width: "100%", height: "100%" }}>
         </canvas>
-
         {duel && <YGOUiController duel={duel}></YGOUiController>}
     </div>
 }

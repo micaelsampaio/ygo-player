@@ -89,17 +89,22 @@ export function TimerEventsActionsMenu({
     </CardMenu>
   );
 }
-
 function parseTimeToSeconds(input: string): number | null {
-  const regex = /(?:(\d+)m)?\s*(?:(\d+)s)?/i;
-  const match = input.trim().match(regex);
+  const trimmed = input.trim();
+
+  if (/^\d+$/.test(trimmed)) {
+    return parseInt(trimmed, 10);
+  }
+
+  const regex = /^(?:(\d+)m)?\s*(?:(\d+)s)?$/i;
+  const match = trimmed.match(regex);
 
   if (!match) return null;
 
   const minutes = match[1] ? parseInt(match[1], 10) : 0;
   const seconds = match[2] ? parseInt(match[2], 10) : 0;
 
-  if (isNaN(minutes) && isNaN(seconds)) return null;
+  if (minutes === 0 && seconds === 0) return null;
 
-  return minutes * 60 + seconds;  // return total seconds
+  return minutes * 60 + seconds;
 }
