@@ -93,10 +93,10 @@ export class YGODuel {
       keys: "d",
       action: "toggleDuelLogs"
     }, {
-      keys: "a",
+      keys: "ArrowLeft",
       action: "previousCommand"
     }, {
-      keys: "d",
+      keys: "ArrowRight",
       action: "nextCommand"
     }, {
       keys: "p",

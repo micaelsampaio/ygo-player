@@ -10,8 +10,8 @@
   },
   "dependencies": {
     "axios": "^1.8.4",
-    "papaparse": "^5.4.1",
     "three": "^0.170.0",
+    "tinykeys": "^3.0.0",
     "ygo-core": "file:../ygo-core"
   },
   "devDependencies": {

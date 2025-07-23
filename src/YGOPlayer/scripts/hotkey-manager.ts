@@ -1,59 +1,31 @@
+import { tinykeys } from "tinykeys";
+
 type Shortcut = {
   keys: string;
   action: string;
 };
 
 export class HotKeyManager {
-  private shortcuts: Map<string, string> = new Map();
   private events: Map<string, (() => void)[]> = new Map();
   private enabled: boolean = true;
-  private keyDownHandler: (e: KeyboardEvent) => void;
+  private unsubscribeTinyKeysEvents?: () => void;
 
   constructor(shortcuts: Shortcut[] = []) {
-    this.keyDownHandler = this.handleKeyDown.bind(this);
-    this.setShortcuts(shortcuts);
-    window.addEventListener('keydown', this.keyDownHandler);
+    this.createShortcutsEvents(shortcuts);
   }
 
-  private normalizeKeys(e: KeyboardEvent): string {
-    const keys = [];
+  createShortcutsEvents(shortcuts: Shortcut[]) {
+    this.clear();
 
-    if (e.ctrlKey) keys.push('Ctrl');
-    if (e.metaKey) keys.push('Meta');
-    if (e.altKey) keys.push('Alt');
-    if (e.shiftKey) keys.push('Shift');
+    const bindings: Record<string, () => void> = {};
 
-    const key = this.normalizeKeyName(e.key);
-    if (!['Control', 'Meta', 'Alt', 'Shift'].includes(key)) {
-      keys.push(key);
+    for (const shortcut of shortcuts) {
+      bindings[shortcut.keys] = () => {
+        this.dispatch(shortcut.action);
+      };
     }
 
-    return keys.join('+');
-  }
-
-  private normalizeKeyName(key: string): string {
-    const arrowKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
-    if (arrowKeys.includes(key)) return key; // Preserve case for arrows
-
-    return key.length === 1 ? key.toUpperCase() : this.capitalize(key);
-  }
-
-  private handleKeyDown(e: KeyboardEvent) {
-    if (!this.enabled) return;
-    const normalizedKey = this.normalizeKeys(e);
-    const action = this.shortcuts.get(normalizedKey);
-    if (action) {
-      e.preventDefault();
-      this.dispatch(action);
-    }
-  }
-
-  setShortcuts(shortcuts: Shortcut[]) {
-    this.shortcuts.clear();
-    for (const { keys, action } of shortcuts) {
-      const normalized = this.normalizeShortcut(keys);
-      this.shortcuts.set(normalized, action);
-    }
+    this.unsubscribeTinyKeysEvents = tinykeys(window, bindings);
   }
 
   on(eventName: string, cb: () => void) {
@@ -73,6 +45,8 @@ export class HotKeyManager {
   }
 
   dispatch(eventName: string) {
+    if (!this.enabled) return;
+
     if (this.events.has(eventName)) {
       for (const cb of this.events.get(eventName)!) {
         try {
@@ -84,41 +58,6 @@ export class HotKeyManager {
     }
   }
 
-  private normalizeShortcut(keys: string): string {
-    return keys
-      .split('+')
-      .map(k => {
-        const key = k.trim().toLowerCase();
-        switch (key) {
-          case 'ctrl':
-            return 'Ctrl';
-          case 'meta':
-          case 'cmd':
-          case 'command':
-            return 'Meta';
-          case 'alt':
-            return 'Alt';
-          case 'shift':
-            return 'Shift';
-          case 'arrowup':
-            return 'ArrowUp';
-          case 'arrowdown':
-            return 'ArrowDown';
-          case 'arrowleft':
-            return 'ArrowLeft';
-          case 'arrowright':
-            return 'ArrowRight';
-          default:
-            return key.length === 1 ? key.toUpperCase() : this.capitalize(key);
-        }
-      })
-      .join('+');
-  }
-
-  private capitalize(str: string): string {
-    return str.charAt(0).toUpperCase() + str.slice(1);
-  }
-
   enable() {
     this.enabled = true;
   }
@@ -128,11 +67,12 @@ export class HotKeyManager {
   }
 
   clear() {
-    this.shortcuts.clear();
+    this.unsubscribeTinyKeysEvents?.();
+    this.unsubscribeTinyKeysEvents = undefined;
   }
 
   destroy() {
-    window.removeEventListener('keydown', this.keyDownHandler);
     this.clear();
+    this.events.clear();
   }
 }
