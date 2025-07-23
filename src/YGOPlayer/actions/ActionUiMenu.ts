@@ -6,6 +6,7 @@ export class ActionUiMenu implements YGOAction {
     private duel: YGODuel;
     public eventType: string = "";
     public eventData: any = null;
+    public unsubscribeKeyEvents?: () => void;
 
     constructor(duel: YGODuel, { eventType, eventData = null }: { eventType: string, eventData?: any }) {
         this.duel = duel;
@@ -18,9 +19,14 @@ export class ActionUiMenu implements YGOAction {
             type: this.eventType,
             data: this.eventData
         });
+        this.unsubscribeKeyEvents = this.duel.globalHotKeysManager.on("escPressed", () => {
+            this.duel.events.dispatch("clear-ui-action");
+        });
     }
 
     public onActionEnd() {
         this.duel.events.dispatch("clear-ui-action");
+        this.unsubscribeKeyEvents?.();
+        this.unsubscribeKeyEvents = undefined;
     }
 }

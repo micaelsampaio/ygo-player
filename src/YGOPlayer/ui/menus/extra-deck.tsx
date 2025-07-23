@@ -46,8 +46,10 @@ export function ExtraDeck({
         }
       }}
     >
-      <h2>EX Deck</h2>
-      <hr />
+      <div className="float-right-menu-icon">
+        <div className="ygo-icon-game-zone ygo-icon-game-zone-ed"></div>
+      </div>
+
       {cards.map((card: Card) => (
         <div>
           <img

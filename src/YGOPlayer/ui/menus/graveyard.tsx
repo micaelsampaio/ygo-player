@@ -36,8 +36,11 @@ export function Graveyard({
         e.stopPropagation();
       }}
     >
-      <h2>GY</h2>
-      <hr />
+
+      <div className="float-right-menu-icon">
+        <div className="ygo-icon-game-zone ygo-icon-game-zone-gy"></div>
+      </div>
+
       {gy.map((card: Card) => (
         <div>
           <img

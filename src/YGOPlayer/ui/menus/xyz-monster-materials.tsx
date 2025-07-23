@@ -37,8 +37,10 @@ export function XyzMonsterMaterialsMenu({
         e.stopPropagation();
       }}
     >
-      <h2>Materials</h2>
-      <hr />
+      <div className="float-right-menu-icon">
+        <div className="ygo-icon-game-zone ygo-icon-game-zone-oru"></div>
+      </div>
+
       {materials.map((material: Card) => (
         <div>
           <img

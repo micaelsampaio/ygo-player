@@ -101,6 +101,9 @@ export class YGODuel {
     }, {
       keys: "p",
       action: "togglePlayPause"
+    }, {
+      keys: "Escape",
+      action: "escPressed"
     }]);
 
     this.globalHotKeysManager.on("toggleControls", () => {
@@ -121,6 +124,10 @@ export class YGODuel {
 
     this.globalHotKeysManager.on("togglePlayPause", () => {
       this.commands.play();
+    });
+
+    this.globalHotKeysManager.on("escPressed", () => {
+      this.events.dispatch("toggle-ui-menu", { group: "game-overlay", type: "settings-menu" });
     });
 
     // const toggleDuelLogs = useCallback(() => {

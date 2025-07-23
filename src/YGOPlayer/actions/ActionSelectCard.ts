@@ -27,7 +27,7 @@ export class ActionCardSelection extends YGOComponent implements YGOAction {
     private time: number;
     private onSelectionCompleted!: ((cardZone: CardZone) => void);
     private onMultipleSelectionCompleted!: ((cardZone: CardZone[]) => void);
-    private onCancelled: (() => void) | null;
+    public unsubscribeKeyEvents?: () => void;
 
     constructor({ duel }: { duel: YGODuel }) {
         super("");
@@ -38,12 +38,17 @@ export class ActionCardSelection extends YGOComponent implements YGOAction {
         this.isMultipleSelection = false;
         this.opacityValue = 1;
         this.time = 0;
-        this.onCancelled = null;
         this.mouseEvents = duel.gameController.getComponent<YGOMouseEvents>("mouse_events")!;
     }
 
     public onActionStart(): void {
         this.hideAllSelectionCards();
+        console.log("TCL: START ACTION");
+
+        this.unsubscribeKeyEvents = this.duel.globalHotKeysManager.on("escPressed", () => {
+            console.log("CLEAR UI ACTION");
+            this.duel.events.dispatch("clear-ui-action");
+        });
 
         for (const cardzone of this.zones) {
 
@@ -93,11 +98,12 @@ export class ActionCardSelection extends YGOComponent implements YGOAction {
     public onActionEnd(): void {
         this.clear();
         this.duel.events.dispatch("clear-ui-action");
+        this.unsubscribeKeyEvents?.();
+        this.unsubscribeKeyEvents = undefined;
     }
 
     private clear() {
         this.mouseEvents.onClickCb = null;
-        this.onCancelled = null;
         this.hideAllSelectionCards();
         this.zones.forEach(zone => zone.onClickCb = null);
     }
@@ -119,7 +125,7 @@ export class ActionCardSelection extends YGOComponent implements YGOAction {
         this.duel.actionManager.setAction(this);
     }
 
-    public startMultipleSelection({ zones, selectionType, onSelectionCompleted, onCancelled = null }: { zones: CardZone[], selectionType: CardSelectionType, onSelectionCompleted: (cardZones: CardZone[]) => void, onCancelled?: (() => void) | null }): void {
+    public startMultipleSelection({ zones, selectionType, onSelectionCompleted }: { zones: CardZone[], selectionType: CardSelectionType, onSelectionCompleted: (cardZones: CardZone[]) => void }): void {
         this.time = 0;
         this.selectionType = selectionType;
         this.isMultipleSelection = true;
@@ -127,7 +133,6 @@ export class ActionCardSelection extends YGOComponent implements YGOAction {
         this.selectedZones = [];
         this.zones.forEach(zone => zone.onClickCb = () => this.onCardZoneClick(zone));
         this.onMultipleSelectionCompleted = onSelectionCompleted;
-        this.onCancelled = onCancelled;
 
         this.duel.actionManager.setAction(this);
     }

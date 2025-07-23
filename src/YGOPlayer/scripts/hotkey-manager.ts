@@ -28,8 +28,12 @@ export class HotKeyManager {
     this.unsubscribeTinyKeysEvents = tinykeys(window, bindings);
   }
 
-  on(eventName: string, cb: () => void) {
+  on(eventName: string, cb: () => void): () => void {
     this.events.set(eventName, [...this.events.get(eventName) || [], cb]);
+
+    return () => {
+      this.off(eventName, cb);
+    }
   }
 
   off(eventName: string, cb: () => void) {
@@ -45,17 +49,15 @@ export class HotKeyManager {
   }
 
   dispatch(eventName: string) {
+    // only calls the last bind of that shortcut 
+    // so you cant have 2 shortcuts with the same keybinds at the same time
     if (!this.enabled) return;
 
-    if (this.events.has(eventName)) {
-      for (const cb of this.events.get(eventName)!) {
-        try {
-          cb();
-        } catch {
-          // Ignore callback errors
-        }
-      }
-    }
+    const events = this.events.get(eventName);
+    if (!events || events.length === 0) return;
+
+    const lastEvent = events[events.length - 1];
+    lastEvent?.();
   }
 
   enable() {

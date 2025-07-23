@@ -36,8 +36,10 @@ export function Banish({
         e.stopPropagation();
       }}
     >
-      <h2>Banish</h2>
-      <hr />
+      <div className="float-right-menu-icon">
+        <div className="ygo-icon-game-zone ygo-icon-game-zone-b"></div>
+      </div>
+
       {cards.map((card: Card) => (
         <div>
           <div style={{ position: "relative" }}

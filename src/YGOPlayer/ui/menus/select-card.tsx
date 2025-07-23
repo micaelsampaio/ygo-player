@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { YGODuel } from "../../core/YGODuel";
 import { Card, FieldZone, FieldZoneId } from "ygo-core";
 import { YGOGameUtils } from "ygo-core";
@@ -168,6 +168,18 @@ export function SelectCardPopup({
     e.stopPropagation();
     duel.events.dispatch("close-ui-menu", { group: "game-popup" });
   }, []);
+
+  useEffect(() => {
+    if (visible) {
+      const unsubscribe = duel.globalHotKeysManager.on("escPressed", () => {
+        duel.events.dispatch("close-ui-menu", { group: "game-popup" });
+      });
+
+      return () => {
+        unsubscribe();
+      }
+    }
+  }, [visible]);
 
   return (
     <div

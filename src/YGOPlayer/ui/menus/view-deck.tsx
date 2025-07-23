@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { YGODuel } from "../../core/YGODuel";
 import { Card } from "ygo-core";
 import { ActionUiMenu } from "../../actions/ActionUiMenu";
@@ -30,9 +30,22 @@ export function ViewDeckPopup({
     action.eventData = { duel, player: deck.player, deck, card, mouseEvent: e };
     duel.actionManager.setAction(action);
   };
+
   const close = () => {
     duel.events.dispatch("close-ui-menu", { group: "game-popup" });
   };
+
+  useEffect(() => {
+    if (visible) {
+      const unsubscribe = duel.globalHotKeysManager.on("escPressed", () => {
+        close();
+      });
+
+      return () => {
+        unsubscribe();
+      }
+    }
+  }, [visible]);
 
   if (!visible) return null;
 
