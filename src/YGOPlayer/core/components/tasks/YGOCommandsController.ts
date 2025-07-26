@@ -136,7 +136,8 @@ export class YGOCommandsController extends YGOComponent {
       loop?: boolean;
       onComplete?: () => void;
     }) => {
-      const sound = this.duel.soundController.playSound(options);
+      // TODO SAVE CURRENT SOUNDS PLAYING
+      this.duel.soundController.playSound(options);
     }
 
     const props = {
