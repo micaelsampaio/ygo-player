@@ -39,7 +39,7 @@ export function GameModalOverlayMesh() {
     return modalPlane;
 }
 
-export function CardActivationEffect({ duel, card, startTask }: { duel: YGODuel, card: THREE.Object3D, startTask: any }) {
+export function CardActivationEffect({ duel, card, startTask, playSound }: { duel: YGODuel, card: THREE.Object3D, startTask: any, playSound: any }) {
 
     const modalGeometry = new THREE.PlaneGeometry(1, 1);
 
@@ -67,6 +67,9 @@ export function CardActivationEffect({ duel, card, startTask }: { duel: YGODuel,
                     scale: new THREE.Vector3(size * 0.8, size * 0.8, size * 0.8),
                     duration: 0.3
                 }),
+                new CallbackTransition(() => {
+                    playSound({ key: duel.createCdnUrl(`/sounds/card_activation.ogg`), volume: 0.5 });
+                })
             ),
             new MultipleTasks(
                 new MaterialOpacityTransition({

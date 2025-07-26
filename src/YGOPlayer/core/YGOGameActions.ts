@@ -710,7 +710,7 @@ export class YGOGameActions {
   public toHand({ card, originZone }: { card: Card; originZone: FieldZone }) {
     this.clearAction();
 
-    const player = this.duel.getActivePlayer();    
+    const player = this.duel.getActivePlayer();
 
     if (card.isMainDeckCard) {
       this.duel.execCommand(
@@ -1043,5 +1043,13 @@ export class YGOGameActions {
     value: string,
   }) {
     this.duel.execCommand(new YGOCommands.LifePointsTransactionCommand({ player, value }));
+  }
+
+  public swapPlayerHand({
+    player,
+  }: {
+    player: number
+  }) {
+    this.duel.execCommand(new YGOCommands.SwapHandCommand({ player }));
   }
 }

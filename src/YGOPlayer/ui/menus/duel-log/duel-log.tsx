@@ -8,6 +8,7 @@ import "./duel-log.css";
 
 const COMPONENTS = {
   [YGODuelEvents.LogType.StartHand]: StartHandLogRow,
+  [YGODuelEvents.LogType.SwapHand]: StartHandLogRow,
   [YGODuelEvents.LogType.LifePoints]: LifePointsLogRow,
   default: DefaultLogRow,
 };

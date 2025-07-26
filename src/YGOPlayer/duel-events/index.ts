@@ -20,6 +20,7 @@ import { XYZSummonEventHandler } from "./events/xyz-summon-event";
 import { NegateCardHandler } from "./events/negate-card-events";
 import { DisappearEventHandler } from "./events/disapear-event";
 import { StartHandEventHandler } from "./events/start-hand-event";
+import { SwapHandEventHandler } from "./events/swap-hand-event";
 
 export interface DuelEventHandlerProps {
   duel: YGODuel;
@@ -53,6 +54,7 @@ const events: any = {
   [YGODuelEvents.LogType.MoveCard]: MoveCardEventHandler,
   /// Change Card Position
   [YGODuelEvents.LogType.StartHand]: StartHandEventHandler,
+  [YGODuelEvents.LogType.SwapHand]: SwapHandEventHandler,
   [YGODuelEvents.LogType.SetST]: ChangeCardPositionHandler,
   [YGODuelEvents.LogType.SetMonster]: ChangeCardPositionHandler,
   [YGODuelEvents.LogType.ChangeCardPosition]: ChangeCardPositionHandler,

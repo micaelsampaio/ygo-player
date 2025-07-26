@@ -40,7 +40,7 @@ export class ActivateCardHandler extends YGOCommandHandler {
 
   public start(): void {
     const { event } = this.props;
-    
+
     console.log("TCL:: EVENT ::: ", event);
 
     if (event.originZone && event.zone) {
@@ -157,6 +157,7 @@ export class ActivateCardHandler extends YGOCommandHandler {
         duel,
         card: cardOverlay,
         startTask: this.props.startTask,
+        playSound: this.props.playSound,
       });
 
       this.createActivationEffect(sequence, cardOverlay, startPosition);
@@ -180,6 +181,7 @@ export class ActivateCardHandler extends YGOCommandHandler {
         duel,
         card: cardOverlay,
         startTask: this.props.startTask,
+        playSound: this.props.playSound,
       });
 
       this.createActivationEffect(sequence, cardOverlay, startPosition, up);
@@ -207,6 +209,7 @@ export class ActivateCardHandler extends YGOCommandHandler {
         duel,
         card: cardOverlay,
         startTask: this.props.startTask,
+        playSound: this.props.playSound,
       });
 
       this.createActivationEffect(

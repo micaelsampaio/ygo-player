@@ -155,4 +155,9 @@ export class GameHand extends YGOEntity {
     const rotation = this.player === 0 ? new THREE.Vector3(0, 0, 0) : new THREE.Vector3(0, this.showHand ? 0 : THREE.MathUtils.degToRad(180), THREE.MathUtils.degToRad(180));
     return rotation;
   }
+
+  public destroyAllCards() {
+    this.cards.forEach(card => card.destroy());
+    this.cards.length = 0;
+  }
 }

@@ -3,7 +3,6 @@ import { DuelEventHandlerProps } from "..";
 import { YGODuelEvents } from "ygo-core";
 import { YGOTaskSequence } from "../../core/components/tasks/YGOTaskSequence";
 import { CallbackTransition } from "../utils/callback";
-import { PositionTransition } from "../utils/position-transition";
 import { MultipleTasks } from "../utils/multiple-tasks";
 import { YGOCommandHandler } from "../../core/components/YGOCommandHandler";
 import { WaitForSeconds } from "../utils/wait-for-seconds";

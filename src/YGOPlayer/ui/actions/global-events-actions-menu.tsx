@@ -18,6 +18,10 @@ export function GlobalEventsActionsMenu({
     duel.gameActions.destroyAllCards({ zone: "all" });
   }, []);
 
+  const newRandomPlayerHand = useCallback(() => {
+    duel.gameActions.swapPlayerHand({ player });
+  }, [player])
+
   useLayoutEffect(() => {
     const container = menuRef.current!;
     const size = container.getBoundingClientRect();
@@ -49,6 +53,9 @@ export function GlobalEventsActionsMenu({
       </button>
       <button type="button" className="ygo-card-item" onClick={destroyAllCards}>
         Destroy all Cards
+      </button>
+      <button type="button" className="ygo-card-item" onClick={newRandomPlayerHand}>
+        New Random Hand
       </button>
     </CardMenu>
   );
