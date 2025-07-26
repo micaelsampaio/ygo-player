@@ -8,7 +8,7 @@ export function LifePointsLogRow({
   log: YGODuelEvents.LifePoints;
   duel: YGODuel;
   ygo: InstanceType<typeof YGOCore>;
-}) {
+}){
 
   const lifepoints = log.lifePoints;
   const diff = lifepoints - log.previousLifePoints;

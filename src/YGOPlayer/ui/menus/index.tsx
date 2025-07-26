@@ -1,3 +1,4 @@
+import { DuelNotesActionEventHandler } from "./duel-notes-action-handler";
 import { GameSettingsDialog } from "../actions/game-settings-dialog";
 import { Banish } from "./banish";
 import { ControlsMenu } from "./controls-menu";
@@ -20,4 +21,5 @@ export const MENUS = {
     "select-card-menu": SelectCardPopup,
     "controls-menu": ControlsMenu,
     "settings-menu": GameSettingsDialog,
+    "duel-notes-game-event-hanlder": DuelNotesActionEventHandler,
 }

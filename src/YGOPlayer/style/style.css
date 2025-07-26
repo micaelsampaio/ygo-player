@@ -8,6 +8,7 @@
 /* GAME */
 @import "./game-zones.css";
 @import "./timeline.css";
+@import "./duel-notes.css";
 
 /* components */
 @import "./buttons.css";

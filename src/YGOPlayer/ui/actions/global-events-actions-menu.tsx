@@ -3,6 +3,7 @@ import { YGODuel } from "../../core/YGODuel";
 import { getTransformFromCamera, } from "../../scripts/ygo-utils";
 import { CardMenu } from "../components/CardMenu";
 import * as THREE from "three";
+import { ActionUiMenu } from "../../actions/ActionUiMenu";
 
 export function GlobalEventsActionsMenu({
   duel,
@@ -20,7 +21,16 @@ export function GlobalEventsActionsMenu({
 
   const newRandomPlayerHand = useCallback(() => {
     duel.gameActions.swapPlayerHand({ player });
-  }, [player])
+  }, [player]);
+
+  const newNote = useCallback(() => {
+    const action = new ActionUiMenu(duel, {
+      eventType: "duel-notes-form-menu",
+      eventData: { duel }
+    });
+    duel.actionManager.clearAction();
+    setTimeout(() => duel.actionManager.setAction(action))
+  }, [])
 
   useLayoutEffect(() => {
     const container = menuRef.current!;
@@ -35,6 +45,9 @@ export function GlobalEventsActionsMenu({
 
   return (
     <CardMenu key="global-events-actions-menu" menuRef={menuRef}>
+      <button type="button" className="ygo-card-item" onClick={newNote}>
+        Add Notes
+      </button>
       <button
         className="ygo-card-item"
         disabled={freeMonsterZones === 0}

@@ -21,6 +21,13 @@ export class HotKeyManager {
 
     for (const shortcut of shortcuts) {
       bindings[shortcut.keys] = () => {
+        const active = document.activeElement;
+        const enteringText = active instanceof HTMLElement
+          && (active.isContentEditable
+            || active.tagName === 'INPUT'
+            || active.tagName === 'TEXTAREA');
+        if (enteringText) return;
+
         this.dispatch(shortcut.action);
       };
     }

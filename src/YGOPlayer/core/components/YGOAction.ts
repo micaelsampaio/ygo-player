@@ -10,7 +10,7 @@ export class YGOActionManager extends YGOComponent {
 
     constructor() {
         super("actions_manager");
-        
+
         this.actionsEnabled = true;
         this.action = this.defaultAction;
         this.actions = new Map();
@@ -29,6 +29,15 @@ export class YGOActionManager extends YGOComponent {
 
         if (this.onActionTransition) this.onActionTransition(prevAction, this.action);
         if (this.onChangeAction) this.onChangeAction(this.action);
+    }
+    setActionNextFrame(action: YGOAction = this.defaultAction) {
+        this.clearAction();
+
+        requestAnimationFrame(() => {
+            setTimeout(() => {
+                this.setAction(action);
+            }, 10);
+        });
     }
 
     setActionByName(action: string) {

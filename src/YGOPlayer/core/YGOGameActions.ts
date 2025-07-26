@@ -1052,4 +1052,22 @@ export class YGOGameActions {
   }) {
     this.duel.execCommand(new YGOCommands.SwapHandCommand({ player }));
   }
+
+  public addDuelNote({
+    player,
+    note,
+    duration
+  }: {
+    player?: number
+    note: string,
+    duration?: number
+  }) {
+    const parsedDuration = duration && !isNaN(duration) && duration > 0 ? duration : -1;
+
+    this.duel.execCommand(new YGOCommands.NoteCommand({
+      player: player ?? this.duel.getActivePlayer(),
+      note,
+      duration: parsedDuration
+    }));
+  }
 }

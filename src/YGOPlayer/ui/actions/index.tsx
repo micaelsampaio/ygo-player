@@ -1,3 +1,4 @@
+import { DuelNotesFormAction } from "./duel-notes-form";
 import { CardBanishMenu } from "./card-banish-menu";
 import { CardDeckMenu } from "./card-deck-menu";
 import { CardExtraDeckMenu } from "./card-ed-menu";
@@ -24,4 +25,5 @@ export const ACTIONS = {
     "card-stats-dialog-menu": CardStatsDialog,
     "global-events-menu": GlobalEventsActionsMenu,
     "timer-events-menu": TimerEventsActionsMenu,
+    "duel-notes-form-menu": DuelNotesFormAction,
 }

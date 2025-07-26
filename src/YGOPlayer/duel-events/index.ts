@@ -21,6 +21,7 @@ import { NegateCardHandler } from "./events/negate-card-events";
 import { DisappearEventHandler } from "./events/disapear-event";
 import { StartHandEventHandler } from "./events/start-hand-event";
 import { SwapHandEventHandler } from "./events/swap-hand-event";
+import { DuelNotesEventHandler } from "./events/duel-notes-event";
 
 export interface DuelEventHandlerProps {
   duel: YGODuel;
@@ -78,6 +79,8 @@ const events: any = {
   [YGODuelEvents.LogType.Reveal]: RevealEventHandler,
   [YGODuelEvents.LogType.Activate]: ActivateCardHandler,
   [YGODuelEvents.LogType.Negate]: NegateCardHandler,
+  // Notes / UI
+  [YGODuelEvents.LogType.Note]: DuelNotesEventHandler,
   /// Default
   DEFAULT: UpdateFieldEvent,
 };

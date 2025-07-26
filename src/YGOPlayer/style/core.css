@@ -540,7 +540,8 @@
     top: 0;
 }
 
-.ygo-player-core input {
+.ygo-player-core input,
+.ygo-player-core textarea {
     background-color: var(--ygo-background-color);
     padding: 10px 10px;
     width: 100%;
@@ -746,8 +747,12 @@
         font-weight: bold;
     }
 
-    text-center {
+    .ygo-text-center {
         text-align: center;
+    }
+
+    .ygo-text-muted {
+        color: var(--ygo-border-color);
     }
 
     .ygo-o-0 {
@@ -792,6 +797,14 @@
 
     .ygo-o-100 {
         opacity: 1;
+    }
+
+    .ygo-w-full {
+        width: 100%;
+    }
+
+    .ygo-h-full {
+        width: 100%;
     }
 }
 

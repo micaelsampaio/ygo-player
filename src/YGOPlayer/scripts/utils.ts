@@ -34,3 +34,8 @@ export function deepMerge<T = any>(target: any, source: any): T {
 export function isObject(value: any): value is { [key: string]: any } {
     return value !== null && typeof value === 'object';
 }
+
+export function stopPropagationCallback(e: any){
+    e.preventDefault();
+    e.stopPropagation();
+}

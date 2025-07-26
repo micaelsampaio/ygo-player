@@ -129,21 +129,33 @@ export class YGODuelScene {
     }
 
     private createFieldButtons() {
-
         const globalMenuAction = new ActionUiMenu(this.duel, {
             eventType: "global-events-menu",
             eventData: { duel: this.duel }
         });
+
 
         const timerMenuAction = new ActionUiMenu(this.duel, {
             eventType: "timer-events-menu",
             eventData: { duel: this.duel }
         });
 
-        const btn = new YGOFieldButton(this.duel, new THREE.Vector3(-8, 0, -0.3), () => {
+        const btn = new YGOFieldButton(this.duel, new THREE.Vector3(-7.7, 0, -0.3), () => {
             globalMenuAction.eventData.transform = btn.gameObject;
             this.duel.actionManager.setAction(globalMenuAction);
         });
+        btn.gameObject.scale.set(1.2, 1.2, 1.2);
+
+        const squareSize = 0.425;
+        const squareSpacing = 0.18;
+        const squareGeometry = new THREE.BoxGeometry(squareSize, squareSize / 6, 0.05);
+        const squareMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
+
+        for (let i = 0; i < 3; i++) {
+            const square = new THREE.Mesh(squareGeometry, squareMaterial);
+            square.position.set(0, squareSpacing * (1 - i), 0.4);
+            btn.gameObject.add(square);
+        }
 
         const btnTimerPosition = new THREE.Vector3(-10.5, 0, -0.3);
         const btnTimer = new YGOFieldButton(this.duel, btnTimerPosition, () => {

@@ -4,12 +4,14 @@ import { YGODuelEvents } from "ygo-core";
 import { DefaultLogRow } from "./default-log";
 import { StartHandLogRow } from "./start-hand";
 import { LifePointsLogRow } from "./lp-log";
+import { NoteLogRow } from "./note-log";
 import "./duel-log.css";
 
 const COMPONENTS = {
   [YGODuelEvents.LogType.StartHand]: StartHandLogRow,
   [YGODuelEvents.LogType.SwapHand]: StartHandLogRow,
   [YGODuelEvents.LogType.LifePoints]: LifePointsLogRow,
+  [YGODuelEvents.LogType.Note]: NoteLogRow,
   default: DefaultLogRow,
 };
 

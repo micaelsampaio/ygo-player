@@ -1,0 +1,58 @@
+.ygo-player-core {
+  .ygo-duel-notes-dialog-container {
+    position: fixed;
+    width: 100%;
+    height: 100dvh;
+    z-index: 2000;
+    top: 0;
+    left: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0, 0, 0, 0.3);
+  }
+
+  .ygo-duel-notes-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    min-width: min(400px, 90%);
+    max-width: max(90%, 300px);
+    font-size: 30px;
+    line-height: 40px;
+    background-color: rgba(0, 0, 0, 0.8);
+    border-radius: 13px;
+    padding: 20px;
+    text-align: center;
+    color: #FFF;
+    box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2);
+    opacity: 0;
+    transition: opacity 300ms ease-in-out;
+  }
+
+  .ygo-fade-in {
+    opacity: 1;
+  }
+
+  .ygo-fade-out {
+    opacity: 0;
+  }
+
+  .ygo-notes-progress-container {
+    max-width: 200px;
+    width: 90%;
+    height: 5px;
+    width: 100%;
+    background-color: black;
+    border-radius: 10px;
+    margin: auto;
+  }
+
+  .ygo-notes-progress-value {
+    height: 100%;
+    background-color: white;
+    border-radius: 10px;
+    transition: width 0.1s ease-in-out;
+  }
+}
