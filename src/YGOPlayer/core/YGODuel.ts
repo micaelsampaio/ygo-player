@@ -262,8 +262,15 @@ export class YGODuel {
 
     setTimeout(() => {
       try {
-        this.ygo.start();
-        this.updateField();
+        setTimeout(() => {
+          this.ygo.start();
+        }, 500);
+
+        for (const player of this.fields) {
+          player.mainDeck.updateDeck();
+          player.extraDeck.updateExtraDeck();
+        }
+
       } catch (error) {
         console.log("ERROR", error);
         alert("ERROR");

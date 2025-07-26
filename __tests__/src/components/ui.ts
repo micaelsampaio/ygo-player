@@ -46,7 +46,6 @@ export const Button = styled.button<{ color?: string }>`
   font-size: 0.9rem;
   cursor: pointer;
   transition: background 0.2s;
-  margin-left: 0.5rem;
 
   &:hover {
     opacity: 0.9;
@@ -88,4 +87,96 @@ export const TextArea = styled.textarea`
   &:focus {
     outline: 2px solid ${(props: any) => props.theme.accent};
   }
+`;
+
+export const InputSelect = styled.select`
+  flex: 1;
+  padding: 0.5rem;
+  background-color: var(--ygo-surface, #1c1c1c);
+  color: var(--ygo-text, #fff);
+  border: 1px solid var(--ygo-border, #444);
+  border-radius: 6px;
+  font-size: 1rem;
+
+  option {
+    background-color: var(--ygo-surface, #1c1c1c);
+    color: var(--ygo-text, #fff);
+  }
+`;
+
+
+interface FlexBoxProps {
+  direction?: 'row' | 'column';
+  justify?: string;
+  align?: string;
+  wrap?: string;
+  gap?: string;
+  mobileDirection?: 'row' | 'column';
+  mobileGap?: string;
+  style?: React.CSSProperties;
+  children: React.ReactNode;
+}
+
+interface FlexBoxProps {
+  direction?: 'row' | 'column';
+  justify?: string;
+  align?: string;
+  wrap?: string;
+  gap?: string;
+  gapX?: string;
+  gapY?: string;
+  mobileDirection?: 'row' | 'column';
+  mobileGap?: string;
+  mobileGapX?: string;
+  mobileGapY?: string;
+  style?: React.CSSProperties;
+  children: React.ReactNode;
+}
+
+export const FlexBox = styled.div<FlexBoxProps>`
+  display: flex;
+  flex-direction: ${({ direction = 'row' }) => direction};
+  justify-content: ${({ justify = 'flex-start' }) => justify};
+  align-items: ${({ align = 'stretch' }) => align};
+  flex-wrap: ${({ wrap = 'nowrap' }) => wrap};
+
+  ${({ gap, gapX, gapY }) =>
+    gap || gapX || gapY
+      ? `
+    column-gap: ${gapX || gap || '0'};
+    row-gap: ${gapY || gap || '0'};
+  `
+      : ''}
+
+  @media (max-width: 768px) {
+    flex-direction: ${({ mobileDirection, direction = 'row' }) =>
+    mobileDirection || direction};
+
+    ${({ mobileGap, mobileGapX, mobileGapY, gap, gapX, gapY }) =>
+    mobileGap || mobileGapX || mobileGapY
+      ? `
+      column-gap: ${mobileGapX || mobileGap || gapX || gap || '0'};
+      row-gap: ${mobileGapY || mobileGap || gapY || gap || '0'};
+    `
+      : ''}
+  }
+`;
+
+
+interface FlexItemProps {
+  grow?: number;
+  shrink?: number;
+  basis?: string;
+  alignSelf?: string;
+  order?: number;
+  style?: React.CSSProperties;
+  children: React.ReactNode;
+}
+
+export const FlexItem = styled.div<FlexItemProps>`
+  flex-grow: ${({ grow = 0 }) => grow};
+  flex-shrink: ${({ shrink = 1 }) => shrink};
+  flex-basis: ${({ basis = 'auto' }) => basis};
+  align-self: ${({ alignSelf = 'auto' }) => alignSelf};
+  order: ${({ order = 0 }) => order};
 `;

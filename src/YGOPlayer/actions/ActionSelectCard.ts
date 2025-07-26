@@ -9,9 +9,9 @@ import { MultipleTasks } from '../duel-events/utils/multiple-tasks';
 import { PositionTransition } from '../duel-events/utils/position-transition';
 import { ScaleTransition } from '../duel-events/utils/scale-transition';
 import { MaterialOpacityTransition } from '../duel-events/utils/material-opacity';
-import { clamp, lerp } from 'three/src/math/MathUtils';
-import { Easing } from '../scripts/easing';
+import { lerp } from 'three/src/math/MathUtils';
 import { YGOGameUtils } from 'ygo-core';
+import { Ease } from '../scripts/ease';
 
 type CardSelectionType = "card" | "zone";
 
@@ -276,7 +276,7 @@ export class ActionCardSelection extends YGOComponent implements YGOAction {
 
         this.time += this.duel.core.unscaledDeltaTime * 10;
         const oscillator = (Math.sin(this.time) + 1) / 2;
-        const easedValue = Easing.linear(oscillator);
+        const easedValue = Ease.linear(oscillator);
         this.opacityValue = lerp(0.3, 1, easedValue);
 
         for (const [, zoneData] of this.cardSelectionZones) {

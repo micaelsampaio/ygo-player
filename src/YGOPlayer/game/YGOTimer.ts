@@ -65,11 +65,22 @@ export class YGOTimer extends YGOEntity {
     const currentStr = this.toString();
 
     if (timeChanged && currentStr !== this.lastTimeString) {
-
-      if (this.countingDown && this.time < 10) {
+      const time = Math.floor(this.time);
+      if (this.countingDown && time > 0 && (time === 30 || time === 20 || time <= 10)) {
+        this.duel.soundController.playSound({
+          key: this.duel.createCdnUrl(`/sounds/timer_tick.ogg`),
+          volume: 0.7,
+        });
+      }
+      if (time === 0) {
+        this.duel.soundController.playSound({
+          key: this.duel.createCdnUrl(`/sounds/timeout.ogg`),
+          volume: 0.7,
+        });
+      }
+      if (this.countingDown && time <= 30) {
         this.duel.tasks.startTask(
           new YGOTaskSequence(
-
             new ScaleTransition({
               gameObject: this.mesh,
               scale: new THREE.Vector3(2, 2, 2),

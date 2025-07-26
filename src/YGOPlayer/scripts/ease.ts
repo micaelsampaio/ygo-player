@@ -1,4 +1,4 @@
-export class Easing {
+export class Ease {
     static linear(t: number): number {
         return t;
     }
@@ -57,6 +57,10 @@ export class Easing {
 
     static easeOutSine(t: number): number {
         return Math.sin(t * Math.PI / 2);
+    }
+
+    static easeInOut(t: number): number {
+        return t * t * (3 - 2 * t);
     }
 
     static easeInOutSine(t: number): number {
@@ -123,7 +127,7 @@ export class Easing {
     }
 
     static easeInBounce(t: number): number {
-        return 1 - Easing.easeOutBounce(1 - t);
+        return 1 - Ease.easeOutBounce(1 - t);
     }
 
     static easeOutBounce(t: number): number {
@@ -143,7 +147,7 @@ export class Easing {
 
     static easeInOutBounce(t: number): number {
         return t < 0.5 ?
-            (1 - Easing.easeOutBounce(1 - 2 * t)) / 2 :
-            (1 + Easing.easeOutBounce(2 * t - 1)) / 2;
+            (1 - Ease.easeOutBounce(1 - 2 * t)) / 2 :
+            (1 + Ease.easeOutBounce(2 * t - 1)) / 2;
     }
 }

@@ -1,8 +1,8 @@
+import * as THREE from "three";
 import { Card } from "ygo-core";
 import { YGODuel } from "../core/YGODuel";
 import { YGOEntity } from "../core/YGOEntity";
 import { GameCardHand } from "./GameCardHand";
-import * as THREE from "three";
 import { CARD_HEIGHT_SIZE } from "../constants";
 
 export class GameHand extends YGOEntity {
@@ -92,15 +92,31 @@ export class GameHand extends YGOEntity {
     return handY;
   }
 
-
   render() {
     const gameField = this.duel.fields[this.player];
+    const totalCards = gameField.hand.cards.length;
+    const cardsTransforms = this.getCardsTransforms(totalCards);
+    const cardRotation = this.getCardsRotation();
+
+    for (let i = 0; i < totalCards; ++i) {
+      const index = this.player === 0 ? i : totalCards - 1 - i;
+      const handCard = gameField.hand.getCard(index)!;
+      handCard.position = cardsTransforms[index].position;
+      handCard.gameObject.position.copy(handCard.position);
+      handCard.gameObject.scale.copy(cardsTransforms[i].scale);
+      handCard.gameObject.rotation.setFromVector3(cardRotation);
+      handCard.gameObject.visible = true;
+    }
+  }
+
+  public getCardsTransforms(handSize: number): { position: THREE.Vector3, scale: THREE.Vector3 }[] {
+    const cardPositions: { position: THREE.Vector3, scale: THREE.Vector3 }[] = new Array(handSize);
     const cardWidth = 10;
     const cardSpacing = 2.7;
     const baseHandZ = 6;
-    const totalCards = gameField.hand.cards.length;
     const handDistribution = 22;
     const handY = this.getCardHandPivot();
+    const totalCards = handSize;
     const normalHandWidth = (totalCards - 1) * cardSpacing + cardWidth;
     const needsCompression = normalHandWidth > handDistribution;
 
@@ -114,27 +130,29 @@ export class GameHand extends YGOEntity {
 
     for (let i = 0; i < totalCards; ++i) {
       const index = this.player === 0 ? i : totalCards - 1 - i;
-      const handCard = gameField.hand.getCard(index)!;
       const xOffset = -actualWidth / 2 + cardWidth / 2 + i * actualSpacing;
       const handZ = baseHandZ;
-      handCard.gameObject.position.set(xOffset, handY, handZ);
+      const position = new THREE.Vector3(xOffset, handY, handZ);
+      const scale = new THREE.Vector3(1, 1, 1);
 
       if (needsCompression) {
         const scaleMultiplier = 1 - 0.02 * Math.abs(i - totalCards / 2) / (totalCards / 2);
-        handCard.gameObject.scale.set(scaleMultiplier, scaleMultiplier, 1);
+        scale.set(scaleMultiplier, scaleMultiplier, 1);
       } else {
-        handCard.gameObject.scale.set(1, 1, 1);
+        scale.set(1, 1, 1);
       }
 
-      handCard.position = handCard.gameObject.position.clone();
-
-      if (handCard.card.originalOwner === 0) {
-        handCard.gameObject.rotation.set(0, 0, 0);
-      } else {
-        handCard.gameObject.rotation.set(0, this.showHand ? 0 : THREE.MathUtils.degToRad(180), THREE.MathUtils.degToRad(180));
+      cardPositions[index] = {
+        position: position,
+        scale: scale,
       }
-
-      handCard.gameObject.visible = true;
     }
+
+    return cardPositions;
+  }
+
+  public getCardsRotation() {
+    const rotation = this.player === 0 ? new THREE.Vector3(0, 0, 0) : new THREE.Vector3(0, this.showHand ? 0 : THREE.MathUtils.degToRad(180), THREE.MathUtils.degToRad(180));
+    return rotation;
   }
 }

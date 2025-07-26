@@ -65,11 +65,20 @@ export class Deck extends YGOEntity implements YGOUiElement {
         return this.gameObject;
     }
 
-    updateDeck() {
-        const deckSize = this.duel.ygo.getField(this.player).mainDeck.length;
+    updateDeck(size?: number) {
+        const deckSize = size || this.duel.ygo.getField(this.player).mainDeck.length;
         for (let i = 0; i < this.cards.length; ++i) {
             this.cards[i].gameObject.visible = i < deckSize;
         }
+    }
+
+    getDeckSize() {
+        for (let i = this.cards.length - 1; i >= 0; --i) {
+            if (this.cards[i].gameObject.visible) {
+                return i + 1;
+            }
+        }
+        return 0;
     }
 
     onMouseClick(event: MouseEvent): void {

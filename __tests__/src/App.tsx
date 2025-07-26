@@ -1,11 +1,13 @@
 import React, { useRef, useState } from 'react';
 import { darkTheme } from './css/theme';
-import { Button, Card, Container, DeckItem, DeckList, Grid, SectionTitle, TextArea, Title } from './components/ui';
+import { Button, Card, Container, DeckItem, DeckList, FlexBox, Grid, InputSelect, SectionTitle, TextArea, Title } from './components/ui';
 import { useStorageDecks } from './hooks/useStorageDecks';
 import { useDuelController } from './hooks/useStorageDuel';
 
 function App() {
   const [jsonInput, setJsonInput] = useState<string>('');
+  const [selectedDeck1, setSelectedDeck1] = useState<any | null>(window.localStorage.getItem("debug_deck1") || "");
+  const [selectedDeck2, setSelectedDeck2] = useState<any | null>(window.localStorage.getItem("debug_deck2") || "");
   const deckManager = useStorageDecks();
   const duelManager = useDuelController();
   const decks = deckManager.decks;
@@ -46,6 +48,16 @@ function App() {
     fileInputRef.current?.click();
   };
 
+  const duelWithSelectedDecks = () => {
+    const deck1 = decks.find(deck => deck.id === selectedDeck1);
+    const deck2 = decks.find(deck => deck.id === selectedDeck2);
+
+    if (!deck1) return alert("DECK Player 1 not found");
+    if (!deck2) return alert("DECK Player 2 not found");
+
+    duelManager.duel({ deck1, deck2 });
+  }
+
   const handleDuel = () => {
     try {
       const props = JSON.parse(jsonInput);
@@ -63,14 +75,14 @@ function App() {
         {/* Left Section - Decks */}
         <Card>
           <SectionTitle>📂 Decks</SectionTitle>
-          <div style={{ marginBottom: '1rem' }}>
+          <FlexBox style={{ marginBottom: '1rem' }} gapX='10px' gapY='10px'>
             <Button color={darkTheme.accent} onClick={downloadFromClipboard}>
               From Clipboard
             </Button>
             <Button color={darkTheme.success} onClick={downloadFromYDK}>
               From YDK
             </Button>
-          </div>
+          </FlexBox>
           <div>
             <input
               type="file"
@@ -100,6 +112,47 @@ function App() {
               </DeckItem>
             ))}
           </DeckList>
+
+          {/* Deck vs Deck Section */}
+          <div style={{ marginTop: '2rem' }}>
+            <SectionTitle>🎮 Play Duel</SectionTitle>
+            <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
+              <InputSelect
+                value={selectedDeck1 || ""}
+                onChange={(e) => {
+                  setSelectedDeck1(e.target.value);
+                  window.localStorage.setItem("debug_deck1", e.target.value);
+                }}
+                style={{ flex: 1 }}
+              >
+                <option value="">Select Deck 1</option>
+                {decks.map(deck => (
+                  <option key={deck.id} value={deck.id}>{deck.name}</option>
+                ))}
+              </InputSelect>
+
+              <InputSelect
+                value={selectedDeck2}
+                onChange={(e) => {
+                  setSelectedDeck2(e.target.value);
+                  window.localStorage.setItem("debug_deck2", e.target.value);
+                }}
+                style={{ flex: 1 }}
+              >
+                <option value="">Select Deck 2</option>
+                {decks.map(deck => (
+                  <option key={deck.id} value={deck.id}>{deck.name}</option>
+                ))}
+              </InputSelect>
+            </div>
+            <Button
+              color={darkTheme.accent}
+              disabled={!selectedDeck1 || !selectedDeck2}
+              onClick={duelWithSelectedDecks}
+            >
+              Play Duel
+            </Button>
+          </div>
         </Card>
 
         {/* Right Section - Duel */}
