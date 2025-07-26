@@ -36,7 +36,7 @@ export class SwapHandEventHandler extends YGOCommandHandler {
     const cardsTasks = new MultipleTasks();
 
     for (let i = 0; i < field.hand.cards.length; ++i) {
-      const index = player === 0 ? i : totalCards - 1 - i;
+      const index = player === 1 ? i : totalCards - 1 - i;
 
       const { sequence: cardSequence } = this.createMoveCardMotion({
         cardInHand: field.hand.getCard(i)!,
