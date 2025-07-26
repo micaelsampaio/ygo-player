@@ -271,12 +271,12 @@ export class YGODuel {
           player.extraDeck.updateExtraDeck();
         }
 
-        setTimeout(() => {
-          this.gameActions.addDuelNote({
-            note: "Test note",
-            duration: 5
-          })
-        }, 3000)
+        // setTimeout(() => {
+        //   this.gameActions.addDuelNote({
+        //     note: "Test note",
+        //     duration: 5
+        //   })
+        // }, 3000)
 
       } catch (error) {
         console.log("ERROR", error);

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { Modal } from "../components/Modal"
 import { Card, FieldZone } from "ygo-core";
 import { YGODuel } from "../../core/YGODuel";
@@ -11,7 +11,7 @@ export function DuelNotesFormAction({ duel, clearAction }: { duel: YGODuel, card
     const [duration, setDuration] = useState("");
 
     const applyChanges = useCallback(() => {
-        const parsedDuration = duration && isNaN(Number(duration)) ? Number(duration) : -1;
+        const parsedDuration = duration && !isNaN(Number(duration)) ? Number(duration) : -1;
         duel.gameActions.addDuelNote({ note, duration: parsedDuration });
         clearAction();
     }, [note, duration]);
