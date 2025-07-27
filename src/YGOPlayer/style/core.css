@@ -17,27 +17,6 @@
     position: absolute;
 }
 
-.ygo-player-core .ygo-card-menu {
-    background-color: var(--ygo-background-color);
-    color: var(--ygo-text-color);
-    position: absolute;
-    top: 0px;
-    left: 0px;
-    z-index: 110;
-    height: auto;
-    padding: 10px;
-    border-radius: var(--ygo-border-radius-medium);
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    width: 180px;
-    max-height: 100%;
-    overflow-y: auto;
-}
-
-.ygo-player-core {
-    border-radius: 100%;
-}
 
 .ygo-player-core .ygo-card-menu>.ygo-card-menu-items {
     display: flex;
@@ -67,6 +46,56 @@
 .ygo-player-core .ygo-card-menu .ygo-card-item:disabled {
     opacity: 0.2;
     cursor: not-allowed;
+}
+
+.ygo-player-core .ygo-card-menu {
+    background-color: var(--ygo-background-color);
+    color: var(--ygo-text-color);
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    z-index: 110;
+    height: auto;
+    padding: 10px;
+    border-radius: var(--ygo-border-radius-medium);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 180px;
+    max-height: 100%;
+    overflow-y: auto;
+
+    &.ygo-card-menu-cols {
+        width: 300px;
+
+        .ygo-card-menu-items {
+            display: grid !important;
+            grid-template-columns: 1fr 1fr !important;
+        }
+    }
+
+    &.ygo-card-menu-indicator {
+        overflow: unset;
+        overflow-y: unset;
+    }
+
+    &.ygo-card-menu-indicator::before {
+        content: '';
+        position: absolute;
+        bottom: -10px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 0;
+        height: 0;
+        border-left: 12px solid transparent;
+        border-right: 12px solid transparent;
+        border-top: 12px solid var(--ygo-background-color);
+    }
+
+}
+
+.ygo-player-core {
+    border-radius: 100%;
 }
 
 .ygo-player-core .ygo-click-overlay {

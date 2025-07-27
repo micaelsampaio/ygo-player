@@ -151,7 +151,7 @@ export function CardZoneMenu({
 
   // TOKEN MENU
   if (isToken) {
-    return <CardMenu menuRef={menuRef}>
+    return <CardMenu indicator menuRef={menuRef}>
 
       <button type="button" className="ygo-card-item" onClick={moveCard}>
         Move
@@ -195,7 +195,7 @@ export function CardZoneMenu({
 
   if (!isMonsterZone && isSpellTrap) {
     return (
-      <CardMenu menuRef={menuRef}>
+      <CardMenu cols indicator menuRef={menuRef}>
 
         <button type="button" className="ygo-card-item" onClick={moveCard}>
           Move
@@ -262,7 +262,7 @@ export function CardZoneMenu({
 
   // CARD MENU
   return (
-    <CardMenu menuRef={menuRef}>
+    <CardMenu cols indicator menuRef={menuRef}>
       <button type="button" className="ygo-card-item" onClick={moveCard}>
         Move
       </button>

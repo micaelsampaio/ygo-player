@@ -145,7 +145,7 @@ export function CardHandMenu({
 
   if (!isMonster && isSpellOrTrap) {
     return <>
-      <CardMenu menuRef={menuRef}>
+      <CardMenu cols indicator menuRef={menuRef}>
         <button className="ygo-card-item" onClick={revealCard}>
           Reveal
         </button>
@@ -239,7 +239,7 @@ export function CardHandMenu({
 
   return (
     <>
-      <CardMenu menuRef={menuRef}>
+      <CardMenu cols indicator menuRef={menuRef}>
         <button className="ygo-card-item" onClick={revealCard}>
           Reveal
         </button>
