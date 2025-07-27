@@ -43,10 +43,8 @@ export class ActionCardSelection extends YGOComponent implements YGOAction {
 
     public onActionStart(): void {
         this.hideAllSelectionCards();
-        console.log("TCL: START ACTION");
 
         this.unsubscribeKeyEvents = this.duel.globalHotKeysManager.on("escPressed", () => {
-            console.log("CLEAR UI ACTION");
             this.duel.events.dispatch("clear-ui-action");
         });
 
@@ -97,7 +95,7 @@ export class ActionCardSelection extends YGOComponent implements YGOAction {
 
     public onActionEnd(): void {
         this.clear();
-        this.duel.events.dispatch("clear-ui-action");
+        // this.duel.events.dispatch("clear-ui-action");
         this.unsubscribeKeyEvents?.();
         this.unsubscribeKeyEvents = undefined;
     }
