@@ -19,4 +19,5 @@ const icons: any = {
     "XYZ Summon": "command-timeline-icon command-timeline-icon-xyz-summon",
     "Fusion Summon": "command-timeline-icon command-timeline-icon-fusion-summon",
     "Synchro Summon": "command-timeline-icon command-timeline-icon-synchro-summon",
+    "Note": "command-timeline-icon command-timeline-icon-duel-notes",
 }

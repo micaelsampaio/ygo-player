@@ -101,6 +101,10 @@
         background-position: 43% 43%;
     }
 
+    .command-timeline-icon-duel-notes {
+        background-position: 100% 43%;
+    }
+
     &:hover {
         .command-timeline-icon {
             width: 24px;

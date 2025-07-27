@@ -130,22 +130,6 @@ export class YGODuel {
       this.events.dispatch("toggle-ui-menu", { group: "game-overlay", type: "settings-menu" });
     });
 
-    // const toggleDuelLogs = useCallback(() => {
-
-    //     }, [duel]);
-
-    //     const toggleGameReplayControls = useCallback(() => {
-    //         duel.events.dispatch("toggle-ui-menu", { group: "game-overlay", type: "controls-menu" });
-    //     }, [duel]);
-
-    //     const toggleSettings = useCallback(() => {
-    //         duel.events.dispatch("toggle-ui-menu", { group: "game-overlay", type: "settings-menu" });
-    //     }, [duel]);
-
-    //     const showGameStats = useCallback(() => {
-    //         duel.events.dispatch("close-ui-menu", { group: "game-overlay" });
-    //         duel.fieldStats.show();
-
     this.gameController.addComponent("mouse_events", this.mouseEvents);
     this.gameController.addComponent("sound_controller", this.soundController);
     this.gameController.addComponent("tasks", this.tasks);

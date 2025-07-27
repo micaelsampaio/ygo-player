@@ -37,7 +37,8 @@ export class DuelNotesEventHandler extends YGOCommandHandler {
     this.unsubscribeEscEvent = duel.globalHotKeysManager.on("escPressed", () => {
       this.props.onCompleted();
     });
-    this.unsubscribeArrowRightEvent = duel.globalHotKeysManager.on("ArrowRight", () => {
+
+    this.unsubscribeArrowRightEvent = duel.globalHotKeysManager.on("nextCommand", () => {
       this.props.onCompleted();
     });
   }
