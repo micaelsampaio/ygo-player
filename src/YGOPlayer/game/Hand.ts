@@ -45,6 +45,13 @@ export class GameHand extends YGOEntity {
     return this.cards.find((c) => c.card.id === id)!;
   }
 
+  getCardFromCardIdAnZoneIndex(id: number, zoneIndex: number): GameCardHand {
+    if (zoneIndex < 0) {
+      this.cards.find((c) => c.card.id === id)!
+    }
+    return this.cards.find((c, index) => c.card.id === id && zoneIndex === index)!;
+  }
+
   removeCardFromCardReference(card: Card) {
     const index = this.cards.findIndex((c) => c.card === card);
 

@@ -28,6 +28,11 @@
     justify-content: center;
     font-weight: bold;
     color: #FFF;
+    cursor: pointer;
+
+    &.ygo-active {
+        background-color: var(--ygo-float-button-bg-color-active);
+    }
 }
 
 .ygo-player-core .ygo-floating-button .ygo-floating-button-icon {

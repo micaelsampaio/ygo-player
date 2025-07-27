@@ -22,6 +22,7 @@ import {
   GameModalOverlayMesh,
 } from "../../game/meshes/mesh-utils";
 import { MaterialOpacityTransition } from "../utils/material-opacity";
+import { GameCardHand } from "../../game/GameCardHand";
 
 interface ActivateCardHandlerProps extends DuelEventHandlerProps {
   event: YGODuelEvents.Activate;
@@ -162,7 +163,7 @@ export class ActivateCardHandler extends YGOCommandHandler {
 
       this.createActivationEffect(sequence, cardOverlay, startPosition);
     } else if (zoneData.zone === "H") {
-      const card = field.hand.getCardFromReference(cardReference);
+      const card: GameCardHand = field.hand.getCardFromCardIdAnZoneIndex(event.id, zoneData.zoneIndex - 1);
       const startPosition: THREE.Vector3 = card.position.clone();
       const startRotation: THREE.Euler = card.gameObject.rotation.clone();
 

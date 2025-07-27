@@ -31,7 +31,12 @@ export function YGOUiController({ duel }: { duel: YGODuel }) {
 
     useEffect(() => {
         const clearAction = () => {
-            setAction({ type: "", data: null });
+            setAction((prevState) => {
+                if (prevState.type) {
+                    return { type: "", data: null };
+                }
+                return prevState;
+            });
             duel.actionManager.clearAction();
         }
 

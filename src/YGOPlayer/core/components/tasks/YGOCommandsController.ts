@@ -111,7 +111,12 @@ export class YGOCommandsController extends YGOComponent {
     const handler = getDuelEventHandler(command);
     this.duel.events.dispatch("disable-game-actions");
 
+    let isCommandCompleted = false;
+
     const onCompleted = () => {
+      if (isCommandCompleted) return;
+
+      isCommandCompleted = true;
       clearTimeout(this.timerOnCompleteEvent);
       this.timerOnCompleteEvent = setTimeout(() => {
         this.currentCommand?.finish();
@@ -162,6 +167,9 @@ export class YGOCommandsController extends YGOComponent {
       if (this.state === YGOCommandsControllerState.PLAYING && !this.pauseRequested) {
         if (this.duel.ygo.hasNextCommand()) {
           clearTimeout(this.timerOnNextCommand);
+
+          this.duel.updateField();
+
           this.timerOnNextCommand = setTimeout(() => {
             this.duel.ygo.redo();
           }, 250) as any as number;

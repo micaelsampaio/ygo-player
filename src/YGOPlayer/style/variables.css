@@ -20,6 +20,7 @@
 
   --ygo-float-button-bg-color: rgba(24, 24, 24, 0.6);
   --ygo-float-button-bg-color-hover: rgba(24, 24, 24, 1);
+  --ygo-float-button-bg-color-active: rgb(0, 0, 0);
 
   --ygo-form-input-placeholder-text-color: rgba(255, 255, 255, 0.6);
   --ygo-form--input-text-color: #fff;
@@ -32,12 +33,18 @@
 
   --ygo-footer-margin: 120px;
 
-  --ygo-font-xs: 12px; /* 0.75rem */
-  --ygo-font-sm: 14px; /* 0.875rem */
-  --ygo-font-md: 16px; /* 1rem - Base font size */
-  --ygo-font-lg: 18px; /* 1.125rem */
-  --ygo-font-xl: 20px; /* 1.25rem */
-  --ygo-font-xxl: 24px; /* 1.5rem */
+  --ygo-font-xs: 12px;
+  /* 0.75rem */
+  --ygo-font-sm: 14px;
+  /* 0.875rem */
+  --ygo-font-md: 16px;
+  /* 1rem - Base font size */
+  --ygo-font-lg: 18px;
+  /* 1.125rem */
+  --ygo-font-xl: 20px;
+  /* 1.25rem */
+  --ygo-font-xxl: 24px;
+  /* 1.5rem */
 
   --ygo-gap-xs: 5px;
   --ygo-gap-sm: 10px;

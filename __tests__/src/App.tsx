@@ -3,9 +3,10 @@ import { darkTheme } from './css/theme';
 import { Button, Card, Container, DeckItem, DeckList, FlexBox, Grid, InputSelect, SectionTitle, TextArea, Title } from './components/ui';
 import { useStorageDecks } from './hooks/useStorageDecks';
 import { useDuelController } from './hooks/useStorageDuel';
+import { LocalStorage } from './scripts/storage';
 
 function App() {
-  const [jsonInput, setJsonInput] = useState<string>('');
+  const [duelData, setDuelData] = useState<string>(() => getDuelDataFromLocalStorageSafe());
   const [selectedDeck1, setSelectedDeck1] = useState<any | null>(window.localStorage.getItem("debug_deck1") || "");
   const [selectedDeck2, setSelectedDeck2] = useState<any | null>(window.localStorage.getItem("debug_deck2") || "");
   const deckManager = useStorageDecks();
@@ -60,7 +61,7 @@ function App() {
 
   const handleDuel = () => {
     try {
-      const props = JSON.parse(jsonInput);
+      const props = JSON.parse(duelData);
       console.log('Starting duel with props:', props);
     } catch {
       alert('Invalid JSON');
@@ -97,18 +98,20 @@ function App() {
               <DeckItem key={deck.id}>
                 <span>{deck.name}</span>
                 <div style={{ flexGrow: "1" }}></div>
-                <Button
-                  color={darkTheme.danger}
-                  onClick={() => deleteDeck(deck.id)}
-                >
-                  Delete
-                </Button>
-                <Button
-                  color={darkTheme.success}
-                  onClick={() => duelManager.duel({ deck1: deck })}
-                >
-                  Play
-                </Button>
+                <FlexBox gapX='10px' gapY='10px'>
+                  <Button
+                    color={darkTheme.danger}
+                    onClick={() => deleteDeck(deck.id)}
+                  >
+                    Delete
+                  </Button>
+                  <Button
+                    color={darkTheme.success}
+                    onClick={() => duelManager.duel({ deck1: deck })}
+                  >
+                    Play
+                  </Button>
+                </FlexBox>
               </DeckItem>
             ))}
           </DeckList>
@@ -159,12 +162,12 @@ function App() {
         <Card>
           <SectionTitle>⚔️ Duel Props</SectionTitle>
           <TextArea
-            value={jsonInput}
-            onChange={(e: any) => setJsonInput(e.target.value)}
+            value={duelData}
+            onChange={(e: any) => setDuelData(e.target.value)}
             placeholder="Paste JSON props here..."
           />
           <div style={{ textAlign: 'right', marginTop: '1rem' }}>
-            <Button onClick={handleDuel}>Start Duel</Button>
+            <Button onClick={() => duelManager.duelWithStaticProps(duelData)}>Start Duel</Button>
           </div>
         </Card>
       </Grid>
@@ -173,3 +176,12 @@ function App() {
 }
 
 export default App;
+
+
+function getDuelDataFromLocalStorageSafe(): string {
+  try {
+    return JSON.stringify(LocalStorage.get("duel_data") || "{}", undefined, 2) || "";
+  } catch (error) {
+    return "";
+  }
+}

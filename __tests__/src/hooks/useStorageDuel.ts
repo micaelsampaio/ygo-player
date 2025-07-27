@@ -48,7 +48,13 @@ export function useDuelController() {
     navigate("/duel");
   }
 
+  const duelWithStaticProps = (duelData: any) => {
+    LocalStorage.set("duel_data", duelData);
+    navigate("/duel");
+  }
+
   return {
+    duelWithStaticProps,
     setDuelData,
     duel
   }
