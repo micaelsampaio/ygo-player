@@ -292,6 +292,7 @@ export class FusionSummonEventHandler extends YGOCommandHandler {
             cardData: duel.ygo.state.getCardData(event.id)!,
             startTask: this.props.startTask,
           });
+          this.props.playSound({ key: duel.createCdnUrl(`/sounds/extra_deck_summon.ogg`), volume: 0.8 });
         })
       ),
       new WaitForSeconds(0.2),

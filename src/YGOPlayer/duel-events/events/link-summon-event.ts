@@ -48,6 +48,9 @@ export class LinkSummonEventHandler extends YGOCommandHandler {
     const camera = duel.camera;
 
     if (event.materials?.length > 0) {
+
+      this.props.playSound({ key: duel.createCdnUrl(`/sounds/materials_vanish.ogg`), volume: 0.25 });
+
       for (let i = 0; i < event.materials.length; ++i) {
         const materialData = event.materials[i];
         const originZoneData = YGOGameUtils.getZoneData(materialData.zone)!;
@@ -149,6 +152,7 @@ export class LinkSummonEventHandler extends YGOCommandHandler {
             cardData: duel.ygo.state.getCardData(event.id)!,
             startTask: this.props.startTask,
           });
+          this.props.playSound({ key: duel.createCdnUrl(`/sounds/extra_deck_summon.ogg`), volume: 0.8 });
         })
       )
       .add(new WaitForSeconds(1))

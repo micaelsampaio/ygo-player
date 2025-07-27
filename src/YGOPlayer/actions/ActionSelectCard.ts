@@ -133,6 +133,12 @@ export class ActionCardSelection extends YGOComponent implements YGOAction {
         this.onMultipleSelectionCompleted = onSelectionCompleted;
 
         this.duel.actionManager.setAction(this);
+
+        if (zones.length === 0) {
+            setTimeout(() => {
+                onSelectionCompleted([]);
+            }, 10);
+        }
     }
 
     public cancelSelection() {

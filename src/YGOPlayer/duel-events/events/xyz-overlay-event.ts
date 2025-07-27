@@ -44,6 +44,8 @@ export class XYZOverlaySummonEventHandler extends YGOCommandHandler {
 
     card.hideCardStats();
 
+    this.props.playSound({ key: duel.createCdnUrl(`/sounds/materials_vanish.ogg`), volume: 0.25 });
+
     startTask(
       new YGOTaskSequence(
         new MaterialOpacityTransition({

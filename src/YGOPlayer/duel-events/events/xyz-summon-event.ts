@@ -100,6 +100,7 @@ export class XYZSummonEventHandler extends YGOCommandHandler {
             cardData: duel.ygo.state.getCardData(event.id)!,
             startTask: this.props.startTask,
           });
+          this.props.playSound({ key: duel.createCdnUrl(`/sounds/extra_deck_summon.ogg`), volume: 0.8 });
         })
       )
       .add(new WaitForSeconds(1))
