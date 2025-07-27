@@ -17,6 +17,8 @@ export class DuelNotesEventHandler extends YGOCommandHandler {
   public start(): void {
     const { event, duel } = this.props;
 
+    const canSkipTime = Date.now() + 1000;
+
     const eventType = "duel-notes-game-event-hanlder";
 
     const eventData = {
@@ -35,10 +37,12 @@ export class DuelNotesEventHandler extends YGOCommandHandler {
     });
 
     this.unsubscribeEscEvent = duel.globalHotKeysManager.on("escPressed", () => {
+      if (Date.now() < canSkipTime) return;
       this.props.onCompleted();
     });
 
     this.unsubscribeArrowRightEvent = duel.globalHotKeysManager.on("nextCommand", () => {
+      if (Date.now() < canSkipTime) return;
       this.props.onCompleted();
     });
   }
