@@ -5,6 +5,8 @@ export interface YGOPlayerSettings {
     musicVolume: number
     gameVolume: number
     gameSpeed: number
+    showCardWhenPlayed: boolean
+    autoStartReplay: boolean
     showFaceDownCardsTransparent: boolean
 }
 
@@ -12,10 +14,16 @@ export interface YGOPlayerSettingsAdapterOptions {
     autoSave?: boolean
 }
 
-export interface YGOPlayerSettingsEvents {
+type YGOPlayerSettingsChangeEvents = {
+    [K in keyof YGOPlayerSettings as `on${Capitalize<string & K>}Change`]: (
+        oldValue: YGOPlayerSettings[K],
+        value: YGOPlayerSettings[K]
+    ) => void;
+};
+
+export interface YGOPlayerSettingsEvents extends YGOPlayerSettingsChangeEvents {
     onMusicVolumeChange: (oldValue: number, value: number) => void
     onGameVolumeChange: (oldValue: number, value: number) => void
-    onShowFaceDownCardsTransparentChange: (oldValue: boolean, value: boolean) => void
     onGameSpeedChange: (oldValue: number, value: number) => void
     onSettingsChanged: () => void
 }
@@ -24,6 +32,8 @@ const DEFAULT_SETTINGS: YGOPlayerSettings = {
     musicVolume: 1,
     gameVolume: 1,
     gameSpeed: 1,
+    showCardWhenPlayed: true,
+    autoStartReplay: true,
     showFaceDownCardsTransparent: true
 }
 
@@ -97,7 +107,6 @@ export class YGOPlayerSettingsAdapter {
         }
     }
 
-
     public getShowFaceDownCardsTransparent() {
         return this.data.showFaceDownCardsTransparent;
     }
@@ -122,6 +131,16 @@ export class YGOPlayerSettingsAdapter {
 
     public getStorageKey(): string {
         return YGO_SETTINGS_KEY;
+    }
+
+    public setConfigFromPath<K extends keyof YGOPlayerSettings>(key: K, value: YGOPlayerSettings[K]) {
+        this.data[key] = value;
+        this.events.dispatch("onSettingsChanged");
+        this.dispatchInternalSave();
+    }
+
+    public getConfigFromPath<K extends keyof YGOPlayerSettings>(key: K): YGOPlayerSettings[K] {
+        return this.data[key];
     }
 
     public save() {

@@ -28,7 +28,7 @@ export function ControlsMenu({ duel, config: gameConfig }: { duel: YGODuel, conf
     }, [])
 
     useEffect(() => {
-        if (!gameConfig.startReplay) {
+        if (!gameConfig.startReplay && duel.settings.getConfigFromPath("autoStartReplay") === true) {
             duel.events.dispatch("update-game-ui-config", { startReplay: true });
             let timer = setTimeout(() => {
                 play();

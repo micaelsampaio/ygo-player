@@ -2,12 +2,12 @@ import { useCallback, useState } from "react";
 import { Modal } from "../components/Modal"
 import { Card, FieldZone } from "ygo-core";
 import { YGODuel } from "../../core/YGODuel";
+import { YGOPlayerSettings } from "../../core/YGOPlayerSettings";
 
 export function GameSettingsDialog({ duel }: { duel: YGODuel, card: Card, originZone: FieldZone, player: number, clearAction: () => void; }) {
     const settings = duel.settings;
     const [gameMusicVolume, setGameMusicState] = useState(() => settings.getMusicVolume());
     const [gameSoundsVolume, setGameSoundsVolumeState] = useState(() => settings.getGameVolume());
-    const [showFaceDownCardsTransparent, setShowFaceDownCardsTransparentState] = useState(() => settings.getShowFaceDownCardsTransparent());
     const [gameSpeed, setGameSpeed] = useState(() => settings.getGameSpeed());
 
     const setGameMusicVolume = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -22,18 +22,15 @@ export function GameSettingsDialog({ duel }: { duel: YGODuel, card: Card, origin
         setGameSoundsVolumeState(volume);
     }
 
-    const setShowFaceDownCardsTransparent = (e: React.ChangeEvent<HTMLInputElement>) => {
-        e.target.blur();
+    const onChangeCheckBox = (e: React.ChangeEvent<HTMLInputElement>, id: keyof YGOPlayerSettings) => {
+        const value = e.target?.checked;
+        console.log("CHECK :", value);
+        settings.setConfigFromPath(id, value as any);
 
-        setShowFaceDownCardsTransparentState(v => {
-            const value = !v;
-            // need this because parent is preventing the default in clicks :) @RMS spaghetti
-            setTimeout(() => {
-                e.target.checked = value;
-            });
+        // if (e.target) e.target.blur();
 
-            settings.setShowFaceDownCardsTransparent(value);
-            return value;
+        setTimeout(() => {
+            if (e.target) e.target.checked = value;
         });
     }
 
@@ -98,19 +95,6 @@ export function GameSettingsDialog({ duel }: { duel: YGODuel, card: Card, origin
                     <input type="range" id="volume" name="volume" step="0.1" min="0.0" max="1.0" value={gameSoundsVolume} onChange={setGameSoundsVolume} onInput={setGameSoundsVolume} />
                 </div>
 
-                <div className="ygo-mt-4">Card Transparents</div>
-                <div className="ygo-flex ygo-mt-2">
-                    <input
-                        style={{ display: "inline-block", width: "auto" }}
-                        type="checkbox"
-                        checked={!!showFaceDownCardsTransparent}
-                        onChange={setShowFaceDownCardsTransparent}
-                    />
-                    <div style={{ display: "inline-block", flexGrow: 1 }}>
-                        Show Card Transparent when face down
-                    </div>
-                </div>
-
                 <div className="ygo-mt-4">
                     <div>Game Speed</div>
 
@@ -127,6 +111,34 @@ export function GameSettingsDialog({ duel }: { duel: YGODuel, card: Card, origin
                         <button disabled={gameSpeed === 3} type="button" className="ygo-btn ygo-btn-action ygo-px-0 ygo-flex-grow-1" onClick={() => setTimeScale(3)}>
                             3x
                         </button>
+                    </div>
+                </div>
+
+                <div className="ygo-mt-4">
+                    <div>Game Settings</div>
+
+                    <div className="ygo-flex ygo-mt-2">
+                        <input
+                            style={{ display: "inline-block", width: "auto" }}
+                            type="checkbox"
+                            checked={!!settings.getConfigFromPath("showCardWhenPlayed")}
+                            onChange={e => onChangeCheckBox(e, "showCardWhenPlayed")}
+                        />
+                        <div style={{ display: "inline-block", flexGrow: 1 }}>
+                            Show Card details when card is played
+                        </div>
+                    </div>
+
+                    <div className="ygo-flex ygo-mt-2">
+                        <input
+                            style={{ display: "inline-block", width: "auto" }}
+                            type="checkbox"
+                            checked={settings.getConfigFromPath("showFaceDownCardsTransparent")}
+                            onChange={e => onChangeCheckBox(e, "showFaceDownCardsTransparent")}
+                        />
+                        <div style={{ display: "inline-block", flexGrow: 1 }}>
+                            Show Card Transparent when face down
+                        </div>
                     </div>
                 </div>
 

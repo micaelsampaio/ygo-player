@@ -109,10 +109,13 @@ export class ActivateCardHandler extends YGOCommandHandler {
     const sequence = new YGOTaskSequence();
     const field = duel.fields[zoneData.player];
 
-    duel.events.dispatch("set-selected-card", {
-      player: zoneData.player,
-      card: cardReference,
-    });
+    if (duel.settings.getConfigFromPath("showCardWhenPlayed")) {
+      duel.events.dispatch("set-selected-card", {
+        player: zoneData.player,
+        card: cardReference,
+      });
+    }
+
 
     const modal = GameModalOverlayMesh();
     modal.material.opacity = 0;

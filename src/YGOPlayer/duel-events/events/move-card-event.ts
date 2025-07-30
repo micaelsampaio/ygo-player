@@ -50,10 +50,12 @@ export class MoveCardEventHandler extends YGOCommandHandler {
 
     if (delay > 0) sequence.add(new WaitForSeconds(delay));
 
-    duel.events.dispatch("set-selected-card", {
-      player: zoneData.player,
-      card: this.cardReference,
-    });
+    if (duel.settings.getConfigFromPath("showCardWhenPlayed")) {
+      duel.events.dispatch("set-selected-card", {
+        player: zoneData.player,
+        card: this.cardReference,
+      });
+    }
 
     if (originZoneData.zone === "D") {
       duel.fields[originZoneData.player].mainDeck.updateDeck();

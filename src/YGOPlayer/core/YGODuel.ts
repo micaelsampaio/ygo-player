@@ -190,9 +190,8 @@ export class YGODuel {
       this.duelScene.createFields({ gameField: gameFieldScene.scene });
       this.duelScene.createGameMusic();
 
-      this.settings.events.on("onShowFaceDownCardsTransparentChange", (oldValue, showTransparentCards) => {
+      this.settings.events.on("onShowCardWhenPlayedChange", (_, showTransparentCards) => {
         this.fields.forEach(field => {
-
           field.monsterZone.forEach(zone => {
             zone.getGameCard()?.updateTransparentCardsState(showTransparentCards);
           })
