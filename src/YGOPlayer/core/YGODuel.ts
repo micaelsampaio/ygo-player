@@ -87,57 +87,7 @@ export class YGODuel {
     this.mouseEvents = new YGOMouseEvents(this);
     this.assets = new YGOAssets(this);
     this.events = new EventBus();
-
-    this.globalHotKeysManager = new HotKeyManager([{
-      keys: "c",
-      action: "toggleControls"
-    }, {
-      keys: "d",
-      action: "toggleDuelLogs"
-    }, {
-      keys: "ArrowLeft",
-      action: "previousCommand"
-    }, {
-      keys: "ArrowRight",
-      action: "nextCommand"
-    }, {
-      keys: "Space",
-      action: "togglePlayPause"
-    }, {
-      keys: "Escape",
-      action: "escPressed"
-    }, {
-      keys: "Shift+P",
-      action: "shortcuts"
-    }]);
-
-    this.globalHotKeysManager.on("toggleControls", () => {
-      this.events.dispatch("toggle-ui-menu", { group: "game-overlay", type: "controls-menu" });
-    });
-
-    this.globalHotKeysManager.on("toggleDuelLogs", () => {
-      this.events.dispatch("toggle-ui-menu", { group: "game-overlay", type: "duel-log" });
-    });
-
-    this.globalHotKeysManager.on("previousCommand", () => {
-      this.commands.previousCommand();
-    });
-
-    this.globalHotKeysManager.on("nextCommand", () => {
-      this.commands.nextCommand();
-    });
-
-    this.globalHotKeysManager.on("togglePlayPause", () => {
-      this.commands.play();
-    });
-
-    this.globalHotKeysManager.on("escPressed", () => {
-      this.events.dispatch("toggle-ui-menu", { group: "game-overlay", type: "settings-menu", data: { currentMenu: SETTINGS_MODAL_TYPE.SETTINGS } });
-    });
-
-    this.globalHotKeysManager.on("shortcuts", () => {
-      this.events.dispatch("set-ui-menu", { group: "game-overlay", type: "settings-menu", data: { currentMenu: SETTINGS_MODAL_TYPE.CONTROLS } });
-    })
+    this.globalHotKeysManager = this.createShortcuts();
 
     this.gameController.addComponent("mouse_events", this.mouseEvents);
     this.gameController.addComponent("sound_controller", this.soundController);
@@ -719,6 +669,61 @@ export class YGODuel {
           })
         )
     );
+  }
+  private createShortcuts() {
+    this.globalHotKeysManager = new HotKeyManager([{
+      keys: "c",
+      action: "toggleControls"
+    }, {
+      keys: "d",
+      action: "toggleDuelLogs"
+    }, {
+      keys: "ArrowLeft",
+      action: "previousCommand"
+    }, {
+      keys: "ArrowRight",
+      action: "nextCommand"
+    }, {
+      keys: "Space",
+      action: "space"
+    }, {
+      keys: "Escape",
+      action: "escPressed"
+    }, {
+      keys: "Shift+P",
+      action: "shortcuts"
+    }]);
+
+    this.globalHotKeysManager.on("toggleControls", () => {
+      this.events.dispatch("toggle-ui-menu", { group: "game-overlay", type: "controls-menu" });
+    });
+
+    this.globalHotKeysManager.on("toggleDuelLogs", () => {
+      this.events.dispatch("toggle-ui-menu", { group: "game-overlay", type: "duel-log" });
+    });
+
+    this.globalHotKeysManager.on("previousCommand", () => {
+      this.commands.previousCommand();
+    });
+
+    this.globalHotKeysManager.on("nextCommand", () => {
+      this.commands.nextCommand();
+    });
+
+    this.globalHotKeysManager.on("space", () => {
+      if (this.commands.isPlaying()) this.commands.pause();
+      else this.commands.play();
+    });
+
+    this.globalHotKeysManager.on("escPressed", () => {
+      this.events.dispatch("toggle-ui-menu", { group: "game-overlay", type: "settings-menu", data: { currentMenu: SETTINGS_MODAL_TYPE.SETTINGS } });
+    });
+
+    this.globalHotKeysManager.on("shortcuts", () => {
+      this.events.dispatch("set-ui-menu", { group: "game-overlay", type: "settings-menu", data: { currentMenu: SETTINGS_MODAL_TYPE.CONTROLS } });
+    })
+
+    return this.globalHotKeysManager;
   }
 
   getGameState() {

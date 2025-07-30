@@ -39,3 +39,9 @@ export function stopPropagationCallback(e: any){
     e.preventDefault();
     e.stopPropagation();
 }
+
+export function removeFocusFromActiveElement() {
+  if (document.activeElement instanceof HTMLElement) {
+    document.activeElement.blur();
+  }
+}

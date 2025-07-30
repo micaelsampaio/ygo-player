@@ -1,6 +1,7 @@
 import { useCallback, useEffect } from "react";
 import { YGODuel } from "../../core/YGODuel";
 import { UiGameConfig } from "../YGOUiController";
+import { removeFocusFromActiveElement } from "../../scripts/utils";
 
 export function ControlsMenu({ duel, config: gameConfig }: { duel: YGODuel, config: UiGameConfig }) {
     const isPlaying = duel.commands.isPlaying();
@@ -28,6 +29,8 @@ export function ControlsMenu({ duel, config: gameConfig }: { duel: YGODuel, conf
     }, [])
 
     useEffect(() => {
+        removeFocusFromActiveElement();
+
         if (!gameConfig.startReplay && duel.settings.getConfigFromPath("autoStartReplay") === true) {
             duel.events.dispatch("update-game-ui-config", { startReplay: true });
             let timer = setTimeout(() => {
@@ -44,7 +47,7 @@ export function ControlsMenu({ duel, config: gameConfig }: { duel: YGODuel, conf
             Controls
         </div>
 
-        <div className="ygo-flex ygo-gap-1">
+        <div className="ygo-flex ygo-gap-1 ygo-pb-4">
             <button disabled={duel.core.timeScale === 1} type="button" className="ygo-card-item ygo-px-0" onClick={() => setTimeScale(1)}>
                 1x
             </button>
@@ -58,12 +61,11 @@ export function ControlsMenu({ duel, config: gameConfig }: { duel: YGODuel, conf
                 3x
             </button>
         </div>
-        <button disabled={isPlaying || !hasNextCommand} type="button" className="ygo-card-item" onClick={play}>
-            Play
+
+        <button disabled={!hasNextCommand} type="button" className="ygo-card-item" onClick={isPlaying ? pause : play}>
+            {isPlaying ? "Pause" : "Play"}
         </button>
-        <button disabled={!isPlaying} type="button" className="ygo-card-item" onClick={pause}>
-            Pause
-        </button>
+
         <div className="ygo-flex ygo-gap-1">
             <button disabled={!hasPrevCommand} type="button" className="ygo-card-item" onClick={prev}>
                 Prev
