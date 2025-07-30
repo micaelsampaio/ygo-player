@@ -31,6 +31,7 @@ import { YGOGameFieldStatsComponent } from "../game/YGOGameFieldStatsComponent";
 import { YGOSoundController } from "./YGOSoundController";
 import { YGOPlayerSettingsAdapter } from "./YGOPlayerSettings";
 import { HotKeyManager } from "../scripts/hotkey-manager";
+import { SETTINGS_MODAL_TYPE } from "../ui/menus/game-settings/game-settings-menu";
 
 export class YGODuel {
   public ygo!: InstanceType<typeof YGOCore>;
@@ -105,6 +106,9 @@ export class YGODuel {
     }, {
       keys: "Escape",
       action: "escPressed"
+    }, {
+      keys: "Shift+P",
+      action: "shortcuts"
     }]);
 
     this.globalHotKeysManager.on("toggleControls", () => {
@@ -128,8 +132,12 @@ export class YGODuel {
     });
 
     this.globalHotKeysManager.on("escPressed", () => {
-      this.events.dispatch("toggle-ui-menu", { group: "game-overlay", type: "settings-menu" });
+      this.events.dispatch("toggle-ui-menu", { group: "game-overlay", type: "settings-menu", data: { currentMenu: SETTINGS_MODAL_TYPE.SETTINGS } });
     });
+
+    this.globalHotKeysManager.on("shortcuts", () => {
+      this.events.dispatch("set-ui-menu", { group: "game-overlay", type: "settings-menu", data: { currentMenu: SETTINGS_MODAL_TYPE.CONTROLS } });
+    })
 
     this.gameController.addComponent("mouse_events", this.mouseEvents);
     this.gameController.addComponent("sound_controller", this.soundController);

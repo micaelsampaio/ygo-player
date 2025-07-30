@@ -1,11 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Card, FieldZone } from "ygo-core";
 import { YGODuel } from "../../../core/YGODuel";
 import { stopPropagationCallback } from "../../../scripts/utils";
 import { GameSettingsDialog } from "./components/game-settings";
 import { GamControlsDialog } from "./components/game-controls";
 
-enum SETTINGS_MODAL_TYPE {
+export enum SETTINGS_MODAL_TYPE {
     SETTINGS,
     CONTROLS
 }
@@ -15,11 +14,13 @@ const MODALS: any = {
     [SETTINGS_MODAL_TYPE.CONTROLS]: GamControlsDialog
 }
 
-export function GameSettingsMenu({ duel }: { duel: YGODuel, card: Card, originZone: FieldZone, player: number, clearAction: () => void; }) {
+export function GameSettingsMenu({ duel, currentMenu = SETTINGS_MODAL_TYPE.SETTINGS }: { duel: YGODuel, currentMenu: SETTINGS_MODAL_TYPE }) {
     const container = useRef<HTMLDivElement>(null);
     const backdrop = useRef<HTMLDivElement>(null);
     const [isVisible, setIsVisble] = useState(false);
-    const [modal, setModal] = useState<{ id: SETTINGS_MODAL_TYPE } | undefined>({ id: SETTINGS_MODAL_TYPE.SETTINGS });
+    const [modal, setModal] = useState<{ id: SETTINGS_MODAL_TYPE } | undefined>(() => {
+        return { id: currentMenu }
+    });
 
     const closeSettings = () => {
         duel.events.dispatch("close-ui-menu", { type: "settings-menu" });
