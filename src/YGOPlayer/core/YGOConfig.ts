@@ -10,11 +10,13 @@ export interface YGOConfigOptions extends YGOPropsOptions {
 
 export interface YGOConfig extends YGOProps {
   cdnUrl: string
+  gameMode: "EDITOR" | "REPLAY"
   autoChangePlayer?: boolean
   options: YGOConfigOptions
   actions?: {
     saveReplay?: (replay: YGOReplayData) => Promise<void>
     reportBug?: (bugReportData: YGOBugReportData) => Promise<void>
+    savePuzzle?: (replay: YGOReplayData) => Promise<void>
   }
 }
 

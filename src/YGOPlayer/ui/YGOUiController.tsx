@@ -10,11 +10,12 @@ import { CardLongPressEffect } from "./components/card-long-press-effect/CardLon
 
 export interface UiGameConfig {
     actions: boolean
+    startReplay: boolean
 }
 
 export function YGOUiController({ duel }: { duel: YGODuel }) {
     const [_, setRender] = useState<number>(-1);
-    const [gameConfig, setGameConfig] = useState<UiGameConfig>({ actions: true });
+    const [gameConfig, setGameConfig] = useState<UiGameConfig>({ actions: true, startReplay: false, });
     const [action, setAction] = useState<{ type: string, data: any }>({ type: "", data: null });
     const [menus, setMenus] = useState<{ group: string, visible: boolean, type: string, data: any }[]>([]);
 
@@ -126,10 +127,13 @@ export function YGOUiController({ duel }: { duel: YGODuel }) {
             });
         })
 
+        duel.events.on("update-game-ui-config", (key: string, value: any) => {
+            setGameConfig(prev => ({ ...prev, [key]: value }));
+        });
+
         duel.events.on("render-ui", () => {
             setRender(performance.now())
         });
-
         duel.events.on("enable-game-actions", () => {
             setGameConfig(currentGameConfig => ({ ...currentGameConfig, actions: true }));
         });

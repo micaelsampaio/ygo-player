@@ -55,6 +55,7 @@ export interface YGOPlayerStartEditorProps {
   players: YGOPlayerData[];
   commands: any[];
   options: YGOPropsOptions;
+  gameMode?: "EDITOR" | "REPLAY"
   actions?: {
     saveReplay?: (replay: YGOReplayData) => Promise<void>
   }

@@ -9,6 +9,7 @@ export interface DuelData {
     extraDeck: any[]
   }[],
   commands?: any[],
+  gameMode: string,
   options: {
     shuffleDeck: boolean
   }
@@ -37,6 +38,7 @@ export function useDuelController() {
 
     const duelData: DuelData = {
       players,
+      gameMode: "EDITOR",
       options
     }
 

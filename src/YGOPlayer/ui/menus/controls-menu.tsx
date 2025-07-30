@@ -1,7 +1,8 @@
-import { useCallback, useRef } from "react";
+import { useCallback, useEffect } from "react";
 import { YGODuel } from "../../core/YGODuel";
+import { UiGameConfig } from "../YGOUiController";
 
-export function ControlsMenu({ duel }: { duel: YGODuel }) {
+export function ControlsMenu({ duel, config: gameConfig }: { duel: YGODuel, config: UiGameConfig }) {
     const isPlaying = duel.commands.isPlaying();
     const hasPrevCommand = duel.ygo.hasPrevCommand();
     const hasNextCommand = duel.ygo.hasNextCommand();
@@ -25,6 +26,18 @@ export function ControlsMenu({ duel }: { duel: YGODuel }) {
     const setTimeScale = useCallback((dt: number) => {
         duel.settings.setGameSpeed(dt);
     }, [])
+
+    useEffect(() => {
+        if (!gameConfig.startReplay) {
+            duel.events.dispatch("update-game-ui-config", { startReplay: true });
+            let timer = setTimeout(() => {
+                play();
+            }, 500);
+            return () => {
+                clearTimeout(timer);
+            }
+        }
+    }, []);
 
     return <div className="ygo-card-menu ygo-controls-menu">
         <div className="">

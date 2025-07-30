@@ -55,6 +55,7 @@ export class YGODuel {
   public duelScene: YGODuelScene;
   public settings: YGOPlayerSettingsAdapter;
   public globalHotKeysManager: HotKeyManager;
+
   constructor({
     canvas,
     config,
@@ -246,6 +247,11 @@ export class YGODuel {
 
     setTimeout(() => {
       try {
+
+        if (this.config.gameMode === "REPLAY") {
+          this.events.dispatch("toggle-ui-menu", { group: "game-overlay", type: "controls-menu" });
+        }
+
         setTimeout(() => {
           this.ygo.start();
         }, 500);

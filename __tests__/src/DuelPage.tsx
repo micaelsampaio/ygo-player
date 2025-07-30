@@ -25,6 +25,7 @@ export default function DuelPage() {
       players: duelData.players,
       cdnUrl: String(import.meta.env.VITE_YGO_CDN_URL),
       commands: duelData.commands,
+      gameMode: duelData.gameMode,
       options: duelData.options || {},
       actions: {
         saveReplay: () => { }

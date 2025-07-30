@@ -70,12 +70,13 @@ export class YGOPlayerComponent extends HTMLElement {
   }
 
   editor(props: YGOPlayerStartEditorProps) {
-    const config = {
+    const config: YGOConfig = {
       cdnUrl: props.cdnUrl,
       commands: props.commands,
       players: props.players,
       options: props.options,
       actions: props.actions,
+      gameMode: props.gameMode || "EDITOR",
     };
     console.log("------- CONFIG ------");
     console.log(config);
@@ -122,12 +123,13 @@ export class YGOPlayerComponent extends HTMLElement {
       ...props.replay.initialField || []
     ];
 
-    const config = {
+    const config: YGOConfig = {
       players,
       commands: props.replay.commands,
       options,
       cdnUrl: props.cdnUrl,
       actions: props.actions,
+      gameMode: "REPLAY",
     };
 
     config.options.shuffleDecks = false;
