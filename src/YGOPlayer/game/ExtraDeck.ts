@@ -18,11 +18,13 @@ export class ExtraDeck extends YGOEntity implements YGOUiElement {
     private hoverGameObject: THREE.Mesh;
     private cards: GameBackCard[];
     public faceUpCards: GameCard[];
+    public isMenuVisible: boolean;
 
     constructor({ duel, player, position }: { duel: YGODuel, player: number, zone: string, position: THREE.Vector3 }) {
         super();
         this.duel = duel;
         this.player = player;
+        this.isMenuVisible = false;
 
         const material = new THREE.MeshBasicMaterial({ color: 0x00555, transparent: true, opacity: 0 });
         const hoverMaterial = new THREE.MeshBasicMaterial({ color: player === 0 ? 0x0000ff : 0xff0000, transparent: true, opacity: 0.55 });
@@ -118,7 +120,9 @@ export class ExtraDeck extends YGOEntity implements YGOUiElement {
         if (this.duel.config.autoChangePlayer) {
             this.duel.setActivePlayer(this.player);
         }
-        this.duel.events.dispatch("toggle-ui-menu", { group: "game-overlay", type: "extra-deck", data: { player: this.player, extraDeck: this } })
+
+        const eventName = this.isMenuVisible ? "close-ui-menu" : "set-ui-menu";
+        this.duel.events.dispatch(eventName, { group: "game-overlay", type: "extra-deck", data: { player: this.player, extraDeck: this } })
     }
 
     onMouseEnter(): void {

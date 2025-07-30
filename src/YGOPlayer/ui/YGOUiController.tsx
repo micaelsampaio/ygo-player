@@ -50,7 +50,7 @@ export function YGOUiController({ duel }: { duel: YGODuel }) {
         duel.events.on("set-ui-menu", ({ group, type, data }: any) => {
             clearAction();
             setMenus((currentMenus) => {
-                const menus = currentMenus.filter(m => m.type !== type);
+                const menus = currentMenus.filter(m => m.group !== group);
                 menus.push({ group, type, data, visible: true });
                 return menus;
             });

@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { YGODuel } from "../../core/YGODuel";
 import { ActionUiMenu } from "../../actions/ActionUiMenu";
 import { Card } from "ygo-core";
@@ -7,14 +7,12 @@ export function ExtraDeck({
   duel,
   player,
   hasAction,
-  clearAction,
   visible = true,
 }: {
   player: number;
   duel: YGODuel;
   visible: boolean;
   hasAction: boolean;
-  clearAction: () => void;
 }) {
   const action = useMemo(() => {
     const action = new ActionUiMenu(duel, {
@@ -22,6 +20,15 @@ export function ExtraDeck({
     });
     return action;
   }, [duel]);
+
+  useEffect(() => {
+    if (duel && player >= 0) {
+      duel.fields[player].extraDeck.isMenuVisible = true;
+      return () => {
+        duel.fields[player].extraDeck.isMenuVisible = false;
+      }
+    }
+  }, [duel, player]);
 
   if (!visible) return null;
   if (!duel.ygo) return null;
@@ -75,6 +82,4 @@ export function ExtraDeck({
       ))}
     </div>
   );
-
-  // TODO
 }

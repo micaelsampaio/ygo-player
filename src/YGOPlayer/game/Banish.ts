@@ -21,12 +21,13 @@ export class Banish extends YGOEntity implements YGOUiElement {
     public position: THREE.Vector3;
     public rotation: THREE.Euler;
     public cardPosition: THREE.Vector3;
-    //private action: ActionUiMenu;
+    public isMenuVisible: boolean;
 
     constructor({ duel, player, position }: { duel: YGODuel, player: number, zone: string, position: THREE.Vector3 }) {
         super();
         this.duel = duel;
         this.player = player;
+        this.isMenuVisible = false;
 
         const normalMaterial = new THREE.MeshBasicMaterial({ color: 0x00555, transparent: true, opacity: 0 });
         const geometry = new THREE.BoxGeometry(2.8, 2.8, 0.1);
@@ -42,12 +43,12 @@ export class Banish extends YGOEntity implements YGOUiElement {
         this.position = this.gameObject.position.clone();
         this.rotation = this.gameObject.rotation.clone();
         this.position.z += 0.1;
-
         this.duel.gameController.getComponent<YGOMouseEvents>("mouse_events")?.registerElement(this);
     }
 
     onMouseClick(event: MouseEvent): void {
-        this.duel.events.dispatch("toggle-ui-menu", { group: "game-overlay", type: "banish", data: { banish: this } })
+        const eventName = this.isMenuVisible ? "close-ui-menu" : "set-ui-menu";
+        this.duel.events.dispatch(eventName, { group: "game-overlay", type: "banish", data: { banish: this } })
     }
 
     onMouseEnter(): void {

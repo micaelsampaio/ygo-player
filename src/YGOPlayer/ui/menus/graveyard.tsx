@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { YGODuel } from "../../core/YGODuel";
 import { ActionUiMenu } from "../../actions/ActionUiMenu";
 import { Graveyard as GameGraveyard } from "../../../YGOPlayer/game/Graveyard";
@@ -17,6 +17,15 @@ export function Graveyard({
     const action = new ActionUiMenu(duel, { eventType: "card-gy-menu" });
     return action;
   }, [duel]);
+
+  useEffect(() => {
+    if (graveyard) {
+      graveyard.isMenuVisible = true;
+      return () => {
+        graveyard.isMenuVisible = false;
+      }
+    }
+  }, [graveyard]);
 
   if (!visible) return null;
   if (!duel.ygo) return null;
@@ -70,6 +79,4 @@ export function Graveyard({
       ))}
     </div>
   );
-
-  // TODO
 }

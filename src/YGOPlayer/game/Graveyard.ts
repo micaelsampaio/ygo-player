@@ -21,6 +21,7 @@ export class Graveyard extends YGOEntity implements YGOUiElement {
     public position: THREE.Vector3;
     public cardPosition: THREE.Vector3;
     public rotation: THREE.Euler;
+    public isMenuVisible: boolean;
 
     constructor({ duel, player, position }: { duel: YGODuel, player: number, zone: string, position: THREE.Vector3 }) {
         super();
@@ -51,10 +52,13 @@ export class Graveyard extends YGOEntity implements YGOUiElement {
         if (this.hoverObject) {
             this.hoverObject.visible = false;
         }
+
+        this.isMenuVisible = false;
     }
 
     onMouseClick(event: MouseEvent): void {
-        this.duel.events.dispatch("toggle-ui-menu", { group: "game-overlay", type: "gy", data: { graveyard: this } })
+        const eventName = this.isMenuVisible ? "close-ui-menu" : "set-ui-menu";
+        this.duel.events.dispatch(eventName, { group: "game-overlay", type: "gy", data: { graveyard: this } })
     }
 
     onMouseEnter(): void {

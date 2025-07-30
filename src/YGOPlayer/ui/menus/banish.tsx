@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { YGODuel } from "../../core/YGODuel";
 import { ActionUiMenu } from "../../actions/ActionUiMenu";
 import { Banish as GameBanish } from "../../../YGOPlayer/game/Banish";
@@ -17,6 +17,15 @@ export function Banish({
     const action = new ActionUiMenu(duel, { eventType: "card-banish-menu" });
     return action;
   }, [duel]);
+
+  useEffect(() => {
+    if (banish) {
+      banish.isMenuVisible = true;
+      return () => {
+        banish.isMenuVisible = false;
+      }
+    }
+  }, [banish]);
 
   if (!visible) return null;
   if (!duel.ygo) return null;
@@ -71,6 +80,4 @@ export function Banish({
       ))}
     </div>
   );
-
-  // TODO
 }
