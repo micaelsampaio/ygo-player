@@ -19,8 +19,6 @@ export function YGOUiController({ duel }: { duel: YGODuel }) {
     const [action, setAction] = useState<{ type: string, data: any }>({ type: "", data: null });
     const [menus, setMenus] = useState<{ group: string, visible: boolean, type: string, data: any }[]>([]);
 
-    console.log("TCL: ACTIONS", action);
-
     const clearAction = () => {
         setAction(prev => {
             if (prev.type) {
