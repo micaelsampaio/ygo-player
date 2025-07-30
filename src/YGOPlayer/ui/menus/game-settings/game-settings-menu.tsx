@@ -3,13 +3,16 @@ import { Card, FieldZone } from "ygo-core";
 import { YGODuel } from "../../../core/YGODuel";
 import { stopPropagationCallback } from "../../../scripts/utils";
 import { GameSettingsDialog } from "./components/game-settings";
+import { GamControlsDialog } from "./components/game-controls";
 
 enum SETTINGS_MODAL_TYPE {
     SETTINGS,
+    CONTROLS
 }
 
 const MODALS: any = {
-    [SETTINGS_MODAL_TYPE.SETTINGS]: GameSettingsDialog
+    [SETTINGS_MODAL_TYPE.SETTINGS]: GameSettingsDialog,
+    [SETTINGS_MODAL_TYPE.CONTROLS]: GamControlsDialog
 }
 
 export function GameSettingsMenu({ duel }: { duel: YGODuel, card: Card, originZone: FieldZone, player: number, clearAction: () => void; }) {
@@ -72,15 +75,16 @@ export function GameSettingsMenu({ duel }: { duel: YGODuel, card: Card, originZo
             <div className="ygo-game-settings-left-panel-container">
                 <div className="ygo-game-settings-left-panel">
                     <div className="ygo-game-settings-logo"></div>
-                    <button disabled={modal?.id === SETTINGS_MODAL_TYPE.SETTINGS} className="ygo-btn ygo-btn-action">Settings</button>
-                    {canSaveReplay && <button className="ygo-btn ygo-btn-action">Save Replay</button>}
-                    {canReportBug && <button className="ygo-btn ygo-btn-action">Report a bug</button>}
+                    <button disabled={modal?.id === SETTINGS_MODAL_TYPE.SETTINGS} onClick={() => setModal({ id: SETTINGS_MODAL_TYPE.SETTINGS })} className="ygo-btn ygo-btn-action">Settings</button>
+                    <button disabled={modal?.id === SETTINGS_MODAL_TYPE.CONTROLS} onClick={() => setModal({ id: SETTINGS_MODAL_TYPE.CONTROLS })} className="ygo-btn ygo-btn-action">Controls</button>
+                    {canSaveReplay && <button onClick={saveReplay} className="ygo-btn ygo-btn-action">Save Replay</button>}
+                    {canReportBug && <button onClick={reportBug} className="ygo-btn ygo-btn-action">Report a bug</button>}
                     <div className="ygo-flex-grow-1"></div>
                     <button className="ygo-btn ygo-btn-action">Close</button>
                 </div>
             </div>
             <div className="ygo-game-settings-content">
-                {MODAL && <MODAL duel={duel} />}
+                {MODAL && <MODAL duel={duel} close={closeSettings} />}
             </div>
         </div>
     </>

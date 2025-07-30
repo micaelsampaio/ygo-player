@@ -100,7 +100,7 @@ export class YGODuel {
       keys: "ArrowRight",
       action: "nextCommand"
     }, {
-      keys: "p",
+      keys: "Space",
       action: "togglePlayPause"
     }, {
       keys: "Escape",
