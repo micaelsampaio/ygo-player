@@ -31,7 +31,9 @@ export function RotateYourPhoneModal() {
             Portrait mode isn't supported. Please Rotate your device to landscape.
           </p>
 
-          <p style={{ fontSize: "14px", opacity: "0.7" }}>We're sorry for the inconvenience - YGO101</p>
+          <p style={{ fontSize: "14px", opacity: "0.7" }}>
+            We're sorry for the inconvenience<br /> We're working on it - YGO101
+          </p>
         </p>
       </div>
     </div>
