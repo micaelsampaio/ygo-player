@@ -28,7 +28,8 @@ export default function DuelPage() {
       gameMode: duelData.gameMode,
       options: duelData.options || {},
       actions: {
-        saveReplay: () => { }
+        saveReplay: () => { },
+        reportBug: () => { }
       }
     };
 

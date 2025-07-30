@@ -1,5 +1,5 @@
 import { DuelNotesActionEventHandler } from "./duel-notes-action-handler";
-import { GameSettingsDialog } from "../actions/game-settings-dialog";
+import { GameSettingsMenu } from "./game-settings/game-settings-menu";
 import { Banish } from "./banish";
 import { ControlsMenu } from "./controls-menu";
 import { ExtraDeck } from "./extra-deck";
@@ -20,6 +20,6 @@ export const MENUS = {
     "selected-card-highlight": SelectedCardHighlightedMenu,
     "select-card-menu": SelectCardPopup,
     "controls-menu": ControlsMenu,
-    "settings-menu": GameSettingsDialog,
+    "settings-menu": GameSettingsMenu,
     "duel-notes-game-event-hanlder": DuelNotesActionEventHandler,
 }

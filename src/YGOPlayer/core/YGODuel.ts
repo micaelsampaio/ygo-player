@@ -734,6 +734,8 @@ export class YGODuel {
   private setupVars() {
     document.documentElement.style.setProperty('--ygo-player-asset-ui-card-icons', `url('${this.config.cdnUrl}/images/ui/card_icons.png')`);
     document.documentElement.style.setProperty('--ygo-player-asset-ui-game-zones', `url('${this.config.cdnUrl}/images/ui/ic_game_zones.png')`);
+    document.documentElement.style.setProperty('--ygo-player-asset-ui-logo', `url('${this.config.cdnUrl}/images/logo_dark.png')`);
+    document.documentElement.style.setProperty('--ygo-player-asset-ui-logo-white', `url('${this.config.cdnUrl}/images/logo_white.png')`);
   }
 
   public createCdnUrl(path: string) {

@@ -20,6 +20,7 @@ function Dialog({
     visible,
     renderHidden = false,
     size,
+    embedded,
     close,
     onContextMenu,
     children,
@@ -27,6 +28,7 @@ function Dialog({
     visible: boolean;
     renderHidden?: boolean;
     size?: "sm" | "md" | "xl" | "xxl"
+    embedded?: boolean
     close: () => void;
     onContextMenu?: () => void,
     children: React.ReactNode;
@@ -51,7 +53,7 @@ function Dialog({
 
     return (
         <ModalContext.Provider value={{ visible, close: closeModal as any }}>
-            <div className={`ygo-player-dialog-container ${visible ? 'ygo-show' : ''}`}
+            <div className={`ygo-player-dialog-container ${embedded ? "ygo-embedded" : ""} ${visible ? 'ygo-show' : ''}`}
                 onContextMenu={onContextClick}
                 onClick={close}
                 onMouseMove={cancelMouseEventsCallback}

@@ -9,6 +9,7 @@
 @import "./game-zones.css";
 @import "./timeline.css";
 @import "./duel-notes.css";
+@import "../../YGOPlayer/ui/menus/game-settings/game-settings.css";
 
 /* components */
 @import "./buttons.css";

@@ -1,0 +1,86 @@
+.ygo-player-core {
+  .ygo-game-settings-logo {
+    background-image: var(--ygo-player-asset-ui-logo-white);
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+    width: 100%;
+    height: 70px;
+    margin-bottom: 40px;
+    margin-top: 20px;
+  }
+
+  .ygo-game-settings-menu {
+    position: fixed;
+    top: 0px;
+    left: 0px;
+    right: 0px;
+    bottom: 0px;
+    z-index: 1000;
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+
+    .ygo-game-settings-left-panel-container {
+      flex-shrink: 0;
+      width: 300px;
+      height: 100%;
+      position: relative;
+    }
+
+    .ygo-game-settings-left-panel {
+      box-sizing: border-box;
+      position: absolute;
+      top: 0px;
+      left: -100%;
+      width: 100%;
+      height: 100dvh;
+      background-color: #222;
+      transition: left 0.25s ease-in-out;
+      padding: 20px;
+
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+
+      .ygo-btn-action {
+        font-size: 20px;
+
+        &.ygo-active {
+          background-color: var(--ygo-primary-color);
+        }
+      }
+    }
+
+    &.ygo-visible {
+      .ygo-game-settings-left-panel {
+        left: 0px;
+      }
+    }
+
+    .ygo-game-settings-content {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: center;
+      flex-grow: 1;
+      height: 100%;
+    }
+  }
+
+  .ygo-game-settings-backdrop {
+    position: fixed;
+    top: 0px;
+    left: 0px;
+    right: 0px;
+    bottom: 0px;
+    background-color: var(--ygo-background-color-80);
+    z-index: 900;
+    opacity: 0;
+    transition: opacity 0.25s ease-in-out;
+
+    &.ygo-visible {
+      opacity: 1;
+    }
+  }
+}
