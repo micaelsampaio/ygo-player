@@ -233,8 +233,7 @@ export class CardZone extends YGOEntity implements YGOUiElement {
       this.zoneData.player !== this.card.cardReference.originalOwner
     ) {
       this.zoneData.player = this.card.cardReference.originalOwner;
-      this.zone = `EMZ${this.zoneData.player === 0 ? "" : "2"}-${this.zoneData.zoneIndex + 1
-        }` as any;
+      this.zone = `EMZ${this.zoneData.player === 0 ? "" : "2"}-${this.zoneData.zoneIndex}` as any;
     }
   }
 
