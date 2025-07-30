@@ -129,7 +129,7 @@ export function GameSettingsDialog({ duel }: { duel: YGODuel, card: Card, origin
                         </div>
                     </div>
 
-                    <div className="ygo-flex ygo-mt-2">
+                    <div className="ygo-flex ygo-mt-3">
                         <input
                             style={{ display: "inline-block", width: "auto" }}
                             type="checkbox"
@@ -138,6 +138,18 @@ export function GameSettingsDialog({ duel }: { duel: YGODuel, card: Card, origin
                         />
                         <div style={{ display: "inline-block", flexGrow: 1 }}>
                             Show Card Transparent when face down
+                        </div>
+                    </div>
+
+                    <div className="ygo-flex ygo-mt-3">
+                        <input
+                            style={{ display: "inline-block", width: "auto" }}
+                            type="checkbox"
+                            checked={settings.getConfigFromPath("autoStartReplay")}
+                            onChange={e => onChangeCheckBox(e, "autoStartReplay")}
+                        />
+                        <div style={{ display: "inline-block", flexGrow: 1 }}>
+                            Auto Start Replay when loaded
                         </div>
                     </div>
                 </div>
