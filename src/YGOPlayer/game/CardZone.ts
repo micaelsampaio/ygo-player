@@ -121,7 +121,7 @@ export class CardZone extends YGOEntity implements YGOUiElement {
           zone: this.zone,
           mouseEvent: event,
         });
-        this.duel.actionManager.setAction(action);
+        this.duel.actionManager.setActionNextFrame(action);
       } else {
         this.duel.actionManager.clearAction();
         this.duel.events.dispatch("clear-ui-action");
