@@ -865,4 +865,32 @@
     .ygo-scroll-y {
         overflow-y: auto;
     }
+
+    .ygo-rotate-modal {
+        position: fixed;
+        inset: 0;
+        background-color: black;
+        z-index: 9999;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 2rem;
+    }
+
+    .ygo-full-screen-text {
+        color: white;
+        text-align: center;
+        max-width: 600px;
+    }
+
+    .ygo-full-screen-text h1 {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+    }
+
+    .ygo-full-screen-text p {
+        font-size: 1.25rem;
+        line-height: 1.6;
+    }
+
 }

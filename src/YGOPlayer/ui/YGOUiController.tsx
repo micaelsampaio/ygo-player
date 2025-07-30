@@ -7,6 +7,7 @@ import { TimeLine } from "./menus/timeline";
 import { BottomRightActions } from "./menus/bottom-right-actions";
 import { PlayerHUD } from "./components/player-hud/PlayerHUD";
 import { CardLongPressEffect } from "./components/card-long-press-effect/CardLongPressEffect";
+import { RotateYourPhoneModal } from "./menus/rotate-your-phone";
 
 export interface UiGameConfig {
     actions: boolean
@@ -151,6 +152,7 @@ export function YGOUiController({ duel }: { duel: YGODuel }) {
         <PlayerHUD duel={duel} player={0} />
         <PlayerHUD duel={duel} player={1} />
         <CardLongPressEffect duel={duel} />
+        <RotateYourPhoneModal />
 
         {
             menus.map(menu => {
