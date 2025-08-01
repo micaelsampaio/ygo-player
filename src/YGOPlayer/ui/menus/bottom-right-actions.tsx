@@ -1,36 +1,32 @@
 import { useCallback } from "react";
 import { YGODuel } from "../../core/YGODuel";
+import { stopPropagationCallback } from "../../scripts/utils";
 
 export function BottomRightActions({ duel }: { duel: YGODuel }) {
 
     const toggleDuelLogs = useCallback((e: React.MouseEvent) => {
-        e.stopPropagation();
-        e.preventDefault();
+        stopPropagationCallback(e);
         duel.events.dispatch("toggle-ui-menu", { group: "game-overlay", type: "duel-log" });
     }, [duel]);
 
     const toggleGameReplayControls = useCallback((e: React.MouseEvent) => {
-        e.stopPropagation();
-        e.preventDefault();
+        stopPropagationCallback(e);
         duel.events.dispatch("toggle-ui-menu", { group: "game-overlay", type: "controls-menu" });
     }, [duel]);
 
     const toggleSettings = useCallback((e: React.MouseEvent) => {
-        e.stopPropagation();
-        e.preventDefault();
+        stopPropagationCallback(e);
         duel.events.dispatch("toggle-ui-menu", { group: "game-overlay", type: "settings-menu" });
     }, [duel]);
 
     const showGameStats = useCallback((e: any) => {
-        e.stopPropagation();
-        e.preventDefault();
+        stopPropagationCallback(e);
         duel.events.dispatch("close-ui-menu", { group: "game-overlay" });
         duel.fieldStats.show();
     }, [duel]);
 
     const hideGameStats = useCallback((e: any) => {
-        e.stopPropagation();
-        e.preventDefault();
+        stopPropagationCallback(e);
         duel.fieldStats.hide();
     }, [duel]);
 

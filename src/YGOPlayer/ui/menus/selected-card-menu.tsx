@@ -3,6 +3,7 @@ import { Card } from "ygo-core";
 import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import { getTransformFromCamera } from "../../scripts/ygo-utils";
 import { YGOGameUtils } from "ygo-core";
+import { stopPropagationCallback } from "../../scripts/utils";
 
 export function SelectedCardMenu({
   duel,
@@ -57,18 +58,11 @@ export function SelectedCardMenu({
     <div
       className="selected-card-menu"
       ref={menuRef}
-      onMouseMove={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-      }}
-      onClick={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-      }}
+      onMouseMove={stopPropagationCallback}
+      onClick={stopPropagationCallback}
 
       onContextMenu={e => {
-        e.preventDefault();
-        e.stopPropagation();
+        stopPropagationCallback(e);
         duel.events.dispatch("clear-ui-action");
         duel.events.dispatch("set-selected-card", { card: null });
       }}

@@ -1,0 +1,81 @@
+.ygo-player-core {
+  .ygo-range-container {
+    width: 100%;
+    padding: var(--ygo-space-xs) 0;
+    position: relative;
+  }
+
+  .ygo-range {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 6px;
+    background: var(--ygo-border-color);
+    border-radius: var(--ygo-border-radius-small);
+    border: 0px solid var(--ygo-border-color) !important;
+    cursor: pointer;
+    position: relative;
+    background-image: linear-gradient(to right,
+        var(--ygo-border-color-light) 0%,
+        var(--ygo-border-color-light) var(--progress, 50%),
+        var(--ygo-border-color) var(--progress, 50%),
+        var(--ygo-border-color) 100%);
+    background-repeat: no-repeat;
+    transition: background 0.3s ease;
+    cursor: pointer;
+  }
+
+  /* Hide WebKit thumb */
+  .ygo-range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 0;
+    width: 0;
+    opacity: 0;
+    border: none;
+    background: transparent;
+  }
+
+  /* Hide Firefox thumb */
+  .ygo-range::-moz-range-thumb {
+    height: 0;
+    width: 0;
+    opacity: 0;
+    border: none;
+    background: transparent;
+  }
+
+  /* Hide Firefox track background if needed */
+  .ygo-range::-moz-range-track {
+    background: transparent;
+    border: none;
+  }
+
+  /* Hide IE/Edge thumb */
+  .ygo-range::-ms-thumb {
+    height: 0;
+    width: 0;
+    opacity: 0;
+    border: none;
+    background: transparent;
+  }
+
+  .ygo-range:focus {
+    outline: none;
+    box-shadow: none;
+  }
+
+  .ygo-range {
+    outline: none;
+    box-shadow: none;
+  }
+
+  .ygo-range:focus,
+  .ygo-range:focus-visible,
+  .ygo-range::-moz-focus-inner {
+    outline: none;
+    box-shadow: none;
+    border: none;
+    border-color: var(--ygo-border-color-light);
+  }
+}

@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { YGODuel } from "../../core/YGODuel";
 import { ActionUiMenu } from "../../actions/ActionUiMenu";
 import { Card, FieldZone } from "ygo-core";
+import { stopPropagationCallback } from "../../scripts/utils";
 
 export function XyzMonsterMaterialsMenu({
   duel,
@@ -28,14 +29,8 @@ export function XyzMonsterMaterialsMenu({
   return (
     <div
       className="float-right-menu"
-      onMouseMove={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-      }}
-      onClick={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-      }}
+      onMouseMove={stopPropagationCallback}
+      onClick={stopPropagationCallback}
     >
       <div className="float-right-menu-icon">
         <div className="ygo-icon-game-zone ygo-icon-game-zone-oru"></div>

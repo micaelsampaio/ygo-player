@@ -1,5 +1,5 @@
 import React, { createContext, useContext } from 'react';
-import { cancelMouseEventsCallback } from '../../scripts/ygo-utils';
+import { stopPropagationCallback } from '../../scripts/utils';
 
 type ModalContextType = {
     visible: boolean;
@@ -36,15 +36,14 @@ function Dialog({
 
     const onContextClick = (e: React.MouseEvent<HTMLDivElement>) => {
         if (e.target === e.currentTarget) {
-            e.preventDefault();
-            e.stopPropagation();
+            stopPropagationCallback(e);
             onContextMenu?.();
         }
     }
 
     const closeModal = (e: React.MouseEvent) => {
         if (e) {
-            cancelMouseEventsCallback(e);
+            stopPropagationCallback(e);
         }
         close();
     }
@@ -56,12 +55,9 @@ function Dialog({
             <div className={`ygo-player-dialog-container ${embedded ? "ygo-embedded" : ""} ${visible ? 'ygo-show' : ''}`}
                 onContextMenu={onContextClick}
                 onClick={close}
-                onMouseMove={cancelMouseEventsCallback}
+                onMouseMove={stopPropagationCallback}
             >
-                <div className={`ygo-player-dialog ${size ? `ygo-${size}` : ''}`} onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                }}>
+                <div className={`ygo-player-dialog ${size ? `ygo-${size}` : ''}`} onClick={stopPropagationCallback}>
                     {children}
                 </div>
             </div>

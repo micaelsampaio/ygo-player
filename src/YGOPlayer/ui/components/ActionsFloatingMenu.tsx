@@ -1,3 +1,4 @@
+import { stopPropagationCallback } from "../../scripts/utils";
 
 export function ActionsFloatingMenu({ menuRef, children, x, y }: any) {
     const style: any = { left: x ? `${x}px` : undefined, top: y ? `${y}px` : undefined }
@@ -5,27 +6,12 @@ export function ActionsFloatingMenu({ menuRef, children, x, y }: any) {
     return <div className="ygo-floating-actions-menu"
         ref={menuRef}
         style={style}
-        onClick={(e) => {
-            e.stopPropagation();
-            e.preventDefault();
-        }}
-        onMouseMove={(e) => {
-            e.stopPropagation();
-            e.preventDefault();
-        }}
-        onMouseDown={(e) => {
-            e.stopPropagation();
-            e.preventDefault();
-        }}
-        onMouseUp={(e) => {
-            e.stopPropagation();
-            e.preventDefault();
-        }}
+        onClick={stopPropagationCallback}
+        onMouseMove={stopPropagationCallback}
+        onMouseDown={stopPropagationCallback}
+        onMouseUp={stopPropagationCallback}
     >
-        <div className="ygo-card-menu-items" onClick={e => {
-            e.preventDefault();
-            e.stopPropagation();
-        }}>
+        <div className="ygo-card-menu-items" onClick={stopPropagationCallback}>
             {children}
         </div>
     </div>

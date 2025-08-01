@@ -3,6 +3,7 @@ import { YGODuel } from "../../core/YGODuel";
 import { ActionUiMenu } from "../../actions/ActionUiMenu";
 import { Banish as GameBanish } from "../../../YGOPlayer/game/Banish";
 import { Card } from "ygo-core";
+import { stopPropagationCallback } from "../../scripts/utils";
 
 export function Banish({
   duel,
@@ -36,14 +37,8 @@ export function Banish({
   return (
     <div
       className="float-right-menu"
-      onMouseMove={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-      }}
-      onClick={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-      }}
+      onMouseMove={stopPropagationCallback}
+      onClick={stopPropagationCallback}
     >
       <div className="float-right-menu-icon">
         <div className="ygo-icon-game-zone ygo-icon-game-zone-b"></div>

@@ -2,6 +2,7 @@ import { useEffect, useMemo } from "react";
 import { YGODuel } from "../../core/YGODuel";
 import { ActionUiMenu } from "../../actions/ActionUiMenu";
 import { Card } from "ygo-core";
+import { stopPropagationCallback } from "../../scripts/utils";
 
 export function ExtraDeck({
   duel,
@@ -39,14 +40,8 @@ export function ExtraDeck({
   return (
     <div
       className="float-right-menu"
-      onMouseMove={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-      }}
-      onClick={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-      }}
+      onMouseMove={stopPropagationCallback}
+      onClick={stopPropagationCallback}
       onScroll={() => {
         if (hasAction) {
           duel.events.dispatch("clear-ui-action");

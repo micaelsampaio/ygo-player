@@ -3,6 +3,7 @@ import { YGODuel } from "../../core/YGODuel";
 import { ActionUiMenu } from "../../actions/ActionUiMenu";
 import { Graveyard as GameGraveyard } from "../../../YGOPlayer/game/Graveyard";
 import { Card } from "ygo-core";
+import { stopPropagationCallback } from "../../scripts/utils";
 
 export function Graveyard({
   duel,
@@ -36,14 +37,8 @@ export function Graveyard({
   return (
     <div
       className="float-right-menu"
-      onMouseMove={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-      }}
-      onClick={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-      }}
+      onMouseMove={stopPropagationCallback}
+      onClick={stopPropagationCallback}
     >
 
       <div className="float-right-menu-icon">

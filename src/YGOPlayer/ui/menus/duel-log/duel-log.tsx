@@ -6,6 +6,7 @@ import { StartHandLogRow } from "./start-hand";
 import { LifePointsLogRow } from "./lp-log";
 import { NoteLogRow } from "./note-log";
 import "./duel-log.css";
+import { stopPropagationCallback } from "../../../scripts/utils";
 
 const COMPONENTS = {
   [YGODuelEvents.LogType.StartHand]: StartHandLogRow,
@@ -75,22 +76,10 @@ export function DuelLogMenu({ duel, menus }: { duel: YGODuel; menus: any[] }) {
   }, [isVisible, logs]);
   return (
     <div className={`ygo-duel-log-container ${isVisible ? "" : "ygo-hidden"}`} ref={duelLogsContainer}
-      onClick={(e) => {
-        e.stopPropagation();
-        e.preventDefault();
-      }}
-      onMouseMove={(e) => {
-        e.stopPropagation();
-        e.preventDefault();
-      }}
-      onMouseDown={(e) => {
-        e.stopPropagation();
-        e.preventDefault();
-      }}
-      onMouseUp={(e) => {
-        e.stopPropagation();
-        e.preventDefault();
-      }}
+      onClick={stopPropagationCallback}
+      onMouseMove={stopPropagationCallback}
+      onMouseDown={stopPropagationCallback}
+      onMouseUp={stopPropagationCallback}
     >
       <div className="ygo-logs">
         {logs.map((log, index) => {

@@ -29,8 +29,8 @@ export interface YGOPlayerSettingsEvents extends YGOPlayerSettingsChangeEvents {
 }
 
 const DEFAULT_SETTINGS: YGOPlayerSettings = {
-    musicVolume: 1,
-    gameVolume: 1,
+    musicVolume: 0.9,
+    gameVolume: 0.9,
     gameSpeed: 1,
     showCardWhenPlayed: true,
     autoStartReplay: true,
@@ -43,9 +43,10 @@ export class YGOPlayerSettingsAdapter {
     private data: YGOPlayerSettings;
     private autoSave: boolean;
     public events: EventBus<YGOPlayerSettingsEvents>;
-
+    private saveTimer: number;
     constructor(options?: YGOPlayerSettingsAdapterOptions) {
         this.autoSave = typeof options?.autoSave !== "undefined" ? !!options?.autoSave : true;
+        this.saveTimer = 0;
         this.data = this.loadConfig();
         this.events = new EventBus();
     }
@@ -125,7 +126,10 @@ export class YGOPlayerSettingsAdapter {
 
     private dispatchInternalSave() {
         if (this.autoSave) {
-            this.save();
+            clearTimeout(this.saveTimer);
+            this.saveTimer = setTimeout(() => {
+                this.save();
+            }, 1000) as any as number;
         }
     }
 

@@ -4,6 +4,7 @@ import { Card } from "ygo-core";
 import { ActionUiMenu } from "../../actions/ActionUiMenu";
 import { Deck } from "../../../YGOPlayer/game/Deck";
 import { YGOGameUtils } from "ygo-core";
+import { stopPropagationCallback } from "../../scripts/utils";
 
 export function ViewDeckPopup({
   duel,
@@ -74,29 +75,21 @@ export function ViewDeckPopup({
   return (
     <div
       className="game-popup"
-      onMouseMove={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-      }}
+      onMouseMove={stopPropagationCallback}
       onClick={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
+        stopPropagationCallback(e);
         close();
       }}
       onContextMenu={(e) => {
         if (e.currentTarget === e.target) {
-          e.preventDefault();
-          e.stopPropagation();
+          stopPropagationCallback(e);
           close();
         }
       }}
     >
       <div
         className="game-popup-dialog ygo-menu-view-main-deck ygo-main-deck-popup"
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-        }}
+        onClick={stopPropagationCallback}
       >
         <div className="game-popup-header">
           <div className="game-popup-header-title">View Deck</div>

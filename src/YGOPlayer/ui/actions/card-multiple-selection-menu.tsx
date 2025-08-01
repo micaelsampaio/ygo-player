@@ -1,4 +1,5 @@
 import { YGODuel } from "../../core/YGODuel";
+import { stopPropagationCallback } from "../../scripts/utils";
 import { ActionsFloatingMenu } from "../components/ActionsFloatingMenu";
 
 export function CardMultipleSelectionMenu({ duel, onCompleted }: { duel: YGODuel, onCompleted: () => void }) {
@@ -6,8 +7,7 @@ export function CardMultipleSelectionMenu({ duel, onCompleted }: { duel: YGODuel
     const y = window.innerHeight / 2 - 30; // mouseEvent.clientY; // Vertical mouse position in px
 
     const onCompletedClick = (e: React.MouseEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
+        stopPropagationCallback(e);
         onCompleted();
     }
 

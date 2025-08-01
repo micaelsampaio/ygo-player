@@ -1,7 +1,7 @@
 import { Command } from "ygo-core";
 import { YGODuel } from "../../core/YGODuel";
-import { cancelMouseEventsCallback } from "../../scripts/ygo-utils";
 import { DefaultTimelineCommand } from "./timeline/commands/default-command";
+import { stopPropagationCallback } from "../../scripts/utils";
 
 export interface TimelineCommandProps {
   duel: YGODuel
@@ -24,8 +24,8 @@ export function TimeLine({ duel }: { duel: YGODuel }) {
   return (
     <div
       className="timeline"
-      onMouseMove={cancelMouseEventsCallback}
-      onClick={cancelMouseEventsCallback}
+      onMouseMove={stopPropagationCallback}
+      onClick={stopPropagationCallback}
     >
       {commands.map((command: any, index: any) => {
         const commandClass = getCommandClass(index, currentCommand);

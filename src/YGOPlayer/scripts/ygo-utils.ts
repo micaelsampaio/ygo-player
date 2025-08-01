@@ -246,11 +246,6 @@ export function getCardZones(
   return result;
 }
 
-export function cancelMouseEventsCallback(e: React.MouseEvent) {
-  e.preventDefault();
-  e.stopPropagation();
-}
-
 export function getCardRotation(duel: YGODuel, card: Card, zone: FieldZone) {
   const zoneData = YGOGameUtils.getZoneData(zone);
   return getCardRotationFromFieldZoneData(duel, card, zoneData);

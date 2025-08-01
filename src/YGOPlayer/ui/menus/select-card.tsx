@@ -3,6 +3,7 @@ import { YGODuel } from "../../core/YGODuel";
 import { Card, FieldZone, FieldZoneId } from "ygo-core";
 import { YGOGameUtils } from "ygo-core";
 import { CardZoneKV } from "../../types";
+import { stopPropagationCallback } from "../../scripts/utils";
 
 type OnSelectCard = (cards: CardZoneKV[]) => void;
 
@@ -164,8 +165,7 @@ export function SelectCardPopup({
   }, [field, filter]);
 
   const close = useCallback((e: any) => {
-    e.preventDefault();
-    e.stopPropagation();
+    stopPropagationCallback(e);
     duel.events.dispatch("close-ui-menu", { group: "game-popup" });
   }, []);
 
@@ -184,10 +184,7 @@ export function SelectCardPopup({
   return (
     <div
       className="game-popup"
-      onMouseMove={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-      }}
+      onMouseMove={stopPropagationCallback}
       onContextMenu={(e) => {
         if (e.currentTarget === e.target) {
           close(e);
@@ -197,10 +194,7 @@ export function SelectCardPopup({
     >
       <div
         className="game-popup-dialog"
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-        }}
+        onClick={stopPropagationCallback}
       >
         <div className="game-popup-header">
           <div className="game-popup-header-title">Select Card</div>

@@ -35,13 +35,15 @@ export function isObject(value: any): value is { [key: string]: any } {
     return value !== null && typeof value === 'object';
 }
 
-export function stopPropagationCallback(e: any){
-    e.preventDefault();
+export function stopPropagationCallback(e: any) {
+    if (!(e.target instanceof HTMLInputElement)) {
+        e.preventDefault();
+    }
     e.stopPropagation();
 }
 
 export function removeFocusFromActiveElement() {
-  if (document.activeElement instanceof HTMLElement) {
-    document.activeElement.blur();
-  }
+    if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur();
+    }
 }

@@ -2,6 +2,7 @@ import { useCallback, useState } from "react";
 import { YGODuel } from "../../../../core/YGODuel";
 import { YGOPlayerSettings } from "../../../../core/YGOPlayerSettings";
 import { Modal } from "../../../components/Modal";
+import InputRange from "../../../components/range/InputRange";
 
 export function GameSettingsDialog({ duel }: { duel: YGODuel }) {
   const settings = duel.settings;
@@ -52,23 +53,13 @@ export function GameSettingsDialog({ duel }: { duel: YGODuel }) {
     <Modal.Body>
       <div>
 
-        {/* {duel.config.actions?.saveReplay && <>
-          <div>
-            Replay
-          </div>
-
-          <div className="ygo-flex ygo-mt-2">
-            <button className="ygo-btn ygo-btn-action ygo-px-0 ygo-flex-grow-1" onClick={saveReplay}>Save Replay</button>
-          </div>
-        </>} */}
-
         <div>Game Music Volume</div>
         <div className="ygo-mt-2">
-          <input type="range" id="volume" name="volume" step="0.1" min="0.0" max="1.0" value={gameMusicVolume} onChange={setGameMusicVolume} onInput={setGameMusicVolume} />
+          <InputRange step={0.1} min={0} max={1} value={gameMusicVolume} onChange={setGameMusicVolume} onInput={setGameMusicVolume} />
         </div>
         <div>Game Sounds Volume</div>
         <div>
-          <input type="range" id="volume" name="volume" step="0.1" min="0.0" max="1.0" value={gameSoundsVolume} onChange={setGameSoundsVolume} onInput={setGameSoundsVolume} />
+          <InputRange step={0.1} min={0} max={1} value={gameSoundsVolume} onChange={setGameSoundsVolume} onInput={setGameSoundsVolume} />
         </div>
 
         <div className="ygo-mt-4">
