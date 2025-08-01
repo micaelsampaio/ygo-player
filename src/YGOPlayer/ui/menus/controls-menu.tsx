@@ -3,7 +3,7 @@ import { YGODuel } from "../../core/YGODuel";
 import { UiGameConfig } from "../YGOUiController";
 import { removeFocusFromActiveElement } from "../../scripts/utils";
 
-export function ControlsMenu({ duel, config: gameConfig }: { duel: YGODuel, config: UiGameConfig }) {
+export function ControlsMenu({ duel, isMobile, isPortrait, config: gameConfig }: { duel: YGODuel, config: UiGameConfig, isMobile: boolean, isPortrait: boolean, }) {
     const isPlaying = duel.commands.isPlaying();
     const hasPrevCommand = duel.ygo.hasPrevCommand();
     const hasNextCommand = duel.ygo.hasNextCommand();
@@ -30,6 +30,8 @@ export function ControlsMenu({ duel, config: gameConfig }: { duel: YGODuel, conf
 
     useEffect(() => {
         removeFocusFromActiveElement();
+
+        if (isMobile && isPortrait) return;
 
         if (!gameConfig.startReplay && duel.settings.getConfigFromPath("autoStartReplay") === true) {
             duel.events.dispatch("update-game-ui-config", { startReplay: true });
