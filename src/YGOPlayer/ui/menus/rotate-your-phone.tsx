@@ -1,24 +1,7 @@
-import { useEffect, useState } from 'react';
 
-export function RotateYourPhoneModal() {
-  const [showModal, setShowModal] = useState(false);
+export function RotateYourPhoneModal({ isMobile, isPortrait }: { isMobile: boolean, isPortrait: boolean }) {
 
-  useEffect(() => {
-    function checkOrientation() {
-      const isMobile = window.innerWidth < 768;
-      const isPortrait = window.innerHeight > window.innerWidth;
-      setShowModal(isMobile && isPortrait);
-    }
-
-    checkOrientation();
-    window.addEventListener('resize', checkOrientation);
-    window.addEventListener('orientationchange', checkOrientation);
-
-    return () => {
-      window.removeEventListener('resize', checkOrientation);
-      window.removeEventListener('orientationchange', checkOrientation);
-    };
-  }, []);
+  const showModal = isMobile && isPortrait;
 
   if (!showModal) return null;
 

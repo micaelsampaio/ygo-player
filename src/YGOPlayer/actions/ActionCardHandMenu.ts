@@ -4,7 +4,7 @@ import { YGODuel } from "../core/YGODuel";
 export class ActionCardHandMenu implements YGOAction {
     public name = "card-hand-menu";
     private duel: YGODuel;
-    private data: any;
+    public data: any;
     public unsubscribeKeyEvents?: () => void;
 
     constructor(duel: YGODuel) {

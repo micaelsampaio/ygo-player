@@ -292,37 +292,25 @@
     border: 2px solid yellow;
 }
 
-.ygo-player-core .selected-card-menu {
-    position: absolute;
-    left: 0px;
-    top: 0px;
-    background-color: rgba(0, 0, 0, 0.7);
-    color: white;
-    width: 240px;
-    border-radius: var(--ygo-border-radius-medium);
-    border: 1px solid var(--ygo-border-color);
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-}
-
 .ygo-player-core {
-    & .selected-card-menu {
+
+    & .ygo-selected-card-menu {
+        position: absolute;
+        left: 0px;
+        top: 0px;
+        background-color: rgba(0, 0, 0, 0.7);
+        color: white;
+        width: 240px;
+        border-radius: var(--ygo-border-radius-medium);
+        border: 1px solid var(--ygo-border-color);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
 
         & .ygo-selected-card-header-content {
             position: relative;
             z-index: 2;
-
-            /* &::before {
-                content: '';
-                position: absolute;
-                top: 0;
-                left: 0%;
-                width: 100%;
-                height: 100%;
-                background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.25) 50%, rgba(0, 0, 0, 0) 100%);
-                z-index: -1;
-            } */
+            flex-grow: 1;
 
             & .ygo-card-name {
                 padding-top: 5px;
@@ -366,7 +354,72 @@
                 margin-bottom: 10px;
             }
         }
+
+        .ygo-selected-card-header-container {
+            display: flex;
+            flex-direction: row;
+            gap: 10px;
+        }
+
+        .ygo-card-image-header-container {
+            display: none;
+        }
     }
+
+    .ygo-selected-card-menu.ygo-is-mobile {
+        font-size: 12px;
+
+        .ygo-card-image-header-container {
+            display: block;
+            flex-shrink: 0;
+        }
+
+        .ygo-card-image {
+            width: 30px;
+            height: auto !important;
+            padding: 10px;
+        }
+
+        .ygo-card-name {
+            font-size: 12px;
+            padding: 3px;
+        }
+
+        .ygo-effect-monster-card-bg {
+            font-size: 12px;
+            padding: 0px;
+        }
+
+        .ygo-card-data-container {
+            padding: 3px;
+        }
+
+        .ygo-card-stats {
+            font-size: 16px;
+
+            .ygo-card-stats-icon {
+                height: 16px;
+                width: 16px;
+                min-height: 16px;
+                min-width: 16px;
+            }
+        }
+
+        .ygo-card-image {
+            height: 80px;
+        }
+
+        .ygo-card-header {
+            display: none;
+        }
+
+        .ygo-card-stats-container {
+            display: flex;
+            flex-direction: row;
+            gap: 10px;
+        }
+    }
+
 
     .ygo-card-stats {
         display: flex;

@@ -62,6 +62,13 @@ export class GameCardHand extends YGOEntity implements YGOUiElement {
       return;
     };
 
+    const action = this.duel.actionManager.getAction<ActionCardHandMenu>("card-hand-menu");
+
+    if (this.duel.actionManager.action === action && action.data.card === this.card) {
+      this.duel.actionManager.clearAction();
+      return;
+    }
+
     this.duel.events.dispatch("set-selected-card", {
       player: this.card.originalOwner,
       card: this.card,
@@ -71,7 +78,6 @@ export class GameCardHand extends YGOEntity implements YGOUiElement {
       this.duel.setActivePlayer(this.player);
     }
 
-    const action = this.duel.actionManager.getAction<ActionCardHandMenu>("card-hand-menu");
     action.setData({
       duel: this.duel,
       card: this.card,

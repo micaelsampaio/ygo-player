@@ -81,7 +81,7 @@ export function GameSettingsMenu({ duel, currentMenu = SETTINGS_MODAL_TYPE.SETTI
                     {canSaveReplay && <button onClick={saveReplay} className="ygo-btn ygo-btn-action">Save Replay</button>}
                     {canReportBug && <button onClick={reportBug} className="ygo-btn ygo-btn-action">Report a bug</button>}
                     <div className="ygo-flex-grow-1"></div>
-                    <button className="ygo-btn ygo-btn-action">Close</button>
+                    <button className="ygo-btn ygo-btn-action" onClick={closeSettings}>Close</button>
                 </div>
             </div>
             <div className="ygo-game-settings-content">

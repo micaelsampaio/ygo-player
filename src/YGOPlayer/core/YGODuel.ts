@@ -118,10 +118,6 @@ export class YGODuel {
         this.assets.loadGLTF(`${this.config.cdnUrl}/models/game_field.glb`),
         this.assets.loadGLTF(`${this.config.cdnUrl}/models/destroy_effect.glb`),
         this.assets.loadGLTF(`${this.config.cdnUrl}/models/field_objects.glb`),
-        this.core.loadFontAsync(
-          "GameFont",
-          "https://threejs.org/examples/fonts/helvetiker_regular.typeface.json"
-        ),
         this.assets.loadImages(
           `${this.config.cdnUrl}/images/ui/card_icons.png`,
           `${this.config.cdnUrl}/images/ui/ic_stars128.png`,
@@ -139,13 +135,13 @@ export class YGODuel {
         //this.assets.loadTextures(Array.from((this.ygo.state as any).cardsIngame.values()).map(id => `http://127.0.0.1:8080/images/cards_small/${id}.jpg`)),
       ]);
 
-      this.fields = createFields({ duel: this, fieldModel: fieldModel.scene });
+      this.fields = createFields({ duel: this, fieldModel: fieldModel.scene as any });
       this.fieldStats = new YGOGameFieldStatsComponent(this);
       this.entities.push(this.gameController);
 
       this.gameController.getComponent<ActionCardSelection>("action_card_selection").createCardSelections();
 
-      this.duelScene.createFields({ gameField: gameFieldScene.scene });
+      this.duelScene.createFields({ gameField: gameFieldScene.scene as any });
       this.duelScene.createGameMusic();
 
       this.settings.events.on("onShowCardWhenPlayedChange", (_, showTransparentCards) => {

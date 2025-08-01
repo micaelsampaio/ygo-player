@@ -8,10 +8,12 @@ import { stopPropagationCallback } from "../../scripts/utils";
 export function SelectedCardMenu({
   duel,
   card,
+  isMobile = false,
   visible = true,
 }: {
   duel: YGODuel;
   card: Card;
+  isMobile: boolean,
   visible: boolean;
 }) {
   const menuRef = useRef<HTMLDivElement>(null);
@@ -30,17 +32,26 @@ export function SelectedCardMenu({
 
   useLayoutEffect(() => {
     if (!menuRef.current) return;
-    const placeholder = duel.duelScene.selectedCardPlaceholder;
+
+    const placeholder = isMobile ? duel.duelScene.selectedCardPlaceholderMobile[card.originalOwner] ?? duel.duelScene.selectedCardPlaceholderMobile[1] : duel.duelScene.selectedCardPlaceholder;
     const container = menuRef.current!;
     const { x, y, width, height } = getTransformFromCamera(duel, placeholder);
-    const maxWidth = x + width;
-    const newWidth = Math.min(300, maxWidth);
 
-    container.style.top = y + "px";
-    container.style.left = 0 + "px";
-    container.style.width = newWidth + "px";
-    container.style.maxHeight = height + "px";
-  }, [visible, menuRef.current, card, duel.duelScene.selectedCardPlaceholder]);
+    if (isMobile) {
+      container.style.top = y + "px";
+      container.style.left = x + "px";
+      container.style.width = width + "px";
+      container.style.maxHeight = height + "px";
+    } else {
+      const maxWidth = x + width;
+      const newWidth = Math.min(300, maxWidth);
+      container.style.top = y + "px";
+      container.style.left = 0 + "px";
+      container.style.width = newWidth + "px";
+      container.style.maxHeight = height + "px";
+    }
+
+  }, [visible, menuRef.current, card, duel.duelScene.selectedCardPlaceholder, isMobile]);
 
   useEffect(() => {
     if (cardDescriptionRef.current) {
@@ -56,7 +67,8 @@ export function SelectedCardMenu({
 
   return (
     <div
-      className="selected-card-menu"
+      // didnt like to put class is mobile but css queries were not working as tehy should
+      className={`ygo-selected-card-menu ${isMobile ? "ygo-is-mobile" : ""}`}
       ref={menuRef}
       onMouseMove={stopPropagationCallback}
       onClick={stopPropagationCallback}
@@ -67,60 +79,66 @@ export function SelectedCardMenu({
         duel.events.dispatch("set-selected-card", { card: null });
       }}
     >
-      <div
-        className={`ygo-selected-card-header ${cardData.colorClassName}`}
-        style={{ fontSize: "20px" }}
-      >
-        <div className="ygo-selected-card-header-content">
-          <div className="ygo-card-name">
-            {card.name}
-          </div>
+      <div className={`ygo-selected-card-header-container ygo-player-${card.owner}-bg-bottom`}>
+        <div className="ygo-card-image-header-container">
+          <div className="ygo-card-image" onClick={openCardHighlighted} style={{ backgroundImage: `url(${card.images.small_url})` }}></div>
         </div>
-      </div>
-
-      <div className={`ygo-player-${card.owner}-bg-bottom ygo-flex ygo-card-data-container`}>
-        <div className="ygo-card-image" onClick={openCardHighlighted} style={{ backgroundImage: `url(${card.images.small_url})` }}></div>
-        <div className="ygo-card-stats-container">
-          {cardData.isMonster && (
-            <>
-              {
-                cardData.isLinkMonster && <div className="ygo-card-stats">
-                  <div className="ygo-card-stats-icon ygo-card-stats-icon-link-monster"></div>
-                  <div>{card.linkval}</div>
-                </div>
-              }
-              {
-                cardData.isXyzMonster && <div className="ygo-card-stats">
-                  <div className="ygo-card-stats-icon ygo-card-stats-icon-rank"></div>
-                  <div>{card.level}</div>
-                </div>
-              }
-              {
-                (!cardData.isLinkMonster && !cardData.isXyzMonster && cardData.isMonster) && <div className="ygo-card-stats">
-                  <div className="ygo-card-stats-icon ygo-card-stats-icon-level"></div>
-                  <div>{card.level}</div>
-                </div>
-              }
-
-              <div className="ygo-card-stats">
-                <div className="ygo-card-stats-icon ygo-card-stats-icon-atk"></div>
-                <div>{card.currentAtk ?? card.atk ?? "0"}</div>
+        <div style={{ flexGrow: 1, width: "100%" }}>
+          <div
+            className={`ygo-selected-card-header ${cardData.colorClassName}`}
+            style={{ fontSize: "20px", width: "100%" }}
+          >
+            <div className="ygo-selected-card-header-content">
+              <div className="ygo-card-name ygo-card-name-header">
+                {card.name}
               </div>
-              <div>
-                {!cardData.isLinkMonster && <div className="ygo-card-stats">
-                  <div className="ygo-card-stats-icon ygo-card-stats-icon-def"></div>
-                  <div>{card.currentDef ?? card.def ?? "0"}</div>
-                </div>}
-              </div>
-            </>
-          )}
-
-          {(cardData.isSpell || cardData.isTrap) && (
-            <div className="ygo-card-stats">
-              {cardData.cardTypeIcon && <div className={`ygo-card-stats-icon ${cardData.cardTypeIcon}`}></div>}
-              <div>{cardData.cardTypeName}</div>
             </div>
-          )}
+          </div>
+          <div className={` ygo-flex ygo-card-data-container`}>
+            <div className="ygo-card-image ygo-card-header" onClick={openCardHighlighted} style={{ backgroundImage: `url(${card.images.small_url})` }}></div>
+            <div className="ygo-card-stats-container">
+              {cardData.isMonster && (
+                <>
+                  {
+                    cardData.isLinkMonster && <div className="ygo-card-stats">
+                      <div className="ygo-card-stats-icon ygo-card-stats-icon-link-monster"></div>
+                      <div>{card.linkval}</div>
+                    </div>
+                  }
+                  {
+                    cardData.isXyzMonster && <div className="ygo-card-stats">
+                      <div className="ygo-card-stats-icon ygo-card-stats-icon-rank"></div>
+                      <div>{card.level}</div>
+                    </div>
+                  }
+                  {
+                    (!cardData.isLinkMonster && !cardData.isXyzMonster && cardData.isMonster) && <div className="ygo-card-stats">
+                      <div className="ygo-card-stats-icon ygo-card-stats-icon-level"></div>
+                      <div>{card.level}</div>
+                    </div>
+                  }
+
+                  <div className="ygo-card-stats">
+                    <div className="ygo-card-stats-icon ygo-card-stats-icon-atk"></div>
+                    <div>{card.currentAtk ?? card.atk ?? "0"}</div>
+                  </div>
+                  <div>
+                    {!cardData.isLinkMonster && <div className="ygo-card-stats">
+                      <div className="ygo-card-stats-icon ygo-card-stats-icon-def"></div>
+                      <div>{card.currentDef ?? card.def ?? "0"}</div>
+                    </div>}
+                  </div>
+                </>
+              )}
+
+              {(cardData.isSpell || cardData.isTrap) && (
+                <div className="ygo-card-stats">
+                  {cardData.cardTypeIcon && <div className={`ygo-card-stats-icon ${cardData.cardTypeIcon}`}></div>}
+                  <div>{cardData.cardTypeName}</div>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 

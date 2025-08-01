@@ -13,6 +13,7 @@ import { YGOTimer } from "../game/YGOTimer";
 
 export class YGODuelScene {
     public selectedCardPlaceholder!: THREE.Object3D;
+    public selectedCardPlaceholderMobile!: THREE.Object3D[];
     public handPlaceholder!: THREE.Object3D;
     public gameFields: YGOGameFieldObject[];
     public turnPlayer!: YGOTurnPlayer;
@@ -79,10 +80,21 @@ export class YGODuelScene {
         this.gameFields.push(new YGOGameFieldObject(this.duel, clonedGameField, 1));
 
         const selectedCardGeometry = new THREE.PlaneGeometry(7, 15);
+        const selectedCardMobileGeometry = new THREE.PlaneGeometry(30, 11);
         const selectedCardMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000, transparent: true, opacity: 0, wireframe: false });
         this.selectedCardPlaceholder = new THREE.Mesh(selectedCardGeometry, selectedCardMaterial);
         this.selectedCardPlaceholder.position.set(-16.5, 0, 0.1);
         this.duel.core.scene.add(this.selectedCardPlaceholder);
+
+        const selectedCardPlaceholder1 = new THREE.Mesh(selectedCardMobileGeometry, selectedCardMaterial);
+        selectedCardPlaceholder1.position.set(0, 7, 0.1);
+        this.duel.core.scene.add(selectedCardPlaceholder1);
+
+        const selectedCardPlaceholder2 = new THREE.Mesh(selectedCardMobileGeometry, selectedCardMaterial);
+        selectedCardPlaceholder2.position.set(0, -7, 0.1);
+        this.duel.core.scene.add(selectedCardPlaceholder2);
+
+        this.selectedCardPlaceholderMobile = [selectedCardPlaceholder1, selectedCardPlaceholder2];
 
         const handObjectGeometry = new THREE.PlaneGeometry(22, 4);
         const handObjectMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000, transparent: true, opacity: 0, wireframe: false });

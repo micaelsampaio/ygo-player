@@ -12,6 +12,7 @@ import { MaterialOpacityTransition } from '../duel-events/utils/material-opacity
 import { lerp } from 'three/src/math/MathUtils';
 import { YGOGameUtils } from 'ygo-core';
 import { Ease } from '../scripts/ease';
+import { getResolutionInfo } from '../scripts/use-device-resolution-info';
 
 type CardSelectionType = "card" | "zone";
 
@@ -43,6 +44,10 @@ export class ActionCardSelection extends YGOComponent implements YGOAction {
 
     public onActionStart(): void {
         this.hideAllSelectionCards();
+
+        if (getResolutionInfo().isMobile) {
+            this.duel.events.dispatch("set-selected-card", { card: null });
+        }
 
         this.unsubscribeKeyEvents = this.duel.globalHotKeysManager.on("escPressed", () => {
             this.duel.events.dispatch("clear-ui-action");
