@@ -159,6 +159,11 @@
         &:active {
             border: 2px solid rgba(255, 255, 0, 0.6);
         }
+
+        @media only screen and (min-device-width: 480px) and (max-device-width: 640px) and (orientation: landscape) {
+            width: 50px;
+            height: 58px;
+        }
     }
 
     .ygo-card-banish-fd-icon {
