@@ -857,7 +857,7 @@ export class YGOGameActions {
   }) {
     this.clearAction();
     const player = this.duel.getActivePlayer();
-    const xyzZones = getXyzMonstersZones(this.duel, [0, 1]);
+    const xyzZones = getXyzMonstersZones(this.duel, [0, 1]).filter(c => c.getCardReference() !== card);
 
     if (xyzZones.length === 0) return;
 

@@ -1,4 +1,3 @@
-import * as THREE from "three";
 import { DuelEventHandlerProps } from "..";
 import { YGODuelEvents, YGOGameUtils } from "ygo-core";
 import { YGOTaskSequence } from "../../core/components/tasks/YGOTaskSequence";
@@ -47,9 +46,31 @@ export class XYZAttachMaterialHandler extends YGOCommandHandler {
       duel.updateHand(originZoneData.player);
     } else {
       cardZone = getGameZone(duel, originZoneData)!;
-      card = cardZone.getGameCard();
-      card.hideCardStats();
+      card = cardZone?.getGameCard();
     }
+
+    if (!card) {
+      const cardData = duel.ygo.state.getCardData(event.id)!;
+      card = new GameCard({ duel, card: cardData, stats: false });
+    }
+
+
+    if (originZoneData.zone === "GY") {
+      const gy = duel.fields[originZoneData.player].graveyard;
+      gy.createMoveFromGraveyardEffect({ card: card.gameObject, sequence });
+    }
+
+    if (originZoneData.zone === "B") {
+      const banish = duel.fields[originZoneData.player].banishedZone;
+      banish.createMoveFromBanishCardEffect({
+        card: card.gameObject,
+        sequence,
+      });
+    }
+
+    duel.events.dispatch("close-ui-menu", { type: "card-materials-menu" });
+
+    card.hideCardStats();
 
     sequence.addMultiple(
       new MultipleTasks(
@@ -69,7 +90,7 @@ export class XYZAttachMaterialHandler extends YGOCommandHandler {
     sequence.add(
       new CallbackTransition(() => {
         card.destroy();
-        if (cardZone) cardZone.setCard(null);
+        cardZone?.setCard(null);
         this.props.onCompleted();
       })
     );

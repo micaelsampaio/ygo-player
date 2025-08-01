@@ -157,7 +157,7 @@ export function CardHandMenu({
               type="button"
               onClick={attachMaterial}
             >
-              Attach Material
+              Attach Material to XYZ
             </button>
           </div>
         )}
@@ -253,7 +253,7 @@ export function CardHandMenu({
               type="button"
               onClick={attachMaterial}
             >
-              Attach Material
+              Attach Material to XYZ
             </button>
           </div>
         )}

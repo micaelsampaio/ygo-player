@@ -219,6 +219,8 @@ export class MoveCardEventHandler extends YGOCommandHandler {
       })
     );
 
+    duel.events.dispatch("close-ui-menu", { type: "card-materials-menu" });
+
     this.props.startTask(sequence);
   }
 }

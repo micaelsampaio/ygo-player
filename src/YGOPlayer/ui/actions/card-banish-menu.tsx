@@ -212,7 +212,7 @@ export function CardBanishMenu({
               className="ygo-card-item"
               onClick={attachMaterial}
             >
-              Attach Material
+              Attach Material to XYZ
             </button>
           </>
         )}

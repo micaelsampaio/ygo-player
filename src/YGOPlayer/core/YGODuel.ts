@@ -213,17 +213,11 @@ export class YGODuel {
           this.ygo.start();
         }, 500);
 
-        for (const player of this.fields) {
-          player.mainDeck.updateDeck();
-          player.extraDeck.updateExtraDeck();
-        }
+        this.updateField();
 
-        // setTimeout(() => {
-        //   this.gameActions.addDuelNote({
-        //     note: "Test note",
-        //     duration: 5
-        //   })
-        // }, 3000)
+        for (const field of this.fields) {
+          field.hand.destroyAllCards();
+        }
 
       } catch (error) {
         console.log("ERROR", error);
