@@ -8,7 +8,7 @@ import { CardMenu } from "../components/CardMenu";
 export function CardHandMenu({
   duel,
   card,
-  index,
+  index
 }: {
   duel: YGODuel;
   card: Card;
@@ -131,7 +131,7 @@ export function CardHandMenu({
     container.style.left = x + width / 2 - size.width / 2 + "px";
   }, [card]);
 
-  const player = duel.getActivePlayer();
+  const player = card.originalOwner;
   const field = duel.ygo.state.fields[player];
   const freeMonsterZones = field.monsterZone.filter((zone: any) => !zone).length;
   const freeSpellTrapZones = field.spellTrapZone.filter((zone: any) => !zone).length;
@@ -145,7 +145,7 @@ export function CardHandMenu({
 
   if (!isMonster && isSpellOrTrap) {
     return <>
-      <CardMenu cols indicator menuRef={menuRef}>
+      <CardMenu cols indicator playerIndex={player} menuRef={menuRef}>
         <button className="ygo-card-item" onClick={revealCard}>
           Reveal
         </button>
@@ -239,7 +239,7 @@ export function CardHandMenu({
 
   return (
     <>
-      <CardMenu cols indicator menuRef={menuRef}>
+      <CardMenu cols indicator playerIndex={player} menuRef={menuRef}>
         <button className="ygo-card-item" onClick={revealCard}>
           Reveal
         </button>

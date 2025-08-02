@@ -83,6 +83,7 @@ export class GameCardHand extends YGOEntity implements YGOUiElement {
       card: this.card,
       cardInHand: this,
       index: this.handIndex,
+      player: this.player,
       mouseEvent: event,
     });
     this.duel.actionManager.setAction(action);
