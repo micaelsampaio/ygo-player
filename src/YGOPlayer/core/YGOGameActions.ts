@@ -757,7 +757,12 @@ export class YGOGameActions {
     this.clearAction();
 
     const player = this.duel.getActivePlayer();
-    const zones = getCardZones(this.duel, [0, 1], ["M", "S"]).filter(
+    const isFieldSpell = YGOGameUtils.isFieldSpell(card);
+    const zonesToMove: any = ["M", "S"];
+
+    if (isFieldSpell) zonesToMove.push("F");
+
+    const zones = getCardZones(this.duel, [0, 1], zonesToMove).filter(
       (c) => c.zone !== originZone
     );
 

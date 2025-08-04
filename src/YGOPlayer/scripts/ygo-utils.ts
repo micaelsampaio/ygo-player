@@ -232,7 +232,6 @@ export function getCardZones(
           }
           break;
       }
-
       if (zonesToFind) {
         zonesToFind.forEach((zone) => {
           if (zone.isEmpty()) {

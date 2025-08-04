@@ -82,8 +82,19 @@ export function CardDeckMenu({
     duel.gameActions.revealCard({ card, originZone });
   }, [card, originZone]);
 
+  const activateFieldSpell = useCallback(() => {
+    closeViewDeckMenu();
+    duel.gameActions.fieldSpell({ card, originZone, position: "faceup" });
+  }, [card, originZone]);
+
+  const setFieldSpell = useCallback(() => {
+    closeViewDeckMenu();
+    duel.gameActions.fieldSpell({ card, originZone, position: "facedown" });
+  }, [card, originZone]);
+
   const isMonster = YGOGameUtils.isMonster(card);
   const isSpellTrap = YGOGameUtils.isSpellTrap(card);
+  const isFieldSpell = YGOGameUtils.isFieldSpell(card);
 
   return (
     <>
@@ -112,6 +123,14 @@ export function CardDeckMenu({
         <button className="ygo-card-item" type="button" onClick={toGy}>
           To GY
         </button>
+        {isFieldSpell && <>
+          <button className="ygo-card-item" type="button" onClick={activateFieldSpell}>
+            Field Spell Zone
+          </button>
+          <button className="ygo-card-item" type="button" onClick={setFieldSpell}>
+            Set Field Spell
+          </button>
+        </>}
         <button className="ygo-card-item" type="button" onClick={toST}>
           To ST (Face up)
         </button>
