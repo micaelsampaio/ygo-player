@@ -10,6 +10,7 @@ import {
 } from "../scripts/ygo-utils";
 import { CardZoneKV } from "../types";
 import { YGODuel } from "./YGODuel";
+import { YGODuelPhase } from "ygo-core";
 
 export class YGOGameActions {
   private duel: YGODuel;
@@ -1074,5 +1075,15 @@ export class YGOGameActions {
       note,
       duration: parsedDuration
     }));
+  }
+
+  public setDuelPhase({ phase }: { phase: YGODuelPhase }) {
+    this.duel.execCommand(new YGOCommands.DuelPhaseCommand({
+      phase
+    }));
+  }
+
+  public nextDuelturn() {
+    this.duel.execCommand(new YGOCommands.DuelTurnCommand());
   }
 }

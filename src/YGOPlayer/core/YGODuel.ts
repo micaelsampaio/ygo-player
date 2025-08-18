@@ -264,10 +264,6 @@ export class YGODuel {
     const gameField = this.fields[playerIndex];
     const duelField = this.ygo.state.fields[playerIndex];
 
-    console.log("TCL: ------------------------");
-    console.log("TCL: FIELD HAND", gameField.hand.cards.map(c => c.card?.name + " > " + c.gameObject.visible));
-    console.log("TCL: DUEL HAND", duelField.hand.map(c => c?.name));
-
     // TODO IMPROVE THE LOOPS AND ARRAY CREATIONS
     const hand: Array<GameCardHand | null> = [];
 

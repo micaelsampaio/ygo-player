@@ -1,9 +1,10 @@
+import * as THREE from "three";
 import { useCallback, useLayoutEffect, useRef } from "react";
 import { YGODuel } from "../../core/YGODuel";
 import { getTransformFromCamera, } from "../../scripts/ygo-utils";
 import { CardMenu } from "../components/CardMenu";
-import * as THREE from "three";
 import { ActionUiMenu } from "../../actions/ActionUiMenu";
+import { YGODuelPhase, YGO_DUEL_PHASE_ORDER } from "ygo-core";
 
 export function GlobalEventsActionsMenu({
   duel,
@@ -19,8 +20,25 @@ export function GlobalEventsActionsMenu({
     duel.gameActions.destroyAllCards({ zone: "all" });
   }, []);
 
+  const nextTurn = useCallback(() => {
+    if (duel.ygo.state.phase === YGODuelPhase.End) {
+      duel.gameActions.nextDuelturn();
+      duel.gameActions.setDuelPhase({ phase: YGODuelPhase.Draw });
+    }
+  }, [player]);
+
   const newRandomPlayerHand = useCallback(() => {
     duel.gameActions.swapPlayerHand({ player });
+  }, [player]);
+
+  const nextPhase = useCallback(() => {
+    const currentPhase = duel.ygo.state.phase;
+    const nextPhaseIndex = YGO_DUEL_PHASE_ORDER.indexOf(currentPhase) + 1;
+    const nextPhase = YGO_DUEL_PHASE_ORDER[nextPhaseIndex];
+
+    if (nextPhase) {
+      duel.gameActions.setDuelPhase({ phase: nextPhase });
+    }
   }, [player]);
 
   const newNote = useCallback(() => {
@@ -69,6 +87,13 @@ export function GlobalEventsActionsMenu({
       </button>
       <button type="button" className="ygo-card-item" onClick={newRandomPlayerHand}>
         New Random Hand
+      </button>
+
+      <button type="button" className="ygo-card-item" onClick={nextPhase}>
+        Next Phase
+      </button>
+      <button type="button" className="ygo-card-item" onClick={nextTurn}>
+        Next Turn
       </button>
     </CardMenu>
   );
