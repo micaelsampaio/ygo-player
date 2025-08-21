@@ -33,8 +33,18 @@ export function GlobalEventsActionsMenu({
 
   const nextPhase = useCallback(() => {
     const currentPhase = duel.ygo.state.phase;
-    const nextPhaseIndex = YGO_DUEL_PHASE_ORDER.indexOf(currentPhase) + 1;
-    const nextPhase = YGO_DUEL_PHASE_ORDER[nextPhaseIndex];
+    const currentTurn = duel.ygo.state.turn;
+    let nextPhaseIndex = YGO_DUEL_PHASE_ORDER.indexOf(currentPhase) + 1;
+    let nextPhase = YGO_DUEL_PHASE_ORDER[nextPhaseIndex];
+
+    if (
+      currentTurn === 1 &&
+      (currentPhase === YGODuelPhase.Main1)
+    ) {
+      // turn 1 skip battle and main2
+      nextPhaseIndex += 2;
+      nextPhase = YGO_DUEL_PHASE_ORDER[nextPhaseIndex];
+    }
 
     if (nextPhase) {
       duel.gameActions.setDuelPhase({ phase: nextPhase });
