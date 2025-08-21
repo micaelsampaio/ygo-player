@@ -28,7 +28,7 @@ export class ActionAttackSelection extends YGOComponent implements YGOAction {
     const field = this.duel.fields[1 - player];
     const result: CardZone[] = [
       ...field.monsterZone.filter(cardZone => cardZone.hasCard()),
-      ...field.extraMonsterZone.filter(cardZone => cardZone.hasCard()),
+      ...field.extraMonsterZone.filter(cardZone => cardZone.hasCard() && cardZone.zoneData.player !== player),
     ];
     return result;
   }
@@ -53,6 +53,7 @@ export class ActionAttackSelection extends YGOComponent implements YGOAction {
       const { cardSelection: gameObject } = this.selectionZones.get(zone.zone)!;
       gameObject.visible = true;
       zone.onClickCb = () => {
+        this.duel.actionManager.clearAction();
         onSelectionCompleted(zone);
       }
     });
