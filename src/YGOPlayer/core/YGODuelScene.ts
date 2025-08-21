@@ -12,6 +12,10 @@ import { YGOTimer } from "../game/YGOTimer";
 
 
 export class YGODuelScene {
+    /**
+     * If true, play random music from /music/ directory. If false, play default music.
+     */
+    public useRandomMusic: boolean = true;
     public selectedCardPlaceholder!: THREE.Object3D;
     public selectedCardPlaceholderMobile!: THREE.Object3D[];
     public handPlaceholder!: THREE.Object3D;
@@ -23,25 +27,59 @@ export class YGODuelScene {
         this.gameFields = [];
     }
 
-    public createGameMusic() {
-        const sound = this.duel.soundController.playSound({
-            key: this.duel.createCdnUrl("/music/temp.mp3"),
-            layer: "GAME_MUSIC",
-            volume: 0.2,
-            loop: true
-        });
-
-        const audio = sound.element;
-
-        const isPlaying = () => !audio.paused && !audio.ended && audio.readyState > 2;
-
-        if (!isPlaying()) {
-            const resumeAudio = () => {
-                audio.play().catch((e) => console.warn("Audio play failed:", e));
-                window.removeEventListener("click", resumeAudio, true);
-            };
-
-            window.addEventListener("click", resumeAudio, true);
+    /**
+     * Plays game music. If useRandomMusic is true, fetches /music/ index and plays a random file. Otherwise, plays default music.
+     */
+    public async createGameMusic() {
+        if (this.useRandomMusic) {
+            try {
+                const res = await fetch(this.duel.createCdnUrl('/music/'));
+                const html = await res.text();
+                // Parse links from the directory index
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const links = Array.from(doc.querySelectorAll('a'));
+                const musicFiles = links
+                    .map(a => a.getAttribute('href'))
+                    .filter(href => href && href.match(/\.(mp3)$/i))
+                    .map(href => href!.startsWith('/') ? href! : '/music/' + href!);
+                if (musicFiles.length === 0) throw new Error('No music files found');
+                const randomMusic = musicFiles[Math.floor(Math.random() * musicFiles.length)];
+                const sound = this.duel.soundController.playSound({
+                    key: this.duel.createCdnUrl(randomMusic),
+                    layer: "GAME_MUSIC",
+                    volume: 0.2,
+                    loop: true
+                });
+                const audio = sound.element;
+                const isPlaying = () => !audio.paused && !audio.ended && audio.readyState > 2;
+                if (!isPlaying()) {
+                    const resumeAudio = () => {
+                        audio.play().catch((e) => console.warn("Audio play failed:", e));
+                        window.removeEventListener("click", resumeAudio, true);
+                    };
+                    window.addEventListener("click", resumeAudio, true);
+                }
+            } catch (e) {
+                console.warn('Failed to load music index or play music:', e);
+            }
+        } else {
+            // Play default music
+            const sound = this.duel.soundController.playSound({
+                key: this.duel.createCdnUrl("/music/temp.mp3"),
+                layer: "GAME_MUSIC",
+                volume: 0.2,
+                loop: true
+            });
+            const audio = sound.element;
+            const isPlaying = () => !audio.paused && !audio.ended && audio.readyState > 2;
+            if (!isPlaying()) {
+                const resumeAudio = () => {
+                    audio.play().catch((e) => console.warn("Audio play failed:", e));
+                    window.removeEventListener("click", resumeAudio, true);
+                };
+                window.addEventListener("click", resumeAudio, true);
+            }
         }
     }
 
