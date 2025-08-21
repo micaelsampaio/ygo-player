@@ -196,6 +196,21 @@ export function getXyzMonstersZones(
   return result;
 }
 
+export function getAllGameCardZones(duel: YGODuel) {
+  const result: CardZone[] = [];
+
+  duel.fields.forEach((player) => {
+    result.push(
+      ...player.monsterZone,
+      ...player.spellTrapZone,
+      ...player.extraMonsterZone,
+      player.fieldZone
+    );
+  });
+
+  return result;
+}
+
 export function getCardZones(
   duel: YGODuel,
   players: number[],

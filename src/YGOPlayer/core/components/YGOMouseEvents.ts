@@ -48,15 +48,7 @@ export class YGOMouseEvents extends YGOComponent {
     }
 
     private getElements(): THREE.Object3D[] {
-        return Array.from(this.elements).map(e => e.gameObject);
-
-        // const activeElements = [];
-        // for (const element of this.elements) {
-        //     if (element.enabled) {
-        //         activeElements.push(element);
-        //     }
-        // }
-        // return activeElements;
+        return Array.from(this.elements).map(e => e.gameObject).filter(e => e.visible);
     }
 
     private getIntersectsElements(event: MouseEvent) {

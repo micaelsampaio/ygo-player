@@ -22,6 +22,7 @@ import { DisappearEventHandler } from "./events/disapear-event";
 import { StartHandEventHandler } from "./events/start-hand-event";
 import { SwapHandEventHandler } from "./events/swap-hand-event";
 import { DuelNotesEventHandler } from "./events/duel-notes-event";
+import { AttackEventHandler } from "./events/attack-event";
 
 export interface DuelEventHandlerProps {
   duel: YGODuel;
@@ -72,6 +73,9 @@ const events: any = {
   [YGODuelEvents.LogType.XYZOverlaySummon]: XYZSummonEventHandler,
   [YGODuelEvents.LogType.FusionSummon]: FusionSummonEventHandler,
   [YGODuelEvents.LogType.SynchroSummon]: SynchroSummonEventHandler,
+  //ATTACK
+  [YGODuelEvents.LogType.Attack]: AttackEventHandler,
+  [YGODuelEvents.LogType.AttackDirectly]: AttackEventHandler,
   // Others
   [YGODuelEvents.LogType.Disappear]: DisappearEventHandler,
   [YGODuelEvents.LogType.Target]: TargetCardEventHandler,

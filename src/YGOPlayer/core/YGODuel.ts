@@ -1,12 +1,12 @@
 import * as THREE from "three";
 import { YGOPlayerCore } from "./YGOPlayerCore";
 import { YGODuelState, YGOUiElement } from "../types";
-import { JSONCommand, YGOCore, YGOGameUtils } from "ygo-core";
+import { JSONCommand, YGOCommands, YGOCore, YGODuelPhase, YGOGameUtils } from "ygo-core";
 import { YGOEntity } from "./YGOEntity";
 import { GameController } from "../game/GameController";
 import { EventBus } from "../scripts/event-bus";
 import { YGOMouseEvents } from "./components/YGOMouseEvents";
-import { createFields, getTransformFromCamera } from "../scripts/ygo-utils";
+import { createFields, getAllGameCardZones, getCardZones, getTransformFromCamera } from "../scripts/ygo-utils";
 import { PlayerField } from "../game/PlayerField";
 import { GameCardHand } from "../game/GameCardHand";
 import { ActionCardSelection } from "../actions/ActionSelectCard";
@@ -32,6 +32,8 @@ import { YGOSoundController } from "./YGOSoundController";
 import { YGOPlayerSettingsAdapter } from "./YGOPlayerSettings";
 import { HotKeyManager } from "../scripts/hotkey-manager";
 import { SETTINGS_MODAL_TYPE } from "../ui/menus/game-settings/game-settings-menu";
+import { BattlePhaseController } from "../actions/BattlePhaseController";
+import { ActionAttackSelection } from "../actions/ActionAttackSelection";
 
 export class YGODuel {
   public ygo!: InstanceType<typeof YGOCore>;
@@ -95,6 +97,7 @@ export class YGODuel {
     this.gameController.addComponent("commands", this.commands);
     this.gameController.addComponent("actions_manager", this.actionManager);
     this.gameController.addComponent("action_card_selection", new ActionCardSelection({ duel: this }));
+    this.gameController.addComponent("attack_selection_action", new ActionAttackSelection(this));
     this.gameController.addComponent("map-click-zone", new YGOMapClick(this));
     this.actionManager.actions.set("card-hand-menu", new ActionCardHandMenu(this));
     this.actionManager.actions.set("card-zone-menu", new ActionCardZoneMenu(this));
@@ -138,11 +141,11 @@ export class YGODuel {
       this.fields = createFields({ duel: this, fieldModel: fieldModel.scene as any });
       this.fieldStats = new YGOGameFieldStatsComponent(this);
       this.entities.push(this.gameController);
-
-      this.gameController.getComponent<ActionCardSelection>("action_card_selection").createCardSelections();
-
       this.duelScene.createFields({ gameField: gameFieldScene.scene as any });
       this.duelScene.createGameMusic();
+      this.gameController.getComponent<ActionCardSelection>("action_card_selection").createCardSelections();
+      this.gameController.getComponent<ActionAttackSelection>("attack_selection_action").create();
+      this.gameController.addComponent("battle_phase_controller", new BattlePhaseController("battle_phase_controller", this));
 
       this.settings.events.on("onShowCardWhenPlayedChange", (_, showTransparentCards) => {
         this.fields.forEach(field => {
@@ -161,6 +164,10 @@ export class YGODuel {
       this.settings.events.on("onGameVolumeChange", (_, value) => this.soundController.setLayerVolume("GAME", value));
       this.settings.events.on("onMusicVolumeChange", (_, value) => this.soundController.setLayerVolume("GAME_MUSIC", value));
       this.settings.events.on("onGameSpeedChange", (_, value) => this.core.setTimeScale(value));
+
+      this.ygo.events.on("set-duel-turn", () => {
+
+      })
 
       this.core.updateCamera();
     } catch (error) {
@@ -208,6 +215,10 @@ export class YGODuel {
         setTimeout(() => {
           this.ygo.start();
         }, 500);
+
+        setTimeout(() => {
+          this.execCommand(new YGOCommands.DuelPhaseCommand({ phase: YGODuelPhase.Battle }))
+        }, 1000);
 
         this.updateField();
 

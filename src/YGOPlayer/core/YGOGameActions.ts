@@ -1086,4 +1086,36 @@ export class YGOGameActions {
   public nextDuelturn() {
     this.duel.execCommand(new YGOCommands.DuelTurnCommand());
   }
+
+  public attack({ attackingId, attackingZone, attackedId, attackedZone, destroyAttacking, destroyAttacked }: {
+    attackingId: number, attackingZone: FieldZone, attackedId: number, attackedZone: FieldZone,
+    destroyAttacking?: number, destroyAttacked?: boolean
+  }) {
+
+    const attackZoneData = YGOGameUtils.getZoneData(attackingZone);
+
+    this.duel.execCommand(new YGOCommands.AttackCommand({
+      player: attackZoneData.player,
+      attackedId,
+      attackedZone,
+      attackingId,
+      attackingZone,
+    }))
+  }
+
+  public attackDirectly({ attackingId, attackingZone, attackedId, attackedZone, destroyAttacking, destroyAttacked }: {
+    attackingId: number, attackingZone: FieldZone, attackedId: number, attackedZone: FieldZone,
+    destroyAttacking?: number, destroyAttacked?: boolean
+  }) {
+
+    const attackZoneData = YGOGameUtils.getZoneData(attackingZone);
+
+    this.duel.execCommand(new YGOCommands.AttackCommand({
+      player: attackZoneData.player,
+      attackedId,
+      attackedZone,
+      attackingId,
+      attackingZone,
+    }))
+  }
 }
