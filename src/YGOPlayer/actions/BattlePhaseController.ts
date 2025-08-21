@@ -10,76 +10,70 @@ export class BattlePhaseController extends YGOComponent {
 
   private attackObjects: Map<string, any>;
 
-  constructor(name: string, duel: YGODuel) {
+  constructor(name: string, private duel: YGODuel) {
     super(name);
     this.attackObjects = new Map();
+    this.enabled = false;
 
     duel.fields.forEach(player => {
       player.monsterZone.forEach(zone => this.attackObjects.set(zone.zone, createAttackZone(duel, zone)));
     })
 
-    this.attackObjects.values().forEach(g => g.gameObject.visible = false);
+    this.hideBattlePhaseIcons();
 
-    duel.ygo.events.on("set-duel-phase", ({ phase, turnPlayer }) => {
+    duel.ygo.events.on("set-duel-phase", ({ phase }) => {
       if (phase === YGODuelPhase.Battle) {
-        this.attackObjects.values().forEach(g => {
-          g.gameObject.visible = g.zone.hasCard() && g.zone.player === turnPlayer;
-          g.onMouseClick = () => {
-            const battleAction = duel.gameController.getComponent<ActionAttackSelection>("attack_selection_action")
-            const zones = battleAction.getMonstersZonesToAttack(g.zone.zoneData.player);
-            const attackingCard = g.zone.getCardReference()!;
-
-            battleAction.startSelection({
-              zones, onSelectionCompleted(zone) {
-                const attackedCard = zone.getCardReference()!;
-                duel.gameActions.attack({
-                  attackingId: attackingCard.id,
-                  attackingZone: g.zone.zone,
-                  attackedId: attackedCard.id,
-                  attackedZone: zone.zone
-                })
-              }
-            });
-          }
-        });
+        this.enabled = true;
       } else {
+        this.enabled = false;
         this.attackObjects.values().forEach(g => {
           g.gameObject.visible = false;
           g.isUiElementClick = false;
         });
       }
     })
-    //     const allZones = getAllGameCardZones(duel);
-    //     allZones.forEach(zone => {
-    //       const availableZoneToAttack = zone.hasCard() && zone.player === turnPlayer;
 
-    //       if (availableZoneToAttack) {
+    duel.events.on("enable-game-actions", () => {
+      if (this.enabled) {
+        this.showBattlePhaseIcons(this.duel.ygo.state.turnPlayer);
+      }
+    });
 
-    //       }
-    //     });
-    //   })
-    //   const allZones = getAllGameCardZones(duel);
-    //   if (phase === YGODuelPhase.Battle) {
-    //     allZones.forEach(zone => {
+    duel.events.on("disable-game-actions", () => {
+      if (this.enabled) {
+        this.hideBattlePhaseIcons();
+      }
+    });
+  }
 
-    //       const availableZoneToAttack = zone.hasCard() && zone.player === turnPlayer;
+  private hideBattlePhaseIcons() {
+    this.attackObjects.values().forEach(g => {
+      g.gameObject.visible = false;
+      g.isUiElementClick = false;
+    });
+  }
 
-    //       if (availableZoneToAttack) {
-    //         zone.onClickCb = () => {
-    //           alert("BATTLE");
-    //         }
-    //       } else {
-    //         zone.onClickCb = () => {
-    //           // NOTHIng
-    //         }
-    //       }
-    //     });
-    //   } else {
-    //     allZones.forEach(zone => {
-    //       zone.onClickCb = null;
-    //     });
-    //   }
-    // })
+  private showBattlePhaseIcons(turnPlayer: number) {
+    this.attackObjects.values().forEach(g => {
+      g.gameObject.visible = g.zone.hasCard() && g.zone.player === turnPlayer;
+      g.onMouseClick = () => {
+        const battleAction = this.duel.gameController.getComponent<ActionAttackSelection>("attack_selection_action")
+        const zones = battleAction.getMonstersZonesToAttack(g.zone.zoneData.player);
+        const attackingCard = g.zone.getCardReference()!;
+
+        battleAction.startSelection({
+          zones, onSelectionCompleted: (zone) => {
+            const attackedCard = zone.getCardReference()!;
+            this.duel.gameActions.attack({
+              attackingId: attackingCard.id,
+              attackingZone: g.zone.zone,
+              attackedId: attackedCard.id,
+              attackedZone: zone.zone
+            })
+          }
+        });
+      }
+    });
   }
 }
 
@@ -110,10 +104,6 @@ function createAttackZone(duel: YGODuel, zone: CardZone) {
     onMouseClick() {
     }
   };
-  // isUiElementHover ?: boolean;
-  // isUiCardElement ?: boolean;
-
-
 
   duel.core.scene.add(triangle);
   duel.gameController.getComponent<YGOMouseEvents>("mouse_events")?.registerElement(uielement);
