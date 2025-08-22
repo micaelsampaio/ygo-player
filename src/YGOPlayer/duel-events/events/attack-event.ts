@@ -1,6 +1,3 @@
-// if origin && zoen
-// new Move card
-// on complete -> start
 import * as THREE from "three";
 import { DuelEventHandlerProps } from "..";
 import { YGODuelEvents, YGOGameUtils } from "ygo-core";
@@ -10,10 +7,8 @@ import {
   getCardRotationFromFieldZoneData,
   getGameZone,
 } from "../../scripts/ygo-utils";
-import { MoveCardEventHandler } from "./move-card-event";
 import { CallbackTransition } from "../utils/callback";
 import { PositionTransition } from "../utils/position-transition";
-import { WaitForSeconds } from "../utils/wait-for-seconds";
 import { RotationTransition } from "../utils/rotation-transition";
 import { Ease } from "../../scripts/ease";
 import { MultipleTasks } from "../utils/multiple-tasks";
@@ -46,6 +41,7 @@ export class AttackEventHandler extends YGOCommandHandler {
       const attackedZoneData = YGOGameUtils.getZoneData(attackedZone);
       const attackedCardZone = getGameZone(duel, attackedZoneData)!;
       const attackedCard = attackedCardZone.getGameCard();
+      const targetAttackedPosition = attackedCard.gameObject.position.clone();
 
       const offset = 5;
       const direction = new THREE.Vector3()
@@ -56,13 +52,45 @@ export class AttackEventHandler extends YGOCommandHandler {
       goingInPosition.z += 3;
       goingOutPosition.z += 1.5;
 
-      const lookDir = new THREE.Vector3().subVectors(
-        attackedCard.gameObject.position,
-        card.gameObject.position
-      ).normalize();
+      const tempDirection = new THREE.Vector3().subVectors(card.gameObject.position, attackedCard.gameObject.position);
+      const angle = Math.atan2(tempDirection.x, -tempDirection.y);
+      const newRotation = card.gameObject.rotation.clone();
 
-      const angleZ = Math.atan2(lookDir.x, lookDir.z);
-      const newRotation = new THREE.Euler(0, 0, angleZ, 'XYZ');
+      if ((event as any).attackedPosition?.includes("facedown")) {
+        const startPosition: THREE.Vector3 = attackedCard.gameObject.position.clone();
+        const targetRotation = getCardRotationFromFieldZoneData(
+          duel,
+          attackedCard.cardReference!,
+          attackedZoneData
+        );
+        const abovePosition = startPosition.clone();
+        abovePosition.z += 1;
+        attackedCard.hideCardStats();
+
+        startTask(new YGOTaskSequence(
+          new PositionTransition({
+            gameObject: attackedCard.gameObject,
+            duration: 0.15,
+            position: abovePosition,
+          }),
+          new MultipleTasks(
+            new PositionTransition({
+              gameObject: attackedCard.gameObject,
+              duration: 0.15,
+              position: startPosition,
+            }),
+            new RotationTransition({
+              gameObject: attackedCard.gameObject,
+              duration: 0.2,
+              rotation: targetRotation,
+            })
+          ),
+          new CallbackTransition(() => {
+            attackedCard.showCardStats();
+          })
+        ))
+      }
+      newRotation.z = angle;
 
       sequence.addMultiple(
         new MultipleTasks(
@@ -81,7 +109,65 @@ export class AttackEventHandler extends YGOCommandHandler {
         ),
         new PositionTransition({
           gameObject: card.gameObject,
-          position: attackedCard.gameObject.position.clone(),
+          position: targetAttackedPosition.clone(),
+          duration: 0.25,
+          ease: Ease.easeInOut,
+        }),
+        new PositionTransition({
+          gameObject: card.gameObject,
+          position: goingOutPosition,
+          duration: 0.4,
+          ease: Ease.easeInOut,
+        }),
+        new MultipleTasks(
+          new PositionTransition({
+            gameObject: card.gameObject,
+            position: originalPosition,
+            duration: 0.2,
+            ease: Ease.easeInOut,
+          }),
+          new RotationTransition({
+            gameObject: card.gameObject,
+            rotation: originalRotation,
+            duration: 0.2,
+            ease: Ease.easeOutSine
+          })
+        )
+      )
+    } else {
+      const offset = 5;
+      const gameHandZone = duel.fields[1 - event.player].hand.gameHandZone;
+      const direction = new THREE.Vector3()
+        .subVectors(card.gameObject.position, gameHandZone.gameObject.position)
+        .normalize();
+      const goingInPosition = card.gameObject.position.clone().addScaledVector(direction, offset);
+      const goingOutPosition = card.gameObject.position.clone().addScaledVector(direction, offset / 2);
+      goingInPosition.z += 3;
+      goingOutPosition.z += 1.5;
+
+      const tempDirection = new THREE.Vector3().subVectors(card.gameObject.position, gameHandZone.gameObject.position);
+      const angle = Math.atan2(tempDirection.x, -tempDirection.y);
+      const newRotation = card.gameObject.rotation.clone();
+      newRotation.z = angle;
+
+      sequence.addMultiple(
+        new MultipleTasks(
+          new PositionTransition({
+            gameObject: card.gameObject,
+            position: goingInPosition,
+            duration: 0.5,
+            ease: Ease.easeInOut,
+          }),
+          new RotationTransition({
+            gameObject: card.gameObject,
+            rotation: newRotation,
+            duration: 0.25,
+            ease: Ease.easeOutSine
+          })
+        ),
+        new PositionTransition({
+          gameObject: card.gameObject,
+          position: gameHandZone.gameObject.position.clone(),
           duration: 0.25,
           ease: Ease.easeInOut,
         }),

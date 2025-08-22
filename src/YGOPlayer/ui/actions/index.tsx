@@ -11,6 +11,7 @@ import { CardZoneMenu } from "./card-zone-menu";
 import { DeckMenu } from "./deck-menu";
 import { GlobalEventsActionsMenu } from "./global-events-actions-menu";
 import { TimerEventsActionsMenu } from "./timer-events-menu";
+import { CardZoneAttackMenuAction } from "./card-zone-attack-menu";
 
 export const ACTIONS = {
     "card-hand-menu": CardHandMenu,
@@ -26,4 +27,5 @@ export const ACTIONS = {
     "global-events-menu": GlobalEventsActionsMenu,
     "timer-events-menu": TimerEventsActionsMenu,
     "duel-notes-form-menu": DuelNotesFormAction,
+    "card-zone-attack-menu": CardZoneAttackMenuAction
 }

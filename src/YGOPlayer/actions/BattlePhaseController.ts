@@ -15,9 +15,15 @@ export class BattlePhaseController extends YGOComponent {
     this.attackObjects = new Map();
     this.enabled = false;
 
-    duel.fields.forEach(player => {
+    duel.fields.forEach((player) => {
       player.monsterZone.forEach(zone => this.attackObjects.set(zone.zone, createAttackZone(duel, zone)));
     })
+    const emz1 = createAttackZone(duel, duel.fields[0].extraMonsterZone[0]);
+    this.attackObjects.set("EMZ-1", emz1);
+    this.attackObjects.set("EMZ2-1", emz1);
+    const emz2 = createAttackZone(duel, duel.fields[0].extraMonsterZone[1]);
+    this.attackObjects.set("EMZ-2", emz2);
+    this.attackObjects.set("EMZ2-2", emz2);
 
     this.hideBattlePhaseIcons();
 
@@ -55,20 +61,23 @@ export class BattlePhaseController extends YGOComponent {
 
   private showBattlePhaseIcons(turnPlayer: number) {
     this.attackObjects.values().forEach(g => {
-      g.gameObject.visible = g.zone.hasCard() && g.zone.player === turnPlayer;
+      g.gameObject.visible = g.zone.hasCard() && g.zone.zoneData.player === turnPlayer;
+
       g.onMouseClick = () => {
         const battleAction = this.duel.gameController.getComponent<ActionAttackSelection>("attack_selection_action")
         const zones = battleAction.getMonstersZonesToAttack(g.zone.zoneData.player);
         const attackingCard = g.zone.getCardReference()!;
 
         battleAction.startSelection({
+          player: g.zone.zoneData.player,
+          card: g.zone,
           zones, onSelectionCompleted: (zone) => {
-            const attackedCard = zone.getCardReference()!;
-            this.duel.gameActions.attack({
-              attackingId: attackingCard.id,
-              attackingZone: g.zone.zone,
-              attackedId: attackedCard.id,
-              attackedZone: zone.zone
+
+          },
+          onDirectAttack: () => {
+            this.duel.gameActions.attackDirectly({
+              id: attackingCard.id,
+              originZone: g.zone.zone
             })
           }
         });

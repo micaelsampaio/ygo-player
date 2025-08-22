@@ -8,6 +8,7 @@ import { GameHand } from "./Hand";
 import { YGOGameCard } from "./YGOGameCard";
 
 export class PlayerField {
+  public playerIndex: number = 0;
   public player!: PlayerInfo;
   public cardsPool!: YGOGameCard[];
   // hand: YGOGameCard[]

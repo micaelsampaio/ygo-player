@@ -4,6 +4,7 @@ import { YGODuel } from "../core/YGODuel";
 import { YGOEntity } from "../core/YGOEntity";
 import { GameCardHand } from "./GameCardHand";
 import { CARD_HEIGHT_SIZE } from "../constants";
+import { GameHandZone } from "./GameHandZone";
 
 export class GameHand extends YGOEntity {
   private duel: YGODuel;
@@ -13,6 +14,7 @@ export class GameHand extends YGOEntity {
   public selectedCard: GameCardHand | undefined;
   private player: number;
   public showHand: boolean;
+  public gameHandZone: GameHandZone;
 
   constructor(duel: YGODuel, player: number, showHand: boolean) {
     super();
@@ -21,6 +23,7 @@ export class GameHand extends YGOEntity {
     this.cards = [];
     this.selectedCard = undefined;
     this.showHand = showHand;
+    this.gameHandZone = new GameHandZone(duel, player);
 
     this.duel.core.events.on("resize", () => {
       this.render();
@@ -100,10 +103,13 @@ export class GameHand extends YGOEntity {
   }
 
   render() {
+    const handPivot = this.getCardHandPivot();
     const gameField = this.duel.fields[this.player];
     const totalCards = gameField.hand.cards.length;
     const cardsTransforms = this.getCardsTransforms(totalCards);
     const cardRotation = this.getCardsRotation();
+
+    this.gameHandZone.gameObject.position.y = handPivot;
 
     for (let i = 0; i < totalCards; ++i) {
       const index = this.player === 0 ? i : totalCards - 1 - i;
@@ -150,7 +156,7 @@ export class GameHand extends YGOEntity {
       }
 
       cardPositions[index] = {
-        position: position,
+        position,
         scale: scale,
       }
     }

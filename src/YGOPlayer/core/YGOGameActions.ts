@@ -1087,35 +1087,63 @@ export class YGOGameActions {
     this.duel.execCommand(new YGOCommands.DuelTurnCommand());
   }
 
-  public attack({ attackingId, attackingZone, attackedId, attackedZone, destroyAttacking, destroyAttacked }: {
+  public attack({ attackingId, attackingZone, attackedId, attackedZone, destroyAttacking, destroyAttacked, battleDamage }: {
     attackingId: number, attackingZone: FieldZone, attackedId: number, attackedZone: FieldZone,
-    destroyAttacking?: number, destroyAttacked?: boolean
+    destroyAttacking?: boolean, destroyAttacked?: boolean, battleDamage?: number
   }) {
 
-    const attackZoneData = YGOGameUtils.getZoneData(attackingZone);
+    const attackingZoneData = YGOGameUtils.getZoneData(attackingZone);
+    const attackedZoneData = YGOGameUtils.getZoneData(attackedZone);
 
     this.duel.execCommand(new YGOCommands.AttackCommand({
-      player: attackZoneData.player,
+      player: attackingZoneData.player,
       attackedId,
       attackedZone,
       attackingId,
-      attackingZone,
+      attackingZone
     }))
+
+    if (destroyAttacking) {
+      this.duel.execCommand(new YGOCommands.DestroyCardCommand({
+        player: attackingZoneData.player,
+        id: attackingId,
+        originZone: attackingZone
+      }))
+    }
+
+    if (destroyAttacked) {
+      this.duel.execCommand(new YGOCommands.DestroyCardCommand({
+        player: attackedZoneData.player,
+        id: attackedId,
+        originZone: attackedZone
+      }))
+    }
+
+    if (battleDamage && battleDamage > 0) {
+      this.duel.execCommand(new YGOCommands.LifePointsTransactionCommand({
+        player: attackedZoneData.player,
+        value: "-" + battleDamage.toString()
+      }))
+    }
+
+    if (battleDamage && battleDamage < 0) {
+      this.duel.execCommand(new YGOCommands.LifePointsTransactionCommand({
+        player: attackingZoneData.player,
+        value: battleDamage.toString()
+      }))
+    }
   }
 
-  public attackDirectly({ attackingId, attackingZone, attackedId, attackedZone, destroyAttacking, destroyAttacked }: {
-    attackingId: number, attackingZone: FieldZone, attackedId: number, attackedZone: FieldZone,
-    destroyAttacking?: number, destroyAttacked?: boolean
+  public attackDirectly({ id, originZone }: {
+    id: number, originZone: FieldZone
   }) {
 
-    const attackZoneData = YGOGameUtils.getZoneData(attackingZone);
+    const attackZoneData = YGOGameUtils.getZoneData(originZone);
 
-    this.duel.execCommand(new YGOCommands.AttackCommand({
+    this.duel.execCommand(new YGOCommands.AttackDirectlyCommand({
       player: attackZoneData.player,
-      attackedId,
-      attackedZone,
-      attackingId,
-      attackingZone,
+      id,
+      originZone
     }))
   }
 }

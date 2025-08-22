@@ -154,6 +154,13 @@ export class YGOMouseEvents extends YGOComponent {
     }
 
     private getCardInHandFromInterseptions(elements: any[]) {
+
+        const gameHandZone = elements.find(c => c.object.uiElementRef.isGameHandZone && c.object.visible);
+
+        if (gameHandZone) {
+            return gameHandZone;
+        }
+
         const cardsInHand = elements.filter((element) => element.object.uiElementRef?.isUiCardElement);
 
         if (cardsInHand.length > 0) {

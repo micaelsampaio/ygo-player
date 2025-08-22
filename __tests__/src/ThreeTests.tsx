@@ -13,7 +13,11 @@ import { YGOMapClick } from '../../src/YGOPlayer/core/YGOMapClick';
 import { YGOComponent } from '../../src/YGOPlayer/core/YGOComponent';
 
 class TempScene extends YGOComponent {
+  private arc!: THREE.Mesh;
   private cube: THREE.Mesh;
+  private arcMaterial!: THREE.ShaderMaterial;
+  private elapsedTime: number = 0;
+  private mousePosition: THREE.Vector3;
 
   constructor(private duel: YGODuel) {
     super("scene");
@@ -23,16 +27,194 @@ class TempScene extends YGOComponent {
     const cube = new THREE.Mesh(geometry, material);
     this.duel.core.scene.add(cube);
 
+    const plane = new THREE.PlaneGeometry(20, 20);
+    const planeMaterial = new THREE.MeshBasicMaterial({ color: 0x0000ff, wireframe: true, opacity: 0, transparent: true });
+    const planeMesh = new THREE.Mesh(plane, planeMaterial);
+    planeMesh.name = "mouse_attack_floor";
+
+    this.duel.core.scene.add(planeMesh);
     this.cube = cube;
 
     this.duel.core.camera.position.set(0, 0, 10);
+
+    this.attackEffect();
+
+    this.mousePosition = new THREE.Vector3();
+
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+
+    // On click
+    window.addEventListener('mousemove', (event) => {
+      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+      raycaster.setFromCamera(mouse, this.duel.core.camera);
+      const intersects = raycaster.intersectObjects([planeMesh], true);
+
+      if (intersects.length > 0) {
+        const intersection = intersects[0];
+        const point = intersection.point;
+        this.mousePosition = point.clone();
+      }
+    });
+  }
+
+  public attackEffect() {
+    const texture = this.duel.core.textureLoader.load("http://localhost:8080/images/particles/player-0-attack.png");
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.RepeatWrapping;
+    texture.minFilter = THREE.LinearFilter;
+    const arcMaterial = new THREE.ShaderMaterial({
+      uniforms: {
+        uTexture: { value: texture },
+        uTime: { value: 0 },
+        uSpeed: { value: 0.5 },
+        uRepeat: { value: new THREE.Vector2(1, 1) } // dynamic repeat
+      },
+      vertexShader: `
+        varying vec2 vUv;
+        void main() {
+          vUv = uv;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0);
+        }
+    `,
+      fragmentShader: `
+        uniform sampler2D uTexture;
+        uniform float uTime;
+        uniform float uSpeed;
+        uniform vec2 uRepeat;
+        varying vec2 vUv;
+
+        void main() {
+            // Apply dynamic repeat
+            vec2 uv = vUv * uRepeat;
+
+            // Slide the texture
+            uv.y -= uTime * uSpeed;
+
+            gl_FragColor = texture2D(uTexture, uv);
+        }
+    `,
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.NormalBlending
+    });
+
+    arcMaterial.uniforms.uRepeat.value.set(1, 15);
+    arcMaterial.uniforms.uSpeed.value = 2.5;
+
+    this.arcMaterial = arcMaterial;
+
+    const arc = createArcMesh(3, 1, 10, arcMaterial);
+    this.duel.core.scene.add(arc);
+    this.arc = arc;
+    this.arc.rotateX(90);
   }
 
   public update(dt: number): void {
-    this.cube.rotation.x += dt;
-    this.cube.rotation.z += dt;
-    this.cube.rotation.z += dt;
+    this.elapsedTime += dt;
+    //this.cube.rotation.x += dt;
+    //this.cube.rotation.z += dt;
+    //this.cube.rotation.y += dt;
+    this.arcMaterial.uniforms.uTime.value = this.elapsedTime;
+
+    const midPoint = new THREE.Vector3()
+      .addVectors(this.cube.position, this.mousePosition)
+      .multiplyScalar(0.5);
+
+    midPoint.z = 1;
+
+    // Set arc position to midpoint
+    this.arc.position.copy(midPoint);
+
+    const distance = this.cube.position.distanceTo(this.mousePosition);
+    this.arc.scale.z = distance / 6.5;
+    this.arcMaterial.uniforms.uRepeat.value.set(1, this.arc.scale.z * 15);
+
+    const direction = new THREE.Vector3();
+    direction.subVectors(this.cube.position, this.mousePosition);
+    const angle = Math.atan2(direction.x, -direction.y);
+
+    this.arc.rotation.y = angle;
+    //lookAtY(this.cube, this.mousePosition);
+    //this.cube.rotateZ(dt);
   }
+}
+function lookAtY(object: THREE.Object3D, targetPosition: THREE.Vector3) {
+  const direction = new THREE.Vector3();
+  direction.subVectors(targetPosition, object.position);
+  const angleY = Math.atan2(-direction.x, -direction.z);
+  object.rotation.y = angleY;
+
+  console.log("angle Y", angleY);
+}
+
+function createArcMesh(radius: number, height: number, numSegments: number, material: THREE.Material) {
+  const ARC_ANGLE = Math.PI * 0.75;   // arc span
+  const STRIP_WIDTH = radius * 0.25;  // width across arc
+  const N = Math.max(1, Math.floor(numSegments));
+
+  const positions = [];
+  const uvs = [];
+  const indices = [];
+
+  const centerline = [];
+  for (let i = 0; i <= N; i++) {
+    const t = i / N;
+    const theta = -ARC_ANGLE * 0.5 + t * ARC_ANGLE;
+
+    const x = 0;
+    const z = Math.sin(theta) * radius;
+    const y = height * Math.sin(Math.PI * t);
+
+    centerline.push(new THREE.Vector3(x, y, z));
+  }
+
+  for (let i = 0; i <= N; i++) {
+    const t = i / N;
+    const p = centerline[i];
+
+    // tangent in XZ plane
+    let tangent;
+    if (i === 0) tangent = centerline[1].clone().sub(p);
+    else if (i === N) tangent = p.clone().sub(centerline[N - 1]);
+    else tangent = centerline[i + 1].clone().sub(centerline[i - 1]);
+
+    tangent.y = 0;
+    tangent.normalize();
+
+    const side = new THREE.Vector3(-tangent.z, 0, tangent.x).normalize();
+    const halfW = STRIP_WIDTH * 0.5;
+
+    const left = p.clone().addScaledVector(side, -halfW);
+    const right = p.clone().addScaledVector(side, halfW);
+
+    // positions
+    positions.push(left.x, left.y, left.z);
+    positions.push(right.x, right.y, right.z);
+
+    uvs.push(1, 1 - t);
+    uvs.push(0, 1 - t);
+  }
+
+  for (let i = 0; i < N; i++) {
+    const a = i * 2;
+    const b = a + 1;
+    const c = a + 2;
+    const d = a + 3;
+
+    indices.push(a, b, c);
+    indices.push(b, d, c);
+  }
+
+  const geom = new THREE.BufferGeometry();
+  geom.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  geom.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+  geom.setIndex(indices);
+  geom.computeVertexNormals();
+
+  return new THREE.Mesh(geom, material);
 }
 
 export function ThreeTestsPage() {

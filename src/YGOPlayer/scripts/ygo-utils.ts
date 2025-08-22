@@ -10,6 +10,7 @@ import { ExtraDeck } from "../game/ExtraDeck";
 import { Card, FieldZone, FieldZoneData, YGOReplayData } from "ygo-core";
 import { YGOGameUtils } from "ygo-core";
 import { Banish } from "../game/Banish";
+import { YGOUtils } from "ygo-core/src/game/YGOUtils";
 
 type CreateFieldDto = {
   duel: YGODuel;
@@ -43,6 +44,7 @@ export function createFields({ duel, fieldModel }: CreateFieldDto) {
   for (let player = 0; player < 2; ++player) {
     const field = new PlayerField();
     const playerSufix = player === 0 ? "" : "2";
+    field.playerIndex = player;
 
     for (let i = 0; i < 5; ++i) {
       const monsterZoneId: any = `M${playerSufix}-${i + 1}`;
@@ -530,4 +532,65 @@ export function getCardPositionInFrontOfCamera({ camera, distance = 4 }: { camer
 
 export function randomIntFromInterval(min: number, max: number): number { // min and max included 
   return Math.floor(Math.random() * (max - min + 1) + min);
+}
+
+export interface YGOBattleInfo {
+  attacking: {
+    destroyed: boolean
+  },
+  attacked: {
+    destroyed: boolean
+  },
+  battleDamage: number
+}
+export function calculateBattleInfo(attackingCard: Card, attackedCard: Card): YGOBattleInfo {
+  const isAtk1 = !YGOGameUtils.isDefense(attackingCard);
+  const isAtk2 = !YGOGameUtils.isDefense(attackedCard);
+
+  const attackPower = isAtk1 ? attackingCard.currentAtk : attackingCard.currentDef;
+  const defendPower = attackedCard.currentAtk;
+  const defendDef = attackedCard.currentDef;
+
+  let battleDamage = 0;
+  let attackingDestroyed = false;
+  let attackedDestroyed = false;
+
+  if (isAtk2) {
+    battleDamage = attackPower - defendPower;
+    if (battleDamage > 0) {
+      attackedDestroyed = true;
+    } else if (battleDamage < 0) {
+      attackingDestroyed = true;
+      battleDamage = -battleDamage; // player loses this much LP
+    } else {
+      attackingDestroyed = attackPower > 0 ? true : false;
+      attackedDestroyed = attackPower > 0 ? true : false;
+      battleDamage = 0;
+    }
+  } else {
+    // Attack vs Defense
+    battleDamage = attackPower - defendDef;
+    if (battleDamage > 0) {
+      attackedDestroyed = true;
+      battleDamage = 0; // no LP loss in standard rules for destroying DEF monster
+    } else if (battleDamage < 0) {
+      attackingDestroyed = true;
+      battleDamage = -battleDamage; // attacking player loses LP
+    } else {
+      // ATK == DEF -> nothing destroyed, no LP loss
+      attackingDestroyed = defendPower > 0 ? true : false;
+      attackedDestroyed = defendPower > 0 ? true : false;
+      battleDamage = 0;
+    }
+  }
+
+  return {
+    attacking: {
+      destroyed: attackingDestroyed,
+    },
+    attacked: {
+      destroyed: attackedDestroyed,
+    },
+    battleDamage,
+  };
 }

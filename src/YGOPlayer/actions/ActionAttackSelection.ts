@@ -6,13 +6,17 @@ import { createCardSelectionGeometry } from "../game/meshes/CardSelectionMesh";
 import { CardZone } from '../game/CardZone';
 import { Ease } from '../scripts/ease';
 import { lerp } from 'three/src/math/MathUtils';
+import { GameHandZone } from '../game/GameHandZone';
 
+enum STATE { SELECTION, PRE_ATTACK_MENU }
 export class ActionAttackSelection extends YGOComponent implements YGOAction {
+  private state = STATE.SELECTION;
   private selectionZones: Map<string, { cardSelection: THREE.Mesh }>;
+  private selectedZone: CardZone | undefined;
   private zones!: CardZone[];
   private time: number = 0;
   private opacityValue: number = 0.0;
-
+  private card: CardZone | undefined;
   constructor(private duel: YGODuel) {
     super("attack_selection_action");
 
@@ -39,6 +43,8 @@ export class ActionAttackSelection extends YGOComponent implements YGOAction {
         const cardSelection = this.createCardSelection(cardZone.position, cardZone.rotation);
         this.selectionZones.set(cardZone.zone, { cardSelection });
       }
+      const cardSelectionHand = this.createDirectAttackSelection(field.hand.gameHandZone);
+      this.selectionZones.set("P" + field.playerIndex, { cardSelection: cardSelectionHand });
     }
 
     for (const cardZone of this.duel.fields[0].extraMonsterZone) {
@@ -48,18 +54,55 @@ export class ActionAttackSelection extends YGOComponent implements YGOAction {
     }
   }
 
-  startSelection({ zones, onSelectionCompleted }: { zones: CardZone[], onSelectionCompleted: (cardzone: CardZone) => void }) {
+  startSelection({ player, card, zones, onDirectAttack }: { player: number, card: CardZone, zones: CardZone[], onSelectionCompleted: (cardzone: CardZone) => void, onDirectAttack?: () => void }) {
+    this.duel.actionManager.setAction(this);
+
+    if (onDirectAttack) {
+      const playerId = "P" + (1 - player);
+      const gameHandZone = this.duel.fields[1 - player].hand.gameHandZone;
+      this.selectionZones.get(playerId)!.cardSelection.visible = true;
+      gameHandZone.gameObject.visible = true;
+      gameHandZone.onClickCb = () => {
+        this.duel.events.dispatch("clear-ui-action");
+        onDirectAttack();
+      }
+    }
+
     zones.forEach(zone => {
+
       const { cardSelection: gameObject } = this.selectionZones.get(zone.zone)!;
       gameObject.visible = true;
+
+
       zone.onClickCb = () => {
-        this.duel.actionManager.clearAction();
-        onSelectionCompleted(zone);
+        this.state = STATE.PRE_ATTACK_MENU;
+        this.selectedZone = zone;
+        this.hideCardSelection();
+
+        this.duel.events.dispatch("set-ui-action", {
+          type: "card-zone-attack-menu",
+          data: {
+            attackedZone: zone.zone,
+            attackedCard: zone.getCardReference(),
+            attackedGameCard: zone.getGameCard(),
+
+            attackingZone: card.zone,
+            attackingCard: card.getCardReference(),
+            attackingGameCard: card.getGameCard(),
+
+            player
+          }
+        });
       }
     });
 
+    this.card = card;
     this.zones = zones;
-    this.duel.actionManager.setAction(this);
+    this.state = STATE.SELECTION;
+
+    this.duel.events.dispatch("set-ui-action", {
+      type: "card-attack-selection", data: {}
+    });
   }
 
   updateAction() {
@@ -74,21 +117,33 @@ export class ActionAttackSelection extends YGOComponent implements YGOAction {
       cardMaterial.opacity = this.opacityValue;
       // zoneMaterial.opacity = this.opacityValue;
     }
+
+    if (this.card) {
+      const startY = this.card.position.y;
+      const yOscillator = Math.sin(this.time / 2) * 0.5;
+      this.card.getGameCard().gameObject.position.y = startY + yOscillator;
+    }
   }
 
   onActionEnd() {
     this.hideCardSelection();
     this.zones?.forEach(zone => zone.onClickCb = null);
+    if (this.card) {
+      this.card.getGameCard().gameObject.position.copy(this.card.position);
+      this.card = undefined;
+    }
   }
 
   private hideCardSelection() {
     this.selectionZones.values().forEach(({ cardSelection: gameObject }) => {
       gameObject.visible = false;
     })
+    this.selectionZones.get("P0")!.cardSelection.parent!.visible = false;
+    this.selectionZones.get("P1")!.cardSelection.parent!.visible = false;
   }
 
   private createCardSelection(position: THREE.Vector3, rotation: THREE.Euler) {
-    const cardSelection = createCardSelectionGeometry(2.7, 3.75, 0.12);
+    const cardSelection = createCardSelectionGeometry(3, 4, 0.15);
     const material = new THREE.MeshBasicMaterial({ color: 0xff0000, opacity: 1, transparent: true });
     const cardSelectionMesh = new THREE.Mesh(cardSelection, material);
 
@@ -97,6 +152,20 @@ export class ActionAttackSelection extends YGOComponent implements YGOAction {
     cardSelectionMesh.position.z += 0.01;
     cardSelectionMesh.visible = false;
     this.duel.core.scene.add(cardSelectionMesh);
+
+    return cardSelectionMesh;
+  }
+
+  private createDirectAttackSelection(gameHandZone: GameHandZone) {
+    const cardSelection = createCardSelectionGeometry(15, 6, 0.15);
+    const material = new THREE.MeshBasicMaterial({ color: 0xff0000, opacity: 1, transparent: true });
+    const cardSelectionMesh = new THREE.Mesh(cardSelection, material);
+
+    cardSelectionMesh.position.set(0, 0, 0);
+    cardSelectionMesh.rotation.set(0, 0, 0.01);
+    cardSelectionMesh.visible = false;
+
+    gameHandZone.gameObject.add(cardSelectionMesh);
 
     return cardSelectionMesh;
   }
