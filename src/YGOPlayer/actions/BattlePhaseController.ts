@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { YGOComponent } from "../core/YGOComponent";
 import { YGODuel } from "../core/YGODuel";
 import { CardZone } from "../game/CardZone";
-import { YGODuelPhase } from 'ygo-core';
+import { YGODuelPhase, YGOGameUtils } from 'ygo-core';
 import { YGOMouseEvents } from '../core/components/YGOMouseEvents';
 import { ActionAttackSelection } from './ActionAttackSelection';
 
@@ -61,7 +61,7 @@ export class BattlePhaseController extends YGOComponent {
 
   private showBattlePhaseIcons(turnPlayer: number) {
     this.attackObjects.values().forEach(g => {
-      g.gameObject.visible = g.zone.hasCard() && g.zone.zoneData.player === turnPlayer;
+      g.gameObject.visible = g.zone.hasCard() && g.zone.zoneData.player === turnPlayer && YGOGameUtils.isFaceUp(g.zone.getCardReference()!);
 
       g.onMouseClick = () => {
         const battleAction = this.duel.gameController.getComponent<ActionAttackSelection>("attack_selection_action")
