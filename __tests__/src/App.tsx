@@ -4,6 +4,7 @@ import { Button, Card, Container, DeckItem, DeckList, FlexBox, Grid, InputSelect
 import { useStorageDecks } from './hooks/useStorageDecks';
 import { useDuelController } from './hooks/useStorageDuel';
 import { LocalStorage } from './scripts/storage';
+import { Link } from 'react-router-dom';
 
 function App() {
   const [duelData, setDuelData] = useState<string>(() => getDuelDataFromLocalStorageSafe());
@@ -160,14 +161,20 @@ function App() {
 
         {/* Right Section - Duel */}
         <Card>
-          <SectionTitle>⚔️ Duel Props</SectionTitle>
-          <TextArea
-            value={duelData}
-            onChange={(e: any) => setDuelData(e.target.value)}
-            placeholder="Paste JSON props here..."
-          />
-          <div style={{ textAlign: 'right', marginTop: '1rem' }}>
-            <Button onClick={() => duelManager.duelWithStaticProps(duelData)}>Start Duel</Button>
+          <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+            <SectionTitle>⚔️ Duel Props</SectionTitle>
+            <div style={{ flexGrow: 1 }}>
+              <TextArea
+                style={{ height: "100%" }}
+                value={duelData}
+                onChange={(e: any) => setDuelData(e.target.value)}
+                placeholder="Paste JSON props here..."
+              />
+            </div>
+            <div style={{ flexShrink: 0, textAlign: 'right', marginTop: '1rem', justifyContent: "end", display: "flex", gap: "16px", rowGap: "16px" }}>
+              <Link to="/three/test"><Button>Temp Three Scene</Button></Link>
+              <Button onClick={() => duelManager.duelWithStaticProps(duelData)}>Start Duel</Button>
+            </div>
           </div>
         </Card>
       </Grid>

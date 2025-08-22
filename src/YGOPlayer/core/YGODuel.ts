@@ -6,11 +6,11 @@ import { YGOEntity } from "./YGOEntity";
 import { GameController } from "../game/GameController";
 import { EventBus } from "../scripts/event-bus";
 import { YGOMouseEvents } from "./components/YGOMouseEvents";
-import { createFields, getAllGameCardZones, getCardZones, getTransformFromCamera } from "../scripts/ygo-utils";
+import { createFields, getTransformFromCamera } from "../scripts/ygo-utils";
 import { PlayerField } from "../game/PlayerField";
 import { GameCardHand } from "../game/GameCardHand";
 import { ActionCardSelection } from "../actions/ActionSelectCard";
-import { YGOActionManager as ActionManager } from "./components/YGOAction";
+import { YGOActionManager } from "./components/YGOAction";
 import { ActionCardHandMenu } from "../actions/ActionCardHandMenu";
 import { ActionCardZoneMenu } from "../actions/ActionCardZoneMenu";
 import { YGOTaskController } from "./components/tasks/YGOTaskController";
@@ -46,7 +46,7 @@ export class YGODuel {
   public camera: THREE.PerspectiveCamera;
   public entities: YGOEntity[];
   public events: EventBus<any>;
-  public actionManager: ActionManager;
+  public actionManager: YGOActionManager;
   public gameActions: YGOGameActions;
   public gameController: GameController;
   public mouseEvents: YGOMouseEvents;
@@ -82,7 +82,7 @@ export class YGODuel {
     this.fields = [];
     this.duelScene = new YGODuelScene(this);
     this.gameController = new GameController(this);
-    this.actionManager = new ActionManager();
+    this.actionManager = new YGOActionManager();
     this.tasks = new YGOTaskController(this);
     this.commands = new YGOCommandsController(this);
     this.soundController = new YGOSoundController();
@@ -216,9 +216,9 @@ export class YGODuel {
           this.ygo.start();
         }, 500);
 
-        // setTimeout(() => {
-        //   this.execCommand(new YGOCommands.DuelPhaseCommand({ phase: YGODuelPhase.Battle }))
-        // }, 1000);
+        setTimeout(() => {
+          this.execCommand(new YGOCommands.DuelPhaseCommand({ phase: YGODuelPhase.Battle }))
+        }, 1000);
 
         this.updateField();
 
