@@ -728,11 +728,7 @@ export class YGODuel {
   }
 
   execCommand(command: Command | string) {
-    if (typeof command === "string") {
-      this.ygo.exec(new JSONCommand(JSON.parse(command)));
-    } else {
-      this.ygo.exec(command);
-    }
+    this.commands.exec(command);
   }
 
   clearActions() {

@@ -1,4 +1,4 @@
-import { Command, YGODuelEvents } from "ygo-core";
+import { Command, JSONCommand, YGODuelEvents } from "ygo-core";
 import { getDuelEventHandler } from "../../../duel-events";
 import { YGOComponent } from "../../YGOComponent";
 import { YGODuel } from "../../YGODuel";
@@ -21,6 +21,7 @@ export class YGOCommandsController extends YGOComponent {
   private timerOnCompleteEvent: number;
   private timerOnNextCommand: number;
   private pauseRequested = false;
+  private commandsToExecuteQueue: Command[];
 
   constructor(duel: YGODuel) {
     super("duel_events_controller");
@@ -29,12 +30,31 @@ export class YGOCommandsController extends YGOComponent {
     this.tasks = [];
     this.state = YGOCommandsControllerState.IDLE;
     this.currentCommand = undefined;
+    this.commandsToExecuteQueue = [];
 
     this.timerOnCompleteEvent = -1;
     this.timerOnNextCommand = -1;
   }
 
   start(): void { }
+
+  exec(command: Command | string) {
+    const alreadyPlaying = this.isPlaying();
+    this.setState(YGOCommandsControllerState.PLAYING);
+
+    if (typeof command === "string") {
+      const cmd = new JSONCommand(JSON.parse(command));
+      if (alreadyPlaying) {
+        return this.commandsToExecuteQueue.push(cmd)
+      }
+      this.duel.ygo.exec(cmd);
+    } else {
+      if (alreadyPlaying) {
+        return this.commandsToExecuteQueue.push(command)
+      }
+      this.duel.ygo.exec(command);
+    }
+  }
 
   getState() {
     return this.state;
@@ -159,7 +179,8 @@ export class YGOCommandsController extends YGOComponent {
   }
 
   private processNextCommand() {
-    if (this.currentCommand) return; // there is already a command to be executed
+    // there is already a command to be executed
+    if (this.currentCommand) return;
 
     this.duel.clearActions();
 
@@ -169,10 +190,9 @@ export class YGOCommandsController extends YGOComponent {
           clearTimeout(this.timerOnNextCommand);
 
           this.duel.updateField();
-
           this.timerOnNextCommand = setTimeout(() => {
             this.duel.ygo.redo();
-          }, 250) as any as number;
+          }, 100) as any as number;
           return;
         }
       }
@@ -185,10 +205,21 @@ export class YGOCommandsController extends YGOComponent {
   }
 
   private onAllCommandsProcessed() {
+
+    if (this.commandsToExecuteQueue.length > 0) {
+      return this.executeCommandInQueue();
+    }
+
     this.setState(YGOCommandsControllerState.IDLE);
     this.duel.updateField();
     this.duel.events.dispatch("enable-game-actions");
     this.duel.events.dispatch("commands-process-completed");
+  }
+
+  private executeCommandInQueue() {
+    const command = this.commandsToExecuteQueue.pop();
+    if (!command) return;
+    this.duel.ygo.exec(command);
   }
 
   update(dt?: number): void {
