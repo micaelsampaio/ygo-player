@@ -12,6 +12,9 @@ import { PositionTransition } from "../utils/position-transition";
 import { RotationTransition } from "../utils/rotation-transition";
 import { Ease } from "../../scripts/ease";
 import { MultipleTasks } from "../utils/multiple-tasks";
+import { ScaleTransition } from "../utils/scale-transition";
+import { MaterialOpacityTransition } from "../utils/material-opacity";
+import { WaitForSeconds } from "../utils/wait-for-seconds";
 
 interface AttackEventHandlerProps extends DuelEventHandlerProps {
   event: YGODuelEvents.Attack | YGODuelEvents.AttackDirectly;
@@ -35,6 +38,10 @@ export class AttackEventHandler extends YGOCommandHandler {
     const originalRotation = card.gameObject.rotation.clone();
 
     const sequence = new YGOTaskSequence();
+
+    // pre load textures
+    duel.core.textureLoader.load(duel.createCdnUrl("/images/particles/circle_03.png"))
+    duel.core.textureLoader.load(duel.createCdnUrl("/images/particles/star_07.png"))
 
     if ((event as any).attackedId) {
       const { attackedZone } = (event as any);
@@ -113,6 +120,11 @@ export class AttackEventHandler extends YGOCommandHandler {
           duration: 0.25,
           ease: Ease.easeInOut,
         }),
+        new CallbackTransition(() => {
+          const position = targetAttackedPosition.clone();
+          position.z += 0.2;
+          this.createAttackCollistionEffect({ startTask, position });
+        }),
         new PositionTransition({
           gameObject: card.gameObject,
           position: goingOutPosition,
@@ -171,6 +183,11 @@ export class AttackEventHandler extends YGOCommandHandler {
           duration: 0.25,
           ease: Ease.easeInOut,
         }),
+        new CallbackTransition(() => {
+          const position = gameHandZone.gameObject.position.clone();
+          position.z += 0.2;
+          this.createAttackCollistionEffect({ startTask, position });
+        }),
         new PositionTransition({
           gameObject: card.gameObject,
           position: goingOutPosition,
@@ -204,5 +221,132 @@ export class AttackEventHandler extends YGOCommandHandler {
   }
 
   public finish(): void {
+  }
+
+  private createAttackCollistionEffect({ startTask, position }: any) {
+    const { duel } = this.props;
+    const circleTexture = duel.core.textureLoader.load(duel.createCdnUrl("/images/particles/circle_03.png"));
+    const circle = new THREE.Mesh(
+      new THREE.PlaneGeometry(8, 8, 8),
+      new THREE.MeshBasicMaterial({
+        color: 0xffd230,
+        map: circleTexture,
+        transparent: true,
+      })
+    );
+    duel.core.scene.add(circle);
+    const circleLarge = new THREE.Mesh(
+      new THREE.PlaneGeometry(16, 16),
+      new THREE.MeshBasicMaterial({
+        color: 0xefb100,
+        map: circleTexture,
+        transparent: true,
+      })
+    );
+    duel.core.scene.add(circleLarge);
+    const flare = new THREE.Mesh(
+      new THREE.PlaneGeometry(15, 15, 15),
+      new THREE.MeshBasicMaterial({
+        color: 0xffd230,
+        transparent: true,
+        map: duel.core.textureLoader.load(duel.createCdnUrl("/images/particles/star_07.png"))
+      })
+    );
+    duel.core.scene.add(flare);
+
+    circle.scale.set(0, 0, 0);
+    circle.position.copy(position);
+    circle.material.opacity = 0;
+
+    circleLarge.scale.set(0, 0, 0);
+    circleLarge.position.copy(position);
+    circleLarge.position.z -= 0.1;
+    circleLarge.material.opacity = 0;
+
+    flare.position.copy(position);
+    flare.position.z += 0.1;
+    flare.scale.set(0, 0, 0);
+    flare.material.opacity = 0;
+
+    startTask(new YGOTaskSequence(
+      new MultipleTasks(
+        new ScaleTransition({
+          gameObject: flare,
+          scale: new THREE.Vector3(1, 1, 1),
+          duration: 0.15
+        }),
+        new MaterialOpacityTransition({
+          material: flare.material,
+          duration: 0.1,
+          opacity: 1
+        })
+      ),
+      new MultipleTasks(
+        new ScaleTransition({
+          gameObject: flare,
+          scale: new THREE.Vector3(0.5, 0.5, 0.5),
+          duration: 0.15
+        }),
+        new MaterialOpacityTransition({
+          material: flare.material,
+          duration: 0.15,
+          opacity: 0
+        })
+      ),
+      new WaitForSeconds(0.5),
+      new CallbackTransition(() => {
+        duel.core.scene.remove(circle);
+        duel.core.scene.remove(circleLarge);
+        duel.core.scene.remove(flare);
+      })
+    ));
+
+    startTask(new YGOTaskSequence(
+      new MultipleTasks(
+        new ScaleTransition({
+          gameObject: circle,
+          scale: new THREE.Vector3(1, 1, 1),
+          duration: 0.2
+        }),
+        new MaterialOpacityTransition({
+          material: circle.material,
+          duration: 0.1,
+          opacity: 1
+        })
+      ),
+      new WaitForSeconds(0.15),
+      new MaterialOpacityTransition({
+        material: circle.material,
+        duration: 0.2,
+        opacity: 0
+      })
+    ));
+
+    startTask(new YGOTaskSequence(
+      new MultipleTasks(
+        new ScaleTransition({
+          gameObject: circleLarge,
+          scale: new THREE.Vector3(1, 1, 1),
+          duration: 0.15
+        }),
+        new MaterialOpacityTransition({
+          material: circleLarge.material,
+          duration: 0.1,
+          opacity: 1
+        })
+      ),
+      new MultipleTasks(
+        new ScaleTransition({
+          gameObject: circleLarge,
+          scale: new THREE.Vector3(1.5, 1.5, 1.5),
+          duration: 0.2
+        }),
+        new MaterialOpacityTransition({
+          material: circleLarge.material,
+          duration: 0.2,
+          opacity: 0
+        })
+      ),
+    ));
   }
 }

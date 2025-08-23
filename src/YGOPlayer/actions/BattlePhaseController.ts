@@ -3,119 +3,101 @@ import { YGOComponent } from "../core/YGOComponent";
 import { YGODuel } from "../core/YGODuel";
 import { CardZone } from "../game/CardZone";
 import { YGODuelPhase, YGOGameUtils } from 'ygo-core';
-import { YGOMouseEvents } from '../core/components/YGOMouseEvents';
 import { ActionAttackSelection } from './ActionAttackSelection';
+import { BattlePhaseButton } from '../game/BattlePhaseButton';
 
 export class BattlePhaseController extends YGOComponent {
 
-  private attackObjects: Map<string, any>;
+  private attackButtons: Map<string, BattlePhaseButton>;
 
   constructor(name: string, private duel: YGODuel) {
     super(name);
-    this.attackObjects = new Map();
+    this.attackButtons = new Map();
     this.enabled = false;
 
-    duel.fields.forEach((player) => {
-      player.monsterZone.forEach(zone => this.attackObjects.set(zone.zone, createAttackZone(duel, zone)));
-    })
-    const emz1 = createAttackZone(duel, duel.fields[0].extraMonsterZone[0]);
-    this.attackObjects.set("EMZ-1", emz1);
-    this.attackObjects.set("EMZ2-1", emz1);
-    const emz2 = createAttackZone(duel, duel.fields[0].extraMonsterZone[1]);
-    this.attackObjects.set("EMZ-2", emz2);
-    this.attackObjects.set("EMZ2-2", emz2);
-
+    this.createAttackButtons();
     this.hideBattlePhaseIcons();
+    this.bindEvents();
+  }
 
-    duel.ygo.events.on("set-duel-phase", ({ phase }) => {
+  private bindEvents() {
+    this.duel.ygo.events.on("set-duel-phase", ({ phase }) => {
       if (phase === YGODuelPhase.Battle) {
         this.enabled = true;
       } else {
         this.enabled = false;
-        this.attackObjects.values().forEach(g => {
-          g.gameObject.visible = false;
-          g.isUiElementClick = false;
-        });
+        this.attackButtons.values().forEach(attackButton => attackButton.hide());
       }
     })
 
-    duel.events.on("enable-game-actions", () => {
+    this.duel.events.on("enable-game-actions", () => {
       if (this.enabled) {
         this.showBattlePhaseIcons(this.duel.ygo.state.turnPlayer);
       }
     });
 
-    duel.events.on("disable-game-actions", () => {
+    this.duel.events.on("disable-game-actions", () => {
       if (this.enabled) {
         this.hideBattlePhaseIcons();
       }
     });
   }
 
+  private createAttackButtons() {
+    this.duel.fields.forEach((player) => {
+      player.monsterZone.forEach(zone => this.attackButtons.set(zone.zone, createAttackZone(this.duel, zone)));
+    })
+    const emz1 = createAttackZone(this.duel, this.duel.fields[0].extraMonsterZone[0]);
+    this.attackButtons.set("EMZ-1", emz1);
+    this.attackButtons.set("EMZ2-1", emz1);
+    const emz2 = createAttackZone(this.duel, this.duel.fields[0].extraMonsterZone[1]);
+    this.attackButtons.set("EMZ-2", emz2);
+    this.attackButtons.set("EMZ2-2", emz2);
+  }
+
   private hideBattlePhaseIcons() {
-    this.attackObjects.values().forEach(g => {
-      g.gameObject.visible = false;
-      g.isUiElementClick = false;
-    });
+    this.attackButtons.values().forEach(button => button.hide());
   }
 
   private showBattlePhaseIcons(turnPlayer: number) {
-    this.attackObjects.values().forEach(g => {
-      g.gameObject.visible = g.zone.hasCard() && g.zone.zoneData.player === turnPlayer && YGOGameUtils.isFaceUp(g.zone.getCardReference()!);
 
-      g.onMouseClick = () => {
+    const rotation = turnPlayer === 1 ? new THREE.Euler(0, THREE.MathUtils.degToRad(180), 0) : new THREE.Euler(0, 0, 0);
+
+    this.attackButtons.values().forEach(attackButton => {
+      const isVisible = attackButton.cardZone.hasCard() && attackButton.cardZone.zoneData.player === turnPlayer && YGOGameUtils.isFaceUp(attackButton.cardZone.getCardReference()!);
+
+      if (!isVisible) {
+        attackButton.hide();
+        return;
+      }
+
+      attackButton.show();
+      attackButton.rotation.copy(rotation);
+      attackButton.gameObject.position.copy(attackButton.position);
+      attackButton.gameObject.rotation.copy(attackButton.rotation);
+      attackButton.onClickCb = () => {
         const battleAction = this.duel.gameController.getComponent<ActionAttackSelection>("attack_selection_action")
-        const zones = battleAction.getMonstersZonesToAttack(g.zone.zoneData.player);
-        const attackingCard = g.zone.getCardReference()!;
+        const zones = battleAction.getMonstersZonesToAttack(attackButton.cardZone.zoneData.player);
 
         battleAction.startSelection({
-          player: g.zone.zoneData.player,
-          card: g.zone,
-          zones, onSelectionCompleted: (zone) => {
-
-          },
-          onDirectAttack: () => {
-            this.duel.gameActions.attackDirectly({
-              id: attackingCard.id,
-              originZone: g.zone.zone
-            })
-          }
+          player: attackButton.cardZone.zoneData.player,
+          cardZone: attackButton.cardZone,
+          zones,
+          directAttack: true,
         });
       }
     });
   }
 }
 
-function createAttackZone(duel: YGODuel, zone: CardZone) {
-  const positions = new Float32Array([
-    0, 1, 0,
-    -1, -1, 0,
-    1, -1, 0,
-  ]);
+function createAttackZone(duel: YGODuel, zone: CardZone): BattlePhaseButton {
 
-  const geometry = new THREE.BufferGeometry();
-  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-  geometry.computeVertexNormals();
+  const attackButton = new BattlePhaseButton(duel);
+  attackButton.cardZone = zone;
+  attackButton.position = zone.position.clone();
+  attackButton.rotation = zone.rotation.clone();
+  attackButton.position.z += 0.25;
+  attackButton.gameObject.position.copy(attackButton.position);
 
-  const material = new THREE.MeshBasicMaterial({
-    color: 0xff0000,
-  });
-
-  const triangle = new THREE.Mesh(geometry, material);
-  triangle.position.copy(zone.position);
-  triangle.position.z += 0.5;
-
-  const uielement = {
-    gameObject: triangle,
-    zone: zone,
-    isUiElement: true,
-    isUiElementClick: true,
-    onMouseClick() {
-    }
-  };
-
-  duel.core.scene.add(triangle);
-  duel.gameController.getComponent<YGOMouseEvents>("mouse_events")?.registerElement(uielement);
-
-  return uielement;
+  return attackButton;
 }

@@ -1139,11 +1139,18 @@ export class YGOGameActions {
   }) {
 
     const attackZoneData = YGOGameUtils.getZoneData(originZone);
-
+    const card = this.duel.ygo.state.getCardFromZone(originZone)!;
     this.duel.execCommand(new YGOCommands.AttackDirectlyCommand({
       player: attackZoneData.player,
       id,
       originZone
     }))
+
+    if (card.currentAtk > 0) {
+      this.duel.execCommand(new YGOCommands.LifePointsTransactionCommand({
+        player: 1 - attackZoneData.player,
+        value: `-${card.currentAtk}`
+      }))
+    }
   }
 }

@@ -54,17 +54,20 @@ export class ActionAttackSelection extends YGOComponent implements YGOAction {
     }
   }
 
-  startSelection({ player, card, zones, onDirectAttack }: { player: number, card: CardZone, zones: CardZone[], onSelectionCompleted: (cardzone: CardZone) => void, onDirectAttack?: () => void }) {
+  startSelection({ player, cardZone, zones, directAttack }: { player: number, cardZone: CardZone, zones: CardZone[], directAttack?: boolean }) {
     this.duel.actionManager.setAction(this);
 
-    if (onDirectAttack) {
+    if (directAttack) {
       const playerId = "P" + (1 - player);
       const gameHandZone = this.duel.fields[1 - player].hand.gameHandZone;
       this.selectionZones.get(playerId)!.cardSelection.visible = true;
       gameHandZone.gameObject.visible = true;
       gameHandZone.onClickCb = () => {
         this.duel.events.dispatch("clear-ui-action");
-        onDirectAttack();
+        this.duel.gameActions.attackDirectly({
+          id: cardZone.getCardReference()!.id,
+          originZone: cardZone.zone
+        })
       }
     }
 
@@ -72,7 +75,6 @@ export class ActionAttackSelection extends YGOComponent implements YGOAction {
 
       const { cardSelection: gameObject } = this.selectionZones.get(zone.zone)!;
       gameObject.visible = true;
-
 
       zone.onClickCb = () => {
         this.state = STATE.PRE_ATTACK_MENU;
@@ -86,9 +88,9 @@ export class ActionAttackSelection extends YGOComponent implements YGOAction {
             attackedCard: zone.getCardReference(),
             attackedGameCard: zone.getGameCard(),
 
-            attackingZone: card.zone,
-            attackingCard: card.getCardReference(),
-            attackingGameCard: card.getGameCard(),
+            attackingZone: cardZone.zone,
+            attackingCard: cardZone.getCardReference(),
+            attackingGameCard: cardZone.getGameCard(),
 
             player
           }
@@ -96,7 +98,7 @@ export class ActionAttackSelection extends YGOComponent implements YGOAction {
       }
     });
 
-    this.card = card;
+    this.card = cardZone;
     this.zones = zones;
     this.state = STATE.SELECTION;
 

@@ -11,39 +11,188 @@ import { YGOSoundController } from "../../src/YGOPlayer/core/YGOSoundController"
 import { GameController } from "../../src/YGOPlayer/game/GameController";
 import { YGOMapClick } from '../../src/YGOPlayer/core/YGOMapClick';
 import { YGOComponent } from '../../src/YGOPlayer/core/YGOComponent';
+import { YGOTaskSequence } from '../../src/YGOPlayer/core/components/tasks/YGOTaskSequence';
+import { PositionTransition } from '../../src/YGOPlayer/duel-events/utils/position-transition';
+import { CallbackTransition } from '../../src/YGOPlayer/duel-events/utils/callback';
+import { Ease } from '../../src/YGOPlayer/scripts/ease';
+import { WaitForSeconds } from '../../src/YGOPlayer/duel-events/utils/wait-for-seconds';
+import { ScaleTransition } from '../../src/YGOPlayer/duel-events/utils/scale-transition';
+import { MultipleTasks } from '../../src/YGOPlayer/duel-events/utils/multiple-tasks';
+import { MaterialOpacityTransition } from '../../src/YGOPlayer/duel-events/utils/material-opacity';
+
+const CDN_PATH = "http://localhost:8080";
 
 class TempScene extends YGOComponent {
   private arc!: THREE.Mesh;
-  private cube: THREE.Mesh;
+  private cube!: THREE.Mesh;
   private arcMaterial!: THREE.ShaderMaterial;
   private elapsedTime: number = 0;
-  private mousePosition: THREE.Vector3;
+  private mousePosition!: THREE.Vector3;
 
   constructor(private duel: YGODuel) {
     super("scene");
 
-    const geometry = new THREE.BoxGeometry(1, 1, 1);
-    const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-    const cube = new THREE.Mesh(geometry, material);
-    this.duel.core.scene.add(cube);
+    // const geometry = new THREE.BoxGeometry(1, 1, 1);
+    // const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+    // const cube = new THREE.Mesh(geometry, material);
+    // this.duel.core.scene.add(cube);
 
+    // this.cube = cube;
+
+    this.duel.core.camera.position.set(0, 0, 10);
+
+    //this.attackEffect();
+
+
+    const cb = () => {
+      this.attackingEffect({
+        startTask: this.duel.tasks.startTask.bind(this.duel.tasks)
+      })
+    }
+    setInterval(() => {
+      cb();
+    }, 2000)
+    cb();
+  }
+
+  public attackingEffect({ startTask }: any) {
+    const position = new THREE.Vector3(0, 0, 0);
+    const circleTexture = this.duel.core.textureLoader.load(this.duel.createCdnUrl("/images/particles/circle_03.png"));
+    const circle = new THREE.Mesh(
+      new THREE.PlaneGeometry(8, 8, 8),
+      new THREE.MeshBasicMaterial({
+        color: 0xffd230,
+        map: circleTexture,
+        transparent: true,
+      })
+    );
+    this.duel.core.scene.add(circle);
+    const circleLarge = new THREE.Mesh(
+      new THREE.PlaneGeometry(16, 16),
+      new THREE.MeshBasicMaterial({
+        color: 0xefb100,
+        map: circleTexture,
+        transparent: true,
+      })
+    );
+    this.duel.core.scene.add(circleLarge);
+    const flare = new THREE.Mesh(
+      new THREE.PlaneGeometry(15, 15, 15),
+      new THREE.MeshBasicMaterial({
+        color: 0xffd230,
+        transparent: true,
+        map: this.duel.core.textureLoader.load(this.duel.createCdnUrl("/images/particles/star_07.png"))
+      })
+    );
+    this.duel.core.scene.add(flare);
+
+    circle.scale.set(0, 0, 0);
+    circle.position.copy(position);
+    circle.material.opacity = 0;
+
+    circleLarge.scale.set(0, 0, 0);
+    circleLarge.position.copy(position);
+    circleLarge.position.z -= 0.1;
+    circleLarge.material.opacity = 0;
+
+    flare.position.copy(position);
+    flare.position.z += 0.1;
+    flare.scale.set(0, 0, 0);
+    flare.material.opacity = 0;
+
+    startTask(new YGOTaskSequence(
+      new MultipleTasks(
+        new ScaleTransition({
+          gameObject: flare,
+          scale: new THREE.Vector3(1, 1, 1),
+          duration: 0.15
+        }),
+        new MaterialOpacityTransition({
+          material: flare.material,
+          duration: 0.1,
+          opacity: 1
+        })
+      ),
+      new MultipleTasks(
+        new ScaleTransition({
+          gameObject: flare,
+          scale: new THREE.Vector3(0.5, 0.5, 0.5),
+          duration: 0.15
+        }),
+        new MaterialOpacityTransition({
+          material: flare.material,
+          duration: 0.15,
+          opacity: 0
+        })
+      ),
+      new WaitForSeconds(0.5),
+      new CallbackTransition(() => {
+        this.duel.core.scene.remove(circle);
+        this.duel.core.scene.remove(circleLarge);
+        this.duel.core.scene.remove(flare);
+      })
+    ));
+
+    startTask(new YGOTaskSequence(
+      new MultipleTasks(
+        new ScaleTransition({
+          gameObject: circle,
+          scale: new THREE.Vector3(1, 1, 1),
+          duration: 0.2
+        }),
+        new MaterialOpacityTransition({
+          material: circle.material,
+          duration: 0.1,
+          opacity: 1
+        })
+      ),
+      new WaitForSeconds(0.15),
+      new MaterialOpacityTransition({
+        material: circle.material,
+        duration: 0.2,
+        opacity: 0
+      })
+    ));
+
+    startTask(new YGOTaskSequence(
+      new MultipleTasks(
+        new ScaleTransition({
+          gameObject: circleLarge,
+          scale: new THREE.Vector3(1, 1, 1),
+          duration: 0.15
+        }),
+        new MaterialOpacityTransition({
+          material: circleLarge.material,
+          duration: 0.1,
+          opacity: 1
+        })
+      ),
+      new MultipleTasks(
+        new ScaleTransition({
+          gameObject: circleLarge,
+          scale: new THREE.Vector3(1.5, 1.5, 1.5),
+          duration: 0.2
+        }),
+        new MaterialOpacityTransition({
+          material: circleLarge.material,
+          duration: 0.2,
+          opacity: 0
+        })
+      ),
+    ));
+  }
+
+  public attackEffect() {
+
+    this.mousePosition = new THREE.Vector3();
     const plane = new THREE.PlaneGeometry(20, 20);
     const planeMaterial = new THREE.MeshBasicMaterial({ color: 0x0000ff, wireframe: true, opacity: 0, transparent: true });
     const planeMesh = new THREE.Mesh(plane, planeMaterial);
     planeMesh.name = "mouse_attack_floor";
-
     this.duel.core.scene.add(planeMesh);
-    this.cube = cube;
-
-    this.duel.core.camera.position.set(0, 0, 10);
-
-    this.attackEffect();
-
-    this.mousePosition = new THREE.Vector3();
 
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
-
     // On click
     window.addEventListener('mousemove', (event) => {
       mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
@@ -58,9 +207,6 @@ class TempScene extends YGOComponent {
         this.mousePosition = point.clone();
       }
     });
-  }
-
-  public attackEffect() {
     const texture = this.duel.core.textureLoader.load("http://localhost:8080/images/particles/player-0-attack.png");
     texture.wrapS = THREE.RepeatWrapping;
     texture.wrapT = THREE.RepeatWrapping;
@@ -113,32 +259,32 @@ class TempScene extends YGOComponent {
   }
 
   public update(dt: number): void {
-    this.elapsedTime += dt;
-    //this.cube.rotation.x += dt;
-    //this.cube.rotation.z += dt;
-    //this.cube.rotation.y += dt;
-    this.arcMaterial.uniforms.uTime.value = this.elapsedTime;
+    // this.elapsedTime += dt;
+    // //this.cube.rotation.x += dt;
+    // //this.cube.rotation.z += dt;
+    // //this.cube.rotation.y += dt;
+    // this.arcMaterial.uniforms.uTime.value = this.elapsedTime;
 
-    const midPoint = new THREE.Vector3()
-      .addVectors(this.cube.position, this.mousePosition)
-      .multiplyScalar(0.5);
+    // const midPoint = new THREE.Vector3()
+    //   .addVectors(this.cube.position, this.mousePosition)
+    //   .multiplyScalar(0.5);
 
-    midPoint.z = 1;
+    // midPoint.z = 1;
 
-    // Set arc position to midpoint
-    this.arc.position.copy(midPoint);
+    // // Set arc position to midpoint
+    // this.arc.position.copy(midPoint);
 
-    const distance = this.cube.position.distanceTo(this.mousePosition);
-    this.arc.scale.z = distance / 6.5;
-    this.arcMaterial.uniforms.uRepeat.value.set(1, this.arc.scale.z * 15);
+    // const distance = this.cube.position.distanceTo(this.mousePosition);
+    // this.arc.scale.z = distance / 6.5;
+    // this.arcMaterial.uniforms.uRepeat.value.set(1, this.arc.scale.z * 15);
 
-    const direction = new THREE.Vector3();
-    direction.subVectors(this.cube.position, this.mousePosition);
-    const angle = Math.atan2(direction.x, -direction.y);
+    // const direction = new THREE.Vector3();
+    // direction.subVectors(this.cube.position, this.mousePosition);
+    // const angle = Math.atan2(direction.x, -direction.y);
 
-    this.arc.rotation.y = angle;
-    //lookAtY(this.cube, this.mousePosition);
-    //this.cube.rotateZ(dt);
+    // this.arc.rotation.y = angle;
+    // //lookAtY(this.cube, this.mousePosition);
+    // //this.cube.rotateZ(dt);
   }
 }
 function lookAtY(object: THREE.Object3D, targetPosition: THREE.Vector3) {
@@ -285,6 +431,10 @@ class TempDuel {
     this.core.scene.add(directionalLight.target);
 
     this.entities.push(this.gameController);
+  }
+
+  public createCdnUrl(path: string) {
+    return `${CDN_PATH}${path}`;
   }
 
   private update() {

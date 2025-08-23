@@ -216,9 +216,9 @@ export class YGODuel {
           this.ygo.start();
         }, 500);
 
-        // setTimeout(() => {
-        //   this.execCommand(new YGOCommands.DuelPhaseCommand({ phase: YGODuelPhase.Battle }))
-        // }, 1000);
+        setTimeout(() => {
+          this.execCommand(new YGOCommands.DuelPhaseCommand({ phase: YGODuelPhase.Battle }))
+        }, 1000);
 
         this.updateField();
 
