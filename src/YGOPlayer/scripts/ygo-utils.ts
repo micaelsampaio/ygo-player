@@ -10,7 +10,7 @@ import { ExtraDeck } from "../game/ExtraDeck";
 import { Card, FieldZone, FieldZoneData, YGOReplayData } from "ygo-core";
 import { YGOGameUtils } from "ygo-core";
 import { Banish } from "../game/Banish";
-import { YGOUtils } from "ygo-core/src/game/YGOUtils";
+//import { YGOUtils } from "ygo-core/src/game/YGOUtils";
 
 type CreateFieldDto = {
   duel: YGODuel;
