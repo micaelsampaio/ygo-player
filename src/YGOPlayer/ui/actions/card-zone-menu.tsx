@@ -237,10 +237,12 @@ export function CardZoneMenu({
         <button type="button" className="ygo-card-item" onClick={banish}>
           Banish
         </button>
+        {
+          card.isMainDeckCard && <button type="button" className="ygo-card-item" onClick={toHand}>
+            To Hand
+          </button>
+        }
 
-        <button type="button" className="ygo-card-item" onClick={toHand}>
-          To Hand
-        </button>
 
         {isFaceUp && (
           <>

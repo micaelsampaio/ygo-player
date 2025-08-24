@@ -111,6 +111,7 @@ export function CardGraveyardMenu({
   const hasXyzMonstersInField = YGOGameUtils.hasXyzMonstersInField(field);
   const isMonster = YGOGameUtils.isMonster(card);
   const isFieldSpell = YGOGameUtils.isFieldSpell(card);
+  const isLink = YGOGameUtils.isLinkMonster(card);
 
   return (
     <>
@@ -125,13 +126,16 @@ export function CardGraveyardMenu({
               SS ATK
             </button>
 
-            <button
-              type="button"
-              className="ygo-card-item"
-              onClick={specialSummonDEF}
-            >
-              SS DEF
-            </button>
+            {
+              !isLink && <button
+                type="button"
+                className="ygo-card-item"
+                onClick={specialSummonDEF}
+              >
+                SS DEF
+              </button>
+            }
+
           </>
         )}
 
@@ -168,9 +172,11 @@ export function CardGraveyardMenu({
           TO ST
         </button>
 
-        <button type="button" className="ygo-card-item" onClick={toHand}>
-          To Hand
-        </button>
+        {
+          card.isMainDeckCard && <button type="button" className="ygo-card-item" onClick={toHand}>
+            To Hand
+          </button>
+        }
 
         <button type="button" className="ygo-card-item" onClick={banish}>
           Banish

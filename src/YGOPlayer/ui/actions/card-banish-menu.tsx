@@ -109,6 +109,7 @@ export function CardBanishMenu({
   const hasXyzMonstersInField = YGOGameUtils.hasXyzMonstersInField(field);
   const isMonster = YGOGameUtils.isMonster(card);
   const isFieldSpell = YGOGameUtils.isFieldSpell(card);
+  const isLinkMonster = YGOGameUtils.isLinkMonster(card);
 
   return (
     <>
@@ -123,13 +124,16 @@ export function CardBanishMenu({
               SS ATK
             </button>
 
-            <button
-              type="button"
-              className="ygo-card-item"
-              onClick={specialSummonDEF}
-            >
-              SS DEF
-            </button>
+            {
+              !isLinkMonster && <button
+                type="button"
+                className="ygo-card-item"
+                onClick={specialSummonDEF}
+              >
+                SS DEF
+              </button>
+            }
+
           </>
         )}
 
@@ -174,12 +178,11 @@ export function CardBanishMenu({
           TO ST
         </button>
 
-        <button type="button" className="ygo-card-item" onClick={toHand}>
-          To Hand
-        </button>
-
         {card.isMainDeckCard && (
           <>
+            <button type="button" className="ygo-card-item" onClick={toHand}>
+              To Hand
+            </button>
             <button type="button" className="ygo-card-item" onClick={toTopDeck}>
               To Top Deck
             </button>
