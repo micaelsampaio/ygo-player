@@ -9,6 +9,8 @@ import { YGOUiElement } from "../types";
 import { YGOMouseEvents } from "./components/YGOMouseEvents";
 import { ActionUiMenu } from "../actions/ActionUiMenu";
 import { YGOTimer } from "../game/YGOTimer";
+import { YGODuelPhase } from "ygo-core";
+import { YGOPhaseObject } from "../game/YGOPhaseObject";
 
 
 export class YGODuelScene {
@@ -22,6 +24,7 @@ export class YGODuelScene {
     public gameFields: YGOGameFieldObject[];
     public turnPlayer!: YGOTurnPlayer;
     public timer!: YGOTimer;
+    public duelPhase!: YGOPhaseObject;
 
     constructor(private duel: YGODuel) {
         this.gameFields = [];
@@ -153,6 +156,7 @@ export class YGODuelScene {
         });
 
         this.turnPlayer = new YGOTurnPlayer(this.duel);
+        this.duelPhase = new YGOPhaseObject(this.duel);
 
         this.createEffects();
         this.createFieldButtons();

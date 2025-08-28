@@ -53,7 +53,7 @@ export function TimerEventsActionsMenu({
   }, [transform]);
 
   return (
-    <CardMenu key="global-events-actions-menu" menuRef={menuRef}>
+    <CardMenu key="global-events-actions-menu" indicator menuRef={menuRef}>
       <button
         className="ygo-card-item"
         type="button"

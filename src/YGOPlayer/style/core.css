@@ -36,6 +36,10 @@
     font-weight: bold;
     border-radius: var(--ygo-border-radius-small);
     cursor: pointer;
+
+    &.active {
+        background-color: var(--ygo-primary-color);
+    }
 }
 
 .ygo-player-core .ygo-card-menu .ygo-card-item-divider {
