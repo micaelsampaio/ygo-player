@@ -75,6 +75,7 @@ export class TargetCardEventHandler extends YGOCommandHandler {
         new WaitForSeconds(0.25),
         new CallbackTransition(() => {
           cardSelectionMesh2.material.opacity = 1;
+          this.props.playSound({ key: duel.createCdnUrl(`/sounds/target.ogg`), volume: 0.5 });
         }),
         new MultipleTasks(
           new ScaleTransition({

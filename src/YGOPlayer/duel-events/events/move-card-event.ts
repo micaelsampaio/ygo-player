@@ -144,9 +144,12 @@ export class MoveCardEventHandler extends YGOCommandHandler {
       });
     }
 
-    if (originZoneData?.zone === "H" && (zoneData.zone === "M" || zoneData.zone === "S")) {
-      playSound({ key: duel.createCdnUrl(`/sounds/card-place-${randomIntFromInterval(1, 4)}.ogg`), volume: 0.7 });
-    }
+    // default move sound; use randomized card-place variants only for hand -> monster/spell placements
+    const soundKey = (originZoneData?.zone === "H" && (zoneData.zone === "M" || zoneData.zone === "S"))
+      ? `/sounds/card-place-${randomIntFromInterval(1, 4)}.ogg`
+      : `/sounds/move.ogg`;
+
+    playSound({ key: duel.createCdnUrl(soundKey), volume: 0.7 });
 
     if (
       zoneData.zone === "M" ||

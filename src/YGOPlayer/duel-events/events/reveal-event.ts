@@ -117,7 +117,7 @@ export class RevealEventHandler extends YGOCommandHandler {
   }
 
   private flipCardAndRevealAnimation({ card, timeToReveal = 1, sequence, transform }: { card: THREE.Object3D, transform: THREE.Object3D, sequence: YGOTaskSequence, timeToReveal?: number }) {
-    const { startTask } = this.props;
+  const { startTask, duel } = this.props;
     const startPosition = transform.position.clone();
     const startRotation = transform.rotation.clone();
 
@@ -167,6 +167,9 @@ export class RevealEventHandler extends YGOCommandHandler {
     startTask(
       new YGOTaskSequence(
         new WaitForSeconds(0.15),
+        new CallbackTransition(() => {
+          this.props.playSound({ key: duel.createCdnUrl(`/sounds/reveal.ogg`), volume: 0.5 });
+        }),
         new RotationTransition({
           gameObject: card,
           duration: 0.2,
