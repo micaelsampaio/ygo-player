@@ -66,10 +66,7 @@ function usePlayerLp(duel: YGODuel, player: number) {
 
     useEffect(() => {
         const listener = ({ player: playerIndex, previousLifePoints, lifePoints }: YGODuelEvents.LifePoints) => {
-            console.log("TCL: EVENT ", playerIndex, previousLifePoints, lifePoints);
             if (playerIndex !== player) return;
-            console.log("TCL: EVENT ", previousLifePoints, "-->", lifePoints)
-            console.log("TCL: EVENT current ", currentLpValue.current);
 
             if (previousLifePoints != lifePoints) {
                 currentLpValue.current = lifePoints;
@@ -84,8 +81,6 @@ function usePlayerLp(duel: YGODuel, player: number) {
     }, []);
 
     useEffect(() => {
-        console.log("TCL: USE EFFECT ", field.lp);
-        console.log("TCL: USE EFFECT ref: ", currentLpValue.current);
         if (field.lp !== currentLpValue.current) {
             currentLpValue.current = field.lp;
             setLps(field.lp);
