@@ -8,13 +8,11 @@ import { Ease } from '../scripts/ease';
 import { lerp } from 'three/src/math/MathUtils';
 import { GameHandZone } from '../game/GameHandZone';
 import { BattlePhaseButton } from '../game/BattlePhaseButton';
-import { YGOMouseEvents } from '../core/components/YGOMouseEvents';
 
 enum STATE { SELECTION, PRE_ATTACK_MENU }
 export class ActionAttackSelection extends YGOComponent implements YGOAction {
   private state = STATE.SELECTION;
   private selectionZones: Map<string, { cardSelection: THREE.Mesh }>;
-  private selectedZone: CardZone | undefined;
   private zones!: CardZone[];
   private time: number = 0;
   private opacityValue: number = 0.0;
@@ -130,9 +128,7 @@ export class ActionAttackSelection extends YGOComponent implements YGOAction {
 
     for (const [, { cardSelection }] of this.selectionZones) {
       const cardMaterial = cardSelection.material as THREE.Material;
-      //const zoneMaterial = zoneData.zone.material as THREE.Material;
       cardMaterial.opacity = this.opacityValue;
-      // zoneMaterial.opacity = this.opacityValue;
     }
 
     if (this.card) {
