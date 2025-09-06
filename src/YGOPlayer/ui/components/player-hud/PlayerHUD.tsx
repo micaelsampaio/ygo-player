@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { YGODuel } from "../../../core/YGODuel";
 import "./style.css";
+import { YGODuelEvents } from "ygo-core";
 
 export function PlayerHUD({ duel, player }: { duel: YGODuel, player: number }) {
 
@@ -37,6 +38,7 @@ function usePlayerLp(duel: YGODuel, player: number) {
     const field = duel.ygo.getField(player);
     const [lps, setLps] = useState<number>(field.lp);
     const animationRef = useRef<number | null>(null);
+    const currentLpValue = useRef(field.lp);
 
     const animateLps = (oldLps: number, newLps: number) => {
         if (animationRef.current) {
@@ -63,16 +65,36 @@ function usePlayerLp(duel: YGODuel, player: number) {
     };
 
     useEffect(() => {
-        const listener = ({ player: playerIndex, lp: newLp }: { player: number; lp: number }) => {
+        const listener = ({ player: playerIndex, previousLifePoints, lifePoints }: YGODuelEvents.LifePoints) => {
+            console.log("TCL: EVENT ", playerIndex, previousLifePoints, lifePoints);
             if (playerIndex !== player) return;
-            animateLps(lps, newLp);
+            console.log("TCL: EVENT ", previousLifePoints, "-->", lifePoints)
+            console.log("TCL: EVENT current ", currentLpValue.current);
+
+            if (previousLifePoints != lifePoints) {
+                currentLpValue.current = lifePoints;
+                animateLps(previousLifePoints, lifePoints);
+            }
         };
 
-        duel.ygo.events.on("set-player-lp", listener);
+        duel.events.on("duel-update-player-life-points", listener);
         return () => {
-            duel.ygo.events.off("set-player-lp", listener);
+            duel.events.off("duel-update-player-life-points", listener);
         };
-    }, [lps]);
+    }, []);
+
+    useEffect(() => {
+        console.log("TCL: USE EFFECT ", field.lp);
+        console.log("TCL: USE EFFECT ref: ", currentLpValue.current);
+        if (field.lp !== currentLpValue.current) {
+            currentLpValue.current = field.lp;
+            setLps(field.lp);
+
+            if (animationRef.current) {
+                cancelAnimationFrame(animationRef.current);
+            }
+        }
+    }, [field.lp]);
 
     return lps;
 }

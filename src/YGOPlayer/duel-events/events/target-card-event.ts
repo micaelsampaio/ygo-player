@@ -1,7 +1,7 @@
 import { DuelEventHandlerProps } from "..";
 import { YGODuelEvents, YGOGameUtils } from "ygo-core";
 import { YGOTaskSequence } from "../../core/components/tasks/YGOTaskSequence";
-import { getCardRotationFromFieldZoneData, getCardRotationFromPlayerIndex, getGameZone, getZonePositionFromZoneData } from "../../scripts/ygo-utils";
+import { getCardRotationFromPlayerIndex, getGameZone, getZonePositionFromZoneData } from "../../scripts/ygo-utils";
 import { CallbackTransition } from "../utils/callback";
 import { PositionTransition } from "../utils/position-transition";
 import { ScaleTransition } from "../utils/scale-transition";
