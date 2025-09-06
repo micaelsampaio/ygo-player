@@ -81,7 +81,6 @@ export class ActionAttackSelection extends YGOComponent implements YGOAction {
 
       zone.onClickCb = () => {
         this.state = STATE.PRE_ATTACK_MENU;
-        this.selectedZone = zone;
         this.hideCardSelection();
 
         this.duel.events.dispatch("set-ui-action", {
