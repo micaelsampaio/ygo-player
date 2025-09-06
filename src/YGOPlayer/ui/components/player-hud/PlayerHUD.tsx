@@ -3,13 +3,18 @@ import { YGODuel } from "../../../core/YGODuel";
 import "./style.css";
 import { YGODuelEvents } from "ygo-core";
 
+enum LifePointsState {
+    IDLE,
+    INCREASING,
+    DECREASING,
+}
 export function PlayerHUD({ duel, player }: { duel: YGODuel, player: number }) {
 
     const field = duel.ygo.getField(player);
     const playerName = field.player.name;
-    const LP = usePlayerLp(duel, player);
+    const { LP, lifePointsState } = usePlayerLp(duel, player);
 
-    const test = () => {
+    const changeLifePoints = () => {
         const value = prompt("LPS:");
 
         if (value) {
@@ -20,23 +25,31 @@ export function PlayerHUD({ duel, player }: { duel: YGODuel, player: number }) {
         }
     }
 
+    const lpsClass = lifePointsState === LifePointsState.INCREASING
+        ? " ygo-lp-increasing"
+        : lifePointsState === LifePointsState.DECREASING
+            ? " ygo-lp-decreasing" : "";
+
     return <div className={`ygo-player-hud ygo-player-${player}`}>
         <div className="ygo-player-hude-player-content">
             <div className="ygo-player-hud-bar"></div>
             <div className="ygo-player-hud-name">
                 {playerName}
             </div>
-            <div className="ygo-player-hud-lp" onClick={test}>
-                <span className="ygo-lp-text">LP</span> <span className="ygo-lp-value">{LP}</span>
+            <div className={`ygo-player-hud-lp ${lpsClass} ygo-flex ygo-gap-1`} onClick={changeLifePoints}>
+                <span className="ygo-lp-text" style={{ marginTop: "auto" }}>
+                    LP</span>
+                <span className="ygo-lp-value">{LP}</span>
             </div>
             <div className="ygo-player-hud-bar"></div>
         </div>
     </div>
 }
 
-function usePlayerLp(duel: YGODuel, player: number) {
+function usePlayerLp(duel: YGODuel, player: number): { LP: number, lifePointsState: LifePointsState } {
     const field = duel.ygo.getField(player);
     const [lps, setLps] = useState<number>(field.lp);
+    const [lifePointsState, setLifePointsState] = useState<LifePointsState>(LifePointsState.IDLE);
     const animationRef = useRef<number | null>(null);
     const currentLpValue = useRef(field.lp);
 
@@ -44,15 +57,18 @@ function usePlayerLp(duel: YGODuel, player: number) {
         if (animationRef.current) {
             cancelAnimationFrame(animationRef.current);
         }
-
+        const state = oldLps > newLps ? LifePointsState.DECREASING : oldLps < newLps ? LifePointsState.INCREASING : LifePointsState.IDLE;
         const step = oldLps > newLps ? -Math.ceil((oldLps - newLps) / 20) : Math.ceil((newLps - oldLps) / 20);
         let current = oldLps;
+
+        setLifePointsState(state);
 
         const animate = () => {
             current += step;
 
             if ((step < 0 && current <= newLps) || (step > 0 && current >= newLps)) {
-                setLps(newLps);
+                setLps(newLps); setLifePointsState(state);
+                setLifePointsState(LifePointsState.IDLE);
                 animationRef.current = null;
                 return;
             }
@@ -65,18 +81,19 @@ function usePlayerLp(duel: YGODuel, player: number) {
     };
 
     useEffect(() => {
-        const listener = ({ player: playerIndex, previousLifePoints, lifePoints }: YGODuelEvents.LifePoints) => {
+        const abortController = new AbortController();
+
+        duel.events.on("duel-update-player-life-points", ({ player: playerIndex, previousLifePoints, lifePoints }: YGODuelEvents.LifePoints) => {
             if (playerIndex !== player) return;
 
             if (previousLifePoints != lifePoints) {
                 currentLpValue.current = lifePoints;
                 animateLps(previousLifePoints, lifePoints);
             }
-        };
+        }, { signal: abortController.signal });
 
-        duel.events.on("duel-update-player-life-points", listener);
         return () => {
-            duel.events.off("duel-update-player-life-points", listener);
+            abortController.abort();
         };
     }, []);
 
@@ -84,6 +101,7 @@ function usePlayerLp(duel: YGODuel, player: number) {
         if (field.lp !== currentLpValue.current) {
             currentLpValue.current = field.lp;
             setLps(field.lp);
+            setLifePointsState(LifePointsState.IDLE);
 
             if (animationRef.current) {
                 cancelAnimationFrame(animationRef.current);
@@ -91,5 +109,5 @@ function usePlayerLp(duel: YGODuel, player: number) {
         }
     }, [field.lp]);
 
-    return lps;
+    return { LP: lps, lifePointsState };
 }
