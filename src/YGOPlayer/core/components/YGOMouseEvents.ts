@@ -10,6 +10,7 @@ export class YGOMouseEvents extends YGOComponent {
     private raycaster: THREE.Raycaster;
     private mouseDownElement: YGOUiElement | null;
     private hoverElement: YGOUiElement | null;
+    public mousePositionOnScreen: THREE.Vector2 = new THREE.Vector2(0, 0);
     public events: EventBus<any>;
 
     public onClickCb: any;
@@ -54,8 +55,12 @@ export class YGOMouseEvents extends YGOComponent {
     private getIntersectsElements(event: MouseEvent) {
         const mouse = new THREE.Vector2();
         const activeElements = this.getElements();
+
         mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
         mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+        this.mousePositionOnScreen.copy(mouse);
+
         this.raycaster.setFromCamera(mouse, this.camera);
         const intersects = this.raycaster.intersectObjects(activeElements);
         return intersects.filter((intersect: any) => intersect?.object?.uiElementRef);

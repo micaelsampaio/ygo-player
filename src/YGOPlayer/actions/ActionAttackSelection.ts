@@ -7,6 +7,8 @@ import { CardZone } from '../game/CardZone';
 import { Ease } from '../scripts/ease';
 import { lerp } from 'three/src/math/MathUtils';
 import { GameHandZone } from '../game/GameHandZone';
+import { BattlePhaseButton } from '../game/BattlePhaseButton';
+import { YGOMouseEvents } from '../core/components/YGOMouseEvents';
 
 enum STATE { SELECTION, PRE_ATTACK_MENU }
 export class ActionAttackSelection extends YGOComponent implements YGOAction {
@@ -17,6 +19,8 @@ export class ActionAttackSelection extends YGOComponent implements YGOAction {
   private time: number = 0;
   private opacityValue: number = 0.0;
   private card: CardZone | undefined;
+  private attackButton!: BattlePhaseButton;
+
   constructor(private duel: YGODuel) {
     super("attack_selection_action");
 
@@ -54,8 +58,9 @@ export class ActionAttackSelection extends YGOComponent implements YGOAction {
     }
   }
 
-  startSelection({ player, cardZone, zones, directAttack }: { player: number, cardZone: CardZone, zones: CardZone[], directAttack?: boolean }) {
+  startSelection({ player, attackButton, cardZone, zones, directAttack }: { player: number, attackButton: BattlePhaseButton, cardZone: CardZone, zones: CardZone[], directAttack?: boolean }) {
     this.duel.actionManager.setAction(this);
+    this.attackButton = attackButton;
 
     if (directAttack) {
       const playerId = "P" + (1 - player);
@@ -113,6 +118,16 @@ export class ActionAttackSelection extends YGOComponent implements YGOAction {
     const easedValue = Ease.linear(oscillator);
     this.opacityValue = lerp(0.3, 1, easedValue);
 
+    const meshPos = new THREE.Vector3();
+    this.attackButton.gameObject.getWorldPosition(meshPos);
+    const screenPos = meshPos.clone().project(this.duel.core.camera);
+    const dx = this.duel.mouseEvents.mousePositionOnScreen.x - screenPos.x;
+    const dy = this.duel.mouseEvents.mousePositionOnScreen.y - screenPos.y;
+    const angle = Math.atan2(dy, dx) - Math.PI / 2;
+
+    this.attackButton.gameObject.rotation.z = angle;
+
+
     for (const [, { cardSelection }] of this.selectionZones) {
       const cardMaterial = cardSelection.material as THREE.Material;
       //const zoneMaterial = zoneData.zone.material as THREE.Material;
@@ -129,7 +144,11 @@ export class ActionAttackSelection extends YGOComponent implements YGOAction {
 
   onActionEnd() {
     this.hideCardSelection();
+
+    this.attackButton?.gameObject.rotation.copy(this.attackButton.rotation);
+
     this.zones?.forEach(zone => zone.onClickCb = null);
+
     if (this.card) {
       this.card.getGameCard().gameObject.position.copy(this.card.position);
       this.card = undefined;

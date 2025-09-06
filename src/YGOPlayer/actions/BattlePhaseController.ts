@@ -60,8 +60,8 @@ export class BattlePhaseController extends YGOComponent {
   }
 
   private showBattlePhaseIcons(turnPlayer: number) {
-
-    const rotation = turnPlayer === 1 ? new THREE.Euler(0, 0, THREE.MathUtils.degToRad(180)) : new THREE.Euler(0, 0, 0);
+    const rotationOffset = turnPlayer === 1 ? THREE.MathUtils.degToRad(180) : 0;
+    const rotation = new THREE.Euler(0, 0, rotationOffset);
 
     this.attackButtons.values().forEach(attackButton => {
       const isVisible = attackButton.cardZone.hasCard() && attackButton.cardZone.zoneData.player === turnPlayer && YGOGameUtils.isFaceUp(attackButton.cardZone.getCardReference()!);
@@ -79,6 +79,7 @@ export class BattlePhaseController extends YGOComponent {
         const zones = battleAction.getMonstersZonesToAttack(attackButton.cardZone.zoneData.player);
 
         battleAction.startSelection({
+          attackButton: attackButton,
           player: attackButton.cardZone.zoneData.player,
           cardZone: attackButton.cardZone,
           zones,
