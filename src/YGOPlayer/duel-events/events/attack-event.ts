@@ -227,18 +227,18 @@ export class AttackEventHandler extends YGOCommandHandler {
     const { duel } = this.props;
     const circleTexture = duel.core.textureLoader.load(duel.createCdnUrl("/images/particles/circle_03.png"));
     const circle = new THREE.Mesh(
-      new THREE.PlaneGeometry(8, 8, 8),
+      new THREE.PlaneGeometry(20, 20, 20),
       new THREE.MeshBasicMaterial({
-        color: 0xffd230,
+        color: 0xffffff,
         map: circleTexture,
         transparent: true,
       })
     );
     duel.core.scene.add(circle);
     const circleLarge = new THREE.Mesh(
-      new THREE.PlaneGeometry(16, 16),
+      new THREE.PlaneGeometry(35, 35),
       new THREE.MeshBasicMaterial({
-        color: 0xefb100,
+        color: 0xffffff,
         map: circleTexture,
         transparent: true,
       })
@@ -247,7 +247,7 @@ export class AttackEventHandler extends YGOCommandHandler {
     const flare = new THREE.Mesh(
       new THREE.PlaneGeometry(15, 15, 15),
       new THREE.MeshBasicMaterial({
-        color: 0xffd230,
+        color: 0xFFDE21,
         transparent: true,
         map: duel.core.textureLoader.load(duel.createCdnUrl("/images/particles/star_07.png"))
       })
@@ -265,7 +265,8 @@ export class AttackEventHandler extends YGOCommandHandler {
 
     flare.position.copy(position);
     flare.position.z += 0.1;
-    flare.scale.set(0, 0, 0);
+    flare.scale.set(0.5, 0.5, 0.5);
+    flare.rotateZ(THREE.MathUtils.randInt(0, 360))
     flare.material.opacity = 0;
 
     startTask(new YGOTaskSequence(
@@ -285,11 +286,11 @@ export class AttackEventHandler extends YGOCommandHandler {
         new ScaleTransition({
           gameObject: flare,
           scale: new THREE.Vector3(0.5, 0.5, 0.5),
-          duration: 0.15
+          duration: 0.1
         }),
         new MaterialOpacityTransition({
           material: flare.material,
-          duration: 0.15,
+          duration: 0.1,
           opacity: 0
         })
       ),
@@ -311,7 +312,7 @@ export class AttackEventHandler extends YGOCommandHandler {
         new MaterialOpacityTransition({
           material: circle.material,
           duration: 0.1,
-          opacity: 1
+          opacity: 0.5
         })
       ),
       new WaitForSeconds(0.15),
@@ -332,7 +333,7 @@ export class AttackEventHandler extends YGOCommandHandler {
         new MaterialOpacityTransition({
           material: circleLarge.material,
           duration: 0.1,
-          opacity: 1
+          opacity: 0.5
         })
       ),
       new MultipleTasks(

@@ -24,7 +24,9 @@ export class DuelLifePointsEventHandler extends YGOCommandHandler {
 
     startTask(new YGOTaskSequence(
       new CallbackTransition(() => {
-        playSound({ key: duel.createCdnUrl(`/sounds/life_points.ogg`), volume: 0.8 });
+        if (event.previousLifePoints !== event.lifePoints) {
+          playSound({ key: duel.createCdnUrl(`/sounds/life_points.ogg`), volume: 0.8 });
+        }
       }),
       new WaitForSeconds(0.4),
       new CallbackTransition(() => {
