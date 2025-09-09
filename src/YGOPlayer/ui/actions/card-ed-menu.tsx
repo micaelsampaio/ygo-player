@@ -100,6 +100,10 @@ export function CardExtraDeckMenu({
     duel.gameActions.banish({ card, originZone, position: "facedown" });
   }, [card, originZone]);
 
+  const attachMaterial = useCallback(() => {
+    duel.gameActions.attachMaterial({ card, originZone });
+  }, [card, originZone]);
+
   useLayoutEffect(() => {
     const container = menuRef.current!;
     const cardRect = htmlCardElement.getBoundingClientRect();
@@ -116,6 +120,8 @@ export function CardExtraDeckMenu({
   const isSynchro = YGOGameUtils.isSynchroMonster(card);
   const isFusion = YGOGameUtils.isFusionMonster(card);
   const isXYZ = YGOGameUtils.isXYZMonster(card);
+  const xyzMonstersInFieldCounter = YGOGameUtils.XyzMonstersInFieldsCounter(duel.ygo);
+  const canAttachMaterial = xyzMonstersInFieldCounter > 0;
 
   return (
     <>
@@ -201,6 +207,16 @@ export function CardExtraDeckMenu({
                   XYZ Overlay DEF
                 </button>
               </>
+            )}
+
+            {canAttachMaterial && (
+              <button
+                type="button"
+                className="ygo-card-item"
+                onClick={attachMaterial}
+              >
+                Attach Material to XYZ
+              </button>
             )}
 
             <button
