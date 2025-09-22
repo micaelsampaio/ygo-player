@@ -54,6 +54,7 @@ export class YGODuel {
   public commands: YGOCommandsController;
   public deltaTime: number = 0;
   private currentPlayerIndex = 0;
+  private autoChangePOV: boolean = true;
   public config: YGOConfig;
   public duelScene: YGODuelScene;
   public settings: YGOPlayerSettingsAdapter;
@@ -194,6 +195,9 @@ export class YGODuel {
     this.ygo.events.on("set-player", (data: any) => {
       this.currentPlayerIndex = data.player;
       this.events.dispatch("render-ui");
+      if (this.config.autoChangePlayer !== false) {
+        this.setPOV(data.player);
+      }
     });
 
     this.events.on("enable-game-actions", () => {
@@ -414,6 +418,24 @@ export class YGODuel {
 
   public setActivePlayer(player: number) {
     this.ygo.setCurrentPlayer(player);
+    if (this.config.autoChangePlayer !== false) {
+      this.setPOV(player);
+    }
+  }
+
+  /**
+   * Set the camera POV to the given player (0 or 1). This updates core.pov and repositions the camera.
+   */
+  public setPOV(player: number) {
+    const p = player === 1 ? 1 : 0;
+    this.core.pov = p;
+    // update camera immediately
+    this.core.updateCamera(true);
+    this.events.dispatch("pov-changed", p);
+  }
+
+  public getPOV() {
+    return this.core.pov;
   }
 
   private createShortcuts() {

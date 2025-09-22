@@ -24,6 +24,7 @@ export class YGOPlayerCore {
     public fonts = new Map<string, Font>();
     public mapBounds: THREE.Object3D;
     public events: EventBus<any>;
+    public pov: number = 0;
 
     // time
     public timeScale: number;
@@ -130,7 +131,7 @@ export class YGOPlayerCore {
         }
     }
 
-    updateCamera() {
+    updateCamera(changePov = false) {
         const box = new THREE.Box3().setFromObject(this.mapBounds);
         const center = box.getCenter(new THREE.Vector3());
         const size = box.getSize(new THREE.Vector3());
@@ -144,12 +145,36 @@ export class YGOPlayerCore {
         const distanceWidth = Math.abs((size.x / 2) / Math.tan(fov / 2) / aspectRatio);
         const distance = Math.max(distanceHeight, distanceWidth) * 1.05;
 
-        this.camera.position.set(center.x, center.y, distance);
+        // Compute a default camera position in front of the map center
+        const defaultPos = new THREE.Vector3(center.x, center.y, center.z + distance);
+
+        if (!changePov) {
+            this.camera.position.copy(defaultPos);
+            this.camera.up.set(0, 1, 0);
+        } else {
+            // Determine vector from center to camera; if camera is not placed yet,
+            // start from the default vector.
+            const fromCenter = new THREE.Vector3().subVectors(this.camera.position, center);
+            if (fromCenter.length() < 1e-6) {
+                fromCenter.copy(new THREE.Vector3(0, 0, distance));
+            }
+
+            // Rotate 180 degrees around X axis
+            fromCenter.applyAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI);
+
+            // Set camera position to center + rotated vector
+            this.camera.position.copy(center).add(fromCenter);
+
+            // Invert up vector so the scene doesn't appear upside-down
+            this.camera.up.set(0, -1, 0);
+        }
+
         this.camera.lookAt(center);
 
         this.camera.near = distance / 100;
         this.camera.far = distance * 100;
         this.camera.updateProjectionMatrix();
+        console.log('Camera updated:', this.camera.position, 'looking at', center, 'distance:', distance, 'changePov:', changePov);
     }
 
     setTimeScale(value: number) {
