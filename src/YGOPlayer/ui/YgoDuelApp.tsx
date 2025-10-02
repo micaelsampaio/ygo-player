@@ -3,8 +3,9 @@ import { YGODuel } from "../core/YGODuel";
 import { YGOUiController } from "./YGOUiController";
 import { YGOConfig } from "../core/YGOConfig";
 import { useDeviceResolutionInfo } from "../scripts/use-device-resolution-info";
+import { YGOClient } from "ygo-core";
 
-export function YgoDuelApp({ config, bind: onBind, start: onStart }: { bind?: (duel: YGODuel) => void, config: YGOConfig, start?: (duel: YGODuel) => void }) {
+export function YgoDuelApp({ config, client, bind: onBind, start: onStart }: { client: YGOClient, bind?: (duel: YGODuel) => void, config: YGOConfig, start?: (duel: YGODuel) => void }) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [duel, setDuel] = useState<YGODuel>();
     const { isMobile } = useDeviceResolutionInfo();
@@ -14,8 +15,8 @@ export function YgoDuelApp({ config, bind: onBind, start: onStart }: { bind?: (d
 
         let duel: YGODuel | undefined;
         const init = async () => {
-            duel = new YGODuel({ canvas: canvasRef.current!, config });
-            if (onBind) onBind(duel);
+            duel = new YGODuel({ canvas: canvasRef.current!, client, config });
+            // if (onBind) onBind(duel);
             await duel.load();
             setDuel(duel);
         }

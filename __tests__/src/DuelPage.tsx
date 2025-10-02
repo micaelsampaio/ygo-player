@@ -1,19 +1,23 @@
 import { useEffect } from 'react';
-import { YGOPlayerComponent } from '../../src/YGOPlayer/web';
+import { registerYGOWebComponents, type YGOPlayerComponent } from '../../src/YGOPlayer/web';
 import type { DuelData } from './hooks/useStorageDuel';
 import { LocalStorage } from './scripts/storage';
 import { useNavigate } from 'react-router-dom';
 
 import "../../src/YGOPlayer/style/style.css";
 
+registerYGOWebComponents();
+
 export default function DuelPage() {
   const navigate = useNavigate();
 
   const startDuel = () => {
-    const ygo: YGOPlayerComponent = document.querySelector("ygo-player")! as any;
+    const ygo = document.querySelector<YGOPlayerComponent>("ygo-player")!;
     const duelData = LocalStorage.get<DuelData>("duel_data");
 
     console.log(ygo);
+    console.log(ygo.editor);
+    console.log(typeof ygo);
 
     if (!duelData || Object.keys(duelData).length === 0) {
       alert("no duel data");

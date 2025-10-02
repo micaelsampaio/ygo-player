@@ -1,4 +1,5 @@
 import { YGOReplayData } from "ygo-core";
+import { YGOClient } from "ygo-core";
 import { YGOPropsOptions } from "ygo-core";
 import { YGOProps } from "ygo-core";
 
