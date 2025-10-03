@@ -6,10 +6,10 @@ export class LocalYGOPlayerServer {
 
   constructor(player: YGOClient, props: YGOProps) {
 
-    player.connect();
+    const serverClient = (player as any).client;
 
     this.game = new YGOGameServer({
-      players: [player],
+      players: [serverClient],
       ygoCoreProps: props,
     })
   }

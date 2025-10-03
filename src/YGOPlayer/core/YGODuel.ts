@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { YGOPlayerCore } from "./YGOPlayerCore";
 import { YGODuelState, YGOUiElement } from "../types";
-import { YGOCore, YGOServerGameStateData, YGOGameUtils } from "ygo-core";
+import { YGOCore, YGOServerGameStateData, YGOGameUtils, JSONCommand } from "ygo-core";
 import { YGOEntity } from "./YGOEntity";
 import { GameController } from "../game/GameController";
 import { EventBus } from "../scripts/event-bus";
@@ -31,6 +31,7 @@ import { BattlePhaseController } from "../actions/BattlePhaseController";
 import { ActionAttackSelection } from "../actions/ActionAttackSelection";
 import { YGOClient } from "ygo-core";
 import { CardData } from "ygo-core";
+import { PromiseTask } from "../scripts/promise-task";
 
 export class YGODuel {
   public ygo!: InstanceType<typeof YGOCore>;
@@ -56,7 +57,7 @@ export class YGODuel {
   public duelScene: YGODuelScene;
   public settings: YGOPlayerSettingsAdapter;
   public globalHotKeysManager: HotKeyManager;
-  private loadingProgess: number = 0;
+  private loadingTask: PromiseTask;
 
   constructor({
     canvas,
@@ -104,6 +105,9 @@ export class YGODuel {
     this.actionManager.actions.set("card-hand-menu", new ActionCardHandMenu(this));
     this.actionManager.actions.set("card-zone-menu", new ActionCardZoneMenu(this));
     this.gameActions = new YGOGameActions(this);
+    this.loadingTask = new PromiseTask();
+    this.loadingTask.registerTask(); // create ygo Task
+    this.loadingTask.registerTask(); // loading assets task
 
     this.soundController.addLayer({ name: "GAME", volume: this.settings.getGameVolume() });
     this.soundController.addLayer({ name: "GAME_MUSIC", volume: this.settings.getMusicVolume(), useTimeScale: false });
@@ -115,10 +119,36 @@ export class YGODuel {
 
     (window as any).YGODuel = this;
 
+    console.log('HERE; OVERRIDE CLIENT');
+
+    console.log('CLIENT :: ', client);
+
     client.onMessage((eventName, data) => {
+      console.log('TCL: --------');
+      console.log("TCL:  ~ YGODuel ~ client.onMessage ~ data:", data)
+      console.log("TCL:  ~ YGODuel ~ client.onMessage ~ eventName:", eventName)
+      console.log('TCL: --------');
 
       if (eventName === "game-state") {
         this.createYGO(data);
+      }
+
+      if (eventName === "exec") {
+        if (data.type === "ygo.command") {
+          const eventData = data.data;
+          const command = new JSONCommand({ type: eventData.command.type, data: eventData.command.data });
+          command.commandId = eventData.command.id;
+          command.timestamp = eventData.command.timestamp;
+          this.commands.exec(command);
+        }
+
+        if (data.type === "ygo.undo") {
+          this.commands.previousCommand();
+        }
+
+        if (data.type === "ygo.redo") {
+          this.commands.nextCommand();
+        }
       }
 
       // TODO
@@ -141,14 +171,16 @@ export class YGODuel {
       player.extraDeck.forEach(id => ids.set(id, undefined));
     })
 
-    const cardsResponse = await fetch(`https://api.ygo101.com/cards?ids=${Array.from(ids.values()).join(",")}`);
+    // TODO USE CACHE
+    const cardsResponse = await fetch(`https://api.ygo101.com/cards?ids=${Array.from(ids.keys()).join(",")}`);
     const cardsData = await cardsResponse.json();
 
     const players = gameState.players.map((player) => {
       return {
         name: player.name,
-        mainDeck: player.mainDeck.map(id => cardsData.get(id)),
-        extraDeck: player.extraDeck.map(id => cardsData.get(id))
+        mainDeck: player.mainDeck.map(id => cardsData.find((card: any) => card.id === id)),
+        extraDeck: player.extraDeck.map(id => cardsData.find((card: any) => card.id === id)),
+        sideDeck: player.sideDeck?.map(id => cardsData.find((card: any) => card.id === id)) || [],
       }
     })
 
@@ -160,96 +192,6 @@ export class YGODuel {
         shuffleDecks: false
       }
     })
-
-    this.onFinishLoading();
-  }
-
-  private async loadAssets() {
-    try {
-      await Promise.all([
-        this.assets.loadGLTF(`${this.config.cdnUrl}/models/field.glb`),
-        this.assets.loadGLTF(`${this.config.cdnUrl}/models/game_field.glb`),
-        this.assets.loadGLTF(`${this.config.cdnUrl}/models/destroy_effect.glb`),
-        this.assets.loadGLTF(`${this.config.cdnUrl}/models/field_objects.glb`),
-        this.assets.loadImages(
-          `${this.config.cdnUrl}/images/ui/card_icons.png`,
-          `${this.config.cdnUrl}/images/ui/ic_stars128.png`,
-          `${this.config.cdnUrl}/images/ui/ic_rank128.png`,
-          `${this.config.cdnUrl}/images/ui/ic_link128.png`,
-          `${this.config.cdnUrl}/images/ui/turn_player_1.png`,
-          `${this.config.cdnUrl}/images/ui/turn_player_2.png`,
-          `${this.config.cdnUrl}/images/ui/ic_xyz_materials128.png`
-        ),
-        this.soundController.loadSounds(
-          this.createCdnUrl("/sounds/card-place-1.ogg"),
-          this.createCdnUrl("/sounds/card-place-2.ogg"),
-          this.createCdnUrl("/sounds/card-place-3.ogg")
-        ),
-        //this.assets.loadTextures(Array.from((this.ygo.state as any).cardsIngame.values()).map(id => `http://127.0.0.1:8080/images/cards_small/${id}.jpg`)),
-      ]);
-
-      this.onFinishLoading();
-    } catch (error) {
-      console.error("ERROR:");
-      console.error("TCL:", error);
-      alert("ERROR");
-    }
-  }
-
-  private async load() {
-    return await new Promise(async (res) => {
-      await this.loadAssets();
-
-      let interval = setInterval(() => {
-        if (this.loadingProgess >= 2) {
-          clearInterval(interval)
-          res(null);
-        }
-      }, 10)
-
-    })
-  }
-
-  private onFinishLoading() {
-    ++this.loadingProgess;
-
-    if (this.loadingProgess < 2) return;
-
-    const fieldModel = this.assets.models.get(`${this.config.cdnUrl}/models/field.glb`)!;
-    const gameFieldScene = this.assets.models.get(`${this.config.cdnUrl}/models/game_field.glb`)!;
-    this.fields = createFields({ duel: this, fieldModel: fieldModel.scene as any });
-    this.fieldStats = new YGOGameFieldStatsComponent(this);
-    this.entities.push(this.gameController);
-    this.duelScene.createFields({ gameField: gameFieldScene.scene as any });
-    this.duelScene.createGameMusic();
-    this.gameController.getComponent<ActionCardSelection>("action_card_selection").createCardSelections();
-    this.gameController.getComponent<ActionAttackSelection>("attack_selection_action").create();
-    this.gameController.addComponent("battle_phase_controller", new BattlePhaseController("battle_phase_controller", this));
-
-    this.settings.events.on("onShowCardWhenPlayedChange", (_, showTransparentCards) => {
-      this.fields.forEach(field => {
-        field.monsterZone.forEach(zone => {
-          zone.getGameCard()?.updateTransparentCardsState(showTransparentCards);
-        })
-        field.extraMonsterZone.forEach(zone => {
-          zone.getGameCard()?.updateTransparentCardsState(showTransparentCards);
-        })
-        field.spellTrapZone.forEach(zone => {
-          zone.getGameCard()?.updateTransparentCardsState(showTransparentCards);
-        })
-      })
-    });
-
-    this.settings.events.on("onGameVolumeChange", (_, value) => this.soundController.setLayerVolume("GAME", value));
-    this.settings.events.on("onMusicVolumeChange", (_, value) => this.soundController.setLayerVolume("GAME_MUSIC", value));
-    this.settings.events.on("onGameSpeedChange", (_, value) => this.core.setTimeScale(value));
-
-    this.core.updateCamera();
-  }
-
-  public startDuel() {
-
-    return;
 
     this.ygo.events.on("new-log", (command: any) => {
       if (this.commands.isRecovering()) return;
@@ -278,32 +220,105 @@ export class YGODuel {
       this.actionManager.actionsEnabled = false;
     });
 
-    setTimeout(() => {
-      try {
+    this.loadingTask.completeTask();
+  }
 
-        if (this.config.gameMode === "REPLAY") {
-          this.events.dispatch("toggle-ui-menu", { group: "game-overlay", type: "controls-menu" });
-        }
+  public async load() {
+    try {
+      await Promise.all([
+        this.assets.loadGLTF(`${this.config.cdnUrl}/models/field.glb`),
+        this.assets.loadGLTF(`${this.config.cdnUrl}/models/game_field.glb`),
+        this.assets.loadGLTF(`${this.config.cdnUrl}/models/destroy_effect.glb`),
+        this.assets.loadGLTF(`${this.config.cdnUrl}/models/field_objects.glb`),
+        this.assets.loadImages(
+          `${this.config.cdnUrl}/images/ui/card_icons.png`,
+          `${this.config.cdnUrl}/images/ui/ic_stars128.png`,
+          `${this.config.cdnUrl}/images/ui/ic_rank128.png`,
+          `${this.config.cdnUrl}/images/ui/ic_link128.png`,
+          `${this.config.cdnUrl}/images/ui/turn_player_1.png`,
+          `${this.config.cdnUrl}/images/ui/turn_player_2.png`,
+          `${this.config.cdnUrl}/images/ui/ic_xyz_materials128.png`
+        ),
+        this.soundController.loadSounds(
+          this.createCdnUrl("/sounds/card-place-1.ogg"),
+          this.createCdnUrl("/sounds/card-place-2.ogg"),
+          this.createCdnUrl("/sounds/card-place-3.ogg")
+        ),
+      ]);
 
-        setTimeout(() => {
-          this.ygo.start();
-        }, 500);
+      this.loadingTask.completeTask();
 
-        // setTimeout(() => {
-        //   this.execCommand(new YGOCommands.DuelPhaseCommand({ phase: YGODuelPhase.Battle }))
-        // }, 1000);
+      await this.loadingTask.wait(); // wait for server events and download cards
 
-        this.updateField();
+      const fieldModel = this.assets.models.get(`${this.config.cdnUrl}/models/field.glb`)!;
+      const gameFieldScene = this.assets.models.get(`${this.config.cdnUrl}/models/game_field.glb`)!;
+      this.fields = createFields({ duel: this, fieldModel: fieldModel.scene as any });
+      this.fieldStats = new YGOGameFieldStatsComponent(this);
+      this.entities.push(this.gameController);
+      this.duelScene.createFields({ gameField: gameFieldScene.scene as any });
+      this.duelScene.createGameMusic();
+      this.gameController.getComponent<ActionCardSelection>("action_card_selection").createCardSelections();
+      this.gameController.getComponent<ActionAttackSelection>("attack_selection_action").create();
+      this.gameController.addComponent("battle_phase_controller", new BattlePhaseController("battle_phase_controller", this));
 
-        for (const field of this.fields) {
-          field.hand.destroyAllCards();
-        }
+      this.settings.events.on("onShowCardWhenPlayedChange", (_, showTransparentCards) => {
+        this.fields.forEach(field => {
+          field.monsterZone.forEach(zone => {
+            zone.getGameCard()?.updateTransparentCardsState(showTransparentCards);
+          })
+          field.extraMonsterZone.forEach(zone => {
+            zone.getGameCard()?.updateTransparentCardsState(showTransparentCards);
+          })
+          field.spellTrapZone.forEach(zone => {
+            zone.getGameCard()?.updateTransparentCardsState(showTransparentCards);
+          })
+        })
+      });
 
-      } catch (error) {
-        console.log("ERROR", error);
-        alert("ERROR");
-      }
-    }); // next frame call
+      this.settings.events.on("onGameVolumeChange", (_, value) => this.soundController.setLayerVolume("GAME", value));
+      this.settings.events.on("onMusicVolumeChange", (_, value) => this.soundController.setLayerVolume("GAME_MUSIC", value));
+      this.settings.events.on("onGameSpeedChange", (_, value) => this.core.setTimeScale(value));
+
+      this.core.updateCamera();
+
+      this.updateField();
+
+      this.client.send("ready");
+    } catch (error) {
+      console.log("TCL:  ~ YGODuel ~ load ~ error:", error)
+      alert('ERROR');
+    }
+  }
+
+
+  public startDuel() {
+
+    // setTimeout(() => {
+    //   try {
+
+    //     if (this.config.gameMode === "REPLAY") {
+    //       this.events.dispatch("toggle-ui-menu", { group: "game-overlay", type: "controls-menu" });
+    //     }
+
+    //     setTimeout(() => {
+    //       this.ygo.start();
+    //     }, 500);
+
+    //     // setTimeout(() => {
+    //     //   this.execCommand(new YGOCommands.DuelPhaseCommand({ phase: YGODuelPhase.Battle }))
+    //     // }, 1000);
+
+    //     this.updateField();
+
+    //     for (const field of this.fields) {
+    //       field.hand.destroyAllCards();
+    //     }
+
+    //   } catch (error) {
+    //     console.log("ERROR", error);
+    //     alert("ERROR");
+    //   }
+    // }); // next frame call
   }
 
   public updateField() {
@@ -522,11 +537,13 @@ export class YGODuel {
     });
 
     this.globalHotKeysManager.on("previousCommand", () => {
-      this.commands.previousCommand();
+      this.client.send("exec", { type: "ygo.undo", })
+      //this.commands.previousCommand();
     });
 
     this.globalHotKeysManager.on("nextCommand", () => {
-      this.commands.nextCommand();
+      // this.commands.nextCommand();
+      this.client.send("exec", { type: "ygo.redo", })
     });
 
     this.globalHotKeysManager.on("space", () => {
@@ -550,7 +567,12 @@ export class YGODuel {
   }
 
   execCommand(command: Command | string) {
-    this.commands.exec(command);
+    this.client.send("exec", {
+      type: "ygo.exec",
+      data: {
+        command: typeof command === "string" ? command : command.toJSON()
+      }
+    })
   }
 
   clearActions() {

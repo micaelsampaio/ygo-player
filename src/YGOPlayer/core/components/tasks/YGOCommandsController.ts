@@ -40,6 +40,7 @@ export class YGOCommandsController extends YGOComponent {
 
   exec(command: Command | string) {
     const alreadyPlaying = this.isPlaying();
+    console.log("TCL:  ~ YGOCommandsController ~ exec ~ alreadyPlaying:", alreadyPlaying)
     this.setState(YGOCommandsControllerState.PLAYING);
 
     if (typeof command === "string") {

@@ -12,6 +12,8 @@ export class LocalYGOPlayerClient implements YGOClient {
     this.username = username;
     this.type = type;
     this.client = new LocalYGOPlayerCommunication(this, this.username, this.type);
+
+    console.log('CREATE CLIENT');
   }
 
   connect() {
@@ -26,7 +28,12 @@ export class LocalYGOPlayerClient implements YGOClient {
   }
 
   send(eventName: string, data?: any) {
-    (this.client as any).onMessageCb(eventName, data);
+    console.log("TCL:  ~ LocalYGOPlayerClient ~ send ~ eventName:", eventName);
+    (this.client as any).onReceiveMessage(eventName, data);
+  }
+
+  onReceiveMessage(eventName: string, data: any) {
+    this.onMessageCb?.(eventName, data);
   }
 
   onMessage(cb: (eventName: string, data?: any) => void): void {
@@ -56,7 +63,11 @@ export class LocalYGOPlayerCommunication implements YGOClient {
 
   public send(eventName: string, data?: any) {
     if (!this.connected) return;
-    (this.client as any).onMessageCb(eventName, data);
+    (this.client as any).onReceiveMessage(eventName, data);
+  }
+
+  onReceiveMessage(eventName: string, data: any) {
+    this.onMessageCb?.(eventName, data);
   }
 
   onMessage(cb: (eventName: string, data?: any) => void): void {
@@ -73,5 +84,6 @@ export class LocalYGOPlayerCommunication implements YGOClient {
 
   disconnect() {
     this.connected = false;
+    this.onDisconnectCb?.();
   }
 }
