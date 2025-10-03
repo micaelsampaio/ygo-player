@@ -9,11 +9,11 @@ export function ControlsMenu({ duel, isMobile, isPortrait, config: gameConfig }:
     const hasNextCommand = duel.ygo.hasNextCommand();
 
     const prev = () => {
-        duel.commands.previousCommand();
+        duel.client.send("exec", { type: "ygo.undo" })
     };
 
     const next = () => {
-        duel.commands.nextCommand();
+        duel.client.send("exec", { type: "ygo.redo" })
     };
 
     const play = () => {
