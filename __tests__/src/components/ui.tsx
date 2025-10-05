@@ -1,4 +1,7 @@
+import { createContext, useContext, useState, type FC, type ReactNode } from "react";
 import styled from "styled-components";
+import { darkTheme } from "../css/theme";
+import { Link, useSearchParams } from "react-router-dom";
 
 // Layout
 export const Container = styled.div`
@@ -180,3 +183,104 @@ export const FlexItem = styled.div<FlexItemProps>`
   align-self: ${({ alignSelf = 'auto' }) => alignSelf};
   order: ${({ order = 0 }) => order};
 `;
+
+
+interface TabContextValue {
+  activeTab: string;
+  setActiveTab: (tab: string) => void;
+}
+
+const TabContext = createContext<TabContextValue | undefined>(undefined);
+
+export const useTabContext = () => {
+  const ctx = useContext(TabContext);
+  if (!ctx) throw new Error("useTabContext must be used within <TabProvider>");
+  return ctx;
+};
+
+interface TabProviderProps {
+  defaultTab: string;
+  children: ReactNode;
+}
+
+export const TabProvider: FC<TabProviderProps> = ({ defaultTab, children }) => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState<string>(searchParams.get("tab") || defaultTab);
+
+  const handleSetActiveTab = (tab: string) => {
+    setActiveTab(tab);
+    searchParams.set("tab", tab);
+    setSearchParams(searchParams, { replace: true });
+  };
+  return (
+    <TabContext.Provider value={{ activeTab, setActiveTab: handleSetActiveTab }}>
+      {children}
+    </TabContext.Provider>
+  );
+};
+
+interface TabListProps {
+  children: ReactNode;
+}
+
+export const TabList: FC<TabListProps> = ({ children }) => {
+  return (
+    <div
+      style={{
+        display: "flex",
+        borderBottom: `2px solid ${darkTheme.border}`,
+        marginBottom: "1rem",
+      }}
+    >
+      {children}
+    </div>
+  );
+};
+
+interface TabProps {
+  id: string;
+  children: ReactNode;
+  href?: string
+}
+
+export const Tab: FC<TabProps> = ({ id, href, children }) => {
+  const { activeTab, setActiveTab } = useTabContext();
+  const isActive = activeTab === id
+  const Component = href ? Link : "button"
+
+  return (
+    <TabStyled>
+      <Component
+        to={href || ""}
+        onClick={href ? undefined : () => setActiveTab(id)}
+        style={{
+          flexShrink: 0,
+          padding: "8px 16px",
+          fontSize: "14px",
+          cursor: "pointer",
+          border: "none",
+          background: "none",
+          color: isActive ? darkTheme.text : darkTheme.textMuted,
+          borderBottom: `3px solid ${isActive ? darkTheme.accent : "transparent"
+            }`,
+          transition: "all 0.2s ease",
+        }}
+      >
+        {children}
+      </Component>
+    </TabStyled>
+  );
+};
+const TabStyled = styled.div`
+  a {text-decoration: none; color: ${darkTheme.textMuted};}
+`
+interface TabContentProps {
+  id: string;
+  children: ReactNode;
+}
+
+export const TabContent: FC<TabContentProps> = ({ id, children }) => {
+  const { activeTab } = useTabContext();
+  if (activeTab !== id) return null;
+  return <div style={{ flexGrow: 1, paddingTop: "0.5rem" }}>{children}</div>;
+};

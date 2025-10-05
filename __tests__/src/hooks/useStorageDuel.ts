@@ -1,6 +1,7 @@
-import { useNavigate } from "react-router-dom";
+import { replace, useNavigate } from "react-router-dom";
 import { LocalStorage } from "../scripts/storage";
 import type { Deck } from "./useStorageDecks";
+import type { YGOReplayData } from "ygo-core";
 
 export interface DuelData {
   players: {
@@ -55,9 +56,50 @@ export function useDuelController() {
     navigate("/duel");
   }
 
+  const viewReplay = async (replay: YGOReplayData) => {
+    console.log(replay);
+    const decks = await fetchPlayersData(...replay.players);
+
+    LocalStorage.set("duel_data", {
+      gameMode: "REPLAY",
+      decks,
+      replay
+    });
+
+    navigate("/duel");
+  }
+
   return {
     duelWithStaticProps,
     setDuelData,
-    duel
+    duel,
+    viewReplay
   }
+}
+
+async function fetchPlayersData(...players: any) {
+  console.log("PLAYERS", players);
+
+  const ids = new Set<number>()
+
+  for (const player of players) {
+    player.mainDeck.forEach((id: number) => ids.add(id));
+    player.extraDeck.forEach((id: number) => ids.add(id));
+    player.sideDeck?.forEach((id: number) => ids.add(id));
+  }
+
+  // TODO USE CACHE
+  const cardsResponse = await fetch(`https://api.ygo101.com/cards?ids=${Array.from(ids).join(",")}`);
+  const cardsData = await cardsResponse.json();
+
+  const newPlayersData = players.map((player: any) => {
+    return {
+      name: player.name,
+      mainDeck: player.mainDeck.map((id: number) => cardsData.find((card: any) => card.id === id)),
+      extraDeck: player.extraDeck.map((id: number) => cardsData.find((card: any) => card.id === id)),
+      sideDeck: player.sideDeck?.map((id: number) => cardsData.find((card: any) => card.id === id)) || [],
+    }
+  })
+
+  return newPlayersData;
 }

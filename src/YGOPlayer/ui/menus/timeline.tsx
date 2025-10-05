@@ -1,7 +1,7 @@
 import { Command } from "ygo-core";
 import { YGODuel } from "../../core/YGODuel";
 import { DefaultTimelineCommand } from "./timeline/commands/default-command";
-import { stopPropagationCallback } from "../../scripts/utils";
+import { removeFocusFromActiveElement, stopPropagationCallback } from "../../scripts/utils";
 
 export interface TimelineCommandProps {
   duel: YGODuel
@@ -18,7 +18,10 @@ export function TimeLine({ duel }: { duel: YGODuel }) {
   const currentCommand = duel.ygo.commandIndex;
 
   const onCommandClick = (command: Command) => {
-    duel.commands.goToCommand(command);
+    setTimeout(() => {
+      removeFocusFromActiveElement();
+    });
+    duel.serverActions.controls.goToCommand(command)
   };
 
   return (
@@ -32,6 +35,7 @@ export function TimeLine({ duel }: { duel: YGODuel }) {
         const Command = DefaultTimelineCommand;
         return (
           <Command
+            key={index}
             duel={duel}
             command={command}
             index={index}

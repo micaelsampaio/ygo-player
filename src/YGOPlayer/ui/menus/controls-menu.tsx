@@ -1,27 +1,26 @@
 import { useCallback, useEffect } from "react";
 import { YGODuel } from "../../core/YGODuel";
-import { UiGameConfig } from "../YGOUiController";
 import { removeFocusFromActiveElement } from "../../scripts/utils";
 
-export function ControlsMenu({ duel, isMobile, isPortrait, config: gameConfig }: { duel: YGODuel, config: UiGameConfig, isMobile: boolean, isPortrait: boolean, }) {
+export function ControlsMenu({ duel }: { duel: YGODuel }) {
     const isPlaying = duel.commands.isPlaying();
     const hasPrevCommand = duel.ygo.hasPrevCommand();
     const hasNextCommand = duel.ygo.hasNextCommand();
 
     const prev = () => {
-        duel.client.send("exec", { type: "ygo.undo" })
+        duel.serverActions.controls.previousCommand();
     };
 
     const next = () => {
-        duel.client.send("exec", { type: "ygo.redo" })
+        duel.serverActions.controls.nextCommand();
     };
 
     const play = () => {
-        duel.commands.play();
+        duel.serverActions.controls.play();
     };
 
     const pause = () => {
-        duel.commands.pause();
+        duel.serverActions.controls.pause();
     };
 
     const setTimeScale = useCallback((dt: number) => {
@@ -30,18 +29,6 @@ export function ControlsMenu({ duel, isMobile, isPortrait, config: gameConfig }:
 
     useEffect(() => {
         removeFocusFromActiveElement();
-
-        if (isMobile && isPortrait) return;
-
-        if (!gameConfig.startReplay && duel.settings.getConfigFromPath("autoStartReplay") === true) {
-            duel.events.dispatch("update-game-ui-config", { startReplay: true });
-            let timer = setTimeout(() => {
-                play();
-            }, 500);
-            return () => {
-                clearTimeout(timer);
-            }
-        }
     }, []);
 
     return <div className="ygo-card-menu ygo-controls-menu">

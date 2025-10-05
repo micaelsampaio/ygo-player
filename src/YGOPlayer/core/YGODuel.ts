@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { YGOPlayerCore } from "./YGOPlayerCore";
 import { YGODuelState, YGOUiElement } from "../types";
-import { YGOCore, YGOServerGameStateData, YGOGameUtils, JSONCommand } from "ygo-core";
+import { YGOCore, YGOServerGameStateData, YGOGameUtils } from "ygo-core";
 import { YGOEntity } from "./YGOEntity";
 import { GameController } from "../game/GameController";
 import { EventBus } from "../scripts/event-bus";
@@ -121,7 +121,7 @@ export class YGODuel {
 
     (window as any).YGODuel = this;
 
-    this.serverActions.requestGameState();
+    this.serverActions.server.getGameState();
   }
 
   public async createYGO(gameState: YGOServerGameStateData) {
@@ -144,14 +144,15 @@ export class YGODuel {
         sideDeck: player.sideDeck?.map(id => cardsData.find((card: any) => card.id === id)) || [],
       }
     })
+    const props = gameState.ygoCoreProps;
+    const options = props.options || {};
+    options.shuffleDecks = false;
 
     this.ygo = new YGOCore({
       players,
       cdnUrl: this.config.cdnUrl,
-      options: {
-        ...gameState.options || {},
-        shuffleDecks: false
-      }
+      commands: props.commands,
+      options
     })
 
     this.ygo.events.on("new-log", (command: any) => {
@@ -244,7 +245,7 @@ export class YGODuel {
 
       this.updateField();
 
-      this.serverActions.setClientReady();
+      this.serverActions.server.setClientReady();
     } catch (error) {
       console.log("TCL:  ~ YGODuel ~ load ~ error:", error)
       alert('ERROR');
@@ -498,18 +499,19 @@ export class YGODuel {
     });
 
     this.globalHotKeysManager.on("previousCommand", () => {
-      this.client.send("exec", { type: "ygo.undo", })
-      //this.commands.previousCommand();
+      this.serverActions.controls.previousCommand();
     });
 
     this.globalHotKeysManager.on("nextCommand", () => {
-      // this.commands.nextCommand();
-      this.client.send("exec", { type: "ygo.redo", })
+      this.serverActions.controls.nextCommand();
     });
 
     this.globalHotKeysManager.on("space", () => {
-      if (this.commands.isPlaying()) this.commands.pause();
-      else this.commands.play();
+      if (this.commands.isPlaying()) {
+        this.serverActions.controls.pause();
+      } else {
+        this.serverActions.controls.play();
+      }
     });
 
     this.globalHotKeysManager.on("escPressed", () => {
@@ -528,7 +530,7 @@ export class YGODuel {
   }
 
   execCommand(command: Command | string) {
-    this.serverActions.execYGOCommand({ command });
+    this.serverActions.ygo.exec({ command })
   }
 
   clearActions() {
