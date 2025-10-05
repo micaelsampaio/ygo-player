@@ -3,7 +3,6 @@ import { registerYGOWebComponents, type YGOPlayerComponent } from '../../src/YGO
 import type { DuelData } from './hooks/useStorageDuel';
 import { LocalStorage } from './scripts/storage';
 import { useNavigate } from 'react-router-dom';
-
 import "../../src/YGOPlayer/style/style.css";
 
 registerYGOWebComponents();
@@ -15,9 +14,12 @@ export default function DuelPage() {
     const ygo = document.querySelector<YGOPlayerComponent>("ygo-player")!;
     const duelData = LocalStorage.get<DuelData>("duel_data");
 
-    console.log(ygo);
-    console.log(ygo.editor);
-    console.log(typeof ygo);
+    if (window.ygoSocketClient) {
+
+      ygo.connectToServer({ client: window.ygoSocketClient as any, cdnUrl: String(import.meta.env.VITE_YGO_CDN_URL) });
+      alert("SOCKET CLIENT");
+      return
+    }
 
     if (!duelData || Object.keys(duelData).length === 0) {
       alert("no duel data");

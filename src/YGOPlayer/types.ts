@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { type YGOClient } from "ygo-core";
 import {
   Card,
   CardData,
@@ -69,6 +70,12 @@ export interface YGOPlayerStartReplayProps {
   actions?: {
 
   }
+}
+
+
+export interface YGOPlayerConnectToServerProps {
+  client: YGOClient
+  cdnUrl: string;
 }
 
 export interface YGOAudioLayer {

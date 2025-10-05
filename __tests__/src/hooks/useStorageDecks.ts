@@ -9,8 +9,8 @@ export interface Deck {
   name: string,
   mainDeck: any[],
   extraDeck: any[],
+  sideDeck?: any[]
 }
-
 
 export function useStorageDecks() {
 
@@ -20,6 +20,7 @@ export function useStorageDecks() {
 
     for (const deckKey of deckIds) {
       const data = LocalStorage.get<Deck>(deckKey);
+      if (!data.sideDeck) data.sideDeck = [];
       decks.push(data);
     }
     decks.sort((d1, d2) => d1.name.localeCompare(d2.name));

@@ -8,12 +8,11 @@ import { Link } from 'react-router-dom';
 
 function App() {
   const [duelData, setDuelData] = useState<string>(() => getDuelDataFromLocalStorageSafe());
-  const [selectedDeck1, setSelectedDeck1] = useState<any | null>(window.localStorage.getItem("debug_deck1") || "");
-  const [selectedDeck2, setSelectedDeck2] = useState<any | null>(window.localStorage.getItem("debug_deck2") || "");
   const deckManager = useStorageDecks();
   const duelManager = useDuelController();
   const decks = deckManager.decks;
-
+  const [selectedDeck1, setSelectedDeck1] = useState<any | null>(window.localStorage.getItem("debug_deck1") || "");
+  const [selectedDeck2, setSelectedDeck2] = useState<any | null>(window.localStorage.getItem("debug_deck2") || "");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const deleteDeck = (id: string) => {
@@ -172,6 +171,7 @@ function App() {
               />
             </div>
             <div style={{ flexShrink: 0, textAlign: 'right', marginTop: '1rem', justifyContent: "end", display: "flex", gap: "16px", rowGap: "16px" }}>
+              <Link to="/lobby"><Button>Lobbies</Button></Link>
               <Link to="/three/test"><Button>Temp Three Scene</Button></Link>
               <Button onClick={() => duelManager.duelWithStaticProps(duelData)}>Start Duel</Button>
             </div>

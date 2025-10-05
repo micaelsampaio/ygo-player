@@ -30,8 +30,8 @@ import { SETTINGS_MODAL_TYPE } from "../ui/menus/game-settings/game-settings-men
 import { BattlePhaseController } from "../actions/BattlePhaseController";
 import { ActionAttackSelection } from "../actions/ActionAttackSelection";
 import { YGOClient } from "ygo-core";
-import { CardData } from "ygo-core";
 import { PromiseTask } from "../scripts/promise-task";
+import { YGOServerActions } from "./YGOServerActions";
 
 export class YGODuel {
   public ygo!: InstanceType<typeof YGOCore>;
@@ -47,6 +47,7 @@ export class YGODuel {
   public events: EventBus<any>;
   public actionManager: YGOActionManager;
   public gameActions: YGOGameActions;
+  public serverActions: YGOServerActions;
   public gameController: GameController;
   public mouseEvents: YGOMouseEvents;
   public tasks: YGOTaskController;
@@ -86,6 +87,7 @@ export class YGODuel {
     this.duelScene = new YGODuelScene(this);
     this.gameController = new GameController(this);
     this.actionManager = new YGOActionManager();
+    this.serverActions = new YGOServerActions(this, this.client);
     this.tasks = new YGOTaskController(this);
     this.commands = new YGOCommandsController(this);
     this.soundController = new YGOSoundController();
@@ -119,60 +121,19 @@ export class YGODuel {
 
     (window as any).YGODuel = this;
 
-    console.log('HERE; OVERRIDE CLIENT');
-
-    console.log('CLIENT :: ', client);
-
-    client.onMessage((eventName, data) => {
-      console.log('TCL: --------');
-      console.log("TCL:  ~ YGODuel ~ client.onMessage ~ data:", data)
-      console.log("TCL:  ~ YGODuel ~ client.onMessage ~ eventName:", eventName)
-      console.log('TCL: --------');
-
-      if (eventName === "game-state") {
-        this.createYGO(data);
-      }
-
-      if (eventName === "exec") {
-        if (data.type === "ygo.command") {
-          const eventData = data.data;
-          const command = new JSONCommand({ type: eventData.command.type, data: eventData.command.data });
-          command.commandId = eventData.command.id;
-          command.timestamp = eventData.command.timestamp;
-          this.commands.exec(command);
-        }
-
-        if (data.type === "ygo.undo") {
-          this.commands.previousCommand();
-        }
-
-        if (data.type === "ygo.redo") {
-          this.commands.nextCommand();
-        }
-      }
-
-      // TODO
-    })
-
-    client.onDisconnect(() => {
-
-    })
-
-    setTimeout(() => {
-      client.send("game-state");
-    })
+    this.serverActions.requestGameState();
   }
 
-  private async createYGO(gameState: YGOServerGameStateData) {
-    const ids = new Map<number, CardData | undefined>()
+  public async createYGO(gameState: YGOServerGameStateData) {
+    const ids = new Set<number>()
 
     gameState.players.map((player) => {
-      player.mainDeck.forEach(id => ids.set(id, undefined));
-      player.extraDeck.forEach(id => ids.set(id, undefined));
+      player.mainDeck.forEach(id => ids.add(id));
+      player.extraDeck.forEach(id => ids.add(id));
     })
 
     // TODO USE CACHE
-    const cardsResponse = await fetch(`https://api.ygo101.com/cards?ids=${Array.from(ids.keys()).join(",")}`);
+    const cardsResponse = await fetch(`https://api.ygo101.com/cards?ids=${Array.from(ids).join(",")}`);
     const cardsData = await cardsResponse.json();
 
     const players = gameState.players.map((player) => {
@@ -283,7 +244,7 @@ export class YGODuel {
 
       this.updateField();
 
-      this.client.send("ready");
+      this.serverActions.setClientReady();
     } catch (error) {
       console.log("TCL:  ~ YGODuel ~ load ~ error:", error)
       alert('ERROR');
@@ -567,12 +528,7 @@ export class YGODuel {
   }
 
   execCommand(command: Command | string) {
-    this.client.send("exec", {
-      type: "ygo.exec",
-      data: {
-        command: typeof command === "string" ? command : command.toJSON()
-      }
-    })
+    this.serverActions.execYGOCommand({ command });
   }
 
   clearActions() {

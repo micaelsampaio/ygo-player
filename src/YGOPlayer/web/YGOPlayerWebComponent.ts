@@ -1,7 +1,7 @@
 import { createElement } from "react";
 import ReactDOM from "react-dom/client";
 import { YgoDuelApp } from "../ui/YgoDuelApp";
-import { YGOPlayerStartEditorProps, YGOPlayerStartReplayProps } from "../types";
+import { YGOPlayerConnectToServerProps, YGOPlayerStartEditorProps, YGOPlayerStartReplayProps } from "../types";
 import { CardData, Command, YGOClientType } from "ygo-core";
 import { YGOConfig } from "../core/YGOConfig";
 import { YGODuel } from "../core/YGODuel";
@@ -23,7 +23,7 @@ export interface YGOPlayerComponent extends HTMLElement {
 
   replay(props: YGOPlayerStartReplayProps): void
 
-  connectToServer(client: YGOClient): void
+  connectToServer(args: YGOPlayerConnectToServerProps): void
 
   on<K extends keyof YGOPlayerComponentEvents>(
     event: K,
@@ -181,8 +181,20 @@ export class YGOPlayerComponentImpl extends HTMLElement implements YGOPlayerComp
     this.start(config);
   }
 
-  connectToServer(client: YGOClient): void {
-    throw new Error("Method not implemented.");
+  connectToServer(props: YGOPlayerConnectToServerProps): void {
+
+    this.client = props.client;
+
+    const config: YGOConfig = {
+      players: [],
+      commands: [],
+      options: {},
+      cdnUrl: props.cdnUrl,
+      actions: {},
+      gameMode: "EDITOR",
+    };
+
+    this.start(config);
   }
 
   on<K extends keyof YGOPlayerComponentEvents>(
