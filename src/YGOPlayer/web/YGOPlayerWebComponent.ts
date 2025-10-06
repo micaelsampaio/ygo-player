@@ -1,12 +1,15 @@
 import { createElement } from "react";
 import ReactDOM from "react-dom/client";
 import { YgoDuelApp } from "../ui/YgoDuelApp";
-import { YGOPlayerStartEditorProps, YGOPlayerStartReplayProps } from "../types";
-import { CardData, Command } from "ygo-core";
+import { YGOPlayerConnectToServerProps, YGOPlayerStartEditorProps, YGOPlayerStartReplayProps } from "../types";
+import { CardData, Command, YGOClientType } from "ygo-core";
 import { YGOConfig } from "../core/YGOConfig";
 import { YGODuel } from "../core/YGODuel";
 import { EventBus } from "../scripts/event-bus";
 import { YGOPropsOptions } from "ygo-core";
+import { YGOClient } from "ygo-core";
+import { LocalYGOPlayerClient } from "../network/local-server/local-client";
+import { LocalYGOPlayerServer } from "../network/local-server/local-server";
 
 export interface YGOPlayerComponentEvents {
   init: (args: { instance: YGOPlayerComponent; duel: YGODuel }) => void;
@@ -15,14 +18,45 @@ export interface YGOPlayerComponentEvents {
   "command-executed": (args: { command: Command }) => void;
 }
 
-export class YGOPlayerComponent extends HTMLElement {
+export interface YGOPlayerComponent extends HTMLElement {
+  editor(props: YGOPlayerStartEditorProps): void
+
+  replay(props: YGOPlayerStartReplayProps): void
+
+  connectToServer(args: YGOPlayerConnectToServerProps): void
+
+  on<K extends keyof YGOPlayerComponentEvents>(
+    event: K,
+    listener: YGOPlayerComponentEvents[K]
+  ): void
+
+  off<K extends keyof YGOPlayerComponentEvents>(
+    event: K,
+    listener: YGOPlayerComponentEvents[K]
+  ): void
+
+  dispatch<K extends keyof YGOPlayerComponentEvents>(
+    event: K,
+    ...args: Parameters<YGOPlayerComponentEvents[K]>
+  ): void
+
+  destroy(): void
+}
+
+export class YGOPlayerComponentImpl extends HTMLElement implements YGOPlayerComponent {
   private root: ReactDOM.Root | undefined;
+  public client!: YGOClient;
   public duel!: YGODuel;
+  public server: any;
   private events: EventBus<YGOPlayerComponentEvents>;
 
   constructor() {
     super();
     this.events = new EventBus();
+
+    if (window.location.href.startsWith("http://localhost")) {
+      (window as any).YGO_WEB_COMPONENT = this;
+    }
   }
 
   connectedCallback() {
@@ -64,12 +98,20 @@ export class YGOPlayerComponent extends HTMLElement {
         start: (duel) => {
           this.dispatch("start", { instance: this, duel })
         },
+        client: this.client,
         config,
       })
     );
   }
 
+  // connectToServer(props: { client: YGOClient }) {
+
+  // }
+
   editor(props: YGOPlayerStartEditorProps) {
+
+    this.client = new LocalYGOPlayerClient(props.players[0]?.name || "Player 1", YGOClientType.PLAYER)
+
     const config: YGOConfig = {
       cdnUrl: props.cdnUrl,
       commands: props.commands,
@@ -78,8 +120,9 @@ export class YGOPlayerComponent extends HTMLElement {
       actions: props.actions,
       gameMode: props.gameMode || "EDITOR",
     };
-    console.log("------- CONFIG ------");
-    console.log(config);
+
+    this.server = new LocalYGOPlayerServer(this.client, config);
+
     this.start(config);
   }
 
@@ -134,8 +177,27 @@ export class YGOPlayerComponent extends HTMLElement {
 
     config.options.shuffleDecks = false;
 
-    console.log("------- CONFIG ---------");
+    this.client = new LocalYGOPlayerClient(players[0]?.name || "Player 1", YGOClientType.PLAYER)
+    this.server = new LocalYGOPlayerServer(this.client, config);
+
+    console.log("------- CONFIG REPLAY ---------");
     console.log(JSON.stringify(config));
+
+    this.start(config);
+  }
+
+  connectToServer(props: YGOPlayerConnectToServerProps): void {
+
+    this.client = props.client;
+
+    const config: YGOConfig = {
+      players: [],
+      commands: [],
+      options: {},
+      cdnUrl: props.cdnUrl,
+      actions: {},
+      gameMode: "EDITOR",
+    };
 
     this.start(config);
   }

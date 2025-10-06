@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { type YGOClient } from "ygo-core";
 import {
   Card,
   CardData,
@@ -45,6 +46,7 @@ export interface YGOPlayerData {
   mainDeck: CardData[];
   extraDeck: CardData[];
 }
+
 export interface YGOReplayDeckData {
   mainDeck: CardData[];
   extraDeck: CardData[];
@@ -67,8 +69,14 @@ export interface YGOPlayerStartReplayProps {
   replay: YGOReplayData;
   options: YGOPropsOptions;
   actions?: {
-
+    saveReplay?: (replay: YGOReplayData) => Promise<void>
   }
+}
+
+
+export interface YGOPlayerConnectToServerProps {
+  client: YGOClient
+  cdnUrl: string;
 }
 
 export interface YGOAudioLayer {

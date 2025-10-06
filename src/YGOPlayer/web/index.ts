@@ -1,15 +1,18 @@
-import { YGOPlayerComponent } from "./YGOPlayerWebComponent";
+import { YGOPlayerComponent, YGOPlayerComponentEvents, YGOPlayerComponentImpl } from "./YGOPlayerWebComponent";
 
-function registerWebComponents() {
+function registerYGOWebComponents() {
+    if (typeof window === "undefined") return;
+
     if (!customElements.get("ygo-player")) {
-        customElements.define('ygo-player', YGOPlayerComponent);
+        customElements.define('ygo-player', YGOPlayerComponentImpl);
     }
-   
 }
 
 export {
-    registerWebComponents,
-    YGOPlayerComponent,
+    registerYGOWebComponents,
 }
 
-registerWebComponents();
+export type {
+    YGOPlayerComponent,
+    YGOPlayerComponentEvents,
+}

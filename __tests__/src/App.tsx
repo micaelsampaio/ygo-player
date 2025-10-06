@@ -1,26 +1,39 @@
 import React, { useRef, useState } from 'react';
 import { darkTheme } from './css/theme';
-import { Button, Card, Container, DeckItem, DeckList, FlexBox, Grid, InputSelect, SectionTitle, TextArea, Title } from './components/ui';
+import {
+  Button,
+  Card,
+  Container,
+  DeckItem,
+  DeckList,
+  FlexBox,
+  Grid,
+  InputSelect,
+  SectionTitle,
+  Tab,
+  TabContent,
+  TabList,
+  TabProvider,
+  TextArea,
+  Title
+} from './components/ui';
 import { useStorageDecks } from './hooks/useStorageDecks';
 import { useDuelController } from './hooks/useStorageDuel';
 import { LocalStorage } from './scripts/storage';
-import { Link } from 'react-router-dom';
 
 function App() {
   const [duelData, setDuelData] = useState<string>(() => getDuelDataFromLocalStorageSafe());
-  const [selectedDeck1, setSelectedDeck1] = useState<any | null>(window.localStorage.getItem("debug_deck1") || "");
-  const [selectedDeck2, setSelectedDeck2] = useState<any | null>(window.localStorage.getItem("debug_deck2") || "");
+  const [replayData, setReplayData] = useState<string>(() => getReplayDataFromLocalStorageSafe());
   const deckManager = useStorageDecks();
   const duelManager = useDuelController();
   const decks = deckManager.decks;
-
+  const [selectedDeck1, setSelectedDeck1] = useState<any | null>(window.localStorage.getItem("debug_deck1") || "");
+  const [selectedDeck2, setSelectedDeck2] = useState<any | null>(window.localStorage.getItem("debug_deck2") || "");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const deleteDeck = (id: string) => {
     const confirmed = window.confirm('Are you sure you want to delete this deck?');
-    if (confirmed) {
-      deckManager.removeDeck(id);
-    }
+    if (confirmed) deckManager.removeDeck(id);
   };
 
   const downloadFromClipboard = async () => {
@@ -46,9 +59,7 @@ function App() {
     reader.readAsText(file);
   };
 
-  const downloadFromYDK = () => {
-    fileInputRef.current?.click();
-  };
+  const downloadFromYDK = () => fileInputRef.current?.click();
 
   const duelWithSelectedDecks = () => {
     const deck1 = decks.find(deck => deck.id === selectedDeck1);
@@ -58,15 +69,21 @@ function App() {
     if (!deck2) return alert("DECK Player 2 not found");
 
     duelManager.duel({ deck1, deck2 });
-  }
+  };
 
-  const handleDuel = () => {
-    try {
-      const props = JSON.parse(duelData);
-      console.log('Starting duel with props:', props);
-    } catch {
-      alert('Invalid JSON');
-    }
+  // handlers
+  const handleDuelStart = () => duelManager.duelWithStaticProps(duelData);
+  const handleViewReplay = () => { duelManager.viewReplay(JSON.parse(replayData)) };
+
+  // save duel/replay data to localStorage
+  const updateDuelData = (value: string) => {
+    setDuelData(value);
+    LocalStorage.set("duel_data", value);
+  };
+
+  const updateReplayData = (value: string) => {
+    setReplayData(value);
+    LocalStorage.set("replay_data", value);
   };
 
   return (
@@ -78,40 +95,26 @@ function App() {
         <Card>
           <SectionTitle>📂 Decks</SectionTitle>
           <FlexBox style={{ marginBottom: '1rem' }} gapX='10px' gapY='10px'>
-            <Button color={darkTheme.accent} onClick={downloadFromClipboard}>
-              From Clipboard
-            </Button>
-            <Button color={darkTheme.success} onClick={downloadFromYDK}>
-              From YDK
-            </Button>
+            <Button color={darkTheme.accent} onClick={downloadFromClipboard}>From Clipboard</Button>
+            <Button color={darkTheme.success} onClick={downloadFromYDK}>From YDK</Button>
           </FlexBox>
-          <div>
-            <input
-              type="file"
-              accept=".ydk"
-              ref={fileInputRef}
-              onChange={handleFileChange}
-              style={{ display: 'none' }}
-            />
-          </div>
+
+          <input
+            type="file"
+            accept=".ydk"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            style={{ display: 'none' }}
+          />
+
           <DeckList>
             {decks.map((deck) => (
               <DeckItem key={deck.id}>
                 <span>{deck.name}</span>
-                <div style={{ flexGrow: "1" }}></div>
+                <div style={{ flexGrow: "1" }} />
                 <FlexBox gapX='10px' gapY='10px'>
-                  <Button
-                    color={darkTheme.danger}
-                    onClick={() => deleteDeck(deck.id)}
-                  >
-                    Delete
-                  </Button>
-                  <Button
-                    color={darkTheme.success}
-                    onClick={() => duelManager.duel({ deck1: deck })}
-                  >
-                    Play
-                  </Button>
+                  <Button color={darkTheme.danger} onClick={() => deleteDeck(deck.id)}>Delete</Button>
+                  <Button color={darkTheme.success} onClick={() => duelManager.duel({ deck1: deck })}>Play</Button>
                 </FlexBox>
               </DeckItem>
             ))}
@@ -159,22 +162,45 @@ function App() {
           </div>
         </Card>
 
-        {/* Right Section - Duel */}
+        {/* Right Section - Duel / Replay Props */}
         <Card>
           <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
-            <SectionTitle>⚔️ Duel Props</SectionTitle>
-            <div style={{ flexGrow: 1 }}>
-              <TextArea
-                style={{ height: "100%" }}
-                value={duelData}
-                onChange={(e: any) => setDuelData(e.target.value)}
-                placeholder="Paste JSON props here..."
-              />
-            </div>
-            <div style={{ flexShrink: 0, textAlign: 'right', marginTop: '1rem', justifyContent: "end", display: "flex", gap: "16px", rowGap: "16px" }}>
-              <Link to="/three/test"><Button>Temp Three Scene</Button></Link>
-              <Button onClick={() => duelManager.duelWithStaticProps(duelData)}>Start Duel</Button>
-            </div>
+            <TabProvider defaultTab="duel">
+              <TabList>
+                <Tab id="duel">Duel Props</Tab>
+                <Tab id="replay">Replay Props</Tab>
+                <Tab id="lobbies" href="/lobby">
+                  Lobbies
+                </Tab>
+                <Tab id="three_test" href="/three/test">
+                  Test Scene
+                </Tab>
+              </TabList>
+
+              <TabContent id="duel">
+                <FlexBox direction="column" gap="10px" style={{ height: "100%", flexGrow: 1 }}>
+                  <TextArea
+                    style={{ height: "100%" }}
+                    value={duelData}
+                    onChange={(e: any) => updateDuelData(e.target.value)}
+                    placeholder="Paste duel JSON props here..."
+                  />
+                  <Button onClick={handleDuelStart}>Start Duel</Button>
+                </FlexBox>
+              </TabContent>
+
+              <TabContent id="replay">
+                <FlexBox direction="column" gap="10px" style={{ height: "100%", flexGrow: 1 }}>
+                  <TextArea
+                    style={{ height: "100%" }}
+                    value={replayData}
+                    onChange={(e: any) => updateReplayData(e.target.value)}
+                    placeholder="Paste replay JSON props here..."
+                  />
+                  <Button color={darkTheme.success} onClick={handleViewReplay}>View Replay</Button>
+                </FlexBox>
+              </TabContent>
+            </TabProvider>
           </div>
         </Card>
       </Grid>
@@ -184,11 +210,18 @@ function App() {
 
 export default App;
 
-
 function getDuelDataFromLocalStorageSafe(): string {
   try {
     return JSON.stringify(LocalStorage.get("duel_data") || "{}", undefined, 2) || "";
-  } catch (error) {
+  } catch {
+    return "";
+  }
+}
+
+function getReplayDataFromLocalStorageSafe(): string {
+  try {
+    return JSON.stringify(LocalStorage.get("replay_data") || "{}", undefined, 2) || "";
+  } catch {
     return "";
   }
 }

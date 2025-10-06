@@ -8,12 +8,12 @@ import { YGOTask } from "./YGOTask";
 export enum YGOCommandsControllerState {
   IDLE = "idle",
   PLAYING = "playing",
-  PLAYING_COMMAND = "playing_command",
-  RECOVER = "recover",
+  PLAYING_COMMAND = "playing_command"
 }
 
 export class YGOCommandsController extends YGOComponent {
   private state: YGOCommandsControllerState;
+  private recovering: boolean;
   private duel: YGODuel;
   private commands: YGOCommandHandler[];
   private currentCommand: YGOCommandHandler | undefined;
@@ -30,15 +30,14 @@ export class YGOCommandsController extends YGOComponent {
     this.tasks = [];
     this.state = YGOCommandsControllerState.IDLE;
     this.currentCommand = undefined;
+    this.recovering = false;
     this.commandsToExecuteQueue = [];
 
     this.timerOnCompleteEvent = -1;
     this.timerOnNextCommand = -1;
   }
 
-  start(): void { }
-
-  exec(command: Command | string) {
+  exec({ command }: { command: Command | string }) {
     const alreadyPlaying = this.isPlaying();
     this.setState(YGOCommandsControllerState.PLAYING);
 
@@ -65,7 +64,7 @@ export class YGOCommandsController extends YGOComponent {
   }
 
   play() {
-    if (this.isLocked()) return;
+    if (this.isRecovering()) return;
     if (!this.duel.ygo.hasNextCommand()) return;
 
     this.setState(YGOCommandsControllerState.PLAYING);
@@ -87,6 +86,7 @@ export class YGOCommandsController extends YGOComponent {
     this.startRecover();
 
     if (this.duel.ygo.hasPrevCommand()) {
+      this.setState(YGOCommandsControllerState.IDLE);
       this.duel.ygo.undo();
     }
 
@@ -95,8 +95,9 @@ export class YGOCommandsController extends YGOComponent {
     this.endRecover();
   }
 
-  goToCommand(command: Command) {
+  goToCommand(command: Command | number) {
     this.startRecover();
+    this.setState(YGOCommandsControllerState.IDLE);
     this.duel.ygo.goToCommand(command);
     this.duel.updateField();
     this.duel.clearActions();
@@ -109,7 +110,7 @@ export class YGOCommandsController extends YGOComponent {
   }
 
   isRecovering() {
-    return this.state === YGOCommandsControllerState.RECOVER;
+    return this.recovering;
   }
 
   isPlaying() {
@@ -121,7 +122,7 @@ export class YGOCommandsController extends YGOComponent {
     return (
       this.state === YGOCommandsControllerState.PLAYING ||
       this.state === YGOCommandsControllerState.PLAYING_COMMAND ||
-      this.state === YGOCommandsControllerState.RECOVER
+      this.isRecovering()
     );
   }
 
@@ -191,7 +192,8 @@ export class YGOCommandsController extends YGOComponent {
 
           this.duel.updateField();
           this.timerOnNextCommand = setTimeout(() => {
-            this.duel.ygo.redo();
+            // this.duel.ygo.redo();
+            this.duel.serverActions.controls.play();
           }, 100) as any as number;
           return;
         }
@@ -227,6 +229,7 @@ export class YGOCommandsController extends YGOComponent {
   }
 
   private clearCommandsState() { // complete pending commands
+    clearTimeout(this.timerOnNextCommand);
 
     if (this.tasks.length > 0) {
       this.tasks.forEach((task) => this.duel.tasks.completeTask(task));
@@ -240,11 +243,11 @@ export class YGOCommandsController extends YGOComponent {
   startRecover() {
     this.clearCommandsState();
     this.pauseRequested = false;
-    this.setState(YGOCommandsControllerState.RECOVER);
+    this.recovering = true;
   }
 
   endRecover() {
-    this.setState(YGOCommandsControllerState.IDLE);
+    this.recovering = false;
     this.pauseRequested = false;
   }
 
