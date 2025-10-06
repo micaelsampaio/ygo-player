@@ -104,10 +104,6 @@ export class YGOPlayerComponentImpl extends HTMLElement implements YGOPlayerComp
     );
   }
 
-  // connectToServer(props: { client: YGOClient }) {
-
-  // }
-
   editor(props: YGOPlayerStartEditorProps) {
 
     this.client = new LocalYGOPlayerClient(props.players[0]?.name || "Player 1", YGOClientType.PLAYER)

@@ -195,13 +195,8 @@ async function startGame(room) {
     return new YGOSocketClient(p.socket, p.id, 1);
   })
 
-
-  console.log(
-    "FETCH CARDS",
-    `https://api.ygo101.com/cards?ids=${Array.from(cardsIds.values()).join(",")}`
-  );
-
-  const response = await fetch(`https://api.ygo101.com/cards?ids=${Array.from(cardsIds.values()).join(",")}`);
+  // const response = await fetch(`https://api.ygo101.com/cards?ids=${Array.from(cardsIds.values()).join(",")}`);
+  const response = await fetch(`http://localhost:5000/cards?ids=${Array.from(cardsIds.values()).join(",")}`);
   const cards = await response.json();
 
   const game = new YGOGameServer({
