@@ -24,6 +24,7 @@ import { SwapHandEventHandler } from "./events/swap-hand-event";
 import { DuelNotesEventHandler } from "./events/duel-notes-event";
 import { AttackEventHandler } from "./events/attack-event";
 import { DuelLifePointsEventHandler } from "./events/duel-lifepoints-event";
+import { PlayerFieldSideEventHandler } from "./events/player-field-side";
 
 export interface DuelEventHandlerProps {
   duel: YGODuel;
@@ -87,6 +88,8 @@ const events: any = {
   [YGODuelEvents.LogType.LifePoints]: DuelLifePointsEventHandler,
   // Notes / UI
   [YGODuelEvents.LogType.Note]: DuelNotesEventHandler,
+  // player / Server events
+  ["player:set-field-side"]: PlayerFieldSideEventHandler,
   /// Default
   DEFAULT: UpdateFieldEvent,
 };

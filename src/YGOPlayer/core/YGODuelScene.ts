@@ -1,15 +1,14 @@
+import * as THREE from "three";
 import { YGOAnimationObject } from "../game/YGOAnimationObject";
 import { YGOGameFieldObject } from "../game/YGOGameFieldObject";
 import { YGOTurnPlayer } from "../game/YGOTurnPlayer";
 import { PoolObjects } from "./PoolObjects";
 import { YGODuel } from "./YGODuel";
-import * as THREE from "three";
 import { YGOEntity } from "./YGOEntity";
 import { YGOUiElement } from "../types";
 import { YGOMouseEvents } from "./components/YGOMouseEvents";
 import { ActionUiMenu } from "../actions/ActionUiMenu";
 import { YGOTimer } from "../game/YGOTimer";
-import { YGODuelPhase } from "ygo-core";
 import { YGOPhaseObject } from "../game/YGOPhaseObject";
 
 

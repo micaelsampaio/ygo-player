@@ -463,7 +463,7 @@ export class YGODuel {
   }
 
   public setActivePlayer(player: number) {
-    this.ygo.setCurrentPlayer(player);
+    this.serverActions.ygo.setPlayerPriority(player);
   }
 
   private createShortcuts() {
