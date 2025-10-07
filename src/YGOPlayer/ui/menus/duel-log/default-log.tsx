@@ -1,7 +1,7 @@
 import { YGOCore, YGOGameUtils } from "ygo-core";
 import { YGODuel } from "../../../core/YGODuel";
 import { DuelLogContainer, DuelLogRow } from "./duel-log-components";
-import { CommandType } from "ygo-core/dist/types/commands";
+import type { CommandType } from "ygo-core";
 import { memo } from "react";
 
 
