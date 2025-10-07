@@ -24,6 +24,10 @@ export class PlayerField {
   public spellTrapZone: [CardZone, CardZone, CardZone, CardZone, CardZone];
   public fieldZone: CardZone;
   public extraMonsterZone: [CardZone, CardZone];
+  public settings = {
+    showCards: false,
+    controlCards: false
+  }
 
   constructor() {
     this.mainDeck = null as any;

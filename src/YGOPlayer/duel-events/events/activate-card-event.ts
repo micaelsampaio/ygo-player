@@ -42,8 +42,6 @@ export class ActivateCardHandler extends YGOCommandHandler {
   public start(): void {
     const { event } = this.props;
 
-    console.log("TCL:: EVENT ::: ", event);
-
     if (event.originZone && event.zone) {
       this.startMoveCommand();
     } else if (

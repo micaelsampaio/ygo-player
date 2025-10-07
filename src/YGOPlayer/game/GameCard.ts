@@ -9,12 +9,12 @@ import { CardMaterial, CardTransparentOverlay } from "./materials/game-card-mate
 
 export class GameCard extends YGOEntity {
   private duel: YGODuel;
-  public zone: string = ""; // TODO USE THIS ??
   public cardReference!: Card;
 
   private transparentCard: THREE.Mesh | undefined;
   private cardStats: GameCardStats | undefined;
   private hasStats: boolean;
+  private zoneData: FieldZoneData | undefined;
 
   constructor({
     duel,
@@ -79,6 +79,8 @@ export class GameCard extends YGOEntity {
 
   public updateCardStats(zoneData: FieldZoneData) {
 
+    this.zoneData = zoneData;
+
     this.updateTransparentCard();
 
     if (!this.hasStats) return;
@@ -116,6 +118,7 @@ export class GameCard extends YGOEntity {
   private updateTransparentCard() {
 
     if (!this.duel.settings.getShowFaceDownCardsTransparent()) return;
+
 
     if (this.transparentCard) {
       return this.showTransparentCard();
@@ -165,7 +168,7 @@ export class GameCard extends YGOEntity {
     };
 
     if (this.transparentCard) {
-      if (this.cardReference && YGOGameUtils.isFaceDown(this.cardReference)) {
+      if (this.cardReference && YGOGameUtils.isFaceDown(this.cardReference) && this.canViewCard()) {
         this.transparentCard.visible = true;
         this.gameObject.visible = false;
 
@@ -200,6 +203,12 @@ export class GameCard extends YGOEntity {
     if (this.cardStats) {
       this.cardStats.destroy();
     }
+  }
+
+  private canViewCard() {
+    if (!this.cardReference) return true;
+    if (!YGOGameUtils.isFaceDown(this.cardReference)) return true;
+    return this.zoneData && this.duel.fields[this.zoneData.player].settings.showCards;
   }
 
   destroy() {

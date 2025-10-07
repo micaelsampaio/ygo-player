@@ -6,7 +6,7 @@ import { YGOProps } from "ygo-core";
 
 export interface YGOConfigOptions extends YGOPropsOptions {
   player?: number
-  showHand?: boolean
+  showCards?:boolean
 }
 
 export interface YGOConfig extends YGOProps {

@@ -24,7 +24,6 @@ export function GameSettingsDialog({ duel }: { duel: YGODuel }) {
 
   const onChangeCheckBox = (e: React.ChangeEvent<HTMLInputElement>, id: keyof YGOPlayerSettings) => {
     const value = e.target?.checked;
-    console.log("CHECK :", value);
     settings.setConfigFromPath(id, value as any);
 
     // if (e.target) e.target.blur();

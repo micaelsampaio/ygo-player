@@ -32,7 +32,6 @@ export class MoveCardEventHandler extends YGOCommandHandler {
     super("move_card_command");
     this.props = props;
     const event = this.props.event;
-    console.log("Move Card: ", event);
     this.cardReference = this.props.ygo.state.getCardById(event.id, event.zone);
   }
 

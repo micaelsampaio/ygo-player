@@ -28,7 +28,6 @@ export function useStorageDecks() {
   });
 
   const addDeck = (deck: Deck) => {
-    console.log("TCL: ADD DECK DECK", deck);
     LocalStorage.set("deck_" + deck.id, deck)
     setDecks(currentDecks => {
       currentDecks.push(deck);

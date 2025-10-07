@@ -12,8 +12,6 @@ export class LocalYGOPlayerClient implements YGOClient {
     this.username = username;
     this.type = type;
     this.client = new LocalYGOPlayerCommunication(this, this.username, this.type);
-
-    console.log('CREATE CLIENT');
   }
 
   connect() {

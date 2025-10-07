@@ -10,6 +10,7 @@ import { ExtraDeck } from "../game/ExtraDeck";
 import { Card, FieldZone, FieldZoneData, YGOReplayData } from "ygo-core";
 import { YGOGameUtils } from "ygo-core";
 import { Banish } from "../game/Banish";
+import { YGOStatic } from "../core/YGOStatic";
 //import { YGOUtils } from "ygo-core/src/game/YGOUtils";
 
 type CreateFieldDto = {
@@ -18,7 +19,10 @@ type CreateFieldDto = {
 };
 
 export function createFields({ duel, fieldModel }: CreateFieldDto) {
-  const { player: playerGameIndex = 0, showHand = true } = duel.config.options || {};
+
+  const ygo = duel.ygo;
+  const playerIndex = YGOStatic.playerIndex;
+
   fieldModel.rotation.copy(YGOMath.degToRadEuler(90, 0, 0));
   fieldModel.position.set(0, 0, 0);
 
@@ -42,9 +46,14 @@ export function createFields({ duel, fieldModel }: CreateFieldDto) {
   const fields: PlayerField[] = [];
 
   for (let player = 0; player < 2; ++player) {
+    const isPlayer = player === playerIndex;
+    const showCards = !!(isPlayer || duel.config.options.showCards)
+    const controlCards = !!(isPlayer || (showCards && ygo.options.controlOpponentCards))
     const field = new PlayerField();
     const playerSufix = player === 0 ? "" : "2";
     field.playerIndex = player;
+    field.settings.showCards = showCards;
+    field.settings.controlCards = controlCards;
 
     for (let i = 0; i < 5; ++i) {
       const monsterZoneId: any = `M${playerSufix}-${i + 1}`;
@@ -115,7 +124,11 @@ export function createFields({ duel, fieldModel }: CreateFieldDto) {
       fieldZoneId,
       zones[fieldZoneId]
     );
-    field.hand = new GameHand(duel, player, showHand || playerGameIndex === player);
+    field.hand = new GameHand(duel, player);
+    field.hand.showHand = field.settings.showCards;
+
+    field.mainDeck.canInteract = controlCards;
+    field.extraDeck.canInteract = controlCards;
 
     fields.push(field);
   }

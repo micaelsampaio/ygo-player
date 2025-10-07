@@ -118,15 +118,6 @@ export class YGOSoundController extends YGOComponent {
         );
 
         await Promise.allSettled(loadPromises);
-
-        // results.forEach((result, i) => {
-        //     const path = paths[i];
-        //     if (result.status === "rejected" || (result.value as any)?.error) {
-        //         console.warn(`❌ Sound failed to load: ${path}`, result.reason || (result.value as any)?.error);
-        //     } else {
-        //         console.log(`✅ Sound loaded: ${path}`);
-        //     }
-        // });
     }
 
     private getSound(key: string): YGOAudioClip {

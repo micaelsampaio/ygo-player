@@ -47,7 +47,6 @@ export function DuelNotesActionEventHandler({
       const newProgress = Math.floor(Math.max(0, 100 - (elapsed.current / duration) * 100));
       setNoteProgress(newProgress);
 
-      console.log(elapsed.current < duration)
       if (elapsed.current < duration) {
         animationFrameId = requestAnimationFrame(update);
       } else {

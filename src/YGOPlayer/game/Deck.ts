@@ -15,6 +15,7 @@ export class Deck extends YGOEntity implements YGOUiElement {
     public player: number;
     private cards: GameBackCard[];
     private hoverGameObject: THREE.Mesh;
+    public canInteract: boolean;
 
     constructor({ duel, player, position }: { duel: YGODuel, player: number, zone: string, position: THREE.Vector3 }) {
         super();
@@ -41,6 +42,7 @@ export class Deck extends YGOEntity implements YGOUiElement {
         this.gameObject.add(this.hoverGameObject);
 
         this.duel.gameController.getComponent<YGOMouseEvents>("mouse_events")?.registerElement(this);
+        this.canInteract = true;
 
         this.cards = Array.from(new Array(60)).map((_, index) => {
             const card = new GameBackCard({ duel: this.duel });
@@ -82,6 +84,7 @@ export class Deck extends YGOEntity implements YGOUiElement {
     }
 
     onMouseClick(event: MouseEvent): void {
+        if (!this.canInteract) return;
         if (this.duel.config.autoChangePlayer) {
             this.duel.setActivePlayer(this.player);
         }
@@ -91,10 +94,12 @@ export class Deck extends YGOEntity implements YGOUiElement {
     }
 
     onMouseEnter(): void {
+        if (!this.canInteract) return;
         this.hoverGameObject.visible = true;
     }
 
     onMouseLeave(): void {
+        if (!this.canInteract) return;
         this.hoverGameObject.visible = false;
     }
 }

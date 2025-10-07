@@ -16,13 +16,13 @@ export class GameHand extends YGOEntity {
   public showHand: boolean;
   public gameHandZone: GameHandZone;
 
-  constructor(duel: YGODuel, player: number, showHand: boolean) {
+  constructor(duel: YGODuel, player: number) {
     super();
     this.duel = duel;
     this.player = player;
     this.cards = [];
     this.selectedCard = undefined;
-    this.showHand = showHand;
+    this.showHand = false;
     this.gameHandZone = new GameHandZone(duel, player);
 
     this.duel.core.events.on("resize", () => {
@@ -119,6 +119,7 @@ export class GameHand extends YGOEntity {
       handCard.gameObject.scale.copy(cardsTransforms[i].scale);
       handCard.gameObject.rotation.setFromVector3(cardRotation);
       handCard.gameObject.visible = true;
+      handCard.isVisible = this.duel.fields[this.player].settings.controlCards;
     }
   }
 

@@ -163,8 +163,6 @@ export class DestroyCardEventHandler extends YGOCommandHandler {
 
     this.props.duel.core.scene.add(destroyEffect.gameObject);
 
-    console.log("DESTRIY EFFECT");
-
     this.props.startTask(
       new YGOTaskSequence(
         new ScaleTransition({

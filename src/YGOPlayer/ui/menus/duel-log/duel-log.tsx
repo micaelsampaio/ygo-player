@@ -95,7 +95,6 @@ export function DuelLogMenu({ duel, menus }: { duel: YGODuel; menus: any[] }) {
               duel={duel}
               ygo={duel.ygo}
               index={index}
-              undoByCommandIndex={undoByCommand}
               log={log}
             />
           );

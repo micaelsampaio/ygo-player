@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { YGOPlayerCore } from "./YGOPlayerCore";
 import { YGODuelState, YGOUiElement } from "../types";
-import { YGOCore, YGOServerGameStateData, YGOGameUtils } from "ygo-core";
+import { YGOCore, YGOServerGameStateData, YGOGameUtils, YGOClientType } from "ygo-core";
 import { YGOEntity } from "./YGOEntity";
 import { GameController } from "../game/GameController";
 import { EventBus } from "../scripts/event-bus";
@@ -32,10 +32,12 @@ import { ActionAttackSelection } from "../actions/ActionAttackSelection";
 import { YGOClient } from "ygo-core";
 import { PromiseTask } from "../scripts/promise-task";
 import { YGOServerActions } from "./YGOServerActions";
+import { YGOStatic } from "./YGOStatic";
 
 export class YGODuel {
   public ygo!: InstanceType<typeof YGOCore>;
   public client: YGOClient;
+  public playerIndex = 0;
   public state: YGODuelState;
   public core: YGOPlayerCore;
   public assets: YGOAssets;
@@ -126,10 +128,16 @@ export class YGODuel {
 
   public async createYGO(gameState: YGOServerGameStateData) {
     const ids = new Set<number>()
+    const playerIndex = gameState.players.findIndex(c => c.name === this.client.username);
+    const otherPlayerIndex = playerIndex >= 0 ? 1 - playerIndex : 1;
+
+    YGOStatic.playerIndex = playerIndex;
+    YGOStatic.otherPlayerIndex = otherPlayerIndex;
 
     gameState.players.map((player) => {
       player.mainDeck.forEach(id => ids.add(id));
       player.extraDeck.forEach(id => ids.add(id));
+      player.sideDeck?.forEach(id => ids.add(id));
     })
 
     // TODO USE CACHE
@@ -155,10 +163,15 @@ export class YGODuel {
       options
     })
 
+    const cardsAreVisible = (this.client.type === YGOClientType.PLAYER && this.ygo.options.viewOpponentCards)
+      || (this.client.type === YGOClientType.SPECTATOR && this.ygo.options.spectatorViewCards);
+
+    this.config.options.showCards = cardsAreVisible;
+
     this.ygo.events.on("new-log", (command: any) => {
       if (this.commands.isRecovering()) return;
-      console.log("-------------- command ------------");
-      console.log("command >>> ", command);
+      // console.log("-------------- command ------------");
+      // console.log("command >>> ", command);
 
       this.events.dispatch("render-ui");
       this.commands.add(command);
@@ -247,7 +260,7 @@ export class YGODuel {
 
       this.serverActions.server.setClientReady();
     } catch (error) {
-      console.log("TCL:  ~ YGODuel ~ load ~ error:", error)
+      console.error("TCL:  ~ YGODuel ~ load ~ error:", error)
       alert('ERROR');
     }
   }

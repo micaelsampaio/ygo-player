@@ -19,12 +19,14 @@ export class ExtraDeck extends YGOEntity implements YGOUiElement {
     private cards: GameBackCard[];
     public faceUpCards: GameCard[];
     public isMenuVisible: boolean;
+    public canInteract: boolean;
 
     constructor({ duel, player, position }: { duel: YGODuel, player: number, zone: string, position: THREE.Vector3 }) {
         super();
         this.duel = duel;
         this.player = player;
         this.isMenuVisible = false;
+        this.canInteract = true;
 
         const material = new THREE.MeshBasicMaterial({ color: 0x00555, transparent: true, opacity: 0 });
         const hoverMaterial = new THREE.MeshBasicMaterial({ color: player === 0 ? 0x0000ff : 0xff0000, transparent: true, opacity: 0.55 });
@@ -117,6 +119,7 @@ export class ExtraDeck extends YGOEntity implements YGOUiElement {
     }
 
     onMouseClick(event: MouseEvent): void {
+        if (!this.canInteract) return;
         if (this.duel.config.autoChangePlayer) {
             this.duel.setActivePlayer(this.player);
         }
@@ -126,10 +129,12 @@ export class ExtraDeck extends YGOEntity implements YGOUiElement {
     }
 
     onMouseEnter(): void {
+        if (!this.canInteract) return;
         this.hoverGameObject.visible = true;
     }
 
     onMouseLeave(): void {
+        if (!this.canInteract) return;
         this.hoverGameObject.visible = false;
     }
 }

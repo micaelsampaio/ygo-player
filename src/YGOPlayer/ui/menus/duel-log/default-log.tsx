@@ -1,68 +1,92 @@
 import { YGOCore, YGOGameUtils } from "ygo-core";
 import { YGODuel } from "../../../core/YGODuel";
 import { DuelLogContainer, DuelLogRow } from "./duel-log-components";
+import { CommandType } from "ygo-core/dist/types/commands";
+import { memo } from "react";
 
-export function DefaultLogRow({
-  log,
-  duel,
-  ygo,
-}: {
-  log: any;
-  duel: YGODuel;
-  ygo: InstanceType<typeof YGOCore>;
-}) {
-  const card = ygo.state.getCardData(log.id)!;
 
-  if (!card) {
-    return <div className="ygo-duel-log-default-row">{log.type}</div>;
-  }
+const HIDE_CARD_COMMANDS = new Set<CommandType>([
+  "Draw From Deck"
+])
 
-  const orginZone = log.originZone || log.zone;
-  const zone = log.originZone && log.zone ? log.zone : undefined;
-  const originZoneClassName = getZoneData(orginZone)!;
-  const zoneClassName = getZoneData(zone)!;
+const SHOW_CARD_COMMANDS = new Set<CommandType>([
+  "To Hand"
+])
 
-  return (
-    <DuelLogRow log={log}>
-      <DuelLogContainer>
-        <div className="ygo-duel-log-default-row">
-          <div className="ygo-text-sm ygo-mb-1 ygo-text-bold">{card.name}</div>
-          <div className="ygo-flex ygo-gap-2">
-            <div>
-              <img
-                onMouseDown={(event: any) => duel.events.dispatch("on-card-mouse-down", { card, event })}
-                onMouseUp={(event: any) => duel.events.dispatch("on-card-mouse-up", { card, event })}
-                onTouchStart={(event: any) => duel.events.dispatch("on-card-mouse-down", { card, event })}
-                onTouchEnd={(event: any) => duel.events.dispatch("on-card-mouse-up", { card, event })}
-                onClick={() => duel.events.dispatch("set-selected-card", { player: log.player, card })}
-                src={card.images.small_url}
-                style={{ width: "45px" }}
-              />
-            </div>
-            <div className="ygo-flex-grow-1">
-              <div className="ygo-text-sm ygo-mb-1 ygo-text-bold ygo-text-center">
-                {log.type}
+export const DefaultLogRow = memo(
+  function DefaultLogRow({
+    log,
+    duel,
+    ygo,
+  }: {
+    log: any;
+    duel: YGODuel;
+    ygo: InstanceType<typeof YGOCore>;
+  }) {
+    const card = ygo.state.getCardData(log.id)!;
+
+    if (!card) {
+      return <div className="ygo-duel-log-default-row">{log.type}</div>;
+    }
+
+    const orginZone = log.originZone || log.zone;
+    const zone = log.originZone && log.zone ? log.zone : undefined;
+    const originZoneClassName = getZoneData(orginZone)!;
+    const zoneClassName = getZoneData(zone)!;
+    const isFaceDown = SHOW_CARD_COMMANDS.has(log.type) ? false : HIDE_CARD_COMMANDS.has(log.type) ? true : log.position ? !log.position.includes("faceup") : false;
+
+    return (
+      <DuelLogRow log={log}>
+        <DuelLogContainer>
+          <div className="ygo-duel-log-default-row">
+            <div className="ygo-text-sm ygo-mb-1 ygo-text-bold">{isFaceDown ? "" : card.name}</div>
+            <div className="ygo-flex ygo-gap-2">
+              <div>
+                {
+                  isFaceDown ? <>
+                    <img
+                      src={duel.createCdnUrl("/images/card_back.png")}
+                      style={{ width: "45px" }}
+                    />
+                  </> : <>
+                    <img
+                      onMouseDown={(event: any) => duel.events.dispatch("on-card-mouse-down", { card, event })}
+                      onMouseUp={(event: any) => duel.events.dispatch("on-card-mouse-up", { card, event })}
+                      onTouchStart={(event: any) => duel.events.dispatch("on-card-mouse-down", { card, event })}
+                      onTouchEnd={(event: any) => duel.events.dispatch("on-card-mouse-up", { card, event })}
+                      onClick={() => duel.events.dispatch("set-selected-card", { player: log.player, card })}
+                      src={card.images.small_url}
+                      style={{ width: "45px" }}
+                    />
+                  </>
+                }
+
               </div>
-              <div className="ygo-flex ygo-gap-2">
-                <div>
-                  <div className={originZoneClassName}></div>
+              <div className="ygo-flex-grow-1">
+                <div className="ygo-text-sm ygo-mb-1 ygo-text-bold ygo-text-center">
+                  {log.type}
                 </div>
-                {log.originZone && log.zone && <>
+                <div className="ygo-flex ygo-gap-2">
                   <div>
-                    <div className={`ygo-icon-game-zone-arrow ygo-player-${log.player}`}></div>
+                    <div className={originZoneClassName}></div>
                   </div>
-                  <div>
-                    <div className={zoneClassName}></div>
-                  </div>
-                </>}
+                  {log.originZone && log.zone && <>
+                    <div>
+                      <div className={`ygo-icon-game-zone-arrow ygo-player-${log.player}`}></div>
+                    </div>
+                    <div>
+                      <div className={zoneClassName}></div>
+                    </div>
+                  </>}
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </DuelLogContainer>
-    </DuelLogRow>
-  );
-}
+        </DuelLogContainer>
+      </DuelLogRow>
+    );
+  }
+);
 
 function getZoneData(zone: string | undefined) {
   if (!zone) return null;

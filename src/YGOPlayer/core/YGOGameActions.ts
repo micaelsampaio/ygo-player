@@ -985,11 +985,9 @@ export class YGOGameActions {
   public changeAtkDef({
     card,
     originZone,
-    prompt: usePrompt = false,
   }: {
     card: Card;
     originZone: FieldZone;
-    prompt?: boolean;
   }) {
     const player = this.duel.getActivePlayer();
     const atkInput = window.prompt("Please enter atk:");
@@ -999,20 +997,9 @@ export class YGOGameActions {
       defInput = window.prompt("Please enter def:");
     }
 
-    const atk =
-      atkInput && !isNaN(atkInput as any) ? Number(atkInput) : undefined;
-    const def =
-      defInput && !isNaN(defInput as any) ? Number(defInput) : undefined;
-    console.log("EVENT DATA", {
-      atkInput,
-      isNane: !isNaN(atkInput as any),
-      value: Number(atkInput),
-      player,
-      id: card.id,
-      originZone,
-      atk,
-      def,
-    });
+    const atk = atkInput && !isNaN(atkInput as any) ? Number(atkInput) : undefined;
+    const def = defInput && !isNaN(defInput as any) ? Number(defInput) : undefined;
+
     this.duel.execCommand(
       new YGOCommands.ChangeCardAtkDefCommand({
         player,

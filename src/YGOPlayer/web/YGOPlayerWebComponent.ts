@@ -92,6 +92,8 @@ export class YGOPlayerComponentImpl extends HTMLElement implements YGOPlayerComp
   private start(config: YGOConfig) {
     if (!this.root) throw new Error("There is no root to render");
 
+    console.log("TCL: YGO WEB COMPOENENT START: ", config);
+
     this.root.render(
       createElement(YgoDuelApp, {
         bind: this.bind.bind(this),
@@ -175,9 +177,6 @@ export class YGOPlayerComponentImpl extends HTMLElement implements YGOPlayerComp
 
     this.client = new LocalYGOPlayerClient(players[0]?.name || "Player 1", YGOClientType.PLAYER)
     this.server = new LocalYGOPlayerServer(this.client, config);
-
-    console.log("------- CONFIG REPLAY ---------");
-    console.log(JSON.stringify(config));
 
     this.start(config);
   }

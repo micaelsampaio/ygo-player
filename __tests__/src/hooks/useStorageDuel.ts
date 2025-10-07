@@ -57,7 +57,6 @@ export function useDuelController() {
   }
 
   const viewReplay = async (replay: YGOReplayData) => {
-    console.log(replay);
     const decks = await fetchPlayersData(...replay.players);
 
     LocalStorage.set("duel_data", {

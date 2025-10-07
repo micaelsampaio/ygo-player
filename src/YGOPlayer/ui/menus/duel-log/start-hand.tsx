@@ -12,6 +12,8 @@ export const StartHandLogRow = memo(function ({
   duel: YGODuel;
   ygo: InstanceType<typeof YGOCore>;
 }) {
+
+  const showCards = duel.fields[log.player].settings.showCards;
   return (
     <DuelLogRow log={log}>
       <DuelLogContainer>
@@ -23,6 +25,13 @@ export const StartHandLogRow = memo(function ({
             {log.cards.map((cardData: any) => {
               const card = ygo.state.getCardData(cardData.id)!;
               if (!card) return null;
+
+              if (!showCards) return <div>
+                <img
+                  src={duel.createCdnUrl("/images/card_back.png")}
+                  style={{ width: "40px" }}
+                />
+              </div>
               return (
                 <div>
                   <img
