@@ -10,6 +10,7 @@ import { YGOMouseEvents } from "./components/YGOMouseEvents";
 import { ActionUiMenu } from "../actions/ActionUiMenu";
 import { YGOTimer } from "../game/YGOTimer";
 import { YGOPhaseObject } from "../game/YGOPhaseObject";
+import { YGOStatic } from "./YGOStatic";
 
 
 export class YGODuelScene {
@@ -106,18 +107,20 @@ export class YGODuelScene {
         this.duel.core.scene.add(directionalLight);
         this.duel.core.scene.add(directionalLight.target);
 
-        gameField.position.set(0, 0, 0);
-
-        gameField.rotateX(THREE.MathUtils.degToRad(90));
-
         const clonedGameField = gameField.clone();
-        clonedGameField.rotateY(THREE.MathUtils.degToRad(180));
+        const gameFields = YGOStatic.playerPOV === 0 ? [gameField, clonedGameField] : [clonedGameField, gameField]
 
-        this.duel.core.scene.add(gameField);
-        this.duel.core.scene.add(clonedGameField);
+        gameFields[0].position.set(0, 0, 0);
+        gameFields[0].rotateX(THREE.MathUtils.degToRad(90));
+        gameFields[1].position.set(0, 0, 0);
+        gameFields[1].rotateX(THREE.MathUtils.degToRad(90));
+        gameFields[1].rotateY(THREE.MathUtils.degToRad(180));
 
-        this.gameFields.push(new YGOGameFieldObject(this.duel, gameField, 0));
-        this.gameFields.push(new YGOGameFieldObject(this.duel, clonedGameField, 1));
+        this.duel.core.scene.add(gameFields[0]);
+        this.duel.core.scene.add(gameFields[1]);
+
+        this.gameFields.push(new YGOGameFieldObject(this.duel, gameFields[0], YGOStatic.playerPOV));
+        this.gameFields.push(new YGOGameFieldObject(this.duel, gameFields[1], 1 - YGOStatic.playerPOV));
 
         const selectedCardGeometry = new THREE.PlaneGeometry(7, 15);
         const selectedCardMobileGeometry = new THREE.PlaneGeometry(30, 11);

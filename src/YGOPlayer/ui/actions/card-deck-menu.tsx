@@ -99,6 +99,9 @@ export function CardDeckMenu({
   return (
     <>
       <CardMenu x={x} y={y}>
+        <div>
+          {originZone}
+        </div>
         {isMonster && (
           <>
             <button

@@ -5,6 +5,7 @@ import { YGOMouseEvents } from '../core/components/YGOMouseEvents';
 import { YGOUiElement } from '../types';
 import { YGODuelPhase } from 'ygo-core';
 import { ActionUiMenu } from '../actions/ActionUiMenu';
+import { YGOStatic } from '../core/YGOStatic';
 
 export class YGOPhaseObject extends YGOEntity implements YGOUiElement {
   public isUiElement: boolean = true;
@@ -93,7 +94,7 @@ export class YGOPhaseObject extends YGOEntity implements YGOUiElement {
     ctx.clearRect(0, 0, canvasWidth, canvasHeight);
 
     // Background gradient
-    const playerColor = turnPlayer === 0 ? "rgb(29, 78, 216)" : "rgb(185, 28, 28)";
+    const playerColor = YGOStatic.isPlayerPOV(turnPlayer) ? "rgb(29, 78, 216)" : "rgb(185, 28, 28)";
     const gradient = ctx.createLinearGradient(0, 0, 0, canvasHeight);
     gradient.addColorStop(0, playerColor);
     gradient.addColorStop(1, "black");

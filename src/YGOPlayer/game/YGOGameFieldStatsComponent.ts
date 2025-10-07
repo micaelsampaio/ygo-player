@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { PlayerField } from "ygo-core";
 import { YGODuel } from "../core/YGODuel";
+import { YGOStatic } from "../core/YGOStatic";
 
 export class YGOGameFieldStatsComponent {
   public stats: YGOGameFieldStatsRender[];
@@ -93,7 +94,9 @@ class YGOGameFieldStatsRender {
     const planeGeometry = new THREE.PlaneGeometry(planeWidth, planeHeight);
     this.mesh = new THREE.Mesh(planeGeometry, material);
 
-    if (player === 0) {
+    const isPlayerPov = YGOStatic.isPlayerPOV(player);
+
+    if (isPlayerPov) {
       this.mesh.position.set(-8.25, 0.15 - 1.5, 2);
     } else {
       this.mesh.position.set(8.25, 1.5 - 0.15, 2);
@@ -105,10 +108,10 @@ class YGOGameFieldStatsRender {
     const gameField = this.duel.fields[this.player];
     const gyPos = gameField.graveyard.position.clone().add(heightOffset);
     const banishedzonePos = gameField.banishedZone.position.clone().add(heightOffset);
-    const deckPos = gameField.mainDeck.gameObject.position.clone().add(new THREE.Vector3(this.player === 0 ? -1.6 : 1.6, this.player === 0 ? 1.5 : -1.5, 3));
-    const extraDeckPos = gameField.extraDeck.gameObject.position.clone().add(new THREE.Vector3(this.player === 0 ? 1.6 : -1.6, this.player === 0 ? 1.5 : -1.5, 3));
+    const deckPos = gameField.mainDeck.gameObject.position.clone().add(new THREE.Vector3(isPlayerPov ? -1.6 : 1.6, isPlayerPov ? 1.5 : -1.5, 3));
+    const extraDeckPos = gameField.extraDeck.gameObject.position.clone().add(new THREE.Vector3(isPlayerPov ? 1.6 : -1.6, isPlayerPov ? 1.5 : -1.5, 3));
 
-    this.handCounter = new CounterRender(duel, new THREE.Vector3(0, this.player === 0 ? -7.5 : 7.5, 3), () => this.duel.ygo.getField(this.player)!.hand.length);
+    this.handCounter = new CounterRender(duel, new THREE.Vector3(0, isPlayerPov ? -7.5 : 7.5, 3), () => this.duel.ygo.getField(this.player)!.hand.length);
     this.deckCounter = new CounterRender(duel, deckPos, () => this.duel.ygo.getField(this.player)!.mainDeck.length);
     this.extraDeckCounter = new CounterRender(duel, extraDeckPos, () => this.duel.ygo.getField(this.player)!.extraDeck.length);
     this.gyCounter = new CounterRender(duel, gyPos, () => this.duel.ygo.getField(this.player)!.graveyard.length);

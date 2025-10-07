@@ -76,10 +76,6 @@ export class YGODuel {
     this.config = config;
     this.settings = new YGOPlayerSettingsAdapter();
 
-    if (this.config.autoChangePlayer === undefined) {
-      this.config.autoChangePlayer = true;
-    }
-
     this.core = new YGOPlayerCore({ canvas });
     this.core.timeScale = this.settings.getGameSpeed();
     this.core.renderer.setAnimationLoop(this.update.bind(this));
@@ -133,6 +129,7 @@ export class YGODuel {
 
     YGOStatic.playerIndex = playerIndex;
     YGOStatic.otherPlayerIndex = otherPlayerIndex;
+    YGOStatic.playerPOV = playerIndex === 0 ? playerIndex : this.ygo.options.playerPOV || 0;
 
     gameState.players.map((player) => {
       player.mainDeck.forEach(id => ids.add(id));
@@ -167,6 +164,7 @@ export class YGODuel {
       || (this.client.type === YGOClientType.SPECTATOR && this.ygo.options.spectatorViewCards);
 
     this.config.options.showCards = cardsAreVisible;
+    this.config.autoChangePlayer = cardsAreVisible;
 
     this.ygo.events.on("new-log", (command: any) => {
       if (this.commands.isRecovering()) return;
@@ -265,35 +263,9 @@ export class YGODuel {
     }
   }
 
-
+  // @deprecated
   public startDuel() {
 
-    // setTimeout(() => {
-    //   try {
-
-    //     if (this.config.gameMode === "REPLAY") {
-    //       this.events.dispatch("toggle-ui-menu", { group: "game-overlay", type: "controls-menu" });
-    //     }
-
-    //     setTimeout(() => {
-    //       this.ygo.start();
-    //     }, 500);
-
-    //     // setTimeout(() => {
-    //     //   this.execCommand(new YGOCommands.DuelPhaseCommand({ phase: YGODuelPhase.Battle }))
-    //     // }, 1000);
-
-    //     this.updateField();
-
-    //     for (const field of this.fields) {
-    //       field.hand.destroyAllCards();
-    //     }
-
-    //   } catch (error) {
-    //     console.log("ERROR", error);
-    //     alert("ERROR");
-    //   }
-    // }); // next frame call
   }
 
   public updateField() {

@@ -3,6 +3,7 @@ import { YGODuel } from "../core/YGODuel";
 import { YGOEntity } from '../core/YGOEntity';
 import { YGOMouseEvents } from '../core/components/YGOMouseEvents';
 import { YGOUiElement } from '../types';
+import { YGOStatic } from '../core/YGOStatic';
 
 export class YGOTurnPlayer extends YGOEntity implements YGOUiElement {
     public isUiElement: boolean = true;
@@ -25,6 +26,10 @@ export class YGOTurnPlayer extends YGOEntity implements YGOUiElement {
             this.duel.assets.getTexture(this.duel.createCdnUrl("/images/ui/turn_player_1.png")),
             this.duel.assets.getTexture(this.duel.createCdnUrl("/images/ui/turn_player_2.png")),
         ]
+
+        if (YGOStatic.isPlayerPOV(1)) {
+            this.textures.reverse();
+        }
 
         const turnMaterial = new THREE.MeshBasicMaterial({ map: this.textures[0] });
         fieldTurnPlaceHolder.material = turnMaterial;
@@ -56,7 +61,7 @@ export class YGOTurnPlayer extends YGOEntity implements YGOUiElement {
         this.duel.ygo.events.on("set-player", ({ player }) => {
             turnMaterial.map = this.textures[player] || this.textures[0];
             turnMaterial.needsUpdate = true;
-            fieldTurnHoverMaterial.color.setHex(player === 0 ? 0x0000ff : 0xff0000);
+            fieldTurnHoverMaterial.color.setHex(YGOStatic.isPlayerPOV(player) ? 0x0000ff : 0xff0000);
         });
     }
 

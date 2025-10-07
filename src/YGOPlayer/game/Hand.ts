@@ -5,13 +5,13 @@ import { YGOEntity } from "../core/YGOEntity";
 import { GameCardHand } from "./GameCardHand";
 import { CARD_HEIGHT_SIZE } from "../constants";
 import { GameHandZone } from "./GameHandZone";
+import { YGOStatic } from "../core/YGOStatic";
 
 export class GameHand extends YGOEntity {
   private duel: YGODuel;
   public canHoverHand: boolean = true;
   public canClickHand: boolean = true;
   public cards: GameCardHand[];
-  public selectedCard: GameCardHand | undefined;
   private player: number;
   public showHand: boolean;
   public gameHandZone: GameHandZone;
@@ -21,7 +21,6 @@ export class GameHand extends YGOEntity {
     this.duel = duel;
     this.player = player;
     this.cards = [];
-    this.selectedCard = undefined;
     this.showHand = false;
     this.gameHandZone = new GameHandZone(duel, player);
 
@@ -77,7 +76,7 @@ export class GameHand extends YGOEntity {
 
     let handY = 0;
 
-    if (this.player === 0) {
+    if (YGOStatic.isPlayerPOV(this.player)) {
       handY = -visibleHeightAtZ / 2 + screenEdgeOffset;
 
       if (handY < -visibleHeightAtZ / 2 + minVisibleHeight) {
@@ -112,7 +111,7 @@ export class GameHand extends YGOEntity {
     this.gameHandZone.gameObject.position.y = handPivot;
 
     for (let i = 0; i < totalCards; ++i) {
-      const index = this.player === 0 ? i : totalCards - 1 - i;
+      const index = YGOStatic.isPlayerPOV(this.player) ? i : totalCards - 1 - i;
       const handCard = gameField.hand.getCard(index)!;
       handCard.position = cardsTransforms[index].position;
       handCard.gameObject.position.copy(handCard.position);
@@ -143,7 +142,7 @@ export class GameHand extends YGOEntity {
     }
 
     for (let i = 0; i < totalCards; ++i) {
-      const index = this.player === 0 ? i : totalCards - 1 - i;
+      const index = YGOStatic.isPlayerPOV(this.player) ? i : totalCards - 1 - i;
       const xOffset = -actualWidth / 2 + cardWidth / 2 + i * actualSpacing;
       const handZ = baseHandZ;
       const position = new THREE.Vector3(xOffset, handY, handZ);
@@ -166,7 +165,7 @@ export class GameHand extends YGOEntity {
   }
 
   public getCardsRotation() {
-    const rotation = this.player === 0 ? new THREE.Vector3(0, 0, 0) : new THREE.Vector3(0, this.showHand ? 0 : THREE.MathUtils.degToRad(180), THREE.MathUtils.degToRad(180));
+    const rotation = YGOStatic.isPlayerPOV(this.player) ? new THREE.Vector3(0, 0, 0) : new THREE.Vector3(0, this.showHand ? 0 : THREE.MathUtils.degToRad(180), THREE.MathUtils.degToRad(180));
     return rotation;
   }
 

@@ -28,17 +28,19 @@ export function createFields({ duel, fieldModel }: CreateFieldDto) {
 
   const zones: { [key: string]: THREE.Mesh } = {};
   const fieldModelP2 = fieldModel.clone();
-  fieldModelP2.rotateY(THREE.MathUtils.degToRad(180));
 
   fieldModelP2.children.forEach((child: any) =>
-    parseFieldZoneChildren(child, 1, zones)
+    parseFieldZoneChildren(child, 1 - YGOStatic.playerPOV, zones)
   );
+
   fieldModel.children.forEach((child: any) =>
-    parseFieldZoneChildren(child, 0, zones)
+    parseFieldZoneChildren(child, YGOStatic.playerPOV, zones)
   );
 
   fieldModel.name = "FIELD1";
   fieldModelP2.name = "FIELD2";
+
+  fieldModelP2.rotateY(THREE.MathUtils.degToRad(180));
 
   duel.core.scene.add(fieldModel);
   duel.core.scene.add(fieldModelP2);
@@ -161,7 +163,7 @@ function createCardZone(
     player,
     position: zoneObject.getWorldPosition(new THREE.Vector3()),
     rotation:
-      player === 0
+      YGOStatic.isPlayerPOV(player)
         ? YGOMath.degToRadEuler(0, 0, 0)
         : YGOMath.degToRadEuler(0, 0, 180),
   });
@@ -251,8 +253,7 @@ export function getCardZones(
               zone.getCardReference()?.originalOwner === player
           );
           zonesToFind.forEach((zone) => {
-            zone.zone = `EMZ${player === 0 ? "" : "2"}-${zone.zoneData.zoneIndex
-              }` as any;
+            zone.zone = `EMZ${player === 0 ? "" : "2"}-${zone.zoneData.zoneIndex}` as any;
             zone.zoneData.player = player;
           });
           break;
@@ -333,7 +334,7 @@ export function getCardRotationFromFieldZoneData(
   if (
     zoneData.zone !== "D" &&
     zoneData.zone !== "ED" &&
-    zoneData.player === 1
+    !YGOStatic.isPlayerPOV(zoneData.player)
   ) {
     rotation.z += THREE.MathUtils.degToRad(180);
   }
@@ -346,7 +347,7 @@ export function getCardRotationFromPlayerIndex(
 ) {
   let rotation: THREE.Euler = new THREE.Euler(0, 0, 0);
 
-  if (player === 1) {
+  if (!YGOStatic.isPlayerPOV(player)) {
     rotation.z += THREE.MathUtils.degToRad(180);
   }
 

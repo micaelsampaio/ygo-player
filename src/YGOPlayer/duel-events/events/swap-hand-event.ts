@@ -14,6 +14,7 @@ import { Ease } from "../../scripts/ease";
 import { ArcPositionTransition } from "../utils/arc-position-transition";
 import { randomIntFromInterval } from "../../scripts/ygo-utils";
 import { StartHandEventHandler } from "./start-hand-event";
+import { YGOStatic } from "../../core/YGOStatic";
 
 interface SwapHandEventHandlerProps extends DuelEventHandlerProps {
   event: YGODuelEvents.SwapHand;
@@ -36,13 +37,13 @@ export class SwapHandEventHandler extends YGOCommandHandler {
     const cardsTasks = new MultipleTasks();
 
     for (let i = 0; i < field.hand.cards.length; ++i) {
-      const index = player === 1 ? i : totalCards - 1 - i;
+      const index = YGOStatic.isPlayerPOV(player) ? totalCards - 1 - i : i;
 
       const { sequence: cardSequence } = this.createMoveCardMotion({
         cardInHand: field.hand.getCard(i)!,
         duel,
         player,
-        arcHeight: player === 0 ? 2 : -1,
+        arcHeight: YGOStatic.isPlayerPOV(player) ? 2 : -1,
         endPosition: targetTransform.position.clone(),
         endRotation: targetTransform.rotation.clone(),
         startDelay: 0.05 * index,

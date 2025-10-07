@@ -4,6 +4,7 @@ import { getTransformFromCamera } from "../../scripts/ygo-utils";
 import { Card, FieldZone } from "ygo-core";
 import { useCallback, useLayoutEffect, useRef } from "react";
 import { CardMenu } from "../components/CardMenu";
+import { YGOStatic } from "../../core/YGOStatic";
 
 export function CardHandMenu({
   duel,
@@ -123,7 +124,7 @@ export function CardHandMenu({
       duel,
       cardFromHand.gameObject
     );
-    if (card.originalOwner === 0) {
+    if (YGOStatic.isPlayerPOV(card.owner)) {
       container.style.top = y - size.height + "px";
     } else {
       container.style.top = y + height + "px";
@@ -131,7 +132,7 @@ export function CardHandMenu({
     container.style.left = x + width / 2 - size.width / 2 + "px";
   }, [card]);
 
-  const player = card.originalOwner;
+  const player = card.owner;
   const field = duel.ygo.state.fields[player];
   const freeMonsterZones = field.monsterZone.filter((zone: any) => !zone).length;
   const freeSpellTrapZones = field.spellTrapZone.filter((zone: any) => !zone).length;

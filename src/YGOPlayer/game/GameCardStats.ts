@@ -4,6 +4,7 @@ import { YGODuel } from "../core/YGODuel";
 import { Card } from "ygo-core";
 import { YGOGameUtils } from "ygo-core";
 import { YGOMath } from "../core/YGOMath";
+import { YGOStatic } from "../core/YGOStatic";
 
 export class GameCardStats {
   public parent: THREE.Object3D;
@@ -93,7 +94,7 @@ export class GameCardStats {
     if (!this.canvas) return;
     if (!this.needsUpdate()) return;
 
-    const isPlayer1 = this.card.owner === 0;
+    const isPlayer1 = YGOStatic.isPlayerPOV(this.card.owner);
 
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
@@ -122,7 +123,7 @@ export class GameCardStats {
   }
 
   renderAtkDef() {
-    const isPlayer1 = this.card.owner === 0;
+    const isPlayer1 = YGOStatic.isPlayerPOV(this.card.owner);
     const atk = this.card.currentAtk;
     const def = this.card.currentDef;
     const hasDef = !YGOGameUtils.isLinkMonster(this.card);
@@ -207,7 +208,7 @@ export class GameCardStats {
   renderLevel() {
     this.ctx.textBaseline = "middle";
 
-    const isPlayer1 = this.card.owner === 0;
+    const isPlayer1 = YGOStatic.isPlayerPOV(this.card.owner);
     const level = this.card.linkval || this.card.currentLevel;
     const levelStr = String(level);
     const x = isPlayer1 ? this.canvas.width - 30 : 30;
@@ -253,7 +254,7 @@ export class GameCardStats {
 
     this.ctx.textBaseline = "middle";
 
-    const isPlayer1 = this.card.owner === 0;
+    const isPlayer1 = YGOStatic.isPlayerPOV(this.card.owner);
     const materials = this.card.materials.length;
     const materialsStr = String(materials);
     let iconPath = `${this.duel.config.cdnUrl}/images/ui/ic_xyz_materials128.png`;
