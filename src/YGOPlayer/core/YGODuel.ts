@@ -127,10 +127,6 @@ export class YGODuel {
     const playerIndex = gameState.players.findIndex(c => c.name === this.client.username);
     const otherPlayerIndex = playerIndex >= 0 ? 1 - playerIndex : 1;
 
-    YGOStatic.playerIndex = playerIndex;
-    YGOStatic.otherPlayerIndex = otherPlayerIndex;
-    YGOStatic.playerPOV = playerIndex === 0 ? playerIndex : this.ygo.options.playerPOV || 0;
-
     gameState.players.map((player) => {
       player.mainDeck.forEach(id => ids.add(id));
       player.extraDeck.forEach(id => ids.add(id));
@@ -166,6 +162,10 @@ export class YGODuel {
       commands: props.commands,
       options
     })
+
+    YGOStatic.playerIndex = playerIndex;
+    YGOStatic.otherPlayerIndex = otherPlayerIndex;
+    YGOStatic.playerPOV = playerIndex === 0 ? playerIndex : this.ygo.options.playerPOV || 0;
 
     const cardsAreVisible = (this.client.type === YGOClientType.PLAYER && this.ygo.options.viewOpponentCards)
       || (this.client.type === YGOClientType.SPECTATOR && this.ygo.options.spectatorViewCards);
