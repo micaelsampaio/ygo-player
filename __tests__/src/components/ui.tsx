@@ -92,6 +92,24 @@ export const TextArea = styled.textarea`
   }
 `;
 
+
+export const Input = styled.input`
+  box-sizing: border-box;
+  width: 100%;
+  background: #111;
+  color: ${(props: any) => props.theme.text};
+  border: 1px solid ${(props: any) => props.theme.border};
+  border-radius: 6px;
+  padding: 1rem;
+  font-family: monospace;
+  font-size: 0.9rem;
+  resize: none;
+
+  &:focus {
+    outline: 2px solid ${(props: any) => props.theme.accent};
+  }
+`;
+
 export const InputSelect = styled.select`
   flex: 1;
   padding: 0.5rem;

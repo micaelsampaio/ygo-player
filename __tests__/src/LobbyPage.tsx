@@ -9,8 +9,10 @@ import {
   DeckList,
   FlexBox,
   Grid,
+  Input,
   InputSelect,
   SectionTitle,
+  TextArea,
   Title,
 } from "./components/ui";
 import { YGOSocketClient } from "./scripts/ygo-client";
@@ -21,6 +23,7 @@ const API_URL = "http://localhost:5800"; // backend server URL
 let socket: Socket | null = null;
 
 function LobbyPage() {
+  const [username, setUsername] = useState(window.localStorage.getItem("user") || "player1")
   const deckManager = useStorageDecks();
   const [lobbies, setLobbies] = useState<any[]>([]);
   const [currentLobby, setCurrentLobby] = useState<any | null>(null);
@@ -61,9 +64,10 @@ function LobbyPage() {
     });
 
     socket.on("gameStarted", (data) => {
+
       window.ygoSocketClient = new YGOSocketClient(
         socket!,
-        socket?.id || "player1",
+        window.localStorage.getItem("user") || "player1",
         1
       );
       navigate(`/duel/${data.lobbyId}`);
@@ -117,6 +121,13 @@ function LobbyPage() {
         {/* Left: Current Lobby */}
         <Card>
           <SectionTitle>🎮 Current Lobby</SectionTitle>
+
+          <Input placeholder="username" value={username} onChange={(e) => {
+            setUsername(e.target.value);
+            window.localStorage.setItem("user", e.target.value)
+          }}
+          />
+
           {currentLobby ? (
             <>
               <p>ID: {currentLobby.id}</p>

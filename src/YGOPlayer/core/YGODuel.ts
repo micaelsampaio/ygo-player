@@ -165,7 +165,7 @@ export class YGODuel {
 
     YGOStatic.playerIndex = playerIndex;
     YGOStatic.otherPlayerIndex = otherPlayerIndex;
-    YGOStatic.playerPOV = playerIndex === 0 ? playerIndex : this.ygo.options.playerPOV || 0;
+    YGOStatic.playerPOV = Number(this.ygo.options.playerPOV) >= 0 ? Number(this.ygo.options.playerPOV) : playerIndex >= 0 ? playerIndex : 0;
 
     const cardsAreVisible = (this.client.type === YGOClientType.PLAYER && this.ygo.options.viewOpponentCards)
       || (this.client.type === YGOClientType.SPECTATOR && this.ygo.options.spectatorViewCards);
