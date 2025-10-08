@@ -24,6 +24,8 @@ export function DuelLogMenu({ duel, menus }: { duel: YGODuel; menus: any[] }) {
   const [logs, setLogs] = useState<YGODuelEvents.DuelLog[]>([]);
   const [isVisible, setVisible] = useState(false);
   const duelLogsContainer = useRef<HTMLDivElement>(null);
+  const scrollBottomRef = useRef<boolean>(true);
+  const scrollTimerRef = useRef<number>(-1);
 
   const undo = () => {
     duel.commands.startRecover();
@@ -34,18 +36,15 @@ export function DuelLogMenu({ duel, menus }: { duel: YGODuel; menus: any[] }) {
 
   const scrollToBottom = () => {
     if (duelLogsContainer.current) {
+      scrollBottomRef.current = true;
       duelLogsContainer.current.scrollTop = duelLogsContainer.current.scrollHeight;
+
+      scrollTimerRef.current = setTimeout(() => {
+        scrollBottomRef.current = true;
+        duelLogsContainer.current!.scrollTop = duelLogsContainer.current!.scrollHeight;
+      }, 10) as unknown as number;
     }
   }
-
-  const undoByCommand = (logIndex: number) => {
-    duel.commands.startRecover();
-    for (let i = logs.length - 1; i >= logIndex; --i) {
-      duel.ygo.undo();
-    }
-    duel.updateField();
-    duel.commands.endRecover();
-  };
 
   useEffect(() => {
     if (!duel) return;
@@ -60,24 +59,41 @@ export function DuelLogMenu({ duel, menus }: { duel: YGODuel; menus: any[] }) {
   }, [menus]);
 
   useEffect(() => {
-    if (isVisible && duelLogsContainer.current) {
-      scrollToBottom();
-    }
-  }, [isVisible]);
-
-  useEffect(() => {
-    if (isVisible && duelLogsContainer.current) {
-      const container = duelLogsContainer.current;
-      const scrollHeight = container.scrollHeight;
-      const scrollTop = container.scrollTop;
-      const clientHeight = container.clientHeight;
-      const isNearBottom = scrollHeight - scrollTop - clientHeight < 150;
-
-      if (isNearBottom) {
+    if (isVisible) {
+      if (scrollBottomRef.current) {
         scrollToBottom();
       }
     }
   }, [isVisible, logs]);
+
+  useEffect(() => {
+    if (isVisible) {
+      scrollToBottom();
+
+      const container = duelLogsContainer.current;
+
+      if (!container) return;
+
+      const onScroll = () => {
+        const scrollHeight = container.scrollHeight;
+        const scrollTop = container.scrollTop;
+        const clientHeight = container.clientHeight;
+        const isNearBottom = scrollHeight - scrollTop - clientHeight < 150;
+        scrollBottomRef.current = isNearBottom;
+      }
+
+      container.addEventListener("scroll", onScroll);
+
+      return () => {
+        container.removeEventListener("scroll", onScroll);
+      }
+    } else {
+      clearTimeout(scrollTimerRef.current);
+      scrollTimerRef.current = -1;
+    }
+
+  }, [isVisible])
+
   return (
     <div className={`ygo-duel-log-container ${isVisible ? "" : "ygo-hidden"}`} ref={duelLogsContainer}
       onClick={stopPropagationCallback}
