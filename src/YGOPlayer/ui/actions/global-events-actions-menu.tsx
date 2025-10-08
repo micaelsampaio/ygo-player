@@ -20,35 +20,8 @@ export function GlobalEventsActionsMenu({
     duel.gameActions.destroyAllCards({ zone: "all" });
   }, []);
 
-  const nextTurn = useCallback(() => {
-    if (duel.ygo.state.phase === YGODuelPhase.End) {
-      duel.gameActions.nextDuelturn();
-      duel.gameActions.setDuelPhase({ phase: YGODuelPhase.Draw });
-    }
-  }, [player]);
-
   const newRandomPlayerHand = useCallback(() => {
     duel.gameActions.swapPlayerHand({ player });
-  }, [player]);
-
-  const nextPhase = useCallback(() => {
-    const currentPhase = duel.ygo.state.phase;
-    const currentTurn = duel.ygo.state.turn;
-    let nextPhaseIndex = YGO_DUEL_PHASE_ORDER.indexOf(currentPhase) + 1;
-    let nextPhase = YGO_DUEL_PHASE_ORDER[nextPhaseIndex];
-
-    if (
-      currentTurn === 1 &&
-      (currentPhase === YGODuelPhase.Main1)
-    ) {
-      // turn 1 skip battle and main2
-      nextPhaseIndex += 2;
-      nextPhase = YGO_DUEL_PHASE_ORDER[nextPhaseIndex];
-    }
-
-    if (nextPhase) {
-      duel.gameActions.setDuelPhase({ phase: nextPhase });
-    }
   }, [player]);
 
   const newNote = useCallback(() => {
@@ -97,13 +70,6 @@ export function GlobalEventsActionsMenu({
       </button>
       <button type="button" className="ygo-card-item" onClick={newRandomPlayerHand}>
         New Random Hand
-      </button>
-
-      <button type="button" className="ygo-card-item" onClick={nextPhase}>
-        Next Phase
-      </button>
-      <button type="button" className="ygo-card-item" onClick={nextTurn}>
-        Next Turn
       </button>
     </CardMenu>
   );
