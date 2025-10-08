@@ -1,12 +1,11 @@
-import { YGOReplayData } from "ygo-core";
-import { YGOClient } from "ygo-core";
+import { CardData, YGOReplayData } from "ygo-core";
 import { YGOPropsOptions } from "ygo-core";
 import { YGOProps } from "ygo-core";
 
 
 export interface YGOConfigOptions extends YGOPropsOptions {
   player?: number
-  showCards?:boolean
+  showCards?: boolean
 }
 
 export interface YGOConfig extends YGOProps {
@@ -15,6 +14,7 @@ export interface YGOConfig extends YGOProps {
   autoChangePlayer?: boolean
   options: YGOConfigOptions
   actions?: {
+    fetchCardsById?(ids: number[]): Promise<CardData[]>
     saveReplay?: (replay: YGOReplayData) => Promise<void>
     reportBug?: (bugReportData: YGOBugReportData) => Promise<void>
     savePuzzle?: (replay: YGOReplayData) => Promise<void>

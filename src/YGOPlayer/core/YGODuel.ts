@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { YGOPlayerCore } from "./YGOPlayerCore";
 import { YGODuelState, YGOUiElement } from "../types";
-import { YGOCore, YGOServerGameStateData, YGOGameUtils, YGOClientType } from "ygo-core";
+import { YGOCore, YGOServerGameStateData, YGOGameUtils, YGOClientType, CardData } from "ygo-core";
 import { YGOEntity } from "./YGOEntity";
 import { GameController } from "../game/GameController";
 import { EventBus } from "../scripts/event-bus";
@@ -137,16 +137,23 @@ export class YGODuel {
       player.sideDeck?.forEach(id => ids.add(id));
     })
 
-    // TODO USE CACHE
-    const cardsResponse = await fetch(`https://api.ygo101.com/cards?ids=${Array.from(ids).join(",")}`);
-    const cardsData = await cardsResponse.json();
+    const cardsData = new Map<number, CardData>();
+
+    if (this.config.actions?.fetchCardsById) {
+      const cardsDataArray = await this.config.actions.fetchCardsById(Array.from(ids));
+      cardsDataArray.map(c => cardsData.set(c.id, c));
+    } else {
+      const cardsResponse = await fetch(`https://api.ygo101.com/cards?ids=${Array.from(ids).join(",")}`);
+      const cardsDataArray = await cardsResponse.json() as CardData[];
+      cardsDataArray.map(c => cardsData.set(c.id, c));
+    }
 
     const players = gameState.players.map((player) => {
       return {
         name: player.name,
-        mainDeck: player.mainDeck.map(id => cardsData.find((card: any) => card.id === id)),
-        extraDeck: player.extraDeck.map(id => cardsData.find((card: any) => card.id === id)),
-        sideDeck: player.sideDeck?.map(id => cardsData.find((card: any) => card.id === id)) || [],
+        mainDeck: player.mainDeck.map(id => cardsData.get(id)!),
+        extraDeck: player.extraDeck.map(id => cardsData.get(id)!),
+        sideDeck: player.sideDeck?.map(id => cardsData.get(id)!) || [],
       }
     })
     const props = gameState.ygoCoreProps;
