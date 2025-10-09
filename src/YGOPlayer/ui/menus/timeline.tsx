@@ -15,7 +15,8 @@ export function TimeLine({ duel }: { duel: YGODuel }) {
   if (!duel.ygo) return null;
 
   const commands = duel.ygo.commands;
-  const currentCommand = duel.ygo.commandIndex;
+  const currentCommand = duel.ygo.peek();
+  const currentCommandIndex = currentCommand ? commands.indexOf(currentCommand) : -1;
 
   const onCommandClick = (command: Command) => {
     setTimeout(() => {
@@ -31,7 +32,7 @@ export function TimeLine({ duel }: { duel: YGODuel }) {
       onClick={stopPropagationCallback}
     >
       {commands.map((command: any, index: any) => {
-        const commandClass = getCommandClass(index, currentCommand);
+        const commandClass = getCommandClass(index, currentCommandIndex);
         const Command = DefaultTimelineCommand;
         return (
           <Command
