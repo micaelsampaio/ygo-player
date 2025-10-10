@@ -13,6 +13,7 @@ import { lerp } from 'three/src/math/MathUtils';
 import { YGOGameUtils } from 'ygo-core';
 import { Ease } from '../scripts/ease';
 import { getResolutionInfo } from '../scripts/use-device-resolution-info';
+import { YGOTimerUtils } from '../scripts/timer-utils';
 
 type CardSelectionType = "card" | "zone";
 
@@ -26,6 +27,7 @@ export class ActionCardSelection extends YGOComponent implements YGOAction {
     private selectedZones: CardZone[];
     private opacityValue: number;
     private time: number;
+    private timers: YGOTimerUtils;
     private onSelectionCompleted!: ((cardZone: CardZone) => void);
     private onMultipleSelectionCompleted!: ((cardZone: CardZone[]) => void);
     public unsubscribeKeyEvents?: () => void;
@@ -33,6 +35,7 @@ export class ActionCardSelection extends YGOComponent implements YGOAction {
     constructor({ duel }: { duel: YGODuel }) {
         super("");
         this.duel = duel;
+        this.timers = new YGOTimerUtils();
         this.cardSelectionZones = new Map();
         this.selectedZones = [];
         this.selectionType = "zone";
@@ -140,7 +143,7 @@ export class ActionCardSelection extends YGOComponent implements YGOAction {
         this.duel.actionManager.setAction(this);
 
         if (zones.length === 0) {
-            setTimeout(() => {
+            this.timers.setTimeout(() => {
                 onSelectionCompleted([]);
             }, 10);
         }

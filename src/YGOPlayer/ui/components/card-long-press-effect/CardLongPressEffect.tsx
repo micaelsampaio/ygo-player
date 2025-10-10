@@ -10,13 +10,10 @@ export function CardLongPressEffect({ duel }: { duel: YGODuel }) {
     const [mousePosition, setMousePosition] = useState<{ top: string, left: string }>({ top: "0", left: "0" });
     const [value, setValue] = useState(50);
     const [isActive, setIsActive] = useState(false);
-    const timer = useRef<number>();
+    const timer = useRef<number>(-1);
 
     const startTimerToDelay = () => {
-        if (timer.current) {
-            clearTimeout(timer.current);
-        }
-
+        clearTimeout(timer.current);
         timer.current = setTimeout(() => {
             startTimerToOpenCard();
         }, 300) as any as number;
@@ -35,15 +32,14 @@ export function CardLongPressEffect({ duel }: { duel: YGODuel }) {
             setValue(progress);
 
             if (progress < 100) {
+                clearTimeout(timer.current);
                 timer.current = setTimeout(update, 16) as any as number;
             } else {
                 openCard();
             }
         };
 
-        if (timer.current) {
-            clearTimeout(timer.current);
-        }
+        clearTimeout(timer.current);
         setIsActive(true);
         update();
     };

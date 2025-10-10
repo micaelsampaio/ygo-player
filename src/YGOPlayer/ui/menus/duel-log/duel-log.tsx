@@ -38,7 +38,7 @@ export function DuelLogMenu({ duel, menus }: { duel: YGODuel; menus: any[] }) {
     if (duelLogsContainer.current) {
       scrollBottomRef.current = true;
       duelLogsContainer.current.scrollTop = duelLogsContainer.current.scrollHeight;
-
+      clearTimeout(scrollTimerRef.current);
       scrollTimerRef.current = setTimeout(() => {
         scrollBottomRef.current = true;
         duelLogsContainer.current!.scrollTop = duelLogsContainer.current!.scrollHeight;

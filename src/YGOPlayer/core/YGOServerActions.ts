@@ -1,18 +1,23 @@
-import { JSONCommand, YGOClient } from "ygo-core";
+import { JSONCommand, YGOClient, YGOServerGameStateData } from "ygo-core";
 import { YGODuel } from "./YGODuel";
 import { Command } from "ygo-core";
+import { YGOTimerUtils } from "../scripts/timer-utils";
+import { YGOComponent } from "./YGOComponent";
 
-export class YGOServerActions {
+export class YGOServerActions extends YGOComponent {
+  private timers: YGOTimerUtils;
 
   constructor(private duel: YGODuel, private client: YGOClient) {
+    super("server-actions");
+    this.timers = new YGOTimerUtils();
     this.registerClientEvents();
   }
 
   public server = {
     getGameState: () => {
-      setTimeout(() => { // call it in next frame
+      this.timers.setTimeout(() => {
         this.client.send("server:game-state");
-      });
+      }, 1);
     },
     setClientReady: () => {
       this.client.send("client:ready");
@@ -72,41 +77,63 @@ export class YGOServerActions {
       console.log("TCL: data:", data)
       console.log('TCL: --------');
 
-      if (eventName === "server:game-state") {
-        this.duel.createYGO(data);
-      }
-
-      if (eventName === "server:exec") {
-        if (data.type === "ygo:commands:exec") {
-          const eventData = data.data;
-          const command = new JSONCommand({ type: eventData.command.type, data: eventData.command.data });
-          command.commandId = eventData.command.id;
-          command.timestamp = eventData.command.timestamp;
-          this.duel.commands.exec({ command });
-        } else if (data.type === "ygo:commands:previous") {
-          this.duel.commands.previousCommand();
-        } else if (data.type === "ygo:commands:next") {
-          this.duel.commands.nextCommand();
-        } else if (data.type === "ygo:commands:play") {
-          this.duel.commands.play();
-        } else if (data.type === "ygo:commands:pause") {
-          this.duel.commands.pause();
-        } else if (data.type === "ygo:commands:goto_command") {
-          const eventData = data.data;
-          this.duel.commands.goToCommand(eventData.commandId);
-        } else if (data.type === "ygo:commands:set_player_priority") {
-          this.duel.ygo.setCurrentPlayer(data.data.player);
-        } else if (data.type === "ygo:replay:start") {
-          this.duel.events.dispatch("update-game-ui-config", { startReplay: true });
-          setTimeout(() => {
-            this.duel.commands.play();
-          }, 500)
-        }
-      }
+      this.processServerCommand(eventName, data);
     })
 
     this.client.onDisconnect(() => {
 
     })
+  }
+
+  public processServerCommand(eventName: string, data: any) {
+    if (eventName === "server:game-state") {
+      const gameState = data as YGOServerGameStateData;
+      this.duel.createYGO(gameState);
+
+      if (gameState.commands.length > 0) {
+        this.duel.commands.isRecovering();
+        gameState.commands.forEach(command => {
+          this.processServerCommand(command.type, command.data);
+        })
+        this.duel.commands.endRecover();
+
+        this.timers.setTimeout(() => {
+          this.duel.updateField();
+        })// next fram
+      }
+
+    }
+
+    if (eventName === "server:exec") {
+      if (data.type === "ygo:commands:exec") {
+        const eventData = data.data;
+        const command = new JSONCommand({ type: eventData.command.type, data: eventData.command.data });
+        command.commandId = eventData.command.id;
+        command.timestamp = eventData.command.timestamp;
+        this.duel.commands.exec({ command });
+      } else if (data.type === "ygo:commands:previous") {
+        this.duel.commands.previousCommand();
+      } else if (data.type === "ygo:commands:next") {
+        this.duel.commands.nextCommand();
+      } else if (data.type === "ygo:commands:play") {
+        this.duel.commands.play();
+      } else if (data.type === "ygo:commands:pause") {
+        this.duel.commands.pause();
+      } else if (data.type === "ygo:commands:goto_command") {
+        const eventData = data.data;
+        this.duel.commands.goToCommand(eventData.commandId);
+      } else if (data.type === "ygo:commands:set_player_priority") {
+        this.duel.ygo.setCurrentPlayer(data.data.player);
+      } else if (data.type === "ygo:replay:start") {
+        this.duel.events.dispatch("update-game-ui-config", { startReplay: true });
+        this.timers.setTimeout(() => {
+          this.duel.commands.play();
+        }, 500)
+      }
+    }
+  }
+
+  public onDestroy() {
+    this.timers.clear();
   }
 }

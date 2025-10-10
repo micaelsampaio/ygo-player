@@ -1,9 +1,10 @@
 import * as THREE from "three";
-import { useCallback, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { YGODuel } from "../../core/YGODuel";
 import { getTransformFromCamera, } from "../../scripts/ygo-utils";
 import { CardMenu } from "../components/CardMenu";
 import { YGODuelPhase, YGO_DUEL_PHASE_ORDER } from "ygo-core";
+import { YGOTimerUtils } from "../../scripts/timer-utils";
 
 export function DuelPhaseActionsMenu({
   duel,
@@ -13,6 +14,7 @@ export function DuelPhaseActionsMenu({
   transform: THREE.Mesh;
 }) {
   const menuRef = useRef<HTMLDivElement>();
+  const timers = useRef<YGOTimerUtils>(new YGOTimerUtils())
 
   const setDuelPhase = useCallback((phase: YGODuelPhase) => {
     duel.gameActions.setDuelPhase({ phase });
@@ -59,12 +61,12 @@ export function DuelPhaseActionsMenu({
     setTransitioning(true);
     // sequence the phase changes with small delays so any phase-entry effects run in order
     steps.forEach((phase, i) => {
-      setTimeout(() => duel.gameActions.setDuelPhase({ phase }), i * 120);
+      timers.current.setTimeout(() => duel.gameActions.setDuelPhase({ phase }), i * 120);
     });
 
     // clear transitioning after last step
     const total = steps.length * 120 + 50;
-    setTimeout(() => setTransitioning(false), total);
+    timers.current.setTimeout(() => setTransitioning(false), total);
   }, [duel]);
 
   const nextPhase = useCallback(() => {
@@ -93,6 +95,12 @@ export function DuelPhaseActionsMenu({
     duel.gameActions.setDuelPhase({ phase: YGODuelPhase.Draw });
   }, [])
 
+  useEffect(() => {
+    return () => {
+      timers.current?.clear();
+    }
+  }, [])
+
   useLayoutEffect(() => {
     const container = menuRef.current!;
     const size = container.getBoundingClientRect();
@@ -109,7 +117,7 @@ export function DuelPhaseActionsMenu({
 
   return (
     <CardMenu key="global-events-actions-menu" indicator menuRef={menuRef}>
-  <button className="ygo-card-item" onClick={nextPhase}>Next Phase</button>
+      <button className="ygo-card-item" onClick={nextPhase}>Next Phase</button>
       <div className="ygo-flex ygo-gap-1">
         <button
           className={`ygo-card-item ${currentDuelPhase === YGODuelPhase.Draw ? "active" : ""}`}

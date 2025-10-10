@@ -102,6 +102,7 @@ export class YGODuel {
     this.gameController.addComponent("action_card_selection", new ActionCardSelection({ duel: this }));
     this.gameController.addComponent("attack_selection_action", new ActionAttackSelection(this));
     this.gameController.addComponent("map-click-zone", new YGOMapClick(this));
+    this.gameController.addComponent("server_actions", this.serverActions);
     this.actionManager.actions.set("card-hand-menu", new ActionCardHandMenu(this));
     this.actionManager.actions.set("card-zone-menu", new ActionCardZoneMenu(this));
     this.gameActions = new YGOGameActions(this);
@@ -558,5 +559,7 @@ export class YGODuel {
     } catch (error) { }
 
     this.globalHotKeysManager?.clear();
+
+    this.client.disconnect();
   }
 }

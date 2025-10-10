@@ -1,3 +1,4 @@
+import { YGOTimerUtils } from "../../scripts/timer-utils";
 import { YGOComponent } from "../YGOComponent";
 
 enum YGOActionManagerState {
@@ -13,10 +14,11 @@ export class YGOActionManager extends YGOComponent {
     private state: YGOActionManagerState;
     public onActionTransition: ((prevAction: YGOAction, action: YGOAction) => void) | null;
     public onChangeAction: ((action: YGOAction) => void) | null;
+    private timers: YGOTimerUtils;
 
     constructor() {
         super("actions_manager");
-
+        this.timers = new YGOTimerUtils();
         this.actionsEnabled = true;
         this.action = this.defaultAction;
         this.actions = new Map();
@@ -51,7 +53,7 @@ export class YGOActionManager extends YGOComponent {
         this.clearAction();
 
         requestAnimationFrame(() => {
-            setTimeout(() => {
+            this.timers.setTimeout(() => {
                 this.setAction(action);
             }, 10);
         });

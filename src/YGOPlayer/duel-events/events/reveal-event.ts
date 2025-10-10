@@ -10,16 +10,19 @@ import { CallbackTransition } from "../utils/callback";
 import { YGOCommandHandler } from "../../core/components/YGOCommandHandler";
 import { MultipleTasks } from "../utils/multiple-tasks";
 import { getCardPositionInFrontOfCamera } from "../../scripts/ygo-utils";
+import { YGOTimerUtils } from "../../scripts/timer-utils";
 
 interface RevealEventHandlerProps extends DuelEventHandlerProps {
   event: YGODuelEvents.Reveal;
 }
 
 export class RevealEventHandler extends YGOCommandHandler {
+  private timers: YGOTimerUtils;
 
   constructor(private props: RevealEventHandlerProps) {
     super("reveal_card_command");
     this.props = props;
+    this.timers = new YGOTimerUtils();
   }
 
   public start(): void {
@@ -103,7 +106,8 @@ export class RevealEventHandler extends YGOCommandHandler {
         })
       );
     } else {
-      setTimeout(() => onCompleted());
+
+      this.timers.setTimeout(() => onCompleted());
       return;
     }
 
@@ -117,7 +121,7 @@ export class RevealEventHandler extends YGOCommandHandler {
   }
 
   private flipCardAndRevealAnimation({ card, timeToReveal = 1, sequence, transform }: { card: THREE.Object3D, transform: THREE.Object3D, sequence: YGOTaskSequence, timeToReveal?: number }) {
-  const { startTask, duel } = this.props;
+    const { startTask, duel } = this.props;
     const startPosition = transform.position.clone();
     const startRotation = transform.rotation.clone();
 
@@ -178,6 +182,10 @@ export class RevealEventHandler extends YGOCommandHandler {
       )
     );
 
+  }
+
+  public finish(): void {
+    this.timers.clear();
   }
 
   public _start(): void {

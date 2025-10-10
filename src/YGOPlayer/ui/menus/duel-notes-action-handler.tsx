@@ -17,6 +17,7 @@ export function DuelNotesActionEventHandler({
   const [progress, setNoteProgress] = useState(event.duration > 0 ? 100 : -1);
   const isCompleted = useRef(false);
   const elapsed = useRef(0);
+  const timer = useRef<number>(-1);
 
   const complete = useCallback(() => {
     if (isCompleted.current) return;
@@ -59,7 +60,11 @@ export function DuelNotesActionEventHandler({
     return () => cancelAnimationFrame(animationFrameId);
   }, [event, progressEnabled]);
 
-
+  useEffect(() => {
+    return () => {
+      clearTimeout(timer.current);
+    }
+  }, [])
 
   useEffect(() => {
     elapsed.current = 0;
@@ -68,9 +73,9 @@ export function DuelNotesActionEventHandler({
   const handleClose = () => {
     setVisible(false);
 
-    setTimeout(() => {
+    timer.current = setTimeout(() => {
       complete();
-    }, 300);
+    }, 300) as any as number;
   };
 
   return (
