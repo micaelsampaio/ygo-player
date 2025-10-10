@@ -144,6 +144,7 @@ export class YGOCommandsController extends YGOComponent {
     let isCommandCompleted = false;
 
     const onCompleted = () => {
+      if (!this.enabled) return;
       if (isCommandCompleted) return;
 
       isCommandCompleted = true;
@@ -269,5 +270,7 @@ export class YGOCommandsController extends YGOComponent {
   public onDestroy(): void {
     clearTimeout(this.timerOnCompleteEvent);
     clearTimeout(this.timerOnNextCommand);
+
+    this.clearCommandsState();
   }
 }

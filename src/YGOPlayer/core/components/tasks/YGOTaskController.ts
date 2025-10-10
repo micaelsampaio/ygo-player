@@ -88,4 +88,8 @@ export class YGOTaskController extends YGOComponent {
 
         this.tasks = [];
     }
+
+    public onDestroy(): void {
+        this.complete();
+    }
 }

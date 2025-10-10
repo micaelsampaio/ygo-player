@@ -27,6 +27,7 @@ export abstract class YGOEntity {
 
 
     destroyEntity() {
+        this.enabled = false;
         this.onDestroy();
 
         for (const component of Object.values(this.components)) {
