@@ -9,6 +9,8 @@ import { PlayerHUD } from "./components/player-hud/PlayerHUD";
 import { CardLongPressEffect } from "./components/card-long-press-effect/CardLongPressEffect";
 import { RotateYourPhoneModal } from "./menus/rotate-your-phone";
 import { useDeviceResolutionInfo } from "../scripts/use-device-resolution-info";
+import { LeftMenuPanel } from "./menus/menu-panel/LeftMenuPanel";
+import { YGOStatic } from "../core/YGOStatic";
 
 export interface UiGameConfig {
     actions: boolean
@@ -110,24 +112,6 @@ export function YGOUiController({ duel }: { duel: YGODuel }) {
             }
         });
 
-        duel.events.on("set-selected-card", (data: any) => {
-            setMenus(currentMenus => {
-                const type = "selected-card-menu";
-                if (!data.card) {
-                    return currentMenus.filter(m => m.type !== type);
-                } else {
-                    const currentMenu = currentMenus.find(m => m.type === type);
-
-                    if (currentMenu) {
-                        currentMenu.data = data;
-                        return [...currentMenus];
-                    }
-
-                    return [...currentMenus, { group: type, visible: true, type: "selected-card-menu", data }];
-                }
-            });
-        })
-
         duel.events.on("update-game-ui-config", (key: string, value: any) => {
             setGameConfig(prev => ({ ...prev, [key]: value }));
         });
@@ -151,10 +135,11 @@ export function YGOUiController({ duel }: { duel: YGODuel }) {
         <DuelLogMenu duel={duel} menus={menus} />
         <TimeLine duel={duel} />
         <BottomRightActions duel={duel} />
-        <PlayerHUD duel={duel} player={0} />
-        <PlayerHUD duel={duel} player={1} />
+        <PlayerHUD duel={duel} player={YGOStatic.playerIndex} />
+        <PlayerHUD duel={duel} player={YGOStatic.otherPlayerIndex} />
         <CardLongPressEffect duel={duel} />
         <RotateYourPhoneModal isPortrait={isPortrait} isMobile={isMobile} />
+        <LeftMenuPanel duel={duel} />
 
         {
             menus.map(menu => {

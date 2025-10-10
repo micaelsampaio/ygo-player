@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { YGODuel } from "../../../core/YGODuel";
 import "./style.css";
 import { YGODuelEvents } from "ygo-core";
+import { YGOStatic } from "../../../core/YGOStatic";
 
 enum LifePointsState {
     IDLE,
@@ -9,7 +10,7 @@ enum LifePointsState {
     DECREASING,
 }
 export function PlayerHUD({ duel, player }: { duel: YGODuel, player: number }) {
-
+    const playerPOV = YGOStatic.isPlayerPOV(player) ? 0 : 1;
     const field = duel.ygo.getField(player);
     const playerName = field.player.name;
     const { LP, lifePointsState } = usePlayerLp(duel, player);
@@ -30,7 +31,7 @@ export function PlayerHUD({ duel, player }: { duel: YGODuel, player: number }) {
         : lifePointsState === LifePointsState.DECREASING
             ? " ygo-lp-decreasing" : "";
 
-    return <div className={`ygo-player-hud ygo-player-${player}`}>
+    return <div className={`ygo-player-hud ygo-player-${playerPOV}`}>
         <div className="ygo-player-hude-player-content">
             <div className="ygo-player-hud-bar"></div>
             <div className="ygo-player-hud-name">

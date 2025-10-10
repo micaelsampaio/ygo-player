@@ -1,4 +1,4 @@
-import { Command, JSONCommand, YGODuelEvents } from "ygo-core";
+import { Command, JSONCommand, YGOCommands, YGOCommandScope, YGODuelEvents } from "ygo-core";
 import { getDuelEventHandler } from "../../../duel-events";
 import { YGOComponent } from "../../YGOComponent";
 import { YGODuel } from "../../YGODuel";
@@ -39,6 +39,7 @@ export class YGOCommandsController extends YGOComponent {
 
   exec({ command }: { command: Command | string }) {
     const alreadyPlaying = this.isPlaying();
+
     this.setState(YGOCommandsControllerState.PLAYING);
 
     if (typeof command === "string") {
@@ -47,11 +48,19 @@ export class YGOCommandsController extends YGOComponent {
         return this.commandsToExecuteQueue.push(cmd)
       }
       this.duel.ygo.exec(cmd);
+
+      if (cmd.scope !== YGOCommandScope.GAME) {
+        this.onAllCommandsProcessed();
+      }
     } else {
       if (alreadyPlaying) {
         return this.commandsToExecuteQueue.push(command)
       }
       this.duel.ygo.exec(command);
+
+      if (command.scope !== YGOCommandScope.GAME) {
+        this.onAllCommandsProcessed();
+      }
     }
   }
 
@@ -221,7 +230,13 @@ export class YGOCommandsController extends YGOComponent {
   private executeCommandInQueue() {
     const command = this.commandsToExecuteQueue.pop();
     if (!command) return;
+
     this.duel.ygo.exec(command);
+
+    if (command.scope !== YGOCommandScope.GAME) {
+      this.currentCommand = undefined;
+      this.onAllCommandsProcessed();
+    }
   }
 
   update(dt?: number): void {

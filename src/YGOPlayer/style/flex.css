@@ -30,7 +30,8 @@
 }
 
 
-.ygo-player-core .ygo-flex-grow-1 {
+.ygo-player-core .ygo-flex-grow-1,
+.ygo-player-core .ygo-grow {
     flex-grow: 1;
 }
 

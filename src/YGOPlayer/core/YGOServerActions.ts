@@ -59,6 +59,12 @@ export class YGOServerActions {
     }
   }
 
+  public chat = {
+    send: (message: string) => {
+      this.client.send("client:chat", { message })
+    }
+  }
+
   private registerClientEvents() {
     this.client.onMessage((eventName, data) => {
       console.log('TCL:\n\n\n\ NEW CLIENT EVENT <<<<<<<<<<<<<<<<<<<');

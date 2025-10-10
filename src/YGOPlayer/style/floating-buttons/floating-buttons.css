@@ -7,15 +7,6 @@
     gap: 20px;
 }
 
-.ygo-player-core .game-actions-top-left {
-    position: absolute;
-    top: 20px;
-    left: 20px;
-    display: flex;
-    align-items: end;
-    gap: 20px;
-}
-
 .ygo-player-core .ygo-floating-button {
     border: 1px solid var(--ygo-border-color);
     background-color: var(--ygo-float-button-bg-color);

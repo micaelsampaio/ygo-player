@@ -210,8 +210,13 @@ async function startGame(room) {
       })),
       options: {
         // TODO
-      }
-    }
+      },
+    },
+    // rules: {
+    //   viewOpponentCards: false,
+    //   controlOpponentCards: true,
+    //   spectatorViewCards: false,
+    // }
   })
 
   console.log("CREATE GAME SERVER");

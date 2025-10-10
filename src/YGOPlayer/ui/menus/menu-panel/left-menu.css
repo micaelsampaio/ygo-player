@@ -1,0 +1,118 @@
+.ygo-player-core {
+
+  .ygo-left-menu-panel {
+    position: fixed;
+    left: 0px;
+    top: 0px;
+    height: 100dvh;
+    z-index: 100;
+    width: 300px;
+    background-color: rgba(0, 0, 0, 0.8);
+    display: flex;
+    gap: 10px;
+    flex-direction: column;
+    padding: 16px;
+  }
+
+  .ygo-left-top-menus {
+    display: flex;
+    font-weight: bold;
+    font-size: 16px;
+    border: 1px solid var(--ygo-border-color);
+
+    &>div {
+      padding: 10px 10px;
+
+      &.ygo-selected {
+        background-color: var(--ygo-primary-color);
+      }
+
+      &:hover {
+        cursor: pointer;
+        background-color: var(--ygo-border-color);
+      }
+    }
+  }
+
+  .ygo-left-menu-card {
+    border-radius: var(--ygo-border-radius-large);
+    border: 1px solid var(--ygo-border-color);
+  }
+
+
+  .ygo-left-menu-card-container {
+    flex-grow: 1;
+    height: 60vh;
+    overflow: hidden;
+  }
+
+  .ygo-left-menu-chat-container {
+    min-height: 300px;
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+
+  .ygo-chat-container {
+    display: flex;
+    flex-direction: column;
+    max-height: 300px;
+    height: 100%;
+    flex-grow: 1;
+    overflow: hidden;
+    gap: 10px;
+    border: 1px solid var(--ygo-border-color);
+    padding: 10px;
+    box-sizing: border-box;
+
+    .ygo-chat-messages {
+      flex-grow: 1;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: var(--ygo-gap-sm);
+      padding: var(--ygo-space-sm);
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--ygo-border-color) transparent;
+    }
+
+    .ygo-chat-message {
+      max-width: 75%;
+      padding: var(--ygo-gap-sm) var(--ygo-gap-md);
+      border-radius: var(--ygo-border-radius-medium);
+      font-size: var(--ygo-font-md);
+      line-height: 1.4;
+      word-break: break-word;
+    }
+
+    .ygo-chat-message.left {
+      align-self: flex-start;
+      background-color: var(--ygo-action-color-dark);
+      color: var(--ygo-text-color);
+      border-top-left-radius: var(--ygo-border-radius-small);
+    }
+
+    .ygo-chat-message.right {
+      align-self: flex-end;
+      background-color: var(--ygo-primary-color);
+      color: var(--ygo-heading-color);
+      border-top-right-radius: var(--ygo-border-radius-small);
+    }
+
+    /* .ygo-chat-message:hover {
+      transform: scale(1.01);
+    } */
+
+    .ygo-chat-messages::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .ygo-chat-messages::-webkit-scrollbar-thumb {
+      background-color: var(--ygo-border-color);
+      border-radius: 4px;
+    }
+  }
+
+
+}
