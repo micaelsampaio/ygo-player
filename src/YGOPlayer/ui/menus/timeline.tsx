@@ -1,4 +1,4 @@
-import { Command } from "ygo-core";
+import { Command, YGOCommandScope } from "ygo-core";
 import { YGODuel } from "../../core/YGODuel";
 import { DefaultTimelineCommand } from "./timeline/commands/default-command";
 import { removeFocusFromActiveElement, stopPropagationCallback } from "../../scripts/utils";
@@ -15,7 +15,7 @@ export function TimeLine({ duel }: { duel: YGODuel }) {
   if (!duel.ygo) return null;
 
   const commands = duel.ygo.commands;
-  const currentCommand = duel.ygo.commandIndex;
+  const currentCommand = duel.ygo.commands.index;
 
   const onCommandClick = (command: Command) => {
     setTimeout(() => {
@@ -31,6 +31,8 @@ export function TimeLine({ duel }: { duel: YGODuel }) {
       onClick={stopPropagationCallback}
     >
       {commands.map((command: any, index: any) => {
+        if (command.scope !== YGOCommandScope.GAME) return null;
+
         const commandClass = getCommandClass(index, currentCommand);
         const Command = DefaultTimelineCommand;
         return (

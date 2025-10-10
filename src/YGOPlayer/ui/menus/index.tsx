@@ -6,7 +6,7 @@ import { ExtraDeck } from "./extra-deck";
 import { Graveyard } from "./graveyard";
 import { SelectCardPopup } from "./select-card";
 import { SelectedCardHighlightedMenu } from "./select-card-highligh-menu";
-import { SelectedCardMenu } from "./selected-card-menu";
+import { SelectedCardMenu } from "./menu-panel/components/selected-card-menu";
 import { ViewDeckPopup } from "./view-deck";
 import { XyzMonsterMaterialsMenu } from "./xyz-monster-materials";
 

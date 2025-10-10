@@ -1,12 +1,15 @@
-import React from "react";
+import React, { forwardRef } from "react";
 
 type TextAreaProps = React.TextareaHTMLAttributes<HTMLTextAreaElement>;
 
-export function YGOTextArea({ className = "", ...props }: TextAreaProps) {
-  return (
-    <textarea
-      className={`ygo-input ygo-w-full ${className}`.trim()}
-      {...props}
-    />
-  );
-}
+export const YGOTextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
+  ({ className = "", ...props }, ref) => {
+    return (
+      <textarea
+        ref={ref}
+        className={`ygo-input ygo-w-full ${className}`.trim()}
+        {...props}
+      />
+    );
+  }
+);

@@ -179,8 +179,8 @@ export function SelectCardPopup({
         unsubscribe();
       }
     }
-  }, [visible]);
-
+  }, [visible]);  
+  
   return (
     <div
       className="game-popup"

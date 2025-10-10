@@ -57,8 +57,8 @@ export class YGOPlayerCore {
         this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         this.renderer.outputColorSpace = THREE.SRGBColorSpace;
 
-        const mapGeometry = new THREE.PlaneGeometry(40, 25);
-        const mapMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000, transparent: true, opacity: 0, wireframe: false });
+        const mapGeometry = new THREE.PlaneGeometry(36, 25);
+        const mapMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000, transparent: true, opacity: 0, wireframe: true });
         this.mapBounds = new THREE.Mesh(mapGeometry, mapMaterial);
 
         this.scene.add(this.mapBounds);
@@ -135,7 +135,8 @@ export class YGOPlayerCore {
         const center = box.getCenter(new THREE.Vector3());
         const size = box.getSize(new THREE.Vector3());
 
-        const screenWidth = window.innerWidth;
+        const sidebarWidth = 300;
+        const screenWidth = window.innerWidth - sidebarWidth;
         const screenHeight = window.innerHeight;
 
         const aspectRatio = screenWidth / screenHeight;
@@ -144,8 +145,10 @@ export class YGOPlayerCore {
         const distanceWidth = Math.abs((size.x / 2) / Math.tan(fov / 2) / aspectRatio);
         const distance = Math.max(distanceHeight, distanceWidth) * 1.05;
 
-        this.camera.position.set(center.x, center.y, distance);
-        this.camera.lookAt(center);
+        const cameraOffsetX = (sidebarWidth / window.innerWidth) * size.x;
+
+        this.camera.position.set(center.x - cameraOffsetX / 2, center.y, distance);
+        this.camera.lookAt(center.x - cameraOffsetX / 2, center.y, 0);
 
         this.camera.near = distance / 100;
         this.camera.far = distance * 100;

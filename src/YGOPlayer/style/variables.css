@@ -3,6 +3,8 @@
   --ygo-primary-hover-color: #3b77bd;
   --ygo-secondary-color: #50e3c2;
   --ygo-background-color: #181818;
+  --ygo-background-color-20: rgba(24, 24, 24, 0.2);
+  --ygo-background-color-30: rgba(24, 24, 24, 0.3);
   --ygo-background-color-60: rgba(24, 24, 24, 0.6);
   --ygo-background-color-70: rgba(24, 24, 24, 0.7);
   --ygo-background-color-80: rgba(24, 24, 24, 0.8);
