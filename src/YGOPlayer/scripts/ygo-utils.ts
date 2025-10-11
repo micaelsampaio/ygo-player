@@ -50,7 +50,8 @@ export function createFields({ duel, fieldModel }: CreateFieldDto) {
   for (let player = 0; player < 2; ++player) {
     const isPlayer = player === playerIndex;
     const showCards = !!(isPlayer || duel.config.options.showCards)
-    const controlCards = !!(isPlayer || (showCards && ygo.options.controlOpponentCards))
+    //const controlCards = !!(isPlayer || (showCards && ygo.options.controlOpponentCards))
+    const controlCards = true;
     const field = new PlayerField();
     const playerSufix = player === 0 ? "" : "2";
     field.playerIndex = player;
@@ -289,8 +290,13 @@ export function getCardRotationFromFieldZoneData(
   let rotation: THREE.Euler = new THREE.Euler(0, 0, 0);
   const field = duel.fields[zoneData.player];
 
-  if (zoneData.zone === "GY" || zoneData.zone === "H") {
+  if (zoneData.zone === "GY") {
     // GY do nothig let go as default rotation
+  } else if (zoneData.zone === "H") {
+    if (!field.settings.showCards && !YGOStatic.isPlayerPOV(zoneData.player)) {
+      rotation.set(0, THREE.MathUtils.degToRad(180), 0);
+    }
+    // do nothig let go as default rotation
   } else if (zoneData.zone === "ED") {
     if (YGOGameUtils.isPendulumCard(card)) {
       rotation = new THREE.Euler(0, 0, THREE.MathUtils.degToRad(-15));
@@ -607,4 +613,12 @@ export function calculateBattleInfo(attackingCard: Card, attackedCard: Card): YG
     },
     battleDamage,
   };
+}
+export function isCardTransformFlipDown(obj: any, tolerance = 10): boolean {
+  if (!obj) return true;
+
+  const yDeg = (obj.rotation.y * 180) / Math.PI;
+  const normalizedY = ((yDeg + 180) % 360) - 180;
+
+  return Math.abs(normalizedY + 180) < tolerance;
 }

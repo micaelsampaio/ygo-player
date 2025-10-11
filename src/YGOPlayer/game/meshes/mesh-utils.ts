@@ -95,7 +95,7 @@ export function CardNegationEffect({ duel, card, startTask }: { duel: YGODuel, c
 
     const modalGeometry = new THREE.PlaneGeometry(1, 1);
     const delay = 0.2;
-
+    const isFlipDown = isCardTransformFlipDown(card);
     for (let i = 0; i < 3; ++i) {
         const frontTexture = duel.assets.getTexture(`${duel.config.cdnUrl}/images/particles/spark_0${i + 1}.png`);
         const material = new THREE.MeshBasicMaterial({ map: frontTexture, transparent: true, color: 0x007ac1, opacity: 1 }); // Front with texture
@@ -103,7 +103,7 @@ export function CardNegationEffect({ duel, card, startTask }: { duel: YGODuel, c
         const size = 6;
         mesh.scale.set(size, size, size);
         mesh.rotation.copy(card.rotation);
-        mesh.position.set(0, 0, 0.02);
+        mesh.position.set(0, 0, isFlipDown ? -0.03 : 0.03);
         mesh.rotateZ(THREE.MathUtils.degToRad(randomIntFromInterval(0, 360)));
         mesh.visible = false;
 
