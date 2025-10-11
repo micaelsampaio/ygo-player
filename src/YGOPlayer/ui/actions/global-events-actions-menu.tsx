@@ -128,7 +128,7 @@ export function GlobalEventsActionsMenu({
       <button type="button" className="ygo-card-item" onClick={newRandomPlayerHand}>
         Toggle Thinking
       </button>
-      <button type="button" className="ygo-card-item" onClick={banishExtraDeckRandomFaceDown}>Banish FD Random From Extra Deck</button>
+      <button type="button" className="ygo-card-item" onClick={toggleThinking}>Banish FD Random From Extra Deck</button>
     </CardMenu>
   );
 }
