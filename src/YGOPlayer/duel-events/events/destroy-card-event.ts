@@ -17,6 +17,8 @@ import { ScaleTransition } from "../utils/scale-transition";
 import { createSquareWithTopMiddlePivot } from "../../game/meshes/mesh-utils";
 import { YGOAnimationObject } from "../../game/YGOAnimationObject";
 import { MaterialOpacityTransition } from "../utils/material-opacity";
+import { UpdateTask } from "../utils/update-task";
+import { WaitForSeconds } from "../utils/wait-for-seconds";
 
 interface DestroyEventHandlerProps extends DuelEventHandlerProps {
   event: YGODuelEvents.Destroy;
@@ -55,6 +57,13 @@ export class DestroyCardEventHandler extends YGOCommandHandler {
       gy = duel.fields[originZoneData.player].graveyard;
     }
 
+    if (originZoneData.zone === "H") {
+      const hand = duel.fields[originZoneData.player].hand;
+      const ref = hand.getCardFromCardIdAnZoneIndex(event.id, originZoneData.zoneIndex - 1);
+      hand.removeCardFromGameCardReference(ref);
+      hand.render();
+    }
+
     card.hideCardStats();
     card.gameObject.visible = false;
 
@@ -73,15 +82,6 @@ export class DestroyCardEventHandler extends YGOCommandHandler {
     mesh.rotation.set(0, 0, 0);
     mesh.position.copy(startPosition);
     duel.core.scene.add(mesh);
-
-    const trailTexture = duel.assets.getTexture(
-      `${duel.config.cdnUrl}/images/particles/flame_07.png`
-    );
-    const trailMat = new THREE.MeshBasicMaterial({
-      map: trailTexture,
-      transparent: true,
-      color: 0xADD8E6,
-    });
 
     // FLASH 
     const flashTexture = duel.assets.getTexture(`${duel.config.cdnUrl}/images/particles/star_09.png`);
@@ -141,58 +141,50 @@ export class DestroyCardEventHandler extends YGOCommandHandler {
       )
     );
 
-
-
-    const trailMesh = createSquareWithTopMiddlePivot(3, 3, trailMat);
-    duel.core.scene.add(trailMesh);
-
-    mesh.add(trailMesh);
-    trailMesh.position.set(0, 0, 0);
-    trailMesh.rotation.set(0, 0, 0);
-    trailMesh.scale.set(1, 0, 1);
-    trailMesh.rotateZ(THREE.MathUtils.degToRad(-90));
-
     const pool = this.props.duel.assets.getPool("destroyEffect");
     const destroyEffect = pool.get<YGOAnimationObject>();
 
     destroyEffect.gameObject.position.copy(card.gameObject.position);
     destroyEffect.gameObject.rotation.set(THREE.MathUtils.degToRad(90), 0, 0);
     destroyEffect.gameObject.visible = true;
+    destroyEffect.gameObject.scale.set(1.5, 1.5, 1.5);
     destroyEffect.playAll();
     destroyEffect.enable();
 
     this.props.duel.core.scene.add(destroyEffect.gameObject);
 
-    this.props.startTask(
-      new YGOTaskSequence(
-        new ScaleTransition({
-          gameObject: trailMesh,
-          scale: new THREE.Vector3(1, 2, 1),
-          duration: 0.35,
-        }),
-        new ScaleTransition({
-          gameObject: trailMesh,
-          scale: new THREE.Vector3(1, 0, 1),
-          duration: 0.1,
-        })
-      )
-    );
+    let updateElapsed = 0;
+    const baseScale = 4;
+    const speed = 3;
+    const intensity = 3;
+    let currentScale = baseScale;
+
+    const updateDestroyEffectSizeTask = new UpdateTask({
+      onUpdate: (dt: number) => {
+        updateElapsed += dt;
+        const targetScale = baseScale + Math.sin(updateElapsed * speed) * intensity;
+        const smoothing = 10 * dt;
+        currentScale += (targetScale - currentScale) * smoothing;
+        mesh.scale.set(currentScale, currentScale, currentScale);
+      },
+    });
+
+    this.props.startTask(updateDestroyEffectSizeTask);
+
+    const distance = mesh.position.distanceTo(gy.cardPosition);
+    const moveToGyDuration = Math.max(distance / 30, 0.4);
 
     sequence.addMultiple(
       new MultipleTasks(
         new PositionTransition({
           gameObject: mesh,
           position: gy.cardPosition,
-          duration: 0.5,
-        }),
-        new ScaleTransition({
-          gameObject: mesh,
-          scale: mesh.scale.addScalar(1.5),
-          duration: 0.25,
+          duration: moveToGyDuration,
         })
       ),
       new CallbackTransition(() => {
         mesh.visible = false;
+        updateDestroyEffectSizeTask.finish();
       })
     );
 
@@ -202,6 +194,7 @@ export class DestroyCardEventHandler extends YGOCommandHandler {
       new CallbackTransition(() => {
         duel.core.scene.remove(mesh);
         cardZone?.setCard(null);
+        card.destroy();
         this.props.onCompleted();
         pool.enquene(destroyEffect);
       })
@@ -209,14 +202,4 @@ export class DestroyCardEventHandler extends YGOCommandHandler {
 
     this.props.startTask(sequence);
   }
-}
-
-function calculateZRotationToLookAt(
-  pos1: THREE.Vector3,
-  pos2: THREE.Vector3
-): number {
-  const deltaX = pos2.x - pos1.x;
-  const deltaY = pos2.y - pos1.y;
-  const angle = Math.atan2(deltaY, deltaX);
-  return angle;
 }

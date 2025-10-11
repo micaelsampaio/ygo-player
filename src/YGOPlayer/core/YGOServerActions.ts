@@ -3,6 +3,7 @@ import { YGODuel } from "./YGODuel";
 import { Command } from "ygo-core";
 import { YGOTimerUtils } from "../scripts/timer-utils";
 import { YGOComponent } from "./YGOComponent";
+import { YGOStatic } from "./YGOStatic";
 
 export class YGOServerActions extends YGOComponent {
   private timers: YGOTimerUtils;
@@ -34,6 +35,11 @@ export class YGOServerActions extends YGOComponent {
       });
     },
     setPlayerPriority: (player: number) => {
+      // if (!this.duel.ygo.options.viewOpponentCards) {
+      //   this.client.send("server:exec", { type: "ygo:commands:set_player_priority", data: { player: YGOStatic.playerIndex } })
+      // } else {
+      //   this.client.send("server:exec", { type: "ygo:commands:set_player_priority", data: { player } })
+      // }
       this.client.send("server:exec", { type: "ygo:commands:set_player_priority", data: { player } })
     }
   };

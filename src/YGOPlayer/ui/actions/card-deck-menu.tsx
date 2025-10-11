@@ -92,6 +92,11 @@ export function CardDeckMenu({
     duel.gameActions.fieldSpell({ card, originZone, position: "facedown" });
   }, [card, originZone]);
 
+  const destroy = useCallback(() => {
+    closeViewDeckMenu();
+    duel.gameActions.destroyCard({ card, originZone });
+  }, [card, originZone]);
+
   const isMonster = YGOGameUtils.isMonster(card);
   const isSpellTrap = YGOGameUtils.isSpellTrap(card);
   const isFieldSpell = YGOGameUtils.isFieldSpell(card);
@@ -99,9 +104,6 @@ export function CardDeckMenu({
   return (
     <>
       <CardMenu x={x} y={y}>
-        <div>
-          {originZone}
-        </div>
         {isMonster && (
           <>
             <button
@@ -154,6 +156,9 @@ export function CardDeckMenu({
         </button>
         <button className="ygo-card-item" type="button" onClick={reveal}>
           Reveal
+        </button>
+        <button className="ygo-card-item" type="button" onClick={destroy}>
+          Destroy
         </button>
       </CardMenu>
     </>

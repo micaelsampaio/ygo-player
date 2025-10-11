@@ -64,6 +64,16 @@ export class GameHand extends YGOEntity {
     }
   }
 
+  removeCardFromGameCardReference(card?: GameCardHand) {
+    if (!card) return;
+    const index = this.cards.findIndex((c) => c === card);
+    if (index >= 0) {
+      this.cards[index].destroy();
+      this.cards = this.cards.filter((_, i) => i !== index);
+      this.cards.forEach((c, index) => (c.handIndex = index));
+    }
+  }
+
   private getCardHandPivot() {
     const cardHeight = CARD_HEIGHT_SIZE;
     const camera = this.duel.camera;

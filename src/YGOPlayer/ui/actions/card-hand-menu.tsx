@@ -95,6 +95,10 @@ export function CardHandMenu({
     duel.gameActions.banish({ card, originZone, position: "facedown" });
   }, [card, index]);
 
+  const destroy = useCallback(() => {
+    duel.gameActions.destroyCard({ card, originZone });
+  }, [card, index]);
+
   const toST = useCallback(() => {
     duel.gameActions.toST({ card, originZone });
   }, [card, index]);
@@ -243,6 +247,10 @@ export function CardHandMenu({
       <CardMenu cols indicator playerIndex={player} menuRef={menuRef}>
         <button className="ygo-card-item" onClick={revealCard}>
           Reveal
+        </button>
+
+        <button className="ygo-card-item" type="button" onClick={destroy}>
+          Destroy
         </button>
 
         <button className="ygo-card-item" onClick={negateCard}>Negate</button>
