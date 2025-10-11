@@ -1,5 +1,5 @@
 import { DuelEventHandlerProps } from "..";
-import { YGOGameUtils } from "ygo-core";
+import { FieldZoneData, YGOGameUtils } from "ygo-core";
 import { MoveCardCommandData } from "ygo-core";
 import { YGOTaskSequence } from "../../core/components/tasks/YGOTaskSequence";
 import { GameCard } from "../../game/GameCard";
@@ -19,33 +19,62 @@ import { MultipleTasks } from "../utils/multiple-tasks";
 import { YGOCommandHandler } from "../../core/components/YGOCommandHandler";
 import { WaitForSeconds } from "../utils/wait-for-seconds";
 
+interface MoveMultileCardCommandData {
+  player: number;
+  id: number;
+  ids: {
+    id: number,
+    originZone: FieldZoneData,
+    zone: FieldZoneData,
+  }[]
+  originZone?: never;
+  zone?: never
+}
+
 interface MoveCardEventHandlerProps extends DuelEventHandlerProps {
-  event: MoveCardCommandData;
+  event: MoveCardCommandData | MoveMultileCardCommandData;
   startCommandDelay?: number;
+  cardReference?: Card
+  cardIndex?: number
 }
 
 export class MoveCardEventHandler extends YGOCommandHandler {
   private props: MoveCardEventHandlerProps;
-  private cardReference: Card;
+  private cardReference: Card | undefined;
 
   constructor(props: MoveCardEventHandlerProps) {
     super("move_card_command");
     this.props = props;
     const event = this.props.event;
-    this.cardReference = this.props.ygo.state.getCardById(event.id, event.zone);
+
+    if (this.props.cardReference) {
+      this.cardReference = this.props.cardReference;
+    }
+
+    if (!this.cardReference) {
+      if (this.props.event.id) {
+        this.cardReference = this.props.ygo.state.getCardById(event.id, event.zone!);
+      }
+    }
   }
 
   public start(): void {
+    if (Array.isArray((this.props as any).event?.ids)) return this.startMultiple(this.props);
+
+    if (!this.cardReference) return this.props.onCompleted();
+
     let scale = new THREE.Vector3(1, 1, 1);
     let card: GameCard | undefined = undefined;
 
-    const { event, startCommandDelay: delay = 0, duel, playSound } = this.props;
+    const { event: eventData, startCommandDelay: delay = 0, duel, playSound } = this.props;
+    const event = eventData as MoveCardCommandData;
     const sequence = new YGOTaskSequence();
     const originZoneData = YGOGameUtils.getZoneData(event.originZone)!;
     const zoneData = YGOGameUtils.getZoneData(event.zone)!;
 
     const originCardZone = getGameZone(duel, originZoneData);
     const cardZone = getGameZone(duel, zoneData);
+    const owner = (event as any).owner ?? this.cardReference.originalOwner ?? this.cardReference.owner;
 
     if (delay > 0) sequence.add(new WaitForSeconds(delay));
 
@@ -131,12 +160,12 @@ export class MoveCardEventHandler extends YGOCommandHandler {
     }
 
     if (originZoneData.zone === "GY") {
-      const gy = duel.fields[this.cardReference.originalOwner].graveyard;
+      const gy = duel.fields[owner].graveyard;
       gy.createMoveFromGraveyardEffect({ card: card.gameObject, sequence });
     }
 
     if (originZoneData.zone === "B") {
-      const banish = duel.fields[this.cardReference.originalOwner].banishedZone;
+      const banish = duel.fields[owner].banishedZone;
       banish.createMoveFromBanishCardEffect({
         card: card.gameObject,
         sequence,
@@ -149,6 +178,12 @@ export class MoveCardEventHandler extends YGOCommandHandler {
       : `/sounds/move.ogg`;
 
     playSound({ key: duel.createCdnUrl(soundKey), volume: 0.7 });
+
+    if (Number(this.props.cardIndex) > 0) {
+      const index = Number(this.props.cardIndex);
+      endPosition.x -= index * 1.5;
+      endPosition.z += index * 0.2;
+    }
 
     if (
       zoneData.zone === "M" ||
@@ -177,11 +212,11 @@ export class MoveCardEventHandler extends YGOCommandHandler {
       );
 
       if (zoneData.zone === "GY") {
-        const gy = duel.fields[this.cardReference.originalOwner].graveyard;
+        const gy = duel.fields[owner].graveyard;
         gy.createSendToGraveyardEffect({ card: card.gameObject, sequence });
       }
       if (zoneData.zone === "B") {
-        const banish = duel.fields[this.cardReference.originalOwner].banishedZone;
+        const banish = duel.fields[owner].banishedZone;
         banish.createBanishCardEffect({ card: card.gameObject, sequence });
       }
     } else {
@@ -222,6 +257,53 @@ export class MoveCardEventHandler extends YGOCommandHandler {
     );
 
     duel.events.dispatch("close-ui-menu", { type: "card-materials-menu" });
+
+    this.props.startTask(sequence);
+  }
+
+  public startMultiple(props: any): void {
+    const event = this.props.event as MoveMultileCardCommandData;
+
+    let completedTasks = 0;
+    let tasks = event.ids.length;
+
+    const completeTask = () => {
+      ++completedTasks;
+
+      if (tasks === completedTasks) {
+        this.props.onCompleted();
+      }
+    }
+
+    const sequence = new YGOTaskSequence();
+
+    event.ids.forEach((cardData, index) => {
+      sequence.add(new WaitForSeconds((index - completedTasks) * 0.05));
+      sequence.add(new CallbackTransition(() => {
+        const data = cardData;
+        const cardReference = {
+          ...this.props.duel.ygo.state.getCardData(data.id),
+          ...data
+        } as Card;
+        const command = new MoveCardEventHandler({
+          ...this.props,
+          cardReference,
+          cardIndex: index - completedTasks,
+          event: {
+            ...this.props.event,
+            ...data,
+            id: data.id,
+            originZone: data.originZone,
+            zone: data.zone,
+            ids: undefined,
+          } as any,
+          onCompleted: () => {
+            completeTask();
+          }
+        })
+        command.start();
+      }))
+    })
 
     this.props.startTask(sequence);
   }

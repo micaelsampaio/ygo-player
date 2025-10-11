@@ -12,6 +12,7 @@ import { WaitForSeconds } from '../duel-events/utils/wait-for-seconds';
 import { CardEmptyMesh } from './meshes/mesh-utils';
 import { MaterialOpacityTransition } from '../duel-events/utils/material-opacity';
 import { YGOStatic } from '../core/YGOStatic';
+import { PositionTransition } from '../duel-events/utils/position-transition';
 
 export class Graveyard extends YGOEntity implements YGOUiElement {
 
@@ -82,18 +83,29 @@ export class Graveyard extends YGOEntity implements YGOUiElement {
         card.add(cardEffect);
         cardEffect.position.set(0, 0, 0);
         cardEffect.rotation.set(0, 0, 0);
-        cardEffect.scale.set(1.01, 1.01, 1.01);
+        cardEffect.scale.set(1.02, 1.02, 1.02);
         cardEffect.material.opacity = 0;
 
-        sequence.addMultiple(
-            new CallbackTransition(() => {
-                card.visible = true;
+        sequence.add(new CallbackTransition(() => {
+            const isNear = card.visible && card.position.distanceTo(this.cardPosition) > 0.05 && card.position.distanceTo(this.cardPosition) < 10;
+
+            if (!isNear) {
                 card.position.copy(this.cardPosition);
-                card.rotation.copy(this.rotation);
-                card.scale.set(1, 1, 1);
-            }),
+            }
+
+            card.visible = true;
+            card.rotation.copy(this.rotation);
+            card.scale.set(1, 1, 1);
+        }))
+
+        sequence.addMultiple(
             new WaitForSeconds(0.15),
             new MultipleTasks(
+                new PositionTransition({
+                    gameObject: card,
+                    position: this.cardPosition.clone(),
+                    duration: 0.2,
+                }),
                 new ScaleTransition({
                     gameObject: card,
                     scale: new THREE.Vector3(0.65, 0.65, 0.65),

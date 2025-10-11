@@ -4,6 +4,7 @@ import { YGODuel } from "../../core/YGODuel";
 import { getTransformFromCamera, } from "../../scripts/ygo-utils";
 import { CardMenu } from "../components/CardMenu";
 import { ActionUiMenu } from "../../actions/ActionUiMenu";
+import { YGOGameUtils } from "ygo-core";
 
 export function GlobalEventsActionsMenu({
   duel,
@@ -15,6 +16,7 @@ export function GlobalEventsActionsMenu({
   const menuRef = useRef<HTMLDivElement>();
   const player = duel.getActivePlayer();
   const timer = useRef<number>(-1);
+  const field = duel.ygo.state.fields[player];
 
   const destroyAllCards = useCallback(() => {
     duel.gameActions.destroyAllCards({ zone: "all" });
@@ -33,6 +35,36 @@ export function GlobalEventsActionsMenu({
     timer.current = setTimeout(() => duel.actionManager.setAction(action)) as unknown as number;
   }, [])
 
+  const banishExtraDeckRandomFaceDown = useCallback(() => {
+    duel.clearActions();
+
+    const numberOfCardsStr = prompt("Choose a number of cards to banish from Extra Deck");
+
+    if (!numberOfCardsStr) return;
+    if (isNaN(Number(numberOfCardsStr))) return;
+
+    const numberOfCards = Number(numberOfCardsStr);
+
+    if (numberOfCards < 1 || numberOfCards > field.extraDeck.length) return;
+
+    const extra = [...field.extraDeck];
+    if (extra.length === 0) return;
+
+    for (let i = extra.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [extra[i], extra[j]] = [extra[j], extra[i]];
+    }
+
+    const selected = extra.slice(0, numberOfCards);
+
+    const cards = selected.map((card) => ({
+      card,
+      zone: YGOGameUtils.createZone("ED", player, field.extraDeck.indexOf(card) + 1),
+    }));
+
+    duel.gameActions.banishMultiple({ cards, position: "facedown" });
+  }, [player, field?.extraDeck?.length, duel]);
+
   useEffect(() => {
     return () => {
       clearTimeout(timer.current);
@@ -47,7 +79,6 @@ export function GlobalEventsActionsMenu({
     container.style.left = x - size.width / 2 + width / 2 + "px";
   }, [transform]);
 
-  const field = duel.ygo.state.fields[player];
   const freeMonsterZones = field.monsterZone.filter((zone: any) => !zone).length;
 
   return (
@@ -77,6 +108,7 @@ export function GlobalEventsActionsMenu({
       <button type="button" className="ygo-card-item" onClick={newRandomPlayerHand}>
         New Random Hand
       </button>
+      <button type="button" className="ygo-card-item" onClick={banishExtraDeckRandomFaceDown}>Banish FD Random From Extra Deck</button>
     </CardMenu>
   );
 }

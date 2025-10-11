@@ -1,17 +1,25 @@
 import { useEffect, useRef, useState } from "react";
 import { YGODuel } from "../../../core/YGODuel";
 import "./style.css";
-import { YGODuelEvents } from "ygo-core";
+import { YGODuelEvents, YGOPlayerState } from "ygo-core";
 import { YGOStatic } from "../../../core/YGOStatic";
+import { Thinking, ViewDeck } from "./player-states";
 
 enum LifePointsState {
     IDLE,
     INCREASING,
     DECREASING,
 }
+
+// const PLAYER_STATES = {
+//     [YGOPlayerState.IDLE]: null,
+//     [YGOPlayerState.THINKING]: Thinking,
+//     [YGOPlayerState.VIEW_DECK]: ViewDeck,
+// }
 export function PlayerHUD({ duel, player }: { duel: YGODuel, player: number }) {
     const playerPOV = YGOStatic.isPlayerPOV(player) ? 0 : 1;
     const field = duel.ygo.getField(player);
+    const state = field.state;
     const playerName = field.player.name;
     const { LP, lifePointsState } = usePlayerLp(duel, player);
 

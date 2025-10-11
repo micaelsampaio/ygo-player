@@ -75,7 +75,7 @@ export function Banish({
                 className="ygo-card"
               />
 
-              {!isVisible && isPlayerPOV && (
+              {isPlayerPOV && card?.position?.includes("facedown") && (
                 <div className="ygo-card-banish-fd-icon">
                 </div>
               )}

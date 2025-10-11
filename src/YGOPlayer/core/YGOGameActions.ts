@@ -662,6 +662,22 @@ export class YGOGameActions {
     );
   }
 
+  public banishMultiple({
+    cards,
+    position = "faceup",
+  }: {
+    cards: { card: Card, zone: FieldZone }[];
+    position?: "faceup" | "facedown";
+  }) {
+    this.duel.execCommand(
+      new YGOCommands.BanishCommand({
+        player: this.duel.getActivePlayer(),
+        ids: cards.map(data => ({ id: data.card.id, zone: data.zone })),
+        position,
+      })
+    );
+  }
+
   public toST({ card, originZone }: { card: Card; originZone: FieldZone }) {
     this.clearAction();
 
