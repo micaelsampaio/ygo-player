@@ -4,7 +4,7 @@ import { YGODuel } from "../../core/YGODuel";
 import { getTransformFromCamera, } from "../../scripts/ygo-utils";
 import { CardMenu } from "../components/CardMenu";
 import { ActionUiMenu } from "../../actions/ActionUiMenu";
-import { YGOGameUtils } from "ygo-core";
+import { YGOGameUtils, YGOPlayerState } from "ygo-core";
 
 export function GlobalEventsActionsMenu({
   duel,
@@ -65,6 +65,23 @@ export function GlobalEventsActionsMenu({
     duel.gameActions.banishMultiple({ cards, position: "facedown" });
   }, [player, field?.extraDeck?.length, duel]);
 
+  const toggleThinking = () => {
+
+    const state = duel.ygo.getField(player)?.state;
+
+    if (state === YGOPlayerState.THINKING) {
+      duel.gameActions.setPlayerState({
+        player,
+        state: YGOPlayerState.IDLE
+      })
+    } else {
+      duel.gameActions.setPlayerState({
+        player,
+        state: YGOPlayerState.THINKING
+      })
+    }
+  }
+
   useEffect(() => {
     return () => {
       clearTimeout(timer.current);
@@ -107,6 +124,9 @@ export function GlobalEventsActionsMenu({
       </button>
       <button type="button" className="ygo-card-item" onClick={newRandomPlayerHand}>
         New Random Hand
+      </button>
+      <button type="button" className="ygo-card-item" onClick={newRandomPlayerHand}>
+        Toggle Thinking
       </button>
       <button type="button" className="ygo-card-item" onClick={banishExtraDeckRandomFaceDown}>Banish FD Random From Extra Deck</button>
     </CardMenu>
