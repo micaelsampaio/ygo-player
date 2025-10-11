@@ -34,6 +34,7 @@ export function ViewDeckPopup({
 
   const close = () => {
     duel.events.dispatch("close-ui-menu", { group: "game-popup" });
+    duel.gameActions.shuffleDeck({ player: deck.player })
   };
 
   useEffect(() => {

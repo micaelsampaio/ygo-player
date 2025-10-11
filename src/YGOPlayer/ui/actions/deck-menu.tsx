@@ -17,6 +17,10 @@ export function DeckMenu({ duel, deck }: { duel: YGODuel, deck: Deck, clearActio
         duel.gameActions.milFromDeck({ player: deck.player, numberOfCards: millCounter });
     }, [deck, millCounter]);
 
+    const shuffleDeck = useCallback(() => {
+        duel.gameActions.shuffleDeck({ player: deck.player });
+    }, [deck]);
+
     const viewDeck = () => {
         duel.events.dispatch("toggle-ui-menu", { group: "game-popup", type: "view-main-deck", data: { duel, deck } });
     }
@@ -32,9 +36,10 @@ export function DeckMenu({ duel, deck }: { duel: YGODuel, deck: Deck, clearActio
     const player = deck.player;
     const mainDeckSize = duel.ygo.state.fields[player].mainDeck.length;
     const field = duel.ygo.state.fields[player];
-    const freeMonsterZones = field.monsterZone.filter((zone: any) => !zone).length;
 
     return <CardMenu menuRef={menuRef}>
+        <button className="ygo-card-item" disabled={field.mainDeck.length === 0} type="button" onClick={shuffleDeck}>Shuffle Deck</button>
+
         <div className="ygo-flex ygo-gap-2">
             <div className="ygo-flex-grow-1">
                 <button className="ygo-card-item" disabled={mainDeckSize === 0} type="button" onClick={milFromDeck}>Mil</button>

@@ -47,3 +47,25 @@ export function removeFocusFromActiveElement() {
         document.activeElement.blur();
     }
 }
+
+export function chunkRandomly<T>(arr: T[], maxGroups: number): T[][] {
+    if (arr.length === 0) return [];
+    if (maxGroups <= 1) return [arr];
+
+    const result: T[][] = [];
+    let remaining = [...arr];
+    let groupsLeft = maxGroups;
+
+    while (remaining.length > 0 && groupsLeft > 0) {
+        const maxPossibleSize = Math.ceil(remaining.length / groupsLeft);
+        const size = Math.max(1, Math.floor(Math.random() * maxPossibleSize));
+
+        result.push(remaining.slice(0, size));
+        remaining = remaining.slice(size);
+        groupsLeft--;
+    }
+
+    if (remaining.length > 0) result.push(remaining);
+
+    return result;
+}

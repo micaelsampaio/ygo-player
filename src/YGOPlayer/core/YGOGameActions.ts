@@ -1142,6 +1142,14 @@ export class YGOGameActions {
     }
   }
 
+  public shuffleDeck({ player }: {
+    player: number
+  }) {
+    this.duel.execCommand(new YGOCommands.ShuffleDeckCommand({
+      player
+    }))
+  }
+
   public setSelectedCard({ card, force = false, player }: { card: Card | null, force?: boolean, player?: number }) {
     if (!force) {
       const position = card?.position ?? null;

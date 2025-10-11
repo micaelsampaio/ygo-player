@@ -25,6 +25,7 @@ import { DuelNotesEventHandler } from "./events/duel-notes-event";
 import { AttackEventHandler } from "./events/attack-event";
 import { DuelLifePointsEventHandler } from "./events/duel-lifepoints-event";
 import { PlayerFieldSideEventHandler } from "./events/player-field-side";
+import { ShuffleDeckEventHandler } from "./events/shuffle-deck-event";
 
 export interface DuelEventHandlerProps {
   duel: YGODuel;
@@ -79,6 +80,7 @@ const events: any = {
   [YGODuelEvents.LogType.Attack]: AttackEventHandler,
   [YGODuelEvents.LogType.AttackDirectly]: AttackEventHandler,
   // Others
+  [YGODuelEvents.LogType.Shuffle]: ShuffleDeckEventHandler,
   [YGODuelEvents.LogType.Disappear]: DisappearEventHandler,
   [YGODuelEvents.LogType.Target]: TargetCardEventHandler,
   [YGODuelEvents.LogType.Destroy]: DestroyCardEventHandler,

@@ -7,6 +7,11 @@ import { ActionUiMenu } from '../actions/ActionUiMenu';
 import { GameBackCard } from './GameBackCard';
 import { CARD_HEIGHT_SIZE, CARD_RATIO } from '../constants';
 import { YGOStatic } from '../core/YGOStatic';
+import { YGOTaskSequence } from '../core/components/tasks/YGOTaskSequence';
+import { PositionTransition } from '../duel-events/utils/position-transition';
+import { Ease } from '../scripts/ease';
+import { MultipleTasks } from '../duel-events/utils/multiple-tasks';
+import { chunkRandomly } from '../scripts/utils';
 
 export class Deck extends YGOEntity implements YGOUiElement {
 
@@ -103,4 +108,43 @@ export class Deck extends YGOEntity implements YGOUiElement {
         if (!this.canInteract) return;
         this.hoverGameObject.visible = false;
     }
+
+    public createShuffleAnimation({ sequence }: { sequence: YGOTaskSequence }) {
+        const cards = this.cards
+            .filter(c => c.gameObject.visible)
+            .map(c => ({
+                card: c,
+                position: c.gameObject.position.clone()
+            }));
+
+        if (cards.length === 0) return sequence;
+
+        const cardGroups = chunkRandomly(cards, Math.max(1, Math.ceil(cards.length / 4)));
+
+        for (let j = 0; j < 4; ++j) {
+            const move = j % 2 == 0;
+            const tasks = [];
+            for (let g = 0; g < cardGroups.length; ++g) {
+                const group = cardGroups[g];
+                const offsetX = (g % 2 === 0 ? -1 : 1) * (Math.random() * 0.5 + 0.5);
+                for (let i = 0; i < group.length; ++i) {
+                    const { card, position } = group[i];
+                    const target = move ? position.clone().add({ x: offsetX, y: 0, z: 0 }) : position.clone();
+
+                    const task = new PositionTransition({
+                        gameObject: card.gameObject,
+                        position: target,
+                        duration: 0.15,
+                        ease: Ease.easeInOutQuad
+                    });
+
+                    tasks.push(task);
+                }
+            }
+            sequence.add(new MultipleTasks(...tasks));
+        }
+
+        return sequence;
+    }
+
 }
