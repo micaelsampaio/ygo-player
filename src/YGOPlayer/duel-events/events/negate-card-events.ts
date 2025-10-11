@@ -10,6 +10,7 @@ import {
   getCardRotationFromFieldZoneData,
   getGameZone,
   getZonePositionFromZoneData,
+  isCardTransformFlipDown,
 } from "../../scripts/ygo-utils";
 import { CallbackTransition } from "../utils/callback";
 import { PositionTransition } from "../utils/position-transition";
@@ -20,6 +21,8 @@ import {
   GameModalOverlayMesh,
 } from "../../game/meshes/mesh-utils";
 import { MaterialOpacityTransition } from "../utils/material-opacity";
+import { MultipleTasks } from "../utils/multiple-tasks";
+import { RotationTransition } from "../utils/rotation-transition";
 
 interface NegateCardHandlerProps extends DuelEventHandlerProps {
   event: YGODuelEvents.Negate;
@@ -40,6 +43,8 @@ export class NegateCardHandler extends YGOCommandHandler {
     const cardZone = getGameZone(duel, zoneData);
     const sequence = new YGOTaskSequence();
     const field = duel.fields[zoneData.player];
+    let modalDuration = 0.4;
+    let negationDelay = 0;
 
     if (duel.settings.getConfigFromPath("showCardWhenPlayed")) {
       duel.events.dispatch("set-selected-card", {
@@ -59,21 +64,6 @@ export class NegateCardHandler extends YGOCommandHandler {
       })
     ));
 
-    this.props.startTask(
-      new YGOTaskSequence(
-        new MaterialOpacityTransition({
-          material: modal.material,
-          duration: 0.25,
-          opacity: 0.7,
-        }),
-        new WaitForSeconds(0.4),
-        new MaterialOpacityTransition({
-          material: modal.material,
-          duration: 0.25,
-          opacity: 0,
-        })
-      )
-    );
 
     if (zoneData.zone === "GY" || zoneData.zone === "B") {
       const cardOverlay = new GameCardGrayscale({ duel, card: cardReference });
@@ -97,6 +87,8 @@ export class NegateCardHandler extends YGOCommandHandler {
       const cardOverlay = new GameCardGrayscale({ duel, card: cardReference });
       const startPosition: THREE.Vector3 = card.position.clone();
       const startRotation: THREE.Euler = card.gameObject.rotation.clone();
+      const isFlipDown = isCardTransformFlipDown(card.gameObject);
+      const originalRotation = card.gameObject.rotation.clone();
 
       card.gameObject.visible = false;
 
@@ -111,8 +103,21 @@ export class NegateCardHandler extends YGOCommandHandler {
       card.isUiElementClick = false;
       card.isUiElementHover = false;
 
+      if (isFlipDown) {
+        modalDuration += 0.35;
+        const rotation = originalRotation.clone();
+        rotation.y = 0;
+
+        sequence.add(new RotationTransition({
+          gameObject: cardOverlay.gameObject,
+          duration: 0.25,
+          rotation: rotation
+        }))
+      }
+
       CardNegationEffect({
         duel,
+        delay: negationDelay,
         card: cardOverlay.gameObject,
         startTask: this.props.startTask,
       });
@@ -162,6 +167,22 @@ export class NegateCardHandler extends YGOCommandHandler {
       this.props.onCompleted();
     }
 
+    this.props.startTask(
+      new YGOTaskSequence(
+        new MaterialOpacityTransition({
+          material: modal.material,
+          duration: 0.25,
+          opacity: 0.7,
+        }),
+        new WaitForSeconds(modalDuration),
+        new MaterialOpacityTransition({
+          material: modal.material,
+          duration: 0.25,
+          opacity: 0,
+        })
+      )
+    );
+
     sequence.add(
       new CallbackTransition(() => {
         duel.core.disableRenderOverlay();
@@ -179,8 +200,8 @@ export class NegateCardHandler extends YGOCommandHandler {
     axis: THREE.Vector3 = new THREE.Vector3(0, 0, 1)
   ) {
     const position = startPos.clone();
+    const rotation = card.rotation.clone();
     position.add(axis);
-
     seq
       .add(
         new PositionTransition({
@@ -191,11 +212,18 @@ export class NegateCardHandler extends YGOCommandHandler {
       )
       .add(new WaitForSeconds(0.5))
       .add(
-        new PositionTransition({
-          gameObject: card,
-          position: startPos,
-          duration: 0.15,
-        })
+        new MultipleTasks(
+          new PositionTransition({
+            gameObject: card,
+            position: startPos,
+            duration: 0.15,
+          }),
+          new RotationTransition({
+            gameObject: card,
+            rotation,
+            duration: 0.15,
+          }),
+        )
       );
   }
 
