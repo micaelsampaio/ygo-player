@@ -109,7 +109,7 @@ export class LinkSummonEventHandler extends YGOCommandHandler {
     );
 
     const startPosition = getCardPositionInFrontOfCamera({ camera });
-    const card = new GameCard({ duel, card: this.cardReference });
+    const card = new GameCard({ duel, card: this.cardReference, player: zoneData.player });
     card.hideCardStats();
     card.gameObject.position.copy(startPosition);
     card.gameObject.visible = false;

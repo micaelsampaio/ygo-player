@@ -18,7 +18,7 @@ export class Deck extends YGOEntity implements YGOUiElement {
     private hoverGameObject: THREE.Mesh;
     public canInteract: boolean;
 
-    constructor({ duel, player, position }: { duel: YGODuel, player: number, zone: string, position: THREE.Vector3 }) {
+    constructor({ duel, player, backCardPath, position }: { duel: YGODuel, player: number, backCardPath: string, zone: string, position: THREE.Vector3 }) {
         super();
         this.duel = duel;
         this.player = player;
@@ -46,7 +46,7 @@ export class Deck extends YGOEntity implements YGOUiElement {
         this.canInteract = true;
 
         this.cards = Array.from(new Array(60)).map((_, index) => {
-            const card = new GameBackCard({ duel: this.duel });
+            const card = new GameBackCard({ duel: this.duel, backCardPath });
             card.gameObject.position.set(cube.position.x, cube.position.y, cube.position.z + index * 0.02);
             card.gameObject.rotation.set(0, THREE.MathUtils.degToRad(180), THREE.MathUtils.degToRad(-15));
             if (!YGOStatic.isPlayerPOV(player)) {

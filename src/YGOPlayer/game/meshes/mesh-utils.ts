@@ -185,7 +185,7 @@ export class GameCardGrayscale {
         const geometry = new THREE.BoxGeometry(width, height, depth);
 
         const frontTexture = duel.assets.getTexture(card.images.small_url);
-        const backTexture = duel.assets.getTexture(`${duel.config.cdnUrl}/images/card_back.png`);
+        const backTexture = duel.assets.getTexture(duel.fields[card.originalOwner].settings.backCardPath);
         const frontMaterial = new CardMaterialGrayscale({ map: frontTexture }); // Front with texture
         const backMaterial = new THREE.MeshBasicMaterial({ map: backTexture }); // Back
         const depthMaterial = new THREE.MeshBasicMaterial({ color: 0xb5b5b5 }); // Depth

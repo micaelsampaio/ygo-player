@@ -22,7 +22,7 @@ export class ExtraDeck extends YGOEntity implements YGOUiElement {
     public isMenuVisible: boolean;
     public canInteract: boolean;
 
-    constructor({ duel, player, position }: { duel: YGODuel, player: number, zone: string, position: THREE.Vector3 }) {
+    constructor({ duel, player, position, backCardPath }: { duel: YGODuel, player: number, zone: string, backCardPath: string, position: THREE.Vector3 }) {
         super();
         this.duel = duel;
         this.player = player;
@@ -55,7 +55,7 @@ export class ExtraDeck extends YGOEntity implements YGOUiElement {
         this.duel.gameController.getComponent<YGOMouseEvents>("mouse_events")?.registerElement(this);
 
         this.cards = Array.from(new Array(60)).map((_, index) => {
-            const card = new GameBackCard({ duel: this.duel });
+            const card = new GameBackCard({ duel: this.duel, backCardPath });
             card.gameObject.position.set(this.gameObject.position.x, this.gameObject.position.y, this.gameObject.position.z + index * 0.02);
             card.gameObject.rotation.set(0, THREE.MathUtils.degToRad(180), THREE.MathUtils.degToRad(15));
             if (!YGOStatic.isPlayerPOV(this.player)) {

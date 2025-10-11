@@ -20,7 +20,6 @@ type CreateFieldDto = {
 
 export function createFields({ duel, fieldModel }: CreateFieldDto) {
 
-  const ygo = duel.ygo;
   const playerIndex = YGOStatic.playerIndex;
 
   fieldModel.rotation.copy(YGOMath.degToRadEuler(90, 0, 0));
@@ -50,13 +49,14 @@ export function createFields({ duel, fieldModel }: CreateFieldDto) {
   for (let player = 0; player < 2; ++player) {
     const isPlayer = player === playerIndex;
     const showCards = !!(isPlayer || duel.config.options.showCards)
-    //const controlCards = !!(isPlayer || (showCards && ygo.options.controlOpponentCards))
-    const controlCards = true;
+    const controlCards = !!(isPlayer || (showCards && duel.ygo.options.controlOpponentCards))
+    //const controlCards = true;
     const field = new PlayerField();
     const playerSufix = player === 0 ? "" : "2";
     field.playerIndex = player;
     field.settings.showCards = showCards;
     field.settings.controlCards = controlCards;
+    field.settings.backCardPath = duel.createCdnUrl("/images/card_back.png");
 
     for (let i = 0; i < 5; ++i) {
       const monsterZoneId: any = `M${playerSufix}-${i + 1}`;
@@ -100,12 +100,14 @@ export function createFields({ duel, fieldModel }: CreateFieldDto) {
       player,
       zone: mainDeckZone,
       position: mainDeckPosition,
+      backCardPath: field.settings.backCardPath
     });
     field.extraDeck = new ExtraDeck({
       duel,
       player,
       zone: extraDeckZone,
       position: extraDeckPosition,
+      backCardPath: field.settings.backCardPath
     });
     field.graveyard = new Graveyard({
       duel,

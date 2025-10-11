@@ -6,14 +6,14 @@ import { CARD_DEPTH, CARD_HEIGHT_SIZE, CARD_RATIO } from '../constants';
 export class GameBackCard extends YGOEntity {
     private duel: YGODuel;
 
-    constructor({ duel }: { duel: YGODuel }) {
+    constructor({ duel, backCardPath }: { duel: YGODuel, backCardPath: string }) {
         super();
 
         this.duel = duel;
 
         const height = CARD_HEIGHT_SIZE, width = height / CARD_RATIO, depth = CARD_DEPTH;
         const geometry = new THREE.BoxGeometry(width, height, depth);
-        const backTexture = this.duel.assets.getTexture(`${this.duel.config.cdnUrl}/images/card_back.png`);
+        const backTexture = this.duel.assets.getTexture(backCardPath);
         const backMaterial = new THREE.MeshBasicMaterial({ map: backTexture });  // Back
         const depthMaterial = new THREE.MeshBasicMaterial({ color: 0xb5b5b5 }); // Depth
 

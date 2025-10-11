@@ -137,11 +137,10 @@ export class GameCardHand extends YGOEntity implements YGOUiElement {
     this.gameObject.name = `HAND_CARD_${this.card.name}`;
 
     const frontTexture = this.duel.assets.getTexture(this.card.images.small_url);
-    const backTexture = this.duel.assets.getTexture(`${this.duel.config.cdnUrl}/images/card_back.png`);
+    const backTexture = this.duel.assets.getTexture(this.duel.fields[card?.originalOwner || this.player || 0].settings.backCardPath);
     const frontMaterial = new CardMaterial({ map: frontTexture }); // Front with texture
     const backMaterial = new THREE.MeshBasicMaterial({ map: backTexture }); // Back
     const depthMaterial = new THREE.MeshBasicMaterial({ color: 0xb5b5b5 }); // Depth
-
 
     this.visibleFrontMaterial = frontMaterial;
     this.hiddenFrontMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 });

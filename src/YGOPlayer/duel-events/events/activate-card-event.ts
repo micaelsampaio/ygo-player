@@ -118,9 +118,8 @@ export class ActivateCardHandler extends YGOCommandHandler {
       });
     }
 
-
     if (zoneData.zone === "GY" || zoneData.zone === "B") {
-      const card = new GameCard({ duel, card: cardReference, stats: false });
+      const card = new GameCard({ duel, card: cardReference, player: zoneData.player, stats: false });
       const startPosition: THREE.Vector3 = getZonePositionFromZoneData(
         duel,
         zoneData

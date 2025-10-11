@@ -9,6 +9,7 @@ import { CardMaterial, CardTransparentOverlay } from "./materials/game-card-mate
 
 export class GameCard extends YGOEntity {
   private duel: YGODuel;
+  private player: number | undefined;
   public cardReference!: Card;
 
   private transparentCard: THREE.Mesh | undefined;
@@ -19,15 +20,18 @@ export class GameCard extends YGOEntity {
   constructor({
     duel,
     card,
+    player,
     stats = true,
   }: {
-    duel: YGODuel;
-    card?: Card;
-    stats?: boolean;
+    duel: YGODuel
+    card?: Card
+    player?: number
+    stats?: boolean
   }) {
     super();
 
     this.duel = duel;
+    this.player = player;
     this.hasStats = stats;
 
     const height = CARD_HEIGHT_SIZE, width = height / CARD_RATIO, depth = CARD_DEPTH;
@@ -57,7 +61,7 @@ export class GameCard extends YGOEntity {
     this.cardReference = card;
 
     const frontTexture = this.duel.assets.getTexture(card.images.small_url);
-    const backTexture = this.duel.assets.getTexture(`${this.duel.config.cdnUrl}/images/card_back.png`);
+    const backTexture = this.duel.assets.getTexture(this.duel.fields[card.originalOwner || this.player || 0].settings.backCardPath);
     const frontMaterial = new CardMaterial({ map: frontTexture }); // Front with texture
     const backMaterial = new THREE.MeshBasicMaterial({ map: backTexture }); // Back
     const depthMaterial = new THREE.MeshBasicMaterial({ color: 0xb5b5b5 }); // Depth
@@ -130,7 +134,7 @@ export class GameCard extends YGOEntity {
 
     const card = this.cardReference;
     const frontTexture = this.duel.assets.getTexture(card.images.small_url);
-    const backTexture = this.duel.assets.getTexture(`${this.duel.config.cdnUrl}/images/card_back.png`);
+    const backTexture = this.duel.assets.getTexture(this.duel.fields[card.originalOwner].settings.backCardPath);
 
     const transparentMaterial = new CardTransparentOverlay({
       map: frontTexture,

@@ -63,7 +63,7 @@ export class FusionSummonEventHandler extends YGOCommandHandler {
         cardZone.setCard(null);
       } else {
         const cardRef = duel.ygo.state.getCardData(material.id)!;
-        card = new GameCard({ card: cardRef, duel, stats: false });
+        card = new GameCard({ card: cardRef, duel, player: cardZone.player, stats: false });
         cardOverlay = card.gameObject.clone();
         card.destroy();
       }

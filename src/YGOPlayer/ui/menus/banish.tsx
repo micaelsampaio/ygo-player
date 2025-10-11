@@ -4,6 +4,7 @@ import { ActionUiMenu } from "../../actions/ActionUiMenu";
 import { Banish as GameBanish } from "../../../YGOPlayer/game/Banish";
 import { Card } from "ygo-core";
 import { stopPropagationCallback } from "../../scripts/utils";
+import { YGOStatic } from "../../core/YGOStatic";
 
 export function Banish({
   duel,
@@ -33,6 +34,7 @@ export function Banish({
 
   const field = duel.ygo.state.fields[banish.player];
   const cards = field.banishedZone;
+  const isPlayerPOV = YGOStatic.isPlayerPOV(banish.player)
 
   return (
     <div
@@ -44,35 +46,39 @@ export function Banish({
         <div className="ygo-icon-game-zone ygo-icon-game-zone-b"></div>
       </div>
 
-      {cards.map((card: Card) => (
-        <div>
-          <div style={{ position: "relative" }}
-            onMouseDown={(event: any) => duel.events.dispatch("on-card-mouse-down", { card, event })}
-            onMouseUp={(event: any) => duel.events.dispatch("on-card-mouse-up", { card, event })}
-            onTouchStart={(event: any) => duel.events.dispatch("on-card-mouse-down", { card, event })}
-            onTouchEnd={(event: any) => duel.events.dispatch("on-card-mouse-up", { card, event })}
-            onClick={(e) => {
-              action.eventData = {
-                duel,
-                card,
-                mouseEvent: e,
-                htmlCardElement: e.target,
-              };
-              duel.actionManager.setAction(action);
-              duel.events.dispatch("set-selected-card", { player: card.owner, card });
-            }}>
-            <img
-              src={card.images.small_url}
-              key={card.index}
-              className="ygo-card"
-            />
-            {card.position === "facedown" && (
-              <div className="ygo-card-banish-fd-icon">
-              </div>
-            )}
-          </div>
-        </div>
-      ))}
+      {cards.map((card: Card) => {
+        const isVisible = card.position !== "facedown" || isPlayerPOV;
+        return (
+          <div>
+            <div style={{ position: "relative" }}
+              onMouseDown={(event: any) => duel.events.dispatch("on-card-mouse-down", { card, event })}
+              onMouseUp={(event: any) => duel.events.dispatch("on-card-mouse-up", { card, event })}
+              onTouchStart={(event: any) => duel.events.dispatch("on-card-mouse-down", { card, event })}
+              onTouchEnd={(event: any) => duel.events.dispatch("on-card-mouse-up", { card, event })}
+              onClick={(e) => {
+                if (!isVisible) return;
+                action.eventData = {
+                  duel,
+                  card,
+                  mouseEvent: e,
+                  htmlCardElement: e.target,
+                };
+                duel.actionManager.setAction(action);
+                duel.events.dispatch("set-selected-card", { player: card.owner, card });
+              }}>
+              <img
+                src={isVisible ? card.images.small_url : duel.createCdnUrl("/images/card_back.png")}
+                key={card.index}
+                className="ygo-card"
+              />
+
+              {!isVisible && isPlayerPOV && (
+                <div className="ygo-card-banish-fd-icon">
+                </div>
+              )}
+            </div>
+          </div>)
+      })}
     </div>
   );
 }

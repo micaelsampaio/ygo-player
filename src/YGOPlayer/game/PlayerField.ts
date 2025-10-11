@@ -25,6 +25,7 @@ export class PlayerField {
   public fieldZone: CardZone;
   public extraMonsterZone: [CardZone, CardZone];
   public settings = {
+    backCardPath: "",
     showCards: false,
     controlCards: false
   }

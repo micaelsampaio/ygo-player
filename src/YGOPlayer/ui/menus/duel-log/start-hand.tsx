@@ -12,7 +12,6 @@ export const StartHandLogRow = memo(function ({
   duel: YGODuel;
   ygo: InstanceType<typeof YGOCore>;
 }) {
-
   const showCards = duel.fields[log.player].settings.showCards;
   return (
     <DuelLogRow log={log}>
