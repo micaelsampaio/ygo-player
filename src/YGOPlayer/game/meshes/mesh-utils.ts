@@ -9,6 +9,7 @@ import { CARD_DEPTH, CARD_HEIGHT_SIZE, CARD_RATIO } from '../../constants';
 import { Card } from 'ygo-core';
 import { CallbackTransition } from '../../duel-events/utils/callback';
 import { CardMaterialGrayscale } from '../materials/game-card-material';
+import { isCardTransformFlipDown } from '../../scripts/ygo-utils';
 
 export function CardEmptyMesh({ material, card, color, depth = CARD_DEPTH, transparent }: { material?: THREE.Material, color?: THREE.ColorRepresentation, depth?: number, card?: THREE.Object3D, transparent?: boolean } | undefined = {}) {
     const height = CARD_HEIGHT_SIZE, width = height / CARD_RATIO;
@@ -33,29 +34,31 @@ export function GameModalOverlayMesh() {
     });
 
     const modalPlane = new THREE.Mesh(modalGeometry, modalMaterial);
-    modalPlane.scale.set(20, 20, 20);
+    modalPlane.scale.set(50, 50, 50);
     modalPlane.position.set(0, 0, 14);
 
     return modalPlane;
 }
 
-export function CardActivationEffect({ duel, card, startTask, playSound }: { duel: YGODuel, card: THREE.Object3D, startTask: any, playSound: any }) {
+export function CardActivationEffect({ duel, delay = 0, card, startTask, playSound }: { duel: YGODuel, delay?: number, card: THREE.Object3D, startTask: any, playSound: any }) {
 
     const modalGeometry = new THREE.PlaneGeometry(1, 1);
+    const isFlipedDown = isCardTransformFlipDown(card);
 
     for (let i = 0; i < 2; ++i) {
         const frontTexture = duel.assets.getTexture(`${duel.config.cdnUrl}/images/particles/flame_02.png`);
-        const material = new THREE.MeshBasicMaterial({ map: frontTexture, transparent: true, color: 0x0091ff }); // Front with texture
+        const material = new THREE.MeshBasicMaterial({ map: frontTexture, side: THREE.DoubleSide, transparent: true, color: 0x0091ff }); // Front with texture
         const mesh = new THREE.Mesh(modalGeometry, material);
         const size = randomIntFromInterval(8, 9);
         material.opacity = 0;
         mesh.scale.set(size, size, size);
         mesh.rotation.copy(card.rotation);
-        mesh.position.set(0, 0, -0.02);
+        mesh.position.set(0, 0, isFlipedDown ? 0.02 : -0.02);
         mesh.rotateZ(THREE.MathUtils.degToRad(i === 0 ? 45 : -90));
         mesh.scale.set(0, 0, 0);
 
         startTask(new YGOTaskSequence(
+            new WaitForSeconds(delay),
             new MultipleTasks(
                 new MaterialOpacityTransition({
                     material: mesh.material,
@@ -109,7 +112,7 @@ export function CardNegationEffect({ duel, card, startTask }: { duel: YGODuel, c
             new CallbackTransition(() => {
                 mesh.visible = true;
             }),
-            new WaitForSeconds(0.1),
+            new WaitForSeconds(0.05),
             new CallbackTransition(() => {
                 mesh.visible = false;
             })

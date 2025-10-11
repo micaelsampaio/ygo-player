@@ -23,6 +23,9 @@ export class GameCardHand extends YGOEntity implements YGOUiElement {
   public isVisible: boolean;
   private startMouseClickTime: number;
 
+  private visibleFrontMaterial: THREE.Material | undefined;
+  private hiddenFrontMaterial: THREE.Material | undefined;
+
   constructor({ duel, player }: { duel: YGODuel; player: number }) {
     super();
 
@@ -133,11 +136,15 @@ export class GameCardHand extends YGOEntity implements YGOUiElement {
 
     this.gameObject.name = `HAND_CARD_${this.card.name}`;
 
-    const frontTexture = this.duel.assets.getTexture(card.images.small_url);
+    const frontTexture = this.duel.assets.getTexture(this.card.images.small_url);
     const backTexture = this.duel.assets.getTexture(`${this.duel.config.cdnUrl}/images/card_back.png`);
     const frontMaterial = new CardMaterial({ map: frontTexture }); // Front with texture
     const backMaterial = new THREE.MeshBasicMaterial({ map: backTexture }); // Back
     const depthMaterial = new THREE.MeshBasicMaterial({ color: 0xb5b5b5 }); // Depth
+
+
+    this.visibleFrontMaterial = frontMaterial;
+    this.hiddenFrontMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 });
 
     const materials = [
       depthMaterial, // Right (depth)
@@ -152,6 +159,15 @@ export class GameCardHand extends YGOEntity implements YGOUiElement {
     mesh.material = materials;
   }
 
+  updateMaterial() {
+
+    if (!this.card) return;
+
+    const mesh = this.gameObject as THREE.Mesh
+    const material: any = mesh.material;
+    material[4] = this.isVisible ? this.visibleFrontMaterial : this.hiddenFrontMaterial;
+  }
+
   setActive(status: boolean) {
     if (status) {
       this.isActive = status;
@@ -160,6 +176,14 @@ export class GameCardHand extends YGOEntity implements YGOUiElement {
     } else {
       this.isActive = status;
       this.gameObject.position.copy(this.position);
+    }
+  }
+
+  setIsVisible(visible: boolean) {
+
+    if (this.isVisible !== visible) {
+      this.isVisible = visible;
+      this.updateMaterial();
     }
   }
 

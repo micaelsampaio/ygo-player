@@ -40,7 +40,7 @@ export class NegateCardHandler extends YGOCommandHandler {
     const cardZone = getGameZone(duel, zoneData);
     const sequence = new YGOTaskSequence();
     const field = duel.fields[zoneData.player];
-    
+
     if (duel.settings.getConfigFromPath("showCardWhenPlayed")) {
       duel.events.dispatch("set-selected-card", {
         player: zoneData.player,
@@ -52,8 +52,12 @@ export class NegateCardHandler extends YGOCommandHandler {
     modal.material.opacity = 0;
     duel.core.scene.add(modal);
     duel.core.enableRenderOverlay();
-
-    this.props.playSound({ key: duel.createCdnUrl(`/sounds/negate.ogg`), volume: 0.7 });
+    this.props.startTask(new YGOTaskSequence(
+      new WaitForSeconds(0.2),
+      new CallbackTransition(() => {
+        this.props.playSound({ key: duel.createCdnUrl(`/sounds/negate.ogg`), volume: 0.7 });
+      })
+    ));
 
     this.props.startTask(
       new YGOTaskSequence(

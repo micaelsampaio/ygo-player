@@ -11,6 +11,7 @@ import {
   getCardRotationFromFieldZoneData,
   getGameZone,
   getZonePositionFromZoneData,
+  isCardTransformFlipDown,
 } from "../../scripts/ygo-utils";
 import { MoveCardEventHandler } from "./move-card-event";
 import { CallbackTransition } from "../utils/callback";
@@ -23,6 +24,8 @@ import {
 } from "../../game/meshes/mesh-utils";
 import { MaterialOpacityTransition } from "../utils/material-opacity";
 import { GameCardHand } from "../../game/GameCardHand";
+import { RotationTransition } from "../utils/rotation-transition";
+import { MultipleTasks } from "../utils/multiple-tasks";
 
 interface ActivateCardHandlerProps extends DuelEventHandlerProps {
   event: YGODuelEvents.Activate;
@@ -106,6 +109,7 @@ export class ActivateCardHandler extends YGOCommandHandler {
     const cardZone = getGameZone(duel, zoneData);
     const sequence = new YGOTaskSequence();
     const field = duel.fields[zoneData.player];
+    let modalDuration = 0.4;
 
     if (duel.settings.getConfigFromPath("showCardWhenPlayed")) {
       duel.events.dispatch("set-selected-card", {
@@ -114,27 +118,6 @@ export class ActivateCardHandler extends YGOCommandHandler {
       });
     }
 
-
-    const modal = GameModalOverlayMesh();
-    modal.material.opacity = 0;
-    duel.core.scene.add(modal);
-    duel.core.enableRenderOverlay();
-
-    this.props.startTask(
-      new YGOTaskSequence(
-        new MaterialOpacityTransition({
-          material: modal.material,
-          duration: 0.25,
-          opacity: 0.7,
-        }),
-        new WaitForSeconds(0.4),
-        new MaterialOpacityTransition({
-          material: modal.material,
-          duration: 0.25,
-          opacity: 0,
-        })
-      )
-    );
 
     if (zoneData.zone === "GY" || zoneData.zone === "B") {
       const card = new GameCard({ duel, card: cardReference, stats: false });
@@ -167,7 +150,7 @@ export class ActivateCardHandler extends YGOCommandHandler {
       const card: GameCardHand = field.hand.getCardFromCardIdAnZoneIndex(event.id, zoneData.zoneIndex - 1);
       const startPosition: THREE.Vector3 = card.position.clone();
       const startRotation: THREE.Euler = card.gameObject.rotation.clone();
-
+      const isFlipDown = isCardTransformFlipDown(card.gameObject);
       const cardOverlay = card.gameObject.clone();
       duel.core.sceneOverlay.add(cardOverlay);
 
@@ -181,10 +164,25 @@ export class ActivateCardHandler extends YGOCommandHandler {
 
       CardActivationEffect({
         duel,
+        delay: isFlipDown ? 0.15 : 0,
         card: cardOverlay,
         startTask: this.props.startTask,
         playSound: this.props.playSound,
       });
+
+      const originalRotation = card.gameObject.rotation.clone();
+
+      if (isFlipDown) {
+        modalDuration += 0.35;
+        const rotation = originalRotation.clone();
+        rotation.y = 0;
+
+        sequence.add(new RotationTransition({
+          gameObject: cardOverlay,
+          duration: 0.25,
+          rotation: rotation
+        }))
+      }
 
       this.createActivationEffect(sequence, cardOverlay, startPosition, up);
 
@@ -230,6 +228,28 @@ export class ActivateCardHandler extends YGOCommandHandler {
       this.props.onCompleted();
     }
 
+
+    const modal = GameModalOverlayMesh();
+    modal.material.opacity = 0;
+    duel.core.scene.add(modal);
+    duel.core.enableRenderOverlay();
+
+    this.props.startTask(
+      new YGOTaskSequence(
+        new MaterialOpacityTransition({
+          material: modal.material,
+          duration: 0.25,
+          opacity: 0.7,
+        }),
+        new WaitForSeconds(modalDuration),
+        new MaterialOpacityTransition({
+          material: modal.material,
+          duration: 0.25,
+          opacity: 0,
+        })
+      )
+    );
+
     sequence.add(
       new CallbackTransition(() => {
         duel.core.disableRenderOverlay();
@@ -247,8 +267,8 @@ export class ActivateCardHandler extends YGOCommandHandler {
     axis: THREE.Vector3 = new THREE.Vector3(0, 0, 1)
   ) {
     const position = startPos.clone();
+    const rotation = card.rotation.clone();
     position.add(axis);
-
     seq
       .add(
         new PositionTransition({
@@ -259,11 +279,18 @@ export class ActivateCardHandler extends YGOCommandHandler {
       )
       .add(new WaitForSeconds(0.5))
       .add(
-        new PositionTransition({
-          gameObject: card,
-          position: startPos,
-          duration: 0.15,
-        })
+        new MultipleTasks(
+          new PositionTransition({
+            gameObject: card,
+            position: startPos,
+            duration: 0.15
+          }),
+          new RotationTransition({
+            gameObject: card,
+            rotation,
+            duration: 0.15
+          }),
+        )
       );
   }
 
