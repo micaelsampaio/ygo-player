@@ -77,11 +77,11 @@ export class GameCardHand extends YGOEntity implements YGOUiElement {
       this.duel.actionManager.clearAction();
       return;
     }
-
-    this.duel.events.dispatch("set-selected-card", {
-      player: this.card.originalOwner,
-      card: this.card,
-    });
+    
+    this.duel.gameActions.setSelectedCard({
+      player: this.player,
+      card: this.card
+    })
 
     if (this.duel.config.autoChangePlayer) {
       this.duel.setActivePlayer(this.player);

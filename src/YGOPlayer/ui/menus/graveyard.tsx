@@ -60,8 +60,7 @@ export function Graveyard({
                 htmlCardElement: e.target,
               };
               duel.actionManager.setAction(action);
-              duel.events.dispatch("set-selected-card", {
-                graveyard,
+              duel.gameActions.setSelectedCard({
                 player: graveyard.player,
                 card,
               });

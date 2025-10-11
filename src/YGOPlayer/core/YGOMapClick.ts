@@ -41,6 +41,5 @@ export class YGOMapClick extends YGOComponent implements YGOUiElement {
 
         this.duel.actionManager.clearAction();
         this.duel.events.dispatch("clear-ui-action");
-        this.duel.events.dispatch("set-selected-card", { card: null });
     }
 }

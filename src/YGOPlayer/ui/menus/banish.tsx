@@ -64,7 +64,10 @@ export function Banish({
                   htmlCardElement: e.target,
                 };
                 duel.actionManager.setAction(action);
-                duel.events.dispatch("set-selected-card", { player: card.owner, card });
+                duel.gameActions.setSelectedCard({
+                  player: banish.player,
+                  card
+                })
               }}>
               <img
                 src={isVisible ? card.images.small_url : duel.createCdnUrl("/images/card_back.png")}

@@ -96,15 +96,14 @@ export class CardZone extends YGOEntity implements YGOUiElement {
 
   onMouseClick(event: MouseEvent): void {
     if (this.canViewCard()) {
-      this.duel.events.dispatch("set-selected-card", {
-        player: 0,
-        card: this.getCardReference(),
-      });
+      this.duel.gameActions.setSelectedCard({
+        player: this.zoneData.player,
+        card: this.getCardReference()
+      })
     } else {
-      this.duel.events.dispatch("set-selected-card", {
-        player: 0,
-        card: null,
-      });
+      this.duel.gameActions.setSelectedCard({
+        card: null
+      })
     }
 
     if (!this.onClickCb) {

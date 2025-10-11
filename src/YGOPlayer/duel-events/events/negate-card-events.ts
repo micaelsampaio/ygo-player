@@ -47,10 +47,11 @@ export class NegateCardHandler extends YGOCommandHandler {
     let negationDelay = 0;
 
     if (duel.settings.getConfigFromPath("showCardWhenPlayed")) {
-      duel.events.dispatch("set-selected-card", {
+      duel.gameActions.setSelectedCard({
         player: zoneData.player,
         card: cardReference,
-      });
+        force: true
+      })
     }
 
     const modal = GameModalOverlayMesh();

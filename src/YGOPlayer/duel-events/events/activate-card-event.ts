@@ -112,10 +112,11 @@ export class ActivateCardHandler extends YGOCommandHandler {
     let modalDuration = 0.4;
 
     if (duel.settings.getConfigFromPath("showCardWhenPlayed")) {
-      duel.events.dispatch("set-selected-card", {
+      duel.gameActions.setSelectedCard({
         player: zoneData.player,
         card: cardReference,
-      });
+        force: true,
+      })
     }
 
     if (zoneData.zone === "GY" || zoneData.zone === "B") {

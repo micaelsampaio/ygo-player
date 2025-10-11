@@ -10,7 +10,6 @@ export function SelectedCardMenu({
 }) {
   const [card, setCard] = useState<Card | null>(null)
   const [cardData, setCardData] = useState(parseSelectedCard(card))
-  const menuRef = useRef<HTMLDivElement>(null);
   const cardDescriptionRef = useRef<HTMLDivElement>(null);
 
   const openCardHighlighted = () => {
@@ -24,29 +23,6 @@ export function SelectedCardMenu({
     });
   }
 
-  // useLayoutEffect(() => {
-  //   if (!menuRef.current) return;
-
-  //   const placeholder = isMobile ? duel.duelScene.selectedCardPlaceholderMobile[card.originalOwner] ?? duel.duelScene.selectedCardPlaceholderMobile[1] : duel.duelScene.selectedCardPlaceholder;
-  //   const container = menuRef.current!;
-  //   const { x, y, width, height } = getTransformFromCamera(duel, placeholder);
-
-  //   if (isMobile) {
-  //     container.style.top = y + "px";
-  //     container.style.left = x + "px";
-  //     container.style.width = width + "px";
-  //     container.style.maxHeight = height + "px";
-  //   } else {
-  //     const maxWidth = x + width;
-  //     const newWidth = Math.min(300, maxWidth);
-  //     container.style.top = y + "px";
-  //     container.style.left = 0 + "px";
-  //     container.style.width = newWidth + "px";
-  //     container.style.maxHeight = height + "px";
-  //   }
-
-  // }, [visible, menuRef.current, card, duel.duelScene.selectedCardPlaceholder, isMobile]);
-
   useEffect(() => {
     if (cardDescriptionRef.current) {
       cardDescriptionRef.current.scrollTop = 0;
@@ -55,27 +31,11 @@ export function SelectedCardMenu({
 
   useEffect(() => {
     duel.events.on("set-selected-card", (data: any) => {
-      console.log("DATA", data);
       if (!data.card) return;
       const card = data.card;
       setCard(card)
       setCardData(parseSelectedCard(card))
     });
-    // setMenus(currentMenus => {
-    //   const type = "selected-card-menu";
-    //   if (!data.card) {
-    //     return currentMenus.filter(m => m.type !== type);
-    //   } else {
-    //     const currentMenu = currentMenus.find(m => m.type === type);
-
-    //     if (currentMenu) {
-    //       currentMenu.data = data;
-    //       return [...currentMenus];
-    //     }
-
-    //     return [...currentMenus, { group: type, visible: true, type: "selected-card-menu", data }];
-    //   }
-    // });
   }, [])
 
 

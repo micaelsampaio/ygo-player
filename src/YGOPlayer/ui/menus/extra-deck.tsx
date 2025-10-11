@@ -67,7 +67,10 @@ export function ExtraDeck({
                 htmlCardElement: e.target,
               };
               duel.actionManager.setAction(action);
-              duel.events.dispatch("set-selected-card", { player, card });
+              duel.gameActions.setSelectedCard({
+                player,
+                card
+              })
             }}
             key={card.index}
             src={card.images.small_url}

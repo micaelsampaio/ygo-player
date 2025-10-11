@@ -49,7 +49,7 @@ export class ActionCardSelection extends YGOComponent implements YGOAction {
         this.hideAllSelectionCards();
 
         if (getResolutionInfo().isMobile) {
-            this.duel.events.dispatch("set-selected-card", { card: null });
+            this.duel.gameActions.setSelectedCard({ card: null });
         }
 
         this.unsubscribeKeyEvents = this.duel.globalHotKeysManager.on("escPressed", () => {

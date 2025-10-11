@@ -172,7 +172,7 @@ export class DestroyCardEventHandler extends YGOCommandHandler {
     this.props.startTask(updateDestroyEffectSizeTask);
 
     const distance = mesh.position.distanceTo(gy.cardPosition);
-    const moveToGyDuration = Math.max(distance / 30, 0.4);
+    const moveToGyDuration = Math.max(distance / 20, 0.4);
 
     sequence.addMultiple(
       new MultipleTasks(

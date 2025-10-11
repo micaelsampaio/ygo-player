@@ -11,6 +11,7 @@ import {
 import { CardZoneKV } from "../types";
 import { YGODuel } from "./YGODuel";
 import { YGODuelPhase } from "ygo-core";
+import { YGOStatic } from "./YGOStatic";
 
 export class YGOGameActions {
   private duel: YGODuel;
@@ -1139,5 +1140,22 @@ export class YGOGameActions {
         value: `-${card.currentAtk}`
       }))
     }
+  }
+
+  public setSelectedCard({ card, force = false, player }: { card: Card | null, force?: boolean, player?: number }) {
+    if (!force) {
+      const position = card?.position ?? null;
+      const owner = card?.originalOwner ?? -1;
+      const showCards = Number.isInteger(player) ? this.duel.fields[player!].settings.showCards : true;
+
+      if (!showCards && owner >= 0) {
+
+        if (!YGOStatic.isPlayerPOV(owner) && position && position.includes("facedown")) {
+          return;
+        }
+      }
+    }
+
+    this.duel.events.dispatch("set-selected-card", { card, player });
   }
 }
