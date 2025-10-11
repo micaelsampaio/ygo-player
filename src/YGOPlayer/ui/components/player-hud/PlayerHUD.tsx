@@ -11,11 +11,12 @@ enum LifePointsState {
     DECREASING,
 }
 
-// const PLAYER_STATES = {
-//     [YGOPlayerState.IDLE]: null,
-//     [YGOPlayerState.THINKING]: Thinking,
-//     [YGOPlayerState.VIEW_DECK]: ViewDeck,
-// }
+const PLAYER_STATES = {
+    [YGOPlayerState.IDLE]: null,
+    [YGOPlayerState.THINKING]: Thinking,
+    [YGOPlayerState.VIEW_DECK]: ViewDeck,
+}
+
 export function PlayerHUD({ duel, player }: { duel: YGODuel, player: number }) {
     const playerPOV = YGOStatic.isPlayerPOV(player) ? 0 : 1;
     const field = duel.ygo.getField(player);
@@ -43,7 +44,7 @@ export function PlayerHUD({ duel, player }: { duel: YGODuel, player: number }) {
         <div className="ygo-player-hude-player-content">
             <div className="ygo-player-hud-bar"></div>
             <div className="ygo-player-hud-name">
-                {playerName}
+                {playerName} {state !== YGOPlayerState.IDLE ? `(${state})` : ''}
             </div>
             <div className={`ygo-player-hud-lp ${lpsClass} ygo-flex ygo-gap-1`} onClick={changeLifePoints}>
                 <span className="ygo-lp-text" style={{ marginTop: "auto" }}>

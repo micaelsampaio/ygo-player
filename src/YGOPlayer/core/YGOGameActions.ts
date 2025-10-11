@@ -1,4 +1,4 @@
-import { YGOCommands, YGOGameUtils } from "ygo-core";
+import { YGOCommands, YGOGameUtils, YGOPlayerState } from "ygo-core";
 import { Card, CardPosition, FieldZone } from "ygo-core";
 import { ActionCardSelection } from "../actions/ActionSelectCard";
 import { CardZone } from "../game/CardZone";
@@ -1163,6 +1163,20 @@ export class YGOGameActions {
   }) {
     this.duel.execCommand(new YGOCommands.ShuffleDeckCommand({
       player
+    }))
+  }
+
+  public setPlayerState({ player, currentState, state }: {
+    player: number,
+    currentState?: YGOPlayerState
+    state: YGOPlayerState
+  }) {
+    currentState = currentState || this.duel.ygo.getField(player).state;
+
+    this.duel.execCommand(new YGOCommands.PlayerStateCommand({
+      player,
+      prevState: currentState,
+      state
     }))
   }
 

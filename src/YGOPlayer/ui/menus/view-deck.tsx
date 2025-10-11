@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { YGODuel } from "../../core/YGODuel";
-import { Card } from "ygo-core";
+import { Card, YGOPlayerState } from "ygo-core";
 import { ActionUiMenu } from "../../actions/ActionUiMenu";
 import { Deck } from "../../../YGOPlayer/game/Deck";
 import { YGOGameUtils } from "ygo-core";
@@ -15,6 +15,7 @@ export function ViewDeckPopup({
   duel: YGODuel;
   visible: boolean;
 }) {
+  const player = deck.player;
   const [search, setSearch] = useState("");
   const [typesOfCards, setTypesOfCards] = useState({
     monster: false,
@@ -48,6 +49,27 @@ export function ViewDeckPopup({
       }
     }
   }, [visible]);
+
+
+  useEffect(() => {
+    if (visible) {
+      const currentState = duel.ygo.getField(player).state;
+
+      duel.gameActions.setPlayerState({
+        player,
+        currentState,
+        state: YGOPlayerState.VIEW_DECK
+      });
+
+      return () => {
+        duel.gameActions.setPlayerState({
+          player,
+          currentState: YGOPlayerState.VIEW_DECK,
+          state: YGOPlayerState.IDLE
+        });
+      }
+    }
+  }, [visible, player]);
 
   if (!visible) return null;
 
