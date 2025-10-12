@@ -40,6 +40,20 @@ export function GlobalEventsActionsMenu({
     timer.current = setTimeout(() => duel.actionManager.setAction(action)) as unknown as number;
   }, [])
 
+  const ripCardFromHandRandom = useCallback(() => {
+    const hand = duel.ygo.getField(1 - player).hand;
+
+    if (hand.length === 0) return;
+
+    const cardIndex = Math.floor(Math.random() * hand.length);
+
+    duel.gameActions.sendToGy({
+      player,
+      card: hand[cardIndex],
+      originZone: YGOGameUtils.createZone("H", 1 - player, cardIndex + 1)
+    });
+  }, [player]);
+
   const banishExtraDeckRandomFaceDown = useCallback(() => {
     duel.clearActions();
 
@@ -69,6 +83,30 @@ export function GlobalEventsActionsMenu({
 
     duel.gameActions.banishMultiple({ cards, position: "facedown" });
   }, [player, field?.extraDeck?.length, duel]);
+
+  const diceRoll = useCallback(() => {
+
+    duel.gameActions.diceRoll({ player });
+
+    // const action = new ActionUiMenu(duel, {
+    //   eventType: "dice-roll-menu",
+    //   eventData: { duel }
+    // });
+    // duel.actionManager.clearAction();
+    // timer.current = setTimeout(() => duel.actionManager.setAction(action)) as unknown as number;
+  }, [])
+
+  const flipCoin = useCallback(() => {
+
+    duel.gameActions.flipCoin({ player });
+
+    // const action = new ActionUiMenu(duel, {
+    //   eventType: "flip-coin-menu",
+    //   eventData: { duel }
+    // });
+    // duel.actionManager.clearAction();
+    // timer.current = setTimeout(() => duel.actionManager.setAction(action)) as unknown as number;
+  }, [])
 
   const toggleThinking = () => {
 
@@ -135,6 +173,18 @@ export function GlobalEventsActionsMenu({
       </button>
       <button type="button" className="ygo-card-item" onClick={shuffleHand}>
         Shuffle Hand
+      </button>
+
+      <button type="button" className="ygo-card-item" onClick={diceRoll}>
+        Roll dice
+      </button>
+
+      <button type="button" className="ygo-card-item" onClick={flipCoin}>
+        Flip Coin
+      </button>
+
+      <button type="button" className="ygo-card-item" onClick={ripCardFromHandRandom}>
+        Rip Card From Hand Random
       </button>
       <button type="button" className="ygo-card-item" onClick={banishExtraDeckRandomFaceDown}>Banish FD Random From Extra Deck</button>
     </CardMenu>

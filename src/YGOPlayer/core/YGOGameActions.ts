@@ -30,6 +30,23 @@ export class YGOGameActions {
     this.duel.events.dispatch("clear-ui-action");
   }
 
+  public setSelectedCard({ card, force = false, player }: { card: Card | null, force?: boolean, player?: number }) {
+    if (!force) {
+      const position = card?.position ?? null;
+      const owner = card?.originalOwner ?? -1;
+      const showCards = Number.isInteger(player) ? this.duel.fields[player!].settings.showCards : true;
+
+      if (!showCards && owner >= 0) {
+
+        if (!YGOStatic.isPlayerPOV(owner) && position && position.includes("facedown")) {
+          return;
+        }
+      }
+    }
+
+    this.duel.events.dispatch("set-selected-card", { card, player });
+  }
+
   //////////////////////// COMMANDS
 
   public normalSummon({
@@ -613,12 +630,12 @@ export class YGOGameActions {
     }
   }
 
-  public sendToGy({ card, originZone }: { card: Card; originZone: FieldZone }) {
+  public sendToGy({ card, player, originZone }: { card: Card; player?: number; originZone: FieldZone }) {
     this.clearAction();
 
     this.duel.execCommand(
       new YGOCommands.SendCardToGYCommand({
-        player: this.duel.getActivePlayer(),
+        player: player ?? this.duel.getActivePlayer(),
         id: card.id,
         originZone,
       })
@@ -1188,20 +1205,20 @@ export class YGOGameActions {
     }))
   }
 
-  public setSelectedCard({ card, force = false, player }: { card: Card | null, force?: boolean, player?: number }) {
-    if (!force) {
-      const position = card?.position ?? null;
-      const owner = card?.originalOwner ?? -1;
-      const showCards = Number.isInteger(player) ? this.duel.fields[player!].settings.showCards : true;
 
-      if (!showCards && owner >= 0) {
+  public diceRoll({ player }: {
+    player: number
+  }) {
+    this.duel.execCommand(new YGOCommands.DiceRollCommand({
+      player
+    }))
+  }
 
-        if (!YGOStatic.isPlayerPOV(owner) && position && position.includes("facedown")) {
-          return;
-        }
-      }
-    }
-
-    this.duel.events.dispatch("set-selected-card", { card, player });
+  public flipCoin({ player }: {
+    player: number
+  }) {
+    this.duel.execCommand(new YGOCommands.CoinFlipCommand({
+      player
+    }))
   }
 }
