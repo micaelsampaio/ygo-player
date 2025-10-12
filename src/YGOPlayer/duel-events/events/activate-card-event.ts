@@ -26,6 +26,7 @@ import { MaterialOpacityTransition } from "../utils/material-opacity";
 import { GameCardHand } from "../../game/GameCardHand";
 import { RotationTransition } from "../utils/rotation-transition";
 import { MultipleTasks } from "../utils/multiple-tasks";
+import { YGOTask } from "../../core/components/tasks/YGOTask";
 
 interface ActivateCardHandlerProps extends DuelEventHandlerProps {
   event: YGODuelEvents.Activate;
@@ -151,9 +152,11 @@ export class ActivateCardHandler extends YGOCommandHandler {
       const startPosition: THREE.Vector3 = card.position.clone();
       const startRotation: THREE.Euler = card.gameObject.rotation.clone();
       const isFlipDown = isCardTransformFlipDown(card.gameObject);
+
+      card.setIsVisible(true);
+
       const cardOverlay = card.gameObject.clone();
       duel.core.sceneOverlay.add(cardOverlay);
-
       card.gameObject.visible = false;
 
       const up = new THREE.Vector3(0, 1, 0);
