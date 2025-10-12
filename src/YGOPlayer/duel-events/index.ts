@@ -24,7 +24,6 @@ import { SwapHandEventHandler } from "./events/swap-hand-event";
 import { DuelNotesEventHandler } from "./events/duel-notes-event";
 import { AttackEventHandler } from "./events/attack-event";
 import { DuelLifePointsEventHandler } from "./events/duel-lifepoints-event";
-import { PlayerFieldSideEventHandler } from "./events/player-field-side";
 import { ShuffleDeckEventHandler } from "./events/shuffle-deck-event";
 import { ShuffleHandEventHandler } from "./events/shuffle-hand-event";
 import { CoinFlipEventHandler } from "./events/coin-flip-event";
@@ -96,8 +95,6 @@ const events: any = {
   [YGODuelEvents.LogType.CoinFlip]: CoinFlipEventHandler,
   // Notes / UI
   [YGODuelEvents.LogType.Note]: DuelNotesEventHandler,
-  // player / Server events
-  ["player:set-field-side"]: PlayerFieldSideEventHandler,
   /// Default
   DEFAULT: UpdateFieldEvent,
 };

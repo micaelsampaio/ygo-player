@@ -9,6 +9,8 @@ export class YGOTurnPlayer extends YGOEntity implements YGOUiElement {
     public isUiElement: boolean = true;
     private textures: THREE.Texture[];
     private fieldTurnHover: THREE.Mesh;
+    private fieldTurnHoverMaterial: THREE.MeshBasicMaterial;
+    private turnMaterial: THREE.MeshBasicMaterial;
 
     constructor(private duel: YGODuel) {
         super();
@@ -31,8 +33,8 @@ export class YGOTurnPlayer extends YGOEntity implements YGOUiElement {
             this.textures.reverse();
         }
 
-        const turnMaterial = new THREE.MeshBasicMaterial({ map: this.textures[0] });
-        fieldTurnPlaceHolder.material = turnMaterial;
+        this.turnMaterial = new THREE.MeshBasicMaterial({ map: this.textures[0] });
+        fieldTurnPlaceHolder.material = this.turnMaterial;
 
         const normalMaterial = new THREE.MeshBasicMaterial({ color: 0x00555, transparent: true, opacity: 0 });
         const geometry = new THREE.BoxGeometry(3, 3, 0.1);
@@ -48,8 +50,8 @@ export class YGOTurnPlayer extends YGOEntity implements YGOUiElement {
 
         this.gameObject = clickElement;
 
-        const fieldTurnHoverMaterial = new THREE.MeshBasicMaterial({ color: 0x0000ff, transparent: true, opacity: 0.5 });
-        this.fieldTurnHover.material = fieldTurnHoverMaterial;
+        this.fieldTurnHoverMaterial = new THREE.MeshBasicMaterial({ color: 0x0000ff, transparent: true, opacity: 0.5 });
+        this.fieldTurnHover.material = this.fieldTurnHoverMaterial;
         this.fieldTurnHover.visible = false;
         this.fieldTurnHover.position.set(0, 0, -0.5);
 
@@ -57,12 +59,18 @@ export class YGOTurnPlayer extends YGOEntity implements YGOUiElement {
         this.duel.core.scene.add(this.gameObject);
 
         this.gameObject.scale.set(0.7, 0.7, 0.7);
-
-        this.duel.ygo.events.on("set-player", ({ player }) => {
-            turnMaterial.map = this.textures[player] || this.textures[0];
-            turnMaterial.needsUpdate = true;
-            fieldTurnHoverMaterial.color.setHex(YGOStatic.isPlayerPOV(player) ? 0x0000ff : 0xff0000);
+        this.duel.ygo.events.on("set-duel-turn-priority", ({ turnPriority }) => {
+            this.setActivePlayer(turnPriority)
         });
+        this.duel.ygo.events.on("set-duel-turn", ({ turnPriority }) => {
+            this.setActivePlayer(turnPriority)
+        });
+    }
+
+    setActivePlayer(turnPriority: number): void {
+        this.turnMaterial.map = this.textures[turnPriority] || this.textures[0];
+        this.turnMaterial.needsUpdate = true;
+        this.fieldTurnHoverMaterial.color.setHex(YGOStatic.isPlayerPOV(turnPriority) ? 0x0000ff : 0xff0000);
     }
 
     onMouseClick(): void {

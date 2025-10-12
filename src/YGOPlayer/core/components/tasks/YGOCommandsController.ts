@@ -136,6 +136,7 @@ export class YGOCommandsController extends YGOComponent {
   }
 
   add(command: YGODuelEvents.DuelLog) {
+    console.log("ADD COMMAND ", command.type);
     clearTimeout(this.timerOnCompleteEvent);
     clearTimeout(this.timerOnNextCommand);
     const handler = getDuelEventHandler(command);

@@ -37,7 +37,6 @@ import { YGOStatic } from "./YGOStatic";
 export class YGODuel {
   public ygo!: InstanceType<typeof YGOCore>;
   public client: YGOClient;
-  public playerIndex = 0;
   public state: YGODuelState;
   public core: YGOPlayerCore;
   public assets: YGOAssets;
@@ -55,7 +54,6 @@ export class YGODuel {
   public tasks: YGOTaskController;
   public commands: YGOCommandsController;
   public deltaTime: number = 0;
-  private currentPlayerIndex = 0;
   public config: YGOConfig;
   public duelScene: YGODuelScene;
   public settings: YGOPlayerSettingsAdapter;
@@ -125,7 +123,12 @@ export class YGODuel {
 
   public async createYGO(gameState: YGOServerGameStateData) {
     const ids = new Set<number>()
-    const playerIndex = gameState.players.findIndex(c => c.name === this.client.username);
+    let playerIndex = gameState.players.findIndex(c => c.name === this.client.username);
+
+    if (this.client.type === YGOClientType.PLAYER && playerIndex === -1) {
+      playerIndex = 0;
+    }
+
     const otherPlayerIndex = playerIndex >= 0 ? 1 - playerIndex : 1;
 
     gameState.players.map((player) => {
@@ -187,8 +190,11 @@ export class YGODuel {
       this.events.dispatch("logs-updated", data);
     });
 
-    this.ygo.events.on("set-player", (data: any) => {
-      this.currentPlayerIndex = data.player;
+    this.ygo.events.on("set-duel-turn", (data: any) => {
+      this.events.dispatch("render-ui");
+    });
+
+    this.ygo.events.on("set-duel-turn-priority", (data: any) => {
       this.events.dispatch("render-ui");
     });
 
@@ -452,11 +458,15 @@ export class YGODuel {
   }
 
   public getActivePlayer() {
-    return this.currentPlayerIndex;
+    return this.ygo.state.turnPriority;
   }
 
   public setActivePlayer(player: number) {
-    this.serverActions.ygo.setPlayerPriority(player);
+    if (this.ygo.options.controlOpponentCards) {
+      this.serverActions.ygo.setPlayerPriority(player);
+    } else {
+      this.serverActions.ygo.setPlayerPriority(YGOStatic.playerIndex);
+    }
   }
 
   private createShortcuts() {

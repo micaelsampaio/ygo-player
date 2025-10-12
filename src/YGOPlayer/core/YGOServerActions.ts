@@ -1,4 +1,4 @@
-import { JSONCommand, YGOClient, YGOServerGameStateData } from "ygo-core";
+import { JSONCommand, YGOClient, YGOCommands, YGOServerGameStateData } from "ygo-core";
 import { YGODuel } from "./YGODuel";
 import { Command } from "ygo-core";
 import { YGOTimerUtils } from "../scripts/timer-utils";
@@ -35,12 +35,11 @@ export class YGOServerActions extends YGOComponent {
       });
     },
     setPlayerPriority: (player: number) => {
-      // if (!this.duel.ygo.options.viewOpponentCards) {
-      //   this.client.send("server:exec", { type: "ygo:commands:set_player_priority", data: { player: YGOStatic.playerIndex } })
-      // } else {
-      //   this.client.send("server:exec", { type: "ygo:commands:set_player_priority", data: { player } })
-      // }
-      this.client.send("server:exec", { type: "ygo:commands:set_player_priority", data: { player } })
+      if (!this.duel.ygo.options.controlTogglePriority) player = YGOStatic.playerIndex;
+
+      if (this.duel.getActivePlayer() !== player) {
+        this.ygo.exec({ command: new YGOCommands.PlayerPriorityCommand({ player }) });
+      }
     }
   };
 
@@ -128,8 +127,6 @@ export class YGOServerActions extends YGOComponent {
       } else if (data.type === "ygo:commands:goto_command") {
         const eventData = data.data;
         this.duel.commands.goToCommand(eventData.commandId);
-      } else if (data.type === "ygo:commands:set_player_priority") {
-        this.duel.ygo.setCurrentPlayer(data.data.player);
       } else if (data.type === "ygo:replay:start") {
         this.duel.events.dispatch("update-game-ui-config", { startReplay: true });
         this.timers.setTimeout(() => {

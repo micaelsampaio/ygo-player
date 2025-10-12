@@ -209,7 +209,10 @@ async function startGame(room) {
         sideDeck: p.deck.sideDeck ? p.deck.sideDeck.map(id => cards.find(c => c.id === id)) : [],
       })),
       options: {
-        // TODO
+        controlTogglePriority: false,
+        viewOpponentCards: false,
+        controlOpponentCards: true,
+        spectatorViewCards: false
       },
     },
     // rules: {

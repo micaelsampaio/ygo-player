@@ -34,9 +34,9 @@ export class YGOGameFieldObject {
       (this.fieldSideGameObject as THREE.Mesh).material = material;
     }
 
-    this.duel.ygo.events.on("set-player", ({ player }) => {
+    this.duel.ygo.events.on("set-duel-turn-priority", ({ turnPriority }) => {
       if (this.fieldSideGameObject) {
-        this.fieldSideGameObject.visible = player === this.player;
+        this.fieldSideGameObject.visible = player === turnPriority;
       }
     });
   }
