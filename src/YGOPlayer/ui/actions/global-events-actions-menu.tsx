@@ -142,7 +142,7 @@ export function GlobalEventsActionsMenu({
   const freeMonsterZones = field.monsterZone.filter((zone: any) => !zone).length;
 
   return (
-    <CardMenu key="global-events-actions-menu" indicator menuRef={menuRef}>
+    <CardMenu key="global-events-actions-menu" cols={2} indicator menuRef={menuRef}>
       <button type="button" className="ygo-card-item" onClick={newNote}>
         Add Notes
       </button>

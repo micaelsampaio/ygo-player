@@ -9,6 +9,8 @@ import { NoteLogRow } from "./note-log";
 import { stopPropagationCallback } from "../../../scripts/utils";
 import { DuelPhaseLogRow } from "./duel-log-phase";
 import { DuelTurnLogRow } from "./duel-log-turn";
+import { CoinFlipLogRow } from "./coin-flip-log";
+import { DiceRollLogRow } from "./dice-roll-log";
 
 const COMPONENTS = {
   [YGODuelEvents.LogType.DuelTurn]: DuelTurnLogRow,
@@ -17,6 +19,8 @@ const COMPONENTS = {
   [YGODuelEvents.LogType.SwapHand]: StartHandLogRow,
   [YGODuelEvents.LogType.LifePoints]: LifePointsLogRow,
   [YGODuelEvents.LogType.Note]: NoteLogRow,
+  [YGODuelEvents.LogType.CoinFlip]: CoinFlipLogRow,
+  [YGODuelEvents.LogType.DiceRoll]: DiceRollLogRow,
   default: DefaultLogRow,
 };
 

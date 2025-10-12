@@ -1209,7 +1209,8 @@ export class YGOGameActions {
     player: number
   }) {
     this.duel.execCommand(new YGOCommands.DiceRollCommand({
-      player
+      player,
+      rolls: 1
     }))
   }
 
@@ -1217,7 +1218,8 @@ export class YGOGameActions {
     player: number
   }) {
     this.duel.execCommand(new YGOCommands.CoinFlipCommand({
-      player
+      player,
+      coinFlips: 1
     }))
   }
 }

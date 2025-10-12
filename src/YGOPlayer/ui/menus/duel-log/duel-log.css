@@ -56,6 +56,48 @@
         width: 100%;
         border: 1px solid white;
     }
+
+    .ygo-ui-icon {
+        width: 50px;
+        height: 50px;
+        background-image: var(--ygo-player-asset-ui-card-icons);
+        background-size: 800% 800%;
+        background-repeat: no-repeat;
+        background-position: 0% 0%;
+        pointer-events: none;
+
+        &.ygo-coin-head {
+            background-position: 0% 56%;
+        }
+
+        &.ygo-coin-tail {
+            background-position: 14% 57%;
+        }
+
+        &.ygo-dice-1 {
+            background-position: 28.4% 57%;
+        }
+
+        &.ygo-dice-2 {
+            background-position: 42.6% 57%;
+        }
+
+        &.ygo-dice-3 {
+            background-position: 56.8% 57%;
+        }
+
+        &.ygo-dice-4 {
+            background-position: 71% 57%;
+        }
+
+        &.ygo-dice-5 {
+            background-position: 85.2% 57%;
+        }
+
+        &.ygo-dice-6 {
+            background-position: 100% 57%;
+        }
+    }
 }
 
 .ygo-player-core .ygo-duel-log-container .ygo-logs>* {

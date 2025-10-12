@@ -27,6 +27,8 @@ import { DuelLifePointsEventHandler } from "./events/duel-lifepoints-event";
 import { PlayerFieldSideEventHandler } from "./events/player-field-side";
 import { ShuffleDeckEventHandler } from "./events/shuffle-deck-event";
 import { ShuffleHandEventHandler } from "./events/shuffle-hand-event";
+import { CoinFlipEventHandler } from "./events/coin-flip-event";
+import { DiceRollEventHandler } from "./events/dice-roll-event";
 
 export interface DuelEventHandlerProps {
   duel: YGODuel;
@@ -90,6 +92,8 @@ const events: any = {
   [YGODuelEvents.LogType.Activate]: ActivateCardHandler,
   [YGODuelEvents.LogType.Negate]: NegateCardHandler,
   [YGODuelEvents.LogType.LifePoints]: DuelLifePointsEventHandler,
+  [YGODuelEvents.LogType.DiceRoll]: DiceRollEventHandler,
+  [YGODuelEvents.LogType.CoinFlip]: CoinFlipEventHandler,
   // Notes / UI
   [YGODuelEvents.LogType.Note]: DuelNotesEventHandler,
   // player / Server events

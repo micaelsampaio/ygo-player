@@ -90,3 +90,41 @@
 .ygo-player-core .ygo-justify-center {
     justify-content: center;
 }
+
+.ygo-player-core {
+    .ygo-space-y-1>*:not(:first-child) {
+        margin-top: 0.25rem;
+    }
+
+    .ygo-space-y-2>*:not(:first-child) {
+        margin-top: 0.5rem;
+    }
+
+    .ygo-space-y-3>*:not(:first-child) {
+        margin-top: 0.75rem;
+    }
+
+    .ygo-space-y-4>*:not(:first-child) {
+        margin-top: 1rem;
+    }
+
+    .ygo-space-y-5>*:not(:first-child) {
+        margin-top: 1.25rem;
+    }
+
+    .ygo-space-y-6>*:not(:first-child) {
+        margin-top: 1.5rem;
+    }
+
+    .ygo-space-y-8>*:not(:first-child) {
+        margin-top: 2rem;
+    }
+
+    .ygo-space-y-10>*:not(:first-child) {
+        margin-top: 2.5rem;
+    }
+
+    .ygo-space-y-12>*:not(:first-child) {
+        margin-top: 3rem;
+    }
+}

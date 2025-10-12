@@ -25,6 +25,8 @@ export class YGODuelScene {
     public turnPlayer!: YGOTurnPlayer;
     public timer!: YGOTimer;
     public duelPhase!: YGOPhaseObject;
+    public diceObject!: THREE.Object3D;
+    public coinObject!: THREE.Object3D;
 
     constructor(private duel: YGODuel) {
         this.gameFields = [];
@@ -156,6 +158,21 @@ export class YGODuelScene {
                 field.banishedZone.hoverObject.visible = false;
             }
         });
+
+        const fieldObjects = this.duel.assets.models.get(this.duel.createCdnUrl("/models/field_objects.glb"));
+
+
+        this.diceObject = fieldObjects?.scene.children.find(child => child.name === "dice")!.clone()!;
+        this.coinObject = fieldObjects?.scene.children.find(child => child.name === "coin")!.clone()!;
+
+        this.duel.core.scene.add(this.diceObject);
+        this.duel.core.scene.add(this.coinObject);
+
+        this.diceObject.position.set(0, 0, -10);
+        this.coinObject.position.set(0, 0, -10);
+
+        this.diceObject.visible = false;
+        this.coinObject.visible = false;
 
         this.turnPlayer = new YGOTurnPlayer(this.duel);
         this.duelPhase = new YGOPhaseObject(this.duel);
