@@ -624,3 +624,13 @@ export function isCardTransformFlipDown(obj: any, tolerance = 10): boolean {
 
   return Math.abs(normalizedY + 180) < tolerance;
 }
+
+
+export function fisherYatesShuffle<T>(array: T[]): T[] {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+
+  return array;
+}

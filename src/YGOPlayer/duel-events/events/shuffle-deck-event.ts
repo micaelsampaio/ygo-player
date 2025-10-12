@@ -5,7 +5,7 @@ import { CallbackTransition } from "../utils/callback";
 import { YGOCommandHandler } from "../../core/components/YGOCommandHandler";
 
 interface ShuffleDeckEventHandlerProps extends DuelEventHandlerProps {
-  event: YGODuelEvents.Shuffle;
+  event: YGODuelEvents.ShuffleDeck;
 }
 
 export class ShuffleDeckEventHandler extends YGOCommandHandler {
