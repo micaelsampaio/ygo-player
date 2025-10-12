@@ -1205,7 +1205,6 @@ export class YGOGameActions {
     }))
   }
 
-
   public diceRoll({ player }: {
     player: number
   }) {
