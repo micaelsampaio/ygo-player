@@ -4,7 +4,6 @@ import { DuelLogContainer, DuelLogRow } from "./duel-log-components";
 import type { CommandType } from "ygo-core";
 import { memo } from "react";
 
-
 const HIDE_CARD_COMMANDS = new Set<CommandType>([
   "Draw From Deck"
 ])
@@ -26,7 +25,11 @@ export const DefaultLogRow = memo(
     const card = ygo.state.getCardData(log.id)!;
 
     if (!card) {
-      return <div className="ygo-duel-log-default-row">{log.type}</div>;
+      return <DuelLogRow log={log}>
+        <DuelLogContainer>
+          {log.type}
+        </DuelLogContainer>
+      </DuelLogRow>;
     }
 
     const orginZone = log.originZone || log.zone;
