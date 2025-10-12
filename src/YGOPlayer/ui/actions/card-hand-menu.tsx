@@ -19,7 +19,7 @@ export function CardHandMenu({
   const menuRef = useRef<HTMLDivElement>(null);
   const originZone: FieldZone = YGOGameUtils.createZone(
     "H",
-    card.originalOwner,
+    card.owner,
     index + 1
   );
 
@@ -121,8 +121,7 @@ export function CardHandMenu({
 
   useLayoutEffect(() => {
     const container = menuRef.current!;
-    const cardFromHand =
-      duel.fields[card.originalOwner].hand.getCardFromReference(card)!;
+    const cardFromHand = duel.fields[card.owner].hand.getCardFromReference(card)!;
     const size = container.getBoundingClientRect();
     const { x, y, width, height } = getTransformFromCamera(
       duel,
