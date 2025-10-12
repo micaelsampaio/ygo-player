@@ -155,7 +155,7 @@ export class GameHand extends YGOEntity {
       const index = YGOStatic.isPlayerPOV(this.player) ? i : totalCards - 1 - i;
       const xOffset = -actualWidth / 2 + cardWidth / 2 + i * actualSpacing;
       const handZ = baseHandZ;
-      const position = new THREE.Vector3(xOffset, handY, handZ);
+      const position = new THREE.Vector3(xOffset - 1, handY, handZ); // TODO MAKE the math mathing -1 is a dirty fix
       const scale = new THREE.Vector3(1, 1, 1);
 
       if (needsCompression) {
