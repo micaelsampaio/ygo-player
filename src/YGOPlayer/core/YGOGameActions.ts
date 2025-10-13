@@ -1214,6 +1214,14 @@ export class YGOGameActions {
     }))
   }
 
+  public admitDefeat({ player }: {
+    player: number
+  }) {
+    this.duel.execCommand(new YGOCommands.AdmitDefeatCommand({
+      player
+    }))
+  }
+
   public flipCoin({ player }: {
     player: number
   }) {
