@@ -15,7 +15,7 @@ export class AdmitDefeatEventHandler extends YGOCommandHandler {
   }
 
   public start(): void {
-    // Admit defeat doesn't require visual effects
-    this.finish();
+    // Admit defeat doesn't require visual effects, complete immediately
+    this.props.onCompleted();
   }
 }
