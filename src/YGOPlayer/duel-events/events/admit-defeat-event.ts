@@ -8,6 +8,7 @@ interface AdmitDefeatEventHandlerProps extends DuelEventHandlerProps {
 
 export class AdmitDefeatEventHandler extends YGOCommandHandler {
   private props: AdmitDefeatEventHandlerProps;
+  private timeoutId?: number;
 
   constructor(props: AdmitDefeatEventHandlerProps) {
     super("admit_defeat_command");
@@ -15,7 +16,14 @@ export class AdmitDefeatEventHandler extends YGOCommandHandler {
   }
 
   public start(): void {
-    // Admit defeat doesn't require visual effects, complete immediately
-    this.props.onCompleted();
+    // Admit defeat doesn't require visual effects, complete in next frame
+    this.timeoutId = setTimeout(() => {
+      this.props.onCompleted();
+    }, 0) as unknown as number;
+  }
+
+  public finish(): void {
+      clearTimeout(this.timeoutId);
+      this.timeoutId = undefined;
   }
 }
