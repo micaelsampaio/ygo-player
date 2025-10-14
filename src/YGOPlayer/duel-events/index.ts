@@ -28,6 +28,7 @@ import { ShuffleDeckEventHandler } from "./events/shuffle-deck-event";
 import { ShuffleHandEventHandler } from "./events/shuffle-hand-event";
 import { CoinFlipEventHandler } from "./events/coin-flip-event";
 import { DiceRollEventHandler } from "./events/dice-roll-event";
+import { AdmitDefeatEventHandler } from "./events/admit-defeat-event";
 
 export interface DuelEventHandlerProps {
   duel: YGODuel;
@@ -93,6 +94,7 @@ const events: any = {
   [YGODuelEvents.LogType.LifePoints]: DuelLifePointsEventHandler,
   [YGODuelEvents.LogType.DiceRoll]: DiceRollEventHandler,
   [YGODuelEvents.LogType.CoinFlip]: CoinFlipEventHandler,
+  [YGODuelEvents.LogType.AdmitDefeat]: AdmitDefeatEventHandler,
   // Notes / UI
   [YGODuelEvents.LogType.Note]: DuelNotesEventHandler,
   /// Default

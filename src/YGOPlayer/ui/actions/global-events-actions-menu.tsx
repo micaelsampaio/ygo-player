@@ -96,6 +96,10 @@ export function GlobalEventsActionsMenu({
     // timer.current = setTimeout(() => duel.actionManager.setAction(action)) as unknown as number;
   }, [])
 
+  const admitDefeat = useCallback(() => {
+    duel.gameActions.admitDefeat({ player });
+  }, [player]);
+
   const flipCoin = useCallback(() => {
 
     duel.gameActions.flipCoin({ player });
@@ -181,6 +185,10 @@ export function GlobalEventsActionsMenu({
 
       <button type="button" className="ygo-card-item" onClick={flipCoin}>
         Flip Coin
+      </button>
+
+      <button type="button" className="ygo-card-item" onClick={admitDefeat}>
+        Admit Defeat
       </button>
 
       <button type="button" className="ygo-card-item" onClick={ripCardFromHandRandom}>
