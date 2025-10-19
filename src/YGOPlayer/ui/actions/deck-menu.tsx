@@ -38,7 +38,7 @@ export function DeckMenu({ duel, deck }: { duel: YGODuel, deck: Deck, clearActio
     const field = duel.ygo.state.fields[player];
 
     return <CardMenu menuRef={menuRef}>
-        <button className="ygo-card-item" disabled={field.mainDeck.length === 0} type="button" onClick={shuffleDeck}>Shuffle Deck</button>
+        {/* <button className="ygo-card-item" disabled={field.mainDeck.length === 0} type="button" onClick={shuffleDeck}>Shuffle Deck</button> */}
 
         <div className="ygo-flex ygo-gap-2">
             <div className="ygo-flex-grow-1">
