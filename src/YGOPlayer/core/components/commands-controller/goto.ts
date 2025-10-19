@@ -10,7 +10,6 @@ export class Goto extends BaseControllerCommand {
   }
 
   exec(): void {
-
     if (this.duel.commands.isRecovering()) {
       this.duel.ygo.goToCommand(this.commandId)
       return;
@@ -21,5 +20,6 @@ export class Goto extends BaseControllerCommand {
     this.duel.commands.endRecover();
     this.duel.commands.setState(YGOCommandsControllerState.IDLE);
     this.duel.updateField();
+    this.duel.clearActions();
   }
 }

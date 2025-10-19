@@ -22,5 +22,6 @@ export class Undo extends BaseControllerCommand {
     this.duel.ygo.undo();
     this.duel.commands.endRecover()
     this.duel.updateField();
+    this.duel.clearActions();
   }
 }
