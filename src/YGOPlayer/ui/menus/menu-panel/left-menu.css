@@ -78,8 +78,8 @@
     }
 
     .ygo-chat-message {
-      max-width: 75%;
-      padding: var(--ygo-gap-sm) var(--ygo-gap-md);
+      max-width: 85%;
+      padding: 8px 8px;
       border-radius: var(--ygo-border-radius-medium);
       font-size: var(--ygo-font-md);
       line-height: 1.4;

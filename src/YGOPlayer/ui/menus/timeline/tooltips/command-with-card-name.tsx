@@ -9,13 +9,28 @@ export const TooltipCommandWithCardName = memo(function ({
 
   const command = baseCommand as any;
   const cardId = command.data.id;
+  const cardIds = command.data.ids;
   const card = duel.ygo.state.getCardData(cardId);
+
+  if (cardIds) {
+    const names = cardIds?.map((c: any) => duel.ygo.state.getCardData(c.id)?.name).filter(Boolean).map((name: string) => <div>{name}</div>)
+    return (
+      <div className="command-tooltip">
+        <div>
+          <div>
+            <b>{command.type}({command.commandId})</b>
+          </div>
+          <div>{names || ""}</div>
+        </div>
+      </div>
+    );
+  }
 
   if (!card || !cardId) {
     return <div className="command-tooltip">
       <div>
         <div>
-          <b>{(command as any).type}</b>
+          <b>{command.type} ({command.commandId})</b>
         </div>
       </div>
     </div>
@@ -26,7 +41,7 @@ export const TooltipCommandWithCardName = memo(function ({
     <div className="command-tooltip">
       <div>
         <div>
-          <b>{(command as any).type}</b>
+          <b>{command.type}({command.commandId})</b>
         </div>
         <div>{card?.name}</div>
       </div>

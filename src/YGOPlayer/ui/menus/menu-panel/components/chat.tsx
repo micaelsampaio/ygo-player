@@ -82,6 +82,7 @@ export function Chat({ duel }: { duel: YGODuel }) {
     }
   }, [chatMessages]);
 
+  let prevUser = "";
   return (
     <div className="ygo-chat-container">
       <div className="ygo-chat-messages" ref={messagesContainerRef}>
@@ -89,8 +90,11 @@ export function Chat({ duel }: { duel: YGODuel }) {
           const className = msg.owner
             ? "ygo-chat-message right"
             : "ygo-chat-message left";
+          const username = prevUser !== msg.username ? msg.username : "";
+          prevUser = msg.username;
           return (
             <div key={msg.key} className={className}>
+              {username && <div className="ygo-text-xs">{username}</div>}
               {msg.message}
             </div>
           );

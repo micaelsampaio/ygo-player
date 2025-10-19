@@ -634,3 +634,23 @@ export function fisherYatesShuffle<T>(array: T[]): T[] {
 
   return array;
 }
+const DEFAULT_OFFSET_POSITION_VEC = new THREE.Vector3(1.5, 0, 0.2);
+
+export function createOffsetPositionInMultipleEvents(
+  player: number,
+  cardIndex: number | undefined,
+  endPosition: THREE.Vector3,
+  offset: THREE.Vector3 = DEFAULT_OFFSET_POSITION_VEC
+): THREE.Vector3 {
+  const newPosition = endPosition.clone();
+  const isPOV = YGOStatic.isPlayerPOV(player);
+  const offsetPlayer = isPOV ? 1 : -1;
+
+  if (typeof cardIndex === "number" && cardIndex > 0) {
+    newPosition.x -= cardIndex * offset.x * offsetPlayer;
+    newPosition.z += cardIndex * offset.z;
+    newPosition.y += cardIndex * offset.y;
+  }
+
+  return newPosition;
+}
