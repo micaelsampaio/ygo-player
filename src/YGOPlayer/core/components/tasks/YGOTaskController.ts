@@ -7,12 +7,10 @@ interface TaskEvents {
 }
 
 export class YGOTaskController extends YGOComponent {
-    private duel: YGODuel;
     private tasks: { task: YGOTask, events: TaskEvents | undefined }[] = [];
 
-    constructor(duel: YGODuel) {
+    constructor(private duel: YGODuel) {
         super("duel_events_controller");
-        this.duel = duel;
         this.tasks = [];
     }
 

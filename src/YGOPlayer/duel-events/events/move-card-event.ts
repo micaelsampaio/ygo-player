@@ -4,6 +4,7 @@ import { MoveCardCommandData } from "ygo-core";
 import { YGOTaskSequence } from "../../core/components/tasks/YGOTaskSequence";
 import { GameCard } from "../../game/GameCard";
 import {
+  createOffsetPositionInMultipleEvents,
   getCardRotationFromFieldZoneData,
   getGameZone,
   getZonePositionFromZoneData,
@@ -179,11 +180,7 @@ export class MoveCardEventHandler extends YGOCommandHandler {
 
     playSound({ key: duel.createCdnUrl(soundKey), volume: 0.7 });
 
-    if (Number(this.props.cardIndex) > 0) {
-      const index = Number(this.props.cardIndex);
-      endPosition.x -= index * 1.5;
-      endPosition.z += index * 0.2;
-    }
+    endPosition.copy(createOffsetPositionInMultipleEvents(this.props.event.player, this.props.cardIndex, endPosition));
 
     if (
       zoneData.zone === "M" ||

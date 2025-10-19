@@ -1,9 +1,10 @@
-import { JSONCommand, YGOClient, YGOCommands, YGOServerGameStateData } from "ygo-core";
+import { JSONCommand, YGOClient, YGOCommands, YGOGameUtils, YGOServerGameStateData } from "ygo-core";
 import { YGODuel } from "./YGODuel";
 import { Command } from "ygo-core";
 import { YGOTimerUtils } from "../scripts/timer-utils";
 import { YGOComponent } from "./YGOComponent";
 import { YGOStatic } from "./YGOStatic";
+import { YGOControllerCommands } from "./components/commands-controller";
 
 export class YGOServerActions extends YGOComponent {
   private timers: YGOTimerUtils;
@@ -45,25 +46,26 @@ export class YGOServerActions extends YGOComponent {
 
   public controls = {
     play: () => {
-      const currentCommandId = this.duel.ygo.peek()?.commandId;
+      const currentCommandId = this.duel.ygo.peek()?.commandId ?? -1;
       this.client.send("server:exec", { type: "ygo:commands:play", data: { currentCommandId } })
     },
     pause: () => {
-      const currentCommandId = this.duel.ygo.peek()?.commandId;
+      const currentCommandId = this.duel.ygo.peek()?.commandId ?? -1;
       this.client.send("server:exec", { type: "ygo:commands:pause", data: { currentCommandId } })
     },
     nextCommand: () => {
       if (this.duel.commands.isPlaying()) return;
-      const currentCommandId = this.duel.ygo.peek()?.commandId;
+      if (!this.duel.ygo.hasNextCommand()) return;
+      const currentCommandId = this.duel.ygo.peek()?.commandId ?? -1;
       this.client.send("server:exec", { type: "ygo:commands:next", data: { currentCommandId } })
     },
     previousCommand: () => {
-      const currentCommandId = this.duel.ygo.peek()?.commandId;
+      if (!this.duel.ygo.hasPrevCommand()) return;
+      const currentCommandId = this.duel.ygo.peek()?.commandId ?? -1;
       this.client.send("server:exec", { type: "ygo:commands:previous", data: { currentCommandId } })
     },
     goToCommand: (command: Command | number) => {
       const commandId = typeof command === "object" ? command.commandId : command;
-
       if (!Number.isInteger(commandId)) return;
       this.client.send("server:exec", { type: "ygo:commands:goto_command", data: { commandId } })
     }
@@ -106,31 +108,35 @@ export class YGOServerActions extends YGOComponent {
           this.duel.updateField();
         })// next fram
       }
-
     }
 
     if (eventName === "server:exec") {
+      const commandData = data.data;
       if (data.type === "ygo:commands:exec") {
         const eventData = data.data;
         const command = new JSONCommand({ type: eventData.command.type, data: eventData.command.data });
         command.commandId = eventData.command.id;
         command.timestamp = eventData.command.timestamp;
-        this.duel.commands.exec({ command });
+        this.duel.commands.exec(new YGOControllerCommands.Exec(this.duel, command));
       } else if (data.type === "ygo:commands:previous") {
-        this.duel.commands.previousCommand();
+        const commandId = commandData.commandId;
+        this.duel.commands.previousCommand({ commandId });
       } else if (data.type === "ygo:commands:next") {
-        this.duel.commands.nextCommand();
+        const commandId = commandData.commandId;
+        this.duel.commands.nextCommand({ commandId });
       } else if (data.type === "ygo:commands:play") {
-        this.duel.commands.play();
+        const commandId = commandData.commandId;
+        this.duel.commands.play({ commandId });
       } else if (data.type === "ygo:commands:pause") {
-        this.duel.commands.pause();
+        const commandId = commandData.commandId;
+        this.duel.commands.pause({ commandId });
       } else if (data.type === "ygo:commands:goto_command") {
         const eventData = data.data;
-        this.duel.commands.goToCommand(eventData.commandId);
+        this.duel.commands.goToCommand({ commandId: eventData.commandId });
       } else if (data.type === "ygo:replay:start") {
         this.duel.events.dispatch("update-game-ui-config", { startReplay: true });
         this.timers.setTimeout(() => {
-          this.duel.commands.play();
+          this.duel.serverActions.controls.play();
         }, 500)
       }
     }

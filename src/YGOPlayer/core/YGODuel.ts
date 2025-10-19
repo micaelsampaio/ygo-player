@@ -15,7 +15,7 @@ import { ActionCardHandMenu } from "../actions/ActionCardHandMenu";
 import { ActionCardZoneMenu } from "../actions/ActionCardZoneMenu";
 import { YGOTaskController } from "./components/tasks/YGOTaskController";
 import { GameCard } from "../game/GameCard";
-import { YGOCommandsController } from "./components/tasks/YGOCommandsController";
+import { YGOCommandsController } from "./components/commands-controller/YGOCommandsController";
 import { YGOAssets } from "./YGOAssets";
 import { YGOGameActions } from "./YGOGameActions";
 import { YGODuelScene } from "./YGODuelScene";
@@ -177,13 +177,13 @@ export class YGODuel {
     this.config.options.showCards = cardsAreVisible;
     this.config.autoChangePlayer = cardsAreVisible;
 
-    this.ygo.events.on("new-log", (command: any) => {
+    this.ygo.events.on("new-log", (evenlLog: any) => {
       if (this.commands.isRecovering()) return;
       // console.log("-------------- command ------------");
       // console.log("command >>> ", command);
 
       this.events.dispatch("render-ui");
-      this.commands.add(command);
+      this.commands.processYGOLog(evenlLog);
     });
 
     this.ygo.events.on("update-logs", (data: any) => {
