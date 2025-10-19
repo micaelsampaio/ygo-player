@@ -16,6 +16,7 @@ export interface YGOPlayerComponentEvents {
   start: (args: { instance: YGOPlayerComponent; duel: YGODuel }) => void;
   "command-created": (args: { command: Command }) => void;
   "command-executed": (args: { command: Command }) => void;
+  "game-defeat": (args: { player: number }) => void;
 }
 
 export interface YGOPlayerComponent extends HTMLElement {
@@ -85,6 +86,11 @@ export class YGOPlayerComponentImpl extends HTMLElement implements YGOPlayerComp
       this.dispatch("command-executed", data);
     });
 
+
+    // Listen for game-defeat events from the duel and dispatch them to the web interface
+    this.duel.events.on("game-defeat", (data: any) => {
+      this.dispatch("game-defeat", data);
+    });
 
     this.dispatch("init", { instance: this, duel });
   }

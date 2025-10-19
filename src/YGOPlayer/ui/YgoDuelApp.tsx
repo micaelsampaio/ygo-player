@@ -16,8 +16,8 @@ export function YgoDuelApp({ config, client, bind: onBind, start: onStart }: { c
         let duel: YGODuel | undefined;
         const init = async () => {
             duel = new YGODuel({ canvas: canvasRef.current!, client, config });
-            // if (onBind) onBind(duel);
             await duel.load();
+            if (onBind) onBind(duel);
             setDuel(duel);
         }
         init();

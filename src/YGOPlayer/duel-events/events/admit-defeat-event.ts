@@ -18,6 +18,10 @@ export class AdmitDefeatEventHandler extends YGOCommandHandler {
   public start(): void {
     // Admit defeat doesn't require visual effects, complete in next frame
     this.timeoutId = setTimeout(() => {
+      // Dispatch game-defeat event to notify the web interface
+      this.props.duel.events.dispatch("game-defeat", {
+        player: this.props.event.player
+      });
       this.props.onCompleted();
     }, 0) as unknown as number;
   }
