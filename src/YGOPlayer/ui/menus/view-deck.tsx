@@ -79,7 +79,7 @@ export function ViewDeckPopup({
   const cardsToShow = useMemo(() => {
     let searchTypes = Object.values(typesOfCards).some((v) => v);
 
-    return cards
+    const cardsToSearch = cards
       .filter((card: any) => {
         let showCard = !searchTypes;
 
@@ -92,7 +92,9 @@ export function ViewDeckPopup({
 
         return card.name.toLowerCase().includes(search);
       })
-      .reverse();
+
+    cardsToSearch.reverse();
+    return cardsToSearch;
   }, [search, cards, cards.length, typesOfCards]);
 
   return (
