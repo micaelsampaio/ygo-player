@@ -747,9 +747,9 @@ export class YGOGameActions {
     );
   }
 
-  public toHand({ card, originZone }: { card: Card; originZone: FieldZone }) {
+  public toHand({ card, reveal, originZone }: { card: Card; reveal?: boolean, originZone: FieldZone }) {
     this.clearAction();
-
+    
     const player = this.duel.getActivePlayer();
 
     if (card.isMainDeckCard) {
@@ -758,6 +758,7 @@ export class YGOGameActions {
           player,
           id: card.id,
           originZone,
+          reveal
         })
       );
     } else {

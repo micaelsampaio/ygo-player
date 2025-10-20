@@ -11,6 +11,11 @@ import { YGOCommandHandler } from "../../core/components/YGOCommandHandler";
 import { MultipleTasks } from "../utils/multiple-tasks";
 import { getCardPositionInFrontOfCamera } from "../../scripts/ygo-utils";
 import { YGOTimerUtils } from "../../scripts/timer-utils";
+import { Ease } from "../../scripts/ease";
+import { YGOStatic } from "../../core/YGOStatic";
+import { createCardSelectionGeometry } from "../../game/meshes/CardSelectionMesh";
+import { ScaleTransition } from "../utils/scale-transition";
+import { MaterialOpacityTransition } from "../utils/material-opacity";
 
 interface RevealEventHandlerProps extends DuelEventHandlerProps {
   event: YGODuelEvents.Reveal;
@@ -61,52 +66,196 @@ export class RevealEventHandler extends YGOCommandHandler {
       const gameField = duel.fields[originZoneData.player];
       const originalCard = gameField.hand.getCard(originZoneData.zoneIndex - 1)!.gameObject;
 
-      originalCard.visible = false;
-
       const startPosition: THREE.Vector3 = originalCard.position;
       const startRotation: THREE.Euler = originalCard.rotation;
 
-      const targetPosition = getCardPositionInFrontOfCamera({ camera: duel.core.camera, distance: 6 });
-      const targetRotation: THREE.Euler = new THREE.Euler(0, 0, 0);
-
       originalCard.visible = false;
-
       card.gameObject.position.copy(originalCard.position);
       card.gameObject.rotation.copy(originalCard.rotation);
-      sequence.addMultiple(
-        new MultipleTasks(
-          new PositionTransition({
-            gameObject: card.gameObject,
-            position: targetPosition,
-            duration: 0.5,
-          }),
-          new RotationTransition({
-            gameObject: card.gameObject,
-            duration: 0.35,
-            rotation: targetRotation,
-          })
-        ),
-        new WaitForSeconds(1),
-        new MultipleTasks(
-          new RotationTransition({
-            gameObject: card.gameObject,
-            duration: 0.25,
-            rotation: startRotation,
-          }),
-          new PositionTransition({
-            gameObject: card.gameObject,
-            position: startPosition,
-            duration: 0.25,
-          })
-        ),
-        new CallbackTransition(() => {
-          originalCard.visible = true;
-          card.destroy();
-          this.props.onCompleted();
-        })
-      );
-    } else {
 
+      if (event.revealType === "target") {
+
+        const endRotation1 = new THREE.Euler(originalCard.rotation.x, originalCard.rotation.y, 0);
+        const endRotation = new THREE.Euler(0, 0, 0);
+        const up = new THREE.Vector3(0, 1, 0);
+        up.applyQuaternion(card.gameObject.quaternion);
+        const endPosition = card.gameObject.position.clone().add(up);
+        endPosition.z += 0.1;
+        const delayTarget = YGOStatic.isPlayerPOV(event.player) ? 0 : 0.5
+
+        const cardSelection = createCardSelectionGeometry(2.65, 3.7, 0.1);
+        const material = new THREE.MeshBasicMaterial({
+          color: 0xADD8E6,
+          opacity: 0,
+          transparent: true,
+        });
+        const material2 = new THREE.MeshBasicMaterial({
+          color: 0xADD8E6,
+          opacity: 0,
+          transparent: true,
+        });
+
+        const targetPosition = endPosition.clone();
+        targetPosition.z += 0.05;
+
+        const cardSelectionMesh = new THREE.Mesh(cardSelection, material);
+        cardSelectionMesh.position.copy(targetPosition);
+        cardSelectionMesh.rotation.copy(endRotation);
+
+        const cardSelectionMesh2 = new THREE.Mesh(cardSelection, material2);
+        cardSelectionMesh2.position.copy(targetPosition);
+        cardSelectionMesh2.rotation.copy(endRotation);
+
+        duel.core.scene.add(cardSelectionMesh);
+        duel.core.scene.add(cardSelectionMesh2);
+
+        this.props.startTask(
+          new YGOTaskSequence(
+            new WaitForSeconds(delayTarget + 0.6),
+            new CallbackTransition(() => {
+              cardSelectionMesh2.material.opacity = 1;
+            }),
+            new MultipleTasks(
+              new ScaleTransition({
+                gameObject: cardSelectionMesh2,
+                scale: cardSelectionMesh2.scale.clone().addScalar(0.4),
+                duration: 0.25,
+              }),
+              new PositionTransition({
+                gameObject: cardSelectionMesh2,
+                position: targetPosition,
+                duration: 0.15,
+              }),
+              new YGOTaskSequence(
+                new WaitForSeconds(0.1),
+                new MaterialOpacityTransition({
+                  material: material2,
+                  opacity: 0,
+                  duration: 0.15,
+                })
+              )
+            ),
+          )
+        );
+
+        this.props.startTask(new YGOTaskSequence(
+          new WaitForSeconds(delayTarget + 0.3),
+          new CallbackTransition(() => {
+            cardSelectionMesh.material.opacity = 1;
+          }),
+          new MultipleTasks(
+            new ScaleTransition({
+              gameObject: cardSelectionMesh,
+              scale: cardSelectionMesh.scale.clone().addScalar(0.4),
+              duration: 0.25,
+            }),
+            new PositionTransition({
+              gameObject: cardSelectionMesh,
+              position: targetPosition,
+              duration: 0.15,
+            }),
+            new YGOTaskSequence(
+              new WaitForSeconds(0.1),
+              new MaterialOpacityTransition({
+                material,
+                opacity: 0,
+                duration: 0.15,
+              })
+            )
+          ),
+          new WaitForSeconds(0.5),
+          new CallbackTransition(() => {
+            duel.core.scene.remove(cardSelectionMesh);
+            duel.core.scene.remove(cardSelectionMesh2);
+          })
+        ));
+
+        sequence.addMultiple(
+          new RotationTransition({
+            gameObject: card.gameObject,
+            rotation: endRotation1,
+            duration: YGOStatic.isPlayerPOV(event.player) ? 0 : 0.5,
+            ease: Ease.easeOutQuad
+          }),
+          new MultipleTasks(
+            new PositionTransition({
+              gameObject: card.gameObject,
+              position: endPosition,
+              duration: 0.25,
+              ease: Ease.easeOutQuad
+            }),
+            new RotationTransition({
+              gameObject: card.gameObject,
+              rotation: endRotation,
+              duration: 0.25,
+              ease: Ease.easeOutQuad
+            })
+          ),
+          new WaitForSeconds(timeToReveal),
+          new RotationTransition({
+            gameObject: card.gameObject,
+            duration: YGOStatic.isPlayerPOV(event.player) ? 0 : 0.5,
+            rotation: endRotation1,
+            ease: Ease.easeOutQuad
+          }),
+          new MultipleTasks(
+            new RotationTransition({
+              gameObject: card.gameObject,
+              duration: 0.25,
+              rotation: startRotation,
+              ease: Ease.easeOutQuad
+            }),
+            new PositionTransition({
+              gameObject: card.gameObject,
+              position: startPosition,
+              duration: 0.25,
+              ease: Ease.easeOutQuad
+            })
+          ),
+        )
+
+      } else {
+        const targetPosition = getCardPositionInFrontOfCamera({ camera: duel.core.camera, distance: 6 });
+        const targetRotation: THREE.Euler = new THREE.Euler(0, 0, 0);
+
+        sequence.addMultiple(
+          new MultipleTasks(
+            new PositionTransition({
+              gameObject: card.gameObject,
+              position: targetPosition,
+              duration: 0.5,
+              ease: Ease.easeOutQuad
+            }),
+            new RotationTransition({
+              gameObject: card.gameObject,
+              duration: 0.35,
+              rotation: targetRotation,
+              ease: Ease.easeOutQuad
+            })
+          ),
+          new WaitForSeconds(1),
+          new MultipleTasks(
+            new RotationTransition({
+              gameObject: card.gameObject,
+              duration: 0.25,
+              rotation: startRotation,
+              ease: Ease.easeOutQuad
+            }),
+            new PositionTransition({
+              gameObject: card.gameObject,
+              position: startPosition,
+              duration: 0.25,
+              ease: Ease.easeOutQuad
+            })
+          ),
+          new CallbackTransition(() => {
+            originalCard.visible = true;
+            card.destroy();
+            this.props.onCompleted();
+          })
+        );
+      }
+    } else {
       this.timers.setTimeout(() => onCompleted());
       return;
     }

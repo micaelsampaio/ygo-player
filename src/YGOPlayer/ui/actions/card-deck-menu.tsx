@@ -32,7 +32,7 @@ export function CardDeckMenu({
   }, []);
 
   const toHand = useCallback(() => {
-    duel.gameActions.toHand({ card, originZone });
+    duel.gameActions.toHand({ card, originZone, reveal: true });
   }, [card, originZone]);
 
   const toGy = useCallback(() => {
