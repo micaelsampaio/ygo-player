@@ -26,6 +26,7 @@ export class ActionCardSelection extends YGOComponent implements YGOAction {
     private selectionType: CardSelectionType;
     private selectedZones: CardZone[];
     private opacityValue: number;
+    private showConfirm: boolean;
     private time: number;
     private timers: YGOTimerUtils;
     private onSelectionCompleted!: ((cardZone: CardZone) => void);
@@ -37,6 +38,7 @@ export class ActionCardSelection extends YGOComponent implements YGOAction {
         this.duel = duel;
         this.timers = new YGOTimerUtils();
         this.cardSelectionZones = new Map();
+        this.showConfirm = true;
         this.selectedZones = [];
         this.selectionType = "zone";
         this.isMultipleSelection = false;
@@ -91,14 +93,13 @@ export class ActionCardSelection extends YGOComponent implements YGOAction {
             this.cancelSelection();
         };
 
-        if (this.isMultipleSelection) {
-            this.duel.events.dispatch("set-ui-action", {
-                type: "card-multiple-selection-menu",
-                data: {
-                    onCompleted: this.onMultipleSelectionCompletedClick.bind(this)
-                }
-            });
-        }
+        this.duel.events.dispatch("set-ui-action", {
+            type: "card-multiple-selection-menu",
+            data: {
+                showConfirm: this.isMultipleSelection ? this.showConfirm : false,
+                onCompleted: this.onMultipleSelectionCompletedClick.bind(this)
+            }
+        });
     }
 
     public onActionEnd(): void {
@@ -121,21 +122,22 @@ export class ActionCardSelection extends YGOComponent implements YGOAction {
         }
     }
 
-    public startSelection({ zones, selectionType, onSelectionCompleted }: { zones: CardZone[], selectionType: CardSelectionType, onSelectionCompleted: (cardZone: CardZone) => void }): void {
+    public startSelection({ zones, showConfirm = true, selectionType, onSelectionCompleted }: { zones: CardZone[], selectionType: CardSelectionType, showConfirm?: boolean, onSelectionCompleted: (cardZone: CardZone) => void }): void {
         this.time = 0;
         this.selectionType = selectionType;
         this.isMultipleSelection = false;
         this.zones = zones;
+        this.showConfirm = showConfirm;
         this.onSelectionCompleted = onSelectionCompleted;
-
         this.duel.actionManager.setAction(this);
     }
 
-    public startMultipleSelection({ zones, selectionType, onSelectionCompleted }: { zones: CardZone[], selectionType: CardSelectionType, onSelectionCompleted: (cardZones: CardZone[]) => void }): void {
+    public startMultipleSelection({ zones, selectionType, showConfirm = true, onSelectionCompleted }: { zones: CardZone[], showConfirm?: boolean, selectionType: CardSelectionType, onSelectionCompleted: (cardZones: CardZone[]) => void }): void {
         this.time = 0;
         this.selectionType = selectionType;
         this.isMultipleSelection = true;
         this.zones = zones;
+        this.showConfirm = showConfirm;
         this.selectedZones = [];
         this.zones.forEach(zone => zone.onClickCb = () => this.onCardZoneClick(zone));
         this.onMultipleSelectionCompleted = onSelectionCompleted;

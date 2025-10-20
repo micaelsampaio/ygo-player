@@ -223,6 +223,7 @@ export class YGOGameActions {
         this.cardSelection.startSelection({
           zones: zonesToSummon,
           selectionType: "zone",
+          showConfirm: false,
           onSelectionCompleted: (cardZone: any) => {
             this.duel.execCommand(
               new YGOCommands.LinkSummonCommand({
@@ -283,6 +284,7 @@ export class YGOGameActions {
         this.cardSelection.startSelection({
           zones: zonesToSummon,
           selectionType: "zone",
+          showConfirm: false,
           onSelectionCompleted: (cardZone: any) => {
             this.duel.execCommand(
               new YGOCommands.XYZSummonCommand({
@@ -344,6 +346,7 @@ export class YGOGameActions {
         this.cardSelection.startSelection({
           zones: zonesToSummon,
           selectionType: "zone",
+          showConfirm: false,
           onSelectionCompleted: (cardZone: any) => {
             this.duel.execCommand(
               new YGOCommands.XYZOverlaySummonCommand({
@@ -403,6 +406,7 @@ export class YGOGameActions {
         this.cardSelection.startSelection({
           zones: zonesToSummon,
           selectionType: "zone",
+          showConfirm: false,
           onSelectionCompleted: (cardZone: CardZone) => {
             this.duel.execCommand(
               new YGOCommands.SynchroSummonCommand({
@@ -476,6 +480,7 @@ export class YGOGameActions {
           this.cardSelection.startSelection({
             zones: zonesToSummon,
             selectionType: "zone",
+            showConfirm: false,
             onSelectionCompleted: (cardZone: CardZone) => {
               this.duel.execCommand(
                 new YGOCommands.FusionSummonCommand({
