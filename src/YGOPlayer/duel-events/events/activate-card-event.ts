@@ -26,7 +26,6 @@ import { MaterialOpacityTransition } from "../utils/material-opacity";
 import { GameCardHand } from "../../game/GameCardHand";
 import { RotationTransition } from "../utils/rotation-transition";
 import { MultipleTasks } from "../utils/multiple-tasks";
-import { YGOTask } from "../../core/components/tasks/YGOTask";
 
 interface ActivateCardHandlerProps extends DuelEventHandlerProps {
   event: YGODuelEvents.Activate;
@@ -37,20 +36,17 @@ export class ActivateCardHandler extends YGOCommandHandler {
 
   constructor(private props: ActivateCardHandlerProps) {
     super("send_card_to_gy_command");
-
-    // if (!this.props.event.reason) {
-    //     this.childCommand = new MoveCardEventHandler(props as any);
-    // }
   }
 
   public start(): void {
     const { event } = this.props;
 
+    console.log("AAA: EVENT ", event);
+
     if (event.originZone && event.zone) {
       this.startMoveCommand();
     } else if (
-      event.previousPosition === "facedown" &&
-      !event.zone.startsWith("H")
+      event.previousPosition === "facedown" && (event.zone?.startsWith("M") || event.zone?.startsWith("EMZ") || event.zone?.startsWith("S"))
     ) {
       this.startChangeCardPositionCommand();
     } else {
