@@ -212,6 +212,9 @@ export class RevealEventHandler extends YGOCommandHandler {
               ease: Ease.easeOutQuad
             })
           ),
+          new CallbackTransition(() => {
+            originalCard.visible = true;
+          })
         )
 
       } else {
@@ -250,8 +253,6 @@ export class RevealEventHandler extends YGOCommandHandler {
           ),
           new CallbackTransition(() => {
             originalCard.visible = true;
-            card.destroy();
-            this.props.onCompleted();
           })
         );
       }
