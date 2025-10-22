@@ -127,4 +127,34 @@
     .ygo-space-y-12>*:not(:first-child) {
         margin-top: 3rem;
     }
+
+    .ygo-grid-col-0 {
+        grid-column: 1;
+        justify-self: start;
+    }
+
+    .ygo-grid-col-1 {
+        grid-column: 2;
+        justify-self: end;
+    }
+
+    .ygo-grid-span-1 {
+        grid-column: span 1;
+    }
+
+    .ygo-grid-span-2 {
+        grid-column: span 2;
+    }
+
+    .ygo-grid-span-3 {
+        grid-column: span 3;
+    }
+
+    .ygo-grid-span-4 {
+        grid-column: span 4;
+    }
+
+    .ygo-grid-span-5 {
+        grid-column: span 5;
+    }
 }

@@ -24,22 +24,47 @@
     gap: 10px;
 }
 
-.ygo-player-core .ygo-card-menu .ygo-card-item {
-    padding: 5px 10px;
-    text-align: center;
-    background-color: var(--ygo-border-color);
-    border: none;
-    color: white;
-    display: inline-block;
-    width: 100%;
-    font-size: 14px;
-    font-weight: bold;
-    border-radius: var(--ygo-border-radius-small);
-    cursor: pointer;
+.ygo-player-core {
+    .ygo-card-menu .ygo-card-item {
+        padding: 5px 10px;
+        text-align: center;
+        background-color: var(--ygo-border-color);
+        border: none;
+        color: white;
+        display: inline-block;
+        width: 100%;
+        font-size: 14px;
+        font-weight: bold;
+        border-radius: var(--ygo-border-radius-small);
+        cursor: pointer;
 
-    &.active {
-        background-color: var(--ygo-primary-color);
+        &.active {
+            background-color: var(--ygo-primary-color);
+        }
     }
+
+    .ygo-card-menu .ygo-card-item.ygo-card-item-flex {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        .ygo-card-item-icon {
+            flex-shrink: 0;
+            width: 16px;
+            height: 16px;
+            background-color: red;
+        }
+
+        .ygo-card-item-text {
+            text-align: center;
+            flex-grow: 1;
+        }
+    }
+
+    /* <button className="ygo-card-item ygo-card-item-flex" onClick={toST}>
+          <div className="ygo-card-item-icon"></div>
+          <div>To S/T</div>
+        </button> */
 }
 
 .ygo-player-core .ygo-card-menu .ygo-card-item-divider {
@@ -77,6 +102,9 @@
 
     &.ygo-card-menu-cols {
         width: 300px;
+        display: grid;
+        grid-template-columns: repeat(1fr, 2);
+        grid-template-rows: 1fr;
 
         .ygo-card-menu-items {
             display: grid !important;
