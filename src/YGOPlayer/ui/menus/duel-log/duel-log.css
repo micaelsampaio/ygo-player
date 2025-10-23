@@ -97,6 +97,18 @@
         &.ygo-dice-6 {
             background-position: 100% 57%;
         }
+
+        &.ygo-p-action-ok {
+            background-position: 0% 71%;
+        }
+
+        &.ygo-p-action-think {
+            background-position: 14% 71%;
+        }
+
+        &.ygo-p-action-wait {
+            background-position: 28.4% 71%;
+        }
     }
 }
 

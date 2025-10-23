@@ -74,7 +74,7 @@ export class GameHand extends YGOEntity {
     }
   }
 
-  private getCardHandPivot() {
+  public getCardHandPivot() {
     const cardHeight = CARD_HEIGHT_SIZE;
     const camera = this.duel.camera;
     const distance = camera.position.z;

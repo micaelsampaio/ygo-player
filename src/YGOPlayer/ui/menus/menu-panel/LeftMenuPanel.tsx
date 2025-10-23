@@ -2,8 +2,9 @@ import { useCallback } from "react";
 import { YGODuel } from "../../../core/YGODuel";
 import { Chat } from "./components/chat";
 import { SelectedCardMenu } from "./components/selected-card-menu";
-import "./left-menu.css";
 import { stopPropagationCallback } from "../../../scripts/utils";
+import { PlayerRemoteActionsComponent } from "./components/player-actions";
+import "./left-menu.css";
 
 export function LeftMenuPanel({ duel }: { duel: YGODuel }) {
 
@@ -26,6 +27,12 @@ export function LeftMenuPanel({ duel }: { duel: YGODuel }) {
         duel={duel}
       />
     </div>
+
+    {
+      !duel.ygo.options.viewOpponentCards && <>
+        <PlayerRemoteActionsComponent duel={duel} />
+      </>
+    }
 
     <div className="ygo-left-menu-chat-container">
       <Chat duel={duel} />

@@ -198,6 +198,10 @@ export class YGODuel {
       this.events.dispatch("render-ui");
     });
 
+    this.ygo.events.on("player-remote-action", remoteData => {
+      this.serverActions.ygo.setPlayerRemoteAction(remoteData);
+    })
+
     this.events.on("enable-game-actions", () => {
       this.actionManager.actionsEnabled = true;
     });
@@ -224,7 +228,8 @@ export class YGODuel {
           `${this.config.cdnUrl}/images/ui/ic_link128.png`,
           `${this.config.cdnUrl}/images/ui/turn_player_1.png`,
           `${this.config.cdnUrl}/images/ui/turn_player_2.png`,
-          `${this.config.cdnUrl}/images/ui/ic_xyz_materials128.png`
+          `${this.config.cdnUrl}/images/ui/ic_xyz_materials128.png`,
+          `${this.config.cdnUrl}/images/sprites/atlas_1.png`,
         ),
         this.soundController.loadSounds(
           this.createCdnUrl("/sounds/card-place-1.ogg"),

@@ -6,6 +6,7 @@ type ChatMessage = {
   key: string;
   username: string;
   owner: boolean;
+  system?: boolean;
   message: ReactNode;
 };
 
@@ -69,10 +70,22 @@ export function Chat({ duel }: { duel: YGODuel }) {
       };
       setChatMessages((prev) => [...prev, chatMessage]);
     };
+    const systemHandler = (data: any) => {
+      const chatMessage: ChatMessage = {
+        key: crypto.randomUUID(),
+        username: "",
+        owner: false,
+        message: data.message,
+        system: true,
+      };
+      setChatMessages((prev) => [...prev, chatMessage]);
+    }
 
     duel.ygo.events.on("chat-message", handler);
+    duel.events.on("system-chat-message", systemHandler);
     return () => {
       duel.ygo.events.off("chat-message", handler);
+      duel.events.off("system-chat-message", systemHandler);
     };
   }, [duel]);
 
@@ -87,6 +100,12 @@ export function Chat({ duel }: { duel: YGODuel }) {
     <div className="ygo-chat-container">
       <div className="ygo-chat-messages" ref={messagesContainerRef}>
         {chatMessages.map((msg) => {
+
+          if (msg.system) {
+            prevUser = "";
+            return <div className="ygo-schat-message">{msg.message}</div>
+          }
+
           const className = msg.owner
             ? "ygo-chat-message right"
             : "ygo-chat-message left";

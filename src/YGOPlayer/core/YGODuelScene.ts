@@ -11,7 +11,18 @@ import { ActionUiMenu } from "../actions/ActionUiMenu";
 import { YGOTimer } from "../game/YGOTimer";
 import { YGOPhaseObject } from "../game/YGOPhaseObject";
 import { YGOStatic } from "./YGOStatic";
+import { YGOPlayerRemoteActions } from "ygo-core";
+import { createAtlasSprite } from "../scripts/sprite";
+import { YGOTaskSequence } from "./components/tasks/YGOTaskSequence";
+import { ScaleTransition } from "../duel-events/utils/scale-transition";
+import { Ease } from "../scripts/ease";
+import { WaitForSeconds } from "../duel-events/utils/wait-for-seconds";
 
+const ATLAS_1_COORDS = {
+    "ok": [0, 0],
+    "t": [1, 0],
+    "w": [2, 0],
+}
 
 export class YGODuelScene {
     /**
@@ -28,10 +39,14 @@ export class YGODuelScene {
     public diceObject!: THREE.Object3D;
     public coinObject!: THREE.Object3D;
     public middleOfTheFieldPivot: THREE.Vector3;
+    private playerActionsPool: Map<number, Map<string, THREE.Object3D[]>>
 
     constructor(private duel: YGODuel) {
         this.gameFields = [];
         this.middleOfTheFieldPivot = new THREE.Vector3(0, 0, 0);
+        this.playerActionsPool = new Map();
+        this.playerActionsPool.set(0, new Map())
+        this.playerActionsPool.set(1, new Map())
     }
 
     /**
@@ -91,6 +106,9 @@ export class YGODuelScene {
     }
 
     public createFields({ gameField }: { gameField: THREE.Scene }) {
+
+
+        //const texture = this.duel.assets.getTexture(this.duel.createCdnUrl("/images/sprites/atlas_1.png"));
 
         const directionalLight = new THREE.DirectionalLight(0xffffff, 3);
         directionalLight.position.set(20, 40, 25);
@@ -181,6 +199,11 @@ export class YGODuelScene {
 
         this.createEffects();
         this.createFieldButtons();
+
+
+        this.duel.ygo.events.on("player-remote-action", data => {
+            this.processPlayerAction(data);
+        })
     }
 
     private createEffects() {
@@ -240,6 +263,72 @@ export class YGODuelScene {
         btnTimer.gameObject.scale.set(2.5, 2.5, 1);
 
         this.timer = new YGOTimer(this.duel, btnTimerPosition);
+    }
+
+    private processPlayerAction({ player, action }: { player: number, action: YGOPlayerRemoteActions }) {
+
+        const pool = this.playerActionsPool.get(player)!;
+        const actionPool = pool.get(action);
+        let obj = actionPool?.find(obj => !obj.visible);
+        let position = new THREE.Vector3(-1, 0, 7.5);
+
+        if (!obj) {
+            const coords = ATLAS_1_COORDS[action] || ATLAS_1_COORDS.ok;
+            const sprite = createAtlasSprite(this.duel, "/images/sprites/atlas_1.png", coords[0], coords[1], 8, 8);
+            const spriteBg = createAtlasSprite(this.duel, "/images/sprites/atlas_1.png", 3, 0, 8, 8);
+            spriteBg.scale.set(4, 4, 4);
+            spriteBg.position.set(0, 0, 0);
+
+            spriteBg.add(sprite);
+            sprite.position.set(0, 0, 0.05);
+            sprite.scale.set(0.8, 0.8, 0.8);
+
+            const material = spriteBg.material as THREE.SpriteMaterial;
+            material.color.set(YGOStatic.isPlayerPOV(player) ? 0x66aaff : 0xff7777);
+            this.duel.core.scene.add(spriteBg);
+
+            obj = spriteBg;
+
+            if (YGOStatic.isPlayerPOV(player)) {
+                position.y = this.duel.fields[0].hand.getCardHandPivot() + 4
+            } else {
+                position.y = this.duel.fields[1].hand.getCardHandPivot() - 4
+            }
+        }
+
+        obj.scale.set(0, 0, 0);
+        obj.position.copy(position);
+
+        const baseScale = new THREE.Vector3(4, 4, 4);
+
+        this.duel.tasks.startTask(new YGOTaskSequence(
+            new ScaleTransition({
+                gameObject: obj,
+                scale: baseScale.clone().multiplyScalar(1.2),
+                duration: 0.2,
+                ease: Ease.easeOutBack
+            }),
+            new ScaleTransition({
+                gameObject: obj,
+                scale: baseScale.clone().multiplyScalar(0.9),
+                duration: 0.15,
+                ease: Ease.easeInOut
+            }),
+            new ScaleTransition({
+                gameObject: obj,
+                scale: baseScale.clone(),
+                duration: 0.25,
+                ease: Ease.easeInOut
+            }),
+            new WaitForSeconds(0.5),
+            new ScaleTransition({
+                gameObject: obj,
+                scale: new THREE.Vector3(0, 0, 0),
+                duration: 0.15,
+                ease: Ease.easeInOut
+            })
+        ));
+
     }
 }
 

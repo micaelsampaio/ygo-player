@@ -5,13 +5,16 @@ import { YGOTimerUtils } from "../scripts/timer-utils";
 import { YGOComponent } from "./YGOComponent";
 import { YGOStatic } from "./YGOStatic";
 import { YGOControllerCommands } from "./components/commands-controller";
+import { YGOPlayerRemoteActions } from "ygo-core";
 
 export class YGOServerActions extends YGOComponent {
   private timers: YGOTimerUtils;
+  private nextPlayerActionCooldown: number;
 
   constructor(private duel: YGODuel, private client: YGOClient) {
     super("server-actions");
     this.timers = new YGOTimerUtils();
+    this.nextPlayerActionCooldown = Date.now();
     this.registerClientEvents();
   }
 
@@ -24,6 +27,10 @@ export class YGOServerActions extends YGOComponent {
     setClientReady: () => {
       this.client.send("client:ready");
     }
+  }
+
+  public getActivePlayer(): number {
+    return YGOStatic.playerIndex;
   }
 
   public ygo = {
@@ -41,6 +48,47 @@ export class YGOServerActions extends YGOComponent {
       if (this.duel.getActivePlayer() !== player) {
         this.ygo.exec({ command: new YGOCommands.PlayerPriorityCommand({ player }) });
       }
+    },
+    setPlayerRemoteAction: (data: { player: number, action: YGOPlayerRemoteActions, data?: any }) => {
+
+      let message = "";
+      const playerName = this.duel.ygo.getField(data.player).player.name;
+
+      console.log("DATA", data.action);
+      console.log("Player", playerName);
+
+      switch (data.action) {
+        case YGOPlayerRemoteActions.OK:
+          message = playerName + " says \"Ok\"";
+          break;
+        case YGOPlayerRemoteActions.Thinking:
+          message = playerName + " says \"Thinking\"";
+          break;
+        case YGOPlayerRemoteActions.WAIT:
+          message = playerName + " says \"Wait\"";
+          break;
+      }
+
+      if (!message) return;
+
+      this.duel.events.dispatch("system-chat-message", {
+        ...data,
+        message
+      });
+    },
+    sendPlayerAction: ({ action, data }: { action: YGOPlayerRemoteActions, data?: any }) => {
+
+      if (Date.now() < this.nextPlayerActionCooldown) return;
+
+      this.nextPlayerActionCooldown = Date.now() + 1000;
+
+      this.ygo.exec({
+        command: new YGOCommands.PlayerRemoteActionCommand({
+          player: this.getActivePlayer(),
+          action,
+          data
+        })
+      })
     }
   };
 
