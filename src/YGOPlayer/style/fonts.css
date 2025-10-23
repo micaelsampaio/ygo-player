@@ -1,0 +1,25 @@
+@font-face {
+  font-family: "ygo-icons";
+  src: url('https://master-duel-cdn.baseira.casa/fonts/ygo-icons.woff2?t=1761169882072') format('woff2'),
+  url('https://master-duel-cdn.baseira.casa/fonts/ygo-icons.woff?t=1761169882072') format('woff'),
+}
+
+[class^="ygo-i--"], [class*=" ygo-i--"] {
+  font-family: 'ygo-icons' !important;
+  font-style:normal;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+
+.ygo-i--b::before { content: "\ea01"; }
+.ygo-i--b_fd::before { content: "\ea02"; }
+.ygo-i--destroy::before { content: "\ea03"; }
+.ygo-i--gy::before { content: "\ea04"; }
+.ygo-i--normal_summon::before { content: "\ea05"; }
+.ygo-i--set::before { content: "\ea06"; }
+.ygo-i--special_summon::before { content: "\ea07"; }
+.ygo-i--special_summon_def::before { content: "\ea08"; }
+.ygo-i--to_hand::before { content: "\ea09"; }
+
+

@@ -47,12 +47,16 @@
         display: flex;
         align-items: center;
         justify-content: center;
+        padding-left: 4px;
+        gap: 4px;
 
         .ygo-card-item-icon {
             flex-shrink: 0;
-            width: 16px;
-            height: 16px;
-            background-color: red;
+            width: 20px;
+            height: 20px;
+            font-size: 20px;
+            text-align: center;
+            font-weight: normal;
         }
 
         .ygo-card-item-text {

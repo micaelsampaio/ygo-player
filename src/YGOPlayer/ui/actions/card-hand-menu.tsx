@@ -5,7 +5,7 @@ import { Card, FieldZone } from "ygo-core";
 import { useCallback, useLayoutEffect, useRef } from "react";
 import { CardMenu } from "../components/CardMenu";
 import { YGOStatic } from "../../core/YGOStatic";
-import { ActionButton } from "../components/ActionButton";
+import { ActionButton, YGOIcon } from "../components/ActionButton";
 
 export function CardHandMenu({
   duel,
@@ -264,9 +264,9 @@ export function CardHandMenu({
 
         <button className="ygo-card-item" onClick={negateCard}>Negate</button>
 
-        <button className="ygo-card-item" type="button" onClick={destroy}>
+        <ActionButton className="ygo-card-item" onClick={destroy} icon={<YGOIcon icon="destroy" />}>
           Destroy
-        </button>
+        </ActionButton>
 
         <button className="ygo-card-item" onClick={toTopDeck}>
           To T/Deck
@@ -276,17 +276,17 @@ export function CardHandMenu({
           To B/Deck
         </button>
 
-        <button className="ygo-card-item" type="button" onClick={banish}>
+        <ActionButton className="ygo-card-item" onClick={banish} icon={<YGOIcon icon="b" />}>
           Banish
-        </button>
+        </ActionButton>
 
-        <button className="ygo-card-item" type="button" onClick={banishFD}>
+        <ActionButton className="ygo-card-item" onClick={banishFD} icon={<YGOIcon icon="b_fd" />}>
           Banish FD
-        </button>
+        </ActionButton>
 
-        <button className="ygo-card-item" type="button" onClick={sendToGy}>
+        <ActionButton className="ygo-card-item" onClick={sendToGy} icon={<YGOIcon icon="gy" />}>
           To Grave
-        </button>
+        </ActionButton>
 
         <ActionButton onClick={toST} icon={<div></div>}>
           <div className="ygo-card-item-text">To S/T</div>
@@ -300,27 +300,28 @@ export function CardHandMenu({
           Reveal
         </button>
 
-        <button
+        <ActionButton
           className="ygo-card-item"
           disabled={freeMonsterZones === 0}
-          type="button"
           onClick={specialSummonATK}
+          icon={<YGOIcon icon="special_summon" />}
         >
           Special Summon ATK
-        </button>
+        </ActionButton>
 
-        <button
+
+        <ActionButton
           className="ygo-card-item"
           disabled={freeMonsterZones === 0}
-          type="button"
           onClick={specialSummonDEF}
+          icon={<YGOIcon icon="special_summon_def" />}
         >
           Special Summon DEF
-        </button>
+        </ActionButton>
 
         {canTribute && <>
           <ActionButton
-            icon={<div></div>}
+            icon={<div className="ygo-i--b"></div>}
             disabled={freeMonsterZones === 0}
             onClick={tributeSummonATK}>
             Tribute Summon ATK
@@ -336,7 +337,7 @@ export function CardHandMenu({
         </>}
 
         <ActionButton
-          icon={<div></div>}
+          icon={<div className="ygo-i--normal_summon"></div>}
           disabled={freeMonsterZones === 0}
           onClick={normalSummon}>
           Normal Summon
@@ -345,7 +346,7 @@ export function CardHandMenu({
         <ActionButton
           className="ygo-card-item"
           disabled={freeMonsterZones === 0}
-          icon={<div></div>}
+          icon={<div className="ygo-i--set"></div>}
           onClick={setSummon}
         >
           Set
