@@ -17,6 +17,7 @@ import { YGOTaskSequence } from "./components/tasks/YGOTaskSequence";
 import { ScaleTransition } from "../duel-events/utils/scale-transition";
 import { Ease } from "../scripts/ease";
 import { WaitForSeconds } from "../duel-events/utils/wait-for-seconds";
+import { CallbackTransition } from "../duel-events/utils/callback";
 
 const ATLAS_1_COORDS = {
     "ok": [0, 0],
@@ -326,6 +327,9 @@ export class YGODuelScene {
                 scale: new THREE.Vector3(0, 0, 0),
                 duration: 0.15,
                 ease: Ease.easeInOut
+            }),
+            new CallbackTransition(() => {
+                obj.visible = false;
             })
         ));
 
