@@ -27,9 +27,11 @@ export class YGODuelScene {
     public duelPhase!: YGOPhaseObject;
     public diceObject!: THREE.Object3D;
     public coinObject!: THREE.Object3D;
+    public middleOfTheFieldPivot: THREE.Vector3;
 
     constructor(private duel: YGODuel) {
         this.gameFields = [];
+        this.middleOfTheFieldPivot = new THREE.Vector3(0, 0, 0);
     }
 
     /**
@@ -173,7 +175,7 @@ export class YGODuelScene {
 
         this.diceObject.visible = false;
         this.coinObject.visible = false;
-
+        this.middleOfTheFieldPivot = new THREE.Vector3(0, 0, 0);
         this.turnPlayer = new YGOTurnPlayer(this.duel);
         this.duelPhase = new YGOPhaseObject(this.duel);
 

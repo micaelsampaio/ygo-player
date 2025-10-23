@@ -552,6 +552,29 @@ export function getCardPositionInFrontOfCamera({ camera, distance = 4 }: { camer
   return startPosition;
 }
 
+export function getCardPositionInFrontOfCameraMiddleOfField({ distance = 4, duel }: { duel: YGODuel, distance?: number }) {
+  const sidebarWidth = 300;
+  const camera = duel.core.camera;
+  const { width } = duel.core.renderer.domElement;
+  const offsetX = (sidebarWidth / width);
+  const ndc = new THREE.Vector3(offsetX, 0, 0.5);
+  ndc.unproject(camera);
+  const direction = ndc.clone().sub(camera.position).normalize();
+  const targetPosition = camera.position.clone().add(direction.multiplyScalar(distance));
+  const middle = duel.duelScene.middleOfTheFieldPivot;
+  const relativeTarget = middle.clone().add(targetPosition.sub(middle));
+  return relativeTarget;
+}
+
+export function getCardRotationRelativeToCamera({ duel, gameObject }: { duel: YGODuel, gameObject: THREE.Object3D }) {
+  const target = duel.core.camera.position.clone();
+  const position = gameObject.position.clone();
+  const m = new THREE.Matrix4();
+  m.lookAt(position, target, gameObject.up);
+  const targetRotation = new THREE.Euler().setFromRotationMatrix(m);
+  return targetRotation;
+}
+
 export function randomIntFromInterval(min: number, max: number): number { // min and max included 
   return Math.floor(Math.random() * (max - min + 1) + min);
 }
