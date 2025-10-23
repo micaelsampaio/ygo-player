@@ -11,7 +11,7 @@ import { RevealEventHandler } from "./events/reveal-event";
 import { SendToGyEventHandler } from "./events/send-to-gy-event";
 import { SynchroSummonEventHandler } from "./events/synchro-summon";
 import { TargetCardEventHandler } from "./events/target-card-event";
-import { TributeSummonHandler } from "./events/tribute-summon-event";
+import { TributeSummonEventHandler } from "./events/tribute-summon-event";
 import { UpdateFieldEvent } from "./events/update-field-event";
 import { XYZAttachMaterialHandler } from "./events/xyz-attach-material-event";
 import { XYZDetachMaterialHandler } from "./events/xyz-detach-material-event";
@@ -49,6 +49,7 @@ const events: any = {
   [YGODuelEvents.LogType.NormalSummon]: MoveCardEventHandler,
   [YGODuelEvents.LogType.SpecialSummon]: MoveCardEventHandler,
   [YGODuelEvents.LogType.SendToGY]: SendToGyEventHandler,
+  [YGODuelEvents.LogType.Tribute]: SendToGyEventHandler,
   [YGODuelEvents.LogType.Banish]: MoveCardEventHandler,
   [YGODuelEvents.LogType.BanishFD]: MoveCardEventHandler,
   [YGODuelEvents.LogType.FieldSpell]: MoveCardEventHandler,
@@ -72,8 +73,8 @@ const events: any = {
   [YGODuelEvents.LogType.XYZDetachMaterial]: XYZDetachMaterialHandler,
   [YGODuelEvents.LogType.XYZAttachMaterial]: XYZAttachMaterialHandler,
   /// Summons
-  [YGODuelEvents.LogType.TributeSummon]: TributeSummonHandler,
-  [YGODuelEvents.LogType.TributeSet]: TributeSummonHandler,
+  [YGODuelEvents.LogType.TributeSummon]: TributeSummonEventHandler,
+  [YGODuelEvents.LogType.TributeSet]: TributeSummonEventHandler,
   [YGODuelEvents.LogType.LinkSummon]: LinkSummonEventHandler,
   [YGODuelEvents.LogType.XYZSummon]: XYZSummonEventHandler,
   [YGODuelEvents.LogType.XYZOverlaySummon]: XYZSummonEventHandler,

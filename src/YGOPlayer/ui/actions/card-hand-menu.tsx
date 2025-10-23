@@ -40,7 +40,7 @@ export function CardHandMenu({
     duel.gameActions.tributeSummon({
       card,
       originZone,
-      position: "faceup-defense",
+      position: "facedown",
     });
   }, [card, index]);
 
@@ -328,10 +328,9 @@ export function CardHandMenu({
           </ActionButton>
 
           <ActionButton
-            icon={<div></div>}
             disabled={freeMonsterZones === 0}
             onClick={tributeSummonDEF}>
-            Tribute Summon ATK
+            Tribute Summon DEF
           </ActionButton>
 
         </>}

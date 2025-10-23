@@ -45,14 +45,69 @@ class TempScene extends YGOComponent {
 
 
     const cb = () => {
-      this.attackingEffect({
-        startTask: this.duel.tasks.startTask.bind(this.duel.tasks)
-      })
+      // this.attackingEffect({
+      //   startTask: this.duel.tasks.startTask.bind(this.duel.tasks)
+      // })
+      this.tributeEffect({ startTask: this.duel.tasks.startTask.bind(this.duel.tasks) })
     }
     setInterval(() => {
       cb();
     }, 2000)
     cb();
+  }
+
+  public tributeEffect({ startTask }: any) {
+
+    const sphere = new THREE.Mesh(
+      new THREE.SphereGeometry(1, 64, 64),
+      new THREE.MeshBasicMaterial({
+        map: this.duel.core.textureLoader.load(this.duel.createCdnUrl("/images/particles/smoke_02.png")),
+        transparent: true,
+      })
+    );
+    sphere.rotateY(THREE.MathUtils.degToRad(Math.random() * 360))
+    sphere.scale.set(0, 0, 0);
+
+    const star = new THREE.Mesh(
+      new THREE.PlaneGeometry(2, 2),
+      new THREE.MeshBasicMaterial({
+        map: this.duel.core.textureLoader.load(this.duel.createCdnUrl("/images/particles/star_08.png")),
+        transparent: true,
+      })
+    )
+    star.scale.set(0.5, 0.5, 0.5);
+    this.duel.core.scene.add(star);
+    this.duel.core.scene.add(sphere);
+
+    startTask(new YGOTaskSequence(
+      new MultipleTasks(
+        new ScaleTransition({
+          gameObject: sphere,
+          scale: new THREE.Vector3(2, 2, 2),
+          duration: 0.25
+        }),
+        new MaterialOpacityTransition({
+          material: sphere.material,
+          opacity: 0,
+          duration: 0.25,
+        }),
+        new ScaleTransition({
+          gameObject: star,
+          scale: new THREE.Vector3(3, 3, 3),
+          duration: 0.15
+        }),
+        new MaterialOpacityTransition({
+          material: star.material,
+          opacity: 0,
+          duration: 0.15,
+        })
+      ),
+      new WaitForSeconds(1),
+      new CallbackTransition(() => {
+        this.duel.core.scene.remove(sphere);
+        this.duel.core.scene.remove(star);
+      })
+    ))
   }
 
   public attackingEffect({ startTask }: any) {
