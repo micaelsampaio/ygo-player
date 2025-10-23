@@ -16,7 +16,6 @@ export class Exec extends BaseControllerCommand {
       return;
     }
 
-    this.duel.updateField();
     this.duel.commands.setState(YGOCommandsControllerState.PLAYING);
     this.duel.ygo.exec(this.command);
   }

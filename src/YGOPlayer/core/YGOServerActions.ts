@@ -106,7 +106,7 @@ export class YGOServerActions extends YGOComponent {
 
         this.timers.setTimeout(() => {
           this.duel.updateField();
-        })// next fram
+        })// next frame
       }
     }
 
