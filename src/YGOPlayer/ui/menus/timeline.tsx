@@ -2,6 +2,7 @@ import { Command, YGOCommandScope } from "ygo-core";
 import { YGODuel } from "../../core/YGODuel";
 import { DefaultTimelineCommand } from "./timeline/commands/default-command";
 import { removeFocusFromActiveElement, stopPropagationCallback } from "../../scripts/utils";
+import { useRef } from "react";
 
 export interface TimelineCommandProps {
   duel: YGODuel
@@ -13,11 +14,12 @@ export interface TimelineCommandProps {
 
 export function TimeLine({ duel }: { duel: YGODuel }) {
   if (!duel.ygo) return null;
-
+  const mouseEnterTime = useRef(Date.now());
   const commands = duel.ygo.commands;
   const currentCommand = duel.ygo.commands.index;
 
   const onCommandClick = (command: Command) => {
+    if (Date.now() <= mouseEnterTime.current) return;
     setTimeout(() => {
       removeFocusFromActiveElement();
     });
@@ -27,6 +29,7 @@ export function TimeLine({ duel }: { duel: YGODuel }) {
   return (
     <div
       className="timeline"
+      onMouseEnter={() => mouseEnterTime.current = Date.now() + 500}
       onMouseMove={stopPropagationCallback}
       onClick={stopPropagationCallback}
     >
