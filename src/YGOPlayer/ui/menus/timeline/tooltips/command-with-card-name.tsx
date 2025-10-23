@@ -18,7 +18,7 @@ export const TooltipCommandWithCardName = memo(function ({
       <div className="command-tooltip">
         <div>
           <div>
-            <b>{command.type}({command.commandId})</b>
+            <b>{command.type}</b>
           </div>
           <div>{names || ""}</div>
         </div>
@@ -30,7 +30,7 @@ export const TooltipCommandWithCardName = memo(function ({
     return <div className="command-tooltip">
       <div>
         <div>
-          <b>{command.type} ({command.commandId})</b>
+          <b>{command.type}</b>
         </div>
       </div>
     </div>
@@ -41,7 +41,7 @@ export const TooltipCommandWithCardName = memo(function ({
     <div className="command-tooltip">
       <div>
         <div>
-          <b>{command.type}({command.commandId})</b>
+          <b>{command.type}</b>
         </div>
         <div>{card?.name}</div>
       </div>
