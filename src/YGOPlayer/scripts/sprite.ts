@@ -13,7 +13,7 @@ export function createAtlasSprite(
   texture.needsUpdate = true;
   texture.repeat.set(1 / tilesX, 1 / tilesY);
   texture.offset.set(x / tilesX, 1 - (y + 1) / tilesY);
-  const material = new THREE.SpriteMaterial({ map: texture, transparent: true });
+  const material = new THREE.SpriteMaterial({ map: texture, transparent: true, sizeAttenuation: false });
   const sprite = new THREE.Sprite(material);
   return sprite;
 }

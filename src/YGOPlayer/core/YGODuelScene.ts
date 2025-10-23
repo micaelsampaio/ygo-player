@@ -276,7 +276,7 @@ export class YGODuelScene {
             const coords = ATLAS_1_COORDS[action] || ATLAS_1_COORDS.ok;
             const sprite = createAtlasSprite(this.duel, "/images/sprites/atlas_1.png", coords[0], coords[1], 8, 8);
             const spriteBg = createAtlasSprite(this.duel, "/images/sprites/atlas_1.png", 3, 0, 8, 8);
-            spriteBg.scale.set(4, 4, 4);
+            spriteBg.scale.set(1, 1, 1);
             spriteBg.position.set(0, 0, 0);
 
             spriteBg.add(sprite);
@@ -296,10 +296,10 @@ export class YGODuelScene {
             }
         }
 
-        obj.scale.set(0, 0, 0);
+        obj.scale.set(0.2, 0.2, 0.2);
         obj.position.copy(position);
 
-        const baseScale = new THREE.Vector3(4, 4, 4);
+        const baseScale = new THREE.Vector3(0.3, 0.3, 0.3);
 
         this.duel.tasks.startTask(new YGOTaskSequence(
             new ScaleTransition({
