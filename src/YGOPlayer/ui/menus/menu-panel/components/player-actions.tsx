@@ -1,6 +1,7 @@
 import { useCallback } from "react";
 import { YGODuel } from "../../../../core/YGODuel";
 import { YGOPlayerRemoteActions } from "ygo-core";
+import { YGOStatic } from "../../../../core/YGOStatic";
 
 export function PlayerRemoteActionsComponent({ duel }: { duel: YGODuel }) {
 
@@ -14,6 +15,7 @@ export function PlayerRemoteActionsComponent({ duel }: { duel: YGODuel }) {
 
   const wait = useCallback(() => {
     duel.serverActions.ygo.sendPlayerAction({ action: YGOPlayerRemoteActions.WAIT })
+    duel.serverActions.ygo.setPlayerPriority(YGOStatic.playerIndex)
   }, []);
 
   return <div className="ygo-player-actions-menu">
