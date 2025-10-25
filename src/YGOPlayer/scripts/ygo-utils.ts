@@ -619,7 +619,7 @@ export function calculateBattleInfo(attackingCard: Card, attackedCard: Card): YG
       attackedDestroyed = true;
       battleDamage = 0; // no LP loss in standard rules for destroying DEF monster
     } else if (battleDamage < 0) {
-      attackingDestroyed = true;
+      attackingDestroyed = false;
       battleDamage = -battleDamage; // attacking player loses LP
     } else {
       // ATK == DEF -> nothing destroyed, no LP loss

@@ -124,7 +124,6 @@ export class ActionAttackSelection extends YGOComponent implements YGOAction {
 
     this.attackButton.gameObject.rotation.z = angle;
 
-
     for (const [, { cardSelection }] of this.selectionZones) {
       const cardMaterial = cardSelection.material as THREE.Material;
       cardMaterial.opacity = this.opacityValue;
