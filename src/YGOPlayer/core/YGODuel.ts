@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { YGOPlayerCore } from "./YGOPlayerCore";
 import { YGODuelState, YGOUiElement } from "../types";
-import { YGOCore, YGOServerGameStateData, YGOGameUtils, YGOClientType, CardData } from "ygo-core";
+import { YGOCore, YGOServerGameStateData, YGOGameUtils, YGOClientType, CardData, YGOCommandScope, YGOCommands } from "ygo-core";
 import { YGOEntity } from "./YGOEntity";
 import { GameController } from "../game/GameController";
 import { EventBus } from "../scripts/event-bus";
@@ -540,6 +540,11 @@ export class YGODuel {
   }
 
   execCommand(command: Command | string) {
+    if (this.ygo.options.controlTogglePriority === false) {
+      if (typeof command === "object" && command.scope === YGOCommandScope.GAME) {
+        this.serverActions.ygo.exec({ command: new YGOCommands.PlayerPriorityCommand({ player: YGOStatic.playerIndex }) });
+      }
+    }
     this.serverActions.ygo.exec({ command })
   }
 

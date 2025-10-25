@@ -4,7 +4,6 @@ import { Card, FieldZone } from "ygo-core";
 import { YGODuel } from "../../core/YGODuel";
 import {
   getTransformFromCamera,
-  getXyzMonstersZones,
 } from "../../scripts/ygo-utils";
 import { CardMenu } from "../components/CardMenu";
 import { GameCard } from "../../game/GameCard";
@@ -14,8 +13,6 @@ export function CardZoneMenu({
   card,
   zone,
   gameCard,
-  clearAction,
-  mouseEvent,
 }: {
   duel: YGODuel;
   gameCard: GameCard;

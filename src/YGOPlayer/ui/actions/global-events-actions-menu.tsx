@@ -14,7 +14,7 @@ export function GlobalEventsActionsMenu({
   transform: THREE.Mesh;
 }) {
   const menuRef = useRef<HTMLDivElement>();
-  const player = duel.getActivePlayer();
+  const player = duel.serverActions.getActivePlayer();
   const timer = useRef<number>(-1);
   const field = duel.ygo.state.fields[player];
 

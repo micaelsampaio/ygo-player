@@ -30,7 +30,10 @@ export class YGOServerActions extends YGOComponent {
   }
 
   public getActivePlayer(): number {
-    return YGOStatic.playerIndex;
+    if (this.duel.ygo.options.controlTogglePriority === false) {
+      return YGOStatic.playerIndex;
+    }
+    return this.duel.getActivePlayer();
   }
 
   public ygo = {
@@ -163,7 +166,7 @@ export class YGOServerActions extends YGOComponent {
       if (data.type === "ygo:commands:exec") {
         const eventData = data.data;
         const command = new JSONCommand({ type: eventData.command.type, data: eventData.command.data });
-        command.commandId = eventData.command.id;
+        command.commandId = eventData.command.commandId;
         command.timestamp = eventData.command.timestamp;
         this.duel.commands.exec(new YGOControllerCommands.Exec(this.duel, command));
       } else if (data.type === "ygo:commands:previous") {
