@@ -1,7 +1,7 @@
 import { YGOCore, YGOGameUtils } from "ygo-core";
 import { YGODuel } from "../../../core/YGODuel";
 import { DuelLogContainer, DuelLogRow } from "./duel-log-components";
-import type { CommandType } from "ygo-core";
+import type { CardPosition, CommandType } from "ygo-core";
 import { memo } from "react";
 import { YGOStatic } from "../../../core/YGOStatic";
 
@@ -41,6 +41,7 @@ export const DefaultLogRow = memo(
     const originZoneClassName = getZoneData(orginZone)!;
     const zoneClassName = getZoneData(zone)!;
     const isFaceDown = SHOW_CARD_COMMANDS.has(log.type) ? false : HIDE_CARD_COMMANDS.has(log.type) ? true : log.position ? !log.position.includes("faceup") : false;
+    const defenseData = isDefenseData(zone || orginZone, log.position);
 
     return (
       <DuelLogRow log={log}>
@@ -53,7 +54,7 @@ export const DefaultLogRow = memo(
                   isFaceDown ? <>
                     <img
                       src={duel.createCdnUrl("/images/card_back.png")}
-                      style={{ width: "45px" }}
+                      style={{ width: "45px", transform: defenseData }}
                     />
                   </> : <>
                     <img
@@ -63,7 +64,7 @@ export const DefaultLogRow = memo(
                       onTouchEnd={(event: any) => duel.events.dispatch("on-card-mouse-up", { card, event })}
                       onClick={() => duel.gameActions.setSelectedCard({ player: log.player, card })}
                       src={card.images.small_url}
-                      style={{ width: "45px" }}
+                      style={{ width: "45px", transform: defenseData }}
                     />
                   </>
                 }
@@ -110,4 +111,18 @@ function getZoneData(zone: string | undefined) {
   }
 
   return zoneStr
+}
+
+function isDefenseData(zone: CardPosition | undefined, position: CardPosition | undefined) {
+
+  console.log("TCL:: ZONE: ", zone);
+  console.log("TCL:: POSITION: ", position);
+
+  if (zone?.startsWith("M") || zone?.startsWith("EMZ")) {
+    if (position?.includes("defense") || position?.includes("facedown")) {
+      return "rotate(-90deg) scale(0.8)"
+    }
+  }
+
+  return undefined;
 }
