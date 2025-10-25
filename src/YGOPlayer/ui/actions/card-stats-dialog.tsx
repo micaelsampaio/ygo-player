@@ -33,23 +33,27 @@ export function CardStatsDialog({ duel, card, player, originZone, clearAction }:
 
         if (typeof newAtk !== "undefined" || typeof newDef !== "undefined") {
             if (newAtk !== card.currentAtk || newDef !== card.currentDef) {
-                duel.execCommand(new YGOCommands.ChangeCardAtkDefCommand({
-                    player,
-                    id: card.id,
-                    originZone,
-                    atk: typeof newAtk !== "undefined" ? newAtk : undefined,
-                    def: typeof newDef !== "undefined" ? newDef : undefined,
-                }));
+                duel.serverActions.ygo.exec({
+                    command: new YGOCommands.ChangeCardAtkDefCommand({
+                        player,
+                        id: card.id,
+                        originZone,
+                        atk: typeof newAtk !== "undefined" ? newAtk : undefined,
+                        def: typeof newDef !== "undefined" ? newDef : undefined,
+                    })
+                });
             }
         }
 
         if (typeof newLevel !== "undefined" && newLevel !== card.currentLevel) {
-            duel.execCommand(new YGOCommands.ChangeCardLevelCommand({
-                player,
-                id: card.id,
-                originZone,
-                level: newLevel
-            }));
+            duel.serverActions.ygo.exec({
+                command: new YGOCommands.ChangeCardLevelCommand({
+                    player,
+                    id: card.id,
+                    originZone,
+                    level: newLevel
+                })
+            });
         }
 
     }, [card, atk, def, level]);
