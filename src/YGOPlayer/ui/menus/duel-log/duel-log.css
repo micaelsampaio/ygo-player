@@ -1,8 +1,8 @@
 .ygo-player-core .ygo-duel-log-container {
     position: absolute;
     right: 0px;
-    top: 20px;
-    height: 100%;
+    top: var(--ygo-header-margin);
+    bottom: var(--ygo-footer-margin);
     width: 250px;
     color: #FFF;
     background-color: var(--ygo-overlay-background-color);
@@ -10,7 +10,6 @@
     overflow-x: hidden;
     overflow-y: auto;
     border-radius: 10px;
-    max-height: calc(100% - var(--ygo-footer-margin) - 20px);
     z-index: 5;
 }
 

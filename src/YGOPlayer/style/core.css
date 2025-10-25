@@ -172,10 +172,10 @@
 
 .ygo-player-core .float-right-menu {
     position: absolute;
-    top: 20px;
+    top: var(--ygo-header-margin);
+    bottom: var(--ygo-footer-margin);
     right: 0px;
     padding: 10px;
-    height: calc(100% - var(--ygo-footer-margin) - 20px);
     min-width: 84px;
     background: var(--ygo-background-color-70);
     border: 1px solid var(--ygo-border-color);

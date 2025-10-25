@@ -33,7 +33,8 @@
   --ygo-space-lg: 32px;
   --ygo-space-xl: 48px;
 
-  --ygo-footer-margin: 120px;
+  --ygo-header-margin: 100px;
+  --ygo-footer-margin: 200px;
 
   --ygo-font-xs: 12px;
   /* 0.75rem */
