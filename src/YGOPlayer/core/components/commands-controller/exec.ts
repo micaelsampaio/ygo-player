@@ -1,4 +1,4 @@
-import { Command } from "ygo-core";
+import { Command, YGOCommandScope } from "ygo-core";
 import { BaseControllerCommand } from "./commands";
 import { YGODuel } from "../../YGODuel";
 import { YGOCommandsControllerState } from "./YGOCommandsController";
@@ -16,7 +16,12 @@ export class Exec extends BaseControllerCommand {
       return;
     }
 
-    this.duel.commands.setState(YGOCommandsControllerState.PLAYING);
+    if (this.command.scope !== YGOCommandScope.GAME) {
+      this.duel.commands.setState(YGOCommandsControllerState.PLAYING_COMMAND);
+    } else {
+      this.duel.commands.setState(YGOCommandsControllerState.PLAYING);
+    }
+
     this.duel.ygo.exec(this.command);
   }
 }

@@ -165,13 +165,9 @@ export class YGOCommandsController extends YGOComponent {
 
     if (this.state === YGOCommandsControllerState.PLAYING && this.duel.ygo.hasNextCommand()) {
       clearTimeout(this.timerToRequestNextCommand)
-      if (this.duel.ygo.peek()?.scope === YGOCommandScope.GAME) {
-        this.timerToRequestNextCommand = setTimeout(() => {
-          if (this.duel.ygo.peek()?.scope === YGOCommandScope.GAME) {
-            this.duel.serverActions.controls.play(); // keep playing
-          }
-        }, 100) as unknown as number;
-      }
+      this.timerToRequestNextCommand = setTimeout(() => {
+        this.duel.serverActions.controls.play(); // keep playing
+      }, 100) as unknown as number;
       return;
     }
 
