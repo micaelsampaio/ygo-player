@@ -1,9 +1,10 @@
 import { useCallback, useEffect } from "react";
 import { YGODuel } from "../../core/YGODuel";
 import { removeFocusFromActiveElement } from "../../scripts/utils";
+import { YGOCommandsControllerState } from "../../core/components/commands-controller/YGOCommandsController";
 
 export function ControlsMenu({ duel }: { duel: YGODuel }) {
-    const isPlaying = duel.commands.isPlaying();
+    const isPlaying = duel.commands.getState() === YGOCommandsControllerState.PLAYING;
     const hasPrevCommand = duel.ygo.hasPrevCommand();
     const hasNextCommand = duel.ygo.hasNextCommand();
 

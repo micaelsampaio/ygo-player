@@ -357,6 +357,11 @@
 }
 
 .ygo-player-core {
+    .ygo-left-menu-item-container {
+        border: 1px solid var(--ygo-border-color);
+        padding: 10px;
+    }
+
     .ygo-player-actions-menu {
         border: 1px solid var(--ygo-border-color);
         box-sizing: border-box;
