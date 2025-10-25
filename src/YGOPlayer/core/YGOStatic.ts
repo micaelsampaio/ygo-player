@@ -5,4 +5,5 @@ export class YGOStatic {
   static isPlayer = (playerIndex: number) => YGOStatic.playerIndex === playerIndex;
   static isOtherPlayer = (playerIndex: number) => YGOStatic.otherPlayerIndex === playerIndex;
   static isPlayerPOV = (playerIndex: number) => YGOStatic.playerPOV === playerIndex;
+  static getPlayerCssIndex = (playerIndex: number) => YGOStatic.isPlayerPOV(playerIndex) ? 0 : 1;
 }

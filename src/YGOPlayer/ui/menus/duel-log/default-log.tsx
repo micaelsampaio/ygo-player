@@ -3,6 +3,7 @@ import { YGODuel } from "../../../core/YGODuel";
 import { DuelLogContainer, DuelLogRow } from "./duel-log-components";
 import type { CommandType } from "ygo-core";
 import { memo } from "react";
+import { YGOStatic } from "../../../core/YGOStatic";
 
 const HIDE_CARD_COMMANDS = new Set<CommandType>([
   "Draw From Deck"
@@ -78,7 +79,7 @@ export const DefaultLogRow = memo(
                   </div>
                   {log.originZone && log.zone && <>
                     <div>
-                      <div className={`ygo-icon-game-zone-arrow ygo-player-${log.player}`}></div>
+                      <div className={`ygo-icon-game-zone-arrow ygo-player-${YGOStatic.getPlayerCssIndex(log.player)}`}></div>
                     </div>
                     <div>
                       <div className={zoneClassName}></div>
@@ -99,7 +100,7 @@ function getZoneData(zone: string | undefined) {
 
   const zoneData = YGOGameUtils.getZoneData(zone as any);
   const zoneId = YGOGameUtils.createZone(zoneData.zone, 0, zoneData.zoneIndex).toLowerCase();
-  let zoneStr = `ygo-icon-game-zone ygo-player-${zoneData.player} ygo-icon-game-zone-container`;
+  let zoneStr = `ygo-icon-game-zone ygo-player-${YGOStatic.getPlayerCssIndex(zoneData.player)} ygo-icon-game-zone-container`;
   if (zoneData.zone === "ORU" || zoneData.zone === "ORUEMZ") {
     zoneStr += ` ygo-icon-game-zone-oru ygo-icon-game-zone-container-rounded`;
   } else if (zoneData.zone === "M" || zoneData.zone === "S" || zoneData.zone === "EMZ") {
