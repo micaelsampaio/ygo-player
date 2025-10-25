@@ -11,6 +11,8 @@ const HIDE_CARD_COMMANDS = new Set<CommandType>([
 const SHOW_CARD_COMMANDS = new Set<CommandType>([
   "To Hand",
   "Destroy",
+  "Send To GY",
+  "Banish"
 ])
 
 export const DefaultLogRow = memo(
