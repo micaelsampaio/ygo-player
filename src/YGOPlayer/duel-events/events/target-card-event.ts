@@ -33,6 +33,7 @@ export class TargetCardEventHandler extends YGOCommandHandler {
     let destroyCard = false;
 
     if (!card) {
+      alert("HERE");
       const cardRef = duel.ygo.state.getCardData(event.id)!;
       card = new GameCard({ card: cardRef, duel, stats: false });
       destroyCard = true;
@@ -57,7 +58,7 @@ export class TargetCardEventHandler extends YGOCommandHandler {
     });
 
     const targetPosition = card.gameObject.position.clone();
-    targetPosition.z += 0.05;
+    targetPosition.z += 0.1;
 
     const cardSelectionMesh = new THREE.Mesh(cardSelection, material);
     cardSelectionMesh.position.copy(card.gameObject.position);
@@ -66,6 +67,11 @@ export class TargetCardEventHandler extends YGOCommandHandler {
     const cardSelectionMesh2 = new THREE.Mesh(cardSelection, material2);
     cardSelectionMesh2.position.copy(card.gameObject.position);
     cardSelectionMesh2.rotation.copy(card.gameObject.rotation);
+
+    if (event.position?.includes("facedown")) {
+      cardSelectionMesh.rotateY(THREE.MathUtils.degToRad(180));
+      cardSelectionMesh2.rotateY(THREE.MathUtils.degToRad(180));
+    }
 
     duel.core.scene.add(cardSelectionMesh);
     duel.core.scene.add(cardSelectionMesh2);
