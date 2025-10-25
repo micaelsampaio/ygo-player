@@ -541,7 +541,11 @@ export class YGODuel {
 
   execCommand(command: Command | string) {
     if (this.ygo.options.controlTogglePriority === false) {
-      if (typeof command === "object" && command.scope === YGOCommandScope.GAME) {
+      if (typeof command === "object"
+        && command.scope === YGOCommandScope.GAME
+        && command.type !== "Duel Turn"
+        && command.type !== "Duel Phase"
+      ) {
         this.serverActions.ygo.exec({ command: new YGOCommands.PlayerPriorityCommand({ player: YGOStatic.playerIndex }) });
       }
     }
