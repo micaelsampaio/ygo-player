@@ -86,7 +86,8 @@ export class YGOPhaseObject extends YGOEntity implements YGOUiElement {
     this.fieldTurnHover.visible = false;
   }
 
-  private updateTexture(turn: number, turnPlayer: number, phase: YGODuelPhase) {
+  private updateTexture(turnProp: number, turnPlayer: number, phase: YGODuelPhase) {
+    const turn = Math.max(turnProp, 1);
     const ctx = this.ctx;
     const canvasWidth = this.canvas.width;
     const canvasHeight = this.canvas.height;
