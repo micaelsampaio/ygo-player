@@ -33,7 +33,6 @@ export class TargetCardEventHandler extends YGOCommandHandler {
     let destroyCard = false;
 
     if (!card) {
-      alert("HERE");
       const cardRef = duel.ygo.state.getCardData(event.id)!;
       card = new GameCard({ card: cardRef, duel, stats: false });
       destroyCard = true;
