@@ -291,9 +291,9 @@ export class YGODuelScene {
             obj = spriteBg;
 
             if (YGOStatic.isPlayerPOV(player)) {
-                position.y = this.duel.fields[0].hand.getCardHandPivot() + 4
+                position.y = this.duel.fields[YGOStatic.playerIndex].hand.getCardHandPivot() + 4
             } else {
-                position.y = this.duel.fields[1].hand.getCardHandPivot() - 4
+                position.y = this.duel.fields[1 - YGOStatic.playerIndex].hand.getCardHandPivot() - 4
             }
         }
 
