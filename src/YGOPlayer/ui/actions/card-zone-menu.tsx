@@ -7,6 +7,7 @@ import {
 } from "../../scripts/ygo-utils";
 import { CardMenu } from "../components/CardMenu";
 import { GameCard } from "../../game/GameCard";
+import { ActionButton, YGOIcon } from "../components/ActionButton";
 
 export function CardZoneMenu({
   duel,
@@ -148,7 +149,7 @@ export function CardZoneMenu({
 
   // TOKEN MENU
   if (isToken) {
-    return <CardMenu indicator menuRef={menuRef}>
+    return <CardMenu indicator playerIndex={zoneData.player} menuRef={menuRef}>
 
       <button type="button" className="ygo-card-item" onClick={moveCard}>
         Move
@@ -192,7 +193,7 @@ export function CardZoneMenu({
 
   if (!isMonsterZone && isSpellTrap) {
     return (
-      <CardMenu cols indicator menuRef={menuRef}>
+      <CardMenu cols indicator playerIndex={zoneData.player} menuRef={menuRef}>
 
         <button type="button" className="ygo-card-item" onClick={moveCard}>
           Move
@@ -261,12 +262,14 @@ export function CardZoneMenu({
 
   // CARD MENU
   return (
-    <CardMenu cols indicator menuRef={menuRef}>
-      <button type="button" className="ygo-card-item" onClick={moveCard}>
-        Move
-      </button>
+    <CardMenu cols indicator playerIndex={zoneData.player} menuRef={menuRef}>
 
-      <button className="ygo-card-item" onClick={negateCard}>Negate</button>
+      {isPendulum && <>
+        <button type="button" className="ygo-card-item" onClick={toExtraDeck}>
+          To Extra Deck
+        </button>
+        <div></div>
+      </>}
 
       {isXYZ && (
         <>
@@ -277,6 +280,7 @@ export function CardZoneMenu({
           >
             View Materials
           </button>
+          <div></div>
         </>
       )}
 
@@ -289,8 +293,16 @@ export function CardZoneMenu({
           >
             Attach Material to XYZ
           </button>
+          <div></div>
         </>
       )}
+
+      <button type="button" className="ygo-card-item" onClick={moveCard}>
+        Move
+      </button>
+
+      <button className="ygo-card-item" onClick={negateCard}>Negate</button>
+
 
       <button type="button" className="ygo-card-item" onClick={targetCard}>
         Target
@@ -298,22 +310,21 @@ export function CardZoneMenu({
 
       <button type="button" className="ygo-card-item" onClick={changeCardStats}>Change Card Stats</button>
 
-
-      <button type="button" className="ygo-card-item" onClick={toBottomDeck}>
-        To Bottom Deck
+      <button className="ygo-card-item" onClick={toTopDeck}>
+        To T/Deck
       </button>
 
-      <button type="button" className="ygo-card-item" onClick={toTopDeck}>
-        To Top Deck
+      <button className="ygo-card-item" onClick={toBottomDeck}>
+        To B/Deck
       </button>
 
-      <button type="button" className="ygo-card-item" onClick={banishFD}>
-        Banish FD
-      </button>
-
-      <button type="button" className="ygo-card-item" onClick={banish}>
+      <ActionButton className="ygo-card-item" onClick={banish} icon={<YGOIcon icon="b" />}>
         Banish
-      </button>
+      </ActionButton>
+
+      <ActionButton className="ygo-card-item" onClick={banishFD} icon={<YGOIcon icon="b_fd" />}>
+        Banish FD
+      </ActionButton>
 
       {isMainDeckCard && (
         <button type="button" className="ygo-card-item" onClick={toHand}>
@@ -327,9 +338,9 @@ export function CardZoneMenu({
         </button>
       )}
 
-      <button type="button" className="ygo-card-item" onClick={destroyCard}>
+      <ActionButton className="ygo-card-item" onClick={destroyCard} icon={<YGOIcon icon="destroy" />}>
         Destroy
-      </button>
+      </ActionButton>
 
       {!isLink && (
         <>
@@ -367,25 +378,16 @@ export function CardZoneMenu({
               )}
             </>
           )}
-
         </>
       )}
 
-      {isPendulum && <>
-        <button type="button" className="ygo-card-item" onClick={toExtraDeck}>
-          To Extra Deck
-        </button>
-      </>}
+      {isFaceUp && <button type="button" className="ygo-card-item" onClick={activateCard}>
+        Activate
+      </button>}
 
-      <button type="button" className="ygo-card-item" onClick={sendToGY}>
-        Send To GY
-      </button>
-
-      {isFaceUp && (
-        <button type="button" className="ygo-card-item" onClick={activateCard}>
-          Activate
-        </button>
-      )}
+      <ActionButton className="ygo-card-item" onClick={sendToGY} icon={<YGOIcon icon="gy" />}>
+        To Grave
+      </ActionButton>
     </CardMenu>
   );
 }
