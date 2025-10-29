@@ -203,6 +203,7 @@ export class YGODuelScene {
 
 
         this.duel.ygo.events.on("player-remote-action", data => {
+            if (this.duel.commands.isRecovering()) return;
             this.processPlayerAction(data);
         })
     }
@@ -301,6 +302,23 @@ export class YGODuelScene {
         obj.position.copy(position);
 
         const baseScale = new THREE.Vector3(0.3, 0.3, 0.3);
+
+
+        let soundPath;
+
+        switch (action) {
+            case YGOPlayerRemoteActions.OK:
+                soundPath = this.duel.createCdnUrl("/sounds/user_action_positive.ogg")
+                break;
+            case YGOPlayerRemoteActions.Thinking:
+            case YGOPlayerRemoteActions.WAIT:
+                soundPath = this.duel.createCdnUrl("/sounds/user_action_negative.ogg")
+                break;
+        }
+
+        if (soundPath) {
+            this.duel.soundController.playSound({ key: soundPath, volume: 0.4 });
+        }
 
         this.duel.tasks.startTask(new YGOTaskSequence(
             new ScaleTransition({
