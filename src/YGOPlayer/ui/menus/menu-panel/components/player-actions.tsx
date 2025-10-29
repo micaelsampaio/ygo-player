@@ -14,8 +14,8 @@ export function PlayerRemoteActionsComponent({ duel }: { duel: YGODuel }) {
   }, []);
 
   const wait = useCallback(() => {
-    duel.serverActions.ygo.sendPlayerAction({ action: YGOPlayerRemoteActions.WAIT })
     duel.serverActions.ygo.setPlayerPriority(YGOStatic.playerIndex)
+    duel.serverActions.ygo.sendPlayerAction({ action: YGOPlayerRemoteActions.WAIT })
   }, []);
 
   return <div className="ygo-player-actions-menu">
