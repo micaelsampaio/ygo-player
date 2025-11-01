@@ -71,15 +71,15 @@
 
     .ygo-player-hud-game-results {
         position: absolute;
-        top: -20px;
+        top: -16px;
         left: 10px;
         display: flex;
         gap: 6px;
 
         .ygo-game-result-bullet {
-            width: 16px;
-            height: 16px;
-            border: 2px solid black;
+            width: 12px;
+            height: 12px;
+            border: 1px solid black;
             background-color: rgba(0, 0, 0, 0.3);
             border-radius: 100%;
 
