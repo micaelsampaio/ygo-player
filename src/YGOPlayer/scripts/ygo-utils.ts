@@ -593,39 +593,16 @@ export function calculateBattleInfo(attackingCard: Card, attackedCard: Card): YG
   const isAtk2 = !YGOGameUtils.isDefense(attackedCard);
 
   const attackPower = isAtk1 ? attackingCard.currentAtk : attackingCard.currentDef;
-  const defendPower = attackedCard.currentAtk;
-  const defendDef = attackedCard.currentDef;
+  const defendPower = isAtk2 ? attackedCard.currentAtk : attackedCard.currentDef;
 
-  let battleDamage = 0;
   let attackingDestroyed = false;
   let attackedDestroyed = false;
 
-  if (isAtk2) {
-    battleDamage = attackPower - defendPower;
-    if (battleDamage > 0) {
-      attackedDestroyed = true;
-    } else if (battleDamage < 0) {
-      attackingDestroyed = true;
-    } else {
-      attackingDestroyed = attackPower > 0 ? true : false;
-      attackedDestroyed = attackPower > 0 ? true : false;
-      battleDamage = 0;
-    }
-  } else {
-    // Attack vs Defense
-    battleDamage = attackPower - defendDef;
-    if (battleDamage > 0) {
-      attackedDestroyed = true;
-      battleDamage = 0;
-    } else if (battleDamage < 0) {
-      attackingDestroyed = false;
-      battleDamage = -battleDamage; // attacking player loses LP
-    } else {
-      attackingDestroyed = false
-      attackedDestroyed = false
-      battleDamage = 0;
-    }
-  }
+  let battleDamage = attackPower - defendPower
+  attackingDestroyed = isAtk2 && attackPower > 0 && battleDamage < 0;
+  attackedDestroyed = battleDamage > 0;
+
+  if (!isAtk2 && battleDamage > 0) battleDamage = 0;
 
   return {
     attacking: {
