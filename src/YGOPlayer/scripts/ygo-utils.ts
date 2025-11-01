@@ -606,7 +606,6 @@ export function calculateBattleInfo(attackingCard: Card, attackedCard: Card): YG
       attackedDestroyed = true;
     } else if (battleDamage < 0) {
       attackingDestroyed = true;
-      battleDamage = -battleDamage; // player loses this much LP
     } else {
       attackingDestroyed = attackPower > 0 ? true : false;
       attackedDestroyed = attackPower > 0 ? true : false;
@@ -617,14 +616,13 @@ export function calculateBattleInfo(attackingCard: Card, attackedCard: Card): YG
     battleDamage = attackPower - defendDef;
     if (battleDamage > 0) {
       attackedDestroyed = true;
-      battleDamage = 0; // no LP loss in standard rules for destroying DEF monster
+      battleDamage = 0;
     } else if (battleDamage < 0) {
       attackingDestroyed = false;
       battleDamage = -battleDamage; // attacking player loses LP
     } else {
-      // ATK == DEF -> nothing destroyed, no LP loss
-      attackingDestroyed = defendPower > 0 ? true : false;
-      attackedDestroyed = defendPower > 0 ? true : false;
+      attackingDestroyed = false
+      attackedDestroyed = false
       battleDamage = 0;
     }
   }

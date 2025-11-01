@@ -24,7 +24,7 @@ export class YGOGameActions {
         "action_card_selection"
       );
   }
-  
+
   //////////// UTILS
   private clearAction() {
     this.duel.events.dispatch("clear-ui-action");
