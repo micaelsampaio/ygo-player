@@ -1130,6 +1130,20 @@ export class YGOGameActions {
       attackingZone
     }))
 
+    if (battleDamage && battleDamage > 0) {
+      this.duel.execCommand(new YGOCommands.LifePointsTransactionCommand({
+        player: attackedZoneData.player,
+        value: "-" + battleDamage.toString()
+      }))
+    }
+
+    if (battleDamage && battleDamage < 0) {
+      this.duel.execCommand(new YGOCommands.LifePointsTransactionCommand({
+        player: attackingZoneData.player,
+        value: battleDamage.toString()
+      }))
+    }
+
     if (destroyAttacking) {
       this.duel.execCommand(new YGOCommands.DestroyCardCommand({
         player: attackingZoneData.player,
@@ -1143,20 +1157,6 @@ export class YGOGameActions {
         player: attackedZoneData.player,
         id: attackedId,
         originZone: attackedZone
-      }))
-    }
-
-    if (battleDamage && battleDamage > 0) {
-      this.duel.execCommand(new YGOCommands.LifePointsTransactionCommand({
-        player: attackedZoneData.player,
-        value: "-" + battleDamage.toString()
-      }))
-    }
-
-    if (battleDamage && battleDamage < 0) {
-      this.duel.execCommand(new YGOCommands.LifePointsTransactionCommand({
-        player: attackingZoneData.player,
-        value: battleDamage.toString()
       }))
     }
   }
