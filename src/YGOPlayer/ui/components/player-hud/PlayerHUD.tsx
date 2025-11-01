@@ -23,6 +23,18 @@ export function PlayerHUD({ duel, player }: { duel: YGODuel, player: number }) {
     const state = field.state;
     const playerName = field.player.name;
     const { LP, lifePointsState } = usePlayerLp(duel, player);
+    const [gameData] = useState(() => {
+        const games = duel.ygo.options.numberOfGames || 1;
+        const currentGame = duel.ygo.options.currentGame || 1;
+        const wins = duel.ygo.options.gamesResult || [];
+        const gamesArray = Array.from(Array(games).keys());
+        return {
+            games,
+            currentGame,
+            gamesArray,
+            wins
+        }
+    })
 
     const changeLifePoints = () => {
         if (!duel.isGameActive) return;
@@ -43,7 +55,23 @@ export function PlayerHUD({ duel, player }: { duel: YGODuel, player: number }) {
             ? " ygo-lp-decreasing" : "";
 
     return <div className={`ygo-player-hud ygo-player-${playerPOV}`}>
-        <div className="ygo-player-hude-player-content">
+        {gameData.games > 1 && <div className={`ygo-player-hud-game-results ygo-player-${playerPOV}`}>
+            {
+                gameData.gamesArray.map(gameId => {
+
+                    let className = "";
+                    if (gameId < gameData.currentGame - 1) {
+                        if (gameData.wins[gameId] === player) {
+                            className = "ygo-game-winner";
+                        } else {
+                            className = "ygo-game-loser";
+                        }
+                    }
+                    return <div key={gameId} className={`ygo-game-result-bullet ${className}`}></div>
+                })
+            }
+        </div>}
+        <div className="ygo-player-hud-player-content">
             <div className="ygo-player-hud-bar"></div>
             <div className="ygo-player-hud-name">
                 {playerName} {state !== YGOPlayerState.IDLE ? `(${state})` : ''}
