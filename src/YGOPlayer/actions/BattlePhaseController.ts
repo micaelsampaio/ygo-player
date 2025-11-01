@@ -76,6 +76,8 @@ export class BattlePhaseController extends YGOComponent {
       attackButton.gameObject.position.copy(attackButton.position);
       attackButton.gameObject.rotation.copy(attackButton.rotation);
       attackButton.onClickCb = () => {
+        if (!this.duel.ygo.options.viewOpponentCards && !YGOStatic.isPlayerPOV(attackButton.cardZone.zoneData.player)) return;
+
         const battleAction = this.duel.gameController.getComponent<ActionAttackSelection>("attack_selection_action")
         const zones = battleAction.getMonstersZonesToAttack(attackButton.cardZone.zoneData.player);
 
