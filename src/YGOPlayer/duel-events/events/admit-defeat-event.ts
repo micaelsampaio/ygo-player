@@ -16,6 +16,17 @@ export class AdmitDefeatEventHandler extends YGOCommandHandler {
   }
 
   public start(): void {
+
+    this.props.duel.events.dispatch("set-ui-menu", {
+      group: "game-overlay",
+      type: "duel-endgame-overlay",
+      data: {
+        loser: this.props.event.player
+      }
+    })
+
+    this.props.duel.endDuel();
+
     // Admit defeat doesn't require visual effects, complete in next frame
     this.timeoutId = setTimeout(() => {
       // Dispatch game-defeat event to notify the web interface
@@ -27,7 +38,7 @@ export class AdmitDefeatEventHandler extends YGOCommandHandler {
   }
 
   public finish(): void {
-      clearTimeout(this.timeoutId);
-      this.timeoutId = undefined;
+    clearTimeout(this.timeoutId);
+    this.timeoutId = undefined;
   }
 }

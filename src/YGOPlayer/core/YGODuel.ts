@@ -58,6 +58,7 @@ export class YGODuel {
   public duelScene: YGODuelScene;
   public settings: YGOPlayerSettingsAdapter;
   public globalHotKeysManager: HotKeyManager;
+  public isGameActive: boolean;
   private loadingTask: PromiseTask;
 
   constructor({
@@ -90,6 +91,7 @@ export class YGODuel {
     this.mouseEvents = new YGOMouseEvents(this);
     this.assets = new YGOAssets(this);
     this.events = new EventBus();
+    this.isGameActive = true;
     this.globalHotKeysManager = this.createShortcuts();
 
     this.gameController.addComponent("mouse_events", this.mouseEvents);
@@ -203,6 +205,7 @@ export class YGODuel {
     })
 
     this.events.on("enable-game-actions", () => {
+      if (!this.isGameActive) return;
       this.actionManager.actionsEnabled = true;
     });
 
@@ -587,5 +590,10 @@ export class YGODuel {
     this.globalHotKeysManager?.clear();
 
     this.client.disconnect();
+  }
+
+  public endDuel() {
+    this.isGameActive = false;
+    this.actionManager.actionsEnabled = false;
   }
 }

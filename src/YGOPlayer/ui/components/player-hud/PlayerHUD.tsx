@@ -25,6 +25,8 @@ export function PlayerHUD({ duel, player }: { duel: YGODuel, player: number }) {
     const { LP, lifePointsState } = usePlayerLp(duel, player);
 
     const changeLifePoints = () => {
+        if (!duel.isGameActive) return;
+
         const value = prompt("LPS:");
 
         if (value) {

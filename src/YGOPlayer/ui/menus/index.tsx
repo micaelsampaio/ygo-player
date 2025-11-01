@@ -9,6 +9,7 @@ import { SelectedCardHighlightedMenu } from "./select-card-highligh-menu";
 import { SelectedCardMenu } from "./menu-panel/components/selected-card-menu";
 import { ViewDeckPopup } from "./view-deck";
 import { XyzMonsterMaterialsMenu } from "./xyz-monster-materials";
+import { DuelEndGameOverlay } from "./duel-endgame-overlay";
 
 export const MENUS = {
     "extra-deck": ExtraDeck,
@@ -22,4 +23,5 @@ export const MENUS = {
     "controls-menu": ControlsMenu,
     "settings-menu": GameSettingsMenu,
     "duel-notes-game-event-hanlder": DuelNotesActionEventHandler,
+    "duel-endgame-overlay": DuelEndGameOverlay,
 }

@@ -74,6 +74,7 @@ export class YGOTurnPlayer extends YGOEntity implements YGOUiElement {
     }
 
     onMouseClick(): void {
+        if (!this.duel.isGameActive) return;
         this.duel.setActivePlayer(this.duel.getActivePlayer() === 0 ? 1 : 0);
     }
 

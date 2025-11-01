@@ -983,4 +983,33 @@
             opacity: 1;
         }
     }
+
+
+    .ygo-end-game-overlay {
+        background-color: var(--ygo-overlay-background-color);
+        position: fixed;
+        left: 300px;
+        right: 0;
+        bottom: 0;
+        top: 0;
+
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        font-size: 100px;
+        font-weight: bold;
+
+        .ygo-winner-text {
+            color: #ffff00;
+        }
+
+        .ygo-loser-text {
+            color: #ce3636
+        }
+
+        @media (max-width: 768px) {
+            font-size: 60px;
+        }
+    }
 }
