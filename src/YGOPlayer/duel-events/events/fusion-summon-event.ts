@@ -56,14 +56,14 @@ export class FusionSummonEventHandler extends YGOCommandHandler {
       let card: GameCard;
       let cardOverlay: THREE.Object3D;
 
-      if (cardZone && cardZone.getGameCard()) {
+      if (cardZone?.getGameCard()) {
         card = cardZone.getGameCard();
         card.hideCardStats();
         cardOverlay = card.gameObject.clone();
         cardZone.setCard(null);
       } else {
         const cardRef = duel.ygo.state.getCardData(material.id)!;
-        card = new GameCard({ card: cardRef, duel, player: cardZone.player, stats: false });
+        card = new GameCard({ card: cardRef, duel, player: zoneData.player, stats: false });
         cardOverlay = card.gameObject.clone();
         card.destroy();
       }
@@ -87,7 +87,6 @@ export class FusionSummonEventHandler extends YGOCommandHandler {
 
       return cardOverlay;
     }).filter(c => c) as any;
-
 
     const modal = GameModalOverlayMesh();
     duel.core.scene.add(modal);
