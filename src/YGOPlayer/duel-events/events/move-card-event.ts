@@ -19,6 +19,7 @@ import * as THREE from "three";
 import { MultipleTasks } from "../utils/multiple-tasks";
 import { YGOCommandHandler } from "../../core/components/YGOCommandHandler";
 import { WaitForSeconds } from "../utils/wait-for-seconds";
+import { revealCardAnimation } from "./reveal-event";
 
 interface MoveMultileCardCommandData {
   player: number;
@@ -236,6 +237,19 @@ export class MoveCardEventHandler extends YGOCommandHandler {
           })
         )
       );
+    }
+
+    if ((originZoneData.zone === "GY" || originZoneData.zone === "B") && (zoneData.zone === "H")) {
+      revealCardAnimation({
+        originalCard: card.gameObject,
+        card: card.gameObject,
+        duel,
+        startPosition: endPosition,
+        startRotation: endRotation,
+        player: event.player,
+        sequence,
+        startTask: this.props.startTask
+      });
     }
 
     sequence.add(
