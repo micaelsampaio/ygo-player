@@ -221,12 +221,14 @@ export function CardZoneMenu({
           Target
         </button>
 
-        <button type="button" className="ygo-card-item" onClick={toBottomDeck}>
-          To Bottom Deck
-        </button>
-        <button type="button" className="ygo-card-item" onClick={toTopDeck}>
-          To Top. Deck
-        </button>
+        {card.isMainDeckCard && <>
+          <button type="button" className="ygo-card-item" onClick={toBottomDeck}>
+            To Bottom Deck
+          </button>
+          <button type="button" className="ygo-card-item" onClick={toTopDeck}>
+            To Top. Deck
+          </button>
+        </>}
 
         <button type="button" className="ygo-card-item" onClick={banishFD}>
           Banish FD
@@ -235,6 +237,7 @@ export function CardZoneMenu({
         <button type="button" className="ygo-card-item" onClick={banish}>
           Banish
         </button>
+
         {
           card.isMainDeckCard && <button type="button" className="ygo-card-item" onClick={toHand}>
             To Hand
