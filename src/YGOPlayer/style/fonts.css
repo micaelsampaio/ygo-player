@@ -1,7 +1,7 @@
 @font-face {
   font-family: "ygo-icons";
-  src: url('https://master-duel-cdn.baseira.casa/fonts/ygo-icons.woff2?t=1761169882072') format('woff2'),
-  url('https://master-duel-cdn.baseira.casa/fonts/ygo-icons.woff?t=1761169882072') format('woff'),
+  src: url('https://cdn.ygo101.com/fonts/ygo-icons.woff2?t=1761169882072') format('woff2'),
+  url('https://cdn.ygo101.com/fonts/ygo-icons.woff?t=1761169882072') format('woff'),
 }
 
 [class^="ygo-i--"], [class*=" ygo-i--"] {
