@@ -834,6 +834,9 @@ export class YGOGameActions {
     position: "top" | "bottom" | undefined;
     shuffle?: boolean;
   }) {
+
+    if (!card.isMainDeckCard) return this.toExtraDeck({ card, originZone })
+
     const player = this.duel.serverActions.getActivePlayer();
     this.duel.execCommand(
       new YGOCommands.ToDeckCommand({

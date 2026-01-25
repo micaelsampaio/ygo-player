@@ -11,6 +11,7 @@ const HIDE_CARD_COMMANDS = new Set<CommandType>([
 
 const SHOW_CARD_COMMANDS = new Set<CommandType>([
   "To Hand",
+  "To Extra Deck",
   "Destroy",
   "Send To GY",
   "Banish"
