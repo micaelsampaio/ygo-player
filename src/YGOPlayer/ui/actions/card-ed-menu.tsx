@@ -32,43 +32,57 @@ export function CardExtraDeckMenu({
     cardIndex + 1
   );
 
+  const closeExtraDeckMenu = () => {
+    duel.events.dispatch("close-ui-menu", { group: "game-overlay", type: "extra-deck" })
+  }
+
   const linkSummon = useCallback(() => {
+    closeExtraDeckMenu();
     duel.gameActions.linkSummon({ card });
   }, [card]);
 
   const xyzSummonATK = useCallback(() => {
+    closeExtraDeckMenu();
     duel.gameActions.xyzSummon({ card, position: "faceup-attack" });
   }, [card]);
 
   const xyzSummonDEF = useCallback(() => {
+    closeExtraDeckMenu();
     duel.gameActions.xyzSummon({ card, position: "faceup-defense" });
   }, [card]);
 
   const xyzOverlaySummonATK = useCallback(() => {
+    closeExtraDeckMenu();
     duel.gameActions.xyzOverlaySummon({ card, position: "faceup-attack" });
   }, [card]);
 
   const xyzOverlaySummonDEF = useCallback(() => {
+    closeExtraDeckMenu();
     duel.gameActions.xyzOverlaySummon({ card, position: "faceup-defense" });
   }, [card]);
 
   const synchroSummonATK = useCallback(() => {
+    closeExtraDeckMenu();
     duel.gameActions.synchroSummon({ card, position: "faceup-attack" });
   }, [card]);
 
   const synchroSummonDEF = useCallback(() => {
+    closeExtraDeckMenu();
     duel.gameActions.synchroSummon({ card, position: "faceup-defense" });
   }, [card]);
 
   const fusionSummonATK = useCallback(() => {
+    closeExtraDeckMenu();
     duel.gameActions.fusionSummon({ card, position: "faceup-attack" });
   }, [card]);
 
   const fusionSummonDEF = useCallback(() => {
+    closeExtraDeckMenu();
     duel.gameActions.fusionSummon({ card, position: "faceup-defense" });
   }, [card]);
 
   const specialSummonATK = useCallback(() => {
+    closeExtraDeckMenu();
     duel.gameActions.specialSummon({
       card,
       originZone,
@@ -77,6 +91,7 @@ export function CardExtraDeckMenu({
   }, [card, originZone]);
 
   const specialSummonDEF = useCallback(() => {
+    closeExtraDeckMenu();
     duel.gameActions.specialSummon({
       card,
       originZone,
@@ -101,6 +116,7 @@ export function CardExtraDeckMenu({
   }, [card, originZone]);
 
   const attachMaterial = useCallback(() => {
+    closeExtraDeckMenu();
     duel.gameActions.attachMaterial({ card, originZone });
   }, [card, originZone]);
 

@@ -39,7 +39,7 @@ export function ExtraDeck({
 
   return (
     <div
-      className="float-right-menu"
+      className="float-right-menu ygo-right-menu-grid"
       onMouseMove={stopPropagationCallback}
       onClick={stopPropagationCallback}
       onScroll={() => {
@@ -48,36 +48,44 @@ export function ExtraDeck({
         }
       }}
     >
+      <button className="float-right-menu-toggle-btn" onClick={() => {
+        duel.events.dispatch("close-ui-menu", { group: "game-overlay", type: "extra-deck" })
+      }}>
+        <div className="ygo-close-btn-icon"></div>
+      </button>
       <div className="float-right-menu-icon">
         <div className="ygo-icon-game-zone ygo-icon-game-zone-ed"></div>
       </div>
-
-      {cards.map((card: Card) => (
-        <div>
-          <img
-            onMouseDown={(event: any) => duel.events.dispatch("on-card-mouse-down", { card, event })}
-            onMouseUp={(event: any) => duel.events.dispatch("on-card-mouse-up", { card, event })}
-            onTouchStart={(event: any) => duel.events.dispatch("on-card-mouse-down", { card, event })}
-            onTouchEnd={(event: any) => duel.events.dispatch("on-card-mouse-up", { card, event })}
-            onClick={(e) => {
-              action.eventData = {
-                duel,
-                card,
-                mouseEvent: e,
-                htmlCardElement: e.target,
-              };
-              duel.actionManager.setAction(action);
-              duel.gameActions.setSelectedCard({
-                player,
-                card
-              })
-            }}
-            key={card.index}
-            src={card.images.small_url}
-            className="ygo-card"
-          />
+      <div className="float-right-menu-content">
+        <div className="float-right-menu-cards">
+          {cards.map((card: Card) => (
+            <div>
+              <img
+                onMouseDown={(event: any) => duel.events.dispatch("on-card-mouse-down", { card, event })}
+                onMouseUp={(event: any) => duel.events.dispatch("on-card-mouse-up", { card, event })}
+                onTouchStart={(event: any) => duel.events.dispatch("on-card-mouse-down", { card, event })}
+                onTouchEnd={(event: any) => duel.events.dispatch("on-card-mouse-up", { card, event })}
+                onClick={(e) => {
+                  action.eventData = {
+                    duel,
+                    card,
+                    mouseEvent: e,
+                    htmlCardElement: e.target,
+                  };
+                  duel.actionManager.setAction(action);
+                  duel.gameActions.setSelectedCard({
+                    player,
+                    card
+                  })
+                }}
+                key={card.index}
+                src={card.images.small_url}
+                className="ygo-card"
+              />
+            </div>
+          ))}
         </div>
-      ))}
+      </div>
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import { stopPropagationCallback } from "../../scripts/utils";
 
-export function ActionsFloatingMenu({ menuRef, children, x, y }: any) {
-    const style: any = { left: x ? `${x}px` : undefined, top: y ? `${y}px` : undefined }
+export function ActionsFloatingMenu({ menuRef, children, x, y, transform }: any) {
+    const style: any = { left: x ? `${x}px` : undefined, top: y ? `${y}px` : undefined, transform }
 
     return <div className="ygo-floating-actions-menu"
         ref={menuRef}

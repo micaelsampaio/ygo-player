@@ -47,10 +47,58 @@
   }
 
   .ygo-left-menu-chat-container {
+    display: flex;
+    flex-direction: column;
     min-height: 300px;
     flex-shrink: 0;
     overflow: hidden;
+
+    &.ygo-hidden {
+      min-height: 50px;
+    }
   }
+
+  .ygo-chat-toggle-wrapper {
+    display: flex;
+    justify-content: flex-end;
+    flex-shrink: 0;
+  }
+
+  .ygo-chat-toggle-btn {
+    border-left: 1px solid var(--ygo-border-color);
+    border-top: 1px solid var(--ygo-border-color);
+    border-right: 1px solid var(--ygo-border-color);
+    border-bottom: none;
+
+    background-color: transparent;
+    color: var(--ygo-text, #fff);
+    padding: 3px 6px;
+    cursor: pointer;
+
+    .ygo-close-btn-icon {
+      width: 20px;
+      height: 20px;
+      background-image: var(--ygo-player-asset-ui-card-icons);
+      background-size: 800% 800%;
+      background-repeat: no-repeat;
+      background-position: 71% 0%;
+      pointer-events: none;
+      transition: transform 0.25s ease-in-out;
+
+      &.ygo-collapsed {
+        transform: rotate(180deg);
+      }
+    }
+
+    &:hover {
+      background-color: var(--ygo-bg, #111);
+    }
+  }
+
+  .ygo-chat-toggle-btn:hover {
+    background: #222;
+  }
+
 
   .ygo-chat-container {
     display: flex;
@@ -63,6 +111,11 @@
     border: 1px solid var(--ygo-border-color);
     padding: 10px;
     box-sizing: border-box;
+
+    &.ygo-hidden {
+      max-height: 2px;
+      padding: 0;
+    }
 
     .ygo-chat-messages {
       flex-grow: 1;

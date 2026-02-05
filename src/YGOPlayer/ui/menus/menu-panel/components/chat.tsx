@@ -11,6 +11,7 @@ type ChatMessage = {
 };
 
 export function Chat({ duel }: { duel: YGODuel }) {
+  const [isChatHidden, setIsChatHidden] = useState(false);
   const [message, setMessage] = useState("");
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
 
@@ -18,6 +19,10 @@ export function Chat({ duel }: { duel: YGODuel }) {
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const shouldAutoScroll = useRef(true);
+
+  const toggleChat = () => {
+    setIsChatHidden(prev => !prev);
+  };
 
   const handleChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
     if (e.target.value.length <= 100) {
@@ -96,40 +101,53 @@ export function Chat({ duel }: { duel: YGODuel }) {
   }, [chatMessages]);
 
   let prevUser = "";
+
+  if(duel.ygo.options.showChat === false) return null;
+
   return (
-    <div className="ygo-chat-container">
-      <div className="ygo-chat-messages" ref={messagesContainerRef}>
-        {chatMessages.map((msg) => {
-
-          if (msg.system) {
-            prevUser = "";
-            return <div className="ygo-schat-message">{msg.message}</div>
-          }
-
-          const className = msg.owner
-            ? "ygo-chat-message right"
-            : "ygo-chat-message left";
-          const username = prevUser !== msg.username ? msg.username : "";
-          prevUser = msg.username;
-          return (
-            <div key={msg.key} className={className}>
-              {username && <div className="ygo-text-xs">{username}</div>}
-              {msg.message}
-            </div>
-          );
-        })}
-        <div ref={messagesEndRef} />
+    <div className={`ygo-left-menu-chat-container ${isChatHidden ? "ygo-hidden" : ""}`}>
+      <div className="ygo-chat-toggle-wrapper">
+        <button
+          className="ygo-chat-toggle-btn"
+          onClick={toggleChat}
+        >
+          <div className={`ygo-close-btn-icon ${isChatHidden ? "ygo-collapsed" : ""}`}></div>
+        </button>
       </div>
+      <div className={`ygo-chat-container ${isChatHidden ? "ygo-hidden" : ""}`}>
+        <div className="ygo-chat-messages" ref={messagesContainerRef}>
+          {chatMessages.map((msg) => {
 
-      <form className="ygo-chat-input" onSubmit={submitMessage}>
-        <YGOTextArea className="ygo-single-line" ref={textareaRef} onKeyDown={(e: any) => {
-          if (e.key === "Enter" && !e.shiftKey) {
-            e.preventDefault();
-            e.stopPropagation();
-            sendMessage();
-          }
-        }} value={message} onChange={handleChange} />
-      </form>
+            if (msg.system) {
+              prevUser = "";
+              return <div className="ygo-schat-message">{msg.message}</div>
+            }
+
+            const className = msg.owner
+              ? "ygo-chat-message right"
+              : "ygo-chat-message left";
+            const username = prevUser !== msg.username ? msg.username : "";
+            prevUser = msg.username;
+            return (
+              <div key={msg.key} className={className}>
+                {username && <div className="ygo-text-xs">{username}</div>}
+                {msg.message}
+              </div>
+            );
+          })}
+          <div ref={messagesEndRef} />
+        </div>
+
+        <form className="ygo-chat-input" onSubmit={submitMessage}>
+          <YGOTextArea className="ygo-single-line" ref={textareaRef} onKeyDown={(e: any) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              e.stopPropagation();
+              sendMessage();
+            }
+          }} value={message} onChange={handleChange} />
+        </form>
+      </div>
     </div>
   );
 }

@@ -34,9 +34,8 @@ export function LeftMenuPanel({ duel }: { duel: YGODuel }) {
       </>
     }
 
-    <div className="ygo-left-menu-chat-container">
-      <Chat duel={duel} />
-    </div>
+
+    <Chat duel={duel} />
 
     {replayCommands && <div className="ygo-left-menu-item-container">
       <GameTimelineControls duel={duel} />

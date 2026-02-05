@@ -14,6 +14,7 @@ import { YGOGameUtils } from 'ygo-core';
 import { Ease } from '../scripts/ease';
 import { getResolutionInfo } from '../scripts/use-device-resolution-info';
 import { YGOTimerUtils } from '../scripts/timer-utils';
+import { getScreenPositionFromWorld } from '../scripts/ygo-utils';
 
 type CardSelectionType = "card" | "zone";
 
@@ -93,9 +94,16 @@ export class ActionCardSelection extends YGOComponent implements YGOAction {
             this.cancelSelection();
         };
 
+        const emz1 = this.duel.fields[0].extraMonsterZone[0].gameObject.position;
+        const emz2 = this.duel.fields[0].extraMonsterZone[1].gameObject.position;
+        const middlePoint = emz1.clone().add(emz2).multiplyScalar(0.5);
+        const screenPoint = getScreenPositionFromWorld(this.duel, middlePoint);
+
+
         this.duel.events.dispatch("set-ui-action", {
             type: "card-multiple-selection-menu",
             data: {
+                confirmButtonPivot: screenPoint,
                 showConfirm: this.isMultipleSelection ? this.showConfirm : false,
                 onCompleted: this.onMultipleSelectionCompletedClick.bind(this)
             }

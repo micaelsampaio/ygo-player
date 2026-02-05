@@ -484,6 +484,25 @@ export function getTransformFromCamera(
   };
 }
 
+export function getScreenPositionFromWorld(
+  duel: YGODuel,
+  worldPosition: THREE.Vector3
+): { x: number; y: number } {
+  const canvas = duel.core.renderer.domElement;
+
+  const projected = worldPosition.clone();
+  projected.project(duel.core.camera);
+
+  const halfWidth = canvas.width / 2;
+  const halfHeight = canvas.height / 2;
+
+  return {
+    x: projected.x * halfWidth + halfWidth,
+    y: -projected.y * halfHeight + halfHeight,
+  };
+}
+
+
 export function replayToYGOProps(
   playersData: { mainDeck: Card[]; extraDeck: Card[] }[],
   replay: YGOReplayData
