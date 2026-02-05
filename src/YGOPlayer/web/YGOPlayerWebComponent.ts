@@ -132,7 +132,7 @@ export class YGOPlayerComponentImpl extends HTMLElement implements YGOPlayerComp
 
   replay(props: YGOPlayerStartReplayProps) {
 
-    const options: YGOPropsOptions = {};
+    const options: YGOPropsOptions = { ...props.options || {} };
 
     const players = props.replay.players.map(
       (playerData: any, playerIndex: any) => {
