@@ -544,6 +544,8 @@ export class YGOGameActions {
 
     const player = this.duel.serverActions.getActivePlayer();
 
+    alert("HERE DISAPEAR");
+
     this.duel.execCommand(
       new YGOCommands.DisappearCommand({
         player,
