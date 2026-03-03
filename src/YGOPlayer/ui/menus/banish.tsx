@@ -46,6 +46,7 @@ export function Banish({
         <div className="ygo-icon-game-zone ygo-icon-game-zone-b"></div>
       </div>
 
+      <div className="float-right-menu-content">
       {cards.map((card: Card) => {
         const isVisible = card.position !== "facedown" || isPlayerPOV;
         return (
@@ -82,6 +83,7 @@ export function Banish({
             </div>
           </div>)
       })}
+      </div>
     </div>
   );
 }

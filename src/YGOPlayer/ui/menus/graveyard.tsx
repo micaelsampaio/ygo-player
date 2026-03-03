@@ -45,6 +45,7 @@ export function Graveyard({
         <div className="ygo-icon-game-zone ygo-icon-game-zone-gy"></div>
       </div>
 
+      <div className="float-right-menu-content">
       {gy.map((card: Card) => (
         <div>
           <img
@@ -71,6 +72,7 @@ export function Graveyard({
           />
         </div>
       ))}
+      </div>
     </div>
   );
 }
