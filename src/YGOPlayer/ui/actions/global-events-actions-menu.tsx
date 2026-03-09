@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
+import { useCallback, useLayoutEffect, useRef } from "react";
 import { YGODuel } from "../../core/YGODuel";
 import { getTransformFromCamera, } from "../../scripts/ygo-utils";
 import { CardMenu } from "../components/CardMenu";
@@ -15,7 +15,6 @@ export function GlobalEventsActionsMenu({
 }) {
   const menuRef = useRef<HTMLDivElement>();
   const player = duel.serverActions.getActivePlayer();
-  const timer = useRef<number>(-1);
   const field = duel.ygo.state.fields[player];
 
   const destroyAllCards = useCallback(() => {
@@ -37,7 +36,7 @@ export function GlobalEventsActionsMenu({
       eventData: { duel }
     });
     duel.actionManager.clearAction();
-    timer.current = setTimeout(() => duel.actionManager.setAction(action)) as unknown as number;
+    duel.actionManager.setAction(action);
   }, [])
 
   const ripCardFromHandRandom = useCallback(() => {
@@ -128,12 +127,6 @@ export function GlobalEventsActionsMenu({
       })
     }
   }
-
-  useEffect(() => {
-    return () => {
-      clearTimeout(timer.current);
-    }
-  }, [])
 
   useLayoutEffect(() => {
     const container = menuRef.current!;
