@@ -5,10 +5,11 @@ const shortcuts = [
   { keys: ["Arrow Right"], action: "Next Duel Event" },
   { keys: ["Space"], action: "Play / Pause" },
   { keys: ["Esc"], action: "Open / Close menu" },
-  { keys: ["Esc"], action: "Open Settins" },
+  { keys: ["Esc"], action: "Open Settings" },
   { keys: ["C"], action: "Toggle Game Controls" },
   { keys: ["D"], action: "Toggle Duel Log" },
-  { keys: ["Shift", "D"], action: "Open Shortcuts Information" },
+  { keys: ["Shift", "P"], action: "Open Shortcuts Information" },
+  { keys: ["K"], action: "Pass Priority" },
 ];
 
 export function GamControlsDialog({ close }: { close: () => void }) {

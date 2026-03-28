@@ -93,6 +93,24 @@
         }
     }
 
+    .ygo-continuous-accept-badge {
+        margin-top: 4px;
+        padding: 2px 8px;
+        font-size: 11px;
+        font-weight: bold;
+        letter-spacing: 0.05em;
+        color: #fff;
+        background: rgba(255, 80, 0, 0.85);
+        border-left: 3px solid #ff5000;
+        text-align: center;
+        animation: ygo-pulse-badge 1.2s ease-in-out infinite;
+    }
+
+    @keyframes ygo-pulse-badge {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+
     @media (max-width: 768px) and (orientation: landscape) {
         .ygo-player-hud-player-content {
             min-width: 100px;
