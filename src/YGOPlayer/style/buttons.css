@@ -54,6 +54,21 @@
     &:hover:not(:disabled) {
       background: var(--ygo-action-color-dark);
     }
+
+    &.ygo-btn-action-active {
+      background: #22a855;
+      box-shadow: 0 0 8px #22a855;
+      animation: ygo-btn-active-pulse 1.2s ease-in-out infinite;
+
+      &:hover:not(:disabled) {
+        background: #22a855;
+      }
+    }
+  }
+
+  @keyframes ygo-btn-active-pulse {
+    0%, 100% { box-shadow: 0 0 6px #22a855; }
+    50% { box-shadow: 0 0 14px #22a855; }
   }
 
   .ygo-btn-danger {

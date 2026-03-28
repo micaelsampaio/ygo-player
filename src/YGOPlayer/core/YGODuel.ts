@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { YGOPlayerCore } from "./YGOPlayerCore";
 import { YGODuelState, YGOUiElement } from "../types";
-import { YGOCore, YGOServerGameStateData, YGOGameUtils, YGOClientType, CardData, YGOCommandScope, YGOCommands } from "ygo-core";
+import { YGOCore, YGOServerGameStateData, YGOGameUtils, YGOClientType, CardData, YGOCommandScope, YGOCommands, YGOPlayerRemoteActions } from "ygo-core";
 import { YGOEntity } from "./YGOEntity";
 import { GameController } from "../game/GameController";
 import { EventBus } from "../scripts/event-bus";
@@ -59,6 +59,7 @@ export class YGODuel {
   public settings: YGOPlayerSettingsAdapter;
   public globalHotKeysManager: HotKeyManager;
   public isGameActive: boolean;
+  public continuousAccept: boolean = false;
   private loadingTask: PromiseTask;
 
   constructor({
@@ -198,6 +199,12 @@ export class YGODuel {
 
     this.ygo.events.on("set-duel-turn-priority", (data: any) => {
       this.events.dispatch("render-ui");
+      if (this.continuousAccept) {
+        const localPlayer = YGOStatic.playerIndex;
+        if (localPlayer >= 0 && this.ygo.state.turnPriority === localPlayer) {
+          this.passPriority();
+        }
+      }
     });
 
     this.ygo.events.on("player-remote-action", remoteData => {
@@ -469,6 +476,14 @@ export class YGODuel {
     return this.ygo.state.turnPriority;
   }
 
+  public passPriority() {
+    if (!this.ygo?.state.waitingForResponse) return;
+    this.serverActions.ygo.exec({
+      command: new YGOCommands.PlayerPriorityCommand({ player: 1 - YGOStatic.playerIndex }),
+    });
+    this.serverActions.ygo.sendPlayerAction({ action: YGOPlayerRemoteActions.OK });
+  }
+
   public setActivePlayer(player: number) {
     if (this.ygo.options.controlOpponentCards) {
       this.serverActions.ygo.setPlayerPriority(player);
@@ -499,7 +514,14 @@ export class YGODuel {
     }, {
       keys: "Shift+P",
       action: "shortcuts"
+    }, {
+      keys: "k",
+      action: "passPriority"
     }]);
+
+    this.globalHotKeysManager.on("passPriority", () => {
+      this.passPriority();
+    });
 
     this.globalHotKeysManager.on("toggleControls", () => {
       this.events.dispatch("toggle-ui-menu", { group: "game-overlay", type: "controls-menu" });
