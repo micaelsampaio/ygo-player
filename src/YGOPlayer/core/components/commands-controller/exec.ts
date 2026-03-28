@@ -1,5 +1,5 @@
 import { Command, YGOCommandScope } from "ygo-core";
-import { BaseControllerCommand } from "./commands";
+import { BaseControllerCommand, ControllerCommandTag } from "./commands";
 import { YGODuel } from "../../YGODuel";
 import { YGOCommandsControllerState } from "./YGOCommandsController";
 
@@ -8,6 +8,9 @@ export class Exec extends BaseControllerCommand {
   constructor(private duel: YGODuel, private command: Command) {
     super();
     this.type = "EXEC"
+    if (duel.commands.isRecovering()) {
+      this.addTag(ControllerCommandTag.EXEC_IMMEDIATLY);
+    }
   }
 
   exec(): void {

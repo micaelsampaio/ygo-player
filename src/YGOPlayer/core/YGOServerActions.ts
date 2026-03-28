@@ -151,13 +151,7 @@ export class YGOServerActions extends YGOComponent {
       if (gameState.commands.length > 0) {
         this.duel.commands.startRecover();
         gameState.commands.forEach(command => {
-          if (command.type === "ygo:commands:exec") {
-            const eventData = command.data;
-            const cmd = new JSONCommand({ type: eventData.command.type, data: eventData.command.data });
-            cmd.commandId = eventData.command.commandId;
-            cmd.timestamp = eventData.command.timestamp;
-            this.duel.ygo.exec(cmd);
-          }
+          this.processServerCommand("server:exec", command);
         });
         this.duel.commands.endRecover();
 
