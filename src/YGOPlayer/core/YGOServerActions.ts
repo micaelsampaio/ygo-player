@@ -143,21 +143,21 @@ export class YGOServerActions extends YGOComponent {
     })
   }
 
-  public processServerCommand(eventName: string, data: any) {
+  public async processServerCommand(eventName: string, data: any) {
     if (eventName === "server:game-state") {
       const gameState = data as YGOServerGameStateData;
-      this.duel.createYGO(gameState);
+      await this.duel.createYGO(gameState);
 
       if (gameState.commands.length > 0) {
-        this.duel.commands.isRecovering();
+        this.duel.commands.startRecover();
         gameState.commands.forEach(command => {
-          this.processServerCommand(command.type, command.data);
-        })
+          this.processServerCommand("server:exec", command);
+        });
         this.duel.commands.endRecover();
 
         this.timers.setTimeout(() => {
           this.duel.updateField();
-        })// next frame
+        });
       }
     }
 

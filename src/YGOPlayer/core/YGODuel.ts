@@ -278,8 +278,6 @@ export class YGODuel {
 
       this.updateField();
 
-      this.fields.forEach(player => player.hand.destroyAllCards());
-
       this.serverActions.server.setClientReady();
     } catch (error) {
       console.error("TCL:  ~ YGODuel ~ load ~ error:", error)
