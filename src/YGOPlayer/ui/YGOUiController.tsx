@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import { YGODuel } from "../core/YGODuel";
 import { ACTIONS } from "./actions";
 import { DuelLogMenu } from "./menus/duel-log/duel-log";
@@ -7,7 +7,6 @@ import { TimeLine } from "./menus/timeline";
 import { BottomRightActions } from "./menus/bottom-right-actions";
 import { PlayerHUD } from "./components/player-hud/PlayerHUD";
 import { CardLongPressEffect } from "./components/card-long-press-effect/CardLongPressEffect";
-import { RotateYourPhoneModal } from "./menus/rotate-your-phone";
 import { useDeviceResolutionInfo } from "../scripts/use-device-resolution-info";
 import { LeftMenuPanel } from "./menus/menu-panel/LeftMenuPanel";
 import { YGOStatic } from "../core/YGOStatic";
@@ -127,6 +126,12 @@ export function YGOUiController({ duel }: { duel: YGODuel }) {
         });
     }, []);
 
+    useLayoutEffect(() => {
+        if (duel) {
+            duel.core.setIsMobile(isMobile);
+        }
+    }, [duel, isMobile])
+
     const Action = (ACTIONS as any)[action.type] as any;
 
     if (!duel) return null;
@@ -138,8 +143,8 @@ export function YGOUiController({ duel }: { duel: YGODuel }) {
         <PlayerHUD duel={duel} player={YGOStatic.playerIndex} />
         <PlayerHUD duel={duel} player={YGOStatic.otherPlayerIndex} />
         <CardLongPressEffect duel={duel} />
-        <RotateYourPhoneModal isPortrait={isPortrait} isMobile={isMobile} />
-        <LeftMenuPanel duel={duel} />
+        {/* <RotateYourPhoneModal isPortrait={isPortrait} isMobile={isMobile} /> */}
+        <LeftMenuPanel duel={duel} isMobile={isMobile} />
 
         {
             menus.map(menu => {

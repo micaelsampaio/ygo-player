@@ -111,18 +111,18 @@
         }
     }
 
+    @media (max-width: 768px) {
+        .ygo-player-hud {
+            transform: scale(0.6);
+            transform-origin: top right;
 
-    /* <div className={`ygo-player-hud ygo-player-${player}`}>
-        <div className="ygo-player-hud-player-content">
-            <div className="ygo-player-hud-bar"></div>
-            <div className="ygo-player-hud-name">
-                {playerName}
-            </div>
-            <div className="ygo-player-hud-lp" onClick={test}>
-                LP {LP}
-            </div>
-            <div className="ygo-player-hud-bar"></div>
-        </div>
-    </div>
-} */
+            &.ygo-player-0 {
+                bottom: 200px;
+            }
+
+            &.ygo-player-1 {
+                top: 20px;
+            }
+        }
+    }
 }

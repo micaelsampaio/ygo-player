@@ -14,6 +14,20 @@
     padding: 16px;
   }
 
+  .ygo-left-menu-panel-mobile {
+    position: fixed;
+    left: 0px;
+    top: 0px;
+    height: 100dvh;
+    z-index: 100;
+    display: flex;
+    gap: 30px;
+    flex-direction: column;
+    padding: 16px;
+    align-items: center;
+    justify-content: center;
+  }
+
   .ygo-left-top-menus {
     display: flex;
     font-weight: bold;
@@ -175,6 +189,18 @@
       border-radius: 4px;
     }
   }
+}
 
+@media (max-width: 768px) {
+  .ygo-player-core {
+    .ygo-left-menu-panel {
+      width: 0px;
+      height: 0px;
+      padding: 0px;
+    }
 
+    .ygo-left-top-menus {
+      display: none;
+    }
+  }
 }

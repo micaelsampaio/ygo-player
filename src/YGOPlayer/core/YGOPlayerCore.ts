@@ -4,6 +4,7 @@ import { GLTF, GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 //@ts-ignore
 import { Font, FontLoader } from 'three/addons/loaders/FontLoader.js';
 import { EventBus } from '../scripts/event-bus';
+import { getResolutionInfo } from '../scripts/use-device-resolution-info';
 // import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
 export const globalUniforms = {
@@ -23,7 +24,9 @@ export class YGOPlayerCore {
     public unscaledDeltaTime: number;
     public fonts = new Map<string, Font>();
     public mapBounds: THREE.Object3D;
+    public mobileMapBounds: THREE.Object3D;
     public events: EventBus<any>;
+    public isMobile: boolean;
 
     // time
     public timeScale: number;
@@ -58,21 +61,28 @@ export class YGOPlayerCore {
         this.renderer.outputColorSpace = THREE.SRGBColorSpace;
 
         const mapGeometry = new THREE.PlaneGeometry(36, 25);
-        const mapMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000, transparent: true, opacity: 0, wireframe: true });
+        const mapMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000, transparent: true, opacity: 1, wireframe: true });
         this.mapBounds = new THREE.Mesh(mapGeometry, mapMaterial);
+        this.mobileMapBounds = new THREE.Mesh(
+            new THREE.PlaneGeometry(26, 25),
+            new THREE.MeshBasicMaterial({ color: 0xff00ff, transparent: true, opacity: 1, wireframe: true })
+        );
 
         this.scene.add(this.mapBounds);
+        this.isMobile = getResolutionInfo().isMobile;
 
         this.eventsController = new AbortController();
 
-        window.addEventListener("resize", () => {
-            this.camera.aspect = window.innerWidth / window.innerHeight;
-            this.camera.updateProjectionMatrix();
-            this.renderer.setSize(window.innerWidth, window.innerHeight);
-            this.render();
-            this.updateCamera();
-            this.events.dispatch("resize");
-        }, { signal: this.eventsController.signal });
+        window.addEventListener("resize", this.resize.bind(this), { signal: this.eventsController.signal });
+    }
+
+    private resize() {
+        this.camera.aspect = window.innerWidth / window.innerHeight;
+        this.camera.updateProjectionMatrix();
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.render();
+        this.updateCamera();
+        this.events.dispatch("resize");
     }
 
     public render() {
@@ -131,11 +141,11 @@ export class YGOPlayerCore {
     }
 
     updateCamera() {
-        const box = new THREE.Box3().setFromObject(this.mapBounds);
+        const box = new THREE.Box3().setFromObject(this.isMobile ? this.mobileMapBounds : this.mapBounds);
         const center = box.getCenter(new THREE.Vector3());
         const size = box.getSize(new THREE.Vector3());
 
-        const sidebarWidth = 300;
+        const sidebarWidth = this.isMobile ? 0 : 300;
         const screenWidth = window.innerWidth - sidebarWidth;
         const screenHeight = window.innerHeight;
 
@@ -191,5 +201,12 @@ export class YGOPlayerCore {
             const child = scene.children[0];
             scene.remove(child);
         }
+    }
+
+    public setIsMobile(isMobile: boolean) {
+        if (this.isMobile != isMobile) {
+            this.resize();
+        }
+        this.isMobile = isMobile;
     }
 }
