@@ -125,12 +125,13 @@ export function CardZoneMenu({
   useLayoutEffect(() => {
     const container = menuRef.current!;
     const size = container.getBoundingClientRect();
-    const { x, y, width, height } = getTransformFromCamera(
-      duel,
-      gameCard.gameObject
-    );
-    container.style.top = Math.max(0, y - size.height) + "px";
-    container.style.left = x - size.width / 2 + width / 2 + "px";
+    const { x, y, width } = getTransformFromCamera(duel, gameCard.gameObject);
+
+    const top = Math.min(Math.max(y - size.height, 0), window.innerHeight - size.height);
+    const left = Math.min(Math.max(x - size.width / 2 + width / 2, 0), window.innerWidth - size.width);
+
+    container.style.top = top + "px";
+    container.style.left = left + "px";
   }, [card]);
 
   const zoneData = YGOGameUtils.getZoneData(zone);

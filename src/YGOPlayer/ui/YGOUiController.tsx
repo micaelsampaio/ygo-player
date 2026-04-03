@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import { YGODuel } from "../core/YGODuel";
 import { ACTIONS } from "./actions";
 import { DuelLogMenu } from "./menus/duel-log/duel-log";
@@ -7,7 +7,6 @@ import { TimeLine } from "./menus/timeline";
 import { BottomRightActions } from "./menus/bottom-right-actions";
 import { PlayerHUD } from "./components/player-hud/PlayerHUD";
 import { CardLongPressEffect } from "./components/card-long-press-effect/CardLongPressEffect";
-import { RotateYourPhoneModal } from "./menus/rotate-your-phone";
 import { useDeviceResolutionInfo } from "../scripts/use-device-resolution-info";
 import { LeftMenuPanel } from "./menus/menu-panel/LeftMenuPanel";
 import { YGOStatic } from "../core/YGOStatic";
@@ -18,11 +17,12 @@ export interface UiGameConfig {
 }
 
 export function YGOUiController({ duel }: { duel: YGODuel }) {
+    const { isMobileLayout, isPortrait } = useDeviceResolutionInfo()
     const [_, setRender] = useState<number>(-1)
     const [gameConfig, setGameConfig] = useState<UiGameConfig>({ actions: true, startReplay: false, })
     const [action, setAction] = useState<{ type: string, data: any }>({ type: "", data: null })
     const [menus, setMenus] = useState<{ group: string, visible: boolean, type: string, data: any }[]>([])
-    const { isMobile, isPortrait } = useDeviceResolutionInfo()
+    const [showFloatingMenus, setShowFloatingMenus] = useState(isMobileLayout ? false : true);
 
     const clearAction = () => {
         setAction(prev => {
@@ -127,6 +127,15 @@ export function YGOUiController({ duel }: { duel: YGODuel }) {
         });
     }, []);
 
+    useLayoutEffect(() => {
+        if (duel) {
+            duel.core.setIsMobileLayout(isMobileLayout);
+        }
+        if (!isMobileLayout) {
+            setShowFloatingMenus(true);
+        }
+    }, [duel, isMobileLayout])
+
     const Action = (ACTIONS as any)[action.type] as any;
 
     if (!duel) return null;
@@ -134,12 +143,12 @@ export function YGOUiController({ duel }: { duel: YGODuel }) {
     return <>
         <DuelLogMenu duel={duel} menus={menus} />
         <TimeLine duel={duel} />
-        <BottomRightActions duel={duel} />
-        <PlayerHUD duel={duel} player={YGOStatic.playerIndex} />
-        <PlayerHUD duel={duel} player={YGOStatic.otherPlayerIndex} />
+        <BottomRightActions duel={duel} showMenus={showFloatingMenus} toggleMenus={() => setShowFloatingMenus(value => !value)} />
+        <PlayerHUD duel={duel} player={YGOStatic.playerIndex} visible={showFloatingMenus} />
+        <PlayerHUD duel={duel} player={YGOStatic.otherPlayerIndex} visible={showFloatingMenus} />
         <CardLongPressEffect duel={duel} />
-        <RotateYourPhoneModal isPortrait={isPortrait} isMobile={isMobile} />
-        <LeftMenuPanel duel={duel} />
+        {/* <RotateYourPhoneModal isPortrait={isPortrait} isMobile={isMobile} /> */}
+        <LeftMenuPanel duel={duel} isMobileLayout={isMobileLayout} showMenus={showFloatingMenus} />
 
         {
             menus.map(menu => {
@@ -149,7 +158,7 @@ export function YGOUiController({ duel }: { duel: YGODuel }) {
                     config={gameConfig}
                     key={menu.type}
                     hasAction={!!Action}
-                    isMobile={isMobile}
+                    isMobile={isMobileLayout}
                     isPortrait={isPortrait}
                     {...menu.data}
                     duel={duel}
@@ -160,7 +169,7 @@ export function YGOUiController({ duel }: { duel: YGODuel }) {
         {Action && gameConfig.actions && <Action
             config={gameConfig}
             type={action.type}
-            isMobile={isMobile}
+            isMobile={isMobileLayout}
             isPortrait={isPortrait}
             {...action.data}
             duel={duel}

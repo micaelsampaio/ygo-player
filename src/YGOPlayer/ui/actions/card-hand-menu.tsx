@@ -124,16 +124,24 @@ export function CardHandMenu({
     const container = menuRef.current!;
     const cardFromHand = duel.fields[card.owner].hand.getCardFromReference(card)!;
     const size = container.getBoundingClientRect();
-    const { x, y, width, height } = getTransformFromCamera(
-      duel,
-      cardFromHand.gameObject
-    );
+    const { x, y, width, height } = getTransformFromCamera(duel, cardFromHand.gameObject);
+
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+
+    let top: number;
     if (YGOStatic.isPlayerPOV(card.owner)) {
-      container.style.top = y - size.height + "px";
+      top = y - size.height;
     } else {
-      container.style.top = y + height + "px";
+      top = y + height;
     }
-    container.style.left = x + width / 2 - size.width / 2 + "px";
+
+    let left = x + width / 2 - size.width / 2;
+    top = Math.max(0, Math.min(top, viewportHeight - size.height));
+    left = Math.max(0, Math.min(left, viewportWidth - size.width));
+
+    container.style.top = top + "px";
+    container.style.left = left + "px";
   }, [card]);
 
   const player = card.owner;

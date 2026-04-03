@@ -1,0 +1,70 @@
+.ygo-player-core {
+    .ygo-aside-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 200;
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        background-color: transparent;
+        pointer-events: none;
+        transition: background-color 0.22s ease;
+    }
+
+    .ygo-aside-overlay.ygo-aside-visible {
+        background-color: var(--ygo-overlay-background-color);
+        pointer-events: all;
+    }
+
+    .ygo-aside-menu {
+        height: 90%;
+        max-height: 90vh;
+        width: 260px;
+        background-color: var(--ygo-background-color);
+        border: 1px solid var(--ygo-border-color);
+        border-radius: 0 var(--ygo-border-radius-medium) var(--ygo-border-radius-medium) 0;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        left: -100%;
+        position: relative;
+        transition: left 0.22s ease;
+    }
+
+    .ygo-aside-overlay.ygo-aside-visible .ygo-aside-menu {
+        left: 0;
+    }
+
+    .ygo-aside-content {
+        flex: 1 1 auto;
+        overflow-y: auto;
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .ygo-aside-footer {
+        flex-shrink: 0;
+        padding: 10px;
+        border-top: 1px solid var(--ygo-border-color);
+        display: flex;
+        justify-content: center;
+    }
+
+    .ygo-aside-close-btn {
+        width: 100%;
+        padding: 8px 0;
+        background-color: var(--ygo-border-color);
+        border: none;
+        border-radius: var(--ygo-border-radius-small);
+        color: #fff;
+        font-size: 18px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    .ygo-aside-close-btn:hover {
+        background-color: var(--ygo-border-color-light);
+    }
+}

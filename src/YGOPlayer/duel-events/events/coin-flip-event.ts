@@ -29,7 +29,7 @@ export class CoinFlipEventHandler extends YGOCommandHandler {
     const { event, duel } = this.props;
     const coin = duel.duelScene.coinObject;
     const side = event.result[0];
-    const startPosition = getCardPositionInFrontOfCamera({ camera: duel.core.camera, distance: 8 });
+    const startPosition = getCardPositionInFrontOfCamera({ duel: duel, distance: 8 });
     coin.position.copy(startPosition);
     coin.rotation.set(THREE.MathUtils.degToRad(90), 0, 0);
     coin.visible = true;

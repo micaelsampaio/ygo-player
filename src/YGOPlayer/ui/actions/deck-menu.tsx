@@ -28,9 +28,19 @@ export function DeckMenu({ duel, deck }: { duel: YGODuel, deck: Deck, clearActio
     useLayoutEffect(() => {
         const container = menuRef.current!;
         const size = container.getBoundingClientRect();
-        const { x, y, width, height } = getTransformFromCamera(duel, deck.gameObject);
-        container.style.top = Math.max(0, (y - size.height)) + "px";
-        container.style.left = (x - (size.width / 2) + (width / 2)) + "px";
+        const { x, y, width } = getTransformFromCamera(duel, deck.gameObject);
+
+        const viewportW = window.innerWidth;
+        const viewportH = window.innerHeight;
+
+        const idealTop = y - size.height;
+        const idealLeft = x - (size.width / 2) + (width / 2);
+
+        const clampedTop = Math.min(Math.max(idealTop, 0), viewportH - size.height);
+        const clampedLeft = Math.min(Math.max(idealLeft, 0), viewportW - size.width);
+
+        container.style.top = clampedTop + "px";
+        container.style.left = clampedLeft + "px";
     }, [deck]);
 
     const player = deck.player;

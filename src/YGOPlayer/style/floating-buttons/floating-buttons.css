@@ -24,11 +24,38 @@
     &.ygo-active {
         background-color: var(--ygo-float-button-bg-color-active);
     }
+
+    &.ygo-red {
+        background-color: rgba(255, 0, 0, 0.3);
+    }
 }
 
 .ygo-player-core .ygo-floating-button .ygo-floating-button-icon {
     width: 32px;
     height: 32px;
+}
+
+@keyframes ygo-glow-fade {
+    0% {
+        box-shadow: 0 0 0px 0px rgba(255, 210, 0, 0);
+        outline-color: rgba(255, 210, 0, 0);
+    }
+
+    15% {
+        box-shadow: 0 0 12px 4px rgba(255, 210, 0, 0.85), 0 0 24px 8px rgba(255, 170, 0, 0.4);
+        outline-color: rgba(255, 210, 0, 0.9);
+    }
+
+    100% {
+        box-shadow: 0 0 0px 0px rgba(255, 210, 0, 0);
+        outline-color: rgba(255, 210, 0, 0);
+    }
+}
+
+.ygo-player-core .ygo-floating-button.ygo-btn-glow {
+    animation: ygo-glow-fade 1.2s ease-out forwards;
+    outline-width: 2px;
+    outline-style: solid;
 }
 
 .ygo-player-core .ygo-floating-button:hover {
@@ -52,7 +79,9 @@
 
 
 .ygo-player-core {
-    @media (max-width: 768px) {
+
+    @media (max-width: 767px),
+    (min-width: 768px) and (max-width: 1024px) and (orientation: portrait) {
         .game-actions-bottom-right {
             display: flex;
             flex-direction: column-reverse;
@@ -60,18 +89,28 @@
         }
 
         .ygo-floating-button {
-            width: 40px;
-            height: 40px;
 
             .ygo-floating-button-icon {
-                width: 14px;
-                height: 14px;
+                width: 20px;
+                height: 20px;
             }
         }
+    }
 
-        .ygo-floating-button.ygo-floating-button-confirm {
+    /* MOBILE */
+    @media (max-width: 767px),
+    (max-width: 1024px) and (orientation: landscape) {
+        .ygo-floating-button {
             width: 40px;
             height: 40px;
+        }
+    }
+
+    /* TABLET  */
+    @media (min-width: 768px) and (max-width: 1024px) and (orientation: portrait) {
+        .ygo-floating-button {
+            width: 60px;
+            height: 60px;
         }
     }
 }

@@ -1,4 +1,34 @@
 .ygo-player-core {
+    .ygo-visible {
+        display: block;
+    }
+
+    .ygo-hidden {
+        display: none;
+    }
+
+    @media (min-width: 480px) {
+        .sm\:ygo-visible {
+            display: block;
+        }
+
+        .sm\:ygo-hidden {
+            display: none;
+        }
+    }
+
+    @media (min-width: 768px) {
+        .md\:ygo-visible {
+            display: block;
+        }
+
+        .md\:ygo-hidden {
+            display: none;
+        }
+    }
+}
+
+.ygo-player-core {
     width: 100%;
     height: 100%;
     position: relative;
@@ -172,8 +202,8 @@
 
 .ygo-player-core .float-right-menu-toggle-btn {
     position: absolute;
-    top: -1px;
-    left: -34px;
+    top: 4px;
+    left: -33px;
     border-left: 1px solid var(--ygo-border-color);
     border-top: 1px solid var(--ygo-border-color);
     border-bottom: 1px solid var(--ygo-border-color);
@@ -223,6 +253,23 @@
     border-bottom-left-radius: 10px;
     gap: 10px;
 
+
+    .ygo-card {
+        /* aspect: 1.44 */
+        width: 80px;
+        height: 115px;
+        max-width: 80px;
+        max-height: 115px;
+        cursor: pointer;
+        border: 2px solid transparent;
+        border-radius: 4px;
+
+        &:hover,
+        &:active {
+            border: 2px solid rgba(255, 255, 0, 0.6);
+        }
+    }
+
     &.ygo-right-menu-grid {
         min-width: 252px;
         border-top-left-radius: 0px;
@@ -259,22 +306,6 @@
         }
     }
 
-    .ygo-card {
-        /* aspect: 1.44 */
-        width: 80px;
-        height: 115px;
-        max-width: 80px;
-        max-height: 115px;
-        cursor: pointer;
-        border: 2px solid transparent;
-        border-radius: 4px;
-
-        &:hover,
-        &:active {
-            border: 2px solid rgba(255, 255, 0, 0.6);
-        }
-    }
-
     .ygo-card-banish-fd-icon {
         position: absolute;
         bottom: 6px;
@@ -289,14 +320,21 @@
     }
 }
 
-.ygo-player-core.ygo-is-mobile {
+/* .ygo-player-core.ygo-is-mobile {
     .float-right-menu {
         .ygo-card {
             width: 50px;
             height: 70px;
         }
     }
-}
+
+    .ygo-card-menu-cols {
+        .ygo-card {
+            width: 80px;
+            height: 115px;
+        }
+    }
+} */
 
 .ygo-player-core .game-popup {
     position: fixed;
@@ -318,7 +356,7 @@
         border: 2px solid var(--ygo-border-color);
         border-radius: var(--ygo-border-radius-medium);
         color: white;
-        max-width: 800px;
+        max-width: min(90%, 800px);
         max-height: min(500px, 90dvh);
         margin: 20px;
         display: flex;
@@ -331,6 +369,12 @@
         height: 100dvh;
         max-width: min(90%, 800px);
         max-height: min(500px, 90dvh);
+
+        @media (max-width: 768px) {
+            & {
+                max-height: 80dvh !important;
+            }
+        }
     }
 }
 
@@ -395,9 +439,14 @@
     color: white;
 }
 
+.ygo-player-core .ygo-menu-view-main-deck-search-container {
+    flex-grow: 1;
+    max-width: 340px;
+}
+
 .ygo-player-core .ygo-menu-view-main-deck-search {
-    width: 340px;
-    max-width: 100%;
+    width: 100%;
+    max-width: 340px;
 }
 
 .ygo-player-core .ygo-menu-view-main-deck-cards .ygo-card {
@@ -969,6 +1018,16 @@
         flex-direction: column;
         gap: 10px;
         width: 180px;
+
+        /* mobile, tablet */
+        @media (max-width: 767px),
+        (min-width: 768px) and (max-width: 1024px) and (orientation: portrait) {
+            top: 10px;
+            left: 50%;
+            bottom: unset;
+            right: unset;
+            transform: translateX(-50%);
+        }
     }
 
     .ygo-card-stats-dialog-menu {
@@ -1069,6 +1128,33 @@
 
         @media (max-width: 768px) {
             font-size: 60px;
+        }
+    }
+
+    .ygo-mobile-layout-visible {
+        display: none;
+    }
+
+    .ygo-mobile-layout-visible-flex {
+        display: none;
+    }
+
+    /* mobile, tablet */
+    @media (max-width: 767px),
+    (min-width: 768px) and (max-width: 1024px) and (orientation: portrait) {
+        .ygo-mobile-layout-visible {
+            display: block;
+        }
+
+        .ygo-mobile-layout-visible-flex {
+            display: flex;
+        }
+
+        .float-right-menu-toggle-btn {
+            top: 6px;
+            left: -51px;
+            width: 50px;
+            height: 50px;
         }
     }
 }

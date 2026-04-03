@@ -34,7 +34,7 @@ export class DiceRollEventHandler extends YGOCommandHandler {
     const { event, duel } = this.props;
     const dice = duel.duelScene.diceObject; // use dice object instead of coin
     const side = event.result[0]; // 1-6
-    const startPosition = getCardPositionInFrontOfCamera({ camera: duel.core.camera, distance: 10 });
+    const startPosition = getCardPositionInFrontOfCamera({ duel, distance: 10 });
 
     dice.position.copy(startPosition);
     dice.rotation.set(0, 0, 0);
