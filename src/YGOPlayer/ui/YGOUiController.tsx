@@ -17,11 +17,12 @@ export interface UiGameConfig {
 }
 
 export function YGOUiController({ duel }: { duel: YGODuel }) {
+    const { isMobile, isPortrait } = useDeviceResolutionInfo()
     const [_, setRender] = useState<number>(-1)
     const [gameConfig, setGameConfig] = useState<UiGameConfig>({ actions: true, startReplay: false, })
     const [action, setAction] = useState<{ type: string, data: any }>({ type: "", data: null })
     const [menus, setMenus] = useState<{ group: string, visible: boolean, type: string, data: any }[]>([])
-    const { isMobile, isPortrait } = useDeviceResolutionInfo()
+    const [showFloatingMenus, setShowFloatingMenus] = useState(isMobile ? false : true);
 
     const clearAction = () => {
         setAction(prev => {
@@ -130,6 +131,9 @@ export function YGOUiController({ duel }: { duel: YGODuel }) {
         if (duel) {
             duel.core.setIsMobile(isMobile);
         }
+        if (!isMobile) {
+            setShowFloatingMenus(true);
+        }
     }, [duel, isMobile])
 
     const Action = (ACTIONS as any)[action.type] as any;
@@ -139,12 +143,12 @@ export function YGOUiController({ duel }: { duel: YGODuel }) {
     return <>
         <DuelLogMenu duel={duel} menus={menus} />
         <TimeLine duel={duel} />
-        <BottomRightActions duel={duel} />
-        <PlayerHUD duel={duel} player={YGOStatic.playerIndex} />
-        <PlayerHUD duel={duel} player={YGOStatic.otherPlayerIndex} />
+        <BottomRightActions duel={duel} showMenus={showFloatingMenus} toggleMenus={() => setShowFloatingMenus(value => !value)} />
+        <PlayerHUD duel={duel} player={YGOStatic.playerIndex} visible={showFloatingMenus} />
+        <PlayerHUD duel={duel} player={YGOStatic.otherPlayerIndex} visible={showFloatingMenus} />
         <CardLongPressEffect duel={duel} />
         {/* <RotateYourPhoneModal isPortrait={isPortrait} isMobile={isMobile} /> */}
-        <LeftMenuPanel duel={duel} isMobile={isMobile} />
+        <LeftMenuPanel duel={duel} isMobile={isMobile} showMenus={showFloatingMenus} />
 
         {
             menus.map(menu => {

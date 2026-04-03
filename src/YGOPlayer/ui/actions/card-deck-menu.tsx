@@ -1,8 +1,9 @@
-import { useCallback } from "react";
+import { useCallback, useLayoutEffect, useRef } from "react";
 import { Card, FieldZone } from "ygo-core";
 import { YGODuel } from "../../core/YGODuel";
 import { CardMenu } from "../components/CardMenu";
 import { YGOGameUtils } from "ygo-core";
+import { getTransformFromCamera } from "../../scripts/ygo-utils";
 
 export function CardDeckMenu({
   duel,
@@ -15,8 +16,7 @@ export function CardDeckMenu({
   clearAction: Function;
   mouseEvent: React.MouseEvent;
 }) {
-  const x = mouseEvent.clientX; // Horizontal mouse position in px
-  const y = mouseEvent.clientY; // Vertical mouse position in px
+  const menuRef = useRef<HTMLDivElement>(null);
   const field = duel.ygo.getField(card.originalOwner);
   const cardIndex = field.mainDeck.findIndex(
     (cardToSearch: any) => cardToSearch === card
@@ -101,66 +101,76 @@ export function CardDeckMenu({
   const isSpellTrap = YGOGameUtils.isSpellTrap(card);
   const isFieldSpell = YGOGameUtils.isFieldSpell(card);
 
+  useLayoutEffect(() => {
+    const container = menuRef.current!;
+    const { width, height } = container.getBoundingClientRect();
+    const { clientX, clientY } = mouseEvent;
+
+    const left = Math.min(clientX, window.innerWidth - width);
+    const top = Math.min(clientY, window.innerHeight - height);
+
+    container.style.left = left + "px";
+    container.style.top = top + "px";
+  }, [card, mouseEvent]);
+
   return (
-    <>
-      <CardMenu x={x} y={y}>
-        {isMonster && (
-          <>
-            <button
-              className="ygo-card-item"
-              type="button"
-              onClick={specialSummonATK}
-            >
-              SS ATK
-            </button>
-            <button
-              className="ygo-card-item"
-              type="button"
-              onClick={specialSummonDEF}
-            >
-              SS DEF
-            </button>
-          </>
-        )}
-        <button className="ygo-card-item" type="button" onClick={toHand}>
-          To Hand
-        </button>
-        <button className="ygo-card-item" type="button" onClick={toGy}>
-          To GY
-        </button>
-        {isFieldSpell && <>
-          <button className="ygo-card-item" type="button" onClick={activateFieldSpell}>
-            Field Spell Zone
-          </button>
-          <button className="ygo-card-item" type="button" onClick={setFieldSpell}>
-            Set Field Spell
-          </button>
-        </>}
-        <button className="ygo-card-item" type="button" onClick={toST}>
-          To ST (Face up)
-        </button>
-        {isSpellTrap && (
+    <CardMenu menuRef={menuRef}>
+      {isMonster && (
+        <>
           <button
             className="ygo-card-item"
             type="button"
-            onClick={setSpellTrap}
+            onClick={specialSummonATK}
           >
-            Set (FD)
+            SS ATK
           </button>
-        )}
-        <button className="ygo-card-item" type="button" onClick={banish}>
-          Banish
+          <button
+            className="ygo-card-item"
+            type="button"
+            onClick={specialSummonDEF}
+          >
+            SS DEF
+          </button>
+        </>
+      )}
+      <button className="ygo-card-item" type="button" onClick={toHand}>
+        To Hand
+      </button>
+      <button className="ygo-card-item" type="button" onClick={toGy}>
+        To GY
+      </button>
+      {isFieldSpell && <>
+        <button className="ygo-card-item" type="button" onClick={activateFieldSpell}>
+          Field Spell Zone
         </button>
-        <button className="ygo-card-item" type="button" onClick={banishFD}>
-          Banish FD
+        <button className="ygo-card-item" type="button" onClick={setFieldSpell}>
+          Set Field Spell
         </button>
-        <button className="ygo-card-item" type="button" onClick={reveal}>
-          Reveal
+      </>}
+      <button className="ygo-card-item" type="button" onClick={toST}>
+        To ST (Face up)
+      </button>
+      {isSpellTrap && (
+        <button
+          className="ygo-card-item"
+          type="button"
+          onClick={setSpellTrap}
+        >
+          Set (FD)
         </button>
-        <button className="ygo-card-item" type="button" onClick={destroy}>
-          Destroy
-        </button>
-      </CardMenu>
-    </>
+      )}
+      <button className="ygo-card-item" type="button" onClick={banish}>
+        Banish
+      </button>
+      <button className="ygo-card-item" type="button" onClick={banishFD}>
+        Banish FD
+      </button>
+      <button className="ygo-card-item" type="button" onClick={reveal}>
+        Reveal
+      </button>
+      <button className="ygo-card-item" type="button" onClick={destroy}>
+        Destroy
+      </button>
+    </CardMenu>
   );
 }

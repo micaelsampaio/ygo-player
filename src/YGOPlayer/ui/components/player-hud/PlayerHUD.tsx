@@ -17,7 +17,7 @@ const PLAYER_STATES = {
     [YGOPlayerState.VIEW_DECK]: ViewDeck,
 }
 
-export function PlayerHUD({ duel, player }: { duel: YGODuel, player: number }) {
+export function PlayerHUD({ duel, player, visible }: { duel: YGODuel, player: number, visible: boolean }) {
     const playerPOV = YGOStatic.isPlayerPOV(player) ? 0 : 1;
     const field = duel.ygo.getField(player);
     const state = field.state;
@@ -53,6 +53,9 @@ export function PlayerHUD({ duel, player }: { duel: YGODuel, player: number }) {
         ? " ygo-lp-increasing"
         : lifePointsState === LifePointsState.DECREASING
             ? " ygo-lp-decreasing" : "";
+
+
+    if (!visible) return null;
 
     return <div className={`ygo-player-hud ygo-player-${playerPOV}`}>
         {gameData.games > 1 && <div className={`ygo-player-hud-game-results ygo-player-${playerPOV}`}>

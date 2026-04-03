@@ -61,14 +61,15 @@ export class YGOPlayerCore {
         this.renderer.outputColorSpace = THREE.SRGBColorSpace;
 
         const mapGeometry = new THREE.PlaneGeometry(36, 25);
-        const mapMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000, transparent: true, opacity: 1, wireframe: true });
+        const mapMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000, transparent: true, opacity: 0, wireframe: true });
         this.mapBounds = new THREE.Mesh(mapGeometry, mapMaterial);
         this.mobileMapBounds = new THREE.Mesh(
             new THREE.PlaneGeometry(26, 25),
-            new THREE.MeshBasicMaterial({ color: 0xff00ff, transparent: true, opacity: 1, wireframe: true })
+            new THREE.MeshBasicMaterial({ color: 0xff00ff, transparent: true, opacity: 0, wireframe: true })
         );
 
         this.scene.add(this.mapBounds);
+        this.scene.add(this.mobileMapBounds);
         this.isMobile = getResolutionInfo().isMobile;
 
         this.eventsController = new AbortController();

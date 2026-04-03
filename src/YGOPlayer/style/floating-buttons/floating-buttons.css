@@ -24,6 +24,10 @@
     &.ygo-active {
         background-color: var(--ygo-float-button-bg-color-active);
     }
+
+    &.ygo-red {
+        background-color: rgba(255, 0, 0, 0.3);
+    }
 }
 
 .ygo-player-core .ygo-floating-button .ygo-floating-button-icon {
@@ -87,8 +91,8 @@
             height: 40px;
 
             .ygo-floating-button-icon {
-                width: 14px;
-                height: 14px;
+                width: 18px;
+                height: 18px;
             }
         }
 

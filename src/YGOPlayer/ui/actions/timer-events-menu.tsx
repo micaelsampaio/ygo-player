@@ -48,12 +48,19 @@ export function TimerEventsActionsMenu({
     const container = menuRef.current!;
     const size = container.getBoundingClientRect();
     const { x, y, width } = getTransformFromCamera(duel, transform);
-    container.style.top = Math.max(0, y - size.height) + "px";
-    container.style.left = x - size.width / 2 + width / 2 + "px";
+
+    const top = Math.max(0, y - size.height);
+    const left = x - size.width / 2 + width / 2;
+
+    const clampedTop = Math.min(top, window.innerHeight - size.height);
+    const clampedLeft = Math.max(0, Math.min(left, window.innerWidth - size.width));
+
+    container.style.top = clampedTop + "px";
+    container.style.left = clampedLeft + "px";
   }, [transform]);
 
   return (
-    <CardMenu key="global-events-actions-menu" indicator menuRef={menuRef}>
+    <CardMenu key="global-events-actions-menu" menuRef={menuRef}>
       <button
         className="ygo-card-item"
         type="button"

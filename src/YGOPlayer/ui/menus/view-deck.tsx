@@ -123,7 +123,7 @@ export function ViewDeckPopup({
           </div>
         </div>
         <div className="game-popup-content-no-scroll ygo-flex ygo-gap-2 ygo-items-center ygo-pt-0">
-          <div>
+          <div className="ygo-menu-view-main-deck-search-container">
             <input
               className="ygo-menu-view-main-deck-search"
               value={search}

@@ -15,7 +15,7 @@ enum LEFT_MENUS {
   SELECTED_CARD
 }
 
-export function LeftMenuPanel({ duel, isMobile }: { duel: YGODuel, isMobile: boolean }) {
+export function LeftMenuPanel({ duel, isMobile, showMenus }: { duel: YGODuel, isMobile: boolean, showMenus: boolean }) {
   const [replayCommands] = useState(duel.config.gameMode === "REPLAY");
   const [openMenu, setOpenMenu] = useState<LEFT_MENUS>(LEFT_MENUS.EMPTY)
 
@@ -25,15 +25,17 @@ export function LeftMenuPanel({ duel, isMobile }: { duel: YGODuel, isMobile: boo
   }, [duel]);
 
   return <>
-    {isMobile && <div className="ygo-left-menu-panel-mobile">
+    {isMobile && <div className={`ygo-left-menu-panel-mobile ${showMenus ? "" : "ygo-hidden"}`}>
       <MobileSelectedCardButton
         duel={duel}
         toggle={() => {
+
           setOpenMenu(LEFT_MENUS.SELECTED_CARD);
           duel.clearActions();
         }} />
 
       <button className="ygo-floating-button" onClick={(e) => {
+        stopPropagationCallback(e);
         setOpenMenu(LEFT_MENUS.EMPTY)
         duel.clearActions();
         toggleSettings(e);
@@ -44,7 +46,6 @@ export function LeftMenuPanel({ duel, isMobile }: { duel: YGODuel, isMobile: boo
 
 
     <div className="ygo-left-menu-panel">
-      <button onClick={() => setOpenMenu(LEFT_MENUS.SELECTED_CARD)}>SELECTED CARD</button>
       <div className="ygo-left-top-menus">
         <div className="ygo-selected">Card Info</div>
         <div onClick={toggleSettings}>Settings</div>

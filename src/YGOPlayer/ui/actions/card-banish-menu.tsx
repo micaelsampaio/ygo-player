@@ -98,12 +98,16 @@ export function CardBanishMenu({
     const container = menuRef.current!;
     const cardRect = htmlCardElement.getBoundingClientRect();
     const containerRect = container.getBoundingClientRect();
-    const top = Math.min(
-      window.innerHeight - containerRect.height,
-      cardRect.top
+    const top = Math.max(
+      0,
+      Math.min(window.innerHeight - containerRect.height, cardRect.top)
     );
-    container.style.left = cardRect.left - containerRect.width + "px";
+    const left = Math.max(
+      0,
+      Math.min(window.innerWidth - containerRect.width, cardRect.left - containerRect.width)
+    );
     container.style.top = top + "px";
+    container.style.left = left + "px";
   }, [card, htmlCardElement]);
 
   const hasXyzMonstersInField = YGOGameUtils.hasXyzMonstersInField(field);

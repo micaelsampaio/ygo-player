@@ -116,6 +116,12 @@
     }
 }
 
+@media (max-width: 768px) {
+    .ygo-player-core .timeline {
+        display: none;
+    }
+}
+
 .ygo-player-core .timeline:hover {
     height: 30px;
 }
