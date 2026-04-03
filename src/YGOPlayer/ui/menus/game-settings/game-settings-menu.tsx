@@ -110,7 +110,10 @@ export function GameSettingsMenu({ duel, currentMenu = SETTINGS_MODAL_TYPE.SETTI
             <div className="ygo-game-settings-content">
                 <button
                     className="ygo-btn ygo-btn-action ygo-mobile-back-btn"
-                    onClick={() => setMobileView("nav")}
+                    onClick={() => {
+                        setModal({ id: null });
+                        setMobileView("nav")
+                    }}
                 >
                     Back
                 </button>
