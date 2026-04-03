@@ -27,9 +27,10 @@ export function BottomRightActions({ duel, showMenus, toggleMenus }: { duel: YGO
 
     return <>
         <div className="game-actions-bottom-right">
-            <div className="ygo-visible md:ygo-hidden">
+            <div className="ygo-mobile-layout-visible">
                 <button className="ygo-floating-button ygo-red" onClick={e => {
                     stopPropagationCallback(e);
+                    duel.clearActions();
                     toggleMenus();
                 }}>
                     {showMenus ?

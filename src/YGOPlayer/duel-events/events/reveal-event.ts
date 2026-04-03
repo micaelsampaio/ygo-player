@@ -89,7 +89,7 @@ export class RevealEventHandler extends YGOCommandHandler {
         });
 
       } else {
-        const targetPosition = getCardPositionInFrontOfCamera({ camera: duel.core.camera, distance: 6 });
+        const targetPosition = getCardPositionInFrontOfCamera({ duel, distance: 6 });
         const targetRotation: THREE.Euler = new THREE.Euler(0, 0, 0);
 
         sequence.addMultiple(

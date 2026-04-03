@@ -22,7 +22,7 @@ export function GameSettingsMenu({ duel, currentMenu = SETTINGS_MODAL_TYPE.SETTI
         return { id: currentMenu };
     });
     const [mobileView, setMobileView] = useState<"nav" | "content">("nav");
-    const isMobile = duel.core.isMobile;
+    const isMobile = duel.core.isMobileLayout;
 
     const closeSettings = () => {
         setMobileView("nav");
@@ -57,7 +57,7 @@ export function GameSettingsMenu({ duel, currentMenu = SETTINGS_MODAL_TYPE.SETTI
     useEffect(() => {
         if (isVisible) {
 
-            if (duel.core.isMobile) {
+            if (duel.core.isMobileLayout) {
                 setModal({ id: null })
             } else {
                 setModal({ id: SETTINGS_MODAL_TYPE.SETTINGS })

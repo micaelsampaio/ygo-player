@@ -20,7 +20,7 @@
     top: 0px;
     height: 100dvh;
     z-index: 100;
-    display: flex;
+    display: none;
     gap: 30px;
     flex-direction: column;
     padding: 16px;
@@ -191,7 +191,8 @@
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 767px),
+(min-width: 768px) and (max-width: 1024px) and (orientation: portrait) {
   .ygo-player-core {
     .ygo-left-menu-panel {
       width: 0px;
@@ -201,6 +202,10 @@
 
     .ygo-left-top-menus {
       display: none;
+    }
+
+    .ygo-left-menu-panel-mobile {
+      display: flex;
     }
   }
 }

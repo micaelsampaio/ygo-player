@@ -151,11 +151,13 @@ export class GameHand extends YGOEntity {
       actualWidth = handDistribution;
     }
 
+    const offsetX = this.duel.core.isMobileLayout ? 0 : 1;
+
     for (let i = 0; i < totalCards; ++i) {
       const index = YGOStatic.isPlayerPOV(this.player) ? i : totalCards - 1 - i;
       const xOffset = -actualWidth / 2 + cardWidth / 2 + i * actualSpacing;
       const handZ = baseHandZ;
-      const position = new THREE.Vector3(xOffset - 1, handY, handZ); // TODO MAKE the math mathing -1 is a dirty fix
+      const position = new THREE.Vector3(xOffset - offsetX, handY, handZ); // TODO MAKE the math mathing -1 is a dirty fix
       const scale = new THREE.Vector3(1, 1, 1);
 
       if (needsCompression) {

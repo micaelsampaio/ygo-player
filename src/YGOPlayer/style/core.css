@@ -253,6 +253,23 @@
     border-bottom-left-radius: 10px;
     gap: 10px;
 
+
+    .ygo-card {
+        /* aspect: 1.44 */
+        width: 80px;
+        height: 115px;
+        max-width: 80px;
+        max-height: 115px;
+        cursor: pointer;
+        border: 2px solid transparent;
+        border-radius: 4px;
+
+        &:hover,
+        &:active {
+            border: 2px solid rgba(255, 255, 0, 0.6);
+        }
+    }
+
     &.ygo-right-menu-grid {
         min-width: 252px;
         border-top-left-radius: 0px;
@@ -289,22 +306,6 @@
         }
     }
 
-    .ygo-card {
-        /* aspect: 1.44 */
-        width: 80px;
-        height: 115px;
-        max-width: 80px;
-        max-height: 115px;
-        cursor: pointer;
-        border: 2px solid transparent;
-        border-radius: 4px;
-
-        &:hover,
-        &:active {
-            border: 2px solid rgba(255, 255, 0, 0.6);
-        }
-    }
-
     .ygo-card-banish-fd-icon {
         position: absolute;
         bottom: 6px;
@@ -319,14 +320,21 @@
     }
 }
 
-.ygo-player-core.ygo-is-mobile {
+/* .ygo-player-core.ygo-is-mobile {
     .float-right-menu {
         .ygo-card {
             width: 50px;
             height: 70px;
         }
     }
-}
+
+    .ygo-card-menu-cols {
+        .ygo-card {
+            width: 80px;
+            height: 115px;
+        }
+    }
+} */
 
 .ygo-player-core .game-popup {
     position: fixed;
@@ -1011,7 +1019,9 @@
         gap: 10px;
         width: 180px;
 
-        @media (max-width: 768px) {
+        /* mobile, tablet */
+        @media (max-width: 767px),
+        (min-width: 768px) and (max-width: 1024px) and (orientation: portrait) {
             top: 10px;
             left: 50%;
             bottom: unset;
@@ -1118,6 +1128,33 @@
 
         @media (max-width: 768px) {
             font-size: 60px;
+        }
+    }
+
+    .ygo-mobile-layout-visible {
+        display: none;
+    }
+
+    .ygo-mobile-layout-visible-flex {
+        display: none;
+    }
+
+    /* mobile, tablet */
+    @media (max-width: 767px),
+    (min-width: 768px) and (max-width: 1024px) and (orientation: portrait) {
+        .ygo-mobile-layout-visible {
+            display: block;
+        }
+
+        .ygo-mobile-layout-visible-flex {
+            display: flex;
+        }
+
+        .float-right-menu-toggle-btn {
+            top: 6px;
+            left: -51px;
+            width: 50px;
+            height: 50px;
         }
     }
 }

@@ -26,7 +26,7 @@ export class YGOPlayerCore {
     public mapBounds: THREE.Object3D;
     public mobileMapBounds: THREE.Object3D;
     public events: EventBus<any>;
-    public isMobile: boolean;
+    public isMobileLayout: boolean;
 
     // time
     public timeScale: number;
@@ -70,11 +70,12 @@ export class YGOPlayerCore {
 
         this.scene.add(this.mapBounds);
         this.scene.add(this.mobileMapBounds);
-        this.isMobile = getResolutionInfo().isMobile;
+        this.isMobileLayout = getResolutionInfo().isMobileLayout;
 
         this.eventsController = new AbortController();
 
         window.addEventListener("resize", this.resize.bind(this), { signal: this.eventsController.signal });
+        window.addEventListener("orientationchange", this.resize.bind(this), { signal: this.eventsController.signal });
     }
 
     private resize() {
@@ -142,11 +143,17 @@ export class YGOPlayerCore {
     }
 
     updateCamera() {
-        const box = new THREE.Box3().setFromObject(this.isMobile ? this.mobileMapBounds : this.mapBounds);
+        const box = new THREE.Box3().setFromObject(this.isMobileLayout ? this.mobileMapBounds : this.mapBounds);
         const center = box.getCenter(new THREE.Vector3());
         const size = box.getSize(new THREE.Vector3());
 
-        const sidebarWidth = this.isMobile ? 0 : 300;
+        this.isMobileLayout ? this.mobileMapBounds : this.mapBounds
+
+
+        const activeBounds = this.isMobileLayout ? this.mobileMapBounds : this.mapBounds;
+        ((activeBounds as any).material as THREE.MeshBasicMaterial).color.set(0x00ff00);
+
+        const sidebarWidth = this.isMobileLayout ? 0 : 300;
         const screenWidth = window.innerWidth - sidebarWidth;
         const screenHeight = window.innerHeight;
 
@@ -204,10 +211,10 @@ export class YGOPlayerCore {
         }
     }
 
-    public setIsMobile(isMobile: boolean) {
-        if (this.isMobile != isMobile) {
+    public setIsMobileLayout(isMobile: boolean) {
+        if (this.isMobileLayout != isMobile) {
             this.resize();
         }
-        this.isMobile = isMobile;
+        this.isMobileLayout = isMobile;
     }
 }

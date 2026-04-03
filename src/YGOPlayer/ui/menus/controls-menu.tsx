@@ -28,6 +28,10 @@ export function ControlsMenu({ duel }: { duel: YGODuel }) {
         duel.settings.setGameSpeed(dt);
     }, [])
 
+    const close = useCallback(() => {
+        duel.events.dispatch("close-ui-menu", { group: "game-overlay" });
+    }, [duel]);
+
     useEffect(() => {
         removeFocusFromActiveElement();
     }, []);
@@ -62,6 +66,11 @@ export function ControlsMenu({ duel }: { duel: YGODuel }) {
             </button>
             <button disabled={!hasNextCommand} type="button" className="ygo-card-item" onClick={next}>
                 Next
+            </button>
+        </div>
+        <div className="ygo-mobile-layout-visible ygo-mt-3">
+            <button type="button" className="ygo-card-item" onClick={close}>
+                Close
             </button>
         </div>
     </div>

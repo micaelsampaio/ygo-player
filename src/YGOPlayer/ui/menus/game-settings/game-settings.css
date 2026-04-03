@@ -106,7 +106,9 @@
     white-space: nowrap;
   }
 
-  @media (max-width: 600px) {
+
+  @media (max-width: 767px),
+  (min-width: 768px) and (max-width: 1024px) and (orientation: portrait) {
     .ygo-game-settings-menu {
       flex-direction: column;
       gap: 0;

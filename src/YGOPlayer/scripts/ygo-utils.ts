@@ -562,7 +562,8 @@ function parseFieldZoneChildren(child: THREE.Mesh, player: number, zones: any) {
   }
 }
 
-export function getCardPositionInFrontOfCamera({ camera, distance = 4 }: { camera: THREE.Camera, distance?: number }) {
+export function getCardPositionInFrontOfCamera({ duel, distance = 4 }: { duel: YGODuel, distance?: number }) {
+  const camera = duel.core.camera;
   const direction = new THREE.Vector3();
   camera.getWorldDirection(direction);
 

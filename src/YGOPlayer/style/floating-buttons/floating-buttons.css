@@ -79,7 +79,9 @@
 
 
 .ygo-player-core {
-    @media (max-width: 768px) {
+
+    @media (max-width: 767px),
+    (min-width: 768px) and (max-width: 1024px) and (orientation: portrait) {
         .game-actions-bottom-right {
             display: flex;
             flex-direction: column-reverse;
@@ -87,18 +89,28 @@
         }
 
         .ygo-floating-button {
-            width: 40px;
-            height: 40px;
 
             .ygo-floating-button-icon {
-                width: 18px;
-                height: 18px;
+                width: 20px;
+                height: 20px;
             }
         }
+    }
 
-        .ygo-floating-button.ygo-floating-button-confirm {
+    /* MOBILE */
+    @media (max-width: 767px),
+    (max-width: 1024px) and (orientation: landscape) {
+        .ygo-floating-button {
             width: 40px;
             height: 40px;
+        }
+    }
+
+    /* TABLET  */
+    @media (min-width: 768px) and (max-width: 1024px) and (orientation: portrait) {
+        .ygo-floating-button {
+            width: 60px;
+            height: 60px;
         }
     }
 }

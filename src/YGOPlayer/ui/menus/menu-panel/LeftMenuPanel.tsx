@@ -15,7 +15,7 @@ enum LEFT_MENUS {
   SELECTED_CARD
 }
 
-export function LeftMenuPanel({ duel, isMobile, showMenus }: { duel: YGODuel, isMobile: boolean, showMenus: boolean }) {
+export function LeftMenuPanel({ duel, isMobileLayout, showMenus }: { duel: YGODuel, isMobileLayout: boolean, showMenus: boolean }) {
   const [replayCommands] = useState(duel.config.gameMode === "REPLAY");
   const [openMenu, setOpenMenu] = useState<LEFT_MENUS>(LEFT_MENUS.EMPTY)
 
@@ -25,7 +25,7 @@ export function LeftMenuPanel({ duel, isMobile, showMenus }: { duel: YGODuel, is
   }, [duel]);
 
   return <>
-    {isMobile && <div className={`ygo-left-menu-panel-mobile ${showMenus ? "" : "ygo-hidden"}`}>
+    {isMobileLayout && <div className={`ygo-left-menu-panel-mobile ${showMenus ? "" : "ygo-hidden"}`}>
       <MobileSelectedCardButton
         duel={duel}
         toggle={() => {
@@ -40,7 +40,7 @@ export function LeftMenuPanel({ duel, isMobile, showMenus }: { duel: YGODuel, is
         duel.clearActions();
         toggleSettings(e);
       }}>
-        <svg className="ygo-floating-button-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915" /><circle cx="12" cy="12" r="3" /></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915" /><circle cx="12" cy="12" r="3" /></svg>
       </button>
     </div>}
 
@@ -53,7 +53,7 @@ export function LeftMenuPanel({ duel, isMobile, showMenus }: { duel: YGODuel, is
 
       <div className="ygo-left-menu-card-container">
         <YgoAsideMenu
-          isMobile={isMobile}
+          isMobile={isMobileLayout}
           visible={openMenu === LEFT_MENUS.SELECTED_CARD}
           close={() => setOpenMenu(LEFT_MENUS.EMPTY)}
         >
