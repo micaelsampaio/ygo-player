@@ -1207,6 +1207,14 @@ export class YGOGameActions {
     }))
   }
 
+  public showHand({ player }: {
+    player: number
+  }) {
+    this.duel.execCommand(new YGOCommands.ShowHandCommand({
+      player
+    }))
+  }
+
   public setPlayerState({ player, currentState, state }: {
     player: number,
     currentState?: YGOPlayerState

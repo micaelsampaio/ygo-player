@@ -30,6 +30,10 @@ export function GlobalEventsActionsMenu({
     duel.gameActions.shuffleHand({ player });
   }, [player]);
 
+  const showHand = useCallback(() => {
+    duel.gameActions.showHand({ player });
+  }, [player]);
+
   const newNote = useCallback(() => {
     const action = new ActionUiMenu(duel, {
       eventType: "duel-notes-form-menu",
@@ -177,6 +181,9 @@ export function GlobalEventsActionsMenu({
       </button>
       <button type="button" className="ygo-card-item" onClick={shuffleHand}>
         Shuffle Hand
+      </button>
+      <button type="button" className="ygo-card-item" onClick={showHand}>
+        Show Hand
       </button>
 
       <button type="button" className="ygo-card-item" onClick={diceRoll}>
