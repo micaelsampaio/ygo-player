@@ -56,6 +56,7 @@ export function PlayerHUD({ duel, player, visible }: { duel: YGODuel, player: nu
 
 
     if (!visible) return null;
+    const isLocalPlayer = playerPOV === 0;
 
     return <div className={`ygo-player-hud ygo-player-${playerPOV}`}>
         {gameData.games > 1 && <div className={`ygo-player-hud-game-results ygo-player-${playerPOV}`}>

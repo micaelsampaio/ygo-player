@@ -78,7 +78,12 @@ export class YGOSoundController extends YGOComponent {
         audio.currentTime = 0;
         audio.volume = audio.volume * targetLayer.volume;
 
-        audio.play().then().catch();
+        audio.play().catch(() => {
+            instance.playing = false;
+            targetLayer.sounds = targetLayer.sounds.filter(s => s !== instance);
+            audio.onended = null;
+            onComplete?.();
+        });
 
         if (!loop) {
             audio.onended = () => {
@@ -188,5 +193,6 @@ export class YGOSoundController extends YGOComponent {
                 sound.element.remove();
             })
         });
+        this.sounds.clear();
     }
 }

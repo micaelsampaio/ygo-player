@@ -64,6 +64,9 @@ export class YGOServerActions extends YGOComponent {
         case YGOPlayerRemoteActions.OK:
           message = playerName + " says \"Ok\"";
           break;
+        case YGOPlayerRemoteActions.ContinuousOK:
+          message = playerName + " says \"Keep going\"";
+          break;
         case YGOPlayerRemoteActions.Thinking:
           message = playerName + " says \"Thinking\"";
           break;
