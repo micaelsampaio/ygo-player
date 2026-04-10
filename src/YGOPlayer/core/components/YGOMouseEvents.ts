@@ -29,8 +29,8 @@ export class YGOMouseEvents extends YGOComponent {
     public start(): void {
         this.eventsReference.onMouseDown = this.event_OnMouseDown.bind(this);
         this.eventsReference.onMouseUp = this.event_OnMouseUp.bind(this);
-        this.eventsReference.onMouseMoveCapture = this.event_OnMouseMove.bind(this);
-        this.eventsReference.onClickCapture = this.event_OnMouseClick.bind(this);
+        this.eventsReference.onMouseMove = this.event_OnMouseMove.bind(this);
+        this.eventsReference.onClick = this.event_OnMouseClick.bind(this);
     }
 
     public onDestroy(): void {
