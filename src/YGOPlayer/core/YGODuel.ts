@@ -477,10 +477,11 @@ export class YGODuel {
   }
 
   public passPriority() {
-    if (!this.ygo?.state.waitingForResponse) return;
-    this.serverActions.ygo.exec({
-      command: new YGOCommands.PlayerPriorityCommand({ player: 1 - YGOStatic.playerIndex }),
-    });
+    if (this.ygo?.state.turnPriority === YGOStatic.playerIndex) {
+      this.serverActions.ygo.exec({
+        command: new YGOCommands.PlayerPriorityCommand({ player: 1 - YGOStatic.playerIndex }),
+      });
+    }
     this.serverActions.ygo.sendPlayerAction({ action: YGOPlayerRemoteActions.OK });
   }
 

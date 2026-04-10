@@ -102,7 +102,7 @@ export class YGOCommandsController extends YGOComponent {
       command.exec();
 
       if (!command.handler) {
-        command.finish();
+        this.finishCurrentCommand();
       }
 
       setTimeout(() => this.processNextCommand());

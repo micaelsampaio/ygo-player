@@ -35,21 +35,33 @@ export function DuelPhaseActionsMenu({
       return;
     }
 
-    // build sequential steps from current to target, honoring turn-1 skip rule
+    // build sequential steps from current to target, honoring phase-skip rules
     const steps: YGODuelPhase[] = [];
+    const battleIndex = YGO_DUEL_PHASE_ORDER.indexOf(YGODuelPhase.Battle);
     let idx = currentIndex;
     while (idx < targetIndex) {
       let nextIdx = idx + 1;
       let nextPhase = YGO_DUEL_PHASE_ORDER[nextIdx];
 
-      // if we are at Main1 on turn 1, skip Battle and Main2
-      if (
-        currentTurn === 1 &&
-        YGO_DUEL_PHASE_ORDER[idx] === YGODuelPhase.Main1
-      ) {
-        nextIdx += 2; // skip Battle and Main2
-        nextPhase = YGO_DUEL_PHASE_ORDER[nextIdx];
+      // Draw and Standby are mandatory sequential — cannot skip them
+      if (YGO_DUEL_PHASE_ORDER[idx] === YGODuelPhase.Draw) {
+        if (target !== YGODuelPhase.Standby) return; // must go to Standby next
       }
+      if (YGO_DUEL_PHASE_ORDER[idx] === YGODuelPhase.Standby) {
+        if (target !== YGODuelPhase.Main1) return; // must go to Main1 next
+      }
+
+      // From Main1: skip Battle and Main2 when turn is 1, or when the target
+      // is End Phase (player is leaving main phase without entering battle).
+      // Main2 is not reachable from Main1 — it requires Battle first.
+      if (YGO_DUEL_PHASE_ORDER[idx] === YGODuelPhase.Main1) {
+        if (target === YGODuelPhase.Main2) return; // illegal jump
+        if (currentTurn === 1 || targetIndex > battleIndex) {
+          nextIdx = targetIndex;
+          nextPhase = YGO_DUEL_PHASE_ORDER[nextIdx];
+        }
+      }
+
 
       if (!nextPhase) break;
       steps.push(nextPhase);
@@ -135,14 +147,14 @@ export function DuelPhaseActionsMenu({
         </button>
         <button
           className={`ygo-card-item ${currentDuelPhase === YGODuelPhase.Standby ? "active" : ""}`}
-          disabled={transitioning || isBefore(YGODuelPhase.Standby, currentDuelPhase)}
+          disabled={transitioning || isBefore(YGODuelPhase.Standby, currentDuelPhase) || currentDuelPhase !== YGODuelPhase.Draw}
           onClick={() => goToPhase(YGODuelPhase.Standby)}
         >
           SP
         </button>
         <button
           className={`ygo-card-item ${currentDuelPhase === YGODuelPhase.Main1 ? "active" : ""}`}
-          disabled={transitioning || isBefore(YGODuelPhase.Main1, currentDuelPhase)}
+          disabled={transitioning || isBefore(YGODuelPhase.Main1, currentDuelPhase) || currentDuelPhase !== YGODuelPhase.Standby}
           onClick={() => goToPhase(YGODuelPhase.Main1)}
         >
           MP1
@@ -151,21 +163,21 @@ export function DuelPhaseActionsMenu({
       <div className="ygo-flex ygo-gap-1">
         <button
           className={`ygo-card-item ${currentDuelPhase === YGODuelPhase.Battle ? "active" : ""}`}
-          disabled={transitioning || currentTurn <= 1 || isBefore(YGODuelPhase.Battle, currentDuelPhase)}
+          disabled={transitioning || currentTurn <= 1 || isBefore(YGODuelPhase.Battle, currentDuelPhase) || currentDuelPhase !== YGODuelPhase.Main1}
           onClick={() => goToPhase(YGODuelPhase.Battle)}
         >
           B
         </button>
         <button
           className={`ygo-card-item ${currentDuelPhase === YGODuelPhase.Main2 ? "active" : ""}`}
-          disabled={transitioning || currentTurn <= 1 || isBefore(YGODuelPhase.Main2, currentDuelPhase)}
+          disabled={transitioning || currentTurn <= 1 || isBefore(YGODuelPhase.Main2, currentDuelPhase) || isBefore(currentDuelPhase, YGODuelPhase.Battle)}
           onClick={() => goToPhase(YGODuelPhase.Main2)}
         >
           MP2
         </button>
         <button
           className={`ygo-card-item ${currentDuelPhase === YGODuelPhase.End ? "active" : ""}`}
-          disabled={transitioning || isBefore(YGODuelPhase.End, currentDuelPhase)}
+          disabled={transitioning || isBefore(YGODuelPhase.End, currentDuelPhase) || isBefore(currentDuelPhase, YGODuelPhase.Main1)}
           onClick={() => goToPhase(YGODuelPhase.End)}
         >
           E

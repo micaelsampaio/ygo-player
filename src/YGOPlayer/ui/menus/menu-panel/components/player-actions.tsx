@@ -21,6 +21,9 @@ export function PlayerRemoteActionsComponent({ duel }: { duel: YGODuel }) {
     longPressTimer.current = setTimeout(() => {
       isLongPress.current = true;
       duel.continuousAccept = !duel.continuousAccept;
+      if (duel.continuousAccept) {
+        duel.serverActions.ygo.sendPlayerAction({ action: YGOPlayerRemoteActions.ContinuousOK });
+      }
       duel.events.dispatch("render-ui");
     }, LONG_PRESS_MS);
   }, [duel]);
@@ -38,10 +41,14 @@ export function PlayerRemoteActionsComponent({ duel }: { duel: YGODuel }) {
   }, [duel]);
 
   const thinking = useCallback(() => {
+    duel.continuousAccept = false;
+    duel.events.dispatch("render-ui");
     duel.serverActions.ygo.sendPlayerAction({ action: YGOPlayerRemoteActions.Thinking });
   }, [duel]);
 
   const wait = useCallback(() => {
+    duel.continuousAccept = false;
+    duel.events.dispatch("render-ui");
     duel.serverActions.ygo.setPlayerPriority(YGOStatic.playerIndex);
     duel.serverActions.ygo.sendPlayerAction({ action: YGOPlayerRemoteActions.WAIT });
   }, [duel]);
