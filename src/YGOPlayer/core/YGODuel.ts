@@ -356,7 +356,7 @@ export class YGODuel {
       } else {
         gameField.hand.cards[i] = hand[i]!;
       }
-      gameField.hand.cards[i].gameObject.visible = true;
+      if (!gameField.hand.showHand) gameField.hand.cards[i].gameObject.visible = true;
       gameField.hand.cards[i].handIndex = i;
     }
   }

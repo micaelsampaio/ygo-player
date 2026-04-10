@@ -69,7 +69,6 @@ export class YGOMouseEvents extends YGOComponent {
     private event_OnMouseDown(event: MouseEvent) {
         const elements = this.getIntersectsElements(event);
         const elementCardInHand = this.getCardInHandFromInterseptions(elements);
-
         if (elements.length > 0) {
             const element: any = elementCardInHand?.object || elements[0].object;
             this.mouseDownElement = element;

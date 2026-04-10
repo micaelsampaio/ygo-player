@@ -12,12 +12,14 @@ import { DuelTurnLogRow } from "./duel-log-turn";
 import { CoinFlipLogRow } from "./coin-flip-log";
 import { DiceRollLogRow } from "./dice-roll-log";
 import { AdmitDefeatLogRow } from "./admit-defeat-log";
+import { ShowHandLogRow } from "./show-hand-log";
 
 const COMPONENTS = {
   [YGODuelEvents.LogType.DuelTurn]: DuelTurnLogRow,
   [YGODuelEvents.LogType.DuelPhase]: DuelPhaseLogRow,
   [YGODuelEvents.LogType.StartHand]: StartHandLogRow,
   [YGODuelEvents.LogType.SwapHand]: StartHandLogRow,
+  [YGODuelEvents.LogType.ShowHand]: ShowHandLogRow,
   [YGODuelEvents.LogType.LifePoints]: LifePointsLogRow,
   [YGODuelEvents.LogType.Note]: NoteLogRow,
   [YGODuelEvents.LogType.CoinFlip]: CoinFlipLogRow,

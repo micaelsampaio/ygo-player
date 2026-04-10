@@ -289,6 +289,19 @@ export class YGOCommandsController extends YGOComponent {
     this.pauseRequestedCommandId = false;
   }
 
+  public clearCommandsQueue() {
+    this.clearTimers();
+    if (this.currentCommand) {
+      this.currentCommand.finish();
+      this.currentCommand = undefined;
+    }
+    if (this.tasks.length > 0) {
+      this.tasks.forEach((task) => this.duel.tasks.completeTask(task));
+      this.tasks = [];
+    }
+    this.commandsQueue.length = 0;
+  }
+
   public onDestroy(): void {
     this.clearTimers();
     this.clearCommandsState();
