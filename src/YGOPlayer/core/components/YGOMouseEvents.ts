@@ -29,8 +29,8 @@ export class YGOMouseEvents extends YGOComponent {
     public start(): void {
         this.eventsReference.onMouseDown = this.event_OnMouseDown.bind(this);
         this.eventsReference.onMouseUp = this.event_OnMouseUp.bind(this);
-        this.eventsReference.onMouseMove = this.event_OnMouseMove.bind(this);
-        this.eventsReference.onClick = this.event_OnMouseClick.bind(this);
+        this.eventsReference.onMouseMoveCapture = this.event_OnMouseMove.bind(this);
+        this.eventsReference.onClickCapture = this.event_OnMouseClick.bind(this);
     }
 
     public onDestroy(): void {
@@ -69,7 +69,6 @@ export class YGOMouseEvents extends YGOComponent {
     private event_OnMouseDown(event: MouseEvent) {
         const elements = this.getIntersectsElements(event);
         const elementCardInHand = this.getCardInHandFromInterseptions(elements);
-
         if (elements.length > 0) {
             const element: any = elementCardInHand?.object || elements[0].object;
             this.mouseDownElement = element;

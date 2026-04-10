@@ -5,6 +5,8 @@ import { Play } from "./play";
 import { Redo } from "./redo";
 import { Undo } from "./undo";
 
+export { YGOCommandsControllerState } from "./YGOCommandsController";
+
 export const YGOControllerCommands = {
   ExecCommandHandler,
   Exec,

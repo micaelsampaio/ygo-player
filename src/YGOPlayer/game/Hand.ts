@@ -127,7 +127,7 @@ export class GameHand extends YGOEntity {
       handCard.gameObject.position.copy(handCard.position);
       handCard.gameObject.scale.copy(cardsTransforms[i].scale);
       handCard.gameObject.rotation.setFromVector3(cardRotation);
-      handCard.gameObject.visible = true;
+      if (!this.showHand) handCard.gameObject.visible = true;
       handCard.setIsVisible(this.duel.fields[this.player].settings.controlCards);
     }
   }

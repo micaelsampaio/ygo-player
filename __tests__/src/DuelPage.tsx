@@ -62,7 +62,7 @@ export default function DuelPage() {
 
   useEffect(() => {
     startDuel();
-  })
+  }, [])
 
   return <div
     style={{
