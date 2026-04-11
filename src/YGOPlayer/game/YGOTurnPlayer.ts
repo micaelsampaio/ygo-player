@@ -29,10 +29,6 @@ export class YGOTurnPlayer extends YGOEntity implements YGOUiElement {
             this.duel.assets.getTexture(this.duel.createCdnUrl("/images/ui/turn_player_2.png")),
         ]
 
-        if (YGOStatic.isPlayerPOV(1)) {
-            this.textures.reverse();
-        }
-
         this.turnMaterial = new THREE.MeshBasicMaterial({ map: this.textures[0] });
         fieldTurnPlaceHolder.material = this.turnMaterial;
 
