@@ -39,6 +39,14 @@ export class YGOServerActions extends YGOComponent {
   public ygo = {
     exec: ({ command }: { command: Command | string }) => {
       const serverCommand = typeof command === "string" ? JSON.parse(command) : command.toJSON();
+
+      // If the player does anything while keep-going is active, cancel it first
+      if (this.duel.continuousAccept && serverCommand.type !== "PlayerRemoteActionCommand") {
+        this.duel.continuousAccept = false;
+        this.duel.events.dispatch("render-ui");
+        this.sendPlayerAction({ action: YGOPlayerRemoteActions.CancelContinuousOK });
+      }
+
       const currentCommandId = this.duel.ygo.peek()?.commandId;
       this.client.send("server:exec", {
         type: "ygo:commands:exec",
@@ -67,6 +75,9 @@ export class YGOServerActions extends YGOComponent {
         case YGOPlayerRemoteActions.ContinuousOK:
           message = playerName + " says \"Keep going\"";
           break;
+        case YGOPlayerRemoteActions.CancelContinuousOK:
+          message = playerName + " turned off \"Keep going\"";
+          break;
         case YGOPlayerRemoteActions.Thinking:
           message = playerName + " says \"Thinking\"";
           break;
@@ -84,9 +95,10 @@ export class YGOServerActions extends YGOComponent {
     },
     sendPlayerAction: ({ action, data }: { action: YGOPlayerRemoteActions, data?: any }) => {
 
-      if (Date.now() < this.nextPlayerActionCooldown) return;
-
-      this.nextPlayerActionCooldown = Date.now() + 1000;
+      if (action !== YGOPlayerRemoteActions.CancelContinuousOK) {
+        if (Date.now() < this.nextPlayerActionCooldown) return;
+        this.nextPlayerActionCooldown = Date.now() + 1000;
+      }
 
       this.ygo.exec({
         command: new YGOCommands.PlayerRemoteActionCommand({

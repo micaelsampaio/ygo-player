@@ -194,6 +194,7 @@ export class YGODuel {
     });
 
     this.ygo.events.on("set-duel-turn", (data: any) => {
+      this.continuousAccept = false;
       this.events.dispatch("render-ui");
     });
 

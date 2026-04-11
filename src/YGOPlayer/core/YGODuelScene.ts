@@ -41,6 +41,7 @@ export class YGODuelScene {
     public coinObject!: THREE.Object3D;
     public middleOfTheFieldPivot: THREE.Vector3;
     private playerActionsPool: Map<number, Map<string, THREE.Object3D[]>>
+    private persistentActionSprite: Map<number, THREE.Object3D | null> = new Map([[0, null], [1, null]])
 
     constructor(private duel: YGODuel) {
         this.gameFields = [];
@@ -204,7 +205,16 @@ export class YGODuelScene {
 
         this.duel.ygo.events.on("player-remote-action", data => {
             if (this.duel.commands.isRecovering()) return;
+            if (data.action === YGOPlayerRemoteActions.CancelContinuousOK) {
+                const prev = this.persistentActionSprite.get(data.player);
+                if (prev) { prev.visible = false; this.persistentActionSprite.set(data.player, null); }
+                return;
+            }
             this.processPlayerAction(data);
+        })
+
+        this.duel.ygo.events.on("set-duel-turn", () => {
+            this.clearPersistentActionSprites();
         })
     }
 
@@ -267,7 +277,23 @@ export class YGODuelScene {
         this.timer = new YGOTimer(this.duel, btnTimerPosition);
     }
 
+    private clearPersistentActionSprites() {
+        this.persistentActionSprite.forEach((obj, player) => {
+            if (obj) {
+                obj.visible = false;
+                this.persistentActionSprite.set(player, null);
+            }
+        });
+    }
+
     private processPlayerAction({ player, action }: { player: number, action: YGOPlayerRemoteActions }) {
+
+        // Clear any persistent ContinuousOK sprite when a new action comes in
+        const prevPersistent = this.persistentActionSprite.get(player);
+        if (prevPersistent) {
+            prevPersistent.visible = false;
+            this.persistentActionSprite.set(player, null);
+        }
 
         const pool = this.playerActionsPool.get(player)!;
         const actionPool = pool.get(action);
@@ -320,6 +346,12 @@ export class YGODuelScene {
             this.duel.soundController.playSound({ key: soundPath, volume: 0.4 });
         }
 
+        const isContinuous = action === YGOPlayerRemoteActions.ContinuousOK && !YGOStatic.isPlayerPOV(player);
+
+        if (isContinuous) {
+            this.persistentActionSprite.set(player, obj);
+        }
+
         this.duel.tasks.startTask(new YGOTaskSequence(
             new ScaleTransition({
                 gameObject: obj,
@@ -339,16 +371,18 @@ export class YGODuelScene {
                 duration: 0.25,
                 ease: Ease.easeInOut
             }),
-            new WaitForSeconds(0.5),
-            new ScaleTransition({
-                gameObject: obj,
-                scale: new THREE.Vector3(0, 0, 0),
-                duration: 0.15,
-                ease: Ease.easeInOut
-            }),
-            new CallbackTransition(() => {
-                obj.visible = false;
-            })
+            ...(isContinuous ? [] : [
+                new WaitForSeconds(0.5),
+                new ScaleTransition({
+                    gameObject: obj,
+                    scale: new THREE.Vector3(0, 0, 0),
+                    duration: 0.15,
+                    ease: Ease.easeInOut
+                }),
+                new CallbackTransition(() => {
+                    obj.visible = false;
+                })
+            ])
         ));
 
     }

@@ -23,6 +23,8 @@ export function PlayerRemoteActionsComponent({ duel }: { duel: YGODuel }) {
       duel.continuousAccept = !duel.continuousAccept;
       if (duel.continuousAccept) {
         duel.serverActions.ygo.sendPlayerAction({ action: YGOPlayerRemoteActions.ContinuousOK });
+      } else {
+        duel.serverActions.ygo.sendPlayerAction({ action: YGOPlayerRemoteActions.CancelContinuousOK });
       }
       duel.events.dispatch("render-ui");
     }, LONG_PRESS_MS);
@@ -37,6 +39,7 @@ export function PlayerRemoteActionsComponent({ duel }: { duel: YGODuel }) {
 
   const onOkClick = useCallback(() => {
     if (isLongPress.current) return;
+    if (duel.continuousAccept) return;
     duel.passPriority();
   }, [duel]);
 
