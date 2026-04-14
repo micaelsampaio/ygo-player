@@ -44,7 +44,7 @@ export class YGOServerActions extends YGOComponent {
       if (this.duel.continuousAccept && serverCommand.type !== "PlayerRemoteActionCommand") {
         this.duel.continuousAccept = false;
         this.duel.events.dispatch("render-ui");
-        this.sendPlayerAction({ action: YGOPlayerRemoteActions.CancelContinuousOK });
+        this.ygo.sendPlayerAction({ action: YGOPlayerRemoteActions.CancelContinuousOK });
       }
 
       const currentCommandId = this.duel.ygo.peek()?.commandId;

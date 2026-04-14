@@ -19,8 +19,10 @@ import { Ease } from "../scripts/ease";
 import { WaitForSeconds } from "../duel-events/utils/wait-for-seconds";
 import { CallbackTransition } from "../duel-events/utils/callback";
 
-const ATLAS_1_COORDS = {
+const ATLAS_1_COORDS: Record<string, [number, number]> = {
     "ok": [0, 0],
+    "cok": [0, 0],
+    "ccok": [0, 0],
     "t": [1, 0],
     "w": [2, 0],
 }
