@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from "react";
 import { YGODuel } from "../../core/YGODuel";
 import { ActionUiMenu } from "../../actions/ActionUiMenu";
-import { Card } from "ygo-core";
+import { Card, YGOGameUtils } from "ygo-core";
 import { stopPropagationCallback } from "../../scripts/utils";
 
 export function ExtraDeck({
@@ -58,7 +58,7 @@ export function ExtraDeck({
       </div>
       <div className="float-right-menu-content">
         <div className="float-right-menu-cards">
-          {cards.map((card: Card) => (
+          {cards.map((card: Card, cardIndex: number) => (
             <div>
               <img
                 onMouseDown={(event: any) => duel.events.dispatch("on-card-mouse-down", { card, event })}
@@ -77,6 +77,11 @@ export function ExtraDeck({
                     player,
                     card
                   })
+                }}
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  const originZone = YGOGameUtils.createZone("ED", player, cardIndex + 1);
+                  duel.gameActions.targetCard({ card, originZone });
                 }}
                 key={card.index}
                 src={card.images.small_url}

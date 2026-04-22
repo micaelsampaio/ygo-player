@@ -66,7 +66,7 @@ export function Graveyard({
       <div className="float-right-menu-content">
         <div className="float-right-menu-cards">
           {gy.map((card: Card) => (
-            <div>
+            <div key={card.index}>
               <img
                 onMouseDown={(event: any) =>
                   duel.events.dispatch("on-card-mouse-down", { card, event })
@@ -93,7 +93,6 @@ export function Graveyard({
                     card,
                   });
                 }}
-                key={card.index}
                 src={card.images.small_url}
                 className="ygo-card"
               />

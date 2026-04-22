@@ -141,10 +141,10 @@ export function CardDeckMenu({
       </button>
       {isFieldSpell && <>
         <button className="ygo-card-item" type="button" onClick={activateFieldSpell}>
-          Field Spell Zone
+          Place Field Spell
         </button>
         <button className="ygo-card-item" type="button" onClick={setFieldSpell}>
-          Set Field Spell
+          Place Field Spell FD
         </button>
       </>}
       <button className="ygo-card-item" type="button" onClick={toST}>

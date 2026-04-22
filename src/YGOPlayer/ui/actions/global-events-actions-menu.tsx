@@ -4,7 +4,7 @@ import { YGODuel } from "../../core/YGODuel";
 import { getTransformFromCamera, } from "../../scripts/ygo-utils";
 import { CardMenu } from "../components/CardMenu";
 import { ActionUiMenu } from "../../actions/ActionUiMenu";
-import { YGOGameUtils, YGOPlayerState } from "ygo-core";
+import { YGOGameUtils } from "ygo-core";
 
 export function GlobalEventsActionsMenu({
   duel,
@@ -44,7 +44,7 @@ export function GlobalEventsActionsMenu({
   }, [])
 
   const ripCardFromHandRandom = useCallback(() => {
-    const hand = duel.ygo.getField(1 - player).hand;
+    const hand = duel.ygo.getField(player).hand;
 
     if (hand.length === 0) return;
 
@@ -53,39 +53,9 @@ export function GlobalEventsActionsMenu({
     duel.gameActions.sendToGy({
       player,
       card: hand[cardIndex],
-      originZone: YGOGameUtils.createZone("H", 1 - player, cardIndex + 1)
+      originZone: YGOGameUtils.createZone("H", player, cardIndex + 1)
     });
   }, [player]);
-
-  const banishExtraDeckRandomFaceDown = useCallback(() => {
-    duel.clearActions();
-
-    const numberOfCardsStr = prompt("Choose a number of cards to banish from Extra Deck");
-
-    if (!numberOfCardsStr) return;
-    if (isNaN(Number(numberOfCardsStr))) return;
-
-    const numberOfCards = Number(numberOfCardsStr);
-
-    if (numberOfCards < 1 || numberOfCards > field.extraDeck.length) return;
-
-    const extra = [...field.extraDeck];
-    if (extra.length === 0) return;
-
-    for (let i = extra.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [extra[i], extra[j]] = [extra[j], extra[i]];
-    }
-
-    const selected = extra.slice(0, numberOfCards);
-
-    const cards = selected.map((card) => ({
-      card,
-      zone: YGOGameUtils.createZone("ED", player, field.extraDeck.indexOf(card) + 1),
-    }));
-
-    duel.gameActions.banishMultiple({ cards, position: "facedown" });
-  }, [player, field?.extraDeck?.length, duel]);
 
   const diceRoll = useCallback(() => {
 
@@ -114,23 +84,6 @@ export function GlobalEventsActionsMenu({
     // duel.actionManager.clearAction();
     // timer.current = setTimeout(() => duel.actionManager.setAction(action)) as unknown as number;
   }, [])
-
-  const toggleThinking = () => {
-
-    const state = duel.ygo.getField(player)?.state;
-
-    if (state === YGOPlayerState.THINKING) {
-      duel.gameActions.setPlayerState({
-        player,
-        state: YGOPlayerState.IDLE
-      })
-    } else {
-      duel.gameActions.setPlayerState({
-        player,
-        state: YGOPlayerState.THINKING
-      })
-    }
-  }
 
   useLayoutEffect(() => {
     const container = menuRef.current!;
@@ -176,16 +129,12 @@ export function GlobalEventsActionsMenu({
       <button type="button" className="ygo-card-item" onClick={newRandomPlayerHand}>
         New Random Hand
       </button>
-      <button type="button" className="ygo-card-item" onClick={toggleThinking}>
-        Toggle Thinking
-      </button>
       <button type="button" className="ygo-card-item" onClick={shuffleHand}>
         Shuffle Hand
       </button>
       <button type="button" className="ygo-card-item" onClick={showHand}>
         Show Hand
       </button>
-
       <button type="button" className="ygo-card-item" onClick={diceRoll}>
         Roll dice
       </button>
@@ -199,9 +148,8 @@ export function GlobalEventsActionsMenu({
       </button>
 
       <button type="button" className="ygo-card-item" onClick={ripCardFromHandRandom}>
-        Rip Card From Hand Random
+        Random Handrip
       </button>
-      <button type="button" className="ygo-card-item" onClick={banishExtraDeckRandomFaceDown}>Banish FD Random From Extra Deck</button>
     </CardMenu>
   );
 }

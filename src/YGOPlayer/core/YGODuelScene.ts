@@ -212,6 +212,9 @@ export class YGODuelScene {
                 if (prev) { prev.visible = false; this.persistentActionSprite.set(data.player, null); }
                 return;
             }
+            if (data.action === YGOPlayerRemoteActions.RevealExtraDeck || data.action === YGOPlayerRemoteActions.PickExtraDeckCard) {
+                return;
+            }
             this.processPlayerAction(data);
         })
 

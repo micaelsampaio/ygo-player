@@ -1215,6 +1215,14 @@ export class YGOGameActions {
     }))
   }
 
+  public showExtraDeck({ player }: {
+    player: number
+  }) {
+    this.duel.execCommand(new YGOCommands.ShowExtraDeckCommand({
+      player
+    }))
+  }
+
   public setPlayerState({ player, currentState, state }: {
     player: number,
     currentState?: YGOPlayerState

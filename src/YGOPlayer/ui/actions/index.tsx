@@ -9,6 +9,7 @@ import { CardMultipleSelectionMenu } from "./card-multiple-selection-menu";
 import { CardStatsDialog } from "./card-stats-dialog";
 import { CardZoneMenu } from "./card-zone-menu";
 import { DeckMenu } from "./deck-menu";
+import { ExtraDeckPileMenu } from "./extra-deck-pile-menu";
 import { GlobalEventsActionsMenu } from "./global-events-actions-menu";
 import { TimerEventsActionsMenu } from "./timer-events-menu";
 import { CardZoneAttackMenuAction } from "./card-zone-attack-menu";
@@ -21,6 +22,7 @@ export const ACTIONS = {
     "card-gy-menu": CardGraveyardMenu,
     "card-banish-menu": CardBanishMenu,
     "card-extra-deck-menu": CardExtraDeckMenu,
+    "extra-deck-pile-menu": ExtraDeckPileMenu,
     "card-multiple-selection-menu": CardMultipleSelectionMenu,
     "card-deck-menu": CardDeckMenu,
     "card-materials-menu": CardMaterialsMenu,

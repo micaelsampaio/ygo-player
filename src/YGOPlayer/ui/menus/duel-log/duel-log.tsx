@@ -111,6 +111,7 @@ export function DuelLogMenu({ duel, menus }: { duel: YGODuel; menus: any[] }) {
     >
       <div className="ygo-logs">
         {logs.map((log, index) => {
+          if (log.type === YGODuelEvents.LogType.Target) return null;
           const Component = (COMPONENTS as any)[log.type] || COMPONENTS.default;
 
           return (

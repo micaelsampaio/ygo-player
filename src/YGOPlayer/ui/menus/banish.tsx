@@ -70,7 +70,7 @@ export function Banish({
           {cards.map((card: Card) => {
             const isVisible = card.position !== "facedown" || isPlayerPOV;
             return (
-              <div>
+              <div key={card.index}>
                 <div
                   style={{ position: "relative" }}
                   onMouseDown={(event: any) =>
@@ -106,7 +106,6 @@ export function Banish({
                         ? card.images.small_url
                         : duel.createCdnUrl("/images/card_back.png")
                     }
-                    key={card.index}
                     className="ygo-card"
                   />
                   {isPlayerPOV && card?.position?.includes("facedown") && (

@@ -8,6 +8,7 @@ import { CARD_HEIGHT_SIZE, CARD_RATIO } from '../constants';
 import { GameCard } from './GameCard';
 import { Card } from 'ygo-core';
 import { YGOStatic } from '../core/YGOStatic';
+import { ActionUiMenu } from '../actions/ActionUiMenu';
 
 export class ExtraDeck extends YGOEntity implements YGOUiElement {
 
@@ -21,6 +22,7 @@ export class ExtraDeck extends YGOEntity implements YGOUiElement {
     public faceUpCards: GameCard[];
     public isMenuVisible: boolean;
     public canInteract: boolean;
+    private action: ActionUiMenu;
 
     constructor({ duel, player, position, backCardPath }: { duel: YGODuel, player: number, zone: string, backCardPath: string, position: THREE.Vector3 }) {
         super();
@@ -51,6 +53,8 @@ export class ExtraDeck extends YGOEntity implements YGOUiElement {
 
         this.duel.core.scene.add(cube);
         this.gameObject.add(this.hoverGameObject);
+
+        this.action = new ActionUiMenu(duel, { eventType: "extra-deck-pile-menu" });
 
         this.duel.gameController.getComponent<YGOMouseEvents>("mouse_events")?.registerElement(this);
 
@@ -125,8 +129,8 @@ export class ExtraDeck extends YGOEntity implements YGOUiElement {
             this.duel.setActivePlayer(this.player);
         }
 
-        const eventName = this.isMenuVisible ? "close-ui-menu" : "set-ui-menu";
-        this.duel.events.dispatch(eventName, { group: "game-overlay", type: "extra-deck", data: { player: this.player, extraDeck: this } })
+        this.action.eventData = { duel: this.duel, player: this.player, extraDeck: this };
+        this.duel.actionManager.setAction(this.action);
     }
 
     onMouseEnter(): void {

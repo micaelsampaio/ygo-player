@@ -46,11 +46,14 @@ export class ShowHandEventHandler extends YGOCommandHandler {
       ? new THREE.Euler(0, 0, 0)
       : new THREE.Euler(0, 0, Math.PI);
 
+    const totalCards = cards.length;
     cards.forEach((cardData, index) => {
       const cardReference = duel.ygo.state.getCardData(cardData.id);
       if (!cardReference) return;
 
-      const handCard = gameHand.getCard(index);
+      // gameHand.cards is built in reversed order for non-POV players (see StartHandEventHandler)
+      const arrayIndex = YGOStatic.isPlayerPOV(player) ? index : totalCards - 1 - index;
+      const handCard = gameHand.getCard(arrayIndex);
       if (!handCard) return;
 
       const original = handCard.gameObject;

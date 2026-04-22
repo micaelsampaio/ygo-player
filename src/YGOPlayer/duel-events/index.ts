@@ -27,6 +27,7 @@ import { DuelLifePointsEventHandler } from "./events/duel-lifepoints-event";
 import { ShuffleDeckEventHandler } from "./events/shuffle-deck-event";
 import { ShuffleHandEventHandler } from "./events/shuffle-hand-event";
 import { ShowHandEventHandler } from "./events/show-hand-event";
+import { ShowExtraDeckEventHandler } from "./events/show-extra-deck-event";
 import { CoinFlipEventHandler } from "./events/coin-flip-event";
 import { DiceRollEventHandler } from "./events/dice-roll-event";
 import { AdmitDefeatEventHandler } from "./events/admit-defeat-event";
@@ -88,6 +89,7 @@ const events: any = {
   [YGODuelEvents.LogType.ShuffleDeck]: ShuffleDeckEventHandler,
   [YGODuelEvents.LogType.ShuffleHand]: ShuffleHandEventHandler,
   [YGODuelEvents.LogType.ShowHand]: ShowHandEventHandler,
+  [YGODuelEvents.LogType.ShowExtraDeck]: ShowExtraDeckEventHandler,
   [YGODuelEvents.LogType.Disappear]: DisappearEventHandler,
   [YGODuelEvents.LogType.Target]: TargetCardEventHandler,
   [YGODuelEvents.LogType.Destroy]: DestroyCardEventHandler,

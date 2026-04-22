@@ -84,6 +84,35 @@ export class YGOServerActions extends YGOComponent {
         case YGOPlayerRemoteActions.WAIT:
           message = playerName + " says \"Wait\"";
           break;
+        case YGOPlayerRemoteActions.RevealExtraDeck: {
+          const sourcePlayer = data.data?.sourcePlayer;
+          if (sourcePlayer !== undefined) {
+            message = playerName + " revealed their Extra Deck";
+            this.duel.events.dispatch("set-ui-menu", {
+              group: "game-overlay",
+              type: "extra-deck",
+              data: { player: sourcePlayer, extraDeck: this.duel.fields[sourcePlayer].extraDeck },
+            });
+          }
+          break;
+        }
+        case YGOPlayerRemoteActions.PickExtraDeckCard: {
+          const targetPlayer = data.data?.targetPlayer;
+          if (targetPlayer !== undefined) {
+            if (YGOStatic.isPlayerPOV(targetPlayer)) {
+              message = "Choose a card from your Extra Deck";
+              this.duel.events.dispatch("set-ui-menu", {
+                group: "game-overlay",
+                type: "extra-deck",
+                data: { player: targetPlayer, extraDeck: this.duel.fields[targetPlayer].extraDeck },
+              });
+            } else {
+              const targetName = this.duel.ygo.getField(targetPlayer).player.name;
+              message = `${targetName} must choose a card from their Extra Deck`;
+            }
+          }
+          break;
+        }
       }
 
       if (!message) return;

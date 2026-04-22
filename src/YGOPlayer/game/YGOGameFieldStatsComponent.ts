@@ -63,8 +63,8 @@ class YGOGameFieldStatsRender {
   private mesh: THREE.Mesh;
   private canvasTexture: THREE.CanvasTexture;
 
-  private gyCounter: CounterRender;
-  private banishedZoneCounter: CounterRender;
+  private gyCounter: CardZoneCounter;
+  private banishedZoneCounter: CardZoneCounter;
   private handCounter: CounterRender;
   private extraDeckCounter: CounterRender;
   private deckCounter: CounterRender;
@@ -114,8 +114,8 @@ class YGOGameFieldStatsRender {
     this.handCounter = new CounterRender(duel, new THREE.Vector3(0, isPlayerPov ? -7.5 : 7.5, 3), () => this.duel.ygo.getField(this.player)!.hand.length);
     this.deckCounter = new CounterRender(duel, deckPos, () => this.duel.ygo.getField(this.player)!.mainDeck.length);
     this.extraDeckCounter = new CounterRender(duel, extraDeckPos, () => this.duel.ygo.getField(this.player)!.extraDeck.length);
-    this.gyCounter = new CounterRender(duel, gyPos, () => this.duel.ygo.getField(this.player)!.graveyard.length);
-    this.banishedZoneCounter = new CounterRender(duel, banishedzonePos, () => this.duel.ygo.getField(this.player)!.banishedZone.length);
+    this.gyCounter = new CardZoneCounter(duel, gyPos, () => this.duel.ygo.getField(this.player)!.graveyard);
+    this.banishedZoneCounter = new CardZoneCounter(duel, banishedzonePos, () => this.duel.ygo.getField(this.player)!.banishedZone);
 
     duel.core.scene.add(this.mesh);
   }
@@ -278,6 +278,67 @@ class YGOGameFieldStatsRender {
     this.extraDeckCounter.mesh.visible = false;
     this.gyCounter.mesh.visible = false;
     this.banishedZoneCounter.mesh.visible = false;
+  }
+}
+
+class CardZoneCounter {
+  public mesh: THREE.Group;
+  private cardMaterial: THREE.MeshBasicMaterial;
+  private badgeCanvas: HTMLCanvasElement;
+  private badgeTexture: THREE.CanvasTexture;
+  private currentUrl = "";
+  private loader = new THREE.TextureLoader();
+
+  constructor(duel: YGODuel, pivot: THREE.Vector3, private getCards: () => any[]) {
+    this.mesh = new THREE.Group();
+    this.mesh.position.copy(pivot);
+
+    this.cardMaterial = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0 });
+    this.mesh.add(new THREE.Mesh(new THREE.PlaneGeometry(1.5, 2.25), this.cardMaterial));
+
+    this.badgeCanvas = document.createElement("canvas");
+    this.badgeCanvas.width = this.badgeCanvas.height = 60;
+    this.badgeTexture = new THREE.CanvasTexture(this.badgeCanvas);
+    const badgeMesh = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.75, 0.75),
+      new THREE.MeshBasicMaterial({ map: this.badgeTexture, transparent: true })
+    );
+    badgeMesh.position.set(0.38, -0.75, 0.01);
+    this.mesh.add(badgeMesh);
+
+    duel.core.scene.add(this.mesh);
+  }
+
+  render() {
+    const cards = this.getCards();
+    const last = cards[cards.length - 1];
+    const url = last?.images?.small_url ?? "";
+
+    if (url !== this.currentUrl) {
+      this.currentUrl = url;
+      if (url) {
+        this.loader.load(url, tex => {
+          this.cardMaterial.map = tex;
+          this.cardMaterial.opacity = 1;
+          this.cardMaterial.needsUpdate = true;
+        });
+      } else {
+        this.cardMaterial.map = null;
+        this.cardMaterial.opacity = 0;
+        this.cardMaterial.needsUpdate = true;
+      }
+    }
+
+    const ctx = this.badgeCanvas.getContext("2d")!;
+    ctx.clearRect(0, 0, 60, 60);
+    ctx.fillStyle = "rgba(0,0,0,0.75)";
+    ctx.beginPath(); ctx.arc(30, 30, 26, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "white";
+    ctx.font = "bold 26px Arial";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(cards.length.toString(), 30, 30);
+    this.badgeTexture.needsUpdate = true;
   }
 }
 
