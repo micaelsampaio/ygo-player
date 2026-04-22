@@ -6,10 +6,10 @@
     WORKDIR /app
     
     # Copy package.json and package-lock.json
-    COPY package.json ./
-    
+    COPY package.json package-lock.json ./
+
     # Install dependencies
-    RUN npm install
+    RUN npm ci
     
     # Copy the ygo-core dist folder from the ygo-core image
     COPY --from=core /app/dist ./node_modules/ygo-core
