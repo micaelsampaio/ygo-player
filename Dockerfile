@@ -5,11 +5,11 @@
     FROM node:22-alpine AS player
     WORKDIR /app
     
-    # Copy package.json and package-lock.json
-    COPY package.json package-lock.json ./
+    # Copy package.json
+    COPY package.json ./
 
     # Install dependencies
-    RUN npm ci
+    RUN npm install
     
     # Copy the ygo-core dist folder from the ygo-core image
     COPY --from=core /app/dist ./node_modules/ygo-core
