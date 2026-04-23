@@ -133,7 +133,7 @@ export function GlobalEventsActionsMenu({
         Shuffle Hand
       </button>
       <button type="button" className="ygo-card-item" onClick={showHand}>
-        Show Hand
+        Reveal Hand
       </button>
       <button type="button" className="ygo-card-item" onClick={diceRoll}>
         Roll dice
