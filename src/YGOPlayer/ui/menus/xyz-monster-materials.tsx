@@ -36,6 +36,12 @@ export function XyzMonsterMaterialsMenu({
         <div className="ygo-icon-game-zone ygo-icon-game-zone-oru"></div>
       </div>
 
+      <button className="float-right-menu-toggle-btn" onClick={() => {
+        duel.events.dispatch("close-ui-menu", { group: "game-overlay", type: "xyz-monster-materials" })
+      }}>
+        <div className="ygo-close-btn-icon"></div>
+      </button>
+
       {materials.map((material: Card) => (
         <div>
           <img

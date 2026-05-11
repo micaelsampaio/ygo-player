@@ -12,6 +12,6 @@ const fullReloadAlways = {
 export default defineConfig({
   plugins: [react(), fullReloadAlways as any],
   server: {
-    port: 5275
+    port: 5173
   },
 })

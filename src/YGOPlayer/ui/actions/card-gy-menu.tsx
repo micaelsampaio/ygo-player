@@ -28,7 +28,12 @@ export function CardGraveyardMenu({
     cardIndex + 1
   );
 
+  const closeGraveyardMenu = () => {
+    duel.events.dispatch("close-ui-menu", { group: "game-overlay", type: "graveyard" })
+  }
+
   const specialSummonATK = useCallback(() => {
+    closeGraveyardMenu();
     duel.gameActions.specialSummon({
       card,
       originZone,
@@ -37,6 +42,7 @@ export function CardGraveyardMenu({
   }, [card, originZone]);
 
   const specialSummonDEF = useCallback(() => {
+    closeGraveyardMenu();
     duel.gameActions.specialSummon({
       card,
       originZone,
@@ -57,6 +63,7 @@ export function CardGraveyardMenu({
   }, [card, originZone]);
 
   const toST = useCallback(() => {
+    closeGraveyardMenu();
     duel.gameActions.toST({ card, originZone });
   }, [card, originZone]);
 
