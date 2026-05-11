@@ -43,6 +43,16 @@ export class StartHandEventHandler extends YGOCommandHandler {
     const deckSize = deck.getDeckSize();
     deck.updateDeck(deckSize - cards.length);
 
+    if (player === 0) {
+      duel.fields[1].hand.cards.forEach((card) => {
+        card.gameObject.visible = false;
+      });
+    }
+
+    duel.fields[player].hand.cards.forEach((card) => {
+      card.gameObject.visible = false;
+    });
+
     const onFinishCardAnimation = () => {
       if (++cardAnimationsDone >= totalCards) {
         if (!done) {

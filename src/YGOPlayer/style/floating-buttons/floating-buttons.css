@@ -104,6 +104,11 @@
             width: 40px;
             height: 40px;
         }
+
+        #ygo-floating-button-close-mobile {
+            display: block;
+            order: 10;
+        }
     }
 
     /* TABLET  */
