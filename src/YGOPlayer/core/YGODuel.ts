@@ -288,8 +288,7 @@ export class YGODuel {
 
       this.serverActions.server.setClientReady();
     } catch (error) {
-      console.error("TCL:  ~ YGODuel ~ load ~ error:", error)
-      alert('ERROR');
+      console.error("YGODuel.load failed:", error);
     }
   }
 
