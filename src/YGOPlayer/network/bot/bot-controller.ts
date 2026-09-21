@@ -24,6 +24,7 @@ export class BotController {
   private playerIndex: number;
   private actionDelayMs: number;
   private createPolicy: BotPolicyFactory;
+  private cdnUrl?: string;
   private ygo?: YGOCore;
   private legality?: BotLegalityTracker;
   private policy?: BotPolicy;
@@ -32,11 +33,12 @@ export class BotController {
   constructor(
     username: string,
     playerIndex: number,
-    options?: { actionDelayMs?: number; model?: string },
+    options?: { actionDelayMs?: number; model?: string; cdnUrl?: string },
   ) {
     this.playerIndex = playerIndex;
     this.actionDelayMs = options?.actionDelayMs ?? 600;
     this.createPolicy = getPolicyFactory(options?.model);
+    this.cdnUrl = options?.cdnUrl;
     this.client = new BotYGOPlayerClient(username);
   }
 
@@ -53,7 +55,7 @@ export class BotController {
   attachGame(ygo: YGOCore) {
     this.ygo = ygo;
     this.legality = new BotLegalityTracker(ygo, this.playerIndex);
-    this.policy = this.createPolicy({ ygo, playerIndex: this.playerIndex, legality: this.legality });
+    this.policy = this.createPolicy({ ygo, playerIndex: this.playerIndex, legality: this.legality, cdnUrl: this.cdnUrl });
     ygo.events.on("command-executed", () => this.maybeAct());
   }
 

@@ -19,6 +19,8 @@ export interface BotPolicyContext {
   ygo: YGOCore;
   playerIndex: number;
   legality: BotLegalityTracker;
+  /** Needed only by policies that fetch a static asset (e.g. "ml-v1"'s .onnx model). */
+  cdnUrl?: string;
 }
 
 export type BotPolicyFactory = (ctx: BotPolicyContext) => BotPolicy;

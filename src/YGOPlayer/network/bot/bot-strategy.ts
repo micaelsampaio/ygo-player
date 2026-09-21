@@ -3,6 +3,7 @@ import { BotLegalityTracker } from "./legality";
 import { ExecutorRegistry } from "./executors/index";
 import { calculateBattleResult } from "./battle-math";
 import { BotCommand, BotPolicy } from "./bot-policy";
+import { predictHighestAtk } from "./ml-inference";
 
 /**
  * Fixed phase-sequence orchestration — deliberately NOT search-based
@@ -39,25 +40,36 @@ import { BotCommand, BotPolicy } from "./bot-policy";
  * out of 1,160 rankable kills) rather than consistently favoring the
  * biggest threat — is what "data-informed-v1" (policy-registry.ts)
  * actually reflects, via `targetSelection: "random"`.
+ *
+ * "ml-v1" (policy-registry.ts) uses `targetSelection: "ml"` — a real
+ * trained RandomForestClassifier (ygo-analyser/model_training/
+ * train_target_selection.py, 68.5% 5-fold CV accuracy vs. ~54% baseline,
+ * see ml-inference.ts) predicts, from real board-state features, whether
+ * a human would attack the highest-ATK available safe kill. Falls back
+ * to "highest-atk" if there's only one safe kill (nothing to choose
+ * between) or if inference fails for any reason (e.g. model asset
+ * unreachable) — never blocks the bot's turn on a network hiccup.
  */
 export class BotStrategy implements BotPolicy {
-  private targetSelection: "highest-atk" | "random";
+  private targetSelection: "highest-atk" | "random" | "ml";
+  private cdnUrl?: string;
 
   constructor(
     private ygo: YGOCore,
     private playerIndex: number,
     private legality: BotLegalityTracker,
     private registry: ExecutorRegistry,
-    options?: { targetSelection?: "highest-atk" | "random" },
+    options?: { targetSelection?: "highest-atk" | "random" | "ml"; cdnUrl?: string },
   ) {
     this.targetSelection = options?.targetSelection ?? "highest-atk";
+    this.cdnUrl = options?.cdnUrl;
   }
 
   async decideNextAction(): Promise<BotCommand[] | null> {
     const phase = this.ygo.state.phase;
 
     if (phase === YGODuelPhase.Main1) return this.decideMainPhaseAction();
-    if (phase === YGODuelPhase.Battle) return this.decideBattleAction();
+    if (phase === YGODuelPhase.Battle) return await this.decideBattleAction();
 
     return null;
   }
@@ -102,7 +114,7 @@ export class BotStrategy implements BotPolicy {
    * mid-battle-phase either), so the loop always makes forward progress
    * across repeated calls.
    */
-  private decideBattleAction(): BotCommand[] | null {
+  private async decideBattleAction(): Promise<BotCommand[] | null> {
     const myZones = this.legality.getOwnMonsterZones();
     const availableAttackers = myZones.filter((zone) => this.legality.canDeclareAttack(zone));
 
@@ -136,10 +148,7 @@ export class BotStrategy implements BotPolicy {
         (t) => t.battle.attackedDestroyed && !t.battle.attackingDestroyed,
       );
 
-      const target =
-        this.targetSelection === "random"
-          ? safeKills[Math.floor(Math.random() * safeKills.length)]
-          : safeKills.sort((a, b) => b.card.currentAtk - a.card.currentAtk)[0];
+      const target = await this.chooseTarget(attackingCard, safeKills);
 
       this.legality.recordAttack(attacker);
 
@@ -152,7 +161,7 @@ export class BotStrategy implements BotPolicy {
             player: this.playerIndex,
             attackingId: attackingCard.id,
             attackingZone: attacker,
-            attackedId: target.card.id,
+            attackedId: target.card!.id,
             attackedZone: target.zone,
           },
         },
@@ -178,7 +187,7 @@ export class BotStrategy implements BotPolicy {
       if (target.battle.attackedDestroyed) {
         commands.push({
           type: "DestroyCardCommand",
-          data: { player: 1 - this.playerIndex, id: target.card.id, originZone: target.zone },
+          data: { player: 1 - this.playerIndex, id: target.card!.id, originZone: target.zone },
         });
       }
 
@@ -186,5 +195,47 @@ export class BotStrategy implements BotPolicy {
     }
 
     return null;
+  }
+
+  private async chooseTarget(
+    attackingCard: ReturnType<YGOCore["state"]["getCardFromZone"]>,
+    safeKills: { zone: FieldZone; card: ReturnType<YGOCore["state"]["getCardFromZone"]>; battle: ReturnType<typeof calculateBattleResult> }[],
+  ) {
+    if (safeKills.length === 0) return undefined;
+    if (this.targetSelection === "random") {
+      return safeKills[Math.floor(Math.random() * safeKills.length)];
+    }
+
+    const sortedByAtk = [...safeKills].sort((a, b) => b.card!.currentAtk - a.card!.currentAtk);
+
+    if (this.targetSelection === "ml" && sortedByAtk.length > 1 && this.cdnUrl) {
+      const atks = sortedByAtk.map((t) => t.card!.currentAtk);
+      const defs = sortedByAtk.map((t) => t.card!.currentDef);
+      const features = [
+        attackingCard!.currentAtk,
+        attackingCard!.currentDef,
+        attackingCard!.level,
+        Math.max(...atks),
+        Math.min(...atks),
+        atks.reduce((a, b) => a + b, 0) / atks.length,
+        Math.max(...defs),
+        sortedByAtk.length,
+        this.ygo.state.turn,
+        this.ygo.getField(this.playerIndex).lp,
+        this.ygo.getField(1 - this.playerIndex).lp,
+        this.ygo.getField(this.playerIndex).hand.length,
+        this.ygo.getField(1 - this.playerIndex).hand.length,
+      ];
+
+      try {
+        const modelUrl = `${this.cdnUrl}/bot-models/target_selection.onnx`;
+        const pickHighest = await predictHighestAtk(modelUrl, features);
+        return pickHighest ? sortedByAtk[0] : sortedByAtk[sortedByAtk.length - 1];
+      } catch (err) {
+        console.error("ml-v1 inference failed, falling back to highest-atk:", err);
+      }
+    }
+
+    return sortedByAtk[0];
   }
 }

@@ -30,6 +30,11 @@ const registry = new Map<string, BotPolicyFactory>([
     ({ ygo, playerIndex, legality }) =>
       new BotStrategy(ygo, playerIndex, legality, new ExecutorRegistry(), { targetSelection: "random" }),
   ],
+  [
+    "ml-v1",
+    ({ ygo, playerIndex, legality, cdnUrl }) =>
+      new BotStrategy(ygo, playerIndex, legality, new ExecutorRegistry(), { targetSelection: "ml", cdnUrl }),
+  ],
 ]);
 
 export const DEFAULT_BOT_MODEL = "rule-based";
