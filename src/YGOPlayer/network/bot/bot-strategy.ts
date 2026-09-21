@@ -66,77 +66,103 @@ export class BotStrategy {
     return null;
   }
 
+  /**
+   * Trade-aware: an attacker only actually attacks a target when it's a
+   * safe kill (destroys the target without losing the attacker) or a
+   * worthwhile even trade (both destroyed, but the target was at least
+   * as big a threat as the attacker). Anything worse — the attacker dies
+   * and the target survives — is skipped rather than thrown away. A
+   * skipped attacker still counts its attack as used for the turn (real
+   * Yu-Gi-Oh doesn't let you "wait and see" mid-battle-phase either), so
+   * the loop always makes forward progress across repeated calls.
+   */
   private decideBattleAction(): BotCommand[] | null {
     const myZones = this.legality.getOwnMonsterZones();
-    const attacker = myZones.find((zone) => this.legality.canDeclareAttack(zone));
-    if (!attacker) return null;
+    const availableAttackers = myZones.filter((zone) => this.legality.canDeclareAttack(zone));
 
-    const attackingCard = this.ygo.state.getCardFromZone(attacker)!;
-    const targets = this.legality.getAttackableTargets();
+    for (const attacker of availableAttackers) {
+      const attackingCard = this.ygo.state.getCardFromZone(attacker)!;
+      const targets = this.legality.getAttackableTargets();
 
-    this.legality.recordAttack(attacker);
+      if (targets.length === 0) {
+        this.legality.recordAttack(attacker);
+        const commands: BotCommand[] = [
+          {
+            type: "AttackDirectlyCommand",
+            data: { player: this.playerIndex, id: attackingCard.id, originZone: attacker },
+          },
+        ];
+        if (attackingCard.currentAtk > 0) {
+          commands.push({
+            type: "LifePointsTransactionCommand",
+            data: { player: 1 - this.playerIndex, value: `-${attackingCard.currentAtk}` },
+          });
+        }
+        return commands;
+      }
 
-    if (targets.length === 0) {
+      const evaluated = targets.map((zone) => {
+        const card = this.ygo.state.getCardFromZone(zone)!;
+        return { zone, card, battle: calculateBattleResult(attackingCard, card) };
+      });
+
+      const safeKills = evaluated.filter(
+        (t) => t.battle.attackedDestroyed && !t.battle.attackingDestroyed,
+      );
+      const worthwhileTrades = evaluated.filter(
+        (t) =>
+          t.battle.attackedDestroyed &&
+          t.battle.attackingDestroyed &&
+          t.card.currentAtk >= attackingCard.currentAtk,
+      );
+
+      const pool = safeKills.length > 0 ? safeKills : worthwhileTrades;
+      const target = pool.sort((a, b) => b.card.currentAtk - a.card.currentAtk)[0];
+
+      this.legality.recordAttack(attacker);
+
+      if (!target) continue; // every target here is a bad trade — hold this attacker back
+
       const commands: BotCommand[] = [
         {
-          type: "AttackDirectlyCommand",
-          data: { player: this.playerIndex, id: attackingCard.id, originZone: attacker },
+          type: "AttackCommand",
+          data: {
+            player: this.playerIndex,
+            attackingId: attackingCard.id,
+            attackingZone: attacker,
+            attackedId: target.card.id,
+            attackedZone: target.zone,
+          },
         },
       ];
-      if (attackingCard.currentAtk > 0) {
+
+      if (target.battle.battleDamage > 0) {
         commands.push({
           type: "LifePointsTransactionCommand",
-          data: { player: 1 - this.playerIndex, value: `-${attackingCard.currentAtk}` },
+          data: { player: 1 - this.playerIndex, value: `-${target.battle.battleDamage}` },
+        });
+      } else if (target.battle.battleDamage < 0) {
+        commands.push({
+          type: "LifePointsTransactionCommand",
+          data: { player: this.playerIndex, value: target.battle.battleDamage.toString() },
         });
       }
+      if (target.battle.attackingDestroyed) {
+        commands.push({
+          type: "DestroyCardCommand",
+          data: { player: this.playerIndex, id: attackingCard.id, originZone: attacker },
+        });
+      }
+      if (target.battle.attackedDestroyed) {
+        commands.push({
+          type: "DestroyCardCommand",
+          data: { player: 1 - this.playerIndex, id: target.card.id, originZone: target.zone },
+        });
+      }
+
       return commands;
     }
 
-    // Weakest opposing monster first — the safest generic heuristic without
-    // per-card knowledge (avoids trading into something that survives).
-    const target = targets
-      .map((zone) => ({ zone, card: this.ygo.state.getCardFromZone(zone)! }))
-      .sort((a, b) => a.card.currentAtk - b.card.currentAtk)[0];
-
-    const battle = calculateBattleResult(attackingCard, target.card);
-
-    const commands: BotCommand[] = [
-      {
-        type: "AttackCommand",
-        data: {
-          player: this.playerIndex,
-          attackingId: attackingCard.id,
-          attackingZone: attacker,
-          attackedId: target.card.id,
-          attackedZone: target.zone,
-        },
-      },
-    ];
-
-    if (battle.battleDamage > 0) {
-      commands.push({
-        type: "LifePointsTransactionCommand",
-        data: { player: 1 - this.playerIndex, value: `-${battle.battleDamage}` },
-      });
-    } else if (battle.battleDamage < 0) {
-      commands.push({
-        type: "LifePointsTransactionCommand",
-        data: { player: this.playerIndex, value: battle.battleDamage.toString() },
-      });
-    }
-    if (battle.attackingDestroyed) {
-      commands.push({
-        type: "DestroyCardCommand",
-        data: { player: this.playerIndex, id: attackingCard.id, originZone: attacker },
-      });
-    }
-    if (battle.attackedDestroyed) {
-      commands.push({
-        type: "DestroyCardCommand",
-        data: { player: 1 - this.playerIndex, id: target.card.id, originZone: target.zone },
-      });
-    }
-
-    return commands;
+    return null;
   }
 }
