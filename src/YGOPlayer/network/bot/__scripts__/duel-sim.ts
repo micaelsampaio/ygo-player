@@ -22,10 +22,11 @@
  * source — pulled in via the ygo-core path mapping below — and mirrors the common ancestor path.)
  *
  * Usage: node duel-sim.js <modelForPlayer0> <modelForPlayer1>
- * Model names must be registered in policy-registry.ts. Right now only
- * "rule-based" exists, so `rule-based rule-based` is the only real
- * combination until a second policy is registered — the harness itself
- * doesn't assume two different policies exist.
+ * Model names must be registered in policy-registry.ts (currently
+ * "rule-based" and "data-informed-v1"). Decks are shuffled, so each
+ * process invocation plays a different game — run it many times (and
+ * swap which model is player0/player1) to get an aggregate win rate
+ * rather than judging policies off one game.
  */
 import { YGOCore, JSONCommand, YGODuelPhase, YGO_DUEL_PHASE_ORDER } from "ygo-core";
 import { BotLegalityTracker } from "../legality";
@@ -68,7 +69,7 @@ function run() {
       { name: "p0", mainDeck: YUBEL_DECK.mainDeck as any, extraDeck: YUBEL_DECK.extraDeck as any },
       { name: "p1", mainDeck: YUBEL_DECK.mainDeck as any, extraDeck: YUBEL_DECK.extraDeck as any },
     ],
-    options: { shuffleDecks: false },
+    options: { shuffleDecks: true },
   });
   ygo.start();
 
