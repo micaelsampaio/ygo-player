@@ -102,8 +102,11 @@ export class YGOSoundController extends YGOComponent {
 
         const audio = new Audio(path);
         await new Promise<void>((resolve, reject) => {
-            audio.oncanplaythrough = () => resolve();
-            audio.onerror = () => reject(new Error(`Failed to load sound: ${path}`));
+            // Backgrounded/hidden tabs can throttle media buffering indefinitely
+            // (canplaythrough never fires), which would otherwise hang duel load forever.
+            const timeout = setTimeout(() => resolve(), 5000);
+            audio.oncanplaythrough = () => { clearTimeout(timeout); resolve(); };
+            audio.onerror = () => { clearTimeout(timeout); reject(new Error(`Failed to load sound: ${path}`)); };
         });
 
         const baseClip: YGOAudioClip = {
