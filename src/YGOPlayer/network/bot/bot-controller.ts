@@ -66,28 +66,40 @@ export class BotController {
     if (!this.ygo || this.acting) return;
     if (this.ygo.state.turnPlayer !== this.playerIndex) return;
 
+    // Held for the whole decision, not just the delay — decideNextAction()
+    // is now async (real inference means real await time), so this guard
+    // has to span that gap too, or a "command-executed" event firing
+    // mid-inference could re-enter takeTurnStep() concurrently.
     this.acting = true;
     setTimeout(() => {
-      this.acting = false;
       this.takeTurnStep();
     }, this.actionDelayMs);
   }
 
-  private takeTurnStep() {
-    if (!this.ygo || !this.legality || !this.policy) return;
-    if (this.ygo.state.turnPlayer !== this.playerIndex) return; // stale timer guard
+  private async takeTurnStep() {
+    try {
+      if (!this.ygo || !this.legality || !this.policy) return;
+      if (this.ygo.state.turnPlayer !== this.playerIndex) return; // stale timer guard
 
-    this.legality.sync();
+      this.legality.sync();
 
-    const commands = this.policy.decideNextAction();
-    if (commands && commands.length > 0) {
-      for (const command of commands) {
-        this.sendCommand(command.type, command.data);
+      const commands = await this.policy.decideNextAction();
+
+      // Re-check after the await — turn/state may have moved on while an
+      // (especially ML-backed) policy was actually thinking.
+      if (this.ygo.state.turnPlayer !== this.playerIndex) return;
+
+      if (commands && commands.length > 0) {
+        for (const command of commands) {
+          this.sendCommand(command.type, command.data);
+        }
+        return;
       }
-      return;
-    }
 
-    this.advancePhaseOrEndTurn();
+      this.advancePhaseOrEndTurn();
+    } finally {
+      this.acting = false;
+    }
   }
 
   /** Nothing left to do this phase — advance, mirroring the human UI's own phase-advance rules. */

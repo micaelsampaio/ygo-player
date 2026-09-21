@@ -53,7 +53,7 @@ export class BotStrategy implements BotPolicy {
     this.targetSelection = options?.targetSelection ?? "highest-atk";
   }
 
-  decideNextAction(): BotCommand[] | null {
+  async decideNextAction(): Promise<BotCommand[] | null> {
     const phase = this.ygo.state.phase;
 
     if (phase === YGODuelPhase.Main1) return this.decideMainPhaseAction();

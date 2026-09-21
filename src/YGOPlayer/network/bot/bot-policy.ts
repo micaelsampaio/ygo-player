@@ -11,7 +11,7 @@ export type BotCommand = { type: string; data: any };
  * the editor()/UI wiring again.
  */
 export interface BotPolicy {
-  decideNextAction(): BotCommand[] | null;
+  decideNextAction(): Promise<BotCommand[] | null>;
 }
 
 /** Everything a policy factory needs to construct a policy for one duel. */

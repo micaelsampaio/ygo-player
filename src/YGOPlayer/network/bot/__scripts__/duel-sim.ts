@@ -57,7 +57,7 @@ function advancePhaseOrEndTurn(ygo: YGOCore): void {
   ygo.exec(new JSONCommand({ type: "DuelPhaseCommand", data: { phase: YGODuelPhase.Draw } }));
 }
 
-function run() {
+async function run() {
   const [modelP0, modelP1] = process.argv.slice(2);
   if (!modelP0 || !modelP1) {
     console.error("Usage: node dist/duel-sim.js <modelForPlayer0> <modelForPlayer1>");
@@ -92,7 +92,7 @@ function run() {
     const active = ygo.state.turnPlayer;
     legalities[active].sync();
 
-    const commands = policies[active].decideNextAction();
+    const commands = await policies[active].decideNextAction();
 
     if (!commands || commands.length === 0) {
       tally[active].holds++;
@@ -128,4 +128,7 @@ function run() {
   );
 }
 
-run();
+run().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});
