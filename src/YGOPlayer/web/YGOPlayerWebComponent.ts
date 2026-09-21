@@ -10,6 +10,7 @@ import { YGOPropsOptions } from "ygo-core";
 import { YGOClient } from "ygo-core";
 import { LocalYGOPlayerClient } from "../network/local-server/local-client";
 import { LocalYGOPlayerServer } from "../network/local-server/local-server";
+import { BotController } from "../network/bot/bot-controller";
 
 export interface YGOPlayerComponentEvents {
   init: (args: { instance: YGOPlayerComponent; duel: YGODuel }) => void;
@@ -125,7 +126,15 @@ export class YGOPlayerComponentImpl extends HTMLElement implements YGOPlayerComp
       gameMode: props.gameMode || "EDITOR",
     };
 
-    this.server = new LocalYGOPlayerServer(this.client, config);
+    const bot = props.bot
+      ? new BotController(
+          props.players[props.bot.playerIndex]?.name || "Bot",
+          props.bot.playerIndex,
+          { actionDelayMs: props.bot.actionDelayMs },
+        )
+      : undefined;
+
+    this.server = new LocalYGOPlayerServer(this.client, config, bot);
 
     this.start(config);
   }

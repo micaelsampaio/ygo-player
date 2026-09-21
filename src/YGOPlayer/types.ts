@@ -61,6 +61,11 @@ export interface YGOPlayerStartEditorProps {
   actions?: {
     saveReplay?: (replay: YGOReplayData) => Promise<void>
   }
+  /** POC: when set, registers a rule-based bot as the given player index instead of requiring a second human. */
+  bot?: {
+    playerIndex: number;
+    actionDelayMs?: number;
+  }
 }
 
 export interface YGOPlayerStartReplayProps {
