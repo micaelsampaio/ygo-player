@@ -1,26 +1,26 @@
-import { YGODuelPhase, YGO_DUEL_PHASE_ORDER } from "ygo-core";
+import { YGOCore, YGODuelPhase, YGO_DUEL_PHASE_ORDER } from "ygo-core";
 import { BotYGOPlayerClient } from "./bot-client";
+import { BotLegalityTracker } from "./legality";
+import { BotStrategy } from "./bot-strategy";
+import { ExecutorRegistry } from "./executors/index";
 
 /**
- * Stage 0 ("walking skeleton"): the bot has no strategy yet. On its own
- * turn it does nothing but advance through every phase and end the turn,
- * exactly mirroring the phase-advance rules the human UI already follows
- * (see ygo-player's DuelPhaseActionsMenu.nextPhase/nextTurn) — turn 1 skips
- * Battle/Main2, otherwise every phase is visited in order.
- *
- * The bot never touches YGOCore/YGOGameState directly. It only replays the
- * same command-executed broadcast stream every other client sees to keep a
- * minimal local mirror of turn/phase/turnPlayer, and emits the same
- * wire-format commands a human's UI would — so it can never desync, since
- * it's driven by the same event log as everyone else.
+ * The bot's decision loop. It never mutates YGOCore/YGOGameState directly —
+ * it only ever reads it (via attachGame, after LocalYGOPlayerServer
+ * constructs the shared, authoritative core) to decide what to do, and
+ * acts exclusively by emitting the same wire-format commands a human's UI
+ * would through its BotYGOPlayerClient. It wakes up on every
+ * "command-executed" event (the same feed everyone else's state updates
+ * come from), so it can't miss a turn/phase change or act on stale state.
  */
 export class BotController {
   private client: BotYGOPlayerClient;
   private playerIndex: number;
-  private turn = 0;
-  private turnPlayer = 0;
-  private phase: YGODuelPhase = YGODuelPhase.Draw;
   private actionDelayMs: number;
+  private ygo?: YGOCore;
+  private legality?: BotLegalityTracker;
+  private strategy?: BotStrategy;
+  private acting = false;
 
   constructor(
     username: string,
@@ -30,7 +30,6 @@ export class BotController {
     this.playerIndex = playerIndex;
     this.actionDelayMs = options?.actionDelayMs ?? 600;
     this.client = new BotYGOPlayerClient(username);
-    this.client.onReceive((eventName, data) => this.onServerMessage(eventName, data));
   }
 
   getClient(): BotYGOPlayerClient {
@@ -38,57 +37,61 @@ export class BotController {
   }
 
   /**
-   * Must be called only after this controller's client has been registered
-   * with YGOGameServer (which binds `onMessage` synchronously in its own
-   * constructor) — calling it any earlier is a silent no-op since there's
-   * nothing yet listening on the other end.
+   * Must be called after this controller's client has been registered
+   * with YGOGameServer (constructor binds it synchronously) and before
+   * sendReady() — gives the bot its read-only view of the shared game and
+   * starts its reactive loop.
    */
+  attachGame(ygo: YGOCore) {
+    this.ygo = ygo;
+    this.legality = new BotLegalityTracker(ygo, this.playerIndex);
+    this.strategy = new BotStrategy(ygo, this.playerIndex, this.legality, new ExecutorRegistry());
+    ygo.events.on("command-executed", () => this.maybeAct());
+  }
+
+  /** Must be called only after attachGame(). */
   sendReady() {
     this.client.emit("client:ready");
   }
 
-  private onServerMessage(eventName: string, data: any) {
-    if (eventName !== "server:exec") return;
+  private maybeAct() {
+    if (!this.ygo || this.acting) return;
+    if (this.ygo.state.turnPlayer !== this.playerIndex) return;
 
-    if (data?.type === "ygo:replay:start") {
-      this.maybeAct();
+    this.acting = true;
+    setTimeout(() => {
+      this.acting = false;
+      this.takeTurnStep();
+    }, this.actionDelayMs);
+  }
+
+  private takeTurnStep() {
+    if (!this.ygo || !this.legality || !this.strategy) return;
+    if (this.ygo.state.turnPlayer !== this.playerIndex) return; // stale timer guard
+
+    this.legality.sync();
+
+    const commands = this.strategy.decideNextAction();
+    if (commands && commands.length > 0) {
+      for (const command of commands) {
+        this.sendCommand(command.type, command.data);
+      }
       return;
     }
 
-    if (data?.type !== "ygo:commands:exec") return;
-
-    const command = data.data?.command;
-    if (!command) return;
-
-    if (command.type === "DuelTurnCommand") {
-      // Mirrors DuelTurnCommand.exec() exactly: the very first turn (0 -> 1,
-      // at game start) does NOT flip turnPlayer — only every turn after does.
-      this.turn++;
-      if (this.turn > 1) {
-        this.turnPlayer = this.turnPlayer === 0 ? 1 : 0;
-      }
-    }
-    if (command.type === "DuelPhaseCommand") {
-      this.phase = command.data.phase;
-    }
-
-    this.maybeAct();
+    this.advancePhaseOrEndTurn();
   }
 
-  private maybeAct() {
-    if (this.turnPlayer !== this.playerIndex) return;
-    setTimeout(() => this.takeTurnStep(), this.actionDelayMs);
-  }
+  /** Nothing left to do this phase — advance, mirroring the human UI's own phase-advance rules. */
+  private advancePhaseOrEndTurn() {
+    const phase = this.ygo!.state.phase;
+    const turn = this.ygo!.state.turn;
 
-  /** Stage 0: no decisions — just advance phases and end the turn. */
-  private takeTurnStep() {
-    if (this.turnPlayer !== this.playerIndex) return; // stale timer guard
-
-    const currentIndex = YGO_DUEL_PHASE_ORDER.indexOf(this.phase);
+    const currentIndex = YGO_DUEL_PHASE_ORDER.indexOf(phase);
     let nextIndex = currentIndex + 1;
 
     // Turn 1 skips Battle/Main2, same rule the human UI's nextPhase() applies.
-    if (this.turn === 1 && this.phase === YGODuelPhase.Main1) {
+    if (turn === 1 && phase === YGODuelPhase.Main1) {
       nextIndex += 2;
     }
 

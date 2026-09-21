@@ -21,7 +21,9 @@ export class LocalYGOPlayerServer {
 
     // Must happen after YGOGameServer's constructor has bound the bot's
     // client (registers its onMessage handler) — any earlier and this is a
-    // silent no-op with nothing listening yet.
+    // silent no-op with nothing listening yet. attachGame gives the bot its
+    // read-only view of the shared core and must run before sendReady().
+    bot?.attachGame(this.game.ygo);
     bot?.sendReady();
   }
 }
