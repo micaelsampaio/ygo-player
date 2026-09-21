@@ -130,7 +130,7 @@ export class YGOPlayerComponentImpl extends HTMLElement implements YGOPlayerComp
       ? new BotController(
           props.players[props.bot.playerIndex]?.name || "Bot",
           props.bot.playerIndex,
-          { actionDelayMs: props.bot.actionDelayMs },
+          { actionDelayMs: props.bot.actionDelayMs, model: props.bot.model },
         )
       : undefined;
 

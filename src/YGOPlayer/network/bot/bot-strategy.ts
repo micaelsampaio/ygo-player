@@ -2,8 +2,7 @@ import { YGOCore, YGODuelPhase, FieldZone } from "ygo-core";
 import { BotLegalityTracker } from "./legality";
 import { ExecutorRegistry } from "./executors/index";
 import { calculateBattleResult } from "./battle-math";
-
-type BotCommand = { type: string; data: any };
+import { BotCommand, BotPolicy } from "./bot-policy";
 
 /**
  * Fixed phase-sequence orchestration — deliberately NOT search-based
@@ -18,8 +17,12 @@ type BotCommand = { type: string; data: any };
  * it with LifePointsTransactionCommand/DestroyCardCommand based on
  * computed battle math, and the bot must send that same sequence for the
  * attack to actually do anything.
+ *
+ * This is the "rule-based" BotPolicy — one of potentially several
+ * (see policy-registry.ts). Nothing here is aware it's being used as a
+ * policy implementation; it just happens to already match the shape.
  */
-export class BotStrategy {
+export class BotStrategy implements BotPolicy {
   constructor(
     private ygo: YGOCore,
     private playerIndex: number,
