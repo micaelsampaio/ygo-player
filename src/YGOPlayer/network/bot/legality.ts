@@ -1,4 +1,4 @@
-import { YGOCore, YGOGameLegality, FieldZone } from "ygo-core";
+import { Card, YGOCore, YGOGameLegality, FieldZone } from "ygo-core";
 
 /**
  * ygo-core tracks no per-turn state for anyone (no "already normal
@@ -59,5 +59,9 @@ export class BotLegalityTracker {
   /** getAttackableTargets is really "occupied monster zones for a player" — reused for our own side. */
   getOwnMonsterZones(): FieldZone[] {
     return YGOGameLegality.getAttackableTargets(this.ygo.state, this.playerIndex);
+  }
+
+  getCardFromZone(zone: FieldZone): Card | null {
+    return this.ygo.state.getCardFromZone(zone);
   }
 }
