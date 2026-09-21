@@ -21,14 +21,37 @@ import { BotCommand, BotPolicy } from "./bot-policy";
  * This is the "rule-based" BotPolicy — one of potentially several
  * (see policy-registry.ts). Nothing here is aware it's being used as a
  * policy implementation; it just happens to already match the shape.
+ *
+ * `options.targetSelection` picks how to choose among multiple available
+ * safe kills: "highest-atk" (default, "rule-based"'s original behavior —
+ * kill the biggest threat) or "random". This was originally meant to
+ * also toggle even-trade acceptance based on the real-replay corpus
+ * finding that real players accept an even trade only ~4% of the time
+ * (see ygo-replay-parser/corpus-findings.md) — but that turned out to be
+ * a dead end: calculateBattleResult can never produce "both destroyed"
+ * (attackedDestroyed requires battleDamage>0, attackingDestroyed
+ * requires battleDamage<0 — mutually exclusive), matching real YGO rules
+ * where equal-ATK battle-position combat destroys neither side. So
+ * "even trades" aren't a reachable code path here at all, and toggling
+ * their acceptance can't produce a real behavioral difference. The
+ * corpus's other finding — real target selection among available kills
+ * is close to a coin flip (471 weakest / 460 strongest / 229 tied,
+ * out of 1,160 rankable kills) rather than consistently favoring the
+ * biggest threat — is what "data-informed-v1" (policy-registry.ts)
+ * actually reflects, via `targetSelection: "random"`.
  */
 export class BotStrategy implements BotPolicy {
+  private targetSelection: "highest-atk" | "random";
+
   constructor(
     private ygo: YGOCore,
     private playerIndex: number,
     private legality: BotLegalityTracker,
     private registry: ExecutorRegistry,
-  ) {}
+    options?: { targetSelection?: "highest-atk" | "random" },
+  ) {
+    this.targetSelection = options?.targetSelection ?? "highest-atk";
+  }
 
   decideNextAction(): BotCommand[] | null {
     const phase = this.ygo.state.phase;
@@ -71,13 +94,13 @@ export class BotStrategy implements BotPolicy {
 
   /**
    * Trade-aware: an attacker only actually attacks a target when it's a
-   * safe kill (destroys the target without losing the attacker) or a
-   * worthwhile even trade (both destroyed, but the target was at least
-   * as big a threat as the attacker). Anything worse — the attacker dies
-   * and the target survives — is skipped rather than thrown away. A
-   * skipped attacker still counts its attack as used for the turn (real
-   * Yu-Gi-Oh doesn't let you "wait and see" mid-battle-phase either), so
-   * the loop always makes forward progress across repeated calls.
+   * safe kill (destroys the target without losing the attacker) —
+   * "even trades" aren't a real code path (see class doc). Anything
+   * worse — the attacker dies and the target survives — is skipped
+   * rather than thrown away. A skipped attacker still counts its attack
+   * as used for the turn (real Yu-Gi-Oh doesn't let you "wait and see"
+   * mid-battle-phase either), so the loop always makes forward progress
+   * across repeated calls.
    */
   private decideBattleAction(): BotCommand[] | null {
     const myZones = this.legality.getOwnMonsterZones();
@@ -112,19 +135,15 @@ export class BotStrategy implements BotPolicy {
       const safeKills = evaluated.filter(
         (t) => t.battle.attackedDestroyed && !t.battle.attackingDestroyed,
       );
-      const worthwhileTrades = evaluated.filter(
-        (t) =>
-          t.battle.attackedDestroyed &&
-          t.battle.attackingDestroyed &&
-          t.card.currentAtk >= attackingCard.currentAtk,
-      );
 
-      const pool = safeKills.length > 0 ? safeKills : worthwhileTrades;
-      const target = pool.sort((a, b) => b.card.currentAtk - a.card.currentAtk)[0];
+      const target =
+        this.targetSelection === "random"
+          ? safeKills[Math.floor(Math.random() * safeKills.length)]
+          : safeKills.sort((a, b) => b.card.currentAtk - a.card.currentAtk)[0];
 
       this.legality.recordAttack(attacker);
 
-      if (!target) continue; // every target here is a bad trade — hold this attacker back
+      if (!target) continue; // no safe kill available — hold this attacker back
 
       const commands: BotCommand[] = [
         {
