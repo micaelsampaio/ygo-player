@@ -137,7 +137,22 @@ export class YGOCommandsController extends YGOComponent {
     }
 
     this.currentCommand = this.commandsQueue.shift();
-    this.currentCommand?.exec();
+    try {
+      this.currentCommand?.exec();
+    } catch (error) {
+      // A single malformed/desynced command (e.g. a mirrored server log
+      // entry referencing a card that isn't actually in the zone the
+      // client's local state has for it) must not freeze the whole duel —
+      // exec() throws before mutating anything for a command like this
+      // (the lookup that fails is always the first thing it does), so it's
+      // safe to just skip it and keep processing rather than let this
+      // propagate uncaught and halt command processing — and every
+      // control in the UI with it — forever.
+      console.error("YGOCommandsController: command exec failed, skipping it", this.currentCommand, error);
+      this.finishCurrentCommand();
+      setTimeout(() => this.processNextCommand());
+      return;
+    }
 
     if (this.currentCommand?.handler) return;
 

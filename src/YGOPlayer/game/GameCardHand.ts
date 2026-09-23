@@ -101,6 +101,7 @@ export class GameCardHand extends YGOEntity implements YGOUiElement {
   onMouseEnter?(event: MouseEvent): void {
     if (!this.isVisible) return;
     if (!this.isUiElementHover) return;
+    if (!this.card) return;
     this.gameObject.position.copy(this.position);
     this.gameObject.position.y += YGOStatic.isPlayerPOV(this.card.owner) ? 0.3 : -0.3;
   }

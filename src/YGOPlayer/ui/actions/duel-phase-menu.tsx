@@ -4,7 +4,6 @@ import { YGODuel } from "../../core/YGODuel";
 import { getTransformFromCamera, } from "../../scripts/ygo-utils";
 import { CardMenu } from "../components/CardMenu";
 import { YGODuelPhase, YGO_DUEL_PHASE_ORDER } from "ygo-core";
-import { YGOTimerUtils } from "../../scripts/timer-utils";
 
 export function DuelPhaseActionsMenu({
   duel,
@@ -14,7 +13,15 @@ export function DuelPhaseActionsMenu({
   transform: THREE.Mesh;
 }) {
   const menuRef = useRef<HTMLDivElement>();
-  const timers = useRef<YGOTimerUtils>(new YGOTimerUtils())
+  // Every executed command (including "Duel Phase"/"Duel Turn") round-trips
+  // through YGOCommandsController.processYGOLog, which dispatches
+  // "disable-game-actions" then "enable-game-actions" around it — and
+  // YGOUiController unmounts/remounts this very component in between (see
+  // `gameConfig.actions` gating `<Action>`). A component-scoped timer ref
+  // (cleared on unmount) would lose every step after the first as soon as
+  // that first step's own command triggers the blip — so goToPhase's
+  // multi-step sequencing below deliberately uses plain setTimeout instead.
+  const isMountedRef = useRef(true);
 
   const setDuelPhase = useCallback((phase: YGODuelPhase) => {
     duel.gameActions.setDuelPhase({ phase });
@@ -22,7 +29,7 @@ export function DuelPhaseActionsMenu({
 
   const [transitioning, setTransitioning] = useState(false);
 
-  const goToPhase = useCallback((target: YGODuelPhase) => {
+  const goToPhase = useCallback((target: YGODuelPhase, onComplete?: () => void) => {
     const currentPhase = duel.ygo.state.phase;
     const currentTurn = duel.ygo.state.turn;
 
@@ -32,6 +39,7 @@ export function DuelPhaseActionsMenu({
     if (targetIndex <= currentIndex) {
       // allow direct set when target is same or before (buttons before are usually disabled)
       duel.gameActions.setDuelPhase({ phase: target });
+      onComplete?.();
       return;
     }
 
@@ -43,13 +51,14 @@ export function DuelPhaseActionsMenu({
       let nextIdx = idx + 1;
       let nextPhase = YGO_DUEL_PHASE_ORDER[nextIdx];
 
-      // Draw and Standby are mandatory sequential — cannot skip them
-      if (YGO_DUEL_PHASE_ORDER[idx] === YGODuelPhase.Draw) {
-        if (target !== YGODuelPhase.Standby) return; // must go to Standby next
-      }
-      if (YGO_DUEL_PHASE_ORDER[idx] === YGODuelPhase.Standby) {
-        if (target !== YGODuelPhase.Main1) return; // must go to Main1 next
-      }
+      // Draw's only next phase is Standby, and Standby's only next phase is
+      // Main1 — neither is ever skippable, but that doesn't mean `target`
+      // (the ultimate destination, which may be several phases further,
+      // e.g. goToPhase(End) from Draw) has to equal that immediate next
+      // step. It previously did (`if (target !== Standby) return`), which
+      // silently aborted any multi-hop call starting from Draw/Standby —
+      // Standby/Main1 are already correctly queued as the next step below
+      // regardless, so there's nothing to guard here.
 
       // From Main1: skip Battle and Main2 when turn is 1, or when the target
       // is End Phase (player is leaving main phase without entering battle).
@@ -68,17 +77,23 @@ export function DuelPhaseActionsMenu({
       idx = nextIdx;
     }
 
-    if (steps.length === 0) return;
+    if (steps.length === 0) {
+      onComplete?.();
+      return;
+    }
 
     setTransitioning(true);
     // sequence the phase changes with small delays so any phase-entry effects run in order
     steps.forEach((phase, i) => {
-      timers.current.setTimeout(() => duel.gameActions.setDuelPhase({ phase }), i * 120);
+      setTimeout(() => duel.gameActions.setDuelPhase({ phase }), i * 120);
     });
 
     // clear transitioning after last step
     const total = steps.length * 120 + 50;
-    timers.current.setTimeout(() => setTransitioning(false), total);
+    setTimeout(() => {
+      if (isMountedRef.current) setTransitioning(false);
+      onComplete?.();
+    }, total);
   }, [duel]);
 
   const nextPhase = useCallback(() => {
@@ -102,14 +117,26 @@ export function DuelPhaseActionsMenu({
   }, [duel]);
 
   const nextTurn = useCallback(() => {
-    // advance to next duel turn and move to the first phase (Draw)
-    duel.gameActions.nextDuelturn();
-    duel.gameActions.setDuelPhase({ phase: YGODuelPhase.Draw });
-  }, [])
+    // Jumping straight to nextDuelturn() from an earlier phase only updates
+    // ygo-core's own turn/phase state — the mirrored "Duel Turn"/"Duel
+    // Phase" pushes never drive ocgcore's real engine through the current
+    // phase's actual transition (IDLE_TO_BP/BATTLE_TO_M2/IDLE_TO_EP/
+    // BATTLE_TO_EP — see do_push in judge.cpp), so ocgcore silently falls
+    // behind ygo-core. In a bot-duel room this means the bot's turn gets
+    // triggered but ocgcore still thinks it's the human's turn, so the bot
+    // immediately hands back without ever playing — with nothing visibly
+    // wrong on screen. Walk to End Phase first (mirroring each real
+    // transition) so both engines are actually in sync before flipping.
+    goToPhase(YGODuelPhase.End, () => {
+      duel.gameActions.nextDuelturn();
+      duel.gameActions.setDuelPhase({ phase: YGODuelPhase.Draw });
+    });
+  }, [goToPhase])
 
   useEffect(() => {
+    isMountedRef.current = true;
     return () => {
-      timers.current?.clear();
+      isMountedRef.current = false;
     }
   }, [])
 

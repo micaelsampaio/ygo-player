@@ -14,18 +14,26 @@ export function YgoDuelApp({ config, client, bind: onBind, start: onStart }: { c
         if (!canvasRef.current) return;
 
         let duel: YGODuel | undefined;
+        let destroyed = false;
         const init = async () => {
             duel = new YGODuel({ canvas: canvasRef.current!, client, config });
             await duel.load();
+            // The web component's connectToServer()/editor()/replay() re-render
+            // this SAME React root with a fresh client/config for a brand new
+            // duel — since load() is async, a second call racing in here could
+            // otherwise leave this stale instance's onBind/setDuel firing after
+            // the cleanup below already destroyed it.
+            if (destroyed) { duel.destroyDuelInstance(); return; }
             if (onBind) onBind(duel);
             setDuel(duel);
         }
         init();
 
         return () => {
+            destroyed = true;
             if (duel) duel.destroyDuelInstance();
         }
-    }, [])
+    }, [client, config])
 
     useEffect(() => {
         try {

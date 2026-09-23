@@ -301,6 +301,11 @@ export class YGODuel {
     for (let playerIndex = 0; playerIndex < this.fields.length; ++playerIndex) {
       const gameField = this.fields[playerIndex];
       const duelField = this.ygo.state.fields[playerIndex];
+      // A reconnect can fire a queued server:exec render before this.ygo.state
+      // has been fully rehydrated — state.fields is briefly shorter than
+      // this.fields in that window. Skip this tick rather than throw; the
+      // next update (moments later, once state catches up) renders correctly.
+      if (!duelField) continue;
 
       for (let i = 0; i < gameField.monsterZone.length; ++i) {
         const cardZone = gameField.monsterZone[i];
@@ -323,15 +328,25 @@ export class YGODuel {
       fieldZoneCard.updateCard();
     }
 
-    for (let i = 0; i < 2; ++i) {
-      const player = this.ygo.state.fields[0].extraMonsterZone[i] ? 0 : this.ygo.state.fields[1].extraMonsterZone[i] ? 1 : 0;
-      const cardFromPlayer = this.ygo.state.fields[0].extraMonsterZone[i] ?? this.ygo.state.fields[1].extraMonsterZone[i];
-      const cardZone = this.fields[player].extraMonsterZone[i];
-      cardZone.setCard(cardFromPlayer);
+    const field0 = this.ygo.state.fields[0];
+    const field1 = this.ygo.state.fields[1];
+    // this.fields is the client-side render array (populated once load()
+    // finishes creating GameFields) — it can still be empty even once
+    // ygo.state.fields (server state) exists, on the same reconnect race.
+    if (field0 && field1 && this.fields[0] && this.fields[1]) {
+      for (let i = 0; i < 2; ++i) {
+        const player = field0.extraMonsterZone[i] ? 0 : field1.extraMonsterZone[i] ? 1 : 0;
+        const cardFromPlayer = field0.extraMonsterZone[i] ?? field1.extraMonsterZone[i];
+        const cardZone = this.fields[player].extraMonsterZone[i];
+        cardZone.setCard(cardFromPlayer);
+      }
     }
 
     this.renderField();
-    this.fieldStats.update();
+    // Same reconnect race as this.fields above — fieldStats is only
+    // assigned once load() reaches that point, and a queued server:exec
+    // render can fire updateField() before then.
+    this.fieldStats?.update();
     this.events.dispatch("render-ui");
   }
 
@@ -372,15 +387,17 @@ export class YGODuel {
     const gameField = this.fields[playerIndex];
     const duelField = this.ygo.state.fields[playerIndex];
     const extraDeck = gameField.extraDeck;
-    const extraDeckCards: Array<GameCard | null> = [];
-
-    // store cards in the array
-    for (let i = 0; i < duelField.extraDeck.length; ++i) {
-      const card = duelField.extraDeck[i];
-      if (YGOGameUtils.isPendulumCard(card)) {
-        extraDeckCards[i] = extraDeck.faceUpCards.find(c => c.cardReference === card) ?? null;
-      }
-    }
+    // Only Pendulum monsters get a face-up GameCard here (non-Pendulum
+    // extra deck cards are represented by the face-down pile instead) —
+    // built by pushing rather than indexing by `i` into duelField.extraDeck
+    // so this array never ends up with holes for the skipped non-Pendulum
+    // slots. A hole (sparse-array `undefined`) crashes ExtraDeck.
+    // updateExtraDeck()'s plain `for` loop over faceUpCards as soon as any
+    // extra deck mixes Pendulum and non-Pendulum monsters.
+    const pendulumCards = duelField.extraDeck.filter(card => YGOGameUtils.isPendulumCard(card));
+    const extraDeckCards: Array<GameCard | null> = pendulumCards.map(
+      card => extraDeck.faceUpCards.find(c => c.cardReference === card) ?? null,
+    );
 
     // delete unused cards
     extraDeck.faceUpCards.forEach((card) => {
@@ -390,12 +407,9 @@ export class YGODuel {
     });
 
     // create cards missing
-    for (let i = 0; i < duelField.extraDeck.length; ++i) {
-      const card = duelField.extraDeck[i];
-      if (YGOGameUtils.isPendulumCard(card)) {
-        if (!extraDeckCards[i]) {
-          extraDeckCards[i] = new GameCard({ card, duel: this, stats: false });
-        }
+    for (let i = 0; i < pendulumCards.length; ++i) {
+      if (!extraDeckCards[i]) {
+        extraDeckCards[i] = new GameCard({ card: pendulumCards[i], duel: this, stats: false });
       }
     }
 
@@ -427,8 +441,10 @@ export class YGODuel {
       gameField.extraDeck.updateExtraDeck();
     }
 
-    for (let i = 0; i < 2; ++i) {
-      this.fields[0].extraMonsterZone[i].updateCard();
+    if (this.fields[0]) {
+      for (let i = 0; i < 2; ++i) {
+        this.fields[0].extraMonsterZone[i].updateCard();
+      }
     }
 
     this.events.dispatch("render-ui");
@@ -610,7 +626,16 @@ export class YGODuel {
 
     this.globalHotKeysManager?.clear();
 
-    this.client.disconnect();
+    // Do NOT call this.client.disconnect() here. For connectToServer() sessions,
+    // `client` is the app's long-lived socket wrapper, reused across multiple
+    // duels in the same tab (rematch / start-another-AI-duel without a reload).
+    // YGOSocketClient/YGONativeWSClient's disconnect() permanently unregisters
+    // their onAny/frame forwarding listener from the underlying socket/comm —
+    // nothing ever re-registers it, so every subsequent duel on that same
+    // client would silently stop receiving any server message, hanging forever
+    // with no error. The client's real lifecycle (actually leaving the duel
+    // page) is owned by the caller (e.g. DuelFeature's own cleanup), not by a
+    // single duel instance being torn down.
   }
 
   public endDuel() {
