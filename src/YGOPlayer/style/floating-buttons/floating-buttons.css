@@ -65,6 +65,11 @@
     cursor: pointer;
 }
 
+.ygo-player-core .ygo-floating-button.ygo-floating-button-active {
+    background-color: var(--ygo-float-button-bg-color-active);
+    border-color: var(--ygo-primary-color);
+}
+
 .ygo-player-core .ygo-floating-button.ygo-floating-button-confirm {
     border: 1px solid var(--ygo-confirm-color);
     width: 80px;

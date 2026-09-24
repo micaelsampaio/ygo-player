@@ -7,6 +7,7 @@ interface ActionButtonProps {
   disabled?: boolean;              // optional disabled state
   className?: string;              // extra CSS classes
   style?: CSSProperties;           // inline styles
+  title?: string;                  // tooltip, e.g. why it's disabled
 }
 
 export function ActionButton({
@@ -16,6 +17,7 @@ export function ActionButton({
   disabled = false,
   className = "",
   style,
+  title,
 }: ActionButtonProps) {
   if (icon) {
     return (
@@ -24,6 +26,7 @@ export function ActionButton({
         onClick={onClick}
         disabled={disabled}
         style={style}
+        title={title}
         type="button"
       >
         <div className="ygo-card-item-icon">{icon}</div>
@@ -38,6 +41,7 @@ export function ActionButton({
       onClick={onClick}
       disabled={disabled}
       style={style}
+      title={title}
       type="button"
     >
       {children}

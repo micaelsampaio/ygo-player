@@ -104,6 +104,7 @@ export function DuelLogMenu({ duel, menus }: { duel: YGODuel; menus: any[] }) {
 
   return (
     <div className={`ygo-duel-log-container ${isVisible ? "" : "ygo-hidden"}`} ref={duelLogsContainer}
+      role="presentation"
       onClick={stopPropagationCallback}
       onMouseMove={stopPropagationCallback}
       onMouseDown={stopPropagationCallback}

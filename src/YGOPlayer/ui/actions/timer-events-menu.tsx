@@ -1,8 +1,9 @@
-import { useCallback, useLayoutEffect, useRef } from "react";
+import { FormEvent, useCallback, useLayoutEffect, useRef, useState } from "react";
 import { YGODuel } from "../../core/YGODuel";
 import { getTransformFromCamera, } from "../../scripts/ygo-utils";
 import { CardMenu } from "../components/CardMenu";
 import * as THREE from "three";
+import { parseTimeToSeconds } from "./parse-time";
 
 export function TimerEventsActionsMenu({
   duel,
@@ -28,21 +29,24 @@ export function TimerEventsActionsMenu({
     duel.events.dispatch("clear-ui-action");
   }, []);
 
-  const startCountDown = useCallback(() => {
-    const timeRaw = prompt("Enter time (e.g. 2m30s, 5m, 30s)");
+  // Inline field instead of a blocking prompt()/alert() (which also froze
+  // the WebGL loop while open).
+  const [countdownOpen, setCountdownOpen] = useState(false);
+  const [countdownRaw, setCountdownRaw] = useState("");
+  const [countdownError, setCountdownError] = useState("");
 
-    if (!timeRaw) return;
+  const startCountDown = useCallback((e: FormEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const timeInSeconds = parseTimeToSeconds(countdownRaw);
 
-    const timeInSeconds = parseTimeToSeconds(timeRaw);
-
-    if (timeInSeconds === null || timeInSeconds <= 0) {
-      alert("Invalid time format. Please enter something like '2m30s', '5m', or '30s'.");
+    if (timeInSeconds === null) {
+      setCountdownError("Use a time like 2m30s, 5m or 30s.");
       return;
     }
     duel.duelScene.timer.startCountDown(timeInSeconds);
     duel.events.dispatch("clear-ui-action");
-  }, []);
-
+  }, [countdownRaw]);
 
   useLayoutEffect(() => {
     const container = menuRef.current!;
@@ -57,7 +61,7 @@ export function TimerEventsActionsMenu({
 
     container.style.top = clampedTop + "px";
     container.style.left = clampedLeft + "px";
-  }, [transform]);
+  }, [transform, countdownOpen, countdownError]);
 
   return (
     <CardMenu key="global-events-actions-menu" menuRef={menuRef}>
@@ -85,33 +89,33 @@ export function TimerEventsActionsMenu({
         Pause Timer
       </button>
 
-      <button
+      {!countdownOpen && <button
         className="ygo-card-item"
         type="button"
-        onClick={() => startCountDown()}
+        onClick={() => setCountdownOpen(true)}
       >
-        Start CountDown
-      </button>
+        Start Countdown
+      </button>}
+
+      {countdownOpen && <form className="ygo-timer-countdown-form" onSubmit={startCountDown}>
+        <div className="ygo-flex ygo-gap-1">
+          <input
+            className="ygo-input"
+            type="text"
+            autoFocus
+            placeholder="e.g. 2m30s"
+            aria-label="Countdown length"
+            aria-invalid={!!countdownError}
+            value={countdownRaw}
+            onChange={e => { setCountdownRaw(e.target.value); setCountdownError(""); }}
+          />
+          <button className="ygo-card-item" type="submit" disabled={!countdownRaw.trim()}>
+            Start
+          </button>
+        </div>
+        {countdownError && <div className="ygo-timer-countdown-error" role="alert">{countdownError}</div>}
+      </form>}
 
     </CardMenu>
   );
-}
-function parseTimeToSeconds(input: string): number | null {
-  const trimmed = input.trim();
-
-  if (/^\d+$/.test(trimmed)) {
-    return parseInt(trimmed, 10);
-  }
-
-  const regex = /^(?:(\d+)m)?\s*(?:(\d+)s)?$/i;
-  const match = trimmed.match(regex);
-
-  if (!match) return null;
-
-  const minutes = match[1] ? parseInt(match[1], 10) : 0;
-  const seconds = match[2] ? parseInt(match[2], 10) : 0;
-
-  if (minutes === 0 && seconds === 0) return null;
-
-  return minutes * 60 + seconds;
 }

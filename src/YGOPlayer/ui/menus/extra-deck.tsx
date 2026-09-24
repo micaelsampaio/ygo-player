@@ -41,6 +41,7 @@ export function ExtraDeck({
     <div
       className="float-right-menu ygo-right-menu-grid"
       onMouseMove={stopPropagationCallback}
+      role="presentation"
       onClick={stopPropagationCallback}
       onScroll={() => {
         if (hasAction) {
@@ -48,7 +49,7 @@ export function ExtraDeck({
         }
       }}
     >
-      <button className="float-right-menu-toggle-btn" onClick={() => {
+      <button aria-label="Close" className="float-right-menu-toggle-btn" onClick={() => {
         duel.events.dispatch("close-ui-menu", { group: "game-overlay", type: "extra-deck" })
       }}>
         <div className="ygo-close-btn-icon"></div>

@@ -1,8 +1,9 @@
 import * as THREE from "three";
-import { useCallback, useLayoutEffect, useRef } from "react";
+import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import { YGODuel } from "../../core/YGODuel";
 import { getTransformFromCamera, } from "../../scripts/ygo-utils";
 import { CardMenu } from "../components/CardMenu";
+import { ConfirmDialog } from "../components/ConfirmDialog";
 import { ActionUiMenu } from "../../actions/ActionUiMenu";
 import { YGOGameUtils } from "ygo-core";
 
@@ -16,6 +17,8 @@ export function GlobalEventsActionsMenu({
   const menuRef = useRef<HTMLDivElement>();
   const player = duel.serverActions.getActivePlayer();
   const field = duel.ygo.state.fields[player];
+  const [pendingConfirm, setPendingConfirm] = useState<"destroy-all" | "admit-defeat" | null>(null);
+  const cancelConfirm = useCallback(() => setPendingConfirm(null), []);
 
   const destroyAllCards = useCallback(() => {
     duel.gameActions.destroyAllCards({ zone: "all" });
@@ -103,6 +106,7 @@ export function GlobalEventsActionsMenu({
   const freeMonsterZones = field.monsterZone.filter((zone: any) => !zone).length;
 
   return (
+    <>
     <CardMenu key="global-events-actions-menu" cols={2} menuRef={menuRef}>
       <button type="button" className="ygo-card-item" onClick={newNote}>
         Add Notes
@@ -123,9 +127,6 @@ export function GlobalEventsActionsMenu({
       >
         Create Token DEF
       </button>
-      <button type="button" className="ygo-card-item" onClick={destroyAllCards}>
-        Destroy all Cards
-      </button>
       <button type="button" className="ygo-card-item" onClick={newRandomPlayerHand}>
         New Random Hand
       </button>
@@ -143,13 +144,39 @@ export function GlobalEventsActionsMenu({
         Flip Coin
       </button>
 
-      <button type="button" className="ygo-card-item" onClick={admitDefeat}>
-        Admit Defeat
-      </button>
-
       <button type="button" className="ygo-card-item" onClick={ripCardFromHandRandom}>
         Random Handrip
       </button>
+
+      {/* Irreversible — kept apart from the everyday actions, and confirmed first. */}
+      <div className="ygo-card-menu-danger-divider" />
+      <button type="button" className="ygo-card-item ygo-card-item-danger" onClick={() => setPendingConfirm("destroy-all")}>
+        Destroy all Cards
+      </button>
+      <button type="button" className="ygo-card-item ygo-card-item-danger" onClick={() => setPendingConfirm("admit-defeat")}>
+        Admit Defeat
+      </button>
     </CardMenu>
+
+    <ConfirmDialog
+      visible={pendingConfirm === "destroy-all"}
+      title="Destroy all cards?"
+      confirmLabel="Destroy all"
+      onCancel={cancelConfirm}
+      onConfirm={() => { setPendingConfirm(null); destroyAllCards(); }}
+    >
+      Every card on your side of the field will be sent to the Graveyard.
+    </ConfirmDialog>
+
+    <ConfirmDialog
+      visible={pendingConfirm === "admit-defeat"}
+      title="Admit defeat?"
+      confirmLabel="Admit defeat"
+      onCancel={cancelConfirm}
+      onConfirm={() => { setPendingConfirm(null); admitDefeat(); }}
+    >
+      You will lose this duel. This can't be undone.
+    </ConfirmDialog>
+    </>
   );
 }

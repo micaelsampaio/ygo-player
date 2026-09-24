@@ -183,6 +183,9 @@ export class YGOPlayerCore {
     }
 
     destroy() {
+        // Stop this duel's render loop — a new duel on the same canvas gets its
+        // own renderer/loop, so leaving this one running leaks a frame per rematch.
+        this.renderer.setAnimationLoop(null);
         this.eventsController.abort();
         this.destroyScene(this.scene);
         this.destroyScene(this.sceneOverlay);

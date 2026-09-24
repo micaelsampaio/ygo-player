@@ -5,6 +5,7 @@ import { ActionUiMenu } from "../../actions/ActionUiMenu";
 import { Deck } from "../../../YGOPlayer/game/Deck";
 import { YGOGameUtils } from "ygo-core";
 import { stopPropagationCallback } from "../../scripts/utils";
+import { clickableProps } from "../components/a11y";
 
 export function ViewDeckPopup({
   duel,
@@ -101,6 +102,7 @@ export function ViewDeckPopup({
     <div
       className="game-popup"
       onMouseMove={stopPropagationCallback}
+      role="presentation"
       onClick={(e) => {
         stopPropagationCallback(e);
         close();
@@ -114,12 +116,13 @@ export function ViewDeckPopup({
     >
       <div
         className="game-popup-dialog ygo-menu-view-main-deck ygo-main-deck-popup"
+        role="presentation"
         onClick={stopPropagationCallback}
       >
         <div className="game-popup-header">
           <div className="game-popup-header-title">View Deck</div>
           <div>
-            <button className="ygo-close" onClick={close}></button>
+            <button aria-label="Close" className="ygo-close" onClick={close}></button>
           </div>
         </div>
         <div className="game-popup-content-no-scroll ygo-flex ygo-gap-2 ygo-items-center ygo-pt-0">
@@ -205,7 +208,7 @@ function CardIcon({
         ? "ygo-trap"
         : "ygo-monster";
   return (
-    <div onClick={onClick}>
+    <div {...clickableProps(onClick, `${type} cards`)} aria-pressed={selected}>
       <div
         className={`card-icon ygo-cursor-pointer ${className} ${selected ? `` : "not-selected"
           }`}

@@ -1,6 +1,7 @@
 import { CardData, YGOReplayData } from "ygo-core";
 import { YGOPropsOptions } from "ygo-core";
 import { YGOProps } from "ygo-core";
+import type { YGOEndGameAction } from "../ui/duel-status";
 
 
 export interface YGOConfigOptions extends YGOPropsOptions {
@@ -13,6 +14,8 @@ export interface YGOConfig extends YGOProps {
   gameMode: "EDITOR" | "REPLAY"
   autoChangePlayer?: boolean
   options: YGOConfigOptions
+  /** Next steps offered on the end-of-duel overlay (see YGOEndGameAction). */
+  endGameActions?: YGOEndGameAction[]
   actions?: {
     fetchCardsById?(ids: number[]): Promise<CardData[]>
     saveReplay?: (replay: YGOReplayData) => Promise<void>

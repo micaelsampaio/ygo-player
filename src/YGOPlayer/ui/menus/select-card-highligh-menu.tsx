@@ -4,6 +4,7 @@ import { useMemo, useRef } from "react";
 import { parseSelectedCard } from "./menu-panel/components/selected-card-menu";
 import { Modal } from "../components/Modal";
 
+import { clickableProps } from "../components/a11y";
 export function SelectedCardHighlightedMenu({
   duel,
   card,
@@ -40,7 +41,7 @@ export function SelectedCardHighlightedMenu({
               {card.name}
             </div>
             <div>
-              <div className="ygo-close" onClick={closeDialog}></div>
+              <div className="ygo-close" {...clickableProps(closeDialog, 'Close')}></div>
             </div>
           </div>
 

@@ -6,12 +6,13 @@ export function ActionsFloatingMenu({ menuRef, children, x, y, transform }: any)
     return <div className="ygo-floating-actions-menu"
         ref={menuRef}
         style={style}
+        role="presentation"
         onClick={stopPropagationCallback}
         onMouseMove={stopPropagationCallback}
         onMouseDown={stopPropagationCallback}
         onMouseUp={stopPropagationCallback}
     >
-        <div className="ygo-card-menu-items" onClick={stopPropagationCallback}>
+        <div className="ygo-card-menu-items" role="presentation" onClick={stopPropagationCallback}>
             {children}
         </div>
     </div>

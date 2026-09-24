@@ -91,22 +91,27 @@ export function YGOSelect({
   return (
     <div
       className={`ygo-select-container ${className}`}
+      role="combobox"
+      aria-haspopup="listbox"
+      aria-expanded={isOpen}
       tabIndex={0}
       onKeyDown={handleKeyDown}
       ref={containerRef}
     >
-      <div className="ygo-select-display" onClick={() => setIsOpen((prev) => !prev)}>
+      <div className="ygo-select-display" role="presentation" onClick={() => setIsOpen((prev) => !prev)}>
         {selectedOption?.label || <span className="placeholder">{placeholder}</span>}
         <span className="ygo-arrow">
           <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3"><path d="M480-344 240-584l56-56 184 184 184-184 56 56-240 240Z" /></svg>
         </span>
       </div>
       {isOpen && (
-        <ul className="ygo-select-options">
+        <ul className="ygo-select-options" role="listbox">
           {options.map((option, index) => (
             <li
               key={option.value}
               ref={(el) => (optionRefs.current[index] = el)}
+              role="option"
+              aria-selected={option.value === value}
               className={`ygo-select-option ${option.value === value ? "ygo-selected" : ""
                 } ${highlightedIndex === index ? "ygo-highlighted" : ""}`}
               onMouseEnter={() => setHighlightedIndex(index)}

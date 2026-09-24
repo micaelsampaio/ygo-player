@@ -1,5 +1,8 @@
 import * as THREE from "three";
 import { type YGOClient } from "ygo-core";
+import type { YGOEndGameAction } from "./ui/duel-status";
+
+export type { YGOEndGameAction };
 import {
   Card,
   CardData,
@@ -58,6 +61,7 @@ export interface YGOPlayerStartEditorProps {
   commands: any[];
   options: YGOPropsOptions;
   gameMode?: "EDITOR" | "REPLAY"
+  endGameActions?: YGOEndGameAction[]
   actions?: {
     saveReplay?: (replay: YGOReplayData) => Promise<void>
   }
@@ -68,15 +72,29 @@ export interface YGOPlayerStartReplayProps {
   decks: YGOReplayDeckData[];
   replay: YGOReplayData;
   options: YGOPropsOptions;
+  endGameActions?: YGOEndGameAction[];
   actions?: {
     saveReplay?: (replay: YGOReplayData) => Promise<void>
   }
 }
 
 
+/** Ack-based request/response for assisted mode — see AssistedOptionsPanel.
+ * The host app (ygo101-web) wires these to its own outer socket layer
+ * (kaibaNet.emitEvent), since judge/adapter access lives server-side in
+ * ygo-socket-server, entirely outside ygo-core's own command/log system. */
+export interface YGOAssistActions {
+  query(): Promise<any>;
+  choose(action: { commandType: string; data: any }): Promise<any>;
+}
+
 export interface YGOPlayerConnectToServerProps {
   client: YGOClient
   cdnUrl: string;
+  assist?: YGOAssistActions;
+  /** Next steps offered on the end-of-duel overlay; handled via the
+   * component's "end-game-action" event. */
+  endGameActions?: YGOEndGameAction[];
 }
 
 export interface YGOAudioLayer {

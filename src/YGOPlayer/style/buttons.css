@@ -72,11 +72,12 @@
   }
 
   .ygo-btn-danger {
-    background: var(--ygo-error-color);
+    /* Fallback for hosts that don't define --ygo-error-color (e.g. the standalone harness). */
+    background: var(--ygo-error-color, #b91c1c);
     color: #fff;
 
     &:hover:not(:disabled) {
-      background: color-mod(var(--ygo-error-color) shade(15%));
+      background: color-mod(var(--ygo-error-color, #b91c1c) shade(15%));
     }
   }
 

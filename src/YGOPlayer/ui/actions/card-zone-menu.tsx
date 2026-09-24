@@ -5,7 +5,7 @@ import { YGODuel } from "../../core/YGODuel";
 import {
   getTransformFromCamera,
 } from "../../scripts/ygo-utils";
-import { CardMenu } from "../components/CardMenu";
+import { CardMenu, CardMenuSection } from "../components/CardMenu";
 import { GameCard } from "../../game/GameCard";
 import { ActionButton, YGOIcon } from "../components/ActionButton";
 
@@ -148,46 +148,43 @@ export function CardZoneMenu({
   const xyzMonstersInFieldCounter = YGOGameUtils.XyzMonstersInFieldsCounter(duel.ygo);
   const canAttachMaterial = (isXYZ && xyzMonstersInFieldCounter > 1) || (!isXYZ && xyzMonstersInFieldCounter > 0);
 
+  const deckMoves = <>
+    <button type="button" className="ygo-card-item" onClick={toTopDeck}>
+      Top of Deck
+    </button>
+    <button type="button" className="ygo-card-item" onClick={toBottomDeck}>
+      Bottom of Deck
+    </button>
+  </>;
+
   // TOKEN MENU
   if (isToken) {
     return <CardMenu indicator playerIndex={zoneData.player} menuRef={menuRef}>
 
-      <button type="button" className="ygo-card-item" onClick={moveCard}>
-        Move
-      </button>
+      {!isAttack && (
+        <button type="button" className="ygo-card-item" onClick={changeBattleToATK}>
+          To ATK Position
+        </button>
+      )}
+
+      {isAttack && (
+        <button type="button" className="ygo-card-item" onClick={changeBattleToDEF}>
+          To DEF Position
+        </button>
+      )}
 
       <button type="button" className="ygo-card-item" onClick={targetCard}>
         Target
       </button>
 
-      <button type="button" className="ygo-card-item" onClick={changeCardStats}>Change Card Stats</button>
+      <button type="button" className="ygo-card-item" onClick={moveCard}>
+        Move
+      </button>
 
-      {!isAttack && (
-        <button
-          type="button"
-          className="ygo-card-item"
-          onClick={changeBattleToATK}
-        >
-          TO ATK
-        </button>
-      )}
+      <button type="button" className="ygo-card-item" onClick={changeCardStats}>Change ATK/DEF/Level</button>
 
-      {isAttack && (
-        <button
-          type="button"
-          className="ygo-card-item"
-          onClick={changeBattleToDEF}
-        >
-          TO DEF
-        </button>
-      )}
-
-      <button
-        type="button"
-        className="ygo-card-item"
-        onClick={removeToken}
-      >
-        Remove
+      <button type="button" className="ygo-card-item" onClick={removeToken}>
+        Remove Token
       </button>
     </CardMenu>
   }
@@ -196,71 +193,56 @@ export function CardZoneMenu({
     return (
       <CardMenu cols indicator playerIndex={zoneData.player} menuRef={menuRef}>
 
-        <button type="button" className="ygo-card-item" onClick={moveCard}>
-          Move
+        <button type="button" className="ygo-card-item" onClick={activateCard}>
+          Activate
         </button>
 
-        <button className="ygo-card-item" onClick={negateCard}>Negate</button>
-
-        {canAttachMaterial && (
-          <>
-            <button
-              type="button"
-              className="ygo-card-item"
-              onClick={attachMaterial}
-            >
-              Attach Material
-            </button>
-          </>
+        {isFaceUp && (
+          <button type="button" className="ygo-card-item" onClick={setCard}>
+            Set
+          </button>
         )}
-
-        <button type="button" className="ygo-card-item" onClick={destroyCard}>
-          Destroy
-        </button>
 
         <button type="button" className="ygo-card-item" onClick={targetCard}>
           Target
         </button>
 
-        {card.isMainDeckCard && <>
-          <button type="button" className="ygo-card-item" onClick={toBottomDeck}>
-            To Bottom Deck
-          </button>
-          <button type="button" className="ygo-card-item" onClick={toTopDeck}>
-            To Top. Deck
-          </button>
-        </>}
-
-        <button type="button" className="ygo-card-item" onClick={banishFD}>
-          Banish FD
+        <button type="button" className="ygo-card-item" onClick={moveCard}>
+          Move
         </button>
+
+        <CardMenuSection label="More" />
+
+        <button className="ygo-card-item" type="button" onClick={negateCard}>Negate</button>
+
+        <button type="button" className="ygo-card-item" onClick={destroyCard}>
+          Destroy
+        </button>
+
+        <button type="button" className="ygo-card-item" onClick={sendToGY}>
+          To Graveyard
+        </button>
+
+        {canAttachMaterial && (
+          <button type="button" className="ygo-card-item" onClick={attachMaterial}>
+            Attach to Xyz
+          </button>
+        )}
 
         <button type="button" className="ygo-card-item" onClick={banish}>
           Banish
         </button>
 
-        {
-          card.isMainDeckCard && <button type="button" className="ygo-card-item" onClick={toHand}>
+        <button type="button" className="ygo-card-item" onClick={banishFD}>
+          Banish Face-down
+        </button>
+
+        {card.isMainDeckCard && <>
+          <button type="button" className="ygo-card-item" onClick={toHand}>
             To Hand
           </button>
-        }
-
-
-        {isFaceUp && (
-          <>
-            <button type="button" className="ygo-card-item" onClick={setCard}>
-              Set
-            </button>
-          </>
-        )}
-
-        <button type="button" className="ygo-card-item" onClick={sendToGY}>
-          To Grave
-        </button>
-
-        <button type="button" className="ygo-card-item" onClick={activateCard}>
-          Activate
-        </button>
+          {deckMoves}
+        </>}
       </CardMenu>)
   }
 
@@ -268,118 +250,30 @@ export function CardZoneMenu({
   return (
     <CardMenu cols indicator playerIndex={zoneData.player} menuRef={menuRef}>
 
-      {isPendulum && <>
-        <button type="button" className="ygo-card-item" onClick={toExtraDeck}>
-          To Extra Deck
-        </button>
-        <div></div>
-      </>}
-
-      {isXYZ && (
-        <>
-          <button
-            type="button"
-            className="ygo-card-item"
-            onClick={viewMaterials}
-          >
-            View Materials
-          </button>
-          <div></div>
-        </>
-      )}
-
-      {canAttachMaterial && (
-        <>
-          <button
-            type="button"
-            className="ygo-card-item"
-            onClick={attachMaterial}
-          >
-            Attach Material to XYZ
-          </button>
-          <div></div>
-        </>
-      )}
-
-      <button type="button" className="ygo-card-item" onClick={moveCard}>
-        Move
-      </button>
-
-      <button className="ygo-card-item" onClick={negateCard}>Negate</button>
-
-
-      <button type="button" className="ygo-card-item" onClick={targetCard}>
-        Target
-      </button>
-
-      <button type="button" className="ygo-card-item" onClick={changeCardStats}>Change Card Stats</button>
-
-      <button className="ygo-card-item" onClick={toTopDeck}>
-        To T/Deck
-      </button>
-
-      <button className="ygo-card-item" onClick={toBottomDeck}>
-        To B/Deck
-      </button>
-
-      <ActionButton className="ygo-card-item" onClick={banish} icon={<YGOIcon icon="b" />}>
-        Banish
-      </ActionButton>
-
-      <ActionButton className="ygo-card-item" onClick={banishFD} icon={<YGOIcon icon="b_fd" />}>
-        Banish FD
-      </ActionButton>
-
-      {isMainDeckCard && (
-        <button type="button" className="ygo-card-item" onClick={toHand}>
-          To Hand
-        </button>
-      )}
-
-      {!isMainDeckCard && (
-        <button type="button" className="ygo-card-item" onClick={toExtraDeck}>
-          To Extra Deck
-        </button>
-      )}
-
-      <ActionButton className="ygo-card-item" onClick={destroyCard} icon={<YGOIcon icon="destroy" />}>
-        Destroy
-      </ActionButton>
-
       {!isLink && (
         <>
           {!isFaceUp && (
-            <>
-              <button type="button" className="ygo-card-item" onClick={flip}>
-                Flip
-              </button>
-            </>
+            <button type="button" className="ygo-card-item" onClick={flip}>
+              Flip
+            </button>
           )}
 
           {isFaceUp && (
             <>
-              <button type="button" className="ygo-card-item" onClick={setCard}>
-                Set
-              </button>
-
               {!isAttack && (
-                <button
-                  type="button"
-                  className="ygo-card-item"
-                  onClick={changeBattleToATK}
-                >
-                  To ATK
+                <button type="button" className="ygo-card-item" onClick={changeBattleToATK}>
+                  To ATK Position
                 </button>
               )}
               {isAttack && (
-                <button
-                  type="button"
-                  className="ygo-card-item"
-                  onClick={changeBattleToDEF}
-                >
-                  To DEF
+                <button type="button" className="ygo-card-item" onClick={changeBattleToDEF}>
+                  To DEF Position
                 </button>
               )}
+
+              <button type="button" className="ygo-card-item" onClick={setCard}>
+                Set
+              </button>
             </>
           )}
         </>
@@ -389,9 +283,61 @@ export function CardZoneMenu({
         Activate
       </button>}
 
-      <ActionButton className="ygo-card-item" onClick={sendToGY} icon={<YGOIcon icon="gy" />}>
-        To Grave
+      <button type="button" className="ygo-card-item" onClick={targetCard}>
+        Target
+      </button>
+
+      {isXYZ && (
+        <button type="button" className="ygo-card-item" onClick={viewMaterials}>
+          View Materials
+        </button>
+      )}
+
+      <button type="button" className="ygo-card-item" onClick={moveCard}>
+        Move
+      </button>
+
+      <CardMenuSection label="More" />
+
+      {canAttachMaterial && (
+        <button type="button" className="ygo-card-item" onClick={attachMaterial}>
+          Attach to Xyz
+        </button>
+      )}
+
+      <button className="ygo-card-item" type="button" onClick={negateCard}>Negate</button>
+
+      <ActionButton className="ygo-card-item" onClick={destroyCard} icon={<YGOIcon icon="destroy" />}>
+        Destroy
       </ActionButton>
+
+      <ActionButton className="ygo-card-item" onClick={sendToGY} icon={<YGOIcon icon="gy" />}>
+        To Graveyard
+      </ActionButton>
+
+      <ActionButton className="ygo-card-item" onClick={banish} icon={<YGOIcon icon="b" />}>
+        Banish
+      </ActionButton>
+
+      <ActionButton className="ygo-card-item" onClick={banishFD} icon={<YGOIcon icon="b_fd" />}>
+        Banish Face-down
+      </ActionButton>
+
+      {isMainDeckCard && (
+        <button type="button" className="ygo-card-item" onClick={toHand}>
+          To Hand
+        </button>
+      )}
+
+      {(!isMainDeckCard || isPendulum) && (
+        <button type="button" className="ygo-card-item" onClick={toExtraDeck}>
+          To Extra Deck
+        </button>
+      )}
+
+      {deckMoves}
+
+      <button type="button" className="ygo-card-item" onClick={changeCardStats}>Change ATK/DEF/Level</button>
     </CardMenu>
   );
 }

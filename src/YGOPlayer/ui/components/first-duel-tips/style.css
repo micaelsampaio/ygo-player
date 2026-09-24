@@ -1,0 +1,59 @@
+.ygo-player-core {
+    .ygo-first-duel-tips {
+        position: fixed;
+        top: 90px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 120;
+        width: min(340px, calc(100vw - 32px));
+        box-sizing: border-box;
+        padding: 12px 14px;
+        border: 1px solid var(--ygo-primary-color);
+        border-radius: var(--ygo-border-radius-medium);
+        background-color: var(--ygo-background-color-80);
+        color: var(--ygo-text-color);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    }
+
+    .ygo-first-duel-tips-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .ygo-first-duel-tips-step {
+        font-size: var(--ygo-font-xs);
+        color: var(--ygo-form-input-placeholder-text-color);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+    }
+
+    .ygo-first-duel-tips-close {
+        background: transparent;
+        border: none;
+        color: var(--ygo-text-color);
+        cursor: pointer;
+        font-size: var(--ygo-font-md);
+        padding: 2px 6px;
+    }
+
+    .ygo-first-duel-tips-title {
+        margin-top: 4px;
+        font-weight: bold;
+        font-size: var(--ygo-font-md);
+        color: var(--ygo-heading-color);
+    }
+
+    .ygo-first-duel-tips-body {
+        margin: 6px 0 12px;
+        font-size: var(--ygo-font-sm);
+        line-height: 1.4;
+    }
+
+    .ygo-first-duel-tips-actions {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--ygo-gap-sm);
+    }
+}

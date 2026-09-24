@@ -10,16 +10,34 @@ import { MobileSelectedCardButton } from "./components/mobile-selected-card-butt
 import "./left-menu.css";
 
 
+import { clickableProps } from "../../components/a11y";
 enum LEFT_MENUS {
   EMPTY,
   SELECTED_CARD
 }
 
+const COLLAPSED_KEY = "ygo-left-panel-collapsed";
+
+function readCollapsed(): boolean {
+  try { return window.localStorage.getItem(COLLAPSED_KEY) === "1"; } catch { return false; }
+}
+
 export function LeftMenuPanel({ duel, isMobileLayout, showMenus }: { duel: YGODuel, isMobileLayout: boolean, showMenus: boolean }) {
   const [replayCommands] = useState(duel.config.gameMode === "REPLAY");
   const [openMenu, setOpenMenu] = useState<LEFT_MENUS>(LEFT_MENUS.EMPTY)
+  // Desktop only (mobile already has its own aside/floating buttons). The
+  // contents stay mounted while collapsed so chat history and the selected
+  // card survive a collapse/expand.
+  const [collapsed, setCollapsed] = useState(readCollapsed);
+  const toggleCollapsed = useCallback((e: React.MouseEvent) => {
+    stopPropagationCallback(e);
+    setCollapsed((c) => {
+      try { window.localStorage.setItem(COLLAPSED_KEY, c ? "0" : "1"); } catch { /* storage blocked */ }
+      return !c;
+    });
+  }, []);
 
-  const toggleSettings = useCallback((e: React.MouseEvent) => {
+  const toggleSettings = useCallback((e: React.SyntheticEvent) => {
     stopPropagationCallback(e);
     duel.events.dispatch("toggle-ui-menu", { group: "game-overlay", type: "settings-menu" });
   }, [duel]);
@@ -34,7 +52,7 @@ export function LeftMenuPanel({ duel, isMobileLayout, showMenus }: { duel: YGODu
           duel.clearActions();
         }} />
 
-      <button className="ygo-floating-button" onClick={(e) => {
+      <button type="button" className="ygo-floating-button" aria-label="Settings" title="Settings" onClick={(e) => {
         stopPropagationCallback(e);
         setOpenMenu(LEFT_MENUS.EMPTY)
         duel.clearActions();
@@ -45,10 +63,19 @@ export function LeftMenuPanel({ duel, isMobileLayout, showMenus }: { duel: YGODu
     </div>}
 
 
-    <div className="ygo-left-menu-panel">
+    <div className={`ygo-left-menu-panel ${collapsed ? "ygo-left-menu-collapsed" : ""}`}>
+      <button
+        className="ygo-left-menu-collapse"
+        onClick={toggleCollapsed}
+        aria-label={collapsed ? "Expand side panel" : "Collapse side panel"}
+        title={collapsed ? "Expand" : "Collapse"}
+      >
+        {collapsed ? "»" : "«"}
+      </button>
+
       <div className="ygo-left-top-menus">
         <div className="ygo-selected">Card Info</div>
-        <div onClick={toggleSettings}>Settings</div>
+        <div {...clickableProps(toggleSettings)}>Settings</div>
       </div>
 
       <div className="ygo-left-menu-card-container">

@@ -1,9 +1,12 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { YGODuel } from "../../../core/YGODuel";
 import "./style.css";
 import { YGODuelEvents, YGOPlayerState } from "ygo-core";
 import { YGOStatic } from "../../../core/YGOStatic";
 import { Thinking, ViewDeck } from "./player-states";
+import { useDuelTurnState } from "../../use-duel-turn-state";
+import { turnStatusText } from "../../duel-status";
+import { LifePointsPopover } from "./LifePointsPopover";
 
 enum LifePointsState {
     IDLE,
@@ -23,6 +26,8 @@ export function PlayerHUD({ duel, player, visible }: { duel: YGODuel, player: nu
     const state = field.state;
     const playerName = field.player.name;
     const { LP, lifePointsState } = usePlayerLp(duel, player);
+    const turnState = useDuelTurnState(duel);
+    const isTurnPlayer = turnState.turnPlayer === player;
     const [gameData] = useState(() => {
         const games = duel.ygo.options.numberOfGames || 1;
         const currentGame = duel.ygo.options.currentGame || 1;
@@ -36,17 +41,19 @@ export function PlayerHUD({ duel, player, visible }: { duel: YGODuel, player: nu
         }
     })
 
-    const changeLifePoints = () => {
+    const [lpEditorOpen, setLpEditorOpen] = useState(false);
+    const closeLpEditor = useCallback(() => setLpEditorOpen(false), []);
+    const canEditLp = duel.isGameActive;
+
+    const toggleLifePointsEditor = () => {
         if (!duel.isGameActive) return;
+        setLpEditorOpen(open => !open);
+    }
 
-        const value = prompt("LPS:");
-
-        if (value) {
-            duel.gameActions.lifePointsTransaction({
-                player,
-                value,
-            });
-        }
+    const applyLifePoints = (value: string) => {
+        setLpEditorOpen(false);
+        if (!duel.isGameActive) return;
+        duel.gameActions.lifePointsTransaction({ player, value });
     }
 
     const lpsClass = lifePointsState === LifePointsState.INCREASING
@@ -58,7 +65,7 @@ export function PlayerHUD({ duel, player, visible }: { duel: YGODuel, player: nu
     if (!visible) return null;
     const isLocalPlayer = playerPOV === 0;
 
-    return <div className={`ygo-player-hud ygo-player-${playerPOV}`}>
+    return <div className={`ygo-player-hud ygo-player-${playerPOV}${isTurnPlayer ? " ygo-player-hud-active-turn" : ""}`}>
         {gameData.games > 1 && <div className={`ygo-player-hud-game-results ygo-player-${playerPOV}`}>
             {
                 gameData.gamesArray.map(gameId => {
@@ -76,14 +83,40 @@ export function PlayerHUD({ duel, player, visible }: { duel: YGODuel, player: nu
             }
         </div>}
         <div className="ygo-player-hud-player-content">
+            {/* Text, not only the blue/red colour, so it reads for colour-blind and first-time players. */}
+            {isTurnPlayer && <div className="ygo-player-hud-turn-chip">
+                {turnStatusText(turnState)}
+            </div>}
             <div className="ygo-player-hud-bar"></div>
             <div className="ygo-player-hud-name">
                 {playerName} {state !== YGOPlayerState.IDLE ? `(${state})` : ''}
             </div>
-            <div className={`ygo-player-hud-lp ${lpsClass} ygo-flex ygo-gap-1`} onClick={changeLifePoints}>
-                <span className="ygo-lp-text" style={{ marginTop: "auto" }}>
-                    LP</span>
-                <span className="ygo-lp-value">{LP}</span>
+            <div className="ygo-player-hud-lp-anchor">
+                <div
+                    className={`ygo-player-hud-lp ${lpsClass} ygo-flex ygo-gap-1${canEditLp ? " ygo-player-hud-lp-editable" : ""}`}
+                    onClick={toggleLifePointsEditor}
+                    role={canEditLp ? "button" : undefined}
+                    tabIndex={canEditLp ? 0 : undefined}
+                    aria-haspopup={canEditLp ? "dialog" : undefined}
+                    aria-expanded={canEditLp ? lpEditorOpen : undefined}
+                    aria-label={canEditLp ? `${playerName}: ${LP} LP. Change life points` : undefined}
+                    title={canEditLp ? "Change life points" : undefined}
+                    onKeyDown={e => {
+                        if (canEditLp && (e.key === "Enter" || e.key === " ")) {
+                            e.preventDefault();
+                            toggleLifePointsEditor();
+                        }
+                    }}
+                >
+                    <span className="ygo-lp-text" style={{ marginTop: "auto" }}>
+                        LP</span>
+                    <span className="ygo-lp-value">{LP}</span>
+                </div>
+                {lpEditorOpen && canEditLp && <LifePointsPopover
+                    playerName={playerName}
+                    currentLp={field.lp}
+                    onApply={applyLifePoints}
+                    onClose={closeLpEditor} />}
             </div>
             <div className="ygo-player-hud-bar"></div>
         </div>

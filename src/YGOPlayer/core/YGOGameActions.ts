@@ -1032,52 +1032,6 @@ export class YGOGameActions {
     );
   }
 
-  public changeAtkDef({
-    card,
-    originZone,
-  }: {
-    card: Card;
-    originZone: FieldZone;
-  }) {
-    const player = this.duel.serverActions.getActivePlayer();
-    const atkInput = window.prompt("Please enter atk:");
-    let defInput: string | null = null;
-
-    if (!YGOGameUtils.isLinkMonster(card)) {
-      defInput = window.prompt("Please enter def:");
-    }
-
-    const atk = atkInput && !isNaN(atkInput as any) ? Number(atkInput) : undefined;
-    const def = defInput && !isNaN(defInput as any) ? Number(defInput) : undefined;
-
-    this.duel.execCommand(
-      new YGOCommands.ChangeCardAtkDefCommand({
-        player,
-        id: card.id,
-        originZone,
-        atk,
-        def,
-      })
-    );
-  }
-
-  public changeCardLevel({
-    card,
-    originZone
-  }: {
-    card: Card;
-    originZone: FieldZone;
-  }) {
-    const player = this.duel.serverActions.getActivePlayer();
-    const levelInput = window.prompt("Please enter the new level:");
-
-    const level = levelInput && !isNaN(levelInput as any) ? Number(levelInput) : undefined;
-
-    if (typeof level === "undefined") return;
-
-    this.duel.execCommand(new YGOCommands.ChangeCardLevelCommand({ player, id: card.id, originZone, level }));
-  }
-
   public lifePointsTransaction({
     player,
     value

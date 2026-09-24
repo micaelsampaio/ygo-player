@@ -2,50 +2,78 @@ import * as THREE from "three";
 import { PlayerField } from "ygo-core";
 import { YGODuel } from "../core/YGODuel";
 import { YGOStatic } from "../core/YGOStatic";
+import { FieldStatsVisibility } from "./field-stats-visibility";
 
 export class YGOGameFieldStatsComponent {
   public stats: YGOGameFieldStatsRender[];
+  /** Shared by the middle-mouse hold and the "card counts" button, so the
+   * button's pressed state always matches what's on the field. */
+  public readonly visibility = new FieldStatsVisibility();
+
+  private onMouseDown = (event: MouseEvent) => {
+    if (event.button === 1) {
+      event.preventDefault();
+      this.visibility.setHeld(true);
+    }
+  };
+
+  private onMouseUp = (event: MouseEvent) => {
+    if (event.button === 1) {
+      event.preventDefault();
+      this.visibility.setHeld(false);
+    }
+  };
+
+  // A release outside the window never fires mouseup here — don't leave the
+  // peek stuck on.
+  private onBlur = () => this.visibility.setHeld(false);
 
   constructor(duel: YGODuel) {
     this.stats = [0, 1].map(
       (playerIndex) => new YGOGameFieldStatsRender(duel, playerIndex)
     );
 
-    for (let i = 0; i < this.stats.length; ++i) {
-      this.stats[i].hide();
-    }
+    this.applyVisibility(false);
+    this.visibility.subscribe(visible => this.applyVisibility(visible));
 
-    // TODO @RMS: HANDLE THIS BETTER
-    window.addEventListener("mousedown", (event) => {
-      if (event.button === 1) {
-        event.preventDefault();
-        this.show();
-      }
-    });
+    window.addEventListener("mousedown", this.onMouseDown);
+    window.addEventListener("mouseup", this.onMouseUp);
+    window.addEventListener("blur", this.onBlur);
+  }
 
-    window.addEventListener("mouseup", (event) => {
-      if (event.button === 1) {
-        event.preventDefault();
-        this.hide();
-      }
-    });
+  public get isVisible() {
+    return this.visibility.visible;
+  }
+
+  public toggle() {
+    this.visibility.toggle();
   }
 
   public show() {
-    for (let i = 0; i < this.stats.length; ++i) {
-      this.stats[i].show();
-    }
+    this.visibility.setPinned(true);
   }
 
   public hide() {
-    for (let i = 0; i < this.stats.length; ++i) {
-      this.stats[i].hide();
-    }
+    this.visibility.setPinned(false);
   }
 
   public update() {
     for (let i = 0; i < this.stats.length; ++i) {
       this.stats[i].render();
+    }
+  }
+
+  public destroy() {
+    window.removeEventListener("mousedown", this.onMouseDown);
+    window.removeEventListener("mouseup", this.onMouseUp);
+    window.removeEventListener("blur", this.onBlur);
+    this.visibility.clear();
+  }
+
+  private applyVisibility(visible: boolean) {
+    for (let i = 0; i < this.stats.length; ++i) {
+      if (visible) this.stats[i].show();
+      else this.stats[i].hide();
     }
   }
 }

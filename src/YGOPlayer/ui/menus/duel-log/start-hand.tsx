@@ -3,6 +3,7 @@ import { YGODuel } from "../../../core/YGODuel";
 import { memo } from "react";
 import { DuelLogContainer, DuelLogRow } from "./duel-log-components";
 
+import { clickableProps } from "../../components/a11y";
 export const StartHandLogRow = memo(function ({
   log,
   duel,
@@ -38,7 +39,7 @@ export const StartHandLogRow = memo(function ({
                     onMouseUp={(event: any) => duel.events.dispatch("on-card-mouse-up", { card, event })}
                     onTouchStart={(event: any) => duel.events.dispatch("on-card-mouse-down", { card, event })}
                     onTouchEnd={(event: any) => duel.events.dispatch("on-card-mouse-up", { card, event })}
-                    onClick={() => duel.gameActions.setSelectedCard({ player: log.player, card })}
+                    {...clickableProps(() => duel.gameActions.setSelectedCard({ player: log.player, card }), card.name)}
                     src={card.images.small_url}
                     style={{ width: "40px" }}
                   />

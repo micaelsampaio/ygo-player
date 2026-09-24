@@ -49,6 +49,10 @@ export class YGODuel {
   public actionManager: YGOActionManager;
   public gameActions: YGOGameActions;
   public serverActions: YGOServerActions;
+  /** Set by YGOPlayerComponentImpl.bind() for connectToServer() only — see
+   * YGOPlayerConnectToServerProps. undefined for editor/replay (no judge/
+   * adapter to query) and for any player who never enabled assisted mode. */
+  public assist?: { query(): Promise<any>; choose(action: { commandType: string; data: any }): Promise<any> };
   public gameController: GameController;
   public mouseEvents: YGOMouseEvents;
   public tasks: YGOTaskController;
@@ -614,6 +618,9 @@ export class YGODuel {
       this.gameController.destroyEntity();
     } catch (error) { }
 
+    // Its middle-mouse listeners live on window, not the torn-down canvas.
+    this.fieldStats?.destroy();
+
     this.entities.forEach(entity => {
       try {
         entity.destroyEntity();
@@ -625,6 +632,8 @@ export class YGODuel {
     } catch (error) { }
 
     this.globalHotKeysManager?.clear();
+
+    if ((window as any).YGODuel === this) (window as any).YGODuel = undefined;
 
     // Do NOT call this.client.disconnect() here. For connectToServer() sessions,
     // `client` is the app's long-lived socket wrapper, reused across multiple

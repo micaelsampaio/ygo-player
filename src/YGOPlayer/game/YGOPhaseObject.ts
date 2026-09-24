@@ -3,9 +3,10 @@ import { YGODuel } from "../core/YGODuel";
 import { YGOEntity } from '../core/YGOEntity';
 import { YGOMouseEvents } from '../core/components/YGOMouseEvents';
 import { YGOUiElement } from '../types';
-import { YGODuelPhase } from 'ygo-core';
+import { YGOClientType, YGODuelPhase } from 'ygo-core';
 import { ActionUiMenu } from '../actions/ActionUiMenu';
 import { YGOStatic } from '../core/YGOStatic';
+import { phaseLabel, phaseObjectTooltip, turnOwnerLabel } from '../ui/duel-status';
 
 export class YGOPhaseObject extends YGOEntity implements YGOUiElement {
   public isUiElement: boolean = true;
@@ -14,6 +15,8 @@ export class YGOPhaseObject extends YGOEntity implements YGOUiElement {
   private ctx: CanvasRenderingContext2D;
   public texture: THREE.Texture;
   public action: ActionUiMenu;
+  private tooltip = "";
+  private hovered = false;
 
   constructor(private duel: YGODuel) {
     super();
@@ -80,10 +83,20 @@ export class YGOPhaseObject extends YGOEntity implements YGOUiElement {
 
   onMouseEnter(): void {
     this.fieldTurnHover.visible = true;
+    this.hovered = true;
+    // The object lives inside the WebGL canvas, so the cursor and native
+    // tooltip have to be set on the canvas itself while it's hovered.
+    const canvas = this.duel.core.renderer.domElement;
+    canvas.style.cursor = "pointer";
+    canvas.title = this.tooltip;
   }
 
   onMouseLeave(): void {
     this.fieldTurnHover.visible = false;
+    this.hovered = false;
+    const canvas = this.duel.core.renderer.domElement;
+    canvas.style.cursor = "";
+    canvas.removeAttribute("title");
   }
 
   private updateTexture(turnProp: number, turnPlayer: number, phase: YGODuelPhase) {
@@ -103,20 +116,28 @@ export class YGOPhaseObject extends YGOEntity implements YGOUiElement {
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
-    // Cute glowing circle in the middle
     const centerX = canvasWidth / 2;
     const centerY = canvasHeight / 2;
 
-    // Turn number text
     ctx.fillStyle = "white";
-    ctx.font = "bold 42px sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText(`Turn ${turn}`, centerX, centerY - 40);
+
+    // Whose turn, in words — the blue/red gradient alone isn't enough for
+    // colour-blind or first-time players. Spectators get the player's name.
+    const isPlayerClient = this.duel.client?.type === YGOClientType.PLAYER;
+    const owner = isPlayerClient
+      ? turnOwnerLabel({ isPlayerClient, isLocalTurn: YGOStatic.isPlayer(turnPlayer) })
+      : this.duel.ygo.getField(turnPlayer)?.player?.name ?? "";
+    this.fillFittedText(owner.toUpperCase(), centerX, centerY - 64, "bold", 26, canvasWidth - 24);
+
+    this.fillFittedText(`Turn ${turn}`, centerX, centerY - 20, "bold", 40, canvasWidth - 24);
 
     // Phase text (smaller, below turn)
-    ctx.font = "34px sans-serif";
-    ctx.fillText(phase.toString(), centerX, centerY + 20);
+    this.fillFittedText(phaseLabel(phase), centerX, centerY + 26, "", 30, canvasWidth - 24);
+
+    this.tooltip = phaseObjectTooltip({ owner, turn, phase, canChangePhase: isPlayerClient });
+    if (this.hovered) this.duel.core.renderer.domElement.title = this.tooltip;
 
     // Border for style
     ctx.strokeStyle = "rgba(255,255,255,0.5)";
@@ -124,5 +145,17 @@ export class YGOPhaseObject extends YGOEntity implements YGOUiElement {
     ctx.strokeRect(2, 2, canvasWidth - 4, canvasHeight - 4);
 
     this.texture.needsUpdate = true;
+  }
+
+  /** Draws centred text, shrinking the font until it fits maxWidth. */
+  private fillFittedText(text: string, x: number, y: number, weight: string, size: number, maxWidth: number) {
+    const ctx = this.ctx;
+    let fontSize = size;
+    ctx.font = `${weight} ${fontSize}px sans-serif`.trim();
+    while (fontSize > 12 && ctx.measureText(text).width > maxWidth) {
+      fontSize -= 2;
+      ctx.font = `${weight} ${fontSize}px sans-serif`.trim();
+    }
+    ctx.fillText(text, x, y);
   }
 }

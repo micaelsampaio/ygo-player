@@ -6,10 +6,13 @@ import { MENUS } from "./menus";
 import { TimeLine } from "./menus/timeline";
 import { BottomRightActions } from "./menus/bottom-right-actions";
 import { PlayerHUD } from "./components/player-hud/PlayerHUD";
+import { TurnBanner } from "./components/player-hud/TurnBanner";
 import { CardLongPressEffect } from "./components/card-long-press-effect/CardLongPressEffect";
 import { useDeviceResolutionInfo } from "../scripts/use-device-resolution-info";
 import { LeftMenuPanel } from "./menus/menu-panel/LeftMenuPanel";
 import { YGOStatic } from "../core/YGOStatic";
+import { AssistedOptionsPanel } from "./menus/assisted-options-panel";
+import { FirstDuelTips } from "./components/first-duel-tips/FirstDuelTips";
 
 export interface UiGameConfig {
     actions: boolean
@@ -146,9 +149,12 @@ export function YGOUiController({ duel }: { duel: YGODuel }) {
         <BottomRightActions duel={duel} showMenus={showFloatingMenus} toggleMenus={() => setShowFloatingMenus(value => !value)} />
         <PlayerHUD duel={duel} player={YGOStatic.playerIndex} visible={showFloatingMenus} />
         <PlayerHUD duel={duel} player={YGOStatic.otherPlayerIndex} visible={showFloatingMenus} />
+        <TurnBanner duel={duel} />
         <CardLongPressEffect duel={duel} />
         {/* <RotateYourPhoneModal isPortrait={isPortrait} isMobile={isMobile} /> */}
         <LeftMenuPanel duel={duel} isMobileLayout={isMobileLayout} showMenus={showFloatingMenus} />
+        <AssistedOptionsPanel duel={duel} isMobileLayout={isMobileLayout} />
+        <FirstDuelTips duel={duel} />
 
         {
             menus.map(menu => {

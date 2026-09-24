@@ -55,13 +55,13 @@ export function DeckMenu({ duel, deck }: { duel: YGODuel, deck: Deck, clearActio
                 <button className="ygo-card-item" disabled={mainDeckSize === 0} type="button" onClick={milFromDeck}>Mil</button>
             </div>
             <div>
-                <button className="ygo-card-item" disabled={mainDeckSize === 0} type="button" onClick={() => setMilCounter(counter => counter > 0 ? counter - 1 : 0)}>+</button>
+                <button aria-label="Decrease mill count" className="ygo-card-item" disabled={mainDeckSize === 0} type="button" onClick={() => setMilCounter(counter => counter > 0 ? counter - 1 : 0)}>-</button>
             </div>
             <div>
                 {millCounter}
             </div>
             <div>
-                <button className="ygo-card-item" disabled={mainDeckSize === 0} type="button" onClick={() => setMilCounter(counter => counter + 1)}>+</button>
+                <button aria-label="Increase mill count" className="ygo-card-item" disabled={mainDeckSize === 0} type="button" onClick={() => setMilCounter(counter => counter + 1)}>+</button>
             </div>
         </div>
         <button className="ygo-card-item" type="button" onClick={viewDeck}>View Deck</button>

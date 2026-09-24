@@ -30,6 +30,8 @@ export function PlayerRemoteActionsComponent({ duel }: { duel: YGODuel }) {
     }, LONG_PRESS_MS);
   }, [duel]);
 
+  // Also bound to pointerleave/pointercancel so dragging off the button (or
+  // the browser taking over the touch) can't still fire the long-press.
   const onOkPointerUp = useCallback(() => {
     if (longPressTimer.current) {
       clearTimeout(longPressTimer.current);
@@ -62,14 +64,19 @@ export function PlayerRemoteActionsComponent({ duel }: { duel: YGODuel }) {
       type="button"
       onPointerDown={onOkPointerDown}
       onPointerUp={onOkPointerUp}
+      onPointerLeave={onOkPointerUp}
+      onPointerCancel={onOkPointerUp}
       onClick={onOkClick}
+      aria-pressed={continuousAccept}
+      aria-label={continuousAccept ? "Auto-pass on (hold to turn off)" : "Pass / OK (hold to auto-pass)"}
+      title={continuousAccept ? "Auto-pass is on. Hold to turn it off." : "Pass / OK. Hold to auto-pass every response."}
     >
       <div className="ygo-ui-icon ygo-p-action-ok"></div>
     </button>
-    <button className="ygo-btn ygo-btn-action" type="button" onClick={thinking}>
+    <button className="ygo-btn ygo-btn-action" type="button" onClick={thinking} aria-label="Thinking" title="Thinking: tell your opponent you need a moment">
       <div className="ygo-ui-icon ygo-p-action-think"></div>
     </button>
-    <button className="ygo-btn ygo-btn-action" type="button" onClick={wait}>
+    <button className="ygo-btn ygo-btn-action" type="button" onClick={wait} aria-label="Wait" title="Wait: ask your opponent to hold, you want to respond">
       <div className="ygo-ui-icon ygo-p-action-wait"></div>
     </button>
   </div>

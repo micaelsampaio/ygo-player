@@ -3,6 +3,9 @@ import { YGODuel } from "../../../core/YGODuel";
 import { stopPropagationCallback } from "../../../scripts/utils";
 import { GameSettingsDialog } from "./components/game-settings";
 import { GamControlsDialog } from "./components/game-controls";
+import { ConfirmDialog } from "../../components/ConfirmDialog";
+import { canSurrender } from "../../duel-status";
+import { YGOClientType } from "ygo-core";
 
 export enum SETTINGS_MODAL_TYPE {
     SETTINGS,
@@ -30,6 +33,18 @@ export function GameSettingsMenu({ duel, currentMenu = SETTINGS_MODAL_TYPE.SETTI
     };
     const canSaveReplay = !!duel.config.actions?.saveReplay;
     const canReportBug = !!duel.config.actions?.reportBug;
+    const showSurrender = canSurrender({
+        isPlayerClient: duel.client?.type === YGOClientType.PLAYER,
+        gameMode: duel.config.gameMode,
+    });
+    const [confirmSurrender, setConfirmSurrender] = useState(false);
+    const cancelSurrender = useCallback(() => setConfirmSurrender(false), []);
+
+    const surrender = useCallback(() => {
+        setConfirmSurrender(false);
+        closeSettings();
+        duel.gameActions.admitDefeat({ player: duel.serverActions.getActivePlayer() });
+    }, [duel]);
 
     const saveReplay = useCallback(async () => {
         if (!canSaveReplay) return;
@@ -85,6 +100,7 @@ export function GameSettingsMenu({ duel, currentMenu = SETTINGS_MODAL_TYPE.SETTI
             onMouseDown={stopPropagationCallback}
             onMouseMove={stopPropagationCallback}
             onMouseUp={stopPropagationCallback}
+            role="presentation"
             onClick={stopPropagationCallback}
         >
             <div className="ygo-game-settings-left-panel-container">
@@ -103,6 +119,7 @@ export function GameSettingsMenu({ duel, currentMenu = SETTINGS_MODAL_TYPE.SETTI
                     {canSaveReplay && <button onClick={saveReplay} className="ygo-btn ygo-btn-action">Save Replay</button>}
                     {canReportBug && <button onClick={reportBug} className="ygo-btn ygo-btn-action">Report a bug</button>}
                     <div className="ygo-flex-grow-1"></div>
+                    {showSurrender && <button onClick={() => setConfirmSurrender(true)} className="ygo-btn ygo-btn-danger">Surrender</button>}
                     <button className="ygo-btn ygo-btn-action" onClick={closeSettings}>Close</button>
                 </div>
             </div>
@@ -120,5 +137,15 @@ export function GameSettingsMenu({ duel, currentMenu = SETTINGS_MODAL_TYPE.SETTI
                 {MODAL && <MODAL duel={duel} close={closeSettings} />}
             </div>
         </div>
+
+        <ConfirmDialog
+            visible={confirmSurrender}
+            title="Surrender?"
+            confirmLabel="Surrender"
+            onCancel={cancelSurrender}
+            onConfirm={surrender}
+        >
+            You will lose this duel. This can't be undone.
+        </ConfirmDialog>
     </>;
 }

@@ -31,6 +31,7 @@ export function TimeLine({ duel }: { duel: YGODuel }) {
       className="timeline"
       onMouseEnter={() => mouseEnterTime.current = Date.now() + 500}
       onMouseMove={stopPropagationCallback}
+      role="presentation"
       onClick={stopPropagationCallback}
     >
       {commands.map((command: any, index: any) => {

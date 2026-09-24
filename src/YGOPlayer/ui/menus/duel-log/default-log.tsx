@@ -5,6 +5,7 @@ import type { CardPosition, CommandType } from "ygo-core";
 import { memo } from "react";
 import { YGOStatic } from "../../../core/YGOStatic";
 
+import { clickableProps } from "../../components/a11y";
 const HIDE_CARD_COMMANDS = new Set<CommandType>([
   "Draw From Deck"
 ])
@@ -63,7 +64,7 @@ export const DefaultLogRow = memo(
                       onMouseUp={(event: any) => duel.events.dispatch("on-card-mouse-up", { card, event })}
                       onTouchStart={(event: any) => duel.events.dispatch("on-card-mouse-down", { card, event })}
                       onTouchEnd={(event: any) => duel.events.dispatch("on-card-mouse-up", { card, event })}
-                      onClick={() => duel.gameActions.setSelectedCard({ player: log.player, card })}
+                      {...clickableProps(() => duel.gameActions.setSelectedCard({ player: log.player, card }), card.name)}
                       src={card.images.small_url}
                       style={{ width: "45px", transform: defenseData }}
                     />

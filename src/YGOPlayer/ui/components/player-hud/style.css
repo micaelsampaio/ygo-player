@@ -29,6 +29,40 @@
         min-width: 140px;
     }
 
+    /* Turn player's HUD: a text chip ("Your turn · Main Phase 1") plus a
+       coloured edge — blue for the POV side, red for the other, matching the bars. */
+    .ygo-player-hud-turn-chip {
+        display: inline-block;
+        margin-left: 20px;
+        margin-bottom: 4px;
+        padding: 2px 8px;
+        font-size: 12px;
+        font-weight: bold;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: #fff;
+        border-radius: 3px;
+        white-space: nowrap;
+    }
+
+    .ygo-player-hud.ygo-player-0 .ygo-player-hud-turn-chip {
+        background: rgb(29, 78, 216);
+    }
+
+    .ygo-player-hud.ygo-player-1 .ygo-player-hud-turn-chip {
+        background: rgb(185, 28, 28);
+    }
+
+    .ygo-player-hud.ygo-player-hud-active-turn {
+        &.ygo-player-0 .ygo-player-hud-name {
+            box-shadow: inset 4px 0 0 rgb(59, 130, 246);
+        }
+
+        &.ygo-player-1 .ygo-player-hud-name {
+            box-shadow: inset 4px 0 0 rgb(239, 68, 68);
+        }
+    }
+
     .ygo-player-hud-bar {
         height: 2px;
     }
@@ -66,6 +100,85 @@
         .ygo-lp-text {
             font-size: 20px;
         }
+    }
+
+    .ygo-player-hud-lp-anchor {
+        position: relative;
+    }
+
+    .ygo-player-hud-lp-editable {
+        cursor: pointer;
+        border-radius: var(--ygo-border-radius-small);
+
+        &:hover,
+        &:focus-visible {
+            outline: 1px dashed rgba(255, 255, 255, 0.6);
+            outline-offset: -1px;
+        }
+    }
+
+    .ygo-lp-popover {
+        position: absolute;
+        right: 0;
+        z-index: 130;
+        width: 260px;
+        padding: 10px;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        font-weight: normal;
+        background-color: var(--ygo-background-color);
+        border: 1px solid var(--ygo-border-color);
+        border-radius: var(--ygo-border-radius-medium);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+
+        .ygo-lp-popover-title {
+            font-weight: bold;
+            font-size: var(--ygo-font-sm);
+        }
+
+        .ygo-lp-popover-quick,
+        .ygo-lp-popover-modes,
+        .ygo-lp-popover-row {
+            display: flex;
+            gap: 6px;
+
+            > * {
+                flex: 1;
+            }
+        }
+
+        .ygo-lp-popover-form {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .ygo-lp-popover-row .ygo-input {
+            flex: 2;
+            min-width: 0;
+        }
+
+        .ygo-lp-popover-hint {
+            font-size: var(--ygo-font-xs);
+            color: var(--ygo-form-input-placeholder-text-color);
+        }
+
+        .ygo-lp-popover-error {
+            color: #ff8a80;
+        }
+    }
+
+    /* Own HUD sits near the bottom, so open upwards; the opponent's opens down. */
+    .ygo-player-hud.ygo-player-0 .ygo-lp-popover {
+        bottom: 100%;
+        margin-bottom: 6px;
+    }
+
+    .ygo-player-hud.ygo-player-1 .ygo-lp-popover {
+        top: 100%;
+        margin-top: 6px;
     }
 
 
@@ -165,4 +278,54 @@
     /* mobile, tablet */
     @media (max-width: 767px),
     (min-width: 768px) and (max-width: 1024px) and (orientation: portrait) {}
+}
+.ygo-player-core {
+    .ygo-turn-banner-live {
+        position: absolute;
+        top: 35%;
+        left: 0;
+        right: 0;
+        display: flex;
+        justify-content: center;
+        pointer-events: none;
+        z-index: 105;
+    }
+
+    .ygo-turn-banner {
+        padding: 10px 40px;
+        font-size: 28px;
+        font-weight: bold;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #fff;
+        animation: ygo-turn-banner-in 1.8s ease-in-out forwards;
+
+        &.ygo-player-0 {
+            background-image: linear-gradient(90deg, rgba(29, 78, 216, 0) 0%, rgba(29, 78, 216, 0.9) 20%, rgba(29, 78, 216, 0.9) 80%, rgba(29, 78, 216, 0) 100%);
+        }
+
+        &.ygo-player-1 {
+            background-image: linear-gradient(90deg, rgba(185, 28, 28, 0) 0%, rgba(185, 28, 28, 0.9) 20%, rgba(185, 28, 28, 0.9) 80%, rgba(185, 28, 28, 0) 100%);
+        }
+    }
+
+    @keyframes ygo-turn-banner-in {
+        0% { opacity: 0; transform: translateY(8px); }
+        15%, 80% { opacity: 1; transform: none; }
+        100% { opacity: 0; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .ygo-turn-banner {
+            animation: none;
+        }
+    }
+
+    @media (max-width: 767px),
+    (max-width: 1024px) and (orientation: landscape) {
+        .ygo-turn-banner {
+            font-size: 18px;
+            padding: 6px 24px;
+        }
+    }
 }

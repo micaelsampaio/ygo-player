@@ -2,6 +2,9 @@ import { ChangeEvent, FormEvent, ReactNode, useEffect, useRef, useState } from "
 import { YGOTextArea } from "../../../components/TextArea";
 import { YGODuel } from "../../../../core/YGODuel";
 
+/** Hard cap the server accepts for one chat message. */
+export const CHAT_MAX_LENGTH = 100;
+
 type ChatMessage = {
   key: string;
   username: string;
@@ -25,9 +28,7 @@ export function Chat({ duel }: { duel: YGODuel }) {
   };
 
   const handleChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
-    if (e.target.value.length <= 100) {
-      setMessage(e.target.value);
-    }
+    setMessage(e.target.value.slice(0, CHAT_MAX_LENGTH));
   };
 
   const submitMessage = (e: FormEvent<HTMLFormElement>) => {
@@ -108,19 +109,24 @@ export function Chat({ duel }: { duel: YGODuel }) {
     <div className={`ygo-left-menu-chat-container ${isChatHidden ? "ygo-hidden" : ""}`}>
       <div className="ygo-chat-toggle-wrapper">
         <button
+          type="button"
           className="ygo-chat-toggle-btn"
           onClick={toggleChat}
+          aria-label={isChatHidden ? "Show chat" : "Hide chat"}
+          aria-expanded={!isChatHidden}
+          title={isChatHidden ? "Show chat" : "Hide chat"}
         >
           <div className={`ygo-close-btn-icon ${isChatHidden ? "ygo-collapsed" : ""}`}></div>
         </button>
       </div>
       <div className={`ygo-chat-container ${isChatHidden ? "ygo-hidden" : ""}`}>
         <div className="ygo-chat-messages" ref={messagesContainerRef}>
+          {chatMessages.length === 0 && <div className="ygo-chat-empty">No messages yet. Say hi to your opponent.</div>}
           {chatMessages.map((msg) => {
 
             if (msg.system) {
               prevUser = "";
-              return <div className="ygo-schat-message">{msg.message}</div>
+              return <div key={msg.key} className="ygo-schat-message">{msg.message}</div>
             }
 
             const className = msg.owner
@@ -139,13 +145,36 @@ export function Chat({ duel }: { duel: YGODuel }) {
         </div>
 
         <form className="ygo-chat-input" onSubmit={submitMessage}>
-          <YGOTextArea className="ygo-single-line" ref={textareaRef} onKeyDown={(e: any) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault();
-              e.stopPropagation();
-              sendMessage();
-            }
-          }} value={message} onChange={handleChange} />
+          <YGOTextArea
+            className="ygo-single-line"
+            ref={textareaRef}
+            placeholder="Type a message…"
+            aria-label="Chat message"
+            maxLength={CHAT_MAX_LENGTH}
+            onKeyDown={(e: any) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                e.stopPropagation();
+                sendMessage();
+              }
+            }}
+            value={message}
+            onChange={handleChange} />
+          <div className="ygo-chat-input-footer">
+            <span
+              className={`ygo-chat-counter${message.length >= CHAT_MAX_LENGTH ? " ygo-chat-counter-full" : ""}`}
+              aria-live="polite"
+            >
+              {message.length}/{CHAT_MAX_LENGTH}
+            </span>
+            <button
+              type="submit"
+              className="ygo-btn ygo-btn-primary ygo-btn-sm"
+              disabled={message.trim().length === 0}
+            >
+              Send
+            </button>
+          </div>
         </form>
       </div>
     </div>

@@ -3,6 +3,7 @@ import { YGODuel } from "../../../../core/YGODuel";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { stopPropagationCallback } from "../../../../scripts/utils";
 
+import { clickableProps } from "../../../components/a11y";
 export function SelectedCardMenu({
   duel,
 }: {
@@ -50,15 +51,16 @@ export function SelectedCardMenu({
   return (
     <div className="ygo-selected-card-menu"
       onMouseMove={stopPropagationCallback}
+      role="presentation"
       onClick={stopPropagationCallback}
     >
       <div className="ygo-card-header"
-        onClick={openCardHighlighted}
+        {...clickableProps(openCardHighlighted)}
       >
         {card.name}
       </div>
 
-      <div className="ygo-card-image" onClick={openCardHighlighted}>
+      <div className="ygo-card-image" {...clickableProps(openCardHighlighted)}>
         <img src={card.images.small_url} alt={card.name} />
       </div>
 

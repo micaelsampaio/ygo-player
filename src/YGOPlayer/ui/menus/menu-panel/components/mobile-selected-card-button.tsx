@@ -29,6 +29,9 @@ export function MobileSelectedCardButton({ duel, toggle }: { duel: YGODuel, togg
 
     return (
         <button
+            type="button"
+            aria-label="Selected card details"
+            title="Selected card details"
             className={`ygo-floating-button${glowing ? " ygo-btn-glow" : ""}`}
             onAnimationEnd={() => setGlowing(false)}
             onClick={e => {

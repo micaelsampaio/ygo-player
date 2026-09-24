@@ -12,6 +12,52 @@
     gap: 10px;
     flex-direction: column;
     padding: 16px;
+    transition: width 0.15s ease, padding 0.15s ease;
+
+    &.ygo-left-menu-collapsed {
+      width: 44px;
+      padding: 12px 6px;
+
+      /* Hidden, not unmounted — chat history and the selected card persist. */
+      & > :not(.ygo-left-menu-collapse) {
+        display: none;
+      }
+    }
+  }
+
+  .ygo-left-menu-collapse {
+    position: absolute;
+    top: 18px;
+    right: 6px;
+    z-index: 1;
+    width: 26px;
+    height: 26px;
+    border: none;
+    border-radius: var(--ygo-border-radius-small);
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--ygo-text-color);
+    font-size: 15px;
+    line-height: 1;
+    cursor: pointer;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.18);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--ygo-primary-color);
+      outline-offset: 1px;
+    }
+  }
+
+  /* Leave room for the collapse button beside the tab bar. */
+  .ygo-left-menu-panel:not(.ygo-left-menu-collapsed) > .ygo-left-top-menus {
+    margin-right: 30px;
+  }
+
+  .ygo-left-menu-collapsed .ygo-left-menu-collapse {
+    position: static;
+    align-self: center;
   }
 
   .ygo-left-menu-panel-mobile {
@@ -153,6 +199,31 @@
       word-break: break-word;
     }
 
+    .ygo-chat-empty {
+      align-self: center;
+      margin: auto 0;
+      font-size: var(--ygo-font-sm);
+      color: var(--ygo-form-input-placeholder-text-color);
+      text-align: center;
+    }
+
+    .ygo-chat-input-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--ygo-gap-sm);
+      margin-top: var(--ygo-gap-xs);
+    }
+
+    .ygo-chat-counter {
+      font-size: var(--ygo-font-xs);
+      color: var(--ygo-form-input-placeholder-text-color);
+
+      &.ygo-chat-counter-full {
+        color: #ff8a80;
+      }
+    }
+
     .ygo-schat-message {
       width: 100%;
       max-width: 100%;
@@ -200,7 +271,8 @@
       padding: 0px;
     }
 
-    .ygo-left-top-menus {
+    .ygo-left-top-menus,
+    .ygo-left-menu-collapse {
       display: none;
     }
 

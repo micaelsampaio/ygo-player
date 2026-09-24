@@ -279,7 +279,7 @@ export class YGOCommandsController extends YGOComponent {
     }
 
     while (this.commandsQueue.length > 0) {
-      const cmd = this.commandsQueue.pop();
+      const cmd = this.commandsQueue.shift(); // FIFO — keep server order
       cmd?.exec();
       cmd?.finish();
     }

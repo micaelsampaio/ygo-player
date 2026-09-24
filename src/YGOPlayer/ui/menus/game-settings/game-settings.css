@@ -43,7 +43,8 @@
       flex-direction: column;
       gap: 10px;
 
-      .ygo-btn-action {
+      .ygo-btn-action,
+      .ygo-btn-danger {
         font-size: 20px;
 
         &.ygo-active {

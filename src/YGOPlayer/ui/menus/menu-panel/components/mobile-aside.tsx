@@ -14,7 +14,7 @@ export function YgoAsideMenu({ visible, isMobile, close, children }: {
             <div className="ygo-aside-menu">
                 <div className="ygo-aside-content">{children}</div>
                 <div className="ygo-aside-footer">
-                    <button className="ygo-aside-close-btn" onClick={close}>✕</button>
+                    <button type="button" className="ygo-aside-close-btn" onClick={close} aria-label="Close" title="Close">✕</button>
                 </div>
             </div>
         </div>

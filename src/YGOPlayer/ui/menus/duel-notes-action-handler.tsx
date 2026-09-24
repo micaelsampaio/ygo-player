@@ -81,6 +81,7 @@ export function DuelNotesActionEventHandler({
   return (
     <div
       className="ygo-duel-notes-dialog-container"
+      role="presentation"
       onClick={(e) => e.stopPropagation()}
       onMouseMove={stopPropagationCallback}
       onMouseDown={stopPropagationCallback}

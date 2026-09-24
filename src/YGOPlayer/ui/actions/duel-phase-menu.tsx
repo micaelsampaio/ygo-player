@@ -4,6 +4,7 @@ import { YGODuel } from "../../core/YGODuel";
 import { getTransformFromCamera, } from "../../scripts/ygo-utils";
 import { CardMenu } from "../components/CardMenu";
 import { YGODuelPhase, YGO_DUEL_PHASE_ORDER } from "ygo-core";
+import { PhaseName, phaseButtonState } from "./phase-buttons";
 
 export function DuelPhaseActionsMenu({
   duel,
@@ -158,78 +159,36 @@ export function DuelPhaseActionsMenu({
   const currentTurn = duel.ygo.state.turn;
   const currentDuelPhase = duel.ygo.state.phase;
 
-  const phaseIndex = (p: YGODuelPhase) => YGO_DUEL_PHASE_ORDER.indexOf(p);
-  const isBefore = (a: YGODuelPhase, b: YGODuelPhase) => phaseIndex(a) < phaseIndex(b);
+  const phaseButton = (phase: YGODuelPhase) => {
+    const state = phaseButtonState(phase as PhaseName, { currentPhase: currentDuelPhase, turn: currentTurn, transitioning });
+    return <button
+      key={phase}
+      type="button"
+      className={`ygo-card-item ${state.active ? "active" : ""}`}
+      disabled={state.disabled}
+      title={state.title}
+      aria-label={state.title}
+      aria-current={state.active ? "step" : undefined}
+      onClick={() => goToPhase(phase)}
+    >
+      {state.label}
+    </button>
+  };
 
   return (
     <CardMenu key="global-events-actions-menu" menuRef={menuRef}>
-      <button className="ygo-card-item" onClick={nextPhase}>Next Phase</button>
+      <button type="button" className="ygo-card-item" onClick={nextPhase} title="Go to the next phase">Next Phase</button>
       <div className="ygo-flex ygo-gap-1">
-        <button
-          className={`ygo-card-item ${currentDuelPhase === YGODuelPhase.Draw ? "active" : ""}`}
-          disabled={transitioning || isBefore(YGODuelPhase.Draw, currentDuelPhase)}
-          onClick={() => goToPhase(YGODuelPhase.Draw)}
-        >
-          D
-        </button>
-        <button
-          className={`ygo-card-item ${currentDuelPhase === YGODuelPhase.Standby ? "active" : ""}`}
-          disabled={transitioning || isBefore(YGODuelPhase.Standby, currentDuelPhase) || currentDuelPhase !== YGODuelPhase.Draw}
-          onClick={() => goToPhase(YGODuelPhase.Standby)}
-        >
-          SP
-        </button>
-        <button
-          className={`ygo-card-item ${currentDuelPhase === YGODuelPhase.Main1 ? "active" : ""}`}
-          disabled={transitioning || isBefore(YGODuelPhase.Main1, currentDuelPhase) || currentDuelPhase !== YGODuelPhase.Standby}
-          onClick={() => goToPhase(YGODuelPhase.Main1)}
-        >
-          MP1
-        </button>
+        {phaseButton(YGODuelPhase.Draw)}
+        {phaseButton(YGODuelPhase.Standby)}
+        {phaseButton(YGODuelPhase.Main1)}
       </div>
       <div className="ygo-flex ygo-gap-1">
-        <button
-          className={`ygo-card-item ${currentDuelPhase === YGODuelPhase.Battle ? "active" : ""}`}
-          disabled={transitioning || currentTurn <= 1 || isBefore(YGODuelPhase.Battle, currentDuelPhase) || currentDuelPhase !== YGODuelPhase.Main1}
-          onClick={() => goToPhase(YGODuelPhase.Battle)}
-        >
-          B
-        </button>
-        <button
-          className={`ygo-card-item ${currentDuelPhase === YGODuelPhase.Main2 ? "active" : ""}`}
-          disabled={transitioning || currentTurn <= 1 || isBefore(YGODuelPhase.Main2, currentDuelPhase) || isBefore(currentDuelPhase, YGODuelPhase.Battle)}
-          onClick={() => goToPhase(YGODuelPhase.Main2)}
-        >
-          MP2
-        </button>
-        <button
-          className={`ygo-card-item ${currentDuelPhase === YGODuelPhase.End ? "active" : ""}`}
-          disabled={transitioning || isBefore(YGODuelPhase.End, currentDuelPhase) || isBefore(currentDuelPhase, YGODuelPhase.Main1)}
-          onClick={() => goToPhase(YGODuelPhase.End)}
-        >
-          E
-        </button>
+        {phaseButton(YGODuelPhase.Battle)}
+        {phaseButton(YGODuelPhase.Main2)}
+        {phaseButton(YGODuelPhase.End)}
       </div>
-      <button className="ygo-card-item" onClick={nextTurn}>Next Turn</button>
+      <button type="button" className="ygo-card-item" onClick={nextTurn} title="End your turn and pass to your opponent">End Turn</button>
     </CardMenu>
   );
-}
-function parseTimeToSeconds(input: string): number | null {
-  const trimmed = input.trim();
-
-  if (/^\d+$/.test(trimmed)) {
-    return parseInt(trimmed, 10);
-  }
-
-  const regex = /^(?:(\d+)m)?\s*(?:(\d+)s)?$/i;
-  const match = trimmed.match(regex);
-
-  if (!match) return null;
-
-  const minutes = match[1] ? parseInt(match[1], 10) : 0;
-  const seconds = match[2] ? parseInt(match[2], 10) : 0;
-
-  if (minutes === 0 && seconds === 0) return null;
-
-  return minutes * 60 + seconds;
 }

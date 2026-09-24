@@ -5,6 +5,7 @@ import { YGOGameUtils } from "ygo-core";
 import { CardZoneKV } from "../../types";
 import { stopPropagationCallback } from "../../scripts/utils";
 
+import { clickableProps } from "../components/a11y";
 type OnSelectCard = (cards: CardZoneKV[]) => void;
 
 export function SelectCardPopup({
@@ -190,10 +191,12 @@ export function SelectCardPopup({
           close(e);
         }
       }}
+      role="presentation"
       onClick={close}
     >
       <div
         className="game-popup-dialog"
+        role="presentation"
         onClick={stopPropagationCallback}
       >
         <div className="game-popup-header">
@@ -207,7 +210,7 @@ export function SelectCardPopup({
             </button>
           </div>
           <div style={{ marginLeft: "20px" }}>
-            <button onClick={close} className="ygo-close"></button>
+            <button aria-label="Close" onClick={close} className="ygo-close"></button>
           </div>
         </div>
         <div className="game-popup-content">
@@ -227,9 +230,9 @@ export function SelectCardPopup({
                           ? "selected"
                           : ""
                           }`}
-                        onClick={() =>
+                        {...clickableProps(() =>
                           onSelectCard(cardData.card, cardData.zone)
-                        }
+                        , cardData.card.name)}
                       />
                     );
                   })}
@@ -252,9 +255,9 @@ export function SelectCardPopup({
                           ? "selected"
                           : ""
                           }`}
-                        onClick={() =>
+                        {...clickableProps(() =>
                           onSelectCard(cardData.card, cardData.zone)
-                        }
+                        , cardData.card.name)}
                       />
                     );
                   })}

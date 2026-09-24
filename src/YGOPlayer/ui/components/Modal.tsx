@@ -1,5 +1,6 @@
 import React, { createContext, useContext } from 'react';
 import { stopPropagationCallback } from '../../scripts/utils';
+import { clickableProps } from './a11y';
 
 type ModalContextType = {
     visible: boolean;
@@ -53,11 +54,12 @@ function Dialog({
     return (
         <ModalContext.Provider value={{ visible, close: closeModal as any }}>
             <div className={`ygo-player-dialog-container ${embedded ? "ygo-embedded" : ""} ${visible ? 'ygo-show' : ''}`}
+                role="presentation"
                 onContextMenu={onContextClick}
                 onClick={close}
                 onMouseMove={stopPropagationCallback}
             >
-                <div className={`ygo-player-dialog ${size ? `ygo-${size}` : ''}`} onClick={stopPropagationCallback}>
+                <div className={`ygo-player-dialog ${size ? `ygo-${size}` : ''}`} role="dialog" aria-modal="true" onClick={stopPropagationCallback}>
                     {children}
                 </div>
             </div>
@@ -69,7 +71,7 @@ function Header({ children = null, closeButton = true }: { children?: React.Reac
     const { close } = useModalContext();
 
     return <div className="ygo-player-dialog-header">
-        <div>{children}</div>{closeButton && <div className='ygo-close' onClick={close}></div>}
+        <div>{children}</div>{closeButton && <div className='ygo-close' {...clickableProps(close, 'Close')}></div>}
     </div>;
 }
 
@@ -82,7 +84,7 @@ function Body({ className, children }: { className?: string, children: React.Rea
 }
 
 function BackDrop({ onClick }: { onClick?: () => void }) {
-    return <div className="ygo-player-dialog-backdrop" onClick={onClick} />;
+    return <div className="ygo-player-dialog-backdrop" role="presentation" onClick={onClick} />;
 }
 
 export const Modal = {

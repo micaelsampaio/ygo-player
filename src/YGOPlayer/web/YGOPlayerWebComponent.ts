@@ -1,8 +1,8 @@
 import { createElement } from "react";
 import ReactDOM from "react-dom/client";
 import { YgoDuelApp } from "../ui/YgoDuelApp";
-import { YGOPlayerConnectToServerProps, YGOPlayerStartEditorProps, YGOPlayerStartReplayProps } from "../types";
-import { CardData, Command, YGOClientType } from "ygo-core";
+import { YGOEndGameAction, YGOPlayerConnectToServerProps, YGOPlayerStartEditorProps, YGOPlayerStartReplayProps } from "../types";
+import { CardData, Command, YGOClientType, YGOReplayData } from "ygo-core";
 import { YGOConfig } from "../core/YGOConfig";
 import { YGODuel } from "../core/YGODuel";
 import { EventBus } from "../scripts/event-bus";
@@ -17,6 +17,10 @@ export interface YGOPlayerComponentEvents {
   "command-created": (args: { command: Command }) => void;
   "command-executed": (args: { command: Command }) => void;
   "game-defeat": (args: { player: number }) => void;
+  /** A next-step button on the end-of-duel overlay was clicked. Only fires
+   * for actions the host enabled via `endGameActions`. `replay` is the
+   * finished duel's replay data (null if it couldn't be built). */
+  "end-game-action": (args: { action: YGOEndGameAction; loser: number; replay: YGOReplayData | null }) => void;
 }
 
 export interface YGOPlayerComponent extends HTMLElement {
@@ -50,6 +54,10 @@ export class YGOPlayerComponentImpl extends HTMLElement implements YGOPlayerComp
   public duel!: YGODuel;
   public server: any;
   private events: EventBus<YGOPlayerComponentEvents>;
+  // Stashed here (rather than threaded through YGOConfig) since it's only
+  // ever relevant for connectToServer — editor/replay have no judge/adapter
+  // to query at all — and handed to `duel` once bind() actually has one.
+  private assist?: YGOPlayerConnectToServerProps["assist"];
 
   constructor() {
     super();
@@ -78,6 +86,7 @@ export class YGOPlayerComponentImpl extends HTMLElement implements YGOPlayerComp
 
   private bind(duel: YGODuel) {
     this.duel = duel;
+    duel.assist = this.assist;
 
     this.duel.ygo.events.on("command-created", (data: any) => {
       this.dispatch("command-created", data);
@@ -90,6 +99,10 @@ export class YGOPlayerComponentImpl extends HTMLElement implements YGOPlayerComp
     // Listen for game-defeat events from the duel and dispatch them to the web interface
     this.duel.events.on("game-defeat", (data: any) => {
       this.dispatch("game-defeat", data);
+    });
+
+    this.duel.events.on("end-game-action", (data: any) => {
+      this.dispatch("end-game-action", data);
     });
 
     this.dispatch("init", { instance: this, duel });
@@ -123,6 +136,7 @@ export class YGOPlayerComponentImpl extends HTMLElement implements YGOPlayerComp
       options: props.options,
       actions: props.actions,
       gameMode: props.gameMode || "EDITOR",
+      endGameActions: props.endGameActions,
     };
 
     this.server = new LocalYGOPlayerServer(this.client, config);
@@ -177,6 +191,7 @@ export class YGOPlayerComponentImpl extends HTMLElement implements YGOPlayerComp
       cdnUrl: props.cdnUrl,
       actions: props.actions,
       gameMode: "REPLAY",
+      endGameActions: props.endGameActions,
     };
 
     config.options.shuffleDecks = false;
@@ -190,6 +205,7 @@ export class YGOPlayerComponentImpl extends HTMLElement implements YGOPlayerComp
   connectToServer(props: YGOPlayerConnectToServerProps): void {
 
     this.client = props.client;
+    this.assist = props.assist;
 
     const config: YGOConfig = {
       players: [],
@@ -198,6 +214,7 @@ export class YGOPlayerComponentImpl extends HTMLElement implements YGOPlayerComp
       cdnUrl: props.cdnUrl,
       actions: {},
       gameMode: "EDITOR",
+      endGameActions: props.endGameActions,
     };
 
     this.start(config);
