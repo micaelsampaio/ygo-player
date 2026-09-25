@@ -66,9 +66,10 @@ export function assistUnavailableReason({ loading, gameActive, isLocalTurn, hasP
       : "Opponent's turn. Waiting for the opponent…";
   }
   if (!hasPriority) return "Waiting for the opponent to respond…";
-  // Our turn and our priority, yet the engine isn't at an open game state:
-  // a chain / response window or an in-progress effect prompt.
-  return "Not your window. Respond with OK or a card's menu.";
+  // Our turn and our priority, yet the engine has nothing for us right now:
+  // it's still resolving (the opponent's response, an automatic step). Our
+  // own chain windows and effect prompts are shown by the panel itself.
+  return "Resolving… your options will appear here.";
 }
 
 const ASSIST_ERRORS: Record<string, string> = {
@@ -133,4 +134,14 @@ export function endGameActionsFor({ isPlayerClient, enabled }: {
   const allowed = new Set(enabled ?? []);
   return END_GAME_ACTION_ORDER.filter(action =>
     allowed.has(action) && (isPlayerClient || action === "back-to-lobby"));
+}
+
+export const BOT_UNDO_TOOLTIP = "Undo your last play (the bot's replies are undone too)";
+
+/** The Undo control's tooltip. In a duel against the bot (`botDuel` in
+ * duel.ygo.options, set by the server's rules) undo goes back to the
+ * player's last decision point, the bot's replies included — the server
+ * rebuilds its rules engine to match. Elsewhere it's the plain timeline step. */
+export function undoTooltip(options: object | null | undefined): string | undefined {
+  return (options as { botDuel?: unknown } | null | undefined)?.botDuel ? BOT_UNDO_TOOLTIP : undefined;
 }

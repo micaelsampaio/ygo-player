@@ -49,7 +49,7 @@ export function GameSettingsMenu({ duel, currentMenu = SETTINGS_MODAL_TYPE.SETTI
     const saveReplay = useCallback(async () => {
         if (!canSaveReplay) return;
         try {
-            const replayData = duel.ygo.getReplayData();
+            const replayData = await duel.getReplayData();
             await duel.config.actions!.saveReplay!(replayData);
         } catch { }
     }, [duel]);
@@ -57,7 +57,8 @@ export function GameSettingsMenu({ duel, currentMenu = SETTINGS_MODAL_TYPE.SETTI
     const reportBug = useCallback(async () => {
         if (!canReportBug) return;
         try {
-            const replayData = duel.ygo.getReplayData();
+            // Mid-match the server keeps a hidden-info duel's full replay: report this client's own view.
+            const replayData = await duel.getReplayData().catch(() => duel.ygo.getReplayData());
             const errors: string[] = [];
             await duel.config.actions!.reportBug!({ data: replayData, errors });
             closeSettings();

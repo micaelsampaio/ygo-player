@@ -26,6 +26,7 @@ import { MaterialOpacityTransition } from "../utils/material-opacity";
 import { GameCardHand } from "../../game/GameCardHand";
 import { RotationTransition } from "../utils/rotation-transition";
 import { MultipleTasks } from "../utils/multiple-tasks";
+import { startBotSpotlight, takeBotActivation } from "../bot-spotlight";
 
 interface ActivateCardHandlerProps extends DuelEventHandlerProps {
   event: YGODuelEvents.Activate;
@@ -33,14 +34,29 @@ interface ActivateCardHandlerProps extends DuelEventHandlerProps {
 
 export class ActivateCardHandler extends YGOCommandHandler {
   private command: YGOCommandHandler | undefined;
+  private cancelSpotlight: (() => void) | undefined;
 
   constructor(private props: ActivateCardHandlerProps) {
     super("send_card_to_gy_command");
   }
 
   public start(): void {
+    const { duel, event } = this.props;
+
+    // The bot's activation: spotlight the card for a beat first (bot-spotlight.ts).
+    if (takeBotActivation(duel, event.commandId)) {
+      this.cancelSpotlight = startBotSpotlight(this.props, event, () => {
+        this.cancelSpotlight = undefined;
+        this.startActivation();
+      });
+      return;
+    }
+    this.startActivation();
+  }
+
+  private startActivation(): void {
     const { event } = this.props;
-    
+
     if (event.originZone && event.zone) {
       this.startMoveCommand();
     } else if (
@@ -292,6 +308,8 @@ export class ActivateCardHandler extends YGOCommandHandler {
   }
 
   public finish(): void {
+    this.cancelSpotlight?.();
+    this.cancelSpotlight = undefined;
     this.command?.finish();
   }
 }

@@ -1,0 +1,113 @@
+/* Post-duel review panel, inside the end-of-duel overlay (which sets a huge font-size). */
+.ygo-player-core .ygo-review-panel {
+    font-size: var(--ygo-font-md);
+    font-weight: normal;
+    text-align: left;
+    color: var(--ygo-text-color);
+    background-color: var(--ygo-background-color);
+    border: 1px solid var(--ygo-border-color);
+    border-radius: var(--ygo-border-radius-medium);
+    padding: var(--ygo-space-sm);
+    width: min(640px, 100%);
+    max-height: min(80vh, 100%);
+    overflow-y: auto;
+    box-sizing: border-box;
+
+    .ygo-review-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--ygo-gap-sm);
+    }
+
+    .ygo-review-title {
+        margin: 0;
+        font-size: var(--ygo-font-xl);
+        color: var(--ygo-heading-color);
+    }
+
+    .ygo-review-headline {
+        margin: var(--ygo-space-xs) 0 0;
+        font-size: var(--ygo-font-lg);
+    }
+
+    .ygo-review-subline,
+    .ygo-review-footnote {
+        margin: var(--ygo-space-xs) 0;
+        font-size: var(--ygo-font-sm);
+        color: var(--ygo-border-color-light);
+    }
+
+    .ygo-review-legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--ygo-gap-md);
+        font-size: var(--ygo-font-xs);
+        color: var(--ygo-border-color-light);
+        margin-bottom: var(--ygo-space-xs);
+    }
+
+    .ygo-review-legend-chosen,
+    .ygo-review-legend-best {
+        border-left: 3px solid;
+        padding-left: var(--ygo-gap-xs);
+    }
+
+    .ygo-review-legend-chosen {
+        border-color: var(--ygo-border-color-light);
+    }
+
+    .ygo-review-legend-best {
+        border-color: var(--ygo-secondary-color);
+    }
+
+    .ygo-review-moments,
+    .ygo-review-options {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+    }
+
+    .ygo-review-moment {
+        border-top: 1px solid var(--ygo-border-color);
+        padding: var(--ygo-space-xs) 0;
+    }
+
+    .ygo-review-moment-title {
+        font-size: var(--ygo-font-sm);
+        font-weight: bold;
+        color: var(--ygo-heading-color);
+        margin-bottom: var(--ygo-gap-xs);
+    }
+
+    .ygo-review-option {
+        display: flex;
+        justify-content: space-between;
+        gap: var(--ygo-gap-sm);
+        padding: 2px var(--ygo-gap-xs);
+        border-left: 3px solid transparent;
+        font-size: var(--ygo-font-sm);
+    }
+
+    .ygo-review-option-chosen {
+        border-left-color: var(--ygo-border-color-light);
+    }
+
+    .ygo-review-option-best {
+        border-left-color: var(--ygo-secondary-color);
+        color: var(--ygo-heading-color);
+    }
+
+    .ygo-review-option-alt {
+        color: var(--ygo-border-color-light);
+    }
+
+    .ygo-review-option-label {
+        overflow-wrap: anywhere;
+    }
+
+    .ygo-review-option-score {
+        white-space: nowrap;
+        font-variant-numeric: tabular-nums;
+    }
+}

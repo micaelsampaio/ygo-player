@@ -54,8 +54,9 @@ describe("assistUnavailableReason", () => {
     expect(assistUnavailableReason({ ...base, hasPriority: false })).toBe("Waiting for the opponent to respond…");
   });
 
-  it("calls a response window on your own priority 'not your window'", () => {
-    expect(assistUnavailableReason(base)).toMatch(/^Not your window/);
+  it("says the engine is still resolving on your own priority (no dead-end 'not your window')", () => {
+    expect(assistUnavailableReason(base)).toMatch(/^Resolving/);
+    expect(assistUnavailableReason(base)).not.toMatch(/Not your window/);
   });
 });
 

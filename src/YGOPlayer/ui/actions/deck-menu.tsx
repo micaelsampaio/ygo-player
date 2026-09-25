@@ -3,6 +3,8 @@ import { YGODuel } from "../../core/YGODuel";
 import { CardMenu } from "../components/CardMenu";
 import { getTransformFromCamera } from "../../scripts/ygo-utils";
 import { Deck } from "../../game/Deck";
+import { YGOStatic } from "../../core/YGOStatic";
+import { isDeckHidden } from "../menus/deck-search/deck-search";
 
 export function DeckMenu({ duel, deck }: { duel: YGODuel, deck: Deck, clearAction: Function, mouseEvent: React.MouseEvent }) {
     const menuRef = useRef<HTMLDivElement>(null);
@@ -23,6 +25,11 @@ export function DeckMenu({ duel, deck }: { duel: YGODuel, deck: Deck, clearActio
 
     const viewDeck = () => {
         duel.events.dispatch("toggle-ui-menu", { group: "game-popup", type: "view-main-deck", data: { duel, deck } });
+    }
+
+    // "Show my deck while searching": the server lists your deck (never in order).
+    const searchDeck = () => {
+        duel.events.dispatch("toggle-ui-menu", { group: "game-popup", type: "deck-search", data: {} });
     }
 
     useLayoutEffect(() => {
@@ -46,6 +53,9 @@ export function DeckMenu({ duel, deck }: { duel: YGODuel, deck: Deck, clearActio
     const player = deck.player;
     const mainDeckSize = duel.ygo.state.fields[player].mainDeck.length;
     const field = duel.ygo.state.fields[player];
+    const canSearch = !!duel.serverActions?.room.id() && YGOStatic.isPlayerPOV(player);
+    // With your deck order hidden, only the server can show what's in it.
+    const deckHidden = isDeckHidden(field.mainDeck);
 
     return <CardMenu menuRef={menuRef}>
         <button className="ygo-card-item" disabled={field.mainDeck.length === 0} type="button" onClick={shuffleDeck}>Shuffle Deck</button>
@@ -64,7 +74,8 @@ export function DeckMenu({ duel, deck }: { duel: YGODuel, deck: Deck, clearActio
                 <button aria-label="Increase mill count" className="ygo-card-item" disabled={mainDeckSize === 0} type="button" onClick={() => setMilCounter(counter => counter + 1)}>+</button>
             </div>
         </div>
-        <button className="ygo-card-item" type="button" onClick={viewDeck}>View Deck</button>
+        {!deckHidden && <button className="ygo-card-item" type="button" onClick={viewDeck}>View Deck</button>}
+        {canSearch && <button className="ygo-card-item" disabled={mainDeckSize === 0} type="button" onClick={searchDeck}>Search Deck</button>}
         <button className="ygo-card-item" disabled={mainDeckSize === 0} type="button" onClick={drawFromDeck}>Draw</button>
     </CardMenu >
 

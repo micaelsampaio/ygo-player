@@ -10,6 +10,10 @@
 	--ygo-background-color-80: rgba(24, 24, 24, 0.8);
 
 	--ygo-confirm-color: rgba(1, 255, 98, 0.8);
+	/* Status: solved / success buttons, and failed / destructive states. */
+	--ygo-success-color: #16a34a;
+	--ygo-error-color: #b91c1c;
+	--ygo-panel-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
 	--ygo-action-color: #444444;
 	--ygo-action-color-dark: #2e2e2e;
 

@@ -3,18 +3,22 @@ import { Card, FieldZone } from "ygo-core";
 import { YGODuel } from "../../core/YGODuel";
 import { CardMenu } from "../components/CardMenu";
 import { YGOGameUtils } from "ygo-core";
-import { getTransformFromCamera } from "../../scripts/ygo-utils";
+import { anchorCardMenu, hasPointerPosition } from "../components/pile-menu";
 
 export function CardDeckMenu({
   duel,
   card,
   mouseEvent,
+  htmlCardElement,
 }: {
   duel: YGODuel;
   zone: FieldZone;
   card: Card;
   clearAction: Function;
-  mouseEvent: React.MouseEvent;
+  /** The click (or, from the keyboard, the Enter/Space keydown) that opened the menu. */
+  mouseEvent: React.MouseEvent | React.KeyboardEvent;
+  /** The card image that was activated: the anchor when there is no pointer position. */
+  htmlCardElement?: Element;
 }) {
   const menuRef = useRef<HTMLDivElement>(null);
   const field = duel.ygo.getField(card.originalOwner);
@@ -104,14 +108,17 @@ export function CardDeckMenu({
   useLayoutEffect(() => {
     const container = menuRef.current!;
     const { width, height } = container.getBoundingClientRect();
-    const { clientX, clientY } = mouseEvent;
-
-    const left = Math.min(clientX, window.innerWidth - width);
-    const top = Math.min(clientY, window.innerHeight - height);
+    const anchor = htmlCardElement ?? (mouseEvent?.target instanceof Element ? mouseEvent.target : null);
+    const { left, top } = anchorCardMenu(mouseEvent as any, anchor, { width, height }, { width: window.innerWidth, height: window.innerHeight });
 
     container.style.left = left + "px";
     container.style.top = top + "px";
-  }, [card, mouseEvent]);
+
+    // Opened from the keyboard: move focus into the menu so its actions are one Tab away.
+    if (!hasPointerPosition(mouseEvent as any)) {
+      container.querySelector<HTMLButtonElement>("button")?.focus();
+    }
+  }, [card, mouseEvent, htmlCardElement]);
 
   return (
     <CardMenu menuRef={menuRef}>

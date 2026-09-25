@@ -1,8 +1,10 @@
-import { useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { YGOClientType } from "ygo-core";
 import { YGODuel } from "../../core/YGODuel";
 import { YGOStatic } from "../../core/YGOStatic";
 import { END_GAME_ACTION_LABELS, YGOEndGameAction, endGameActionsFor, endGameHeadline } from "../duel-status";
+import { AvailableReview, isShowableReview, reviewSourceOf } from "./duel-review/duel-review";
+import { DuelReviewPanel } from "./duel-review/duel-review-panel";
 
 const stopPointer = (e: React.SyntheticEvent) => e.stopPropagation();
 
@@ -16,6 +18,20 @@ export function DuelEndGameOverlay({ duel, loser }: { duel: YGODuel, loser: numb
     winnerName,
   });
 
+  // Bot duels: the review of the player's own decisions ("Review my plays"),
+  // fetched once in the background — the button only appears once there is one.
+  const [review, setReview] = useState<AvailableReview | null>(null);
+  const [showReview, setShowReview] = useState(false);
+  useEffect(() => {
+    const source = isPlayerClient ? reviewSourceOf(duel) : null;
+    if (!source) return;
+    let active = true;
+    source.review()
+      .then((res) => { if (active && isShowableReview(res)) setReview(res); })
+      .catch(() => { });
+    return () => { active = false; };
+  }, [duel, isPlayerClient]);
+
   const viewLog = useCallback(() => {
     // Same "game-overlay" group, so the log takes this overlay's place.
     duel.events.dispatch("set-ui-menu", { group: "game-overlay", type: "duel-log" });
@@ -28,15 +44,29 @@ export function DuelEndGameOverlay({ duel, loser }: { duel: YGODuel, loser: numb
   // Next steps are the host's to handle (save dialog, new room, navigation),
   // so they're only forwarded through the web component's "end-game-action".
   const nextSteps = endGameActionsFor({ isPlayerClient, enabled: duel.config.endGameActions });
-  const runNextStep = useCallback((action: YGOEndGameAction) => {
+  const runNextStep = useCallback(async (action: YGOEndGameAction) => {
     let replay = null;
     if (action === "save-replay") {
       try {
-        replay = duel.ygo.getReplayData();
+        // From the server when it holds the hidden information (see YGODuel.getReplayData).
+        replay = await duel.getReplayData();
       } catch { }
     }
     duel.events.dispatch("end-game-action", { action, loser, replay });
   }, [duel, loser]);
+
+  if (showReview && review) {
+    return <div
+      className="ygo-end-game-overlay"
+      role="dialog"
+      aria-label="Review of your plays"
+      onMouseDown={stopPointer}
+      onMouseUp={stopPointer}
+      onClick={stopPointer}
+    >
+      <DuelReviewPanel result={review} onClose={() => setShowReview(false)} />
+    </div>;
+  }
 
   return <div
     className="ygo-end-game-overlay"
@@ -60,6 +90,9 @@ export function DuelEndGameOverlay({ duel, loser }: { duel: YGODuel, loser: numb
       </button>)}
     </div>}
     <div className="ygo-end-game-actions">
+      {review && <button type="button" className="ygo-btn ygo-btn-action" onClick={() => setShowReview(true)}>
+        Review my plays
+      </button>}
       <button type="button" className="ygo-btn ygo-btn-action" onClick={viewLog}>
         View Duel Log
       </button>

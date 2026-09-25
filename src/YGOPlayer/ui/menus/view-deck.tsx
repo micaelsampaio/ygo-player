@@ -6,6 +6,7 @@ import { Deck } from "../../../YGOPlayer/game/Deck";
 import { YGOGameUtils } from "ygo-core";
 import { stopPropagationCallback } from "../../scripts/utils";
 import { clickableProps } from "../components/a11y";
+import { pileCardProps } from "../components/pile-menu";
 
 export function ViewDeckPopup({
   duel,
@@ -29,8 +30,8 @@ export function ViewDeckPopup({
     return action;
   }, [duel]);
 
-  const onCardClick = (e: React.MouseEvent, card: Card) => {
-    action.eventData = { duel, player: deck.player, deck, card, mouseEvent: e };
+  const onCardClick = (e: React.SyntheticEvent, card: Card) => {
+    action.eventData = { duel, player: deck.player, deck, card, mouseEvent: e, htmlCardElement: e.currentTarget };
     duel.actionManager.setAction(action);
   };
 
@@ -181,6 +182,8 @@ export function ViewDeckPopup({
                 onTouchStart={(event: any) => duel.events.dispatch("on-card-mouse-down", { card, event })}
                 onTouchEnd={(event: any) => duel.events.dispatch("on-card-mouse-up", { card, event })}
                 onClick={(e) => onCardClick(e, card)}
+                {...pileCardProps<HTMLImageElement>((e) => onCardClick(e, card), card.name)}
+                alt={card.name}
                 src={card.images.small_url}
                 className="ygo-card"
               />

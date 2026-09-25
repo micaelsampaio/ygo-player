@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { YGOPlayerCore } from "./YGOPlayerCore";
 import { YGODuelState, YGOUiElement } from "../types";
-import { YGOCore, YGOServerGameStateData, YGOGameUtils, YGOClientType, CardData, YGOCommandScope, YGOCommands, YGOPlayerRemoteActions } from "ygo-core";
+import { YGOCore, YGOServerGameStateData, YGOGameUtils, YGOClientType, CardData, YGOCommandScope, YGOCommands, YGOPlayerRemoteActions, HIDDEN_CARD_ID, createHiddenCardData } from "ygo-core";
 import { YGOEntity } from "./YGOEntity";
 import { GameController } from "../game/GameController";
 import { EventBus } from "../scripts/event-bus";
@@ -52,7 +52,10 @@ export class YGODuel {
   /** Set by YGOPlayerComponentImpl.bind() for connectToServer() only — see
    * YGOPlayerConnectToServerProps. undefined for editor/replay (no judge/
    * adapter to query) and for any player who never enabled assisted mode. */
-  public assist?: { query(): Promise<any>; choose(action: { commandType: string; data: any }): Promise<any> };
+  public assist?: { query(): Promise<any>; choose(action: { commandType: string; data: any }): Promise<any>; review?(): Promise<any> };
+  /** The assisted options the panel last received (AssistedOptionsPanel keeps
+   * it current) — card menus route a matching move through assist.choose. */
+  public assistOptions: any = null;
   public gameController: GameController;
   public mouseEvents: YGOMouseEvents;
   public tasks: YGOTaskController;
@@ -144,7 +147,16 @@ export class YGODuel {
       player.sideDeck?.forEach(id => ids.add(id));
     })
 
+    // Hidden information: the server sends the cards this client may not see
+    // as HIDDEN_CARD_ID placeholders, and the data of the opponent's cards
+    // revealed so far (hiddenInfo.cards) — later reveals come with each command.
+    ids.delete(HIDDEN_CARD_ID);
+    const revealedCards = gameState.hiddenInfo?.cards ?? [];
+    revealedCards.forEach(card => ids.delete(card.id));
+
     const cardsData = new Map<number, CardData>();
+    cardsData.set(HIDDEN_CARD_ID, createHiddenCardData());
+    revealedCards.forEach(card => cardsData.set(card.id, card));
 
     if (this.config.actions?.fetchCardsById) {
       const cardsDataArray = await this.config.actions.fetchCardsById(Array.from(ids));
@@ -171,7 +183,8 @@ export class YGODuel {
       players,
       cdnUrl: this.config.cdnUrl,
       commands: props.commands,
-      options
+      options,
+      cardPool: revealedCards,
     })
 
     YGOStatic.playerIndex = playerIndex;
@@ -581,6 +594,18 @@ export class YGODuel {
 
   getGameState() {
     return this.ygo.getCurrentStateProps();
+  }
+
+  /**
+   * The duel's replay. With server-side hidden information this client only
+   * holds its own view (the opponent's cards are placeholders), so the full
+   * replay comes from the server — which hands it out once the match is over.
+   */
+  async getReplayData(): Promise<any> {
+    if (this.ygo.options.hiddenInfoClient) {
+      return this.serverActions.server.requestReplay();
+    }
+    return this.ygo.getReplayData();
   }
 
   execCommand(command: Command | string) {

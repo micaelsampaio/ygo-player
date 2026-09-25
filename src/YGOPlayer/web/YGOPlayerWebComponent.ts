@@ -10,6 +10,7 @@ import { YGOPropsOptions } from "ygo-core";
 import { YGOClient } from "ygo-core";
 import { LocalYGOPlayerClient } from "../network/local-server/local-client";
 import { LocalYGOPlayerServer } from "../network/local-server/local-server";
+import type { PuzzleRetryRequest } from "../ui/puzzle/puzzle-state";
 
 export interface YGOPlayerComponentEvents {
   init: (args: { instance: YGOPlayerComponent; duel: YGODuel }) => void;
@@ -21,6 +22,10 @@ export interface YGOPlayerComponentEvents {
    * for actions the host enabled via `endGameActions`. `replay` is the
    * finished duel's replay data (null if it couldn't be built). */
   "end-game-action": (args: { action: YGOEndGameAction; loser: number; replay: YGOReplayData | null }) => void;
+  /** Engine-checked puzzles: the player asked to try the puzzle again. A
+   * retry is a new server room (ygo-socket-server puzzle:retry { roomId }),
+   * so the host starts it and mounts the new duel. */
+  "puzzle-retry": (args: PuzzleRetryRequest) => void;
 }
 
 export interface YGOPlayerComponent extends HTMLElement {
@@ -103,6 +108,10 @@ export class YGOPlayerComponentImpl extends HTMLElement implements YGOPlayerComp
 
     this.duel.events.on("end-game-action", (data: any) => {
       this.dispatch("end-game-action", data);
+    });
+
+    this.duel.events.on("puzzle-retry", (data: any) => {
+      this.dispatch("puzzle-retry", data);
     });
 
     this.dispatch("init", { instance: this, duel });

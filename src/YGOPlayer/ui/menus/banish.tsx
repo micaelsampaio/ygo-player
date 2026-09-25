@@ -5,6 +5,7 @@ import { Banish as GameBanish } from "../../../YGOPlayer/game/Banish";
 import { Card } from "ygo-core";
 import { stopPropagationCallback } from "../../scripts/utils";
 import { YGOStatic } from "../../core/YGOStatic";
+import { pileCardProps } from "../components/pile-menu";
 
 export function Banish({
   duel,
@@ -37,6 +38,23 @@ export function Banish({
   const field = duel.ygo.state.fields[banish.player];
   const cards = field.banishedZone;
   const isPlayerPOV = YGOStatic.isPlayerPOV(banish.player);
+
+  // From the mouse or, focused, Enter/Space: the card menu anchors to this card.
+  // Face-down cards the viewer can't see open nothing (and aren't focusable).
+  const openCardMenu = (e: React.SyntheticEvent, card: Card, isVisible: boolean) => {
+    if (!isVisible) return;
+    action.eventData = {
+      duel,
+      card,
+      mouseEvent: e,
+      htmlCardElement: e.currentTarget,
+    };
+    duel.actionManager.setAction(action);
+    duel.gameActions.setSelectedCard({
+      player: banish.player,
+      card,
+    });
+  };
 
   return (
     <div
@@ -86,20 +104,8 @@ export function Banish({
                   onTouchEnd={(event: any) =>
                     duel.events.dispatch("on-card-mouse-up", { card, event })
                   }
-                  onClick={(e) => {
-                    if (!isVisible) return;
-                    action.eventData = {
-                      duel,
-                      card,
-                      mouseEvent: e,
-                      htmlCardElement: e.target,
-                    };
-                    duel.actionManager.setAction(action);
-                    duel.gameActions.setSelectedCard({
-                      player: banish.player,
-                      card,
-                    });
-                  }}
+                  onClick={(e) => openCardMenu(e, card, isVisible)}
+                  {...(isVisible ? pileCardProps<HTMLDivElement>((e) => openCardMenu(e, card, true), card.name) : {})}
                 >
                   <img
                     src={

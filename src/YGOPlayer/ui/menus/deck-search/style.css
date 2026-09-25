@@ -1,0 +1,69 @@
+.ygo-player-core {
+    .ygo-deck-search-reveal {
+        display: flex;
+        align-items: center;
+        gap: var(--ygo-gap-xs);
+        font-size: var(--ygo-font-xs);
+        white-space: nowrap;
+        cursor: pointer;
+    }
+
+    .ygo-deck-search-error {
+        margin: 0 var(--ygo-space-sm);
+        padding: 6px 10px;
+        border-left: 3px solid var(--ygo-error-color, #b91c1c);
+        border-radius: var(--ygo-border-radius-small);
+        background-color: var(--ygo-background-color-60);
+        font-size: var(--ygo-font-sm);
+    }
+
+    .ygo-deck-search-status {
+        padding: var(--ygo-space-xs);
+        font-size: var(--ygo-font-sm);
+        opacity: 0.75;
+    }
+
+    .ygo-deck-search-card {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .ygo-deck-search-card-button {
+        position: relative;
+        padding: 0;
+        border: 2px solid transparent;
+        border-radius: var(--ygo-border-radius-small);
+        background: none;
+        color: inherit;
+        cursor: pointer;
+    }
+
+    .ygo-deck-search-card-selected .ygo-deck-search-card-button {
+        border-color: var(--ygo-primary-color);
+    }
+
+    .ygo-deck-search-card-name {
+        display: block;
+        padding: var(--ygo-space-xs);
+        font-size: var(--ygo-font-xs);
+    }
+
+    .ygo-deck-search-count {
+        position: absolute;
+        right: 4px;
+        bottom: 4px;
+        padding: 0 5px;
+        border-radius: var(--ygo-border-radius-small);
+        background-color: var(--ygo-background-color-80);
+        font-size: var(--ygo-font-xs);
+        font-weight: bold;
+    }
+
+    .ygo-deck-search-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+}

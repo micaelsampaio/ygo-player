@@ -13,6 +13,7 @@ import { LeftMenuPanel } from "./menus/menu-panel/LeftMenuPanel";
 import { YGOStatic } from "../core/YGOStatic";
 import { AssistedOptionsPanel } from "./menus/assisted-options-panel";
 import { FirstDuelTips } from "./components/first-duel-tips/FirstDuelTips";
+import { PuzzleHUD } from "./puzzle/PuzzleHUD";
 
 export interface UiGameConfig {
     actions: boolean
@@ -155,6 +156,7 @@ export function YGOUiController({ duel }: { duel: YGODuel }) {
         <LeftMenuPanel duel={duel} isMobileLayout={isMobileLayout} showMenus={showFloatingMenus} />
         <AssistedOptionsPanel duel={duel} isMobileLayout={isMobileLayout} />
         <FirstDuelTips duel={duel} />
+        <PuzzleHUD duel={duel} />
 
         {
             menus.map(menu => {

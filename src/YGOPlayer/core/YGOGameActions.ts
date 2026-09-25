@@ -1,4 +1,5 @@
-import { YGOCommands, YGOGameUtils, YGOPlayerState } from "ygo-core";
+import { YGOClientType, YGOCommands, YGOGameUtils, YGOPlayerState } from "ygo-core";
+import { ASSIST_FREE_FORM_NOTICE, AssistMove, findAssistOption } from "../ui/assist-routing";
 import { Card, CardPosition, FieldZone } from "ygo-core";
 import { ActionCardSelection } from "../actions/ActionSelectCard";
 import { CardZone } from "../game/CardZone";
@@ -47,6 +48,29 @@ export class YGOGameActions {
     this.duel.events.dispatch("set-selected-card", { card, player });
   }
 
+  /**
+   * Assisted Mode: when the engine currently offers this exact move for this
+   * card, make it through the engine (duel.assist.choose) — the engine runs
+   * the effect and the panel then shows its prompts for the human to answer.
+   * Returns true when it did. Otherwise (no match) the caller falls back to
+   * the free-form move, with a short notice that the engine can't follow it.
+   */
+  private routeAssisted(move: AssistMove, card: Card, originZone: FieldZone | undefined): boolean {
+    const duel = this.duel;
+    if (!duel.assist || duel.client?.type !== YGOClientType.PLAYER || !duel.ygo?.options?.assistedMode) return false;
+    const ref = findAssistOption(duel.assistOptions, move, card.id, originZone);
+    if (!ref) {
+      duel.events.dispatch("assist-notice", { message: ASSIST_FREE_FORM_NOTICE });
+      return false;
+    }
+    this.clearAction();
+    duel.events.dispatch("assist-choice-start", {});
+    duel.assist.choose({ commandType: move, data: { id: ref.code, ctrl: ref.ctrl, loc: ref.loc, seq: ref.seq } })
+      .then((res: any) => duel.events.dispatch("assist-choice-done", { notices: res?.notices }))
+      .catch((error: any) => duel.events.dispatch("assist-choice-done", { error }));
+    return true;
+  }
+
   //////////////////////// COMMANDS
 
   public normalSummon({
@@ -56,6 +80,7 @@ export class YGOGameActions {
     card: Card;
     originZone: FieldZone;
   }) {
+    if (this.routeAssisted("Normal Summon", card, originZone)) return;
     this.clearAction();
 
     const player = this.duel.serverActions.getActivePlayer();
@@ -84,6 +109,7 @@ export class YGOGameActions {
     card: Card;
     originZone: FieldZone;
   }) {
+    if (this.routeAssisted("Set Monster", card, originZone)) return;
     this.clearAction();
 
     const player = this.duel.serverActions.getActivePlayer();
@@ -114,6 +140,7 @@ export class YGOGameActions {
     originZone: FieldZone;
     position?: CardPosition;
   }) {
+    if (this.routeAssisted("Special Summon", card, originZone)) return;
     this.clearAction();
 
     const player = this.duel.serverActions.getActivePlayer();
@@ -152,6 +179,7 @@ export class YGOGameActions {
     originZone: FieldZone;
     position?: CardPosition;
   }) {
+    if (this.routeAssisted(position === "facedown" ? "Set Monster" : "Normal Summon", card, originZone)) return;
     this.clearAction();
 
     const player = this.duel.serverActions.getActivePlayer();
@@ -566,6 +594,7 @@ export class YGOGameActions {
     reveal?: boolean;
     selectZone?: boolean;
   }) {
+    if (selectZone && this.routeAssisted("Set ST", card, originZone)) return;
     this.clearAction();
 
     const player = this.duel.serverActions.getActivePlayer();
@@ -610,6 +639,7 @@ export class YGOGameActions {
     originZone: FieldZone;
     selectZone?: boolean;
   }) {
+    if (this.routeAssisted("Activate", card, originZone)) return;
     this.clearAction();
 
     const player = this.duel.serverActions.getActivePlayer();
@@ -738,6 +768,7 @@ export class YGOGameActions {
     originZone: FieldZone;
     position?: "faceup" | "facedown";
   }) {
+    if (this.routeAssisted(position === "facedown" ? "Set ST" : "Activate", card, originZone)) return;
     this.clearAction();
 
     const player = this.duel.serverActions.getActivePlayer();

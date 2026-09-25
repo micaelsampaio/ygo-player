@@ -10,6 +10,7 @@ import { SelectedCardMenu } from "./menu-panel/components/selected-card-menu";
 import { ViewDeckPopup } from "./view-deck";
 import { XyzMonsterMaterialsMenu } from "./xyz-monster-materials";
 import { DuelEndGameOverlay } from "./duel-endgame-overlay";
+import { DeckSearchPopup } from "./deck-search/DeckSearchPopup";
 
 export const MENUS = {
     "extra-deck": ExtraDeck,
@@ -17,6 +18,7 @@ export const MENUS = {
     "banish": Banish,
     "xyz-monster-materials": XyzMonsterMaterialsMenu,
     "view-main-deck": ViewDeckPopup,
+    "deck-search": DeckSearchPopup,
     "selected-card-menu": SelectedCardMenu,
     "selected-card-highlight": SelectedCardHighlightedMenu,
     "select-card-menu": SelectCardPopup,

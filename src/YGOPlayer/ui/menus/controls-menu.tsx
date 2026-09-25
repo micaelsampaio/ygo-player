@@ -2,6 +2,7 @@ import { useCallback, useEffect } from "react";
 import { YGODuel } from "../../core/YGODuel";
 import { removeFocusFromActiveElement } from "../../scripts/utils";
 import { YGOCommandsControllerState } from "../../core/components/commands-controller/YGOCommandsController";
+import { undoTooltip } from "../duel-status";
 
 export function ControlsMenu({ duel }: { duel: YGODuel }) {
     const isPlaying = duel.commands.getState() === YGOCommandsControllerState.PLAYING;
@@ -61,7 +62,7 @@ export function ControlsMenu({ duel }: { duel: YGODuel }) {
         </button>
 
         <div className="ygo-flex ygo-gap-1">
-            <button disabled={!hasPrevCommand} type="button" className="ygo-card-item" onClick={prev}>
+            <button disabled={!hasPrevCommand} title={undoTooltip(duel.ygo.options)} type="button" className="ygo-card-item" onClick={prev}>
                 Prev
             </button>
             <button disabled={!hasNextCommand} type="button" className="ygo-card-item" onClick={next}>

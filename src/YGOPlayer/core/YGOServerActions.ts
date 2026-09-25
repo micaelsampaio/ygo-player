@@ -6,6 +6,13 @@ import { YGOComponent } from "./YGOComponent";
 import { YGOStatic } from "./YGOStatic";
 import { YGOControllerCommands } from "./components/commands-controller";
 import { YGOPlayerRemoteActions } from "ygo-core";
+import { markBotActivation } from "../duel-events/bot-spotlight";
+import { duelRoomId, roomEventFor } from "./room-events";
+
+/** Server commands that move the duel's timeline instead of adding to it. */
+const TIMELINE_MOVES = new Set([
+  "ygo:commands:previous", "ygo:commands:next", "ygo:commands:play", "ygo:commands:goto_command",
+]);
 
 export class YGOServerActions extends YGOComponent {
   private timers: YGOTimerUtils;
@@ -26,8 +33,36 @@ export class YGOServerActions extends YGOComponent {
     },
     setClientReady: () => {
       this.client.send("client:ready");
-    }
+    },
+    /** The server's full replay (hidden information: only once the match is over). */
+    requestReplay: (timeoutMs = 5000): Promise<any> => {
+      return new Promise((resolve, reject) => {
+        const timer = setTimeout(() => {
+          this.replayRequests = this.replayRequests.filter(r => r.resolve !== resolve);
+          reject(new Error("The server did not send the replay"));
+        }, timeoutMs);
+        this.replayRequests.push({ resolve, reject, timer });
+        this.client.send("server:replay");
+      });
+    },
   }
+
+  /**
+   * Room-scoped requests outside ygo-core's command stream (room-events.ts):
+   * puzzle:state, puzzle:retry, duel:preferences:set, duel:deck:search /
+   * duel:deck:take. False when this duel isn't played in a server room.
+   */
+  public room = {
+    id: (): string | null => duelRoomId(this.duel.ygo?.options),
+    send: (event: string, data: Record<string, unknown> = {}): boolean => {
+      const roomId = this.room.id();
+      if (!roomId) return false;
+      this.client.send(event, { ...data, roomId });
+      return true;
+    },
+  }
+
+  private replayRequests: { resolve: (replay: any) => void, reject: (error: Error) => void, timer: ReturnType<typeof setTimeout> }[] = [];
 
   public getActivePlayer(): number {
     if (this.duel.ygo.options.controlTogglePriority === false) {
@@ -188,6 +223,37 @@ export class YGOServerActions extends YGOComponent {
   }
 
   public async processServerCommand(eventName: string, data: any) {
+    // puzzle:state, duel:preferences, duel:deck:* (room-events.ts).
+    const roomEvent = roomEventFor(eventName, data, this.room.id());
+    if (roomEvent) {
+      this.duel.events.dispatch(roomEvent, data);
+      return;
+    }
+
+    if (eventName === "server:exec" && TIMELINE_MOVES.has(data?.type)) {
+      // After the move is queued below.
+      this.timers.setTimeout(() => this.onTimelineMoved(), 1);
+    }
+
+    // Private duels: the server refused a command (e.g. acting on the other
+    // player's hidden cards — ygo-core YGOGameServer.acceptPlayerCommand).
+    if (eventName === "server:exec-rejected") {
+      const reason = typeof data?.reason === "string" && data.reason ? data.reason : "That action isn't allowed";
+      this.duel.events.dispatch("system-chat-message", { message: `Not allowed: ${reason}` } as any);
+      return;
+    }
+
+    if (eventName === "server:replay") {
+      const requests = this.replayRequests;
+      this.replayRequests = [];
+      requests.forEach(({ resolve, reject, timer }) => {
+        clearTimeout(timer);
+        if (data?.replay) resolve(data.replay);
+        else reject(new Error(data?.error || "Replay not available"));
+      });
+      return;
+    }
+
     if (eventName === "server:game-state") {
       const gameState = data as YGOServerGameStateData;
       await this.duel.createYGO(gameState);
@@ -209,9 +275,13 @@ export class YGOServerActions extends YGOComponent {
       const commandData = data.data;
       if (data.type === "ygo:commands:exec") {
         const eventData = data.data;
+        // Hidden information: data of the opponent's cards this command reveals.
+        if (eventData.cards) this.duel.ygo.state.registerCardData(eventData.cards);
         const command = new JSONCommand({ type: eventData.command.type, data: eventData.command.data });
         command.commandId = eventData.command.commandId;
         command.timestamp = eventData.command.timestamp;
+        // Bot duels: the bot's activation gets a spotlight when it plays.
+        if (!this.duel.commands.isRecovering()) markBotActivation(this.duel, eventData.command);
         this.duel.commands.exec(new YGOControllerCommands.Exec(this.duel, command));
       } else if (data.type === "ygo:commands:previous") {
         const commandId = commandData.commandId;
@@ -239,5 +309,17 @@ export class YGOServerActions extends YGOComponent {
 
   public onDestroy() {
     this.timers.clear();
+    this.replayRequests.forEach(({ reject, timer }) => {
+      clearTimeout(timer);
+      reject(new Error("Duel closed"));
+    });
+    this.replayRequests = [];
+  }
+
+  /** The server moved the duel's timeline (undo / redo / a timeline jump):
+   * in a bot duel its rules engine was rebuilt to that point, so the
+   * assisted panel asks it again for the options there. */
+  private onTimelineMoved() {
+    this.duel.events.dispatch("assist-refresh", {});
   }
 }

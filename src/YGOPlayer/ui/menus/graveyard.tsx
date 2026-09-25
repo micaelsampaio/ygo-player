@@ -4,6 +4,7 @@ import { ActionUiMenu } from "../../actions/ActionUiMenu";
 import { Graveyard as GameGraveyard } from "../../../YGOPlayer/game/Graveyard";
 import { Card } from "ygo-core";
 import { stopPropagationCallback } from "../../scripts/utils";
+import { pileCardProps } from "../components/pile-menu";
 
 export function Graveyard({
   duel,
@@ -35,6 +36,21 @@ export function Graveyard({
 
   const field = duel.ygo.state.fields[graveyard.player];
   const gy = field.graveyard;
+
+  // From the mouse or, focused, Enter/Space: the card menu anchors to this card's image.
+  const openCardMenu = (e: React.SyntheticEvent, card: Card) => {
+    action.eventData = {
+      duel,
+      card,
+      mouseEvent: e,
+      htmlCardElement: e.currentTarget,
+    };
+    duel.actionManager.setAction(action);
+    duel.gameActions.setSelectedCard({
+      player: graveyard.player,
+      card,
+    });
+  };
 
   return (
     <div
@@ -81,19 +97,9 @@ export function Graveyard({
                 onTouchEnd={(event: any) =>
                   duel.events.dispatch("on-card-mouse-up", { card, event })
                 }
-                onClick={(e) => {
-                  action.eventData = {
-                    duel,
-                    card,
-                    mouseEvent: e,
-                    htmlCardElement: e.target,
-                  };
-                  duel.actionManager.setAction(action);
-                  duel.gameActions.setSelectedCard({
-                    player: graveyard.player,
-                    card,
-                  });
-                }}
+                onClick={(e) => openCardMenu(e, card)}
+                {...pileCardProps<HTMLImageElement>((e) => openCardMenu(e, card), card.name)}
+                alt={card.name}
                 src={card.images.small_url}
                 className="ygo-card"
               />

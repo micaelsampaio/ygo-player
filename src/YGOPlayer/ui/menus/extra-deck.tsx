@@ -3,6 +3,7 @@ import { YGODuel } from "../../core/YGODuel";
 import { ActionUiMenu } from "../../actions/ActionUiMenu";
 import { Card, YGOGameUtils } from "ygo-core";
 import { stopPropagationCallback } from "../../scripts/utils";
+import { pileCardProps } from "../components/pile-menu";
 
 export function ExtraDeck({
   duel,
@@ -37,6 +38,21 @@ export function ExtraDeck({
   const field = duel.ygo.state.fields[player];
   const cards = field.extraDeck;
 
+  // From the mouse or, focused, Enter/Space: the card menu anchors to this card's image.
+  const openCardMenu = (e: React.SyntheticEvent, card: Card) => {
+    action.eventData = {
+      duel,
+      card,
+      mouseEvent: e,
+      htmlCardElement: e.currentTarget,
+    };
+    duel.actionManager.setAction(action);
+    duel.gameActions.setSelectedCard({
+      player,
+      card
+    })
+  };
+
   return (
     <div
       className="float-right-menu ygo-right-menu-grid"
@@ -66,19 +82,9 @@ export function ExtraDeck({
                 onMouseUp={(event: any) => duel.events.dispatch("on-card-mouse-up", { card, event })}
                 onTouchStart={(event: any) => duel.events.dispatch("on-card-mouse-down", { card, event })}
                 onTouchEnd={(event: any) => duel.events.dispatch("on-card-mouse-up", { card, event })}
-                onClick={(e) => {
-                  action.eventData = {
-                    duel,
-                    card,
-                    mouseEvent: e,
-                    htmlCardElement: e.target,
-                  };
-                  duel.actionManager.setAction(action);
-                  duel.gameActions.setSelectedCard({
-                    player,
-                    card
-                  })
-                }}
+                onClick={(e) => openCardMenu(e, card)}
+                {...pileCardProps<HTMLImageElement>((e) => openCardMenu(e, card), card.name)}
+                alt={card.name}
                 onContextMenu={(e) => {
                   e.preventDefault();
                   const originZone = YGOGameUtils.createZone("ED", player, cardIndex + 1);

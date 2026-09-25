@@ -86,6 +86,8 @@ export interface YGOPlayerStartReplayProps {
 export interface YGOAssistActions {
   query(): Promise<any>;
   choose(action: { commandType: string; data: any }): Promise<any>;
+  /** Bot duels: the post-duel review of the player's plays (ygo-socket-server `duel:bot:review`), shown as "Review my plays" on the end-of-duel overlay. */
+  review?(): Promise<any>;
 }
 
 export interface YGOPlayerConnectToServerProps {

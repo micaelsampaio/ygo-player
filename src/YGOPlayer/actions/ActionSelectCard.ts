@@ -9,12 +9,11 @@ import { MultipleTasks } from '../duel-events/utils/multiple-tasks';
 import { PositionTransition } from '../duel-events/utils/position-transition';
 import { ScaleTransition } from '../duel-events/utils/scale-transition';
 import { MaterialOpacityTransition } from '../duel-events/utils/material-opacity';
-import { lerp } from 'three/src/math/MathUtils';
 import { YGOGameUtils } from 'ygo-core';
-import { Ease } from '../scripts/ease';
 import { getResolutionInfo } from '../scripts/use-device-resolution-info';
 import { YGOTimerUtils } from '../scripts/timer-utils';
 import { getScreenPositionFromWorld } from '../scripts/ygo-utils';
+import { selectionOpacity } from '../ui/assist-zones';
 
 type CardSelectionType = "card" | "zone";
 
@@ -33,6 +32,12 @@ export class ActionCardSelection extends YGOComponent implements YGOAction {
     private onSelectionCompleted!: ((cardZone: CardZone) => void);
     private onMultipleSelectionCompleted!: ((cardZone: CardZone[]) => void);
     public unsubscribeKeyEvents?: () => void;
+    /** Called when the player dismisses a selection (Esc / click away) — not when one completes. */
+    private onSelectionCanceled?: () => void;
+    /** Identifies the current selection (see isSelecting). */
+    private selectionId: number = 0;
+    private selecting: boolean = false;
+    private reducedMotion: MediaQueryList | null;
 
     constructor({ duel }: { duel: YGODuel }) {
         super("");
@@ -46,6 +51,14 @@ export class ActionCardSelection extends YGOComponent implements YGOAction {
         this.opacityValue = 1;
         this.time = 0;
         this.mouseEvents = duel.gameController.getComponent<YGOMouseEvents>("mouse_events")!;
+        this.reducedMotion = typeof window !== "undefined" && typeof window.matchMedia === "function"
+            ? window.matchMedia("(prefers-reduced-motion: reduce)")
+            : null;
+    }
+
+    /** Whether selection `id` (from startSelection) is still showing and unanswered. */
+    public isSelecting(id: number): boolean {
+        return this.selecting && this.selectionId === id && this.duel.actionManager.action === this;
     }
 
     public onActionStart(): void {
@@ -111,6 +124,7 @@ export class ActionCardSelection extends YGOComponent implements YGOAction {
     }
 
     public onActionEnd(): void {
+        this.selecting = false;
         this.clear();
         // this.duel.events.dispatch("clear-ui-action");
         this.unsubscribeKeyEvents?.();
@@ -130,7 +144,10 @@ export class ActionCardSelection extends YGOComponent implements YGOAction {
         }
     }
 
-    public startSelection({ zones, showConfirm = true, selectionType, onSelectionCompleted }: { zones: CardZone[], selectionType: CardSelectionType, showConfirm?: boolean, onSelectionCompleted: (cardZone: CardZone) => void }): void {
+    /** Returns an id for isSelecting(). `onCanceled` fires if the player dismisses it. */
+    public startSelection({ zones, showConfirm = true, selectionType, onSelectionCompleted, onCanceled }: { zones: CardZone[], selectionType: CardSelectionType, showConfirm?: boolean, onSelectionCompleted: (cardZone: CardZone) => void, onCanceled?: () => void }): number {
+        this.onSelectionCanceled = onCanceled;
+        this.selectionId++;
         this.time = 0;
         this.selectionType = selectionType;
         this.isMultipleSelection = false;
@@ -138,6 +155,8 @@ export class ActionCardSelection extends YGOComponent implements YGOAction {
         this.showConfirm = showConfirm;
         this.onSelectionCompleted = onSelectionCompleted;
         this.duel.actionManager.setAction(this);
+        this.selecting = this.duel.actionManager.action === this;
+        return this.selectionId;
     }
 
     public startMultipleSelection({ zones, selectionType, showConfirm = true, onSelectionCompleted }: { zones: CardZone[], showConfirm?: boolean, selectionType: CardSelectionType, onSelectionCompleted: (cardZones: CardZone[]) => void }): void {
@@ -149,6 +168,8 @@ export class ActionCardSelection extends YGOComponent implements YGOAction {
         this.selectedZones = [];
         this.zones.forEach(zone => zone.onClickCb = () => this.onCardZoneClick(zone));
         this.onMultipleSelectionCompleted = onSelectionCompleted;
+        this.onSelectionCanceled = undefined;
+        this.selectionId++;
 
         this.duel.actionManager.setAction(this);
 
@@ -160,9 +181,13 @@ export class ActionCardSelection extends YGOComponent implements YGOAction {
     }
 
     public cancelSelection() {
+        const onCanceled = this.selecting ? this.onSelectionCanceled : undefined;
+        this.selecting = false;
+        this.onSelectionCanceled = undefined;
         this.clear();
         this.duel.actionManager.clearAction();
         this.duel.events.dispatch("clear-ui-action");
+        onCanceled?.();
     }
 
     private onCardZoneClick(zone: CardZone) {
@@ -189,6 +214,7 @@ export class ActionCardSelection extends YGOComponent implements YGOAction {
                 this.onMultipleSelectionCompletedClick();
             }
         } else {
+            this.selecting = false;
             this.clear();
             this.onSelectionCompleted(zone);
             this.clickOnZone(zone.position);
@@ -297,9 +323,8 @@ export class ActionCardSelection extends YGOComponent implements YGOAction {
     public updateAction(): void {
 
         this.time += this.duel.core.unscaledDeltaTime * 10;
-        const oscillator = (Math.sin(this.time) + 1) / 2;
-        const easedValue = Ease.linear(oscillator);
-        this.opacityValue = lerp(0.3, 1, easedValue);
+        // prefers-reduced-motion: a steady glow instead of the pulse.
+        this.opacityValue = selectionOpacity(this.time, !!this.reducedMotion?.matches);
 
         for (const [, zoneData] of this.cardSelectionZones) {
             const cardMaterial = zoneData.card.material as THREE.Material;
