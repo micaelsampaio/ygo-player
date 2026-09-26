@@ -1,0 +1,108 @@
+.ygo-player-core .ygo-pile-choice { z-index: 112; }
+
+.ygo-player-core .ygo-pile-choice-tabs {
+  display: flex;
+  gap: 6px;
+  padding: 0 12px 8px;
+  flex-wrap: wrap;
+}
+
+.ygo-player-core .ygo-pile-choice-tab {
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(0, 0, 0, 0.3);
+  color: inherit;
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ygo-player-core .ygo-pile-choice-tab.active {
+  border-color: #ffc93c;
+  box-shadow: inset 0 0 0 1px #ffc93c;
+}
+
+.ygo-player-core .ygo-pile-choice-tab-count { opacity: 0.65; margin-left: 4px; }
+
+.ygo-player-core .ygo-pile-choice-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.ygo-player-core .ygo-pile-choice-card {
+  position: relative;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  border-radius: 6px;
+  outline: none;
+  transition: transform 120ms ease-out;
+}
+
+.ygo-player-core .ygo-pile-choice-card .ygo-card {
+  display: block;
+  border-radius: 4px;
+  box-shadow: 0 0 0 2px rgba(255, 201, 60, 0.55);
+}
+
+.ygo-player-core .ygo-pile-choice-card:hover:not(:disabled),
+.ygo-player-core .ygo-pile-choice-card:focus-visible { transform: translateY(-3px); }
+
+.ygo-player-core .ygo-pile-choice-card:focus-visible .ygo-card { box-shadow: 0 0 0 3px #fff; }
+
+.ygo-player-core .ygo-pile-choice-card.picked .ygo-card {
+  box-shadow: 0 0 0 3px #ffc93c, 0 0 14px rgba(255, 201, 60, 0.7);
+}
+
+.ygo-player-core .ygo-pile-choice-card:disabled { cursor: default; opacity: 0.8; }
+
+.ygo-player-core .ygo-pile-choice-copies,
+.ygo-player-core .ygo-pile-choice-check {
+  position: absolute;
+  font-size: 12px;
+  font-weight: 800;
+  border-radius: 999px;
+  padding: 1px 6px;
+  font-variant-numeric: tabular-nums;
+}
+
+.ygo-player-core .ygo-pile-choice-copies { bottom: 4px; right: 4px; background: rgba(0, 0, 0, 0.75); color: #fff; }
+.ygo-player-core .ygo-pile-choice-check { top: 4px; right: 4px; background: #ffc93c; color: #111; min-width: 20px; text-align: center; }
+
+.ygo-player-core .ygo-pile-choice-rest { opacity: 0.3; filter: grayscale(0.6); cursor: default; }
+
+.ygo-player-core .ygo-pile-choice-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.ygo-player-core .ygo-pile-choice-count { flex-grow: 1; font-size: 13px; opacity: 0.8; }
+
+.ygo-player-core .ygo-pile-choice-confirm,
+.ygo-player-core .ygo-pile-choice-secondary {
+  border-radius: 6px;
+  padding: 6px 16px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: inherit;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.ygo-player-core .ygo-pile-choice-confirm:not(:disabled) { background: #ffc93c; color: #111; border-color: #ffc93c; }
+.ygo-player-core .ygo-pile-choice-confirm:disabled,
+.ygo-player-core .ygo-pile-choice-secondary:disabled { opacity: 0.45; cursor: not-allowed; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ygo-player-core .ygo-pile-choice-card { transition: none; }
+}

@@ -8,15 +8,17 @@ import { createHighlightFrame, disposeHighlightFrame, HIGHLIGHT_CSS, placeHighli
 import { ActionCardSelection } from "../../actions/ActionSelectCard";
 import { CardZone } from "../../game/CardZone";
 import { getGameZone } from "../../scripts/ygo-utils";
-import { EnginePlace, pickZone, promptKey, samePlace, ZoneHighlight, zoneHighlights } from "../assist-zones";
+import { EnginePlace, pickZone, placeToYgoZone, promptKey, samePlace, ZoneHighlight, zoneHighlights } from "../assist-zones";
 import { assistErrorMessage, assistUnavailableReason, phaseLabel } from "../duel-status";
 import { useDuelTurnState } from "../use-duel-turn-state";
 import { assistPanelTitle, mustStayOpen, opponentWaitingText, passLabel, respondSectionTitle } from "../assist-respond";
 import { clampPanelPosition } from "./panel-position";
 import { useChainStops, type ChainStops } from "./duel-preferences";
+import { PileChoicePopup } from "./pile-choice/PileChoicePopup";
+import { pileTabs, reopenLabel, usesPilePicker } from "./pile-choice/pile-choice";
 import { ndcToContainer, positionGlyph, shortPositionLabel } from "../field-overlay";
 import {
-  CardRefData, PromptData, candidateWhere, isSelectionValid, locationLabel, optionLabel,
+  CardRefData, PromptData, candidateWhere, isSelectionValid, locationLabel, optionLabel, toggleSelection,
   groupCandidates, positionChoices, promptSubtitle, promptTitle, toggleGroupSelection, LOC_HAND, LOC_MZONE as LOC_M, LOC_SZONE as LOC_S,
 } from "../assist-prompt";
 
@@ -459,6 +461,57 @@ function useFieldZoneSelection(duel: YGODuel, zones: ZoneHighlight[], enabled: b
   return { dismissed, showAgain: () => setDismissed(false) };
 }
 
+/**
+ * A card prompt answered on the field: the candidates that are on the board
+ * are picked by clicking the card itself (the target of "destroy 1 card on
+ * the field", a Tribute, a material), as in a manual duel — each click is
+ * that candidate's choice. The panel list stays as the fallback.
+ */
+function useFieldCardSelection(duel: YGODuel, targets: Array<{ index: number; zone: string }>, enabled: boolean, onPick: (index: number) => void) {
+  const onPickRef = useRef(onPick);
+  onPickRef.current = onPick;
+  const targetsKey = targets.map((t) => `${t.index}@${t.zone}`).join(",");
+
+  useEffect(() => {
+    if (!enabled || targets.length === 0) return;
+    const selection = duel.gameController?.getComponent<ActionCardSelection>("action_card_selection");
+    if (!selection) return;
+    let id = -1;
+    let disposed = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+
+    const start = () => {
+      if (disposed || (id !== -1 && selection.isSelecting(id))) return;
+      const byZone = new Map<CardZone, number>();
+      for (const t of targets) {
+        const cardZone = getGameZone(duel, YGOGameUtils.getZoneData(t.zone as any));
+        if (cardZone?.getCardReference()) byZone.set(cardZone, t.index);
+      }
+      if (byZone.size === 0) return;
+      id = selection.startSelection({
+        zones: [...byZone.keys()],
+        selectionType: "card",
+        onSelectionCompleted: (cardZone: CardZone) => {
+          const index = byZone.get(cardZone);
+          if (index !== undefined && !disposed) onPickRef.current(index);
+        },
+      });
+    };
+
+    start();
+    const onEnable = () => { clearTimeout(timer); timer = setTimeout(start, 0); };
+    duel.events.on("enable-game-actions", onEnable);
+    return () => {
+      disposed = true;
+      clearTimeout(timer);
+      duel.events.off("enable-game-actions", onEnable);
+      if (id !== -1 && selection.isSelecting(id)) duel.actionManager.clearAction();
+    };
+    // `targets` is rebuilt every render; targetsKey is its identity.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [duel, targetsKey, enabled]);
+}
+
 /** The zone prompt's part of "Your choice": pick on the field; the list is a collapsed fallback. */
 function PlaceChoice({ duel, prompt, busy, pendingKey, respond }: {
   duel: YGODuel;
@@ -637,6 +690,16 @@ function PromptView({ duel, prompt, busy, pendingKey, respond, onHover }: {
   onHover: (target: HighlightTarget | null) => void;
 }) {
   const [selected, setSelected] = useState<number[]>([]);
+  // A choice from a pile (Deck, GY, banished, Extra Deck) opens in a pile
+  // view by itself; closing it only minimizes it (the button below reopens it).
+  const pilePicker = usesPilePicker(prompt);
+  const [pickerOpen, setPickerOpen] = useState(pilePicker);
+  const probeRef = useRef<HTMLDivElement | null>(null);
+  const [pickerContainer, setPickerContainer] = useState<HTMLElement | null>(null);
+  useLayoutEffect(() => {
+    const panel = probeRef.current?.closest(".ygo-assisted-options-panel") as HTMLElement | null;
+    setPickerContainer((panel?.offsetParent as HTMLElement | null) ?? null);
+  }, []);
   const nameOf = (code: number) => duel.ygo?.state?.getCardData(code)?.name;
   // Code 0: a card the server keeps hidden from you (an opponent's hand or Set card).
   const cardName = (code: number) => (code === 0 ? "Hidden card" : nameOf(code) ?? `#${code}`);
@@ -647,6 +710,23 @@ function PromptView({ duel, prompt, busy, pendingKey, respond, onHover }: {
   const subtitle = promptSubtitle(prompt, nameOf);
   const candidates = prompt.candidates ?? [];
   const onBoard = (c: CardRefData) => (c.loc & (LOC_HAND | LOC_M | LOC_S)) !== 0;
+
+  // Candidates on the field are also picked by clicking the card there.
+  const cardPrompt = prompt.kind === "card" || prompt.kind === "tribute" || prompt.kind === "unselectCard";
+  const fieldTargets = cardPrompt
+    ? candidates.flatMap((c, index) => {
+      if (!(c.loc & (LOC_M | LOC_S)) || (prompt.kind !== "unselectCard" && selected.includes(index))) return [];
+      const zone = placeToYgoZone({ player: c.ctrl, loc: c.loc & LOC_M ? LOC_M : LOC_S, seq: c.seq }, prompt.player, me);
+      return zone ? [{ index, zone }] : [];
+    })
+    : [];
+  const pickOnField = (index: number) => {
+    if (prompt.kind === "unselectCard") { respond(`pick:${index}`, { index }); return; }
+    // One card to choose: clicking it is the answer. Several: it's one of the picks (then Confirm).
+    if ((prompt.max ?? 1) <= 1 && (prompt.min ?? 1) <= 1) { respond("confirm", { indices: [index] }); return; }
+    setSelected((prev) => toggleSelection(prompt, prev, index));
+  };
+  useFieldCardSelection(duel, fieldTargets, !busy && !(pilePicker && pickerOpen), pickOnField);
 
   let body: ReactNode = null;
   switch (prompt.kind) {
@@ -747,14 +827,40 @@ function PromptView({ duel, prompt, busy, pendingKey, respond, onHover }: {
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+    <div ref={probeRef} style={{ display: "flex", flexDirection: "column", gap: 4 }}>
       <div style={{ fontSize: 11, fontWeight: 600, opacity: 0.55, display: "flex", alignItems: "center", gap: 5, marginTop: 2 }}>
         <span style={{ width: 7, height: 7, borderRadius: "50%", background: HIGHLIGHT_CSS, display: "inline-block" }} />
         Your choice
       </div>
       <div style={{ fontSize: 13, fontWeight: 700, lineHeight: 1.3 }}>{title}</div>
       {subtitle && <div style={{ fontSize: 12, opacity: 0.7 }}>{subtitle}</div>}
+      {pilePicker && (
+        <button
+          className="ygo-card-item"
+          type="button"
+          onClick={() => setPickerOpen(true)}
+          style={{ fontWeight: 700, fontSize: 13, justifyContent: "center", boxShadow: `inset 0 0 0 1px ${HIGHLIGHT_CSS}` }}
+        >
+          {reopenLabel(pileTabs(prompt))}
+        </button>
+      )}
       {body}
+      {pilePicker && pickerOpen && pickerContainer && (
+        <PileChoicePopup
+          duel={duel}
+          prompt={prompt}
+          container={pickerContainer}
+          selected={selected}
+          busy={busy}
+          pendingKey={pendingKey}
+          onToggle={(group) => setSelected((prev) => toggleGroupSelection(prompt, prev, group))}
+          onPick={(i) => respond(`pick:${i}`, { index: i })}
+          onConfirm={() => respond("confirm", { indices: selected })}
+          onCancel={prompt.cancelable ? () => respond("cancel", { indices: [] }) : undefined}
+          onFinish={prompt.finishable || prompt.cancelable ? () => respond("finish", { index: -1 }) : undefined}
+          onClose={() => setPickerOpen(false)}
+        />
+      )}
     </div>
   );
 }
@@ -794,6 +900,10 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
     if (!enabled || !duel.assist) return;
     const requestId = ++requestIdRef.current;
     duel.assist.query().then((res: AssistQueryResult) => {
+      // Card data the server sent for the cards these options name (a Deck
+      // card this client never saw), so names and art show.
+      const cards = (res as { cards?: unknown[] } | null)?.cards;
+      if (Array.isArray(cards) && cards.length) duel.ygo?.state?.registerCardData(cards as any);
       if (requestIdRef.current !== requestId) return; // superseded by a newer query
       setResult(res);
       duel.assistOptions = res; // card menus route matching moves through the engine

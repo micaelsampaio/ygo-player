@@ -209,11 +209,6 @@ export class YGOServerActions extends YGOComponent {
 
   private registerClientEvents() {
     this.client.onMessage((eventName, data) => {
-      console.log('TCL:\n\n\n\ NEW CLIENT EVENT <<<<<<<<<<<<<<<<<<<');
-      console.log("TCL: event:", eventName)
-      console.log("TCL: data:", data)
-      console.log('TCL: --------');
-
       this.processServerCommand(eventName, data);
     })
 
