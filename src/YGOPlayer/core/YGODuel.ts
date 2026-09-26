@@ -25,6 +25,8 @@ import { YGOMapClick } from "./YGOMapClick";
 import { YGOGameFieldStatsComponent } from "../game/YGOGameFieldStatsComponent";
 import { YGOSoundController } from "./YGOSoundController";
 import { YGOPlayerSettingsAdapter } from "./YGOPlayerSettings";
+import { fieldTheme } from "./field-themes";
+import { recolorModel } from "./field-theme-scene";
 import { HotKeyManager } from "../scripts/hotkey-manager";
 import { SETTINGS_MODAL_TYPE } from "../ui/menus/game-settings/game-settings-menu";
 import { BattlePhaseController } from "../actions/BattlePhaseController";
@@ -247,9 +249,12 @@ export class YGODuel {
 
   public async load() {
     try {
+      // The field's look (core/field-themes.ts): its table model, if any.
+      const theme = fieldTheme(this.settings.getFieldTheme());
+      const tableUrl = theme.model ? `${this.config.cdnUrl}/models/${theme.model}.glb` : null;
       await Promise.all([
         this.assets.loadGLTF(`${this.config.cdnUrl}/models/field.glb`),
-        this.assets.loadGLTF(`${this.config.cdnUrl}/models/game_field.glb`),
+        ...(tableUrl ? [this.assets.loadGLTF(tableUrl)] : []),
         this.assets.loadGLTF(`${this.config.cdnUrl}/models/destroy_effect.glb`),
         this.assets.loadGLTF(`${this.config.cdnUrl}/models/field_objects.glb`),
         this.assets.loadImages(
@@ -274,11 +279,12 @@ export class YGODuel {
       await this.loadingTask.wait(); // wait for server events and download cards
 
       const fieldModel = this.assets.models.get(`${this.config.cdnUrl}/models/field.glb`)!;
-      const gameFieldScene = this.assets.models.get(`${this.config.cdnUrl}/models/game_field.glb`)!;
+      const gameFieldScene = tableUrl ? this.assets.models.get(tableUrl) ?? null : null;
+      if (gameFieldScene && theme.recolor) recolorModel(gameFieldScene.scene, theme.recolor);
       this.fields = createFields({ duel: this, fieldModel: fieldModel.scene as any });
       this.fieldStats = new YGOGameFieldStatsComponent(this);
       this.entities.push(this.gameController);
-      this.duelScene.createFields({ gameField: gameFieldScene.scene as any });
+      this.duelScene.createFields({ gameField: (gameFieldScene?.scene ?? null) as any, theme });
       this.duelScene.createGameMusic();
       this.gameController.getComponent<ActionCardSelection>("action_card_selection").createCardSelections();
       this.gameController.getComponent<ActionAttackSelection>("attack_selection_action").create();

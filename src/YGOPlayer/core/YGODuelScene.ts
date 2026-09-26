@@ -1,3 +1,5 @@
+import { DEFAULT_FIELD_THEME, FieldTheme, fieldTheme } from "./field-themes";
+import { createPlaymat } from "./field-theme-scene";
 import * as THREE from "three";
 import { YGOAnimationObject } from "../game/YGOAnimationObject";
 import { YGOGameFieldObject } from "../game/YGOGameFieldObject";
@@ -109,12 +111,12 @@ export class YGODuelScene {
         }
     }
 
-    public createFields({ gameField }: { gameField: THREE.Scene }) {
+    public createFields({ gameField, theme = fieldTheme(DEFAULT_FIELD_THEME) }: { gameField: THREE.Scene | null; theme?: FieldTheme }) {
 
 
         //const texture = this.duel.assets.getTexture(this.duel.createCdnUrl("/images/sprites/atlas_1.png"));
 
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 3);
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 3 * theme.light);
         directionalLight.position.set(20, 40, 25);
         directionalLight.target.position.set(0, 0, 0);
         directionalLight.castShadow = true;
@@ -129,24 +131,29 @@ export class YGODuelScene {
         directionalLight.shadow.bias = -0.0005;
         directionalLight.shadow.normalBias = 0.04;
 
-        this.duel.core.scene.add(new THREE.AmbientLight('white', 1));
+        this.duel.core.scene.add(new THREE.AmbientLight('white', theme.light));
         this.duel.core.scene.add(directionalLight);
         this.duel.core.scene.add(directionalLight.target);
 
-        const clonedGameField = gameField.clone();
-        const gameFields = YGOStatic.playerPOV === 0 ? [gameField, clonedGameField] : [clonedGameField, gameField]
+        if (gameField) {
+            const clonedGameField = gameField.clone();
+            const gameFields = YGOStatic.playerPOV === 0 ? [gameField, clonedGameField] : [clonedGameField, gameField]
 
-        gameFields[0].position.set(0, 0, 0);
-        gameFields[0].rotateX(THREE.MathUtils.degToRad(90));
-        gameFields[1].position.set(0, 0, 0);
-        gameFields[1].rotateX(THREE.MathUtils.degToRad(90));
-        gameFields[1].rotateY(THREE.MathUtils.degToRad(180));
+            gameFields[0].position.set(0, 0, 0);
+            gameFields[0].rotateX(THREE.MathUtils.degToRad(90));
+            gameFields[1].position.set(0, 0, 0);
+            gameFields[1].rotateX(THREE.MathUtils.degToRad(90));
+            gameFields[1].rotateY(THREE.MathUtils.degToRad(180));
 
-        this.duel.core.scene.add(gameFields[0]);
-        this.duel.core.scene.add(gameFields[1]);
+            this.duel.core.scene.add(gameFields[0]);
+            this.duel.core.scene.add(gameFields[1]);
 
-        this.gameFields.push(new YGOGameFieldObject(this.duel, gameFields[0], YGOStatic.playerPOV));
-        this.gameFields.push(new YGOGameFieldObject(this.duel, gameFields[1], 1 - YGOStatic.playerPOV));
+            this.gameFields.push(new YGOGameFieldObject(this.duel, gameFields[0], YGOStatic.playerPOV));
+            this.gameFields.push(new YGOGameFieldObject(this.duel, gameFields[1], 1 - YGOStatic.playerPOV));
+        } else {
+            // The playmat: no table model, a drawn mat under the zones.
+            this.duel.core.scene.add(createPlaymat(this.duel, YGOStatic.playerIndex));
+        }
 
         const selectedCardGeometry = new THREE.PlaneGeometry(7, 15);
         const selectedCardMobileGeometry = new THREE.PlaneGeometry(30, 11);
@@ -172,8 +179,8 @@ export class YGODuelScene {
         this.handPlaceholder = handObject;
 
         this.duel.fields.forEach((field, playerIndex) => {
-            field.graveyard.hoverObject = this.duel.duelScene.gameFields[playerIndex].gameObject.children.find(obj => obj.name === "GY_SELECTION_MESH");
-            field.banishedZone.hoverObject = this.duel.duelScene.gameFields[playerIndex].gameObject.children.find(obj => obj.name === "B_SELECTION_MESH");
+            field.graveyard.hoverObject = this.duel.duelScene.gameFields[playerIndex]?.gameObject.children.find(obj => obj.name === "GY_SELECTION_MESH");
+            field.banishedZone.hoverObject = this.duel.duelScene.gameFields[playerIndex]?.gameObject.children.find(obj => obj.name === "B_SELECTION_MESH");
 
             if (field.graveyard.hoverObject) {
                 field.graveyard.hoverObject.visible = false;

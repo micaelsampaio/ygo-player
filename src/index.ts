@@ -5,6 +5,7 @@ import "./YGOPlayer/style/style.css";
 export * from "ygo-core";
 export * from "./YGOPlayer/web";
 export * from "./YGOPlayer/core/YGODuel";
+export * from "./YGOPlayer/core/field-themes";
 
 import { YGOGameUtils, YGOCore } from "ygo-core";
 

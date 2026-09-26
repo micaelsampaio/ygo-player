@@ -8,6 +8,8 @@ export interface YGOPlayerSettings {
     showCardWhenPlayed: boolean
     autoStartReplay: boolean
     showFaceDownCardsTransparent: boolean
+    /** The duel field's look (core/field-themes.ts); applies from the next duel. */
+    fieldTheme: string
 }
 
 export interface YGOPlayerSettingsAdapterOptions {
@@ -34,7 +36,8 @@ const DEFAULT_SETTINGS: YGOPlayerSettings = {
     gameSpeed: 1,
     showCardWhenPlayed: true,
     autoStartReplay: true,
-    showFaceDownCardsTransparent: true
+    showFaceDownCardsTransparent: true,
+    fieldTheme: "classic"
 }
 
 const YGO_SETTINGS_KEY = "ygo_player_settings";
@@ -120,6 +123,20 @@ export class YGOPlayerSettingsAdapter {
             this.dispatchInternalSave();
 
             this.events.dispatch("onShowFaceDownCardsTransparentChange", oldValue, value);
+            this.events.dispatch("onSettingsChanged");
+        }
+    }
+
+    public getFieldTheme() {
+        return this.data.fieldTheme;
+    }
+
+    public setFieldTheme(value: string) {
+        if (value !== this.data.fieldTheme) {
+            const oldValue = this.data.fieldTheme;
+            this.data.fieldTheme = value;
+            this.dispatchInternalSave();
+            this.events.dispatch("onFieldThemeChange", oldValue, value);
             this.events.dispatch("onSettingsChanged");
         }
     }

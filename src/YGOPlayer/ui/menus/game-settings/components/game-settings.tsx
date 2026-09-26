@@ -3,12 +3,16 @@ import { YGODuel } from "../../../../core/YGODuel";
 import { YGOPlayerSettings } from "../../../../core/YGOPlayerSettings";
 import { Modal } from "../../../components/Modal";
 import InputRange from "../../../components/range/InputRange";
+import { FIELD_THEMES, fieldTheme } from "../../../../core/field-themes";
 
 export function GameSettingsDialog({ duel }: { duel: YGODuel }) {
   const settings = duel.settings;
   const [gameMusicVolume, setGameMusicState] = useState(() => settings.getMusicVolume());
   const [gameSoundsVolume, setGameSoundsVolumeState] = useState(() => settings.getGameVolume());
   const [gameSpeed, setGameSpeed] = useState(() => settings.getGameSpeed());
+  const [field, setField] = useState(() => fieldTheme(settings.getFieldTheme()).id);
+  // The board is built once per duel, so a new field shows from the next duel.
+  const loadedField = useState(() => fieldTheme(settings.getFieldTheme()).id)[0];
 
   const setGameMusicVolume = (e: React.ChangeEvent<HTMLInputElement>) => {
     const volume = Number(e.target.value);
@@ -59,6 +63,26 @@ export function GameSettingsDialog({ duel }: { duel: YGODuel }) {
         <div>Game Sounds Volume</div>
         <div>
           <InputRange step={0.1} min={0} max={1} value={gameSoundsVolume} onChange={setGameSoundsVolume} onInput={setGameSoundsVolume} />
+        </div>
+
+        <div className="ygo-mt-4">
+          <div id="ygo-field-theme-label">Field</div>
+          <div className="ygo-flex ygo-gap-1 ygo-mt-2" role="radiogroup" aria-labelledby="ygo-field-theme-label">
+            {FIELD_THEMES.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                role="radio"
+                aria-checked={field === t.id}
+                title={t.description}
+                className={`ygo-btn ygo-btn-action ygo-px-0 ygo-flex-grow-1${field === t.id ? " ygo-btn-action-active" : ""}`}
+                onClick={() => { settings.setFieldTheme(t.id); setField(t.id); }}
+              >
+                {t.name}
+              </button>
+            ))}
+          </div>
+          {field !== loadedField && <div className="ygo-mt-1" style={{ fontSize: 12, opacity: 0.7 }}>Shows from your next duel.</div>}
         </div>
 
         <div className="ygo-mt-4">
