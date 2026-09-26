@@ -4,16 +4,12 @@ import { YGODuel } from "../../../core/YGODuel";
 import { YGOStatic } from "../../../core/YGOStatic";
 import { stopPropagationCallback } from "../../../scripts/utils";
 import { CandidateGroup, isSelectionValid, PromptData, promptTitle } from "../../assist-prompt";
-import { PileKind, pileTabs } from "./pile-choice";
+import { pileTabs } from "./pile-choice";
 import "./style.css";
-
-const PILE_FIELD: Record<PileKind, string | null> = {
-  deck: "mainDeck", gy: "graveyard", banished: "banishedZone", extra: "extraDeck", hand: "hand", field: null,
-};
 
 /**
  * An engine card prompt answered in a pile view: the valid choices as a
- * card grid (one tab per pile), the rest of the pile dimmed for context.
+ * card grid, one tab per pile.
  * Picking follows the prompt exactly as the panel's list does (it shares
  * its selection and responses); closing only minimizes it — the panel
  * keeps a button to bring it back.
@@ -37,8 +33,6 @@ export function PileChoicePopup({ duel, prompt, container, selected, busy, pendi
   const tabs = useMemo(() => pileTabs(prompt), [prompt]);
   const [tabKey, setTabKey] = useState(() => tabs[0]?.key);
   const tab = tabs.find((t) => t.key === tabKey) ?? tabs[0];
-  const [onlyChoices, setOnlyChoices] = useState<Record<string, boolean>>({});
-  const showOnly = onlyChoices[tab?.key ?? ""] ?? tab?.pile === "deck";
   const [search, setSearch] = useState("");
   const candidates = prompt.candidates ?? [];
   const me = YGOStatic.playerIndex;
@@ -56,13 +50,7 @@ export function PileChoicePopup({ duel, prompt, container, selected, busy, pendi
   if (!tab) return null;
 
   const matches = (code: number) => !search || (nameOf(code) ?? "").toLowerCase().includes(search.toLowerCase());
-  const choiceCodes = new Set(tab.choices.map((c) => c.code));
-  // The rest of this pile, where the board knows its cards (a hidden Deck shows only the choices).
   const owner = tab.mine ? me : 1 - me;
-  const field = PILE_FIELD[tab.pile];
-  const rest: any[] = showOnly || !field
-    ? []
-    : ((duel.ygo?.state?.fields?.[owner] as any)?.[field] ?? []).filter((c: any) => c && c.id && !choiceCodes.has(c.id) && matches(c.id));
 
   const showInfo = (code: number) => {
     const card = dataOf(code);
@@ -99,12 +87,6 @@ export function PileChoicePopup({ duel, prompt, container, selected, busy, pendi
           <div className="ygo-menu-view-main-deck-search-container">
             <input className="ygo-menu-view-main-deck-search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search a card..." aria-label="Search the choices" />
           </div>
-          {field && (
-            <label className="ygo-pile-choice-toggle">
-              <input type="checkbox" checked={showOnly} onChange={(e) => setOnlyChoices((prev) => ({ ...prev, [tab.key]: e.target.checked }))} />
-              Show only choices
-            </label>
-          )}
         </div>
 
         <div className="game-popup-content">
@@ -133,10 +115,6 @@ export function PileChoicePopup({ duel, prompt, container, selected, busy, pendi
                 </button>
               );
             })}
-            {rest.map((card: any, i: number) => (
-              <img key={`rest:${card.id}:${i}`} src={card.images?.small_url} alt={card.name ?? ""} title={`${card.name ?? ""} — not a choice`}
-                className="ygo-card ygo-pile-choice-rest" onMouseEnter={() => showInfo(card.id)} />
-            ))}
           </div>
         </div>
 

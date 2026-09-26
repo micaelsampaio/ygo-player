@@ -10,10 +10,26 @@
  *
  * Zones: ocgcore MZONE seq 0-4 = "M-1".."M-5", 5/6 = the Extra Monster Zones
  * ("EMZ-1"/"EMZ-2"); SZONE seq 0-4 = "S-1".."S-5", 5 = the Field Zone ("F").
- * Player 1's ids carry a "2" ("M2-3"). Same mapping as the server's
- * diffTranslator (slotFieldZone), so the card lands where it was placed.
+ * Player 1's ids carry a "2" ("M2-3"). The Extra Monster Zones are one pair
+ * shared by both players: ygo-core numbers them left to right as player 0
+ * sees the field (EMZ-1 and EMZ2-1 are the same zone), while ocgcore counts
+ * each player's from their own side — so for player 1 seq 5 is EMZ2-2. Same
+ * mapping as the server's diffTranslator (slotFieldZone), so the card lands
+ * where it was placed.
  */
 import { freeZones, LOC_MZONE, LOC_SZONE, PromptData, ZoneChoice } from "./assist-prompt";
+
+/** ygo-core EMZ index (1 = left as player 0 sees it) of an ocgcore EMZ seq (5/6) of this ygo-core player. */
+export function emzIndexFor(ygoPlayer: number, seq: number): 1 | 2 {
+  const left = ygoPlayer === 1 ? seq === 6 : seq === 5;
+  return left ? 1 : 2;
+}
+
+/** The ocgcore EMZ seq (5/6) of a ygo-core EMZ index for this ygo-core player — the inverse of emzIndexFor. */
+export function emzSeqFor(ygoPlayer: number, index: number): 5 | 6 {
+  const left = index === 1;
+  return ygoPlayer === 1 ? (left ? 6 : 5) : (left ? 5 : 6);
+}
 
 export interface EnginePlace {
   player: number;
@@ -29,7 +45,7 @@ export function placeToYgoZone(place: EnginePlace, promptPlayer: number, me: num
   if (!Number.isInteger(seq) || seq < 0) return null;
   if (loc === LOC_MZONE) {
     if (seq <= 4) return `M${sfx}-${seq + 1}`;
-    if (seq <= 6) return `EMZ${sfx}-${seq - 4}`;
+    if (seq <= 6) return `EMZ${sfx}-${emzIndexFor(ygoPlayer, seq)}`;
     return null;
   }
   if (loc === LOC_SZONE) {
@@ -50,7 +66,7 @@ export function ygoZoneToPlace(zone: string, promptPlayer: number, me: number): 
   const inRange = (lo: number, hi: number) => Number.isInteger(index) && index >= lo && index <= hi;
   switch (id) {
     case "M": return inRange(1, 5) ? { player, loc: LOC_MZONE, seq: index - 1 } : null;
-    case "EMZ": return inRange(1, 2) ? { player, loc: LOC_MZONE, seq: index + 4 } : null;
+    case "EMZ": return inRange(1, 2) ? { player, loc: LOC_MZONE, seq: emzSeqFor(ygoPlayer, index) } : null;
     case "S": return inRange(1, 5) ? { player, loc: LOC_SZONE, seq: index - 1 } : null;
     case "F": return rawIndex === undefined ? { player, loc: LOC_SZONE, seq: 5 } : null;
     default: return null;

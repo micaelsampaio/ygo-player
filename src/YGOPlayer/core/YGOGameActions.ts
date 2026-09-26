@@ -1,5 +1,5 @@
 import { YGOClientType, YGOCommands, YGOGameUtils, YGOPlayerState } from "ygo-core";
-import { ASSIST_FREE_FORM_NOTICE, AssistMove, assistRouteFor } from "../ui/assist-routing";
+import { ASSIST_FREE_FORM_NOTICE, AssistMove, assistPhaseRouteFor, assistRouteFor } from "../ui/assist-routing";
 import type { CardRefData } from "../ui/assist-prompt";
 import { Card, CardPosition, FieldZone } from "ygo-core";
 import { ActionCardSelection } from "../actions/ActionSelectCard";
@@ -1134,6 +1134,57 @@ export class YGOGameActions {
       note,
       duration: parsedDuration
     }));
+  }
+
+  /**
+   * Assisted Mode: the phase menu's phase changes go through the engine
+   * (duel.assist.choose "Duel Phase", the same move as the panel's Next
+   * Phase row), one phase at a time, so the engine opens each new phase's
+   * chain window — and a chain stop of "Always" pauses there. The walk stops
+   * at the first window or prompt left open for the player. Returns null
+   * when the engine doesn't take the first step (not Assisted Mode, or a
+   * phase it doesn't offer): the caller makes the free-form change.
+   */
+  public goToPhaseAssisted(steps: YGODuelPhase[]): Promise<void> | null {
+    const duel = this.duel;
+    const assist = duel.assist;
+    if (!assist || steps.length === 0 || duel.client?.type !== YGOClientType.PLAYER || !duel.ygo?.options?.assistedMode) return null;
+    const first = assistPhaseRouteFor(duel.assistOptions, steps[0]);
+    if (first.kind === "freeForm") return null;
+    this.clearAction();
+    if (first.kind === "blocked") {
+      duel.events.dispatch("assist-notice", { message: first.message });
+      return Promise.resolve();
+    }
+
+    const query = async () => {
+      const next = await assist.query();
+      duel.assistOptions = next;
+      return next;
+    };
+    const walk = async (): Promise<{ notices?: string[] }> => {
+      let current = duel.assistOptions;
+      for (const [i, phase] of steps.entries()) {
+        let route = assistPhaseRouteFor(current, phase);
+        if (route.kind === "continueFirst" && i === 0) {
+          await assist.choose({ commandType: "Pass", data: {} });
+          current = await query();
+          route = assistPhaseRouteFor(current, phase);
+        }
+        if (route.kind === "blocked") return { notices: [route.message] };
+        if (route.kind !== "choose") return i === 0 ? { notices: [`Can't go to ${phase} right now.`] } : {};
+        await assist.choose({ commandType: "Duel Phase", data: { phase } });
+        current = await query();
+        // A window (or an effect's choice) the engine left open for the player: stop here.
+        if (current?.available && (current.pending === "chain" || current.pending === "prompt")) return {};
+      }
+      return {};
+    };
+
+    duel.events.dispatch("assist-choice-start", {});
+    return walk()
+      .then((res) => duel.events.dispatch("assist-choice-done", { notices: res?.notices }))
+      .catch((error: any) => duel.events.dispatch("assist-choice-done", { error }));
   }
 
   public setDuelPhase({ phase }: { phase: YGODuelPhase }) {

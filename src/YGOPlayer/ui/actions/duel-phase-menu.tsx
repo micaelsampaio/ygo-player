@@ -83,6 +83,17 @@ export function DuelPhaseActionsMenu({
       return;
     }
 
+    // Assisted Mode: through the engine, one phase at a time, stopping at a
+    // chain window left open for you (chain stops "Always"). Choosing End
+    // there hands the turn over server-side, so onComplete's free-form turn
+    // flip must not run.
+    const assisted = duel.gameActions.goToPhaseAssisted(steps);
+    if (assisted) {
+      setTransitioning(true);
+      assisted.finally(() => { if (isMountedRef.current) setTransitioning(false); });
+      return;
+    }
+
     setTransitioning(true);
     // sequence the phase changes with small delays so any phase-entry effects run in order
     steps.forEach((phase, i) => {
@@ -112,7 +123,7 @@ export function DuelPhaseActionsMenu({
       nextPhase = YGO_DUEL_PHASE_ORDER[nextPhaseIndex];
     }
 
-    if (nextPhase) {
+    if (nextPhase && !duel.gameActions.goToPhaseAssisted([nextPhase])) {
       duel.gameActions.setDuelPhase({ phase: nextPhase });
     }
   }, [duel]);

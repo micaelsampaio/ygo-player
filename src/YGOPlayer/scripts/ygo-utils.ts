@@ -11,6 +11,7 @@ import { Card, FieldZone, FieldZoneData, YGOReplayData } from "ygo-core";
 import { YGOGameUtils } from "ygo-core";
 import { Banish } from "../game/Banish";
 import { YGOStatic } from "../core/YGOStatic";
+import { allowedExtraMonsterZones } from "./extra-monster-zones";
 //import { YGOUtils } from "ygo-core/src/game/YGOUtils";
 
 type CreateFieldDto = {
@@ -249,17 +250,19 @@ export function getCardZones(
         case "S":
           zonesToFind = duel.fields[player].spellTrapZone;
           break;
-        case "EMZ":
+        case "EMZ": {
+          // One EMZ per player (a second only through a Link Arrow); the
+          // pair is shared, so never the one the opponent holds.
+          const allowed = allowedExtraMonsterZones(duel.ygo.state.fields as any, player);
           zonesToFind = duel.fields[player].extraMonsterZone.filter(
-            (zone) =>
-              zone.isEmpty() ||
-              zone.getCardReference()?.originalOwner === player
+            (zone, i) => allowed.includes((i + 1) as 1 | 2)
           );
           zonesToFind.forEach((zone) => {
             zone.zone = `EMZ${player === 0 ? "" : "2"}-${zone.zoneData.zoneIndex}` as any;
             zone.zoneData.player = player;
           });
           break;
+        }
         case "F":
           if (duel.fields[player].fieldZone.isEmpty()) {
             result.push(duel.fields[player].fieldZone);

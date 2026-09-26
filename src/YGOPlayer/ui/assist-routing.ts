@@ -6,6 +6,7 @@
  * the engine can't follow. Pure lookup; the glue lives in YGOGameActions.
  */
 import { CardRefData, LOC_DECK, LOC_EXTRA, LOC_GRAVE, LOC_HAND, LOC_MZONE, LOC_REMOVED, LOC_SZONE } from "./assist-prompt";
+import { emzSeqFor } from "./assist-zones";
 
 export type AssistMove = "Activate" | "Normal Summon" | "Special Summon" | "Set Monster" | "Set ST";
 
@@ -13,12 +14,13 @@ export type AssistMove = "Activate" | "Normal Summon" | "Special Summon" | "Set 
 export function zoneToLocation(zone: string | undefined | null): { loc: number; seq: number | null } | null {
   if (!zone) return null;
   const [rawId, rawIndex] = zone.split("-");
-  const id = rawId.length > 1 && rawId.endsWith("2") ? rawId.slice(0, -1) : rawId;
+  const isP2 = rawId.length > 1 && rawId.endsWith("2");
+  const id = isP2 ? rawId.slice(0, -1) : rawId;
   const index = rawIndex !== undefined ? Number(rawIndex) : NaN;
   switch (id) {
     case "H": return { loc: LOC_HAND, seq: null }; // hand order isn't guaranteed to match
     case "M": return { loc: LOC_MZONE, seq: Number.isInteger(index) ? index - 1 : null };
-    case "EMZ": return { loc: LOC_MZONE, seq: Number.isInteger(index) ? 4 + index : null };
+    case "EMZ": return { loc: LOC_MZONE, seq: index === 1 || index === 2 ? emzSeqFor(isP2 ? 1 : 0, index) : null };
     case "S": return { loc: LOC_SZONE, seq: Number.isInteger(index) ? index - 1 : null };
     case "F": return { loc: LOC_SZONE, seq: 5 };
     case "GY": return { loc: LOC_GRAVE, seq: null };
@@ -92,3 +94,33 @@ export function assistRouteFor(result: any, move: AssistMove, code: number, zone
   return { kind: "freeForm" };
 }
 
+
+export const ANSWER_PROMPT_FIRST_NOTICE = "Answer the effect's choice first.";
+
+export type AssistPhaseRoute =
+  | { kind: "choose" }
+  /** Their own open chain window (nothing on the chain yet): moving on means passing it first. */
+  | { kind: "continueFirst" }
+  | { kind: "blocked"; message: string }
+  | { kind: "freeForm" };
+
+/**
+ * What a phase control (the field's phase menu) does in Assisted Mode, given
+ * the assisted options the panel last saw. The engine takes the phase the
+ * panel's Next Phase row offers, and the End Phase straight from Main Phase 1
+ * or the Battle Phase (a legal skip). Going through the engine is what lets a
+ * chain stop of "Always" pause at the new phase's window.
+ */
+export function assistPhaseRouteFor(result: any, phase: string): AssistPhaseRoute {
+  if (!result?.available) return { kind: "freeForm" };
+  if (result.pending === "prompt") return { kind: "blocked", message: ANSWER_PROMPT_FIRST_NOTICE };
+  if (result.pending === "chain") {
+    const { chainLength, canPass } = result.respond ?? {};
+    if (chainLength === 0 && canPass) return { kind: "continueFirst" };
+    return { kind: "blocked", message: RESPOND_FIRST_NOTICE };
+  }
+  if (result.pending !== "idle" && result.pending !== "battle") return { kind: "freeForm" };
+  if (phase === result.nextPhase) return { kind: "choose" };
+  if (phase === "End" && (result.ygoPhase === "Main Phase 1" || result.ygoPhase === "Battle")) return { kind: "choose" };
+  return { kind: "freeForm" };
+}

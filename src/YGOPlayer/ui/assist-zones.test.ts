@@ -33,6 +33,16 @@ describe("placeToYgoZone / ygoZoneToPlace", () => {
     expect(placeToYgoZone({ player: 1, loc: S, seq: 5 }, 0, 0)).toBe("F2");
   });
 
+  it("mirrors the top player's Extra Monster Zones: their left one is EMZ2-2", () => {
+    // Seat 1 counts its EMZs from its own side; ygo-core's EMZ-n / EMZ2-n are one zone.
+    expect(placeToYgoZone({ player: 1, loc: M, seq: 5 }, 0, 0)).toBe("EMZ2-2");
+    expect(placeToYgoZone({ player: 1, loc: M, seq: 6 }, 0, 0)).toBe("EMZ2-1");
+    expect(placeToYgoZone({ player: 0, loc: M, seq: 5 }, 0, 1)).toBe("EMZ2-2");
+    expect(ygoZoneToPlace("EMZ2-1", 0, 0)).toEqual({ player: 1, loc: M, seq: 6 });
+    expect(ygoZoneToPlace("EMZ2-2", 0, 1)).toEqual({ player: 0, loc: M, seq: 5 });
+    expect(ygoZoneToPlace("EMZ-1", 0, 0)).toEqual({ player: 0, loc: M, seq: 5 });
+  });
+
   it("follows the seat remap when the viewer is ygo seat 1 but engine player 0 (they went first)", () => {
     // The prompt is the viewer's: engine player 0 → ygo seat 1.
     expect(placeToYgoZone({ player: 0, loc: S, seq: 0 }, 0, 1)).toBe("S2-1");
