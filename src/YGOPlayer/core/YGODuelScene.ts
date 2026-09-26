@@ -1,5 +1,7 @@
+import { buildHoloArena } from "./field-builders/holo-arena";
+import { buildColiseum } from "./field-builders/coliseum";
+import { FieldAnimator } from "./field-builders/layout";
 import { DEFAULT_FIELD_THEME, FieldTheme, fieldTheme } from "./field-themes";
-import { createPlaymat } from "./field-theme-scene";
 import * as THREE from "three";
 import { YGOAnimationObject } from "../game/YGOAnimationObject";
 import { YGOGameFieldObject } from "../game/YGOGameFieldObject";
@@ -150,9 +152,15 @@ export class YGODuelScene {
 
             this.gameFields.push(new YGOGameFieldObject(this.duel, gameFields[0], YGOStatic.playerPOV));
             this.gameFields.push(new YGOGameFieldObject(this.duel, gameFields[1], 1 - YGOStatic.playerPOV));
-        } else {
-            // The playmat: no table model, a drawn mat under the zones.
-            this.duel.core.scene.add(createPlaymat(this.duel, YGOStatic.playerIndex));
+        } else if (theme.build) {
+            // A field generated in code: its scenery, the turn glow and pile highlights per side.
+            // Bloom costs GPU time: phones (the mobile layout) get the field without it.
+            if (theme.post && !this.duel.core.isMobileLayout) this.duel.core.enablePostFx(theme.post);
+            const built = (theme.build === "holo" ? buildHoloArena : buildColiseum)(this.duel, YGOStatic.playerIndex);
+            this.duel.core.scene.add(built.root);
+            this.gameFields.push(new YGOGameFieldObject(this.duel, built.sides[0] as any, YGOStatic.playerPOV));
+            this.gameFields.push(new YGOGameFieldObject(this.duel, built.sides[1] as any, 1 - YGOStatic.playerPOV));
+            if (built.update) this.duel.entities.push(new FieldAnimator(built.update));
         }
 
         const selectedCardGeometry = new THREE.PlaneGeometry(7, 15);

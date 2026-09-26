@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 //@ts-ignore
 import { GLTF, GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
+import { PostFx, PostFxOptions } from './render/post-fx';
 //@ts-ignore
 import { Font, FontLoader } from 'three/addons/loaders/FontLoader.js';
 import { EventBus } from '../scripts/event-bus';
@@ -38,6 +39,8 @@ export class YGOPlayerCore {
 
     // globals
     public globalUniforms = globalUniforms;
+    /** Bloom and vignette, when the field asks for them (see render/post-fx.ts). */
+    private postFx: PostFx | null = null;
 
     constructor({ canvas }: { canvas: HTMLCanvasElement }) {
         this.events = new EventBus();
@@ -82,6 +85,7 @@ export class YGOPlayerCore {
         this.camera.aspect = window.innerWidth / window.innerHeight;
         this.camera.updateProjectionMatrix();
         this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.postFx?.setSize(window.innerWidth, window.innerHeight);
         this.render();
         this.updateCamera();
         this.events.dispatch("resize");
@@ -93,6 +97,12 @@ export class YGOPlayerCore {
         this.deltaTime = this.unscaledDeltaTime * this.timeScale;
         this.previousFrame = now;
         this.globalUniforms.time.value = performance.now() / 1000;
+
+        if (this.postFx) {
+            this.postFx.setOverlay(this.isOverlayEnabled);
+            this.postFx.render();
+            return;
+        }
 
         this.renderer.render(this.scene, this.camera);
 
@@ -125,6 +135,13 @@ export class YGOPlayerCore {
                 this.fonts.set(name, font);
             })
         })
+    }
+
+    /** Turns on the post-processing (a field that asks for bloom). */
+    public enablePostFx(opts: PostFxOptions = {}) {
+        this.postFx?.dispose();
+        this.postFx = new PostFx(this.renderer, this.scene, this.sceneOverlay, this.camera, opts);
+        this.postFx.setSize(window.innerWidth, window.innerHeight);
     }
 
     public enableRenderOverlay() {
@@ -186,6 +203,8 @@ export class YGOPlayerCore {
         // Stop this duel's render loop — a new duel on the same canvas gets its
         // own renderer/loop, so leaving this one running leaks a frame per rematch.
         this.renderer.setAnimationLoop(null);
+        this.postFx?.dispose();
+        this.postFx = null;
         this.eventsController.abort();
         this.destroyScene(this.scene);
         this.destroyScene(this.sceneOverlay);
