@@ -1,0 +1,43 @@
+.ygo-player-core .ygo-chain-links {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 6;
+}
+
+.ygo-player-core .ygo-chain-link-badge {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 800;
+  color: #fff;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.55);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+  font-variant-numeric: tabular-nums;
+  animation: ygo-chain-link-in 220ms ease-out;
+}
+
+.ygo-player-core .ygo-chain-link-badge.ygo-player-0 { background: #2f5bff; }
+.ygo-player-core .ygo-chain-link-badge.ygo-player-1 { background: #e0342f; }
+
+/* The newest link — what a response answers. */
+.ygo-player-core .ygo-chain-link-badge.ygo-chain-link-top {
+  border-color: #ffc93c;
+  box-shadow: 0 0 0 3px rgba(255, 201, 60, 0.45), 0 2px 8px rgba(0, 0, 0, 0.55);
+}
+
+@keyframes ygo-chain-link-in {
+  from { transform: translate(-50%, -50%) scale(0.4); opacity: 0; }
+  to { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ygo-player-core .ygo-chain-link-badge { animation: none; }
+}

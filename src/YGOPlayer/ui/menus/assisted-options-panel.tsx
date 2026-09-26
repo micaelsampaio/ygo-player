@@ -11,9 +11,9 @@ import { getGameZone } from "../../scripts/ygo-utils";
 import { EnginePlace, pickZone, promptKey, samePlace, ZoneHighlight, zoneHighlights } from "../assist-zones";
 import { assistErrorMessage, assistUnavailableReason, phaseLabel } from "../duel-status";
 import { useDuelTurnState } from "../use-duel-turn-state";
-import { assistPanelTitle, mustStayOpen, opponentWaitingText } from "../assist-respond";
+import { assistPanelTitle, mustStayOpen, opponentWaitingText, passLabel, respondSectionTitle } from "../assist-respond";
 import { clampPanelPosition } from "./panel-position";
-import { useStopAtEveryWindow } from "./duel-preferences";
+import { useChainStops, type ChainStops } from "./duel-preferences";
 import { ndcToContainer, positionGlyph, shortPositionLabel } from "../field-overlay";
 import {
   CardRefData, PromptData, candidateWhere, isSelectionValid, locationLabel, optionLabel,
@@ -46,7 +46,7 @@ type AssistQueryResult =
   | { available: true; pending: "idle"; options: IdleOptions; nextPhase?: string | null }
   | { available: true; pending: "battle"; options: BattleOptions; nextPhase?: string | null }
   /** The human's own chain window: chain a card, or don't respond. */
-  | { available: true; pending: "chain"; respond: { activatable: CardRefData[]; canPass: boolean; forced: boolean } }
+  | { available: true; pending: "chain"; respond: { activatable: CardRefData[]; canPass: boolean; forced: boolean; chainLength?: number; chain?: CardRefData[] } }
   /** An effect's follow-up choice the engine is holding for the human. */
   | { available: true; pending: "prompt"; prompt: PromptData };
 
@@ -108,14 +108,21 @@ function phaseRow(label: string, phase: string): OptionRow {
   return { key: `phase:${phase}`, label, commandType: "Duel Phase", data: { phase }, count: 1, highlight: false };
 }
 
+/** The name of the card whose effect is on top of the chain (the one a response answers). */
+function chainTopName(duel: YGODuel, chain: CardRefData[] | undefined): string | undefined {
+  const top = chain?.[chain.length - 1];
+  return top ? duel.ygo.state.getCardData(top.code)?.name : undefined;
+}
+
 function sectionsFor(duel: YGODuel, result: AssistQueryResult): Section[] {
   if (!result.available || result.pending === "prompt") return [];
   if (result.pending === "chain") {
     const rows = cardRows(duel, result.respond.activatable, "Activate", "id", true);
+    const { chainLength } = result.respond;
     if (result.respond.canPass) {
-      rows.push({ key: "pass", label: "Don't respond", commandType: "Pass", data: {}, count: 1, highlight: false });
+      rows.push({ key: "pass", label: passLabel(chainLength), commandType: "Pass", data: {}, count: 1, highlight: false });
     }
-    return [{ title: "Respond", rows }];
+    return [{ title: respondSectionTitle(chainLength, chainTopName(duel, result.respond.chain)), rows }];
   }
   const nextPhaseSection: Section = {
     title: "Next Phase",
@@ -781,7 +788,7 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
   const turnState = useDuelTurnState(duel);
 
   const enabled = !!duel.assist && duel.client.type === YGOClientType.PLAYER && !!duel.ygo?.options?.assistedMode;
-  const [stopAtEveryWindow, setStopAtEveryWindow] = useStopAtEveryWindow(duel, enabled);
+  const [chainStops, setChainStops, chainStopsHeld] = useChainStops(duel, enabled);
 
   const refresh = () => {
     if (!enabled || !duel.assist) return;
@@ -866,12 +873,16 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
 
   const busy = pendingKey !== null;
   const activePending = isActive ? result.pending : null;
-  const decision = { pending: activePending, isLocalTurn: turnState.isLocalTurn };
+  const chainLength = isActive && result.pending === "chain" ? result.respond.chainLength : undefined;
+  const respondingTo = isActive && result.pending === "chain" ? chainTopName(duel, result.respond.chain) : undefined;
+  const decision = { pending: activePending, isLocalTurn: turnState.isLocalTurn, chainLength };
   // A held prompt is the one thing the engine is waiting on — keep it on
   // screen even when the panel is collapsed. So is a chain window during the
   // opponent's turn: in a bot duel its turn is paused until you answer.
   const collapsed = placement.collapsed && !mustStayOpen(decision);
-  const waitingText = opponentWaitingText({ ...decision, botDuel: !!(duel.ygo?.options as { botDuel?: unknown } | undefined)?.botDuel });
+  // The server says whether this is a bot duel (older servers: the duel's own option).
+  const botDuel = !!(result as { botDuel?: boolean }).botDuel || !!(duel.ygo?.options as { botDuel?: unknown } | undefined)?.botDuel;
+  const waitingText = opponentWaitingText({ ...decision, botDuel, respondingTo });
   const statusText = isActive
     ? (sections.length === 0 && !prompt ? "No options right now." : null)
     : assistUnavailableReason({
@@ -1008,7 +1019,7 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
       {!collapsed && sections.map((section) => (
         <div key={section.title} style={{ display: "flex", flexDirection: "column", gap: 4 }}>
           <div style={{ fontSize: 11, fontWeight: 600, opacity: 0.55, display: "flex", alignItems: "center", gap: 5, marginTop: 2 }}>
-            {(section.title === "Activate" || section.title === "Respond") && (
+            {(section.title === "Activate" || section.rows.some((r) => r.commandType === "Activate" && r.highlight)) && (
               <span style={{ width: 7, height: 7, borderRadius: "50%", background: HIGHLIGHT_CSS, display: "inline-block" }} />
             )}
             {section.title}
@@ -1039,19 +1050,74 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
           ))}
         </div>
       ))}
-      {!collapsed && (
-        <label
-          title="Stop at each of your chain windows, even when you have nothing to chain (the bot waits for you)"
-          style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, opacity: 0.7, marginTop: 2, cursor: "pointer" }}
+      {!collapsed && <ChainStopsControl value={chainStops} held={chainStopsHeld} onChange={setChainStops} />}
+    </div>
+  );
+}
+
+const CHAIN_STOP_CHOICES: ReadonlyArray<{ value: ChainStops; label: string; hint: string }> = [
+  { value: "auto", label: "Auto", hint: "Pauses when you have a card you can chain." },
+  { value: "always", label: "Always", hint: "Pauses at every chance to respond, even with nothing to chain, so your speed gives nothing away." },
+  { value: "off", label: "Off", hint: "Never pauses unless a chain is forced. Faster, but your hand traps and set cards stay unused." },
+];
+
+/**
+ * "Chain stops": which of your chain windows pause for you — Auto, Always or
+ * Off, as in Master Duel. Holding OK shows here as Off (`held`), for as long as it lasts. A labelled segmented switch at the foot of the
+ * panel, split from the options by a hairline, with a line on what the
+ * current choice does.
+ */
+function ChainStopsControl({ value, held, onChange }: { value: ChainStops; held: boolean; onChange: (value: ChainStops) => void }) {
+  const refs = useRef<Array<HTMLButtonElement | null>>([]);
+  const current = CHAIN_STOP_CHOICES.find((c) => c.value === value) ?? CHAIN_STOP_CHOICES[0];
+  const pick = (i: number) => {
+    const n = CHAIN_STOP_CHOICES.length;
+    const index = (i + n) % n;
+    onChange(CHAIN_STOP_CHOICES[index].value);
+    refs.current[index]?.focus();
+  };
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 5, marginTop: 4, paddingTop: 8, borderTop: "1px solid rgba(255, 255, 255, 0.08)" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+        <span id="ygo-chain-stops-label" style={{ fontSize: 12, fontWeight: 600 }}>Chain stops</span>
+        <div
+          role="radiogroup"
+          aria-labelledby="ygo-chain-stops-label"
+          aria-describedby="ygo-chain-stops-hint"
+          style={{ display: "flex", padding: 2, borderRadius: 6, background: "rgba(0, 0, 0, 0.35)", border: "1px solid rgba(255, 255, 255, 0.1)" }}
         >
-          <input
-            type="checkbox"
-            checked={stopAtEveryWindow}
-            onChange={(e) => setStopAtEveryWindow(e.target.checked)}
-          />
-          Stop at every window
-        </label>
-      )}
+          {CHAIN_STOP_CHOICES.map((c, i) => {
+            const active = c.value === value;
+            return (
+              <button
+                key={c.value}
+                ref={(el) => { refs.current[i] = el; }}
+                type="button"
+                role="radio"
+                aria-checked={active}
+                tabIndex={active ? 0 : -1}
+                onClick={() => onChange(c.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "ArrowRight" || e.key === "ArrowDown") { e.preventDefault(); pick(i + 1); }
+                  if (e.key === "ArrowLeft" || e.key === "ArrowUp") { e.preventDefault(); pick(i - 1); }
+                }}
+                style={{
+                  border: "none", cursor: "pointer", borderRadius: 4, padding: "3px 8px",
+                  fontSize: 12, fontWeight: 600, lineHeight: 1.3,
+                  color: active ? "#111" : "inherit",
+                  background: active ? HIGHLIGHT_CSS : "transparent",
+                  opacity: active ? 1 : 0.7,
+                }}
+              >
+                {c.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+      <div id="ygo-chain-stops-hint" style={{ fontSize: 11, lineHeight: 1.35, opacity: 0.6 }}>
+        {held ? "Off while OK is held: ends at the next turn or your next move." : current.hint}
+      </div>
     </div>
   );
 }

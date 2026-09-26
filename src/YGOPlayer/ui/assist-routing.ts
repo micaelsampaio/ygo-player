@@ -62,3 +62,33 @@ export function findAssistOption(result: any, move: AssistMove, code: number, zo
 }
 
 export const ASSIST_FREE_FORM_NOTICE = "Not available in Assisted Mode right now — done as a free-form move.";
+
+export type AssistRoute =
+  | { kind: "choose"; ref: CardRefData }
+  /** An open chain window of theirs (nothing on the chain yet) is in the way: press Continue first, then look again. */
+  | { kind: "continueFirst" }
+  /** A chain is being built: the engine accepts only a response or a pass now. */
+  | { kind: "blocked"; message: string }
+  | { kind: "freeForm" };
+
+export const RESPOND_FIRST_NOTICE = "Respond to the chain first: chain a card, or choose Don't respond.";
+
+/**
+ * What a card-menu move does in Assisted Mode, given the assisted options the
+ * panel last saw. A move the engine lists goes through it. At the player's
+ * own open window — the engine asks "activate anything?" after a summon or a
+ * phase change, with no chain yet — a summon or Set isn't listed, but
+ * wanting to make one means "no, carry on": Continue, then the move. With a
+ * chain on the way, a free-form move would only be rejected by the engine.
+ */
+export function assistRouteFor(result: any, move: AssistMove, code: number, zone: string | undefined | null): AssistRoute {
+  const ref = findAssistOption(result, move, code, zone);
+  if (ref) return { kind: "choose", ref };
+  if (result?.available && result.pending === "chain") {
+    const { chainLength, canPass } = result.respond ?? {};
+    if (chainLength === 0 && canPass) return { kind: "continueFirst" };
+    if (chainLength > 0) return { kind: "blocked", message: RESPOND_FIRST_NOTICE };
+  }
+  return { kind: "freeForm" };
+}
+

@@ -12,6 +12,7 @@ import { useDeviceResolutionInfo } from "../scripts/use-device-resolution-info";
 import { LeftMenuPanel } from "./menus/menu-panel/LeftMenuPanel";
 import { YGOStatic } from "../core/YGOStatic";
 import { AssistedOptionsPanel } from "./menus/assisted-options-panel";
+import { ChainLinkBadges } from "./components/chain-links/ChainLinkBadges";
 import { FirstDuelTips } from "./components/first-duel-tips/FirstDuelTips";
 import { PuzzleHUD } from "./puzzle/PuzzleHUD";
 
@@ -154,6 +155,7 @@ export function YGOUiController({ duel }: { duel: YGODuel }) {
         <CardLongPressEffect duel={duel} />
         {/* <RotateYourPhoneModal isPortrait={isPortrait} isMobile={isMobile} /> */}
         <LeftMenuPanel duel={duel} isMobileLayout={isMobileLayout} showMenus={showFloatingMenus} />
+        <ChainLinkBadges duel={duel} />
         <AssistedOptionsPanel duel={duel} isMobileLayout={isMobileLayout} />
         <FirstDuelTips duel={duel} />
         <PuzzleHUD duel={duel} />

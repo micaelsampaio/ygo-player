@@ -6,12 +6,18 @@ import { YGOStatic } from "../../../../core/YGOStatic";
 const LONG_PRESS_MS = 600;
 
 export function PlayerRemoteActionsComponent({ duel }: { duel: YGODuel }) {
-  const [continuousAccept, setContinuousAccept] = useState(duel.continuousAccept);
+  // Lit for a held OK, and in Assisted Mode for Chain stops Off (the same thing, kept on).
+  const isLit = () => duel.continuousAccept || duel.chainStops?.value === "off";
+  const [continuousAccept, setContinuousAccept] = useState(isLit);
+  const [chainStopsOff, setChainStopsOff] = useState(duel.chainStops?.value === "off");
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isLongPress = useRef(false);
 
   useEffect(() => {
-    const handler = () => setContinuousAccept(duel.continuousAccept);
+    const handler = () => {
+      setContinuousAccept(isLit());
+      setChainStopsOff(duel.chainStops?.value === "off");
+    };
     duel.events.on("render-ui", handler);
     return () => duel.events.off("render-ui", handler);
   }, [duel]);
@@ -20,6 +26,11 @@ export function PlayerRemoteActionsComponent({ duel }: { duel: YGODuel }) {
     isLongPress.current = false;
     longPressTimer.current = setTimeout(() => {
       isLongPress.current = true;
+      // Chain stops is Off: holding OK turns it back to Auto.
+      if (duel.chainStops?.value === "off" && !duel.continuousAccept) {
+        duel.chainStops.set("auto");
+        return;
+      }
       duel.continuousAccept = !duel.continuousAccept;
       if (duel.continuousAccept) {
         duel.serverActions.ygo.sendPlayerAction({ action: YGOPlayerRemoteActions.ContinuousOK });
@@ -68,8 +79,8 @@ export function PlayerRemoteActionsComponent({ duel }: { duel: YGODuel }) {
       onPointerCancel={onOkPointerUp}
       onClick={onOkClick}
       aria-pressed={continuousAccept}
-      aria-label={continuousAccept ? "Auto-pass on (hold to turn off)" : "Pass / OK (hold to auto-pass)"}
-      title={continuousAccept ? "Auto-pass is on. Hold to turn it off." : "Pass / OK. Hold to auto-pass every response."}
+      aria-label={chainStopsOff && !duel.continuousAccept ? "Chain stops Off (hold to set Auto)" : continuousAccept ? "Auto-pass on (hold to turn off)" : "Pass / OK (hold to auto-pass)"}
+      title={chainStopsOff && !duel.continuousAccept ? "Chain stops is Off: only forced chains stop. Hold to set it back to Auto." : continuousAccept ? "Auto-pass is on. Hold to turn it off." : "Pass / OK. Hold to auto-pass every response."}
     >
       <div className="ygo-ui-icon ygo-p-action-ok"></div>
     </button>

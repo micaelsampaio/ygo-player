@@ -1,5 +1,6 @@
 import { YGOClientType, YGOCommands, YGOGameUtils, YGOPlayerState } from "ygo-core";
-import { ASSIST_FREE_FORM_NOTICE, AssistMove, findAssistOption } from "../ui/assist-routing";
+import { ASSIST_FREE_FORM_NOTICE, AssistMove, assistRouteFor } from "../ui/assist-routing";
+import type { CardRefData } from "../ui/assist-prompt";
 import { Card, CardPosition, FieldZone } from "ygo-core";
 import { ActionCardSelection } from "../actions/ActionSelectCard";
 import { CardZone } from "../game/CardZone";
@@ -57,18 +58,49 @@ export class YGOGameActions {
    */
   private routeAssisted(move: AssistMove, card: Card, originZone: FieldZone | undefined): boolean {
     const duel = this.duel;
-    if (!duel.assist || duel.client?.type !== YGOClientType.PLAYER || !duel.ygo?.options?.assistedMode) return false;
-    const ref = findAssistOption(duel.assistOptions, move, card.id, originZone);
-    if (!ref) {
+    const assist = duel.assist;
+    if (!assist || duel.client?.type !== YGOClientType.PLAYER || !duel.ygo?.options?.assistedMode) return false;
+    const route = assistRouteFor(duel.assistOptions, move, card.id, originZone);
+    if (route.kind === "freeForm") {
       duel.events.dispatch("assist-notice", { message: ASSIST_FREE_FORM_NOTICE });
       return false;
     }
     this.clearAction();
+    if (route.kind === "blocked") {
+      duel.events.dispatch("assist-notice", { message: route.message });
+      return true;
+    }
+    const choose = (ref: CardRefData) => assist.choose({ commandType: move, data: { id: ref.code, ctrl: ref.ctrl, loc: ref.loc, seq: ref.seq } });
     duel.events.dispatch("assist-choice-start", {});
-    duel.assist.choose({ commandType: move, data: { id: ref.code, ctrl: ref.ctrl, loc: ref.loc, seq: ref.seq } })
+    const done = route.kind === "choose"
+      ? choose(route.ref)
+      // Continue past the open window, then make the move if the engine now lists it.
+      : assist.choose({ commandType: "Pass", data: {} })
+        .then(() => assist.query())
+        .then((next: any) => {
+          duel.assistOptions = next;
+          const again = assistRouteFor(next, move, card.id, originZone);
+          if (again.kind === "choose") return choose(again.ref);
+          return { notices: [`${card.name ?? "That card"} can't do that right now.`] };
+        });
+    done
       .then((res: any) => duel.events.dispatch("assist-choice-done", { notices: res?.notices }))
       .catch((error: any) => duel.events.dispatch("assist-choice-done", { error }));
     return true;
+  }
+
+  /**
+   * Assisted Mode: a Link / Xyz / Synchro / Fusion Summon from the Extra Deck
+   * goes through the engine as that card's Special Summon — it picks the
+   * legal materials and offers only the zones the monster may go to (an
+   * Extra Monster Zone, or a Main Monster Zone a Link Arrow points to). The
+   * free-form path below offers every zone, and while the engine waits on
+   * something else (a chain window) it is rejected outright.
+   */
+  private routeExtraDeckSummon(card: Card): boolean {
+    const index = this.duel.ygo.state.fields[card.originalOwner].extraDeck.findIndex((c: any) => c === card);
+    if (index === -1) return false;
+    return this.routeAssisted("Special Summon", card, YGOGameUtils.createZone("ED", card.originalOwner, index + 1));
   }
 
   //////////////////////// COMMANDS
@@ -227,6 +259,7 @@ export class YGOGameActions {
   }
 
   public linkSummon({ card }: { card: Card }) {
+    if (this.routeExtraDeckSummon(card)) return;
     this.clearAction();
 
     const player = this.duel.serverActions.getActivePlayer();
@@ -288,6 +321,7 @@ export class YGOGameActions {
     card: Card;
     position?: CardPosition;
   }) {
+    if (this.routeExtraDeckSummon(card)) return;
     this.clearAction();
 
     const player = this.duel.serverActions.getActivePlayer();
@@ -350,6 +384,7 @@ export class YGOGameActions {
     card: Card;
     position?: CardPosition;
   }) {
+    if (this.routeExtraDeckSummon(card)) return;
     this.clearAction();
 
     const player = this.duel.serverActions.getActivePlayer();
@@ -412,6 +447,7 @@ export class YGOGameActions {
     card: Card;
     position?: CardPosition;
   }) {
+    if (this.routeExtraDeckSummon(card)) return;
     this.clearAction();
 
     const player = this.duel.serverActions.getActivePlayer();
@@ -472,6 +508,7 @@ export class YGOGameActions {
     card: Card;
     position?: CardPosition;
   }) {
+    if (this.routeExtraDeckSummon(card)) return;
     const player = this.duel.serverActions.getActivePlayer();
 
     this.duel.events.dispatch("toggle-ui-menu", {

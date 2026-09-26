@@ -51,7 +51,8 @@ export const DefaultLogRow = memo(
           <div className="ygo-duel-log-default-row">
             <div className="ygo-text-sm ygo-mb-1 ygo-text-bold">{isFaceDown ? "" : card.name}</div>
             <div className="ygo-flex ygo-gap-2">
-              <div>
+              <div className="ygo-duel-log-card">
+                {log.chainLink ? <span className={`ygo-duel-log-chain-badge ygo-player-${YGOStatic.getPlayerCssIndex(log.player)}`} aria-hidden="true">{log.chainLink}</span> : null}
                 {
                   isFaceDown ? <>
                     <img
@@ -75,6 +76,7 @@ export const DefaultLogRow = memo(
               <div className="ygo-flex-grow-1">
                 <div className="ygo-text-sm ygo-mb-1 ygo-text-bold ygo-text-center">
                   {log.type}
+                  {log.chainLink ? <span className="ygo-duel-log-chain-link"> · Chain Link {log.chainLink}</span> : null}
                 </div>
                 <div className="ygo-flex ygo-gap-2">
                   <div>
@@ -116,9 +118,6 @@ function getZoneData(zone: string | undefined) {
 }
 
 function isDefenseData(zone: CardPosition | undefined, position: CardPosition | undefined) {
-
-  console.log("TCL:: ZONE: ", zone);
-  console.log("TCL:: POSITION: ", position);
 
   if (zone?.startsWith("M") || zone?.startsWith("EMZ")) {
     if (position?.includes("defense") || position?.includes("facedown")) {

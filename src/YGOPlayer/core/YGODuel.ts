@@ -67,6 +67,9 @@ export class YGODuel {
   public globalHotKeysManager: HotKeyManager;
   public isGameActive: boolean;
   public continuousAccept: boolean = false;
+  /** Assisted Mode server duels: the Chain stops setting (ui/menus/duel-preferences.ts),
+   * so the OK button can show and change it. Null elsewhere. */
+  public chainStops: { value: "auto" | "always" | "off"; set(value: "auto" | "always" | "off"): void } | null = null;
   private loadingTask: PromiseTask;
 
   constructor({

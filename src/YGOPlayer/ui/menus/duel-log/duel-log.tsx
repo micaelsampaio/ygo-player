@@ -13,6 +13,7 @@ import { CoinFlipLogRow } from "./coin-flip-log";
 import { DiceRollLogRow } from "./dice-roll-log";
 import { AdmitDefeatLogRow } from "./admit-defeat-log";
 import { ShowHandLogRow } from "./show-hand-log";
+import { ChainResolvedLogRow } from "./chain-resolved-log";
 
 const COMPONENTS = {
   [YGODuelEvents.LogType.DuelTurn]: DuelTurnLogRow,
@@ -25,6 +26,7 @@ const COMPONENTS = {
   [YGODuelEvents.LogType.CoinFlip]: CoinFlipLogRow,
   [YGODuelEvents.LogType.DiceRoll]: DiceRollLogRow,
   [YGODuelEvents.LogType.AdmitDefeat]: AdmitDefeatLogRow,
+  [YGODuelEvents.LogType.ChainResolved]: ChainResolvedLogRow,
   default: DefaultLogRow,
 };
 
