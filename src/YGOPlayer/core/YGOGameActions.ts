@@ -71,7 +71,7 @@ export class YGOGameActions {
       return true;
     }
     const choose = (ref: CardRefData) => assist.choose({ commandType: move, data: { id: ref.code, ctrl: ref.ctrl, loc: ref.loc, seq: ref.seq } });
-    duel.events.dispatch("assist-choice-start", {});
+    duel.events.dispatch("assist-choice-start", { code: card.id });
     const done = route.kind === "choose"
       ? choose(route.ref)
       // Continue past the open window, then make the move if the engine now lists it.

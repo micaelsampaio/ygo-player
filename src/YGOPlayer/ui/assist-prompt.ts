@@ -237,3 +237,19 @@ export function toggleSelection(prompt: PromptData, selected: number[], index: n
   if (selected.length >= (prompt.max ?? 1)) return selected;
   return [...selected, index];
 }
+
+/**
+ * The answer to a held prompt when it has exactly one: a card/Tribute choice
+ * with one candidate that is a complete answer, or a zone choice with one
+ * free zone. Null when there's a real choice (or a yes/no).
+ */
+export function singlePromptAnswer(prompt: PromptData): any | null {
+  if (prompt.kind === "card" || prompt.kind === "tribute") {
+    return (prompt.candidates ?? []).length === 1 && isSelectionValid(prompt, [0]) ? { indices: [0] } : null;
+  }
+  if (prompt.kind === "place" && (prompt.count || 1) === 1) {
+    const zones = freeZones(prompt);
+    return zones.length === 1 ? { player: zones[0].player, loc: zones[0].loc, seq: zones[0].seq } : null;
+  }
+  return null;
+}

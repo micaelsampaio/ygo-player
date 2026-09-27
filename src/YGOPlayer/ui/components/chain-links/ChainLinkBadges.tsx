@@ -1,10 +1,25 @@
 import { useEffect, useRef, useState } from "react";
 import { YGODuel } from "../../../core/YGODuel";
 import { YGOStatic } from "../../../core/YGOStatic";
-import { getZonePosition } from "../../../scripts/ygo-utils";
+import { YGOGameUtils } from "ygo-core";
+import { getGameZone, getZonePosition } from "../../../scripts/ygo-utils";
 import { ndcToContainer } from "../../field-overlay";
-import { chainBadges } from "./chain-links";
+import { ChainBoardView, chainBadges } from "./chain-links";
 import "./style.css";
+
+/** The board as drawn: field slots and the hand from the scene objects (they
+ * lag ygo-core's state until each move has animated), piles from the state
+ * (their cards have no object of their own). */
+function boardView(duel: YGODuel): ChainBoardView {
+  return {
+    fieldCardId: (zone) => getGameZone(duel, YGOGameUtils.getZoneData(zone))?.getCardReference()?.id,
+    handIds: (player) => duel.fields[player]?.hand.cards.map((c) => c.card.id) ?? [],
+    pileIds: (player, pile) => {
+      const field = duel.ygo.state.fields[player];
+      return (pile === "GY" ? field?.graveyard : field?.banishedZone)?.map((c) => c.id) ?? [];
+    },
+  };
+}
 
 interface Placed { key: string; link: number; player: number; top: boolean; stack: number; x: number; y: number; name: string }
 
@@ -12,7 +27,9 @@ interface Placed { key: string; link: number; player: number; top: boolean; stac
  * The chain being built, drawn on the field: a numbered badge on each card
  * with an effect on the chain (Master Duel style), the newest one marked.
  * Only server duels fill ygo-core's chain (their rules engine knows it);
- * elsewhere this draws nothing. Re-projected a few times a second while a
+ * elsewhere this draws nothing. A badge only sits on its card where the
+ * board shows it now: once the card has left (to a pile, banished, shuffled
+ * back), its number goes. Re-projected a few times a second while a
  * chain is open (the camera or the layout can move).
  */
 export function ChainLinkBadges({ duel }: { duel: YGODuel }) {
@@ -23,7 +40,7 @@ export function ChainLinkBadges({ duel }: { duel: YGODuel }) {
     const place = () => {
       const root = ref.current;
       const chain = (duel.ygo?.state as any)?.chain;
-      const badges = chainBadges(chain);
+      const badges = chainBadges(chain, boardView(duel));
       if (!root || badges.length === 0) {
         setPlaced((prev) => (prev.length ? [] : prev));
         return;

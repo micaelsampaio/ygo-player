@@ -62,6 +62,12 @@ export class YGOCommandsController extends YGOComponent {
     );
   }
 
+  /** A command is animating, or more are queued (between two commands the
+   * current one is briefly unset while the next waits on a setTimeout). */
+  isBusy() {
+    return !!this.isLocked() || this.commandsQueue.length > 0;
+  }
+
   getState() {
     return this.state;
   }

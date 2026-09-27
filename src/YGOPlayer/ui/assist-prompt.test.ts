@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  singlePromptAnswer,
   candidateWhere, decodeDescription, freeZones, isSelectionValid, optionLabel, positionChoices,
   promptSubtitle, promptTitle, PromptData, toggleSelection, groupCandidates, toggleGroupSelection, LOC_DECK, LOC_MZONE,
 } from "./assist-prompt";
@@ -157,5 +158,25 @@ describe("grouping identical copies in card prompts", () => {
     sel = toggleGroupSelection(prompt, sel, g); expect(sel).toEqual([]);
     // At the maximum, clicking a row takes its copies back out.
     expect(toggleGroupSelection({ ...prompt, max: 2 }, [0, 1], g)).toEqual([0]);
+  });
+});
+
+describe("singlePromptAnswer", () => {
+  const cand = (code: number) => ({ code, ctrl: 0, loc: 0x01, seq: 0, pos: 0 });
+  const base = { player: 0, msg: 15 } as const;
+
+  it("answers a card choice with one candidate", () => {
+    expect(singlePromptAnswer({ ...base, kind: "card", min: 1, max: 1, candidates: [cand(1)] } as any)).toEqual({ indices: [0] });
+    expect(singlePromptAnswer({ ...base, kind: "card", min: 1, max: 1, candidates: [cand(1), cand(2)] } as any)).toBeNull();
+    // Two cards needed but only one there: not a complete answer.
+    expect(singlePromptAnswer({ ...base, kind: "card", min: 2, max: 2, candidates: [cand(1)] } as any)).toBeNull();
+  });
+
+  it("answers a zone choice with one free zone, never a yes/no", () => {
+    // Every zone blocked but own Monster Zone 3 (bit 2).
+    const flag = (0xffffffff & ~(1 << 2)) >>> 0;
+    expect(singlePromptAnswer({ ...base, kind: "place", count: 1, flag } as any)).toEqual({ player: 0, loc: 0x04, seq: 2 });
+    expect(singlePromptAnswer({ ...base, kind: "place", count: 1, flag: 0 } as any)).toBeNull();
+    expect(singlePromptAnswer({ ...base, kind: "yesNo" } as any)).toBeNull();
   });
 });

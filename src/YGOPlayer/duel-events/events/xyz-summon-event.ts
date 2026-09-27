@@ -84,7 +84,8 @@ export class XYZSummonEventHandler extends YGOCommandHandler {
           material: modal.material,
           opacity: 0,
           duration: 0.15,
-        })
+        }),
+        new CallbackTransition(() => duel.core.scene.remove(modal)),
       )
     );
 

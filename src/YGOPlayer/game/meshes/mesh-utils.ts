@@ -31,6 +31,9 @@ export function GameModalOverlayMesh() {
         color: 0x000000,
         transparent: true,
         opacity: 0.8,
+        // A dimmer over everything: it must not write depth, or whatever the
+        // field draws after it (the Coliseum's fire) fails the depth test.
+        depthWrite: false,
     });
 
     const modalPlane = new THREE.Mesh(modalGeometry, modalMaterial);

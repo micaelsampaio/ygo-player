@@ -4,7 +4,7 @@ import * as THREE from "three";
 import { YGODuel } from "../../core/YGODuel";
 import { YGOClientType, YGOGameUtils } from "ygo-core";
 import { YGOStatic } from "../../core/YGOStatic";
-import { createHighlightFrame, disposeHighlightFrame, HIGHLIGHT_CSS, placeHighlightFrame } from "../../game/meshes/highlight-frame";
+import { createHighlightFrame, disposeHighlightFrame, HIGHLIGHT_COLOR, HIGHLIGHT_CSS, QUICK_COLOR, QUICK_CSS, placeHighlightFrame } from "../../game/meshes/highlight-frame";
 import { ActionCardSelection } from "../../actions/ActionSelectCard";
 import { CardZone } from "../../game/CardZone";
 import { getGameZone } from "../../scripts/ygo-utils";
@@ -13,13 +13,15 @@ import { assistErrorMessage, assistUnavailableReason, phaseLabel } from "../duel
 import { useDuelTurnState } from "../use-duel-turn-state";
 import { assistPanelTitle, mustStayOpen, opponentWaitingText, passLabel, respondSectionTitle } from "../assist-respond";
 import { clampPanelPosition } from "./panel-position";
+import { AnimationGate, createAnimationGate } from "./animation-gate";
+import { canSummonFromExtraDeck } from "./extra-deck-highlight";
 import { useChainStops, type ChainStops } from "./duel-preferences";
 import { PileChoicePopup } from "./pile-choice/PileChoicePopup";
 import { pileTabs, reopenLabel, usesPilePicker } from "./pile-choice/pile-choice";
 import { ndcToContainer, positionGlyph, shortPositionLabel } from "../field-overlay";
 import {
   CardRefData, PromptData, candidateWhere, isSelectionValid, locationLabel, optionLabel, toggleSelection,
-  groupCandidates, positionChoices, promptSubtitle, promptTitle, toggleGroupSelection, LOC_HAND, LOC_MZONE as LOC_M, LOC_SZONE as LOC_S,
+  groupCandidates, positionChoices, promptSubtitle, promptTitle, singlePromptAnswer, toggleGroupSelection, LOC_HAND, LOC_MZONE as LOC_M, LOC_SZONE as LOC_S,
 } from "../assist-prompt";
 
 interface IdleOptions {
@@ -29,6 +31,8 @@ interface IdleOptions {
   mset: CardRefData[];
   sset: CardRefData[];
   activatable: CardRefData[];
+  /** Spell Speed of each `activatable` entry (older servers: missing). */
+  activatableSpeed?: number[];
   toBattle: boolean;
   toEnd: boolean;
 }
@@ -67,7 +71,18 @@ interface OptionRow {
   count: number;
   /** Only "Activate" rows get the on-card glow — summoning/setting a card you're already holding doesn't need it pointed out. */
   highlight: boolean;
+  /** The glow's kind: "play" (amber) — Spell Speed 1, only on your own open
+   * game state; "quick" (blue) — Spell Speed 2+ or a chain response. */
+  tone?: Tone;
 }
+
+type Tone = "play" | "quick";
+const TONE_CSS: Record<Tone, string> = { play: HIGHLIGHT_CSS, quick: QUICK_CSS };
+const TONE_COLOR: Record<Tone, number> = { play: HIGHLIGHT_COLOR, quick: QUICK_COLOR };
+const TONE_TITLE: Record<Tone, string> = {
+  play: "Amber: usable on your own open game state (Spell Speed 1)",
+  quick: "Blue: a quick effect, Quick-Play, Trap or trigger — usable in response (Spell Speed 2+)",
+};
 
 interface Section {
   title: string;
@@ -77,9 +92,10 @@ interface Section {
 const LOCATION_MZONE = LOC_M;
 const LOCATION_SZONE = LOC_S;
 
-function cardRows(duel: YGODuel, refs: CardRefData[], commandType: string, dataKey: string, activate = false): OptionRow[] {
+function cardRows(duel: YGODuel, refs: CardRefData[], commandType: string, dataKey: string, activate = false, toneOf?: (index: number) => Tone): OptionRow[] {
   const byKey = new Map<string, OptionRow>();
-  for (const ref of refs) {
+  for (const [index, ref] of refs.entries()) {
+    const tone = activate ? (toneOf?.(index) ?? "play") : undefined;
     const where = activate ? locationLabel(ref.loc) : undefined;
     // Activate: the same code in hand vs GY (or two face-up copies on the
     // field) are different choices, so key on the exact location — plus the
@@ -89,7 +105,8 @@ function cardRows(duel: YGODuel, refs: CardRefData[], commandType: string, dataK
       ? `${commandType}:${ref.code}:${ref.ctrl}:${ref.loc}${onField ? `:${ref.seq}` : ""}`
       : `${commandType}:${ref.code}`;
     const existing = byKey.get(key);
-    if (existing) { existing.count++; continue; }
+    // Two effects of one card: the quicker one's glow.
+    if (existing) { existing.count++; if (tone === "quick") existing.tone = "quick"; continue; }
     byKey.set(key, {
       key,
       label: duel.ygo.state.getCardData(ref.code)?.name ?? `#${ref.code}`,
@@ -101,9 +118,16 @@ function cardRows(duel: YGODuel, refs: CardRefData[], commandType: string, dataK
       where,
       count: 1,
       highlight: activate,
+      tone,
     });
   }
   return [...byKey.values()];
+}
+
+/** The row Space takes: Continue / Don't respond, else the only option there is. */
+function spaceRow(sections: Section[]): OptionRow | null {
+  const rows = sections.flatMap((s) => s.rows);
+  return rows.find((r) => r.commandType === "Pass") ?? (rows.length === 1 ? rows[0] : null);
 }
 
 function phaseRow(label: string, phase: string): OptionRow {
@@ -119,7 +143,7 @@ function chainTopName(duel: YGODuel, chain: CardRefData[] | undefined): string |
 function sectionsFor(duel: YGODuel, result: AssistQueryResult): Section[] {
   if (!result.available || result.pending === "prompt") return [];
   if (result.pending === "chain") {
-    const rows = cardRows(duel, result.respond.activatable, "Activate", "id", true);
+    const rows = cardRows(duel, result.respond.activatable, "Activate", "id", true, () => "quick");
     const { chainLength } = result.respond;
     if (result.respond.canPass) {
       rows.push({ key: "pass", label: passLabel(chainLength), commandType: "Pass", data: {}, count: 1, highlight: false });
@@ -134,7 +158,7 @@ function sectionsFor(duel: YGODuel, result: AssistQueryResult): Section[] {
   if (result.pending === "idle") {
     const { options } = result;
     return [
-      { title: "Activate", rows: cardRows(duel, options.activatable, "Activate", "id", true) },
+      { title: "Activate", rows: cardRows(duel, options.activatable, "Activate", "id", true, (i) => ((options.activatableSpeed?.[i] ?? 1) >= 2 ? "quick" : "play")) },
       { title: "Special Summon", rows: cardRows(duel, options.spSummon, "Special Summon", "id") },
       { title: "Normal Summon", rows: cardRows(duel, options.summonable, "Normal Summon", "id") },
       { title: "Set Monster", rows: cardRows(duel, options.mset, "Set Monster", "id") },
@@ -146,31 +170,45 @@ function sectionsFor(duel: YGODuel, result: AssistQueryResult): Section[] {
 
   const options = (result as { options: BattleOptions }).options;
   return [
-    { title: "Activate", rows: cardRows(duel, options.activatable, "Activate", "id", true) },
+    // The Battle Phase only allows Spell Speed 2+.
+    { title: "Activate", rows: cardRows(duel, options.activatable, "Activate", "id", true, () => "quick") },
     { title: "Attack", rows: cardRows(duel, options.attackable, "Attack", "attackingId") },
     nextPhaseSection,
   ].filter((s) => s.rows.length > 0);
 }
 
+/** How long the panel waits after a choice for the moves it caused to start. */
+const CHOICE_SETTLE_MS = 700;
+
 const PULSE_MIN = 0.45;
 const PULSE_MAX = 1;
 const PULSE_PERIOD_MS = 1400;
 
-/** The live 3D object currently showing a card with this code on the
- * viewer's own side — hand or field. GY/banished cards have no individual
- * object, so they aren't highlighted (the panel row's location tag covers them). */
-function findCardObject(duel: YGODuel, playerIndex: number, code: number): THREE.Object3D | null {
+/** The live 3D objects currently showing a card with this code on the
+ * viewer's own side — every copy in the hand or on the field. GY/banished
+ * cards have no individual object, so they aren't highlighted (the panel
+ * row's location tag covers them). */
+function findCardObjects(duel: YGODuel, playerIndex: number, code: number, loc?: number): THREE.Object3D[] {
   const field = duel.fields[playerIndex];
-  if (!field) return null;
-
-  const handCard = field.hand.getCardFromCardId(code);
-  if (handCard) return handCard.gameObject;
-
-  const zones = [...field.monsterZone, ...field.spellTrapZone, field.fieldZone, ...duel.fields[0].extraMonsterZone];
+  if (!field) return [];
+  // The option's own location, when known: a Fabled Lurrie triggering in the
+  // GY must not light up the copy still in the hand.
+  const inHandOk = loc === undefined || (loc & LOC_HAND) !== 0;
+  const onFieldOk = loc === undefined || (loc & (LOC_M | LOC_S)) !== 0;
+  if (!inHandOk && !onFieldOk) return [];
+  // The hand's list can briefly hold a replaced (hidden) object for a card
+  // next to its live one (a re-deal, a hand refresh): frame the ones on
+  // screen, or a frame copies the hidden object's visibility and never shows.
+  const inHand = inHandOk ? field.hand.cards.filter((c) => c.card.id === code) : [];
+  const shown = inHand.filter((c) => c.gameObject.visible);
+  const objects: THREE.Object3D[] = (shown.length ? shown : inHand).map((c) => c.gameObject);
+  const zones = onFieldOk ? [...field.monsterZone, ...field.spellTrapZone, field.fieldZone, ...duel.fields[0].extraMonsterZone] : [];
   for (const zone of zones) {
-    if (zone.getCardReference()?.id === code) return zone.getGameCard()?.gameObject ?? null;
+    if (zone.getCardReference()?.id !== code) continue;
+    const object = zone.getGameCard()?.gameObject;
+    if (object) objects.push(object);
   }
-  return null;
+  return objects;
 }
 
 function disposeFrame(duel: YGODuel, frame: THREE.Mesh) {
@@ -178,9 +216,10 @@ function disposeFrame(duel: YGODuel, frame: THREE.Mesh) {
 }
 
 /** A card to frame on the board: its code, on whose side (a viewer-relative ygo player index). */
-interface HighlightTarget { code: number; side: number }
+/** `loc`: the option's ocgcore location, when known — only a card there is framed. */
+interface HighlightTarget { code: number; side: number; tone?: Tone; loc?: number }
 
-const targetKey = (t: HighlightTarget) => `${t.side}:${t.code}`;
+const targetKey = (t: HighlightTarget) => `${t.side}:${t.code}:${t.tone ?? "play"}:${t.loc ?? "any"}`;
 
 /**
  * Pulsing amber frame around every card with an activatable effect right
@@ -212,20 +251,20 @@ function useCardHighlights(duel: YGODuel, targets: HighlightTarget[], hover: Hig
     let timer: ReturnType<typeof setTimeout>;
     const reconcile = () => {
       const frames = framesRef.current;
-      const want = wantedRef.current;
+      // One frame per copy: two Effect Veilers in the hand are both usable.
+      const desired = new Map<string, { target: THREE.Object3D; tone: Tone }>();
+      for (const [key, t] of wantedRef.current) {
+        findCardObjects(duel, t.side, t.code, t.loc).forEach((target, i) => desired.set(`${key}#${i}`, { target, tone: t.tone ?? "play" }));
+      }
       for (const [key, entry] of frames) {
-        const t = want.get(key);
-        const target = t ? findCardObject(duel, t.side, t.code) : null;
-        if (target !== entry.target) {
+        if (desired.get(key)?.target !== entry.target) {
           disposeFrame(duel, entry.frame);
           frames.delete(key);
         }
       }
-      for (const [key, t] of want) {
+      for (const [key, { target, tone }] of desired) {
         if (frames.has(key)) continue;
-        const target = findCardObject(duel, t.side, t.code);
-        if (!target) continue; // not on the board yet — retried next tick
-        const frame = createHighlightFrame(target, PULSE_MAX);
+        const frame = createHighlightFrame(target, PULSE_MAX, TONE_COLOR[tone]);
         duel.core.scene.add(frame);
         frames.set(key, { frame, target });
       }
@@ -256,13 +295,53 @@ function useCardHighlights(duel: YGODuel, targets: HighlightTarget[], hover: Hig
   }, [duel]);
 }
 
+/**
+ * The viewer's Extra Deck pile gets the same pulsing amber ("play") frame
+ * while something in it can be Special Summoned — its cards have no object
+ * of their own to frame. Clicking the pile still opens it. The frame follows
+ * the pile's top card (it changes as the pile shrinks or grows).
+ */
+function useExtraDeckHighlight(duel: YGODuel, active: boolean) {
+  useEffect(() => {
+    if (!active) return;
+    let entry: { frame: THREE.Mesh; target: THREE.Object3D } | null = null;
+    const drop = () => {
+      if (entry) disposeFrame(duel, entry.frame);
+      entry = null;
+    };
+    let timer: ReturnType<typeof setTimeout>;
+    const tick = () => {
+      const target = duel.fields[YGOStatic.playerIndex]?.extraDeck?.getCardTransform() ?? null;
+      if (entry?.target !== target) {
+        drop();
+        if (target) {
+          entry = { frame: createHighlightFrame(target, PULSE_MAX, TONE_COLOR.play), target };
+          duel.core.scene.add(entry.frame);
+        }
+      }
+      if (entry) {
+        const t = (Date.now() % PULSE_PERIOD_MS) / PULSE_PERIOD_MS;
+        placeHighlightFrame(entry.frame, entry.target);
+        entry.frame.visible = entry.target.visible;
+        (entry.frame.material as THREE.MeshBasicMaterial).opacity = PULSE_MIN + (PULSE_MAX - PULSE_MIN) * ((Math.sin(t * Math.PI * 2) + 1) / 2);
+      }
+      timer = setTimeout(tick, 32);
+    };
+    tick();
+    return () => {
+      clearTimeout(timer);
+      drop();
+    };
+  }, [duel, active]);
+}
+
 /** Only cards that exist as an object on the board can be framed (hand / field). */
 function promptTargets(prompt: PromptData | null): HighlightTarget[] {
   if (!prompt?.candidates) return [];
   const me = YGOStatic.playerIndex;
   return prompt.candidates
     .filter((c) => (c.loc & (LOC_HAND | LOC_M | LOC_S)) !== 0)
-    .map((c) => ({ code: c.code, side: c.ctrl === prompt.player ? me : 1 - me }));
+    .map((c) => ({ code: c.code, side: c.ctrl === prompt.player ? me : 1 - me, loc: c.loc }));
 }
 
 const PLACEMENT_KEY = "ygo-assisted-panel";
@@ -579,7 +658,7 @@ function PlaceChoice({ duel, prompt, busy, pendingKey, respond }: {
  * is about to land (a card summoned from the Extra Deck, GY…). */
 function positionAnchor(duel: YGODuel, code: number | undefined): THREE.Vector3 | null {
   const me = YGOStatic.playerIndex;
-  const card = code !== undefined ? findCardObject(duel, me, code) : null;
+  const card = code !== undefined ? findCardObjects(duel, me, code)[0] ?? null : null;
   if (card) return card.getWorldPosition(new THREE.Vector3());
   const zones = duel.fields[me]?.monsterZone ?? [];
   const middle = zones[Math.floor(zones.length / 2)];
@@ -727,6 +806,26 @@ function PromptView({ duel, prompt, busy, pendingKey, respond, onHover }: {
     setSelected((prev) => toggleSelection(prompt, prev, index));
   };
   useFieldCardSelection(duel, fieldTargets, !busy && !(pilePicker && pickerOpen), pickOnField);
+  // …and candidates in the hand by clicking the card in the hand (they have
+  // the yellow frame): the click picks it instead of opening its menu.
+  const handPickRef = useRef<(player: number, code: number) => boolean>(() => false);
+  handPickRef.current = (player, code) => {
+    if (!cardPrompt || busy || (pilePicker && pickerOpen)) return false;
+    const matches = candidates
+      .map((c, index) => ({ c, index }))
+      .filter(({ c }) => (c.loc & LOC_HAND) !== 0 && c.code === code && (c.ctrl === prompt.player ? me : 1 - me) === player);
+    if (matches.length === 0) return false;
+    // Copies of a card in the hand are the same choice: take one not picked yet.
+    pickOnField((matches.find((m) => !selected.includes(m.index)) ?? matches[0]).index);
+    return true;
+  };
+  useEffect(() => {
+    const pick = (player: number, code: number) => handPickRef.current(player, code);
+    duel.assistHandPick = pick;
+    return () => {
+      if (duel.assistHandPick === pick) duel.assistHandPick = null;
+    };
+  }, [duel]);
 
   let body: ReactNode = null;
   switch (prompt.kind) {
@@ -896,22 +995,55 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
   const enabled = !!duel.assist && duel.client.type === YGOClientType.PLAYER && !!duel.ygo?.options?.assistedMode;
   const [chainStops, setChainStops, chainStopsHeld] = useChainStops(duel, enabled);
 
+  // A new result waits for the running animation (the card being activated,
+  // the bot's spotlight, the moves queued after it) to finish before it
+  // shows — rows, frames and prompts alike. Until then `held` keeps the old
+  // rows disabled and unframed. Released on the next enable-game-actions
+  // (the queue drained), with a poll as the backstop.
+  const [held, setHeld] = useState(false);
+  const gateRef = useRef<AnimationGate<{ result: AssistQueryResult; options: AssistQueryResult | null }> | null>(null);
+  // Right after a choice the server's answer can arrive before the moves it
+  // caused (the bot's response, paced on the server): the board is still
+  // for a moment, then animates. Hold the next options through that gap.
+  const settleUntilRef = useRef(0);
+  const holdAfterChoice = () => { settleUntilRef.current = Date.now() + CHOICE_SETTLE_MS; };
+  if (!gateRef.current) {
+    gateRef.current = createAnimationGate(() => !!duel.commands?.isBusy?.() || Date.now() < settleUntilRef.current, ({ result: next, options }) => {
+      setResult(next);
+      duel.assistOptions = options; // card menus route matching moves through the engine
+      setHeld(false);
+    });
+  }
+  const gate = gateRef.current;
+
+  // Queries still on their way: until they answer, the rows on screen are stale.
+  const inFlightRef = useRef(0);
   const refresh = () => {
     if (!enabled || !duel.assist) return;
     const requestId = ++requestIdRef.current;
+    inFlightRef.current++;
+    // Asked mid-animation (right after a choice): the rows on screen are about to be replaced.
+    if (duel.commands?.isBusy?.()) setHeld(true);
+    const offer = (value: { result: AssistQueryResult; options: AssistQueryResult | null }) => {
+      if (!gate.offer(value)) setHeld(true);
+    };
     duel.assist.query().then((res: AssistQueryResult) => {
       // Card data the server sent for the cards these options name (a Deck
       // card this client never saw), so names and art show.
       const cards = (res as { cards?: unknown[] } | null)?.cards;
       if (Array.isArray(cards) && cards.length) duel.ygo?.state?.registerCardData(cards as any);
       if (requestIdRef.current !== requestId) return; // superseded by a newer query
-      setResult(res);
-      duel.assistOptions = res; // card menus route matching moves through the engine
+      // Card menus route through the engine with the newest options at once
+      // (an offered card activated from its own menu is that response); only
+      // what the panel draws waits for the animation.
+      duel.assistOptions = res;
+      offer({ result: res, options: res });
     }).catch(() => {
       if (requestIdRef.current !== requestId) return;
-      setResult({ available: false });
       duel.assistOptions = null;
+      offer({ result: { available: false }, options: null });
     }).finally(() => {
+      inFlightRef.current--;
       if (requestIdRef.current === requestId) setLoading(false);
     });
   };
@@ -924,11 +1056,16 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
     // clearing on "disable" would flicker the panel (and rebuild every
     // frame) on each one. The re-query on "enable" replaces the result
     // anyway, and a click on a now-stale row is safely rejected server-side.
-    const onEnable = () => refresh();
+    const onEnable = () => { gate.flush(); refresh(); };
     // A card's own menu can make an assisted move too (YGOGameActions.routeAssisted).
-    const onMenuStart = () => { setPendingKey("menu"); setError(null); };
+    const onMenuStart = (payload?: { code?: number }) => {
+      setPendingKey("menu");
+      setError(null);
+      if (payload?.code !== undefined) forgetCarried(payload.code);
+    };
     const onMenuDone = (payload?: { error?: unknown; notices?: string[] }) => {
       setPendingKey(null);
+      holdAfterChoice();
       if (payload?.error) setError(assistErrorMessage(payload.error));
       if (payload?.notices?.length) setNotice(payload.notices.join(" · "));
       refresh();
@@ -953,6 +1090,14 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [duel, enabled]);
 
+  const lastPlayTargetsRef = useRef<{ turn?: number; phase?: string; targets: HighlightTarget[] } | null>(null);
+  // The card just activated: its effect may be spent (once per turn), so it
+  // doesn't keep a carried-over glow.
+  const forgetCarried = (code: number) => {
+    const carried = lastPlayTargetsRef.current;
+    if (carried) carried.targets = carried.targets.filter((t) => t.code !== code);
+  };
+
   // Space = the panel's Continue / Don't respond row (see YGODuel.assistSpaceAction).
   const spaceActionRef = useRef<() => boolean>(() => false);
   useEffect(() => {
@@ -963,6 +1108,16 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
       if (duel.assistSpaceAction === action) duel.assistSpaceAction = null;
     };
   }, [duel, enabled]);
+
+  // Backstop for a held result: an animation that ends without an
+  // enable-game-actions (an undo, a replay jump) still releases it.
+  useEffect(() => {
+    if (!held) return;
+    const timer = setInterval(() => {
+      if (!gate.flush() && !gate.holding && !duel.commands?.isBusy?.() && inFlightRef.current === 0) setHeld(false);
+    }, 250);
+    return () => clearInterval(timer);
+  }, [held, gate, duel]);
 
   useEffect(() => {
     if (!error) return;
@@ -981,18 +1136,32 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
   const prompt = isActive && result.pending === "prompt" ? result.prompt : null;
   const optionCount = sections.reduce((total, section) => total + section.rows.length, 0) + (prompt ? 1 : 0);
   const me = YGOStatic.playerIndex;
-  const highlightTargets: HighlightTarget[] = [
-    ...sections.flatMap((s) => s.rows).filter((r) => r.highlight && r.code !== undefined).map((r) => ({ code: r.code as number, side: me })),
-    ...promptTargets(prompt),
-  ];
+  const rowTargets: HighlightTarget[] = sections.flatMap((s) => s.rows)
+    .filter((r) => r.highlight && r.code !== undefined)
+    .map((r) => ({ code: r.code as number, side: me, tone: r.tone, loc: typeof r.data?.loc === "number" ? r.data.loc : undefined }));
+  // Your own empty chain window (after a card resolved, a summon, a phase
+  // change) lists only what can be chained. The cards you could play on your
+  // open game state are still usable — the card menu continues past the
+  // window first — so their amber glow stays, from this phase's last options.
+  if (isActive && result.pending === "idle") {
+    lastPlayTargetsRef.current = { turn: duel.ygo?.state?.turn, phase: duel.ygo?.state?.phase, targets: rowTargets };
+  }
+  const carried = lastPlayTargetsRef.current;
+  const openWindow = isActive && result.pending === "chain" && result.respond.chainLength === 0 && turnState.isLocalTurn;
+  const carriedTargets = openWindow && carried && carried.turn === duel.ygo?.state?.turn && carried.phase === duel.ygo?.state?.phase
+    ? carried.targets.filter((t) => t.tone !== "quick" && !rowTargets.some((r) => r.code === t.code && r.side === t.side))
+    : [];
+  // Held for a running animation: the old rows stay up, disabled, with no frames.
+  const highlightTargets: HighlightTarget[] = held ? [] : [...rowTargets, ...carriedTargets, ...promptTargets(prompt)];
 
-  useCardHighlights(duel, highlightTargets, isActive ? hover : null);
+  useCardHighlights(duel, highlightTargets, isActive && !held ? hover : null);
+  useExtraDeckHighlight(duel, !held && isActive && result.pending === "idle" && canSummonFromExtraDeck(result.options));
   const panelRef = useRef<HTMLDivElement | null>(null);
   const placement = usePanelPlacement(panelRef, isMobileLayout);
 
   if (!enabled) return null;
 
-  const busy = pendingKey !== null;
+  const busy = pendingKey !== null || held;
   const activePending = isActive ? result.pending : null;
   const chainLength = isActive && result.pending === "chain" ? result.respond.chainLength : undefined;
   const respondingTo = isActive && result.pending === "chain" ? chainTopName(duel, result.respond.chain) : undefined;
@@ -1015,6 +1184,7 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
 
   const send = (key: string, commandType: string, data: any) => {
     if (busy || !duel.assist) return;
+    if (commandType === "Activate" && typeof data?.id === "number") forgetCarried(data.id);
     setPendingKey(key);
     setError(null);
     setHover(null);
@@ -1031,17 +1201,27 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
       })
       .finally(() => {
         setPendingKey(null);
+        holdAfterChoice();
         refresh();
       });
   };
   const choose = (row: OptionRow) => send(row.key, row.commandType, row.data);
+  const spaceTarget = prompt ? null : spaceRow(sections);
   spaceActionRef.current = () => {
     // A focused button already answers Space itself.
     const focused = document.activeElement;
     if (focused instanceof HTMLButtonElement || focused instanceof HTMLSelectElement) return false;
-    const passRow = sections.flatMap((s) => s.rows).find((r) => r.commandType === "Pass");
-    if (!passRow || busy || prompt) return false;
-    choose(passRow);
+    if (busy) return false;
+    if (prompt) {
+      // An effect's choice with exactly one answer (one card, one free zone).
+      const answer = singlePromptAnswer(prompt);
+      if (!answer) return false;
+      respondPrompt("confirm", answer);
+      return true;
+    }
+    const row = spaceRow(sections);
+    if (!row) return false;
+    choose(row);
     return true;
   };
   const respondPrompt = (key: string, data: any) => send(`prompt:${key}`, "Respond Prompt", data);
@@ -1149,9 +1329,9 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
       {!collapsed && sections.map((section) => (
         <div key={section.title} style={{ display: "flex", flexDirection: "column", gap: 4 }}>
           <div style={{ fontSize: 11, fontWeight: 600, opacity: 0.55, display: "flex", alignItems: "center", gap: 5, marginTop: 2 }}>
-            {(section.title === "Activate" || section.rows.some((r) => r.commandType === "Activate" && r.highlight)) && (
-              <span style={{ width: 7, height: 7, borderRadius: "50%", background: HIGHLIGHT_CSS, display: "inline-block" }} />
-            )}
+            {[...new Set(section.rows.filter((r) => r.highlight).map((r) => r.tone ?? "play"))].map((tone) => (
+              <span key={tone} title={TONE_TITLE[tone]} style={{ width: 7, height: 7, borderRadius: "50%", background: TONE_CSS[tone], display: "inline-block" }} />
+            ))}
             {section.title}
           </div>
           {section.rows.map((row) => (
@@ -1161,13 +1341,13 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
               disabled={busy}
               aria-busy={pendingKey === row.key}
               onClick={() => choose(row)}
-              onMouseEnter={() => setHover(row.code !== undefined ? { code: row.code, side: me } : null)}
+              onMouseEnter={() => setHover(row.code !== undefined ? { code: row.code, side: me, tone: row.tone, loc: typeof row.data?.loc === "number" ? row.data.loc : undefined } : null)}
               onMouseLeave={() => setHover(null)}
-              onFocus={() => setHover(row.code !== undefined ? { code: row.code, side: me } : null)}
+              onFocus={() => setHover(row.code !== undefined ? { code: row.code, side: me, tone: row.tone, loc: typeof row.data?.loc === "number" ? row.data.loc : undefined } : null)}
               onBlur={() => setHover(null)}
               style={{
                 display: "flex", alignItems: "center", gap: 6, textAlign: "left", fontWeight: 600, fontSize: 13,
-                ...(row.highlight ? { boxShadow: `inset 3px 0 0 ${HIGHLIGHT_CSS}` } : {}),
+                ...(row.highlight ? { boxShadow: `inset 3px 0 0 ${TONE_CSS[row.tone ?? "play"]}` } : {}),
                 // Keep the chosen row readable while the rest dim out.
                 ...(pendingKey === row.key ? { opacity: 1 } : {}),
               }}
@@ -1176,7 +1356,7 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
               {pendingKey === row.key && <span className="ygo-inline-spinner" aria-hidden="true" />}
               {row.count > 1 && <span style={{ opacity: 0.6, fontSize: 11 }}>×{row.count}</span>}
               {row.where && <span style={{ opacity: 0.55, fontSize: 10, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.04em" }}>{row.where}</span>}
-              {row.commandType === "Pass" && (
+              {row === spaceTarget && (
                 <kbd title="Press Space" style={{ fontFamily: "inherit", fontSize: 10, fontWeight: 600, opacity: 0.6, padding: "1px 5px", borderRadius: 3, border: "1px solid currentColor" }}>Space</kbd>
               )}
             </button>

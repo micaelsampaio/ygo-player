@@ -62,6 +62,10 @@ export class YGODuel {
    * when the panel offers it — returns true when it did. Otherwise Space keeps
    * its replay Play/Pause. Set by the assisted options panel. */
   public assistSpaceAction: (() => boolean) | null = null;
+  /** Assisted Mode: a click on a hand card while an effect asks you to choose
+   * cards picks it when it's one of the choices — returns true when it did
+   * (the card's menu doesn't open). Set by the assisted options panel. */
+  public assistHandPick: ((player: number, code: number) => boolean) | null = null;
   public gameController: GameController;
   public mouseEvents: YGOMouseEvents;
   public tasks: YGOTaskController;

@@ -180,7 +180,8 @@ export class NegateCardHandler extends YGOCommandHandler {
           material: modal.material,
           duration: 0.25,
           opacity: 0,
-        })
+        }),
+        new CallbackTransition(() => duel.core.scene.remove(modal)),
       )
     );
 
