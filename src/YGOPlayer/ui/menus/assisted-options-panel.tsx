@@ -953,6 +953,17 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [duel, enabled]);
 
+  // Space = the panel's Continue / Don't respond row (see YGODuel.assistSpaceAction).
+  const spaceActionRef = useRef<() => boolean>(() => false);
+  useEffect(() => {
+    if (!enabled) return;
+    const action = () => spaceActionRef.current();
+    duel.assistSpaceAction = action;
+    return () => {
+      if (duel.assistSpaceAction === action) duel.assistSpaceAction = null;
+    };
+  }, [duel, enabled]);
+
   useEffect(() => {
     if (!error) return;
     const timer = setTimeout(() => setError(null), ERROR_VISIBLE_MS);
@@ -1024,6 +1035,15 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
       });
   };
   const choose = (row: OptionRow) => send(row.key, row.commandType, row.data);
+  spaceActionRef.current = () => {
+    // A focused button already answers Space itself.
+    const focused = document.activeElement;
+    if (focused instanceof HTMLButtonElement || focused instanceof HTMLSelectElement) return false;
+    const passRow = sections.flatMap((s) => s.rows).find((r) => r.commandType === "Pass");
+    if (!passRow || busy || prompt) return false;
+    choose(passRow);
+    return true;
+  };
   const respondPrompt = (key: string, data: any) => send(`prompt:${key}`, "Respond Prompt", data);
   const promptPendingKey = pendingKey?.startsWith("prompt:") ? pendingKey.slice("prompt:".length) : null;
 
@@ -1156,6 +1176,9 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
               {pendingKey === row.key && <span className="ygo-inline-spinner" aria-hidden="true" />}
               {row.count > 1 && <span style={{ opacity: 0.6, fontSize: 11 }}>×{row.count}</span>}
               {row.where && <span style={{ opacity: 0.55, fontSize: 10, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.04em" }}>{row.where}</span>}
+              {row.commandType === "Pass" && (
+                <kbd title="Press Space" style={{ fontFamily: "inherit", fontSize: 10, fontWeight: 600, opacity: 0.6, padding: "1px 5px", borderRadius: 3, border: "1px solid currentColor" }}>Space</kbd>
+              )}
             </button>
           ))}
         </div>

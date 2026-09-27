@@ -3,7 +3,7 @@ import { Modal } from "../../../components/Modal";
 const shortcuts = [
   { keys: ["Arrow Left"], action: "Previous Duel Event" },
   { keys: ["Arrow Right"], action: "Next Duel Event" },
-  { keys: ["Space"], action: "Play / Pause" },
+  { keys: ["Space"], action: "Play / Pause · Assisted Mode: Continue / Don't respond" },
   { keys: ["Esc"], action: "Open / Close menu" },
   { keys: ["Esc"], action: "Open Settings" },
   { keys: ["C"], action: "Toggle Game Controls" },

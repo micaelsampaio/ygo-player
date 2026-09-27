@@ -58,6 +58,10 @@ export class YGODuel {
   /** The assisted options the panel last received (AssistedOptionsPanel keeps
    * it current) — card menus route a matching move through assist.choose. */
   public assistOptions: any = null;
+  /** Assisted Mode: Space passes your chain window (Continue / Don't respond)
+   * when the panel offers it — returns true when it did. Otherwise Space keeps
+   * its replay Play/Pause. Set by the assisted options panel. */
+  public assistSpaceAction: (() => boolean) | null = null;
   public gameController: GameController;
   public mouseEvents: YGOMouseEvents;
   public tasks: YGOTaskController;
@@ -583,6 +587,7 @@ export class YGODuel {
     });
 
     this.globalHotKeysManager.on("space", () => {
+      if (this.assistSpaceAction?.()) return;
       if (this.commands.isPlaying()) {
         this.serverActions.controls.pause();
       } else {
