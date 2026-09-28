@@ -14,6 +14,7 @@ import { useDuelTurnState } from "../use-duel-turn-state";
 import { assistPanelTitle, mustStayOpen, opponentWaitingText, passLabel, respondSectionTitle } from "../assist-respond";
 import { clampPanelPosition } from "./panel-position";
 import { AnimationGate, createAnimationGate } from "./animation-gate";
+import { extraDeckSummonKind, GROUP_COLLAPSE_AT, groupSpecialSummons } from "./special-summon-groups";
 import { canSummonFromExtraDeck } from "./extra-deck-highlight";
 import { useChainStops, type ChainStops } from "./duel-preferences";
 import { PileChoicePopup } from "./pile-choice/PileChoicePopup";
@@ -92,16 +93,21 @@ interface Section {
 const LOCATION_MZONE = LOC_M;
 const LOCATION_SZONE = LOC_S;
 
-function cardRows(duel: YGODuel, refs: CardRefData[], commandType: string, dataKey: string, activate = false, toneOf?: (index: number) => Tone): OptionRow[] {
+function cardRows(
+  duel: YGODuel, refs: CardRefData[], commandType: string, dataKey: string, activate = false, toneOf?: (index: number) => Tone,
+  // exact: rows per copy location with its engine ref (Activate always is); tag: the row's small label.
+  opts: { exact?: boolean; tag?: (code: number) => string | undefined } = {},
+): OptionRow[] {
   const byKey = new Map<string, OptionRow>();
+  const exact = activate || !!opts.exact;
   for (const [index, ref] of refs.entries()) {
     const tone = activate ? (toneOf?.(index) ?? "play") : undefined;
-    const where = activate ? locationLabel(ref.loc) : undefined;
+    const where = activate ? locationLabel(ref.loc) : opts.tag?.(ref.code);
     // Activate: the same code in hand vs GY (or two face-up copies on the
     // field) are different choices, so key on the exact location — plus the
     // zone for field cards — and send that copy's ref, not just its code.
     const onField = (ref.loc & (LOCATION_MZONE | LOCATION_SZONE)) !== 0;
-    const key = activate
+    const key = exact
       ? `${commandType}:${ref.code}:${ref.ctrl}:${ref.loc}${onField ? `:${ref.seq}` : ""}`
       : `${commandType}:${ref.code}`;
     const existing = byKey.get(key);
@@ -111,7 +117,7 @@ function cardRows(duel: YGODuel, refs: CardRefData[], commandType: string, dataK
       key,
       label: duel.ygo.state.getCardData(ref.code)?.name ?? `#${ref.code}`,
       commandType,
-      data: activate
+      data: exact
         ? { [dataKey]: ref.code, ctrl: ref.ctrl, loc: ref.loc, seq: ref.seq }
         : { [dataKey]: ref.code },
       code: ref.code,
@@ -159,7 +165,14 @@ function sectionsFor(duel: YGODuel, result: AssistQueryResult): Section[] {
     const { options } = result;
     return [
       { title: "Activate", rows: cardRows(duel, options.activatable, "Activate", "id", true, (i) => ((options.activatableSpeed?.[i] ?? 1) >= 2 ? "quick" : "play")) },
-      { title: "Special Summon", rows: cardRows(duel, options.spSummon, "Special Summon", "id") },
+      // By origin (Extra Deck first), each row that exact copy; Extra Deck rows name their summon.
+      ...groupSpecialSummons(options.spSummon).map((g) => ({
+        title: `Special Summon · ${g.label}`,
+        rows: cardRows(duel, g.refs, "Special Summon", "id", false, undefined, {
+          exact: true,
+          tag: g.label === "Extra Deck" ? (code: number) => extraDeckSummonKind(duel.ygo.state.getCardData(code)?.type) : undefined,
+        }),
+      })),
       { title: "Normal Summon", rows: cardRows(duel, options.summonable, "Normal Summon", "id") },
       { title: "Set Monster", rows: cardRows(duel, options.mset, "Set Monster", "id") },
       { title: "Set Spell/Trap", rows: cardRows(duel, options.sset, "Set ST", "id") },
@@ -985,6 +998,13 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
   const [loading, setLoading] = useState(true);
   // The row whose choice is in flight (spinner on it, every row disabled).
   const [pendingKey, setPendingKey] = useState<string | null>(null);
+  // Long groups (a full Extra Deck) fold behind their title; the ones opened, by title.
+  const [openGroups, setOpenGroups] = useState<Set<string>>(() => new Set());
+  const toggleGroup = (title: string) => setOpenGroups((prev) => {
+    const next = new Set(prev);
+    if (next.has(title)) next.delete(title); else next.add(title);
+    return next;
+  });
   const [error, setError] = useState<string | null>(null);
   // Short-lived notice (e.g. a card-menu move the engine doesn't offer right now).
   const [notice, setNotice] = useState<string | null>(null);
@@ -1326,15 +1346,26 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
           onHover={setHover}
         />
       )}
-      {!collapsed && sections.map((section) => (
+      {!collapsed && sections.map((section) => {
+        const foldable = section.rows.length > GROUP_COLLAPSE_AT;
+        const open = !foldable || openGroups.has(section.title);
+        return (
         <div key={section.title} style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-          <div style={{ fontSize: 11, fontWeight: 600, opacity: 0.55, display: "flex", alignItems: "center", gap: 5, marginTop: 2 }}>
+          <div
+            role={foldable ? "button" : undefined}
+            tabIndex={foldable ? 0 : undefined}
+            aria-expanded={foldable ? open : undefined}
+            onClick={foldable ? () => toggleGroup(section.title) : undefined}
+            onKeyDown={foldable ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggleGroup(section.title); } } : undefined}
+            style={{ fontSize: 11, fontWeight: 600, opacity: 0.55, display: "flex", alignItems: "center", gap: 5, marginTop: 2, cursor: foldable ? "pointer" : undefined }}
+          >
             {[...new Set(section.rows.filter((r) => r.highlight).map((r) => r.tone ?? "play"))].map((tone) => (
               <span key={tone} title={TONE_TITLE[tone]} style={{ width: 7, height: 7, borderRadius: "50%", background: TONE_CSS[tone], display: "inline-block" }} />
             ))}
             {section.title}
+            {foldable && <span style={{ marginLeft: "auto", fontWeight: 500 }}>{open ? "▾" : `(${section.rows.length}) ▸`}</span>}
           </div>
-          {section.rows.map((row) => (
+          {open && section.rows.map((row) => (
             <button
               key={row.key}
               className="ygo-card-item"
@@ -1362,7 +1393,8 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
             </button>
           ))}
         </div>
-      ))}
+        );
+      })}
       {!collapsed && <ChainStopsControl value={chainStops} held={chainStopsHeld} onChange={setChainStops} />}
     </div>
   );
