@@ -1,9 +1,10 @@
-import { useCallback, useLayoutEffect, useRef } from "react";
-import { YGOGameUtils } from "ygo-core";
+import { useRef } from "react";
+import { useAnchoredMenu } from "../components/use-anchored-menu";
 import { Card, FieldZone } from "ygo-core";
 import { YGODuel } from "../../core/YGODuel";
 import { UiGameConfig } from "../YGOUiController";
 import { CardMenu } from "../components/CardMenu";
+import { pileMenuActions } from "./pile-card-actions";
 
 export function CardExtraDeckMenu({
   duel,
@@ -22,260 +23,20 @@ export function CardExtraDeckMenu({
   config: UiGameConfig;
 }) {
   const menuRef = useRef<HTMLDivElement>(null);
-  const player = card.originalOwner;
-  const cardIndex = duel.ygo.state.fields[player].extraDeck.findIndex(
-    (c: any) => c === card
-  );
-  const originZone: FieldZone = YGOGameUtils.createZone(
-    "ED",
-    player,
-    cardIndex + 1
-  );
+  const actions = pileMenuActions(duel, card, "ED");
 
-  const closeExtraDeckMenu = () => {
-    duel.events.dispatch("close-ui-menu", { group: "game-overlay", type: "extra-deck" })
-  }
-
-  const linkSummon = useCallback(() => {
-    closeExtraDeckMenu();
-    duel.gameActions.linkSummon({ card });
-  }, [card]);
-
-  const xyzSummonATK = useCallback(() => {
-    closeExtraDeckMenu();
-    duel.gameActions.xyzSummon({ card, position: "faceup-attack" });
-  }, [card]);
-
-  const xyzSummonDEF = useCallback(() => {
-    closeExtraDeckMenu();
-    duel.gameActions.xyzSummon({ card, position: "faceup-defense" });
-  }, [card]);
-
-  const xyzOverlaySummonATK = useCallback(() => {
-    closeExtraDeckMenu();
-    duel.gameActions.xyzOverlaySummon({ card, position: "faceup-attack" });
-  }, [card]);
-
-  const xyzOverlaySummonDEF = useCallback(() => {
-    closeExtraDeckMenu();
-    duel.gameActions.xyzOverlaySummon({ card, position: "faceup-defense" });
-  }, [card]);
-
-  const synchroSummonATK = useCallback(() => {
-    closeExtraDeckMenu();
-    duel.gameActions.synchroSummon({ card, position: "faceup-attack" });
-  }, [card]);
-
-  const synchroSummonDEF = useCallback(() => {
-    closeExtraDeckMenu();
-    duel.gameActions.synchroSummon({ card, position: "faceup-defense" });
-  }, [card]);
-
-  const fusionSummonATK = useCallback(() => {
-    closeExtraDeckMenu();
-    duel.gameActions.fusionSummon({ card, position: "faceup-attack" });
-  }, [card]);
-
-  const fusionSummonDEF = useCallback(() => {
-    closeExtraDeckMenu();
-    duel.gameActions.fusionSummon({ card, position: "faceup-defense" });
-  }, [card]);
-
-  const specialSummonATK = useCallback(() => {
-    closeExtraDeckMenu();
-    duel.gameActions.specialSummon({
-      card,
-      originZone,
-      position: "faceup-attack",
-    });
-  }, [card, originZone]);
-
-  const specialSummonDEF = useCallback(() => {
-    closeExtraDeckMenu();
-    duel.gameActions.specialSummon({
-      card,
-      originZone,
-      position: "faceup-defense",
-    });
-  }, [card, originZone]);
-
-  const revealCard = useCallback(() => {
-    duel.gameActions.revealCard({ card, originZone, });
-  }, [card, originZone]);
-
-  const toGY = useCallback(() => {
-    duel.gameActions.sendToGy({ card, originZone });
-  }, [card, originZone]);
-
-  const banish = useCallback(() => {
-    duel.gameActions.banish({ card, originZone, position: "faceup" });
-  }, [card, originZone]);
-
-  const banishFD = useCallback(() => {
-    duel.gameActions.banish({ card, originZone, position: "facedown" });
-  }, [card, originZone]);
-
-  const attachMaterial = useCallback(() => {
-    closeExtraDeckMenu();
-    duel.gameActions.attachMaterial({ card, originZone });
-  }, [card, originZone]);
-
-  useLayoutEffect(() => {
-    const container = menuRef.current!;
-    const cardRect = htmlCardElement.getBoundingClientRect();
-    const containerRect = container.getBoundingClientRect();
-    const top = Math.max(
-      0,
-      Math.min(window.innerHeight - containerRect.height, cardRect.top)
-    );
-    const left = Math.max(
-      0,
-      Math.min(window.innerWidth - containerRect.width, cardRect.left - containerRect.width)
-    );
-
-    container.style.top = top + "px";
-    container.style.left = left + "px";
-  }, [card, htmlCardElement]);
-
-  const isLink = YGOGameUtils.isLinkMonster(card);
-  const isSynchro = YGOGameUtils.isSynchroMonster(card);
-  const isFusion = YGOGameUtils.isFusionMonster(card);
-  const isXYZ = YGOGameUtils.isXYZMonster(card);
-  const xyzMonstersInFieldCounter = YGOGameUtils.XyzMonstersInFieldsCounter(duel.ygo);
-  const canAttachMaterial = xyzMonstersInFieldCounter > 0;
+  useAnchoredMenu(duel, menuRef, () => ({ kind: "left-of", element: htmlCardElement, event: mouseEvent }), [card, htmlCardElement]);
 
   return (
     <>
       <CardMenu menuRef={menuRef}>
         {config.actions && (
           <>
-            {isLink && (
-              <button
-                className="ygo-card-item"
-                type="button"
-                onClick={linkSummon}
-              >
-                Link Summon
+            {actions.map((action) => (
+              <button key={action.key} type="button" className="ygo-card-item" onClick={action.run}>
+                {action.label}
               </button>
-            )}
-
-            {isSynchro && (
-              <>
-                <button
-                  className="ygo-card-item"
-                  type="button"
-                  onClick={synchroSummonATK}
-                >
-                  Synchro Summon ATK
-                </button>
-                <button
-                  className="ygo-card-item"
-                  type="button"
-                  onClick={synchroSummonDEF}
-                >
-                  Synchro Summon DEF
-                </button>
-              </>
-            )}
-
-            {isFusion && (
-              <>
-                <button
-                  className="ygo-card-item"
-                  type="button"
-                  onClick={fusionSummonATK}
-                >
-                  Fusion Summon ATK
-                </button>
-                <button
-                  className="ygo-card-item"
-                  type="button"
-                  onClick={fusionSummonDEF}
-                >
-                  Fusion Summon DEF
-                </button>
-              </>
-            )}
-
-            {isXYZ && (
-              <>
-                <button
-                  className="ygo-card-item"
-                  type="button"
-                  onClick={xyzSummonATK}
-                >
-                  XYZ Summon ATK
-                </button>
-                <button
-                  className="ygo-card-item"
-                  type="button"
-                  onClick={xyzSummonDEF}
-                >
-                  XYZ Summon DEF
-                </button>
-                <button
-                  className="ygo-card-item"
-                  type="button"
-                  onClick={xyzOverlaySummonATK}
-                >
-                  XYZ Overlay ATK
-                </button>
-                <button
-                  className="ygo-card-item"
-                  type="button"
-                  onClick={xyzOverlaySummonDEF}
-                >
-                  XYZ Overlay DEF
-                </button>
-              </>
-            )}
-
-            {canAttachMaterial && (
-              <button
-                type="button"
-                className="ygo-card-item"
-                onClick={attachMaterial}
-              >
-                Attach Material to XYZ
-              </button>
-            )}
-
-            <button
-              type="button"
-              className="ygo-card-item"
-              onClick={specialSummonATK}
-            >
-              SS ATK
-            </button>
-
-            {!isLink && (
-              <button
-                type="button"
-                className="ygo-card-item"
-                onClick={specialSummonDEF}
-              >
-                SS DEF
-              </button>
-            )}
-
-            <button
-              type="button"
-              className="ygo-card-item"
-              onClick={toGY}
-            >
-              To Grave
-            </button>
-
-            <button type="button" className="ygo-card-item" onClick={banish}>
-              Banish
-            </button>
-
-            <button type="button" className="ygo-card-item" onClick={banishFD}>
-              Banish FD
-            </button>
-
-
-            <button type="button" className="ygo-card-item" onClick={revealCard}>Reveal</button>
+            ))}
           </>
         )}
       </CardMenu>

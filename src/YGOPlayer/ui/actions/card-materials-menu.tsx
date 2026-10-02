@@ -1,4 +1,5 @@
-import { useCallback, useLayoutEffect, useRef } from "react";
+import { useCallback, useRef } from "react";
+import { useAnchoredMenu } from "../components/use-anchored-menu";
 import { Card, FieldZone } from "ygo-core";
 import { YGODuel } from "../../core/YGODuel";
 import { UiGameConfig } from "../YGOUiController";
@@ -10,6 +11,7 @@ export function CardMaterialsMenu({
   originZone,
   material,
   htmlCardElement,
+  mouseEvent,
 }: {
   duel: YGODuel;
   zone: FieldZone;
@@ -24,17 +26,7 @@ export function CardMaterialsMenu({
   const menuRef = useRef<HTMLDivElement>(null);
   const materialIndex = card.materials.findIndex((mat) => mat === material);
 
-  useLayoutEffect(() => {
-    const container = menuRef.current!;
-    const cardRect = htmlCardElement.getBoundingClientRect();
-    const containerRect = container.getBoundingClientRect();
-    const top = Math.min(
-      window.innerHeight - containerRect.height,
-      cardRect.top
-    );
-    container.style.left = cardRect.left - containerRect.width + "px";
-    container.style.top = top + "px";
-  }, [card, htmlCardElement]);
+  useAnchoredMenu(duel, menuRef, () => ({ kind: "left-of", element: htmlCardElement, event: mouseEvent }), [card, htmlCardElement]);
 
   const detachMaterial = useCallback(() => {
     duel.gameActions.detachMaterial({ card, originZone, materialIndex });

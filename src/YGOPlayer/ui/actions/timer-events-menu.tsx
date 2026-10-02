@@ -1,6 +1,6 @@
-import { FormEvent, useCallback, useLayoutEffect, useRef, useState } from "react";
+import { FormEvent, useCallback, useRef, useState } from "react";
+import { useAnchoredMenu } from "../components/use-anchored-menu";
 import { YGODuel } from "../../core/YGODuel";
-import { getTransformFromCamera, } from "../../scripts/ygo-utils";
 import { CardMenu } from "../components/CardMenu";
 import * as THREE from "three";
 import { parseTimeToSeconds } from "./parse-time";
@@ -48,20 +48,7 @@ export function TimerEventsActionsMenu({
     duel.events.dispatch("clear-ui-action");
   }, [countdownRaw]);
 
-  useLayoutEffect(() => {
-    const container = menuRef.current!;
-    const size = container.getBoundingClientRect();
-    const { x, y, width } = getTransformFromCamera(duel, transform);
-
-    const top = Math.max(0, y - size.height);
-    const left = x - size.width / 2 + width / 2;
-
-    const clampedTop = Math.min(top, window.innerHeight - size.height);
-    const clampedLeft = Math.max(0, Math.min(left, window.innerWidth - size.width));
-
-    container.style.top = clampedTop + "px";
-    container.style.left = clampedLeft + "px";
-  }, [transform, countdownOpen, countdownError]);
+  useAnchoredMenu(duel, menuRef, () => ({ kind: "object3d", object: transform }), [transform, countdownOpen, countdownError]);
 
   return (
     <CardMenu key="global-events-actions-menu" menuRef={menuRef}>

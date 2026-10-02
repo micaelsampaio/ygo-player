@@ -1,7 +1,7 @@
 import * as THREE from "three";
-import { useCallback, useLayoutEffect, useRef, useState } from "react";
+import { useAnchoredMenu } from "../components/use-anchored-menu";
+import { useCallback, useRef, useState } from "react";
 import { YGODuel } from "../../core/YGODuel";
-import { getTransformFromCamera, } from "../../scripts/ygo-utils";
 import { CardMenu } from "../components/CardMenu";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { ActionUiMenu } from "../../actions/ActionUiMenu";
@@ -74,20 +74,7 @@ export function GlobalEventsActionsMenu({
     duel.gameActions.flipCoin({ player });
   }, [])
 
-  useLayoutEffect(() => {
-    const container = menuRef.current!;
-    const size = container.getBoundingClientRect();
-    const { x, y, width } = getTransformFromCamera(duel, transform);
-
-    const top = Math.max(0, y - size.height);
-    const left = x - size.width / 2 + width / 2;
-
-    const clampedTop = Math.min(top, window.innerHeight - size.height);
-    const clampedLeft = Math.max(0, Math.min(left, window.innerWidth - size.width));
-
-    container.style.top = clampedTop + "px";
-    container.style.left = clampedLeft + "px";
-  }, [transform]);
+  useAnchoredMenu(duel, menuRef, () => ({ kind: "object3d", object: transform }), [transform]);
 
   const freeMonsterZones = field.monsterZone.filter((zone: any) => !zone).length;
 

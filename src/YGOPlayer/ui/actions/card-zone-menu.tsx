@@ -1,10 +1,8 @@
-import { useCallback, useLayoutEffect, useRef } from "react";
+import { useCallback, useRef } from "react";
+import { useAnchoredMenu } from "../components/use-anchored-menu";
 import { YGOGameUtils } from "ygo-core";
 import { Card, FieldZone } from "ygo-core";
 import { YGODuel } from "../../core/YGODuel";
-import {
-  getTransformFromCamera,
-} from "../../scripts/ygo-utils";
 import { CardMenu, CardMenuSection } from "../components/CardMenu";
 import { GameCard } from "../../game/GameCard";
 import { ActionButton, YGOIcon } from "../components/ActionButton";
@@ -122,17 +120,7 @@ export function CardZoneMenu({
     duel.gameActions.negateCard({ card, originZone: zone });
   }, [card, zone]);
 
-  useLayoutEffect(() => {
-    const container = menuRef.current!;
-    const size = container.getBoundingClientRect();
-    const { x, y, width } = getTransformFromCamera(duel, gameCard.gameObject);
-
-    const top = Math.min(Math.max(y - size.height, 0), window.innerHeight - size.height);
-    const left = Math.min(Math.max(x - size.width / 2 + width / 2, 0), window.innerWidth - size.width);
-
-    container.style.top = top + "px";
-    container.style.left = left + "px";
-  }, [card]);
+  useAnchoredMenu(duel, menuRef, () => ({ kind: "object3d", object: gameCard.gameObject }), [card]);
 
   const zoneData = YGOGameUtils.getZoneData(zone);
   const field = duel.ygo.state.fields[player];

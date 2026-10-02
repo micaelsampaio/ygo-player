@@ -1,7 +1,7 @@
-import { useCallback, useLayoutEffect, useRef } from "react";
+import { useCallback, useRef } from "react";
+import { useAnchoredMenu } from "../components/use-anchored-menu";
 import { YGODuel } from "../../core/YGODuel";
 import { CardMenu } from "../components/CardMenu";
-import { getTransformFromCamera } from "../../scripts/ygo-utils";
 import { ExtraDeck } from "../../game/ExtraDeck";
 import { YGOGameUtils } from "ygo-core";
 
@@ -50,20 +50,7 @@ export function ExtraDeckPileMenu({
     duel.gameActions.banishMultiple({ cards: [{ card, zone }], position: "faceup" });
   }, [player]);
 
-  useLayoutEffect(() => {
-    const container = menuRef.current!;
-    const size = container.getBoundingClientRect();
-    const { x, y, width } = getTransformFromCamera(duel, extraDeck.gameObject);
-
-    const top = Math.max(0, y - size.height);
-    const left = x - size.width / 2 + width / 2;
-
-    const clampedTop = Math.min(top, window.innerHeight - size.height);
-    const clampedLeft = Math.max(0, Math.min(left, window.innerWidth - size.width));
-
-    container.style.top = clampedTop + "px";
-    container.style.left = clampedLeft + "px";
-  }, [extraDeck]);
+  useAnchoredMenu(duel, menuRef, () => ({ kind: "object3d", object: extraDeck.gameObject }), [extraDeck]);
 
   const isEmpty = field.extraDeck.length === 0;
 

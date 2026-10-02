@@ -98,9 +98,141 @@ export class YGOGameActions {
    * something else (a chain window) it is rejected outright.
    */
   private routeExtraDeckSummon(card: Card): boolean {
-    const index = this.duel.ygo.state.fields[card.originalOwner].extraDeck.findIndex((c: any) => c === card);
+    const index = this.extraDeckIndex(card);
     if (index === -1) return false;
     return this.routeAssisted("Special Summon", card, YGOGameUtils.createZone("ED", card.originalOwner, index + 1));
+  }
+
+  private extraDeckIndex(card: Card): number {
+    return this.duel.ygo.state.fields[card.originalOwner].extraDeck.findIndex((c: any) => c === card);
+  }
+
+  /** The Extra Deck zone `card` is summoned from (ED-n, 1-based). */
+  private edOriginZone(card: Card): FieldZone {
+    return YGOGameUtils.createZone("ED", card.originalOwner, this.extraDeckIndex(card) + 1);
+  }
+
+  /**
+   * Second step of every material summon: offer the owner's free zones of
+   * `zoneTypes` plus the zones the materials free up, then exec the command
+   * built for the picked zone and clear the UI action.
+   */
+  private pickSummonZone({
+    card,
+    zoneTypes,
+    freedZones,
+    showConfirm,
+    build,
+  }: {
+    card: Card;
+    zoneTypes: ("M" | "EMZ")[];
+    freedZones: CardZone[];
+    showConfirm?: boolean;
+    build: (zone: FieldZone) => any;
+  }) {
+    const zonesToSummon = getCardZones(this.duel, [card.originalOwner], zoneTypes);
+    freedZones.forEach((z) => zonesToSummon.push(z));
+
+    this.cardSelection.startSelection({
+      zones: zonesToSummon,
+      selectionType: "zone",
+      ...(showConfirm === undefined ? {} : { showConfirm }),
+      onSelectionCompleted: (cardZone: CardZone) => {
+        this.duel.execCommand(build(cardZone.zone));
+        this.clearAction();
+      },
+    });
+  }
+
+  /**
+   * Link / Xyz / Xyz overlay / Synchro Summon from the Extra Deck: pick
+   * materials among the owner's monsters that pass `materialFilter`, then a
+   * Main or Extra Monster Zone (the freed material zones included).
+   */
+  private materialSummon({
+    card,
+    materialFilter,
+    buildCommand,
+  }: {
+    card: Card;
+    materialFilter?: (material: Card) => boolean;
+    buildCommand: (data: {
+      player: number;
+      id: number;
+      materials: { id: number; zone: FieldZone }[];
+      originZone: FieldZone;
+      zone: FieldZone;
+    }) => any;
+  }) {
+    if (this.routeExtraDeckSummon(card)) return;
+    this.clearAction();
+
+    const player = this.duel.serverActions.getActivePlayer();
+    const originZone = this.edOriginZone(card);
+    const monsters = getMonstersZones(this.duel, [card.originalOwner]);
+    const zones = materialFilter ? monsters.filter((zone) => materialFilter(zone.getCardReference()!)) : monsters;
+
+    this.cardSelection.startMultipleSelection({
+      zones,
+      selectionType: "card",
+      onSelectionCompleted: (cardZones: CardZone[]) => {
+        const materials = cardZones.map((cardZone) => ({
+          id: cardZone.getCardReference()!.id,
+          zone: cardZone.zone,
+        }));
+
+        this.pickSummonZone({
+          card,
+          zoneTypes: ["M", "EMZ"],
+          freedZones: cardZones,
+          showConfirm: false,
+          build: (zone) => buildCommand({ player, id: card.id, materials, originZone, zone }),
+        });
+      },
+    });
+  }
+
+  /**
+   * Clear the pending UI action, have the player pick one of `getZones()`,
+   * then exec the command `build` makes for that zone.
+   */
+  private selectZoneThen(
+    getZones: () => CardZone[],
+    build: (zone: FieldZone, player: number) => any,
+    { skipIfNoZones = false }: { skipIfNoZones?: boolean } = {}
+  ) {
+    this.clearAction();
+    const player = this.duel.serverActions.getActivePlayer();
+    const zones = getZones();
+    if (skipIfNoZones && zones.length === 0) return;
+
+    this.cardSelection.startSelection({
+      zones,
+      selectionType: "zone",
+      onSelectionCompleted: (cardZone: CardZone) => {
+        this.duel.execCommand(build(cardZone.zone, player));
+      },
+    });
+  }
+
+  /**
+   * One-shot command on `card` ({ player, id, ...extra }). `clear` says
+   * whether the pending UI action is cleared first: banish, flip,
+   * changeBattlePosition, toDeck and disapear leave it as is.
+   */
+  private execOnCard(
+    CommandClass: new (data: any) => any,
+    { card, player, ...extra }: { card: Card; player?: number; [key: string]: any },
+    { clear = true }: { clear?: boolean } = {}
+  ) {
+    if (clear) this.clearAction();
+    this.duel.execCommand(
+      new CommandClass({
+        player: player ?? this.duel.serverActions.getActivePlayer(),
+        id: card.id,
+        ...extra,
+      })
+    );
   }
 
   //////////////////////// COMMANDS
@@ -113,25 +245,10 @@ export class YGOGameActions {
     originZone: FieldZone;
   }) {
     if (this.routeAssisted("Normal Summon", card, originZone)) return;
-    this.clearAction();
-
-    const player = this.duel.serverActions.getActivePlayer();
-    const zones = getCardZones(this.duel, [card.originalOwner], ["M"]);
-
-    this.cardSelection.startSelection({
-      zones,
-      selectionType: "zone",
-      onSelectionCompleted: (cardZone: any) => {
-        this.duel.execCommand(
-          new YGOCommands.NormalSummonCommand({
-            player,
-            id: card.id,
-            originZone,
-            zone: cardZone.zone,
-          })
-        );
-      },
-    });
+    this.selectZoneThen(
+      () => getCardZones(this.duel, [card.originalOwner], ["M"]),
+      (zone, player) => new YGOCommands.NormalSummonCommand({ player, id: card.id, originZone, zone })
+    );
   }
 
   public setSummon({
@@ -142,25 +259,10 @@ export class YGOGameActions {
     originZone: FieldZone;
   }) {
     if (this.routeAssisted("Set Monster", card, originZone)) return;
-    this.clearAction();
-
-    const player = this.duel.serverActions.getActivePlayer();
-    const zones = getCardZones(this.duel, [card.originalOwner], ["M"]);
-
-    this.cardSelection.startSelection({
-      zones,
-      selectionType: "zone",
-      onSelectionCompleted: (cardZone: any) => {
-        this.duel.execCommand(
-          new YGOCommands.SetMonsterCommand({
-            player,
-            id: card.id,
-            originZone,
-            zone: cardZone.zone,
-          })
-        );
-      },
-    });
+    this.selectZoneThen(
+      () => getCardZones(this.duel, [card.originalOwner], ["M"]),
+      (zone, player) => new YGOCommands.SetMonsterCommand({ player, id: card.id, originZone, zone })
+    );
   }
 
   public specialSummon({
@@ -173,33 +275,18 @@ export class YGOGameActions {
     position?: CardPosition;
   }) {
     if (this.routeAssisted("Special Summon", card, originZone)) return;
-    this.clearAction();
-
-    const player = this.duel.serverActions.getActivePlayer();
-    // Allow selecting Extra Monster Zones only when origin is actually Extra Deck
-    const zoneTypes: ("M" | "S" | "F" | "EMZ")[] = ["M"];
-    const zoneData = originZone ? YGOGameUtils.getZoneData(originZone as any) : null;
-    if (zoneData && zoneData.zone === "ED") {
-      zoneTypes.push("EMZ");
-    }
-
-    const zones = getCardZones(this.duel, [card.originalOwner], zoneTypes);
-
-    this.cardSelection.startSelection({
-      zones,
-      selectionType: "zone",
-      onSelectionCompleted: (cardZone: any) => {
-        this.duel.execCommand(
-          new YGOCommands.SpecialSummonCommand({
-            player,
-            id: card.id,
-            originZone,
-            zone: cardZone.zone,
-            position,
-          })
-        );
+    this.selectZoneThen(
+      () => {
+        // Allow selecting Extra Monster Zones only when origin is actually Extra Deck
+        const zoneTypes: ("M" | "S" | "F" | "EMZ")[] = ["M"];
+        const zoneData = originZone ? YGOGameUtils.getZoneData(originZone as any) : null;
+        if (zoneData && zoneData.zone === "ED") {
+          zoneTypes.push("EMZ");
+        }
+        return getCardZones(this.duel, [card.originalOwner], zoneTypes);
       },
-    });
+      (zone, player) => new YGOCommands.SpecialSummonCommand({ player, id: card.id, originZone, zone, position })
+    );
   }
 
   public tributeSummon({
@@ -222,282 +309,50 @@ export class YGOGameActions {
       zones,
       selectionType: "card",
       onSelectionCompleted: (cardZones: CardZone[]) => {
-        const tributes = cardZones.map((cardZone) => {
-          return {
-            id: cardZone.getCardReference()!.id,
-            zone: cardZone.zone,
-          };
-        });
+        const tributes = cardZones.map((cardZone) => ({
+          id: cardZone.getCardReference()!.id,
+          zone: cardZone.zone,
+        }));
 
-        const zonesToSummon = getCardZones(
-          this.duel,
-          [card.originalOwner],
-          ["M"]
-        );
-        cardZones.forEach((z) => zonesToSummon.push(z));
-
-        this.cardSelection.startSelection({
-          zones: zonesToSummon,
-          selectionType: "zone",
-          onSelectionCompleted: (cardZone: any) => {
-            this.duel.execCommand(
-              new YGOCommands.TributeSummonCommand({
-                player,
-                id: card.id,
-                tributes,
-                originZone,
-                zone: cardZone.zone,
-                position,
-              })
-            );
-
-            this.clearAction();
-          },
+        this.pickSummonZone({
+          card,
+          zoneTypes: ["M"],
+          freedZones: cardZones,
+          build: (zone) =>
+            new YGOCommands.TributeSummonCommand({ player, id: card.id, tributes, originZone, zone, position }),
         });
       },
     });
   }
 
   public linkSummon({ card }: { card: Card }) {
-    if (this.routeExtraDeckSummon(card)) return;
-    this.clearAction();
-
-    const player = this.duel.serverActions.getActivePlayer();
-    const cardIndex = this.duel.ygo.state.fields[
-      card.originalOwner
-    ].extraDeck.findIndex((c: any) => c === card);
-    const zones = getMonstersZones(this.duel, [card.originalOwner]).filter(
-      (zone) => YGOGameUtils.isFaceUp(zone.getCardReference()!)
-    );
-
-    this.cardSelection.startMultipleSelection({
-      zones,
-      selectionType: "card",
-      onSelectionCompleted: (cardZones: CardZone[]) => {
-        const materials = cardZones.map((cardZone) => {
-          return {
-            id: cardZone.getCardReference()!.id,
-            zone: cardZone.zone,
-          };
-        });
-
-        const zonesToSummon = getCardZones(
-          this.duel,
-          [card.originalOwner],
-          ["M", "EMZ"]
-        );
-        cardZones.forEach((z) => zonesToSummon.push(z));
-
-        this.cardSelection.startSelection({
-          zones: zonesToSummon,
-          selectionType: "zone",
-          showConfirm: false,
-          onSelectionCompleted: (cardZone: any) => {
-            this.duel.execCommand(
-              new YGOCommands.LinkSummonCommand({
-                player,
-                id: card.id,
-                materials,
-                originZone: YGOGameUtils.createZone(
-                  "ED",
-                  card.originalOwner,
-                  cardIndex + 1
-                ),
-                zone: cardZone.zone,
-              })
-            );
-
-            this.clearAction();
-          },
-        });
-      },
+    this.materialSummon({
+      card,
+      materialFilter: (m) => YGOGameUtils.isFaceUp(m),
+      buildCommand: (data) => new YGOCommands.LinkSummonCommand(data),
     });
   }
 
-  public xyzSummon({
-    card,
-    position = "faceup-attack",
-  }: {
-    card: Card;
-    position?: CardPosition;
-  }) {
-    if (this.routeExtraDeckSummon(card)) return;
-    this.clearAction();
-
-    const player = this.duel.serverActions.getActivePlayer();
-    const cardIndex = this.duel.ygo.state.fields[
-      card.originalOwner
-    ].extraDeck.findIndex((c: any) => c === card);
-    const zones = getMonstersZones(this.duel, [card.originalOwner]).filter(
-      (zone) => !YGOGameUtils.isToken(zone.getCardReference()!) && YGOGameUtils.isFaceUp(zone.getCardReference()!)
-    );
-
-    this.cardSelection.startMultipleSelection({
-      zones,
-      selectionType: "card",
-      onSelectionCompleted: (cardZones: CardZone[]) => {
-        const materials = cardZones.map((cardZone) => {
-          return {
-            id: cardZone.getCardReference()!.id,
-            zone: cardZone.zone,
-          };
-        });
-
-        const zonesToSummon = getCardZones(
-          this.duel,
-          [card.originalOwner],
-          ["M", "EMZ"]
-        );
-        cardZones.forEach((z) => zonesToSummon.push(z));
-
-        this.cardSelection.startSelection({
-          zones: zonesToSummon,
-          selectionType: "zone",
-          showConfirm: false,
-          onSelectionCompleted: (cardZone: any) => {
-            this.duel.execCommand(
-              new YGOCommands.XYZSummonCommand({
-                player,
-                id: card.id,
-                materials,
-                originZone: YGOGameUtils.createZone(
-                  "ED",
-                  card.originalOwner,
-                  cardIndex + 1
-                ),
-                zone: cardZone.zone,
-                position,
-              })
-            );
-
-            this.clearAction();
-          },
-        });
-      },
+  public xyzSummon({ card, position = "faceup-attack" }: { card: Card; position?: CardPosition }) {
+    this.materialSummon({
+      card,
+      materialFilter: (m) => !YGOGameUtils.isToken(m) && YGOGameUtils.isFaceUp(m),
+      buildCommand: (data) => new YGOCommands.XYZSummonCommand({ ...data, position }),
     });
   }
 
-  public xyzOverlaySummon({
-    card,
-    position = "faceup-attack",
-  }: {
-    card: Card;
-    position?: CardPosition;
-  }) {
-    if (this.routeExtraDeckSummon(card)) return;
-    this.clearAction();
-
-    const player = this.duel.serverActions.getActivePlayer();
-    const cardIndex = this.duel.ygo.state.fields[
-      card.originalOwner
-    ].extraDeck.findIndex((c: any) => c === card);
-    const zones = getMonstersZones(this.duel, [card.originalOwner]).filter(
-      (zone) => !YGOGameUtils.isToken(zone.getCardReference()!) && YGOGameUtils.isFaceUp(zone.getCardReference()!)
-    );
-
-    this.cardSelection.startMultipleSelection({
-      zones,
-      selectionType: "card",
-      onSelectionCompleted: (cardZones: CardZone[]) => {
-        const materials = cardZones.map((cardZone) => {
-          return {
-            id: cardZone.getCardReference()!.id,
-            zone: cardZone.zone,
-          };
-        });
-
-        const zonesToSummon = getCardZones(
-          this.duel,
-          [card.originalOwner],
-          ["M", "EMZ"]
-        );
-        cardZones.forEach((z) => zonesToSummon.push(z));
-
-        this.cardSelection.startSelection({
-          zones: zonesToSummon,
-          selectionType: "zone",
-          showConfirm: false,
-          onSelectionCompleted: (cardZone: any) => {
-            this.duel.execCommand(
-              new YGOCommands.XYZOverlaySummonCommand({
-                player,
-                id: card.id,
-                materials,
-                originZone: YGOGameUtils.createZone(
-                  "ED",
-                  card.originalOwner,
-                  cardIndex + 1
-                ),
-                zone: cardZone.zone,
-                position,
-              })
-            );
-
-            this.clearAction();
-          },
-        });
-      },
+  public xyzOverlaySummon({ card, position = "faceup-attack" }: { card: Card; position?: CardPosition }) {
+    this.materialSummon({
+      card,
+      materialFilter: (m) => !YGOGameUtils.isToken(m) && YGOGameUtils.isFaceUp(m),
+      buildCommand: (data) => new YGOCommands.XYZOverlaySummonCommand({ ...data, position }),
     });
   }
 
-  public synchroSummon({
-    card,
-    position = "faceup-attack",
-  }: {
-    card: Card;
-    position?: CardPosition;
-  }) {
-    if (this.routeExtraDeckSummon(card)) return;
-    this.clearAction();
-
-    const player = this.duel.serverActions.getActivePlayer();
-    const cardIndex = this.duel.ygo.state.fields[
-      card.originalOwner
-    ].extraDeck.findIndex((c: any) => c === card);
-    const zones = getMonstersZones(this.duel, [card.originalOwner]);
-
-    this.cardSelection.startMultipleSelection({
-      zones,
-      selectionType: "card",
-      onSelectionCompleted: (cardZones: CardZone[]) => {
-        const materials = cardZones.map((cardZone) => {
-          return {
-            id: cardZone.getCardReference()!.id,
-            zone: cardZone.zone,
-          };
-        });
-
-        const zonesToSummon = getCardZones(
-          this.duel,
-          [card.originalOwner],
-          ["M", "EMZ"]
-        );
-        cardZones.forEach((z) => zonesToSummon.push(z));
-
-        this.cardSelection.startSelection({
-          zones: zonesToSummon,
-          selectionType: "zone",
-          showConfirm: false,
-          onSelectionCompleted: (cardZone: CardZone) => {
-            this.duel.execCommand(
-              new YGOCommands.SynchroSummonCommand({
-                player,
-                id: card.id,
-                materials,
-                originZone: YGOGameUtils.createZone(
-                  "ED",
-                  card.originalOwner,
-                  cardIndex + 1
-                ),
-                zone: cardZone.zone,
-                position,
-              })
-            );
-
-            this.clearAction();
-          },
-        });
-      },
+  public synchroSummon({ card, position = "faceup-attack" }: { card: Card; position?: CardPosition }) {
+    this.materialSummon({
+      card,
+      buildCommand: (data) => new YGOCommands.SynchroSummonCommand({ ...data, position }),
     });
   }
 
@@ -527,50 +382,27 @@ export class YGOGameActions {
             type: "select-card-menu",
           });
 
-          const cardIndex = this.duel.ygo.state.fields[
-            card.originalOwner
-          ].extraDeck.findIndex((c: any) => c === card);
-
+          const originZone = this.edOriginZone(card);
           const materials = cards.map((cardData) => {
             return { id: cardData.card.id, zone: cardData.zone };
           });
 
-          const zonesToSummon = getCardZones(
-            this.duel,
-            [card.originalOwner],
-            ["M", "EMZ"]
-          );
-
+          // Materials on the field (Main or Extra Monster Zone) free their zone.
+          const freedZones: CardZone[] = [];
           materials.forEach((material) => {
             const zoneData = YGOGameUtils.getZoneData(material.zone);
-            if (zoneData.zone === "M") {
-              const cardZone = getGameZone(this.duel, zoneData)!;
-              zonesToSummon.push(cardZone);
+            if (zoneData.zone === "M" || zoneData.zone === "EMZ") {
+              freedZones.push(getGameZone(this.duel, zoneData)!);
             }
           });
 
-          this.cardSelection.startSelection({
-            zones: zonesToSummon,
-            selectionType: "zone",
+          this.pickSummonZone({
+            card,
+            zoneTypes: ["M", "EMZ"],
+            freedZones,
             showConfirm: false,
-            onSelectionCompleted: (cardZone: CardZone) => {
-              this.duel.execCommand(
-                new YGOCommands.FusionSummonCommand({
-                  player,
-                  id: card.id,
-                  materials,
-                  originZone: YGOGameUtils.createZone(
-                    "ED",
-                    card.originalOwner,
-                    cardIndex + 1
-                  ),
-                  zone: cardZone.zone,
-                  position,
-                })
-              );
-
-              this.clearAction();
-            },
+            build: (zone) =>
+              new YGOCommands.FusionSummonCommand({ player, id: card.id, materials, originZone, zone, position }),
           });
         },
       },
@@ -578,24 +410,10 @@ export class YGOGameActions {
   }
 
   public createToken({ position }: { position?: CardPosition } = {}) {
-    this.clearAction();
-
-    const player = this.duel.serverActions.getActivePlayer();
-    const zones = getCardZones(this.duel, [0, 1], ["M"]);
-
-    this.cardSelection.startSelection({
-      zones,
-      selectionType: "zone",
-      onSelectionCompleted: (cardZone: CardZone) => {
-        this.duel.execCommand(
-          new YGOCommands.CreateTokenCommand({
-            player,
-            originZone: cardZone.zone,
-            position,
-          })
-        );
-      },
-    });
+    this.selectZoneThen(
+      () => getCardZones(this.duel, [0, 1], ["M"]),
+      (zone, player) => new YGOCommands.CreateTokenCommand({ player, originZone: zone, position })
+    );
   }
 
   public disapear({
@@ -606,16 +424,7 @@ export class YGOGameActions {
     originZone: FieldZone;
   }) {
     if (!YGOGameUtils.isToken(card)) return;
-
-    const player = this.duel.serverActions.getActivePlayer();
-
-    this.duel.execCommand(
-      new YGOCommands.DisappearCommand({
-        player,
-        id: card.id,
-        originZone,
-      })
-    );
+    this.execOnCard(YGOCommands.DisappearCommand, { card, originZone }, { clear: false });
   }
 
   public setCard({
@@ -632,38 +441,14 @@ export class YGOGameActions {
     selectZone?: boolean;
   }) {
     if (selectZone && this.routeAssisted("Set ST", card, originZone)) return;
-    this.clearAction();
-
-    const player = this.duel.serverActions.getActivePlayer();
 
     if (selectZone) {
-      const zones = getCardZones(this.duel, [card.originalOwner], ["S"]);
-
-      this.cardSelection.startSelection({
-        zones,
-        selectionType: "zone",
-        onSelectionCompleted: (cardZone: any) => {
-          this.duel.execCommand(
-            new YGOCommands.SetCardCommand({
-              player,
-              id: card.id,
-              originZone,
-              zone: cardZone.zone,
-              reveal,
-            })
-          );
-        },
-      });
-    } else {
-      this.duel.execCommand(
-        new YGOCommands.SetCardCommand({
-          id: card.id,
-          player,
-          originZone,
-          zone,
-          reveal,
-        })
+      this.selectZoneThen(
+        () => getCardZones(this.duel, [card.originalOwner], ["S"]),
+        (zone, player) => new YGOCommands.SetCardCommand({ player, id: card.id, originZone, zone, reveal })
       );
+    } else {
+      this.execOnCard(YGOCommands.SetCardCommand, { card, originZone, zone, reveal });
     }
   }
 
@@ -677,48 +462,19 @@ export class YGOGameActions {
     selectZone?: boolean;
   }) {
     if (this.routeAssisted("Activate", card, originZone)) return;
-    this.clearAction();
-
-    const player = this.duel.serverActions.getActivePlayer();
 
     if (selectZone) {
-      const zones = getCardZones(this.duel, [card.originalOwner], ["S"]);
-
-      this.cardSelection.startSelection({
-        zones,
-        selectionType: "zone",
-        onSelectionCompleted: (cardZone: any) => {
-          this.duel.execCommand(
-            new YGOCommands.ActivateCardCommand({
-              player,
-              id: card.id,
-              originZone,
-              zone: cardZone.zone,
-            })
-          );
-        },
-      });
-    } else {
-      this.duel.execCommand(
-        new YGOCommands.ActivateCardCommand({
-          player,
-          id: card.id,
-          zone: originZone,
-        })
+      this.selectZoneThen(
+        () => getCardZones(this.duel, [card.originalOwner], ["S"]),
+        (zone, player) => new YGOCommands.ActivateCardCommand({ player, id: card.id, originZone, zone })
       );
+    } else {
+      this.execOnCard(YGOCommands.ActivateCardCommand, { card, zone: originZone });
     }
   }
 
   public sendToGy({ card, player, originZone }: { card: Card; player?: number; originZone: FieldZone }) {
-    this.clearAction();
-
-    this.duel.execCommand(
-      new YGOCommands.SendCardToGYCommand({
-        player: player ?? this.duel.serverActions.getActivePlayer(),
-        id: card.id,
-        originZone,
-      })
-    );
+    this.execOnCard(YGOCommands.SendCardToGYCommand, { card, player, originZone });
   }
 
   public revealCard({
@@ -728,15 +484,7 @@ export class YGOGameActions {
     card: Card;
     originZone: FieldZone;
   }) {
-    this.clearAction();
-
-    this.duel.execCommand(
-      new YGOCommands.RevealCommand({
-        player: this.duel.serverActions.getActivePlayer(),
-        id: card.id,
-        originZone,
-      })
-    );
+    this.execOnCard(YGOCommands.RevealCommand, { card, originZone });
   }
 
   public banish({
@@ -748,14 +496,7 @@ export class YGOGameActions {
     originZone: FieldZone;
     position?: "faceup" | "facedown";
   }) {
-    this.duel.execCommand(
-      new YGOCommands.BanishCommand({
-        player: this.duel.serverActions.getActivePlayer(),
-        id: card.id,
-        originZone,
-        position,
-      })
-    );
+    this.execOnCard(YGOCommands.BanishCommand, { card, originZone, position }, { clear: false });
   }
 
   public banishMultiple({
@@ -775,25 +516,10 @@ export class YGOGameActions {
   }
 
   public toST({ card, originZone }: { card: Card; originZone: FieldZone }) {
-    this.clearAction();
-
-    const player = this.duel.serverActions.getActivePlayer();
-    const zones = getCardZones(this.duel, [card.originalOwner], ["S"]);
-
-    this.cardSelection.startSelection({
-      zones,
-      selectionType: "zone",
-      onSelectionCompleted: (cardZone: any) => {
-        this.duel.execCommand(
-          new YGOCommands.ToSTCommand({
-            player,
-            id: card.id,
-            originZone,
-            zone: cardZone.zone,
-          })
-        );
-      },
-    });
+    this.selectZoneThen(
+      () => getCardZones(this.duel, [card.originalOwner], ["S"]),
+      (zone, player) => new YGOCommands.ToSTCommand({ player, id: card.id, originZone, zone })
+    );
   }
 
   public fieldSpell({
@@ -870,32 +596,14 @@ export class YGOGameActions {
   }
 
   public moveCard({ card, originZone }: { card: Card; originZone: FieldZone }) {
-    this.clearAction();
-
-    const player = this.duel.serverActions.getActivePlayer();
-    const isFieldSpell = YGOGameUtils.isFieldSpell(card);
-    const zonesToMove: any = ["M", "S"];
-
-    if (isFieldSpell) zonesToMove.push("F");
-
-    const zones = getCardZones(this.duel, [0, 1], zonesToMove).filter(
-      (c) => c.zone !== originZone
-    );
-
-    this.cardSelection.startSelection({
-      zones,
-      selectionType: "zone",
-      onSelectionCompleted: (cardZone: any) => {
-        this.duel.execCommand(
-          new YGOCommands.MoveCardCommand({
-            player,
-            id: card.id,
-            originZone,
-            zone: cardZone.zone,
-          })
-        );
+    this.selectZoneThen(
+      () => {
+        const zonesToMove: any = ["M", "S"];
+        if (YGOGameUtils.isFieldSpell(card)) zonesToMove.push("F");
+        return getCardZones(this.duel, [0, 1], zonesToMove).filter((c) => c.zone !== originZone);
       },
-    });
+      (zone, player) => new YGOCommands.MoveCardCommand({ player, id: card.id, originZone, zone })
+    );
   }
 
   public toDeck({
@@ -912,27 +620,11 @@ export class YGOGameActions {
 
     if (!card.isMainDeckCard) return this.toExtraDeck({ card, originZone })
 
-    const player = this.duel.serverActions.getActivePlayer();
-    this.duel.execCommand(
-      new YGOCommands.ToDeckCommand({
-        player,
-        id: card.id,
-        originZone,
-        position,
-        shuffle,
-      })
-    );
+    this.execOnCard(YGOCommands.ToDeckCommand, { card, originZone, position, shuffle }, { clear: false });
   }
 
   public flip({ card, originZone }: { card: Card; originZone: FieldZone }) {
-    const player = this.duel.serverActions.getActivePlayer();
-    this.duel.execCommand(
-      new YGOCommands.FlipCommand({
-        player,
-        id: card.id,
-        originZone,
-      })
-    );
+    this.execOnCard(YGOCommands.FlipCommand, { card, originZone }, { clear: false });
   }
 
   public changeBattlePosition({
@@ -944,16 +636,7 @@ export class YGOGameActions {
     originZone: FieldZone;
     position: CardPosition;
   }) {
-    const player = this.duel.serverActions.getActivePlayer();
-
-    this.duel.execCommand(
-      new YGOCommands.ChangeCardPositionCommand({
-        player,
-        id: card.id,
-        originZone,
-        position,
-      })
-    );
+    this.execOnCard(YGOCommands.ChangeCardPositionCommand, { card, originZone, position }, { clear: false });
   }
 
   public drawFromDeck({ player }: { player: number }) {
@@ -979,26 +662,11 @@ export class YGOGameActions {
     card: Card;
     originZone: FieldZone;
   }) {
-    this.clearAction();
-    const player = this.duel.serverActions.getActivePlayer();
-    const xyzZones = getXyzMonstersZones(this.duel, [0, 1]).filter(c => c.getCardReference() !== card);
-
-    if (xyzZones.length === 0) return;
-
-    this.cardSelection.startSelection({
-      zones: xyzZones,
-      selectionType: "zone",
-      onSelectionCompleted: (cardZone: any) => {
-        this.duel.execCommand(
-          new YGOCommands.XYZAttachMaterialCommand({
-            player,
-            id: card.id,
-            originZone,
-            zone: cardZone.zone,
-          })
-        );
-      },
-    });
+    this.selectZoneThen(
+      () => getXyzMonstersZones(this.duel, [0, 1]).filter(c => c.getCardReference() !== card),
+      (zone, player) => new YGOCommands.XYZAttachMaterialCommand({ player, id: card.id, originZone, zone }),
+      { skipIfNoZones: true }
+    );
   }
 
   public detachMaterial({
@@ -1030,17 +698,7 @@ export class YGOGameActions {
     card: Card;
     originZone: FieldZone;
   }) {
-    this.clearAction();
-
-    const player = this.duel.serverActions.getActivePlayer();
-
-    this.duel.execCommand(
-      new YGOCommands.DestroyCardCommand({
-        player,
-        id: card.id,
-        originZone,
-      })
-    );
+    this.execOnCard(YGOCommands.DestroyCardCommand, { card, originZone });
   }
 
   public destroyAllCards({
@@ -1067,17 +725,7 @@ export class YGOGameActions {
     card: Card;
     originZone: FieldZone;
   }) {
-    this.clearAction();
-
-    const player = this.duel.serverActions.getActivePlayer();
-
-    this.duel.execCommand(
-      new YGOCommands.TargetCommand({
-        player,
-        id: card.id,
-        originZone,
-      })
-    );
+    this.execOnCard(YGOCommands.TargetCommand, { card, originZone });
   }
 
   public negateCard({
@@ -1087,17 +735,7 @@ export class YGOGameActions {
     card: Card;
     originZone: FieldZone;
   }) {
-    this.clearAction();
-
-    const player = this.duel.serverActions.getActivePlayer();
-
-    this.duel.execCommand(
-      new YGOCommands.NegateCommand({
-        player,
-        id: card.id,
-        originZone,
-      })
-    );
+    this.execOnCard(YGOCommands.NegateCommand, { card, originZone });
   }
 
   public lifePointsTransaction({

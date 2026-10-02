@@ -1,7 +1,7 @@
-import { useCallback, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
+import { useAnchoredMenu } from "../components/use-anchored-menu";
 import { YGODuel } from "../../core/YGODuel";
 import { CardMenu } from "../components/CardMenu";
-import { getTransformFromCamera } from "../../scripts/ygo-utils";
 import { Deck } from "../../game/Deck";
 import { YGOStatic } from "../../core/YGOStatic";
 import { isDeckHidden } from "../menus/deck-search/deck-search";
@@ -32,23 +32,7 @@ export function DeckMenu({ duel, deck }: { duel: YGODuel, deck: Deck, clearActio
         duel.events.dispatch("toggle-ui-menu", { group: "game-popup", type: "deck-search", data: {} });
     }
 
-    useLayoutEffect(() => {
-        const container = menuRef.current!;
-        const size = container.getBoundingClientRect();
-        const { x, y, width } = getTransformFromCamera(duel, deck.gameObject);
-
-        const viewportW = window.innerWidth;
-        const viewportH = window.innerHeight;
-
-        const idealTop = y - size.height;
-        const idealLeft = x - (size.width / 2) + (width / 2);
-
-        const clampedTop = Math.min(Math.max(idealTop, 0), viewportH - size.height);
-        const clampedLeft = Math.min(Math.max(idealLeft, 0), viewportW - size.width);
-
-        container.style.top = clampedTop + "px";
-        container.style.left = clampedLeft + "px";
-    }, [deck]);
+    useAnchoredMenu(duel, menuRef, () => ({ kind: "object3d", object: deck.gameObject }), [deck]);
 
     const player = deck.player;
     const mainDeckSize = duel.ygo.state.fields[player].mainDeck.length;

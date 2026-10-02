@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import type { KeyboardEvent } from "react";
-import { anchorCardMenu, hasPointerPosition, pileCardProps, placeAtPoint, placeBesideRect } from "./pile-menu";
+import { anchorCardMenu, hasPointerPosition, pileCardProps, placeAboveRect, placeAtPoint, placeBesideRect, placeLeftOfRect } from "./pile-menu";
 
 const viewport = { width: 1000, height: 800 };
 const size = { width: 200, height: 300 };
@@ -73,5 +73,47 @@ describe("pileCardProps", () => {
     const open = vi.fn();
     pileCardProps(open, "x").onKeyDown(key("Enter", true));
     expect(open).not.toHaveBeenCalled();
+  });
+});
+
+describe("placeLeftOfRect", () => {
+  it("opens to the card's left, top-aligned", () => {
+    expect(placeLeftOfRect(card, size, viewport)).toEqual({ left: 300, top: 100 });
+  });
+
+  it("is clamped to the viewport", () => {
+    expect(placeLeftOfRect({ left: 50, top: 700, right: 110, bottom: 790 }, size, viewport)).toEqual({ left: 0, top: 500 });
+    expect(placeLeftOfRect({ left: 1500, top: -20, right: 1560, bottom: 70 }, size, viewport)).toEqual({ left: 800, top: 0 });
+  });
+});
+
+describe("placeAboveRect", () => {
+  const box = { x: 400, y: 500, width: 60, height: 90 };
+
+  it("centres the menu above the box", () => {
+    expect(placeAboveRect(box, size, viewport)).toEqual({ left: 330, top: 200 });
+  });
+
+  it("goes below the box with `below` (the opponent's hand)", () => {
+    expect(placeAboveRect({ ...box, y: 20 }, size, viewport, { below: true })).toEqual({ left: 330, top: 110 });
+  });
+
+  it("is clamped at the edges", () => {
+    expect(placeAboveRect({ x: -40, y: 100, width: 60, height: 90 }, size, viewport)).toEqual({ left: 0, top: 0 });
+    expect(placeAboveRect({ x: 980, y: 900, width: 60, height: 90 }, size, viewport)).toEqual({ left: 800, top: 500 });
+    expect(placeAboveRect({ ...box, y: 700 }, size, viewport, { below: true })).toEqual({ left: 330, top: 500 });
+  });
+
+  it("matches the old hand-rolled clamp whenever the menu fits the viewport", () => {
+    for (const x of [-100, 0, 300, 900, 1200]) {
+      for (const y of [-50, 0, 250, 600, 1000]) {
+        const b = { x, y, width: 60, height: 90 };
+        const old = {
+          top: Math.min(Math.max(y - size.height, 0), viewport.height - size.height),
+          left: Math.min(Math.max(x - size.width / 2 + b.width / 2, 0), viewport.width - size.width),
+        };
+        expect(placeAboveRect(b, size, viewport)).toEqual(old);
+      }
+    }
   });
 });

@@ -1,8 +1,8 @@
 import { YGOGameUtils } from "ygo-core";
+import { useAnchoredMenu } from "../components/use-anchored-menu";
 import { YGODuel } from "../../core/YGODuel";
-import { getTransformFromCamera } from "../../scripts/ygo-utils";
 import { Card, FieldZone } from "ygo-core";
-import { useCallback, useLayoutEffect, useRef } from "react";
+import { useCallback, useRef } from "react";
 import { CardMenu, CardMenuSection } from "../components/CardMenu";
 import { YGOStatic } from "../../core/YGOStatic";
 import { ActionButton, YGOIcon } from "../components/ActionButton";
@@ -120,29 +120,12 @@ export function CardHandMenu({
     duel.gameActions.negateCard({ card, originZone });
   }, [card, originZone]);
 
-  useLayoutEffect(() => {
-    const container = menuRef.current!;
-    const cardFromHand = duel.fields[card.owner].hand.getCardFromReference(card)!;
-    const size = container.getBoundingClientRect();
-    const { x, y, width, height } = getTransformFromCamera(duel, cardFromHand.gameObject);
-
-    const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
-
-    let top: number;
-    if (YGOStatic.isPlayerPOV(card.owner)) {
-      top = y - size.height;
-    } else {
-      top = y + height;
-    }
-
-    let left = x + width / 2 - size.width / 2;
-    top = Math.max(0, Math.min(top, viewportHeight - size.height));
-    left = Math.max(0, Math.min(left, viewportWidth - size.width));
-
-    container.style.top = top + "px";
-    container.style.left = left + "px";
-  }, [card]);
+  useAnchoredMenu(duel, menuRef, () => ({
+    kind: "object3d",
+    object: duel.fields[card.owner].hand.getCardFromReference(card)!.gameObject,
+    // The opponent's hand is at the top of the screen: open below the card.
+    below: !YGOStatic.isPlayerPOV(card.owner),
+  }), [card]);
 
   const player = card.owner;
   const field = duel.ygo.state.fields[player];

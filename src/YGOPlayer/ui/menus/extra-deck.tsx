@@ -1,11 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { YGODuel } from "../../core/YGODuel";
-import { ActionUiMenu } from "../../actions/ActionUiMenu";
 import { Card, YGOGameUtils } from "ygo-core";
-import { stopPropagationCallback } from "../../scripts/utils";
 import { pileCardProps } from "../components/pile-menu";
 import { summonableExtraDeckCodes } from "./extra-deck-highlight";
 import { YGOStatic } from "../../core/YGOStatic";
+import { pileCardPressHandlers, PileViewer } from "./pile-viewer";
 
 export function ExtraDeck({
   duel,
@@ -18,23 +17,6 @@ export function ExtraDeck({
   visible: boolean;
   hasAction: boolean;
 }) {
-  const action = useMemo(() => {
-    const action = new ActionUiMenu(duel, {
-      eventType: "card-extra-deck-menu",
-    });
-    return action;
-  }, [duel]);
-
-  useEffect(() => {
-    if (duel && player >= 0) {
-      duel.fields[player].extraDeck.isMenuVisible = true;
-      return () => {
-        duel.fields[player].extraDeck.isMenuVisible = false;
-      }
-    }
-  }, [duel, player]);
-
-  // Assisted Mode: the cards the engine offers to Special Summon now, framed like the pile.
   const [summonable, setSummonable] = useState<Set<number>>(() => summonableExtraDeckCodes(duel.assistOptions as any));
   useEffect(() => {
     const onOptions = (res: unknown) => setSummonable(summonableExtraDeckCodes(res as any));
@@ -42,73 +24,39 @@ export function ExtraDeck({
     return () => duel.events.off("assist-options", onOptions);
   }, [duel]);
 
-  if (!visible) return null;
-  if (!duel.ygo) return null;
-
-  const field = duel.ygo.state.fields[player];
-  const cards = field.extraDeck;
-
-  // From the mouse or, focused, Enter/Space: the card menu anchors to this card's image.
-  const openCardMenu = (e: React.SyntheticEvent, card: Card) => {
-    action.eventData = {
-      duel,
-      card,
-      mouseEvent: e,
-      htmlCardElement: e.currentTarget,
-    };
-    duel.actionManager.setAction(action);
-    duel.gameActions.setSelectedCard({
-      player,
-      card
-    })
-  };
-
   return (
-    <div
-      className="float-right-menu ygo-right-menu-grid"
-      onMouseMove={stopPropagationCallback}
-      role="presentation"
-      onClick={stopPropagationCallback}
-      onScroll={() => {
-        if (hasAction) {
-          duel.events.dispatch("clear-ui-action");
-        }
-      }}
+    <PileViewer
+      duel={duel}
+      player={player}
+      pile={duel && player >= 0 ? duel.fields[player].extraDeck : null}
+      visible={visible}
+      hasAction={hasAction}
+      menuEventType="card-extra-deck-menu"
+      closeType="extra-deck"
+      iconClass="ed"
     >
-      <button aria-label="Close" className="float-right-menu-toggle-btn" onClick={() => {
-        duel.events.dispatch("close-ui-menu", { group: "game-overlay", type: "extra-deck" })
-      }}>
-        <div className="ygo-close-btn-icon"></div>
-      </button>
-      <div className="float-right-menu-icon">
-        <div className="ygo-icon-game-zone ygo-icon-game-zone-ed"></div>
-      </div>
-      <div className="float-right-menu-content">
-        <div className="float-right-menu-cards">
-          {cards.map((card: Card, cardIndex: number) => (
-            <div>
-              <img
-                onMouseDown={(event: any) => duel.events.dispatch("on-card-mouse-down", { card, event })}
-                onMouseUp={(event: any) => duel.events.dispatch("on-card-mouse-up", { card, event })}
-                onTouchStart={(event: any) => duel.events.dispatch("on-card-mouse-down", { card, event })}
-                onTouchEnd={(event: any) => duel.events.dispatch("on-card-mouse-up", { card, event })}
-                onClick={(e) => openCardMenu(e, card)}
-                {...pileCardProps<HTMLImageElement>((e) => openCardMenu(e, card), card.name)}
-                alt={card.name}
-                onContextMenu={(e) => {
-                  e.preventDefault();
-                  const originZone = YGOGameUtils.createZone("ED", player, cardIndex + 1);
-                  duel.gameActions.targetCard({ card, originZone });
-                }}
-                key={card.index}
-                src={card.images.small_url}
-                className={player === YGOStatic.playerIndex && summonable.has(card.id) ? "ygo-card ygo-card-offered" : "ygo-card"}
-                title={player === YGOStatic.playerIndex && summonable.has(card.id) ? `${card.name}: can be Special Summoned now` : undefined}
-              />
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
+      {(openCardMenu) => duel.ygo.state.fields[player].extraDeck.map((card: Card, cardIndex: number) => {
+        // Assisted Mode: the viewer's own cards the engine lets them Special Summon now.
+        const offered = player === YGOStatic.playerIndex && summonable.has(card.id);
+        return (
+          <div key={card.index}>
+            <img
+              {...pileCardPressHandlers(duel, card)}
+              onClick={(e) => openCardMenu(e, card)}
+              {...pileCardProps<HTMLImageElement>((e) => openCardMenu(e, card), card.name)}
+              alt={card.name}
+              onContextMenu={(e) => {
+                e.preventDefault();
+                const originZone = YGOGameUtils.createZone("ED", player, cardIndex + 1);
+                duel.gameActions.targetCard({ card, originZone });
+              }}
+              src={card.images.small_url}
+              className={offered ? "ygo-card ygo-card-offered" : "ygo-card"}
+              title={offered ? `${card.name}: can be Special Summoned now` : undefined}
+            />
+          </div>
+        );
+      })}
+    </PileViewer>
   );
 }

@@ -66,6 +66,35 @@ export function placeBesideRect(rect: AnchorRect, size: MenuSize, viewport: View
   };
 }
 
+/** To the card's left, top-aligned with it (the GY / banished / Extra Deck / materials card menus). */
+export function placeLeftOfRect(rect: AnchorRect, size: MenuSize, viewport: Viewport): MenuPosition {
+  return {
+    left: clamp(rect.left - size.width, 0, viewport.width - size.width),
+    top: clamp(rect.top, 0, viewport.height - size.height),
+  };
+}
+
+/** A screen box (top-left x/y, width/height), e.g. a 3D object's projection. */
+export interface ScreenBox {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+/**
+ * Centred above a box on the board (a card, the Deck, a phase button) — or
+ * below it with `below` (a card in the opponent's hand, at the top of the
+ * screen) — kept inside the viewport.
+ */
+export function placeAboveRect(box: ScreenBox, size: MenuSize, viewport: Viewport, { below = false }: { below?: boolean } = {}): MenuPosition {
+  const top = below ? box.y + box.height : box.y - size.height;
+  return {
+    left: clamp(box.x + box.width / 2 - size.width / 2, 0, viewport.width - size.width),
+    top: clamp(top, 0, viewport.height - size.height),
+  };
+}
+
 /** Where a card menu opened by `event` on `element` goes. */
 export function anchorCardMenu(
   event: PointerLike | null | undefined,
