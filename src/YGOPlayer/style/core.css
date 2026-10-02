@@ -1252,3 +1252,21 @@
         }
     }
 }
+
+/* Surrender dialog (bot duels): an optional reason, one tap. */
+.ygo-leave-reasons { margin-top: 14px; text-align: left; }
+.ygo-leave-reasons-title { margin: 0 0 8px; font-size: 13px; font-weight: 600; color: #e6e9f2; }
+.ygo-leave-reasons-title span { font-weight: 400; color: #9aa3b8; }
+.ygo-leave-reasons-list { display: flex; flex-wrap: wrap; gap: 8px; }
+.ygo-leave-reason {
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    background: rgba(255, 255, 255, 0.06);
+    color: #e6e9f2;
+    border-radius: 999px;
+    padding: 4px 12px;
+    font-size: 12px;
+    cursor: pointer;
+}
+.ygo-leave-reason:hover { background: rgba(255, 255, 255, 0.12); }
+.ygo-leave-reason:focus-visible { outline: 2px solid #ffc93c; outline-offset: 2px; }
+.ygo-leave-reason-active { border-color: #ffc93c; background: rgba(255, 201, 60, 0.18); color: #ffe39a; }

@@ -88,6 +88,8 @@ export interface YGOAssistActions {
   choose(action: { commandType: string; data: any }): Promise<any>;
   /** Bot duels: the post-duel review of the player's plays (ygo-socket-server `duel:bot:review`), shown as "Review my plays" on the end-of-duel overlay. */
   review?(): Promise<any>;
+  /** Bot duels: why the player is surrendering (ygo-socket-server `duel:bot:feedback`), optional. */
+  leaveFeedback?(reason: string): Promise<any>;
 }
 
 export interface YGOPlayerConnectToServerProps {

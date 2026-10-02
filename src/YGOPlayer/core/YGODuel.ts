@@ -54,7 +54,7 @@ export class YGODuel {
   /** Set by YGOPlayerComponentImpl.bind() for connectToServer() only — see
    * YGOPlayerConnectToServerProps. undefined for editor/replay (no judge/
    * adapter to query) and for any player who never enabled assisted mode. */
-  public assist?: { query(): Promise<any>; choose(action: { commandType: string; data: any }): Promise<any>; review?(): Promise<any> };
+  public assist?: { query(): Promise<any>; choose(action: { commandType: string; data: any }): Promise<any>; review?(): Promise<any>; leaveFeedback?(reason: string): Promise<any> };
   /** The assisted options the panel last received (AssistedOptionsPanel keeps
    * it current) — card menus route a matching move through assist.choose. */
   public assistOptions: any = null;

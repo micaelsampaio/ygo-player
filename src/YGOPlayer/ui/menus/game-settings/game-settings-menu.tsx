@@ -7,6 +7,16 @@ import { ConfirmDialog } from "../../components/ConfirmDialog";
 import { canSurrender } from "../../duel-status";
 import { YGOClientType } from "ygo-core";
 
+/** Why a player surrenders a bot duel (the server's LEAVE_REASONS): one optional tap. */
+const LEAVE_REASONS: Array<{ id: string; label: string }> = [
+    { id: "too-hard", label: "Too hard" },
+    { id: "too-easy", label: "Too easy" },
+    { id: "stuck", label: "Nothing happens" },
+    { id: "broken", label: "Something's broken" },
+    { id: "too-slow", label: "Too slow" },
+    { id: "practising", label: "Just practising" },
+];
+
 export enum SETTINGS_MODAL_TYPE {
     SETTINGS,
     CONTROLS
@@ -38,13 +48,19 @@ export function GameSettingsMenu({ duel, currentMenu = SETTINGS_MODAL_TYPE.SETTI
         gameMode: duel.config.gameMode,
     });
     const [confirmSurrender, setConfirmSurrender] = useState(false);
-    const cancelSurrender = useCallback(() => setConfirmSurrender(false), []);
+    const [leaveReason, setLeaveReason] = useState<string | null>(null);
+    const cancelSurrender = useCallback(() => { setConfirmSurrender(false); setLeaveReason(null); }, []);
+    // Bot duels: the reason helps tell a bot that's too strong from a duel that got stuck.
+    const askReason = !!duel.ygo?.options?.botDuel && !!duel.assist?.leaveFeedback;
 
     const surrender = useCallback(() => {
         setConfirmSurrender(false);
         closeSettings();
+        // Sent first, on the same socket, so it reaches the game's log before the surrender.
+        if (askReason && leaveReason) void duel.assist!.leaveFeedback!(leaveReason).catch(() => undefined);
+        setLeaveReason(null);
         duel.gameActions.admitDefeat({ player: duel.serverActions.getActivePlayer() });
-    }, [duel]);
+    }, [duel, askReason, leaveReason]);
 
     const saveReplay = useCallback(async () => {
         if (!canSaveReplay) return;
@@ -147,6 +163,24 @@ export function GameSettingsMenu({ duel, currentMenu = SETTINGS_MODAL_TYPE.SETTI
             onConfirm={surrender}
         >
             You will lose this duel. This can't be undone.
+            {askReason && (
+                <div className="ygo-leave-reasons" role="group" aria-label="Why are you leaving? (optional)">
+                    <p className="ygo-leave-reasons-title">Why are you leaving? <span>(optional)</span></p>
+                    <div className="ygo-leave-reasons-list">
+                        {LEAVE_REASONS.map((r) => (
+                            <button
+                                key={r.id}
+                                type="button"
+                                aria-pressed={leaveReason === r.id}
+                                className={leaveReason === r.id ? "ygo-leave-reason ygo-leave-reason-active" : "ygo-leave-reason"}
+                                onClick={() => setLeaveReason(leaveReason === r.id ? null : r.id)}
+                            >
+                                {r.label}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            )}
         </ConfirmDialog>
     </>;
 }
