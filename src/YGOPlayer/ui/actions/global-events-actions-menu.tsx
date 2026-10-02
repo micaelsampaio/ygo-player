@@ -63,13 +63,6 @@ export function GlobalEventsActionsMenu({
   const diceRoll = useCallback(() => {
 
     duel.gameActions.diceRoll({ player });
-
-    // const action = new ActionUiMenu(duel, {
-    //   eventType: "dice-roll-menu",
-    //   eventData: { duel }
-    // });
-    // duel.actionManager.clearAction();
-    // timer.current = setTimeout(() => duel.actionManager.setAction(action)) as unknown as number;
   }, [])
 
   const admitDefeat = useCallback(() => {
@@ -79,13 +72,6 @@ export function GlobalEventsActionsMenu({
   const flipCoin = useCallback(() => {
 
     duel.gameActions.flipCoin({ player });
-
-    // const action = new ActionUiMenu(duel, {
-    //   eventType: "flip-coin-menu",
-    //   eventData: { duel }
-    // });
-    // duel.actionManager.clearAction();
-    // timer.current = setTimeout(() => duel.actionManager.setAction(action)) as unknown as number;
   }, [])
 
   useLayoutEffect(() => {

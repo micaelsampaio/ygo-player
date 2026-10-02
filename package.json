@@ -9,7 +9,6 @@
     "dev": "NODE_ENV=development webpack --mode development --watch"
   },
   "dependencies": {
-    "axios": "^1.8.4",
     "onnxruntime-web": "^1.30.0",
     "three": "^0.170.0",
     "tinykeys": "^3.0.0",
@@ -23,13 +22,10 @@
     "mini-css-extract-plugin": "^2.9.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "style-loader": "^4.0.0",
     "ts-loader": "^9.5.2",
     "typescript": "~5.6.2",
-    "vite": "^4.0.0",
     "webpack": "^5.97.1",
-    "webpack-cli": "^6.0.1",
-    "webpack-dev-server": "^5.2.0"
+    "webpack-cli": "^6.0.1"
   },
   "exports": {
     ".": {

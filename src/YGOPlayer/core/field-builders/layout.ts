@@ -95,38 +95,3 @@ export class FieldAnimator extends YGOEntity {
 
 /** The shared shader clock (seconds), advanced by the renderer each frame. */
 export const timeUniform = globalUniforms.time;
-
-/** A rounded-rectangle outline glow on a plane (signed distance), additive: a zone border. */
-export function glowOutlineMaterial(color: THREE.Color, opts: { width: number; height: number; pad: number; thickness?: number; pulse?: number; phase?: number; fill?: number }) {
-  return new THREE.ShaderMaterial({
-    transparent: true,
-    depthWrite: false,
-    blending: THREE.AdditiveBlending,
-    uniforms: {
-      uColor: { value: color },
-      uSize: { value: new THREE.Vector2(opts.width, opts.height) },
-      uPad: { value: opts.pad },
-      uThick: { value: opts.thickness ?? 0.07 },
-      uPulse: { value: opts.pulse ?? 0.25 },
-      uPhase: { value: opts.phase ?? 0 },
-      uFill: { value: opts.fill ?? 0.05 },
-      uTime: timeUniform,
-    },
-    vertexShader: `varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
-    fragmentShader: `
-      uniform vec3 uColor; uniform vec2 uSize; uniform float uPad; uniform float uThick; uniform float uPulse; uniform float uPhase; uniform float uFill; uniform float uTime;
-      varying vec2 vUv;
-      float sdRoundBox(vec2 p, vec2 b, float r) { vec2 q = abs(p) - b + r; return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - r; }
-      void main() {
-        vec2 full = uSize + 2.0 * uPad;
-        vec2 p = (vUv - 0.5) * full;
-        float d = sdRoundBox(p, uSize * 0.5, 0.35);
-        float line = exp(-pow(abs(d) / uThick, 2.0));
-        float halo = exp(-max(d, 0.0) * 3.0) * 0.35;
-        float inside = d < 0.0 ? uFill : 0.0;
-        float pulse = 1.0 - uPulse + uPulse * (0.5 + 0.5 * sin(uTime * 1.8 + uPhase));
-        float a = (line + halo + inside) * pulse;
-        gl_FragColor = vec4(uColor * a, a);
-      }`,
-  });
-}

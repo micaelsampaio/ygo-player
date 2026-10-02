@@ -31,28 +31,6 @@ export function SelectCardPopup({
     new Map()
   );
 
-  // const action = useMemo(() => {
-  //     const action = new ActionUiMenu(duel, { eventType: "card-deck-menu" });
-  //     return action;
-  // }, [duel])
-
-  // const onCardClick = (e: React.MouseEvent, card: Card) => {
-  //     action.eventData = { duel, card, mouseEvent: e };
-  //     duel.actionManager.setAction(action);
-  // }
-
-  // if (!visible) return null;
-
-  // const onSelectCard = (zone: FieldZoneId, card: Card) => {
-  //     if (selectedCards.current.has(card)) {
-  //         selectedCards.current.delete(card);
-  //     } else {
-  //         selectedCards.current.set(card, { card, zone });
-  //     }
-
-  //     setRender(Date.now());
-  // }
-
   const onSelectCard = (card: Card, zone: FieldZone) => {
     if (selectedCards.current.has(card)) {
       selectedCards.current.delete(card);
@@ -62,43 +40,6 @@ export function SelectCardPopup({
 
     setRender(Date.now());
   };
-
-  // const onSelectCardsCallback = () => {
-  //     const player = 0;
-  //     const field = duel.ygo.state.fields[player];
-  //     const cards = Array.from(selectedCards.current.values());
-
-  //     const newCards = cards.map(cardData => {
-  //         let zone: FieldZone | undefined;
-  //         switch (cardData.zone) {
-  //             case "H":
-  //                 const handIndex = field.hand.findIndex(c => c == cardData.card);
-  //                 zone = YGOGameUtils.createZone("H", player, handIndex + 1);
-  //                 break;
-  //             case "M":
-  //                 const monsterIndex = field.monsterZone.findIndex(c => c == cardData.card);
-  //                 zone = YGOGameUtils.createZone("M", player, monsterIndex + 1);
-  //                 break;
-  //             case "D":
-  //                 const mainDeckIndex = field.mainDeck.findIndex(c => c == cardData.card);
-  //                 zone = YGOGameUtils.createZone("D", player, mainDeckIndex + 1);
-  //                 break;
-  //             case "ED":
-  //                 const extraDeckIndex = field.mainDeck.findIndex(c => c == cardData.card);
-  //                 zone = YGOGameUtils.createZone("ED", player, extraDeckIndex + 1);
-  //                 break;
-  //             default:
-  //                 throw new Error("invalid card zone in card selection " + cardData.zone);
-  //         }
-
-  //         return {
-  //             card: cardData.card,
-  //             zone
-  //         }
-  //     })
-
-  //     onSelectedCardsCb(newCards);
-  // }
 
   const onSelectCardsCallback = () => {
     const cards = Array.from(selectedCards.current.values());

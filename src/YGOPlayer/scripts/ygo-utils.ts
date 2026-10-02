@@ -7,7 +7,7 @@ import { GameHand } from "../game/Hand";
 import { Deck } from "../game/Deck";
 import { Graveyard } from "../game/Graveyard";
 import { ExtraDeck } from "../game/ExtraDeck";
-import { Card, FieldZone, FieldZoneData, YGOReplayData } from "ygo-core";
+import { Card, FieldZone, FieldZoneData } from "ygo-core";
 import { YGOGameUtils } from "ygo-core";
 import { Banish } from "../game/Banish";
 import { YGOStatic } from "../core/YGOStatic";
@@ -212,21 +212,6 @@ export function getXyzMonstersZones(
       )
         result.push(zone);
     });
-  });
-
-  return result;
-}
-
-export function getAllGameCardZones(duel: YGODuel) {
-  const result: CardZone[] = [];
-
-  duel.fields.forEach((player) => {
-    result.push(
-      ...player.monsterZone,
-      ...player.spellTrapZone,
-      ...player.extraMonsterZone,
-      player.fieldZone
-    );
   });
 
   return result;
@@ -506,40 +491,6 @@ export function getScreenPositionFromWorld(
 }
 
 
-export function replayToYGOProps(
-  playersData: { mainDeck: Card[]; extraDeck: Card[] }[],
-  replay: YGOReplayData
-) {
-  const players = replay.players.map((player, playerIndex) => {
-    const { mainDeck: mainDeckProps, extraDeck: extraDeckProps } =
-      playersData[playerIndex];
-    const mainDeck = player.mainDeck.map((id) => {
-      const card = mainDeckProps.find((c) => c.id === id);
-      if (!card) throw new Error(`card "${id}" not found in main deck`);
-      return card;
-    });
-    const extraDeck = player.extraDeck.map((id) => {
-      const card = extraDeckProps.find((c) => c.id === id);
-      if (!card) throw new Error(`card "${id}" not found in extra deck`);
-      return card;
-    });
-
-    return {
-      name: player.name,
-      mainDeck,
-      extraDeck,
-    };
-  });
-  return {
-    players,
-    commands: replay.commands,
-    options: {
-      fieldState: replay.initialField ? replay.initialField : undefined,
-      shuffleDecks: false,
-    },
-  };
-}
-
 function parseFieldZoneChildren(child: THREE.Mesh, player: number, zones: any) {
   if (child.isMesh) {
     const position = child.getWorldPosition(new THREE.Vector3());
@@ -573,29 +524,6 @@ export function getCardPositionInFrontOfCamera({ duel, distance = 4 }: { duel: Y
   const startPosition = camera.position.clone().add(direction.multiplyScalar(distance));
 
   return startPosition;
-}
-
-export function getCardPositionInFrontOfCameraMiddleOfField({ distance = 4, duel }: { duel: YGODuel, distance?: number }) {
-  const sidebarWidth = 300;
-  const camera = duel.core.camera;
-  const { width } = duel.core.renderer.domElement;
-  const offsetX = (sidebarWidth / width);
-  const ndc = new THREE.Vector3(offsetX, 0, 0.5);
-  ndc.unproject(camera);
-  const direction = ndc.clone().sub(camera.position).normalize();
-  const targetPosition = camera.position.clone().add(direction.multiplyScalar(distance));
-  const middle = duel.duelScene.middleOfTheFieldPivot;
-  const relativeTarget = middle.clone().add(targetPosition.sub(middle));
-  return relativeTarget;
-}
-
-export function getCardRotationRelativeToCamera({ duel, gameObject }: { duel: YGODuel, gameObject: THREE.Object3D }) {
-  const target = duel.core.camera.position.clone();
-  const position = gameObject.position.clone();
-  const m = new THREE.Matrix4();
-  m.lookAt(position, target, gameObject.up);
-  const targetRotation = new THREE.Euler().setFromRotationMatrix(m);
-  return targetRotation;
 }
 
 export function randomIntFromInterval(min: number, max: number): number { // min and max included 
