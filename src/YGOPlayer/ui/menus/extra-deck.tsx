@@ -1,9 +1,11 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { YGODuel } from "../../core/YGODuel";
 import { ActionUiMenu } from "../../actions/ActionUiMenu";
 import { Card, YGOGameUtils } from "ygo-core";
 import { stopPropagationCallback } from "../../scripts/utils";
 import { pileCardProps } from "../components/pile-menu";
+import { summonableExtraDeckCodes } from "./extra-deck-highlight";
+import { YGOStatic } from "../../core/YGOStatic";
 
 export function ExtraDeck({
   duel,
@@ -31,6 +33,14 @@ export function ExtraDeck({
       }
     }
   }, [duel, player]);
+
+  // Assisted Mode: the cards the engine offers to Special Summon now, framed like the pile.
+  const [summonable, setSummonable] = useState<Set<number>>(() => summonableExtraDeckCodes(duel.assistOptions as any));
+  useEffect(() => {
+    const onOptions = (res: unknown) => setSummonable(summonableExtraDeckCodes(res as any));
+    duel.events.on("assist-options", onOptions);
+    return () => duel.events.off("assist-options", onOptions);
+  }, [duel]);
 
   if (!visible) return null;
   if (!duel.ygo) return null;
@@ -92,7 +102,8 @@ export function ExtraDeck({
                 }}
                 key={card.index}
                 src={card.images.small_url}
-                className="ygo-card"
+                className={player === YGOStatic.playerIndex && summonable.has(card.id) ? "ygo-card ygo-card-offered" : "ygo-card"}
+                title={player === YGOStatic.playerIndex && summonable.has(card.id) ? `${card.name}: can be Special Summoned now` : undefined}
               />
             </div>
           ))}

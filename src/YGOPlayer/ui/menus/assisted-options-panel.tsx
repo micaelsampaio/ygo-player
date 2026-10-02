@@ -1057,10 +1057,13 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
       // (an offered card activated from its own menu is that response); only
       // what the panel draws waits for the animation.
       duel.assistOptions = res;
+      // Pile viewers (the opened Extra Deck) frame the cards these options can play.
+      duel.events.dispatch("assist-options", res);
       offer({ result: res, options: res });
     }).catch(() => {
       if (requestIdRef.current !== requestId) return;
       duel.assistOptions = null;
+      duel.events.dispatch("assist-options", null);
       offer({ result: { available: false }, options: null });
     }).finally(() => {
       inFlightRef.current--;
