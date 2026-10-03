@@ -52,7 +52,6 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
   // Short-lived notice (e.g. a card-menu move the engine doesn't offer right now).
   const [notice, setNotice] = useState<string | null>(null);
   const [hover, setHover] = useState<HighlightTarget | null>(null);
-  const requestIdRef = useRef(0);
   const turnState = useDuelTurnState(duel);
 
   const enabled = !!duel.assist && duel.client.type === YGOClientType.PLAYER && !!duel.ygo?.options?.assistedMode;
@@ -64,59 +63,38 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
   // rows disabled and unframed. Released on the next enable-game-actions
   // (the queue drained), with a poll as the backstop.
   const [held, setHeld] = useState(false);
-  const gateRef = useRef<AnimationGate<{ result: AssistQueryResult; options: AssistQueryResult | null }> | null>(null);
+  const gateRef = useRef<AnimationGate<AssistQueryResult> | null>(null);
   // Right after a choice the server's answer can arrive before the moves it
   // caused (the bot's response, paced on the server): the board is still
   // for a moment, then animates. Hold the next options through that gap.
   const settleUntilRef = useRef(0);
   const holdAfterChoice = () => { settleUntilRef.current = Date.now() + CHOICE_SETTLE_MS; };
   if (!gateRef.current) {
-    gateRef.current = createAnimationGate(() => !!duel.commands?.isBusy?.() || Date.now() < settleUntilRef.current, ({ result: next, options }) => {
+    gateRef.current = createAnimationGate(() => !!duel.commands?.isBusy?.() || Date.now() < settleUntilRef.current, (next: AssistQueryResult) => {
       setResult(next);
-      duel.assistOptions = options; // card menus route matching moves through the engine
       setHeld(false);
     });
   }
   const gate = gateRef.current;
 
-  // Queries still on their way: until they answer, the rows on screen are stale.
-  const inFlightRef = useRef(0);
+  // The engine's options live in duel.assistController (card menus route
+  // through them at once, pile viewers frame what they offer); the panel asks
+  // it to re-query and draws each new answer once the animation allows.
+  const controller = duel.assistController;
   const refresh = () => {
     if (!enabled || !duel.assist) return;
-    const requestId = ++requestIdRef.current;
-    inFlightRef.current++;
     // Asked mid-animation (right after a choice): the rows on screen are about to be replaced.
     if (duel.commands?.isBusy?.()) setHeld(true);
-    const offer = (value: { result: AssistQueryResult; options: AssistQueryResult | null }) => {
-      if (!gate.offer(value)) setHeld(true);
-    };
-    duel.assist.query().then((res: AssistQueryResult) => {
-      // Card data the server sent for the cards these options name (a Deck
-      // card this client never saw), so names and art show.
-      const cards = (res as { cards?: unknown[] } | null)?.cards;
-      if (Array.isArray(cards) && cards.length) duel.ygo?.state?.registerCardData(cards as any);
-      if (requestIdRef.current !== requestId) return; // superseded by a newer query
-      // Card menus route through the engine with the newest options at once
-      // (an offered card activated from its own menu is that response); only
-      // what the panel draws waits for the animation.
-      duel.assistOptions = res;
-      // Pile viewers (the opened Extra Deck) frame the cards these options can play.
-      duel.events.dispatch("assist-options", res);
-      offer({ result: res, options: res });
-    }).catch(() => {
-      if (requestIdRef.current !== requestId) return;
-      duel.assistOptions = null;
-      duel.events.dispatch("assist-options", null);
-      offer({ result: { available: false }, options: null });
-    }).finally(() => {
-      inFlightRef.current--;
-      if (requestIdRef.current === requestId) setLoading(false);
-    });
+    void controller.refresh();
   };
 
   useEffect(() => {
     // Don't ask the server anything in a room that never enabled assisted mode.
     if (!enabled) return;
+    const unsubscribe = controller.subscribe((options) => {
+      if (!gate.offer(options ?? { available: false })) setHeld(true);
+      setLoading(false);
+    });
     refresh();
     // Every executed command toggles disable→enable around its animation;
     // clearing on "disable" would flicker the panel (and rebuild every
@@ -151,7 +129,8 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
       duel.events.off("assist-choice-done", onMenuDone);
       duel.events.off("assist-notice", onNotice);
       duel.events.off("assist-refresh", onTimelineMoved);
-      duel.assistOptions = null;
+      unsubscribe();
+      controller.clear();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [duel, enabled]);
@@ -164,15 +143,11 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
     if (carried) carried.targets = carried.targets.filter((t) => t.code !== code);
   };
 
-  // Space = the panel's Continue / Don't respond row (see YGODuel.assistSpaceAction).
+  // Space = the panel's Continue / Don't respond row (see YGOAssistController.spaceAction).
   const spaceActionRef = useRef<() => boolean>(() => false);
   useEffect(() => {
     if (!enabled) return;
-    const action = () => spaceActionRef.current();
-    duel.assistSpaceAction = action;
-    return () => {
-      if (duel.assistSpaceAction === action) duel.assistSpaceAction = null;
-    };
+    return duel.assistController.setSpaceAction(() => spaceActionRef.current());
   }, [duel, enabled]);
 
   // Backstop for a held result: an animation that ends without an
@@ -180,7 +155,7 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
   useEffect(() => {
     if (!held) return;
     const timer = setInterval(() => {
-      if (!gate.flush() && !gate.holding && !duel.commands?.isBusy?.() && inFlightRef.current === 0) setHeld(false);
+      if (!gate.flush() && !gate.holding && !duel.commands?.isBusy?.() && duel.assistController.inFlight === 0) setHeld(false);
     }, 250);
     return () => clearInterval(timer);
   }, [held, gate, duel]);
@@ -254,7 +229,7 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
     setPendingKey(key);
     setError(null);
     setHover(null);
-    duel.assist.choose({ commandType, data })
+    controller.choose({ commandType, data })
       .then((res: any) => {
         // e.g. "Bot activated Ash Blossom & Joyous Spring in response to your Bonfire"
         if (Array.isArray(res?.notices) && res.notices.length) setNotice(res.notices.join(" · "));

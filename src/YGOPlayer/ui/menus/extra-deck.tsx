@@ -17,12 +17,8 @@ export function ExtraDeck({
   visible: boolean;
   hasAction: boolean;
 }) {
-  const [summonable, setSummonable] = useState<Set<number>>(() => summonableExtraDeckCodes(duel.assistOptions as any));
-  useEffect(() => {
-    const onOptions = (res: unknown) => setSummonable(summonableExtraDeckCodes(res as any));
-    duel.events.on("assist-options", onOptions);
-    return () => duel.events.off("assist-options", onOptions);
-  }, [duel]);
+  const [summonable, setSummonable] = useState<Set<number>>(() => summonableExtraDeckCodes(duel.assistController.options as any));
+  useEffect(() => duel.assistController.subscribe((res) => setSummonable(summonableExtraDeckCodes(res as any))), [duel]);
 
   return (
     <PileViewer

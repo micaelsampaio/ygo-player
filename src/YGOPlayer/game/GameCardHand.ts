@@ -71,7 +71,7 @@ export class GameCardHand extends YGOEntity implements YGOUiElement {
       return;
     };
 
-    if (this.duel.assistHandPick?.(this.player, this.card.id)) return;
+    if (this.duel.assistController.handPick?.(this.player, this.card.id)) return;
 
     const action = this.duel.actionManager.getAction<ActionCardHandMenu>("card-hand-menu");
 

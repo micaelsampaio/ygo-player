@@ -321,11 +321,7 @@ export function PromptView({ duel, prompt, busy, pendingKey, respond, onHover }:
     return true;
   };
   useEffect(() => {
-    const pick = (player: number, code: number) => handPickRef.current(player, code);
-    duel.assistHandPick = pick;
-    return () => {
-      if (duel.assistHandPick === pick) duel.assistHandPick = null;
-    };
+    return duel.assistController.setHandPick((player: number, code: number) => handPickRef.current(player, code));
   }, [duel]);
 
   let body: ReactNode = null;

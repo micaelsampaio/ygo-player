@@ -1,9 +1,9 @@
-import * as THREE from "three";
 import { DuelEventHandlerProps } from "..";
 import { YGODuelEvents, YGOGameUtils } from "ygo-core";
 import { YGOTaskSequence } from "../../core/components/tasks/YGOTaskSequence";
 import { GameCard } from "../../game/GameCard";
 import {
+  getCardPositionInFrontOfCamera,
   getCardRotationFromFieldZoneData,
   getGameZone,
   getZonePositionFromZoneData,
@@ -17,6 +17,7 @@ import { YGOCommandHandler } from "../../core/components/YGOCommandHandler";
 import { MultipleTasks } from "../utils/multiple-tasks";
 import { createCardPopSummonEffectSequence, GameModalOverlayMesh } from "../../game/meshes/mesh-utils";
 import { MaterialOpacityTransition } from "../utils/material-opacity";
+import { extraDeckSummonPopDistance } from "../utils/extra-deck-summon";
 
 interface XYZSummonEventHandlerProps extends DuelEventHandlerProps {
   event: YGODuelEvents.XYZSummon;
@@ -49,14 +50,8 @@ export class XYZSummonEventHandler extends YGOCommandHandler {
       zoneData
     );
 
-    const direction = new THREE.Vector3();
-    camera.getWorldDirection(direction);
-
-    const startPosition = camera.position
-      .clone()
-      .add(direction.multiplyScalar(4));
-
-    const card = new GameCard({ duel, card: this.cardReference });
+    const startPosition = getCardPositionInFrontOfCamera({ duel, distance: extraDeckSummonPopDistance(duel.core.isMobileLayout) });
+    const card = new GameCard({ duel, card: this.cardReference, player: zoneData.player });
     card.hideCardStats();
     card.gameObject.position.copy(startPosition);
     card.gameObject.visible = false;

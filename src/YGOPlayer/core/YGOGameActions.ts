@@ -60,7 +60,8 @@ export class YGOGameActions {
     const duel = this.duel;
     const assist = duel.assist;
     if (!assist || duel.client?.type !== YGOClientType.PLAYER || !duel.ygo?.options?.assistedMode) return false;
-    const route = assistRouteFor(duel.assistOptions, move, card.id, originZone);
+    const controller = duel.assistController;
+    const route = assistRouteFor(controller.options, move, card.id, originZone);
     if (route.kind === "freeForm") {
       duel.events.dispatch("assist-notice", { message: ASSIST_FREE_FORM_NOTICE });
       return false;
@@ -70,15 +71,14 @@ export class YGOGameActions {
       duel.events.dispatch("assist-notice", { message: route.message });
       return true;
     }
-    const choose = (ref: CardRefData) => assist.choose({ commandType: move, data: { id: ref.code, ctrl: ref.ctrl, loc: ref.loc, seq: ref.seq } });
+    const choose = (ref: CardRefData) => controller.choose({ commandType: move, data: { id: ref.code, ctrl: ref.ctrl, loc: ref.loc, seq: ref.seq } });
     duel.events.dispatch("assist-choice-start", { code: card.id });
     const done = route.kind === "choose"
       ? choose(route.ref)
       // Continue past the open window, then make the move if the engine now lists it.
-      : assist.choose({ commandType: "Pass", data: {} })
-        .then(() => assist.query())
+      : controller.choose({ commandType: "Pass", data: {} })
+        .then(() => controller.query())
         .then((next: any) => {
-          duel.assistOptions = next;
           const again = assistRouteFor(next, move, card.id, originZone);
           if (again.kind === "choose") return choose(again.ref);
           return { notices: [`${card.name ?? "That card"} can't do that right now.`] };
@@ -787,7 +787,8 @@ export class YGOGameActions {
     const duel = this.duel;
     const assist = duel.assist;
     if (!assist || steps.length === 0 || duel.client?.type !== YGOClientType.PLAYER || !duel.ygo?.options?.assistedMode) return null;
-    const first = assistPhaseRouteFor(duel.assistOptions, steps[0]);
+    const controller = duel.assistController;
+    const first = assistPhaseRouteFor(controller.options, steps[0]);
     if (first.kind === "freeForm") return null;
     this.clearAction();
     if (first.kind === "blocked") {
@@ -795,23 +796,19 @@ export class YGOGameActions {
       return Promise.resolve();
     }
 
-    const query = async () => {
-      const next = await assist.query();
-      duel.assistOptions = next;
-      return next;
-    };
+    const query = () => controller.query();
     const walk = async (): Promise<{ notices?: string[] }> => {
-      let current = duel.assistOptions;
+      let current: any = controller.options;
       for (const [i, phase] of steps.entries()) {
         let route = assistPhaseRouteFor(current, phase);
         if (route.kind === "continueFirst" && i === 0) {
-          await assist.choose({ commandType: "Pass", data: {} });
+          await controller.choose({ commandType: "Pass", data: {} });
           current = await query();
           route = assistPhaseRouteFor(current, phase);
         }
         if (route.kind === "blocked") return { notices: [route.message] };
         if (route.kind !== "choose") return i === 0 ? { notices: [`Can't go to ${phase} right now.`] } : {};
-        await assist.choose({ commandType: "Duel Phase", data: { phase } });
+        await controller.choose({ commandType: "Duel Phase", data: { phase } });
         current = await query();
         // A window (or an effect's choice) the engine left open for the player: stop here.
         if (current?.available && (current.pending === "chain" || current.pending === "prompt")) return {};

@@ -35,6 +35,7 @@ import { YGOClient } from "ygo-core";
 import { PromiseTask } from "../scripts/promise-task";
 import { YGOServerActions } from "./YGOServerActions";
 import { YGOStatic } from "./YGOStatic";
+import { YGOAssistController } from "./YGOAssistController";
 
 export class YGODuel {
   public ygo!: InstanceType<typeof YGOCore>;
@@ -55,17 +56,10 @@ export class YGODuel {
    * YGOPlayerConnectToServerProps. undefined for editor/replay (no judge/
    * adapter to query) and for any player who never enabled assisted mode. */
   public assist?: { query(): Promise<any>; choose(action: { commandType: string; data: any }): Promise<any>; review?(): Promise<any>; leaveFeedback?(reason: string): Promise<any> };
-  /** The assisted options the panel last received (AssistedOptionsPanel keeps
-   * it current) — card menus route a matching move through assist.choose. */
-  public assistOptions: any = null;
-  /** Assisted Mode: Space passes your chain window (Continue / Don't respond)
-   * when the panel offers it — returns true when it did. Otherwise Space keeps
-   * its replay Play/Pause. Set by the assisted options panel. */
-  public assistSpaceAction: (() => boolean) | null = null;
-  /** Assisted Mode: a click on a hand card while an effect asks you to choose
-   * cards picks it when it's one of the choices — returns true when it did
-   * (the card's menu doesn't open). Set by the assisted options panel. */
-  public assistHandPick: ((player: number, code: number) => boolean) | null = null;
+  /** Assisted Mode: the engine's current options (card menus route a
+   * matching move through it), the Space handler and the hand-card pick —
+   * see YGOAssistController. */
+  public assistController: YGOAssistController = new YGOAssistController(this);
   public gameController: GameController;
   public mouseEvents: YGOMouseEvents;
   public tasks: YGOTaskController;
@@ -591,7 +585,7 @@ export class YGODuel {
     });
 
     this.globalHotKeysManager.on("space", () => {
-      if (this.assistSpaceAction?.()) return;
+      if (this.assistController.spaceAction?.()) return;
       if (this.commands.isPlaying()) {
         this.serverActions.controls.pause();
       } else {

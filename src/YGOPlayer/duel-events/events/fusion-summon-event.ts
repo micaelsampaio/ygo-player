@@ -268,7 +268,7 @@ export class FusionSummonEventHandler extends YGOCommandHandler {
 
     camera.getWorldDirection(direction);
 
-    const fusionCard = new GameCard({ duel, card: this.cardReference });
+    const fusionCard = new GameCard({ duel, card: this.cardReference, player: zoneData.player });
     fusionCard.gameObject.position.copy(pivotPosition);
     fusionCard.gameObject.position.y += 0.05;
     fusionCard.gameObject.visible = false;
