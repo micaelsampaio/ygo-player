@@ -192,7 +192,7 @@ export function parseSelectedCard(card: Card | null) {
 
   let typeLine = "";
 
-  if (isSpell || isTrap) {
+  if (isSpell) {
     typeLine = `[Spell]`;
   } else if (isTrap) {
     typeLine = `[Trap]`;

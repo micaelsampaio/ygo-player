@@ -8,6 +8,8 @@ import { stopPropagationCallback } from "../../scripts/utils";
 import { clickableProps } from "../components/a11y";
 import { pileCardProps } from "../components/pile-menu";
 
+const NO_CARDS: never[] = [];
+
 export function ViewDeckPopup({
   duel,
   deck,
@@ -73,10 +75,8 @@ export function ViewDeckPopup({
     }
   }, [visible, player]);
 
-  if (!visible) return null;
-
-  const field = duel.ygo.state.fields[deck.player];
-  const cards = field.mainDeck;
+  // Hooks run on every render: the early return for a hidden viewer comes after them.
+  const cards = visible ? duel.ygo.state.fields[deck.player].mainDeck : NO_CARDS;
 
   const cardsToShow = useMemo(() => {
     let searchTypes = Object.values(typesOfCards).some((v) => v);
@@ -98,6 +98,8 @@ export function ViewDeckPopup({
     cardsToSearch.reverse();
     return cardsToSearch;
   }, [search, cards, cards.length, typesOfCards]);
+
+  if (!visible) return null;
 
   return (
     <div

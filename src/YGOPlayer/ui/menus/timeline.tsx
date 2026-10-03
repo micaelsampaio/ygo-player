@@ -13,8 +13,8 @@ export interface TimelineCommandProps {
 }
 
 export function TimeLine({ duel }: { duel: YGODuel }) {
-  if (!duel.ygo) return null;
   const mouseEnterTime = useRef(Date.now());
+  if (!duel.ygo) return null;
   const commands = duel.ygo.commands;
   const currentCommand = duel.ygo.commands.index;
 
