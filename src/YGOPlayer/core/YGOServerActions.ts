@@ -1,4 +1,5 @@
 import { JSONCommand, YGOClient, YGOCommands, YGOGameUtils, YGOServerGameStateData } from "ygo-core";
+import type { YGOCommandPayload, YGOServerCommandRequest } from "ygo-core";
 import { YGODuel } from "./YGODuel";
 import { Command } from "ygo-core";
 import { YGOTimerUtils } from "../scripts/timer-utils";
@@ -100,9 +101,6 @@ export class YGOServerActions extends YGOComponent {
       let message = "";
       const playerName = this.duel.ygo.getField(data.player).player.name;
 
-      console.log("DATA", data.action);
-      console.log("Player", playerName);
-
       switch (data.action) {
         case YGOPlayerRemoteActions.OK:
           message = playerName + " says \"Ok\"";
@@ -177,27 +175,27 @@ export class YGOServerActions extends YGOComponent {
   public controls = {
     play: () => {
       const currentCommandId = this.duel.ygo.peek()?.commandId ?? -1;
-      this.client.send("server:exec", { type: "ygo:commands:play", data: { currentCommandId } })
+      this.client.send("server:exec", { type: "ygo:commands:play", data: { currentCommandId } } satisfies YGOServerCommandRequest)
     },
     pause: () => {
       const currentCommandId = this.duel.ygo.peek()?.commandId ?? -1;
-      this.client.send("server:exec", { type: "ygo:commands:pause", data: { currentCommandId } })
+      this.client.send("server:exec", { type: "ygo:commands:pause", data: { currentCommandId } } satisfies YGOServerCommandRequest)
     },
     nextCommand: () => {
       if (this.duel.commands.isPlaying()) return;
       if (!this.duel.ygo.hasNextCommand()) return;
       const currentCommandId = this.duel.ygo.peek()?.commandId ?? -1;
-      this.client.send("server:exec", { type: "ygo:commands:next", data: { currentCommandId } })
+      this.client.send("server:exec", { type: "ygo:commands:next", data: { currentCommandId } } satisfies YGOServerCommandRequest)
     },
     previousCommand: () => {
       if (!this.duel.ygo.hasPrevCommand()) return;
       const currentCommandId = this.duel.ygo.peek()?.commandId ?? -1;
-      this.client.send("server:exec", { type: "ygo:commands:previous", data: { currentCommandId } })
+      this.client.send("server:exec", { type: "ygo:commands:previous", data: { currentCommandId } } satisfies YGOServerCommandRequest)
     },
     goToCommand: (command: Command | number) => {
       const commandId = typeof command === "object" ? command.commandId : command;
       if (!Number.isInteger(commandId)) return;
-      this.client.send("server:exec", { type: "ygo:commands:goto_command", data: { commandId } })
+      this.client.send("server:exec", { type: "ygo:commands:goto_command", data: { commandId } } satisfies YGOServerCommandRequest)
     }
   }
 
@@ -234,7 +232,7 @@ export class YGOServerActions extends YGOComponent {
     // player's hidden cards — ygo-core YGOGameServer.acceptPlayerCommand).
     if (eventName === "server:exec-rejected") {
       const reason = typeof data?.reason === "string" && data.reason ? data.reason : "That action isn't allowed";
-      this.duel.events.dispatch("system-chat-message", { message: `Not allowed: ${reason}` } as any);
+      this.duel.events.dispatch("system-chat-message", { message: `Not allowed: ${reason}` });
       return;
     }
 
@@ -267,9 +265,9 @@ export class YGOServerActions extends YGOComponent {
     }
 
     if (eventName === "server:exec") {
-      const commandData = data.data;
-      if (data.type === "ygo:commands:exec") {
-        const eventData = data.data;
+      const payload = data as YGOCommandPayload;
+      if (payload.type === "ygo:commands:exec") {
+        const eventData = payload.data;
         // Hidden information: data of the opponent's cards this command reveals.
         if (eventData.cards) this.duel.ygo.state.registerCardData(eventData.cards);
         const command = new JSONCommand({ type: eventData.command.type, data: eventData.command.data });
@@ -278,22 +276,22 @@ export class YGOServerActions extends YGOComponent {
         // Bot duels: the bot's activation gets a spotlight when it plays.
         if (!this.duel.commands.isRecovering()) markBotActivation(this.duel, eventData.command);
         this.duel.commands.exec(new YGOControllerCommands.Exec(this.duel, command));
-      } else if (data.type === "ygo:commands:previous") {
-        const commandId = commandData.commandId;
+      } else if (payload.type === "ygo:commands:previous") {
+        const commandId = payload.data.commandId;
         this.duel.commands.previousCommand({ commandId });
-      } else if (data.type === "ygo:commands:next") {
-        const commandId = commandData.commandId;
+      } else if (payload.type === "ygo:commands:next") {
+        const commandId = payload.data.commandId;
         this.duel.commands.nextCommand({ commandId });
-      } else if (data.type === "ygo:commands:play") {
-        const commandId = commandData.commandId;
+      } else if (payload.type === "ygo:commands:play") {
+        const commandId = payload.data.commandId;
         this.duel.commands.play({ commandId });
-      } else if (data.type === "ygo:commands:pause") {
-        const commandId = commandData.commandId;
+      } else if (payload.type === "ygo:commands:pause") {
+        const commandId = payload.data.commandId;
         this.duel.commands.pause({ commandId });
-      } else if (data.type === "ygo:commands:goto_command") {
-        const eventData = data.data;
+      } else if (payload.type === "ygo:commands:goto_command") {
+        const eventData = payload.data;
         this.duel.commands.goToCommand({ commandId: eventData.commandId });
-      } else if (data.type === "ygo:replay:start") {
+      } else if (payload.type === "ygo:replay:start") {
         this.duel.events.dispatch("update-game-ui-config", { startReplay: true });
         this.timers.setTimeout(() => {
           this.duel.serverActions.controls.play();

@@ -1,3 +1,4 @@
+import type { ComponentType } from "react";
 import { DuelNotesActionEventHandler } from "./duel-notes-action-handler";
 import { GameSettingsMenu } from "./game-settings/game-settings-menu";
 import { Banish } from "./banish";
@@ -26,4 +27,7 @@ export const MENUS = {
     "settings-menu": GameSettingsMenu,
     "duel-notes-game-event-hanlder": DuelNotesActionEventHandler,
     "duel-endgame-overlay": DuelEndGameOverlay,
-}
+} satisfies Record<string, ComponentType<never>>;
+
+/** The `type` of a "set-ui-menu" / "toggle-ui-menu" event that renders a component. */
+export type YGOUiMenuType = keyof typeof MENUS;

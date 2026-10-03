@@ -4,6 +4,8 @@
  * events, which carry the engine's verdict.
  */
 
+import type { PuzzleRetryRequest } from "../../domain/puzzle-retry";
+
 export type PuzzleGoal = { type: "win" } | { type: "damage"; amount: number };
 export type PuzzleStatus = "playing" | "solved" | "failed";
 export type PuzzleOpponentPolicy = "pass" | "bot" | "eager";
@@ -93,12 +95,7 @@ export function puzzleResultTitle(view: PuzzleView): string | null {
   return null;
 }
 
-/** What the HUD hands its host for Try again (a new room: see ygo-socket-server puzzle:retry). */
-export interface PuzzleRetryRequest {
-  roomId: string;
-  puzzleId: string;
-  attempt: number;
-}
+export type { PuzzleRetryRequest } from "../../domain/puzzle-retry";
 
 export function retryRequestOf(view: PuzzleView): PuzzleRetryRequest {
   return { roomId: view.roomId, puzzleId: view.puzzleId, attempt: view.attempt };

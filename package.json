@@ -6,7 +6,11 @@
   "scripts": {
     "build": "NODE_ENV=production webpack --mode production",
     "build:docker": "DOCKER=true NODE_ENV=production webpack --mode production",
-    "dev": "NODE_ENV=development webpack --mode development --watch"
+    "dev": "NODE_ENV=development webpack --mode development --watch",
+    "typecheck": "tsc --noEmit -p .",
+    "lint": "eslint src",
+    "test": "vitest run src",
+    "check": "npm run typecheck && npm run lint && npm run test"
   },
   "dependencies": {
     "onnxruntime-web": "^1.30.0",
@@ -15,15 +19,22 @@
     "ygo-core": "file:../ygo-core"
   },
   "devDependencies": {
+    "@eslint/js": "^9.19.0",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@types/three": "^0.170.0",
     "css-loader": "^7.1.2",
+    "eslint": "^9.19.0",
+    "eslint-plugin-react-hooks": "^5.0.0",
+    "eslint-plugin-react-refresh": "^0.4.18",
+    "globals": "^15.14.0",
     "mini-css-extract-plugin": "^2.9.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "ts-loader": "^9.5.2",
     "typescript": "~5.6.2",
+    "typescript-eslint": "^8.22.0",
+    "vitest": "^3.2.4",
     "webpack": "^5.97.1",
     "webpack-cli": "^6.0.1"
   },

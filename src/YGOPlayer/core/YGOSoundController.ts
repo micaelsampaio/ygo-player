@@ -1,12 +1,13 @@
 import { YGOAudioClip, YGOAudioLayer } from "../types";
 import { YGOComponent } from "./YGOComponent";
+import { YGOPlayerLogger } from "./YGOPlayerLogger";
 
 export class YGOSoundController extends YGOComponent {
     private sounds: Map<string, YGOAudioClip[]>;
     private layers: YGOAudioLayer[];
     private timeScale: number;
 
-    constructor() {
+    constructor(private logger: YGOPlayerLogger = new YGOPlayerLogger()) {
         super("audio_controller");
         this.sounds = new Map();
         this.layers = [];
@@ -47,7 +48,7 @@ export class YGOSoundController extends YGOComponent {
         const audioClip = this.getSound(key);
 
         if (!audioClip) {
-            console.warn(`Sound ${key} could not be loaded.`);
+            this.logger.warn("YGOSoundController", `Sound ${key} could not be loaded.`);
             return null as any;
         }
 
@@ -57,7 +58,7 @@ export class YGOSoundController extends YGOComponent {
 
         const targetLayer = layer ? this.layers.find(l => l.name === layer) : this.layers[0];
         if (!targetLayer) {
-            console.warn(`Layer "${layer}" not found.`);
+            this.logger.warn("YGOSoundController", `Layer "${layer}" not found.`);
             return null as any;
         }
 

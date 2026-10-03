@@ -5,6 +5,8 @@
  * imports, so it stays unit-testable on its own.
  */
 
+import type { YGOEndGameAction } from "../domain/end-game";
+
 // Keys are ygo-core's YGODuelPhase values.
 export const PHASE_LABELS: Record<string, string> = {
   "Draw": "Draw Phase",
@@ -110,11 +112,7 @@ export function endGameHeadline({ isPlayerClient, localPlayerLost, winnerName }:
   return { text: winnerName ? `${winnerName} wins` : "Duel over", tone: "neutral" };
 }
 
-/** Next-step buttons the end-of-duel overlay can offer. The host (ygo101-web)
- * opts in to each one via `endGameActions` and handles the click through the
- * web component's "end-game-action" event — what "rematch" or "the lobby"
- * means depends entirely on how the duel was started. */
-export type YGOEndGameAction = "save-replay" | "rematch" | "back-to-lobby";
+export type { YGOEndGameAction } from "../domain/end-game";
 
 const END_GAME_ACTION_ORDER: YGOEndGameAction[] = ["save-replay", "rematch", "back-to-lobby"];
 

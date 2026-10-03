@@ -1,5 +1,8 @@
 import * as THREE from "three";
 import { YGOEntity } from "../core/YGOEntity";
+import { YGOPlayerLogger } from "../core/YGOPlayerLogger";
+
+const logger = new YGOPlayerLogger();
 
 export class YGOAnimationObject extends YGOEntity {
     private animator: THREE.AnimationMixer;
@@ -40,7 +43,7 @@ export class YGOAnimationObject extends YGOEntity {
         }
 
         if (!name || !this.actions.has(name)) {
-            console.warn(`Animation "${name}" not found`);
+            logger.warn("YGOAnimationObject", `Animation "${name}" not found`);
             return;
         }
 
@@ -66,7 +69,7 @@ export class YGOAnimationObject extends YGOEntity {
         timeScale?: number;
     } = {}): void {
         if (this.animations.length === 0) {
-            console.warn("No animations found to play");
+            logger.warn("YGOAnimationObject", "No animations found to play");
             return;
         }
 

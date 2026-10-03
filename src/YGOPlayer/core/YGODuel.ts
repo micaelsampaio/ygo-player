@@ -5,6 +5,7 @@ import { YGOCore, YGOReplayData, YGOServerGameStateData, YGOGameUtils, YGOClient
 import { YGOEntity } from "./YGOEntity";
 import { GameController } from "../game/GameController";
 import { EventBus } from "../scripts/event-bus";
+import type { YGODuelUIEvents } from "./YGODuelUIEvents";
 import { YGOMouseEvents } from "./components/YGOMouseEvents";
 import { createFields } from "../scripts/ygo-utils";
 import { PlayerField } from "../game/PlayerField";
@@ -28,7 +29,7 @@ import { YGOPlayerSettingsAdapter } from "./YGOPlayerSettings";
 import { fieldTheme } from "./field-themes";
 import { recolorModel } from "./field-theme-scene";
 import { HotKeyManager } from "../scripts/hotkey-manager";
-import { SETTINGS_MODAL_TYPE } from "../ui/menus/game-settings/game-settings-menu";
+import { SETTINGS_MODAL_TYPE } from "../domain/settings-modal";
 import { BattlePhaseController } from "../actions/BattlePhaseController";
 import { ActionAttackSelection } from "../actions/ActionAttackSelection";
 import { YGOClient } from "ygo-core";
@@ -57,7 +58,7 @@ export class YGODuel {
   public fieldStats!: YGOGameFieldStatsComponent;
   public camera: THREE.PerspectiveCamera;
   public entities: YGOEntity[];
-  public events: EventBus<any>;
+  public events: EventBus<YGODuelUIEvents>;
   public actionManager: YGOActionManager;
   public gameActions: YGOGameActions;
   public serverActions: YGOServerActions;
@@ -113,7 +114,7 @@ export class YGODuel {
     this.serverActions = new YGOServerActions(this, this.client);
     this.tasks = new YGOTaskController(this);
     this.commands = new YGOCommandsController(this);
-    this.soundController = new YGOSoundController();
+    this.soundController = new YGOSoundController(this.logger);
     this.mouseEvents = new YGOMouseEvents(this);
     this.assets = new YGOAssets(this);
     this.events = new EventBus();
@@ -216,8 +217,6 @@ export class YGODuel {
 
     this.ygo.events.on("new-log", (evenlLog) => {
       if (this.commands.isRecovering()) return;
-      // console.log("-------------- command ------------");
-      // console.log("command >>> ", command);
 
       this.events.dispatch("render-ui");
       this.commands.processYGOLog(evenlLog);
@@ -326,7 +325,7 @@ export class YGODuel {
 
       this.serverActions.server.setClientReady();
     } catch (error) {
-      console.error("YGODuel.load failed:", error);
+      this.logger.error("YGODuel", "load failed:", error);
     }
   }
 

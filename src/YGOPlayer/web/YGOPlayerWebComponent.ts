@@ -122,8 +122,6 @@ export class YGOPlayerComponentImpl extends HTMLElement implements YGOPlayerComp
   private start(config: YGOConfig) {
     if (!this.root) throw new Error("There is no root to render");
 
-    console.log("TCL: YGO WEB COMPOENENT START: ", config);
-
     this.root.render(
       createElement(YgoDuelApp, {
         bind: this.bind.bind(this),

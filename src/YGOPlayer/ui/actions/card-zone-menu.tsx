@@ -78,7 +78,6 @@ export function CardZoneMenu({
   const viewMaterials = () => {
     duel.events.dispatch("toggle-ui-menu", {
       group: "game-overlay",
-      autoClose: true,
       type: "xyz-monster-materials",
       data: { card, zone },
     });

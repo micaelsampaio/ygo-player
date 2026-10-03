@@ -1,3 +1,4 @@
+import type { ComponentType } from "react";
 import { DuelNotesFormAction } from "./duel-notes-form";
 import { CardBanishMenu } from "./card-banish-menu";
 import { CardDeckMenu } from "./card-deck-menu";
@@ -32,4 +33,7 @@ export const ACTIONS = {
     "duel-notes-form-menu": DuelNotesFormAction,
     "card-zone-attack-menu": CardZoneAttackMenuAction,
     "duel-phase-menu": DuelPhaseActionsMenu,
-}
+} satisfies Record<string, ComponentType<never>>;
+
+/** The `type` of a "set-ui-action" event that renders a component. */
+export type YGOUiActionType = keyof typeof ACTIONS;

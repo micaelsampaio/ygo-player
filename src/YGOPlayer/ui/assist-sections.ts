@@ -9,38 +9,9 @@ import { phaseLabel } from "./duel-status";
 import { passLabel, respondSectionTitle } from "./assist-respond";
 import { extraDeckSummonKind, groupSpecialSummons } from "./menus/special-summon-groups";
 import { CardRefData, PromptData, locationLabel, LOC_MZONE as LOC_M, LOC_SZONE as LOC_S } from "./assist-prompt";
+import type { AssistQueryResult, BattleOptions } from "../domain/assist-query";
 
-export interface IdleOptions {
-  summonable: CardRefData[];
-  spSummon: CardRefData[];
-  reposition: CardRefData[];
-  mset: CardRefData[];
-  sset: CardRefData[];
-  activatable: CardRefData[];
-  /** Spell Speed of each `activatable` entry (older servers: missing). */
-  activatableSpeed?: number[];
-  toBattle: boolean;
-  toEnd: boolean;
-}
-
-export interface BattleOptions {
-  attackable: CardRefData[];
-  activatable: CardRefData[];
-  toMain2: boolean;
-  toEnd: boolean;
-}
-
-/** The server only ever offers the single next phase (never a skip), plus
- * Standby / Main Phase 1 catch-up steps while the visible phase is behind
- * the engine's — see guidedView in ygo-socket-server's assistOptions.ts. */
-export type AssistQueryResult =
-  | { available: false }
-  | { available: true; pending: "idle"; options: IdleOptions; nextPhase?: string | null }
-  | { available: true; pending: "battle"; options: BattleOptions; nextPhase?: string | null }
-  /** The human's own chain window: chain a card, or don't respond. */
-  | { available: true; pending: "chain"; respond: { activatable: CardRefData[]; canPass: boolean; forced: boolean; chainLength?: number; chain?: CardRefData[] } }
-  /** An effect's follow-up choice the engine is holding for the human. */
-  | { available: true; pending: "prompt"; prompt: PromptData };
+export type { IdleOptions, BattleOptions, AssistQueryResult } from "../domain/assist-query";
 
 export interface OptionRow {
   key: string;

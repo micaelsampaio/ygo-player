@@ -41,7 +41,7 @@ export function YgoDuelApp({ config, client, bind: onBind, start: onStart }: { c
             duel.startDuel();
             if (onStart) onStart(duel);
         } catch (error) {
-            console.error("YgoDuelApp startDuel failed:", error);
+            duel?.logger.error("YgoDuelApp", "startDuel failed:", error);
         }
     }, [duel])
 

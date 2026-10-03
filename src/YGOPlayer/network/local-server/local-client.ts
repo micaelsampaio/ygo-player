@@ -33,9 +33,6 @@ export class LocalYGOPlayerClient implements YGOClient {
   }
 
   send(eventName: string, data?: unknown) {
-    console.log("TCL: >>>>>>>>>>>>>>> ");
-    console.log("TCL: send ~ eventName:", eventName);
-    console.log("TCL: send ~ data:", data);
     this.client.onReceiveMessage(eventName, data);
   }
 

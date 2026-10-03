@@ -85,13 +85,13 @@ export class YGODuelScene {
                 const isPlaying = () => !audio.paused && !audio.ended && audio.readyState > 2;
                 if (!isPlaying()) {
                     const resumeAudio = () => {
-                        audio.play().catch((e) => console.warn("Audio play failed:", e));
+                        audio.play().catch((e) => this.duel.logger.warn("YGODuelScene", "Audio play failed:", e));
                         window.removeEventListener("click", resumeAudio, true);
                     };
                     window.addEventListener("click", resumeAudio, true);
                 }
             } catch (e) {
-                console.warn('Failed to load music index or play music:', e);
+                this.duel.logger.warn("YGODuelScene", "Failed to load music index or play music:", e);
             }
         } else {
             // Play default music
@@ -105,7 +105,7 @@ export class YGODuelScene {
             const isPlaying = () => !audio.paused && !audio.ended && audio.readyState > 2;
             if (!isPlaying()) {
                 const resumeAudio = () => {
-                    audio.play().catch((e) => console.warn("Audio play failed:", e));
+                    audio.play().catch((e) => this.duel.logger.warn("YGODuelScene", "Audio play failed:", e));
                     window.removeEventListener("click", resumeAudio, true);
                 };
                 window.addEventListener("click", resumeAudio, true);

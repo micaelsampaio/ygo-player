@@ -237,7 +237,7 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
       .catch((err: any) => {
         // Most commonly "stale options" — the real engine's state moved on
         // between query and click. Not fatal: refresh() below re-syncs.
-        console.warn("AssistedOptionsPanel: choice rejected", err?.error ?? err);
+        duel.logger.warn("AssistedOptionsPanel", "choice rejected", err?.error ?? err);
         setError(assistErrorMessage(err));
       })
       .finally(() => {

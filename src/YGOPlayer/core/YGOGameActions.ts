@@ -1,6 +1,6 @@
 import { YGOClientType, YGOCommands, YGOGameUtils, YGOPlayerState } from "ygo-core";
-import { ASSIST_FREE_FORM_NOTICE, AssistMove, assistPhaseRouteFor, assistRouteFor } from "../ui/assist-routing";
-import type { CardRefData } from "../ui/assist-prompt";
+import { ASSIST_FREE_FORM_NOTICE, AssistMove, assistPhaseRouteFor, assistRouteFor } from "../domain/assist-routing";
+import type { CardRefData } from "../domain/assist-prompt";
 import { Card, CardPosition, FieldZone } from "ygo-core";
 import { ActionCardSelection } from "../actions/ActionSelectCard";
 import { CardZone } from "../game/CardZone";

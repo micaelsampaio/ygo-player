@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { YGODuel } from "../../../core/YGODuel";
+import type { YGOCardPointerEvent } from "../../../core/YGODuelUIEvents";
 import { Card } from "ygo-core";
 import { clamp } from "three/src/math/MathUtils";
 import "./style.css";
@@ -60,7 +61,7 @@ export function CardLongPressEffect({ duel }: { duel: YGODuel }) {
     }
 
     useEffect(() => {
-        duel.events.on("on-card-mouse-down", ({ event, card }: { event: MouseEvent, card: Card }) => {
+        duel.events.on("on-card-mouse-down", ({ event, card }: YGOCardPointerEvent) => {
             if (event.type === "mousedown") {
                 if (event.button > 1 || event.button < 0) return;
             }
@@ -75,7 +76,7 @@ export function CardLongPressEffect({ duel }: { duel: YGODuel }) {
             setMousePosition({ left: `${x}px`, top: `${y}px` });
         })
 
-        duel.events.on("on-card-mouse-up", (data: any) => {
+        duel.events.on("on-card-mouse-up", () => {
             clearTimeout(timer.current);
             setIsActive(false);
             selectedCard.current = null;

@@ -6,6 +6,7 @@ import { GamControlsDialog } from "./components/game-controls";
 import { ConfirmDialog } from "../../components/ConfirmDialog";
 import { canSurrender } from "../../duel-status";
 import { YGOClientType } from "ygo-core";
+import { SETTINGS_MODAL_TYPE } from "../../../domain/settings-modal";
 
 /** Why a player surrenders a bot duel (the server's LEAVE_REASONS): one optional tap. */
 const LEAVE_REASONS: Array<{ id: string; label: string }> = [
@@ -17,10 +18,7 @@ const LEAVE_REASONS: Array<{ id: string; label: string }> = [
     { id: "practising", label: "Just practising" },
 ];
 
-export enum SETTINGS_MODAL_TYPE {
-    SETTINGS,
-    CONTROLS
-}
+export { SETTINGS_MODAL_TYPE };
 
 const MODALS: any = {
     [SETTINGS_MODAL_TYPE.SETTINGS]: GameSettingsDialog,

@@ -9,7 +9,9 @@
  */
 
 /** Server event → the duel event (duel.events) it is dispatched as. */
-export const ROOM_EVENTS: Readonly<Record<string, string>> = {
+export type YGORoomDuelEvent = "puzzle-state" | "duel-preferences" | "deck-search-contents" | "deck-search-taken";
+
+export const ROOM_EVENTS: Readonly<Record<string, YGORoomDuelEvent>> = {
   "puzzle:state": "puzzle-state",
   "duel:preferences": "duel-preferences",
   "duel:deck:contents": "deck-search-contents",
@@ -20,7 +22,7 @@ export const ROOM_EVENTS: Readonly<Record<string, string>> = {
  * The duel event for a server event, or null when it isn't one of these or
  * it's about another room.
  */
-export function roomEventFor(eventName: string, data: unknown, roomId: unknown): string | null {
+export function roomEventFor(eventName: string, data: unknown, roomId: unknown): YGORoomDuelEvent | null {
   const duelEvent = ROOM_EVENTS[eventName];
   if (!duelEvent) return null;
   const eventRoom = (data as { roomId?: unknown } | null)?.roomId;

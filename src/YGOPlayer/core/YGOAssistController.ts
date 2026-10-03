@@ -1,4 +1,4 @@
-import type { AssistQueryResult } from "../ui/assist-sections";
+import type { AssistQueryResult } from "../domain/assist-query";
 
 export type AssistAction = { commandType: string; data: any };
 

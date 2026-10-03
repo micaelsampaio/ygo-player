@@ -1,7 +1,7 @@
 import { CardData, YGOReplayData } from "ygo-core";
 import { YGOPropsOptions } from "ygo-core";
 import { YGOProps } from "ygo-core";
-import type { YGOEndGameAction } from "../ui/duel-status";
+import type { YGOEndGameAction } from "../domain/end-game";
 import type { YGOPlayerErrorHandler } from "./YGOPlayerLogger";
 
 

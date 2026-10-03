@@ -80,7 +80,7 @@ export class YGOTaskController extends YGOComponent {
 
             if (this.tasks.length > 0) {
                 // check if there are any current task
-                console.error("YGO: THERE IS STILL TASKS ONGOING AFTER CLEAR TASKS");
+                this.duel.logger.error("YGO", "THERE IS STILL TASKS ONGOING AFTER CLEAR TASKS");
             }
         }
 

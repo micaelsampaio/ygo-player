@@ -1,5 +1,6 @@
-import { useEffect, useLayoutEffect, useState } from "react";
+import { ComponentType, useEffect, useLayoutEffect, useState } from "react";
 import { YGODuel } from "../core/YGODuel";
+import type { UiGameConfig } from "../core/YGODuelUIEvents";
 import { ACTIONS } from "./actions";
 import { DuelLogMenu } from "./menus/duel-log/duel-log";
 import { MENUS } from "./menus";
@@ -16,17 +17,24 @@ import { ChainLinkBadges } from "./components/chain-links/ChainLinkBadges";
 import { FirstDuelTips } from "./components/first-duel-tips/FirstDuelTips";
 import { PuzzleHUD } from "./puzzle/PuzzleHUD";
 
-export interface UiGameConfig {
-    actions: boolean
-    startReplay: boolean
+export type { UiGameConfig } from "../core/YGODuelUIEvents";
+
+/** An action/menu component as the controller renders it: its props come from
+ * the event's `data` (spread) plus the controller's own, so they can't be
+ * checked here. */
+type DynamicUiComponent = ComponentType<Record<string, unknown>>;
+
+/** The component registered for `type`, if any (same lookup as a plain index). */
+function componentFor(registry: Record<string, ComponentType<never>>, type: string): DynamicUiComponent | undefined {
+    return (registry as Record<string, ComponentType<never> | undefined>)[type] as DynamicUiComponent | undefined;
 }
 
 export function YGOUiController({ duel }: { duel: YGODuel }) {
     const { isMobileLayout, isPortrait } = useDeviceResolutionInfo()
     const [_, setRender] = useState<number>(-1)
     const [gameConfig, setGameConfig] = useState<UiGameConfig>({ actions: true, startReplay: false, })
-    const [action, setAction] = useState<{ type: string, data: any }>({ type: "", data: null })
-    const [menus, setMenus] = useState<{ group: string, visible: boolean, type: string, data: any }[]>([])
+    const [action, setAction] = useState<{ type: string, data?: object | null }>({ type: "", data: null })
+    const [menus, setMenus] = useState<{ group: string, visible: boolean, type: string, data?: object }[]>([])
     const [showFloatingMenus, setShowFloatingMenus] = useState(isMobileLayout ? false : true);
 
     const clearAction = () => {
@@ -49,7 +57,7 @@ export function YGOUiController({ duel }: { duel: YGODuel }) {
             duel.actionManager.clearAction();
         }
 
-        duel.events.on("set-ui-action", ({ type, data }: any) => {
+        duel.events.on("set-ui-action", ({ type, data }) => {
             setAction({ type, data });
         });
 
@@ -57,7 +65,7 @@ export function YGOUiController({ duel }: { duel: YGODuel }) {
             clearAction();
         });
 
-        duel.events.on("set-ui-menu", ({ group, type, data }: any) => {
+        duel.events.on("set-ui-menu", ({ group, type, data }) => {
             clearAction();
             setMenus((currentMenus) => {
                 const menus = currentMenus.filter(m => m.group !== group);
@@ -66,7 +74,7 @@ export function YGOUiController({ duel }: { duel: YGODuel }) {
             });
         });
 
-        duel.events.on("toggle-ui-menu", ({ group, type, data }: any) => {
+        duel.events.on("toggle-ui-menu", ({ group, type, data }) => {
             clearAction();
 
             setMenus((currentMenus) => {
@@ -82,7 +90,7 @@ export function YGOUiController({ duel }: { duel: YGODuel }) {
             });
         });
 
-        duel.events.on("set-ui-menu-visibility", ({ group, type, visibility }: any) => {
+        duel.events.on("set-ui-menu-visibility", ({ group, type, visibility }) => {
 
             setMenus((currentMenus) => {
 
@@ -107,7 +115,7 @@ export function YGOUiController({ duel }: { duel: YGODuel }) {
             });
         });
 
-        duel.events.on("close-ui-menu", ({ group, type }: { group: string, type: string }) => {
+        duel.events.on("close-ui-menu", ({ group, type }) => {
             clearAction();
 
             if (group) {
@@ -117,8 +125,8 @@ export function YGOUiController({ duel }: { duel: YGODuel }) {
             }
         });
 
-        duel.events.on("update-game-ui-config", (key: string, value: any) => {
-            setGameConfig(prev => ({ ...prev, [key]: value }));
+        duel.events.on("update-game-ui-config", (config) => {
+            setGameConfig(prev => ({ ...prev, ...config }));
         });
 
         duel.events.on("render-ui", () => {
@@ -141,7 +149,7 @@ export function YGOUiController({ duel }: { duel: YGODuel }) {
         }
     }, [duel, isMobileLayout])
 
-    const Action = (ACTIONS as any)[action.type] as any;
+    const Action = componentFor(ACTIONS, action.type);
 
     if (!duel) return null;
 
@@ -162,7 +170,7 @@ export function YGOUiController({ duel }: { duel: YGODuel }) {
 
         {
             menus.map(menu => {
-                const Menu = (MENUS as any)[menu.type] as any;
+                const Menu = componentFor(MENUS, menu.type);
                 if (!Menu) return null;
                 return <Menu
                     config={gameConfig}
