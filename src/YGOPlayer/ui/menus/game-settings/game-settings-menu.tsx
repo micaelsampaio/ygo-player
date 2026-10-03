@@ -67,7 +67,9 @@ export function GameSettingsMenu({ duel, currentMenu = SETTINGS_MODAL_TYPE.SETTI
         try {
             const replayData = await duel.getReplayData();
             await duel.config.actions!.saveReplay!(replayData);
-        } catch { }
+        } catch (error) {
+            duel.logger.swallowed("GameSettingsMenu.saveReplay", error);
+        }
     }, [duel]);
 
     const reportBug = useCallback(async () => {
@@ -78,7 +80,9 @@ export function GameSettingsMenu({ duel, currentMenu = SETTINGS_MODAL_TYPE.SETTI
             const errors: string[] = [];
             await duel.config.actions!.reportBug!({ data: replayData, errors });
             closeSettings();
-        } catch { }
+        } catch (error) {
+            duel.logger.swallowed("GameSettingsMenu.reportBug", error);
+        }
     }, [duel]);
 
     const selectModal = (id: SETTINGS_MODAL_TYPE) => {

@@ -1,6 +1,5 @@
 import { memo } from "react";
 import { TimelineCommandProps } from "../../timeline";
-//import { MoveCardCommand } from "ygo-core/dist/commands/MoveCardCommand";
 
 export const TooltipCommandWithCardName = memo(function ({
   command: baseCommand,

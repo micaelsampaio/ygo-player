@@ -1,6 +1,7 @@
 import * as THREE from "three";
-import { type YGOClient } from "ygo-core";
+import { type YGOClient, type YGOSerializedCommand } from "ygo-core";
 import type { YGOEndGameAction } from "./ui/duel-status";
+import type { YGOPlayerErrorHandler } from "./core/YGOPlayerLogger";
 
 export type { YGOEndGameAction };
 import {
@@ -58,10 +59,12 @@ export interface YGOReplayDeckData {
 export interface YGOPlayerStartEditorProps {
   cdnUrl: string;
   players: YGOPlayerData[];
-  commands: any[];
+  commands: YGOSerializedCommand[];
   options: YGOPropsOptions;
   gameMode?: "EDITOR" | "REPLAY"
   endGameActions?: YGOEndGameAction[]
+  /** Sees every error the player catches and recovers from (see YGOPlayerLogger). */
+  onError?: YGOPlayerErrorHandler;
   actions?: {
     saveReplay?: (replay: YGOReplayData) => Promise<void>
   }
@@ -73,6 +76,8 @@ export interface YGOPlayerStartReplayProps {
   replay: YGOReplayData;
   options: YGOPropsOptions;
   endGameActions?: YGOEndGameAction[];
+  /** Sees every error the player catches and recovers from (see YGOPlayerLogger). */
+  onError?: YGOPlayerErrorHandler;
   actions?: {
     saveReplay?: (replay: YGOReplayData) => Promise<void>
   }
@@ -99,6 +104,8 @@ export interface YGOPlayerConnectToServerProps {
   /** Next steps offered on the end-of-duel overlay; handled via the
    * component's "end-game-action" event. */
   endGameActions?: YGOEndGameAction[];
+  /** Sees every error the player catches and recovers from (see YGOPlayerLogger). */
+  onError?: YGOPlayerErrorHandler;
 }
 
 export interface YGOAudioLayer {

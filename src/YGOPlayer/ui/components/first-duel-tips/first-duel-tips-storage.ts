@@ -1,3 +1,5 @@
+import { getStorage, safeGetItem, safeSetItem } from "../../../scripts/safe-storage";
+
 /**
  * Remembers that the viewer dismissed the first-duel tips. Storage can be
  * missing or throw (private mode, blocked site data), in which case the tips
@@ -7,28 +9,13 @@ export const FIRST_DUEL_TIPS_KEY = "ygo-first-duel-tips-dismissed";
 
 type StorageLike = Pick<Storage, "getItem" | "setItem">;
 
-function defaultStorage(): StorageLike | null {
-  try {
-    return window.localStorage;
-  } catch {
-    return null;
-  }
+export function hasDismissedFirstDuelTips(storage: StorageLike | null | undefined = getStorage()): boolean {
+  return safeGetItem(FIRST_DUEL_TIPS_KEY, storage ?? undefined) === "1";
 }
 
-export function hasDismissedFirstDuelTips(storage: StorageLike | null = defaultStorage()): boolean {
-  try {
-    return storage?.getItem(FIRST_DUEL_TIPS_KEY) === "1";
-  } catch {
-    return false;
-  }
-}
-
-export function dismissFirstDuelTips(storage: StorageLike | null = defaultStorage()): void {
-  try {
-    storage?.setItem(FIRST_DUEL_TIPS_KEY, "1");
-  } catch {
-    /* storage blocked — the tips come back next duel */
-  }
+export function dismissFirstDuelTips(storage: StorageLike | null | undefined = getStorage()): void {
+  // Storage blocked: the tips come back next duel.
+  safeSetItem(FIRST_DUEL_TIPS_KEY, "1", storage ?? undefined);
 }
 
 /** Tips are for someone actually playing: not spectators/judges, not replays. */

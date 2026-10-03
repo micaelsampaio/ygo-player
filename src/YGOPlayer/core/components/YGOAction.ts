@@ -1,5 +1,6 @@
 import { YGOTimerUtils } from "../../scripts/timer-utils";
 import { YGOComponent } from "../YGOComponent";
+import { YGOPlayerLogger } from "../YGOPlayerLogger";
 
 enum YGOActionManagerState {
     IDLE,
@@ -16,7 +17,7 @@ export class YGOActionManager extends YGOComponent {
     public onChangeAction: ((action: YGOAction) => void) | null;
     private timers: YGOTimerUtils;
 
-    constructor() {
+    constructor(private logger: YGOPlayerLogger = new YGOPlayerLogger()) {
         super("actions_manager");
         this.timers = new YGOTimerUtils();
         this.actionsEnabled = true;
@@ -44,7 +45,9 @@ export class YGOActionManager extends YGOComponent {
             if (this.onActionTransition) this.onActionTransition(prevAction, this.action);
             if (this.onChangeAction) this.onChangeAction(this.action);
 
-        } catch { } finally {
+        } catch (error) {
+            this.logger.swallowed("YGOActionManager.setAction", error, action);
+        } finally {
             this.state = YGOActionManagerState.IDLE;
         }
     }

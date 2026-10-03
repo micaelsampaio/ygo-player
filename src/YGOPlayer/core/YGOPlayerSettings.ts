@@ -1,5 +1,6 @@
 import { EventBus } from "../scripts/event-bus"
 import { deepMerge, getJsonFromLocalStorage, safeStringify } from "../scripts/utils"
+import { safeSetItem } from "../scripts/safe-storage"
 
 export interface YGOPlayerSettings {
     musicVolume: number
@@ -166,6 +167,6 @@ export class YGOPlayerSettingsAdapter {
 
     public save() {
         const settingsAsString = safeStringify(this.data);
-        window.localStorage.setItem(YGO_SETTINGS_KEY, settingsAsString);
+        safeSetItem(YGO_SETTINGS_KEY, settingsAsString);
     }
 }

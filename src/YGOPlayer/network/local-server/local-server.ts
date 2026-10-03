@@ -1,12 +1,13 @@
 import { YGOProps } from "ygo-core";
-import { YGOClient, YGOGameServer } from "ygo-core";
+import { YGOGameServer } from "ygo-core";
+import { LocalYGOPlayerClient } from "./local-client";
 
 export class LocalYGOPlayerServer {
   public game!: YGOGameServer;
 
-  constructor(player: YGOClient, props: YGOProps) {
+  constructor(player: LocalYGOPlayerClient, props: YGOProps) {
 
-    const serverClient = (player as any).client;
+    const serverClient = player.client;
 
     this.game = new YGOGameServer({
       players: [serverClient],

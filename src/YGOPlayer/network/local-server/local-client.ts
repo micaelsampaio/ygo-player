@@ -1,12 +1,19 @@
 import { YGOClient, YGOClientType } from "ygo-core";
 
+type MessageCallback = (eventName: string, data?: unknown) => void;
+
+/** One end of the local pair: what the other end calls to deliver a message. */
+interface LocalPeer {
+  onReceiveMessage(eventName: string, data?: unknown): void;
+}
+
 // simulate local socket
 export class LocalYGOPlayerClient implements YGOClient {
   public username: string = "";
-  public client: YGOClient = null as any;
+  public client: LocalYGOPlayerCommunication;
   public type: YGOClientType;
-  private onMessageCb: any;
-  private onDisconnectCb: any;
+  private onMessageCb: MessageCallback | undefined;
+  private onDisconnectCb: (() => void) | undefined;
 
   constructor(username: string, type: YGOClientType) {
     this.username = username;
@@ -25,18 +32,18 @@ export class LocalYGOPlayerClient implements YGOClient {
     // this.client.disconnect();
   }
 
-  send(eventName: string, data?: any) {
+  send(eventName: string, data?: unknown) {
     console.log("TCL: >>>>>>>>>>>>>>> ");
     console.log("TCL: send ~ eventName:", eventName);
     console.log("TCL: send ~ data:", data);
-    (this.client as any).onReceiveMessage(eventName, data);
+    this.client.onReceiveMessage(eventName, data);
   }
 
-  onReceiveMessage(eventName: string, data: any) {
+  onReceiveMessage(eventName: string, data?: unknown) {
     this.onMessageCb?.(eventName, data);
   }
 
-  onMessage(cb: (eventName: string, data?: any) => void): void {
+  onMessage(cb: MessageCallback): void {
     this.onMessageCb = cb;
   }
 
@@ -49,28 +56,28 @@ export class LocalYGOPlayerClient implements YGOClient {
 export class LocalYGOPlayerCommunication implements YGOClient {
   public type: YGOClientType;
   public username: string;
-  public client: YGOClient;
-  private onMessageCb: any;
-  private onDisconnectCb: any;
+  public client: YGOClient & LocalPeer;
+  private onMessageCb: MessageCallback | undefined;
+  private onDisconnectCb: (() => void) | undefined;
   private connected: boolean;
 
-  constructor(client: YGOClient, username: string, type: YGOClientType) {
+  constructor(client: YGOClient & LocalPeer, username: string, type: YGOClientType) {
     this.client = client;
     this.username = username;
     this.type = type;
     this.connected = true;
   }
 
-  public send(eventName: string, data?: any) {
+  public send(eventName: string, data?: unknown) {
     if (!this.connected) return;
-    (this.client as any).onReceiveMessage(eventName, data);
+    this.client.onReceiveMessage(eventName, data);
   }
 
-  onReceiveMessage(eventName: string, data: any) {
+  onReceiveMessage(eventName: string, data?: unknown) {
     this.onMessageCb?.(eventName, data);
   }
 
-  onMessage(cb: (eventName: string, data?: any) => void): void {
+  onMessage(cb: MessageCallback): void {
     this.onMessageCb = cb;
   }
 

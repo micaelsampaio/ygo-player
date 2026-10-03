@@ -28,6 +28,8 @@ export interface YGOPlayerComponentEvents {
   "puzzle-retry": (args: PuzzleRetryRequest) => void;
 }
 
+type EventArgs<K extends keyof YGOPlayerComponentEvents> = Parameters<YGOPlayerComponentEvents[K]>[0];
+
 export interface YGOPlayerComponent extends HTMLElement {
   editor(props: YGOPlayerStartEditorProps): void
 
@@ -57,7 +59,7 @@ export class YGOPlayerComponentImpl extends HTMLElement implements YGOPlayerComp
   private root: ReactDOM.Root | undefined;
   public client!: YGOClient;
   public duel!: YGODuel;
-  public server: any;
+  public server: LocalYGOPlayerServer | undefined;
   private events: EventBus<YGOPlayerComponentEvents>;
   // Stashed here (rather than threaded through YGOConfig) since it's only
   // ever relevant for connectToServer — editor/replay have no judge/adapter
@@ -93,24 +95,24 @@ export class YGOPlayerComponentImpl extends HTMLElement implements YGOPlayerComp
     this.duel = duel;
     duel.assist = this.assist;
 
-    this.duel.ygo.events.on("command-created", (data: any) => {
+    this.duel.ygo.events.on("command-created", (data) => {
       this.dispatch("command-created", data);
     });
-    this.duel.ygo.events.on("command-executed", (data: any) => {
+    this.duel.ygo.events.on("command-executed", (data) => {
       this.dispatch("command-executed", data);
     });
 
 
     // Listen for game-defeat events from the duel and dispatch them to the web interface
-    this.duel.events.on("game-defeat", (data: any) => {
+    this.duel.events.on("game-defeat", (data: EventArgs<"game-defeat">) => {
       this.dispatch("game-defeat", data);
     });
 
-    this.duel.events.on("end-game-action", (data: any) => {
+    this.duel.events.on("end-game-action", (data: EventArgs<"end-game-action">) => {
       this.dispatch("end-game-action", data);
     });
 
-    this.duel.events.on("puzzle-retry", (data: any) => {
+    this.duel.events.on("puzzle-retry", (data: EventArgs<"puzzle-retry">) => {
       this.dispatch("puzzle-retry", data);
     });
 
@@ -136,7 +138,8 @@ export class YGOPlayerComponentImpl extends HTMLElement implements YGOPlayerComp
 
   editor(props: YGOPlayerStartEditorProps) {
 
-    this.client = new LocalYGOPlayerClient(props.players[0]?.name || "Player 1", YGOClientType.PLAYER)
+    const client = new LocalYGOPlayerClient(props.players[0]?.name || "Player 1", YGOClientType.PLAYER);
+    this.client = client;
 
     const config: YGOConfig = {
       cdnUrl: props.cdnUrl,
@@ -146,9 +149,10 @@ export class YGOPlayerComponentImpl extends HTMLElement implements YGOPlayerComp
       actions: props.actions,
       gameMode: props.gameMode || "EDITOR",
       endGameActions: props.endGameActions,
+      onError: props.onError,
     };
 
-    this.server = new LocalYGOPlayerServer(this.client, config);
+    this.server = new LocalYGOPlayerServer(client, config);
 
     this.start(config);
   }
@@ -158,8 +162,8 @@ export class YGOPlayerComponentImpl extends HTMLElement implements YGOPlayerComp
     const options: YGOPropsOptions = { ...props.options || {} };
 
     const players = props.replay.players.map(
-      (playerData: any, playerIndex: any) => {
-        const mainDeck: CardData[] = playerData.mainDeck.map((id: any) => {
+      (playerData, playerIndex) => {
+        const mainDeck: CardData[] = playerData.mainDeck.map((id) => {
           const card = props.decks[playerIndex].mainDeck.find(
             (card) => card.id === id
           );
@@ -170,7 +174,7 @@ export class YGOPlayerComponentImpl extends HTMLElement implements YGOPlayerComp
           return card as CardData;
         });
 
-        const extraDeck: CardData[] = playerData.extraDeck.map((id: any) => {
+        const extraDeck: CardData[] = playerData.extraDeck.map((id) => {
           const card = props.decks[playerIndex].extraDeck.find(
             (card) => card.id === id
           );
@@ -201,12 +205,14 @@ export class YGOPlayerComponentImpl extends HTMLElement implements YGOPlayerComp
       actions: props.actions,
       gameMode: "REPLAY",
       endGameActions: props.endGameActions,
+      onError: props.onError,
     };
 
     config.options.shuffleDecks = false;
 
-    this.client = new LocalYGOPlayerClient(players[0]?.name || "Player 1", YGOClientType.PLAYER)
-    this.server = new LocalYGOPlayerServer(this.client, config);
+    const client = new LocalYGOPlayerClient(players[0]?.name || "Player 1", YGOClientType.PLAYER);
+    this.client = client;
+    this.server = new LocalYGOPlayerServer(client, config);
 
     this.start(config);
   }
@@ -224,6 +230,7 @@ export class YGOPlayerComponentImpl extends HTMLElement implements YGOPlayerComp
       actions: {},
       gameMode: "EDITOR",
       endGameActions: props.endGameActions,
+      onError: props.onError,
     };
 
     this.start(config);

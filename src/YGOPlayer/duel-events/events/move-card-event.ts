@@ -144,7 +144,6 @@ export class MoveCardEventHandler extends YGOCommandHandler {
       scale = cardZone.scale.clone();
     }
 
-    // @ts-ignore
     if (!card) {
       card = new GameCard({ duel, card: this.cardReference });
     }

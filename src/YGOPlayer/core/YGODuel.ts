@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { YGOPlayerCore } from "./YGOPlayerCore";
 import { YGODuelState, YGOUiElement } from "../types";
-import { YGOCore, YGOServerGameStateData, YGOGameUtils, YGOClientType, CardData, YGOCommandScope, YGOCommands, YGOPlayerRemoteActions, HIDDEN_CARD_ID, createHiddenCardData } from "ygo-core";
+import { YGOCore, YGOReplayData, YGOServerGameStateData, YGOGameUtils, YGOClientType, CardData, YGOCommandScope, YGOCommands, YGOPlayerRemoteActions, HIDDEN_CARD_ID, createHiddenCardData } from "ygo-core";
 import { YGOEntity } from "./YGOEntity";
 import { GameController } from "../game/GameController";
 import { EventBus } from "../scripts/event-bus";
@@ -36,6 +36,15 @@ import { PromiseTask } from "../scripts/promise-task";
 import { YGOServerActions } from "./YGOServerActions";
 import { YGOStatic } from "./YGOStatic";
 import { YGOAssistController } from "./YGOAssistController";
+import { YGOPlayerLogger } from "./YGOPlayerLogger";
+import type { YGOAssistActions } from "../types";
+
+declare global {
+  interface Window {
+    /** The live duel, for debugging from the console. */
+    YGODuel?: YGODuel;
+  }
+}
 
 export class YGODuel {
   public ygo!: InstanceType<typeof YGOCore>;
@@ -55,7 +64,7 @@ export class YGODuel {
   /** Set by YGOPlayerComponentImpl.bind() for connectToServer() only — see
    * YGOPlayerConnectToServerProps. undefined for editor/replay (no judge/
    * adapter to query) and for any player who never enabled assisted mode. */
-  public assist?: { query(): Promise<any>; choose(action: { commandType: string; data: any }): Promise<any>; review?(): Promise<any>; leaveFeedback?(reason: string): Promise<any> };
+  public assist?: YGOAssistActions;
   /** Assisted Mode: the engine's current options (card menus route a
    * matching move through it), the Space handler and the hand-card pick —
    * see YGOAssistController. */
@@ -68,6 +77,7 @@ export class YGODuel {
   public config: YGOConfig;
   public duelScene: YGODuelScene;
   public settings: YGOPlayerSettingsAdapter;
+  public logger: YGOPlayerLogger;
   public globalHotKeysManager: HotKeyManager;
   public isGameActive: boolean;
   public continuousAccept: boolean = false;
@@ -89,6 +99,7 @@ export class YGODuel {
     this.client = client;
     this.config = config;
     this.settings = new YGOPlayerSettingsAdapter();
+    this.logger = new YGOPlayerLogger(config.onError);
 
     this.core = new YGOPlayerCore({ canvas });
     this.core.timeScale = this.settings.getGameSpeed();
@@ -98,7 +109,7 @@ export class YGODuel {
     this.fields = [];
     this.duelScene = new YGODuelScene(this);
     this.gameController = new GameController(this);
-    this.actionManager = new YGOActionManager();
+    this.actionManager = new YGOActionManager(this.logger);
     this.serverActions = new YGOServerActions(this, this.client);
     this.tasks = new YGOTaskController(this);
     this.commands = new YGOCommandsController(this);
@@ -131,9 +142,8 @@ export class YGODuel {
     this.setupVars();
 
     this.core.events.on("on-timescale-change", (timeScale: number) => this.soundController.setTimeScale(timeScale));
-    //this.ygo = new YGOCore(this.config);
 
-    (window as any).YGODuel = this;
+    window.YGODuel = this;
 
     this.serverActions.server.getGameState();
   }
@@ -204,7 +214,7 @@ export class YGODuel {
     this.config.options.showCards = cardsAreVisible;
     this.config.autoChangePlayer = cardsAreVisible;
 
-    this.ygo.events.on("new-log", (evenlLog: any) => {
+    this.ygo.events.on("new-log", (evenlLog) => {
       if (this.commands.isRecovering()) return;
       // console.log("-------------- command ------------");
       // console.log("command >>> ", command);
@@ -213,16 +223,16 @@ export class YGODuel {
       this.commands.processYGOLog(evenlLog);
     });
 
-    this.ygo.events.on("update-logs", (data: any) => {
+    this.ygo.events.on("update-logs", (data) => {
       this.events.dispatch("logs-updated", data);
     });
 
-    this.ygo.events.on("set-duel-turn", (data: any) => {
+    this.ygo.events.on("set-duel-turn", () => {
       this.continuousAccept = false;
       this.events.dispatch("render-ui");
     });
 
-    this.ygo.events.on("set-duel-turn-priority", (data: any) => {
+    this.ygo.events.on("set-duel-turn-priority", () => {
       this.events.dispatch("render-ui");
       if (this.continuousAccept) {
         const localPlayer = YGOStatic.playerIndex;
@@ -283,10 +293,10 @@ export class YGODuel {
       const fieldModel = this.assets.models.get(`${this.config.cdnUrl}/models/field.glb`)!;
       const gameFieldScene = tableUrl ? this.assets.models.get(tableUrl) ?? null : null;
       if (gameFieldScene && theme.recolor) recolorModel(gameFieldScene.scene, theme.recolor);
-      this.fields = createFields({ duel: this, fieldModel: fieldModel.scene as any });
+      this.fields = createFields({ duel: this, fieldModel: fieldModel.scene });
       this.fieldStats = new YGOGameFieldStatsComponent(this);
       this.entities.push(this.gameController);
-      this.duelScene.createFields({ gameField: (gameFieldScene?.scene ?? null) as any, theme });
+      this.duelScene.createFields({ gameField: (gameFieldScene?.scene ?? null) as unknown as THREE.Scene | null, theme }); // a GLTF root Group, used as the field scene
       this.duelScene.createGameMusic();
       this.gameController.getComponent<ActionCardSelection>("action_card_selection").createCardSelections();
       this.gameController.getComponent<ActionAttackSelection>("attack_selection_action").create();
@@ -441,7 +451,7 @@ export class YGODuel {
       }
     }
 
-    extraDeck.faceUpCards = extraDeckCards.reverse() as any;
+    extraDeck.faceUpCards = extraDeckCards.reverse() as GameCard[]; // every slot was filled above
     extraDeck.updateExtraDeck();
   }
 
@@ -498,7 +508,7 @@ export class YGODuel {
   }
 
   public destroy(entity: YGOEntity) {
-    const uiElement: YGOUiElement = entity as any;
+    const uiElement = entity as unknown as YGOUiElement;
 
     if (uiElement.isUiElement) {
       this.gameController
@@ -613,7 +623,7 @@ export class YGODuel {
    * holds its own view (the opponent's cards are placeholders), so the full
    * replay comes from the server — which hands it out once the match is over.
    */
-  async getReplayData(): Promise<any> {
+  async getReplayData(): Promise<YGOReplayData> {
     if (this.ygo.options.hiddenInfoClient) {
       return this.serverActions.server.requestReplay();
     }
@@ -653,7 +663,9 @@ export class YGODuel {
   public destroyDuelInstance() {
     try {
       this.gameController.destroyEntity();
-    } catch (error) { }
+    } catch (error) {
+      this.logger.swallowed("YGODuel.destroyDuelInstance:gameController", error);
+    }
 
     // Its middle-mouse listeners live on window, not the torn-down canvas.
     this.fieldStats?.destroy();
@@ -661,16 +673,20 @@ export class YGODuel {
     this.entities.forEach(entity => {
       try {
         entity.destroyEntity();
-      } catch (error) { }
+      } catch (error) {
+        this.logger.swallowed("YGODuel.destroyDuelInstance:entity", error, entity);
+      }
     });
 
     try {
       this.core.destroy();
-    } catch (error) { }
+    } catch (error) {
+      this.logger.swallowed("YGODuel.destroyDuelInstance:core", error);
+    }
 
     this.globalHotKeysManager?.clear();
 
-    if ((window as any).YGODuel === this) (window as any).YGODuel = undefined;
+    if (window.YGODuel === this) window.YGODuel = undefined;
 
     // Do NOT call this.client.disconnect() here. For connectToServer() sessions,
     // `client` is the app's long-lived socket wrapper, reused across multiple

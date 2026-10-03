@@ -12,11 +12,10 @@ import { YGOGameUtils } from "ygo-core";
 import { Banish } from "../game/Banish";
 import { YGOStatic } from "../core/YGOStatic";
 import { allowedExtraMonsterZones } from "./extra-monster-zones";
-//import { YGOUtils } from "ygo-core/src/game/YGOUtils";
 
 type CreateFieldDto = {
   duel: YGODuel;
-  fieldModel: THREE.Scene;
+  fieldModel: THREE.Object3D;
 };
 
 export function createFields({ duel, fieldModel }: CreateFieldDto) {

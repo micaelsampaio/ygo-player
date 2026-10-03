@@ -4,16 +4,28 @@ import { YGODuel } from "../YGODuel";
 import { YGOUiElement } from '../../types';
 import { EventBus } from '../../scripts/event-bus';
 
+/** A registered element, as seen from its game object (set by registerElement). */
+type UiElementRef = YGOUiElement & { isGameHandZone?: boolean; handIndex?: number };
+type UiObject = THREE.Object3D & { uiElementRef?: UiElementRef };
+type UiIntersection = THREE.Intersection<UiObject>;
+type MouseClickArgs = { event: MouseEvent; elements: UiIntersection[] };
+
+export interface YGOMouseEventsEvents {
+    click: (args: MouseClickArgs) => void;
+}
+
 export class YGOMouseEvents extends YGOComponent {
     private elements: Set<YGOUiElement>;
     private camera: THREE.Camera;
     private raycaster: THREE.Raycaster;
-    private mouseDownElement: YGOUiElement | null;
+    /** The game object pressed on mouse down (compared on mouse up / click). */
+    private mouseDownElement: UiObject | null;
     private hoverElement: YGOUiElement | null;
     public mousePositionOnScreen: THREE.Vector2 = new THREE.Vector2(0, 0);
-    public events: EventBus<any>;
+    public events: EventBus<YGOMouseEventsEvents>;
 
-    public onClickCb: any;
+    public onClickCb: ((args: MouseClickArgs) => void) | null | undefined;
+    // Spread as React props on the player root (YgoDuelApp), whose handlers get React mouse events.
     public eventsReference: any = {};
 
     constructor(duel: YGODuel) {
@@ -37,14 +49,14 @@ export class YGOMouseEvents extends YGOComponent {
 
     }
 
-    public registerElement(element: any) {
-        element.gameObject.uiElementRef = element;
+    public registerElement(element: YGOUiElement) {
+        (element.gameObject as UiObject).uiElementRef = element;
         element.isUiElement = true;
         this.elements.add(element);
     }
 
-    public unregisterElement(element: any) {
-        delete element.gameObject.uiElementRef;
+    public unregisterElement(element: YGOUiElement) {
+        delete (element.gameObject as UiObject).uiElementRef;
         this.elements.delete(element);
     }
 
@@ -52,7 +64,7 @@ export class YGOMouseEvents extends YGOComponent {
         return Array.from(this.elements).map(e => e.gameObject).filter(e => e.visible);
     }
 
-    private getIntersectsElements(event: MouseEvent) {
+    private getIntersectsElements(event: MouseEvent): UiIntersection[] {
         const mouse = new THREE.Vector2();
         const activeElements = this.getElements();
 
@@ -62,15 +74,15 @@ export class YGOMouseEvents extends YGOComponent {
         this.mousePositionOnScreen.copy(mouse);
 
         this.raycaster.setFromCamera(mouse, this.camera);
-        const intersects = this.raycaster.intersectObjects(activeElements);
-        return intersects.filter((intersect: any) => intersect?.object?.uiElementRef);
+        const intersects = this.raycaster.intersectObjects<UiObject>(activeElements);
+        return intersects.filter((intersect) => intersect?.object?.uiElementRef);
     }
 
     private event_OnMouseDown(event: MouseEvent) {
         const elements = this.getIntersectsElements(event);
         const elementCardInHand = this.getCardInHandFromInterseptions(elements);
         if (elements.length > 0) {
-            const element: any = elementCardInHand?.object || elements[0].object;
+            const element = elementCardInHand?.object || elements[0].object;
             this.mouseDownElement = element;
 
             const clickElement = element.uiElementRef as YGOUiElement;
@@ -88,9 +100,9 @@ export class YGOMouseEvents extends YGOComponent {
         const elementCardInHand = this.getCardInHandFromInterseptions(elements);
 
         if (elements.length > 0) {
-            const element: any = elementCardInHand?.object || elements[0].object;
+            const element = elementCardInHand?.object || elements[0].object;
 
-            (event as any).sameTargetAsMouseDown = this.mouseDownElement === element;
+            (event as MouseEvent & { sameTargetAsMouseDown?: boolean }).sameTargetAsMouseDown = this.mouseDownElement === element;
 
             const clickElement = element.uiElementRef as YGOUiElement;
 
@@ -107,7 +119,7 @@ export class YGOMouseEvents extends YGOComponent {
         let clickElement: YGOUiElement | null = null;
 
         if (elements.length > 0) {
-            const element: any = elementCardInHand?.object || elements[0].object;
+            const element = elementCardInHand?.object || elements[0].object;
 
             if (element === this.mouseDownElement) {
                 clickElement = element.uiElementRef as YGOUiElement;
@@ -132,8 +144,8 @@ export class YGOMouseEvents extends YGOComponent {
         const elementCardInHand = this.getCardInHandFromInterseptions(elements);
 
         if (elements.length > 0) {
-            const element: any = elementCardInHand?.object || elements[0].object;
-            const hoverElement: YGOUiElement = element.uiElementRef;
+            const element = elementCardInHand?.object || elements[0].object;
+            const hoverElement = element.uiElementRef as YGOUiElement;
 
             if (hoverElement !== this.hoverElement) {
                 if (this.hoverElement?.onMouseLeave) {
@@ -157,9 +169,9 @@ export class YGOMouseEvents extends YGOComponent {
         }
     }
 
-    private getCardInHandFromInterseptions(elements: any[]) {
+    private getCardInHandFromInterseptions(elements: UiIntersection[]): UiIntersection | undefined {
 
-        const gameHandZone = elements.find(c => c.object.uiElementRef.isGameHandZone && c.object.visible);
+        const gameHandZone = elements.find(c => c.object.uiElementRef!.isGameHandZone && c.object.visible);
 
         if (gameHandZone) {
             return gameHandZone;
@@ -168,8 +180,8 @@ export class YGOMouseEvents extends YGOComponent {
         const cardsInHand = elements.filter((element) => element.object.uiElementRef?.isUiCardElement);
 
         if (cardsInHand.length > 0) {
-            cardsInHand.sort((a: any, b: any) => {
-                return b.object.uiElementRef.handIndex - a.object.uiElementRef.handIndex;
+            cardsInHand.sort((a, b) => {
+                return b.object.uiElementRef!.handIndex! - a.object.uiElementRef!.handIndex!;
             });
 
             return cardsInHand[0];

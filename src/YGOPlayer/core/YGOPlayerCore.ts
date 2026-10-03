@@ -1,12 +1,15 @@
 import * as THREE from 'three';
-//@ts-ignore
 import { GLTF, GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { PostFx, PostFxOptions } from './render/post-fx';
-//@ts-ignore
+// @ts-expect-error "three/addons/*" is a package.json exports alias; moduleResolution "node" cannot see its types (webpack resolves it).
 import { Font, FontLoader } from 'three/addons/loaders/FontLoader.js';
 import { EventBus } from '../scripts/event-bus';
 import { getResolutionInfo } from '../scripts/use-device-resolution-info';
-// import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+
+export interface YGOPlayerCoreEvents {
+    resize: () => void;
+    "on-timescale-change": (timeScale: number) => void;
+}
 
 export const globalUniforms = {
     time: { value: 0.0 }
@@ -26,7 +29,7 @@ export class YGOPlayerCore {
     public fonts = new Map<string, Font>();
     public mapBounds: THREE.Object3D;
     public mobileMapBounds: THREE.Object3D;
-    public events: EventBus<any>;
+    public events: EventBus<YGOPlayerCoreEvents>;
     public isMobileLayout: boolean;
 
     // time
@@ -106,8 +109,6 @@ export class YGOPlayerCore {
 
         this.renderer.render(this.scene, this.camera);
 
-        // (this as any).controls.update();
-
         if (this.isOverlayEnabled) {
             this.renderer.autoClear = false;
             this.renderer.clearDepth();
@@ -130,7 +131,7 @@ export class YGOPlayerCore {
 
     public async loadFontAsync(name: string, url: string): Promise<Font> {
         return new Promise((resolve) => {
-            this.fontLoader.load(url, (font: any) => {
+            this.fontLoader.load(url, (font: Font) => {
                 resolve(font);
                 this.fonts.set(name, font);
             })
@@ -168,7 +169,7 @@ export class YGOPlayerCore {
 
 
         const activeBounds = this.isMobileLayout ? this.mobileMapBounds : this.mapBounds;
-        ((activeBounds as any).material as THREE.MeshBasicMaterial).color.set(0x00ff00);
+        ((activeBounds as THREE.Mesh).material as THREE.MeshBasicMaterial).color.set(0x00ff00);
 
         const sidebarWidth = this.isMobileLayout ? 0 : 300;
         const screenWidth = window.innerWidth - sidebarWidth;

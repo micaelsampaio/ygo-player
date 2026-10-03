@@ -18,7 +18,7 @@ import { XYZDetachMaterialHandler } from "./events/xyz-detach-material-event";
 import { XYZOverlaySummonEventHandler } from "./events/xyz-overlay-event";
 import { XYZSummonEventHandler } from "./events/xyz-summon-event";
 import { NegateCardHandler } from "./events/negate-card-events";
-import { DisappearEventHandler } from "./events/disapear-event";
+import { DisappearEventHandler } from "./events/disappear-event";
 import { StartHandEventHandler } from "./events/start-hand-event";
 import { SwapHandEventHandler } from "./events/swap-hand-event";
 import { DuelNotesEventHandler } from "./events/duel-notes-event";

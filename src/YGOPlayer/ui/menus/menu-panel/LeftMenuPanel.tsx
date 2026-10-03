@@ -3,6 +3,7 @@ import { YGODuel } from "../../../core/YGODuel";
 import { Chat } from "./components/chat";
 import { SelectedCardMenu } from "./components/selected-card-menu";
 import { stopPropagationCallback } from "../../../scripts/utils";
+import { safeGetItem, safeSetItem } from "../../../scripts/safe-storage";
 import { PlayerRemoteActionsComponent } from "./components/player-actions";
 import { GameTimelineControls } from "./components/timeline-controls";
 import { YgoAsideMenu } from "./components/mobile-aside";
@@ -19,7 +20,7 @@ enum LEFT_MENUS {
 const COLLAPSED_KEY = "ygo-left-panel-collapsed";
 
 function readCollapsed(): boolean {
-  try { return window.localStorage.getItem(COLLAPSED_KEY) === "1"; } catch { return false; }
+  return safeGetItem(COLLAPSED_KEY) === "1";
 }
 
 export function LeftMenuPanel({ duel, isMobileLayout, showMenus }: { duel: YGODuel, isMobileLayout: boolean, showMenus: boolean }) {
@@ -32,7 +33,7 @@ export function LeftMenuPanel({ duel, isMobileLayout, showMenus }: { duel: YGODu
   const toggleCollapsed = useCallback((e: React.MouseEvent) => {
     stopPropagationCallback(e);
     setCollapsed((c) => {
-      try { window.localStorage.setItem(COLLAPSED_KEY, c ? "0" : "1"); } catch { /* storage blocked */ }
+      safeSetItem(COLLAPSED_KEY, c ? "0" : "1");
       return !c;
     });
   }, []);

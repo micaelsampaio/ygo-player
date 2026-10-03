@@ -1,4 +1,5 @@
 import type { PostFxOptions } from "./render/post-fx";
+import { getStorage } from "../scripts/safe-storage";
 /**
  * Duel field themes: how the board looks — the table model, its palette,
  * the light — never where the zones are (that's field.glb), so a theme
@@ -46,7 +47,7 @@ export function fieldTheme(id: string | null | undefined): FieldTheme {
 const SETTINGS_KEY = "ygo_player_settings";
 
 /** The field theme saved in this browser (the lobby and the in-duel settings share it). */
-export function getStoredFieldTheme(storage: Pick<Storage, "getItem"> | undefined = safeStorage()): FieldThemeId {
+export function getStoredFieldTheme(storage: Pick<Storage, "getItem"> | undefined = getStorage()): FieldThemeId {
   try {
     const raw = storage?.getItem(SETTINGS_KEY);
     return fieldTheme(raw ? JSON.parse(raw)?.fieldTheme : undefined).id;
@@ -55,7 +56,7 @@ export function getStoredFieldTheme(storage: Pick<Storage, "getItem"> | undefine
   }
 }
 
-export function setStoredFieldTheme(id: FieldThemeId, storage: Pick<Storage, "getItem" | "setItem"> | undefined = safeStorage()): void {
+export function setStoredFieldTheme(id: FieldThemeId, storage: Pick<Storage, "getItem" | "setItem"> | undefined = getStorage()): void {
   try {
     const raw = storage?.getItem(SETTINGS_KEY);
     const settings = raw ? JSON.parse(raw) ?? {} : {};
@@ -63,13 +64,5 @@ export function setStoredFieldTheme(id: FieldThemeId, storage: Pick<Storage, "ge
     storage?.setItem(SETTINGS_KEY, JSON.stringify(settings));
   } catch {
     // Private mode / blocked storage: the choice just isn't remembered.
-  }
-}
-
-function safeStorage(): Storage | undefined {
-  try {
-    return typeof localStorage === "undefined" ? undefined : localStorage;
-  } catch {
-    return undefined;
   }
 }

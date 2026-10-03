@@ -1,7 +1,6 @@
 import * as THREE from "three";
 import { YGODuel } from "./YGODuel";
 import { PoolObjects } from "./PoolObjects";
-//@ts-ignore
 import { GLTF, GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 
 export class YGOAssets {
@@ -77,7 +76,6 @@ export class YGOAssets {
     }
 
     getPool(key: string): PoolObjects {
-        const pool = this.poolObjects.get(key);
-        return pool as any;
+        return this.poolObjects.get(key)!;
     }
 }

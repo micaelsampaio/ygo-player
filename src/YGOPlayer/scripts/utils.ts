@@ -1,6 +1,10 @@
+import { getStorage } from "./safe-storage";
+
 export function getJsonFromLocalStorage(key: string, defaultValue: any = {}) {
     try {
-        const json = JSON.parse(window.localStorage.getItem(key)!);
+        const storage = getStorage();
+        if (!storage) return defaultValue;
+        const json = JSON.parse(storage.getItem(key)!);
         return json;
     } catch (error) {
         return defaultValue;

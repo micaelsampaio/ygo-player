@@ -28,7 +28,7 @@ export function DuelEndGameOverlay({ duel, loser }: { duel: YGODuel, loser: numb
     let active = true;
     source.review()
       .then((res) => { if (active && isShowableReview(res)) setReview(res); })
-      .catch(() => { });
+      .catch((error) => duel.logger.swallowed("DuelEndGameOverlay.review", error));
     return () => { active = false; };
   }, [duel, isPlayerClient]);
 
@@ -50,7 +50,9 @@ export function DuelEndGameOverlay({ duel, loser }: { duel: YGODuel, loser: numb
       try {
         // From the server when it holds the hidden information (see YGODuel.getReplayData).
         replay = await duel.getReplayData();
-      } catch { }
+      } catch (error) {
+        duel.logger.swallowed("DuelEndGameOverlay.saveReplay", error);
+      }
     }
     duel.events.dispatch("end-game-action", { action, loser, replay });
   }, [duel, loser]);

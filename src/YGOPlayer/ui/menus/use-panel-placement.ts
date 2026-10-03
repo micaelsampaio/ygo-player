@@ -1,5 +1,6 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import { clampPanelPosition } from "./panel-position";
+import { safeGetItem, safeSetItem } from "../../scripts/safe-storage";
 
 const PLACEMENT_KEY = "ygo-assisted-panel";
 
@@ -7,14 +8,14 @@ interface Placement { x: number | null; y: number | null; collapsed: boolean }
 
 function loadPlacement(): Placement {
   try {
-    const raw = window.localStorage.getItem(PLACEMENT_KEY);
+    const raw = safeGetItem(PLACEMENT_KEY);
     if (raw) return { x: null, y: null, collapsed: false, ...JSON.parse(raw) };
-  } catch { /* storage blocked — fall back to the docked default */ }
+  } catch { /* unreadable value — fall back to the docked default */ }
   return { x: null, y: null, collapsed: false };
 }
 
 function savePlacement(p: Placement) {
-  try { window.localStorage.setItem(PLACEMENT_KEY, JSON.stringify(p)); } catch { /* ignore */ }
+  safeSetItem(PLACEMENT_KEY, JSON.stringify(p));
 }
 
 /** Drag-by-header + collapse, remembered per browser, so the panel can be

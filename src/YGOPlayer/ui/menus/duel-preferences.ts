@@ -12,6 +12,7 @@
  */
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { YGODuel } from "../../core/YGODuel";
+import { getStorage } from "../../scripts/safe-storage";
 
 export type ChainStops = "auto" | "always" | "off";
 
@@ -26,7 +27,7 @@ const LEGACY_STORAGE_KEY = "ygo-player:stop-at-every-window";
 
 const isChainStops = (v: unknown): v is ChainStops => CHAIN_STOPS.includes(v as ChainStops);
 
-export function storedChainStops(storage: Pick<Storage, "getItem"> | undefined = safeStorage()): ChainStops {
+export function storedChainStops(storage: Pick<Storage, "getItem"> | undefined = getStorage()): ChainStops {
   try {
     const value = storage?.getItem(STORAGE_KEY);
     return isChainStops(value) ? value : "auto";
@@ -35,21 +36,13 @@ export function storedChainStops(storage: Pick<Storage, "getItem"> | undefined =
   }
 }
 
-export function storeChainStops(value: ChainStops, storage: Pick<Storage, "setItem" | "removeItem"> | undefined = safeStorage()): void {
+export function storeChainStops(value: ChainStops, storage: Pick<Storage, "setItem" | "removeItem"> | undefined = getStorage()): void {
   try {
     storage?.removeItem(LEGACY_STORAGE_KEY);
     if (value === "auto") storage?.removeItem(STORAGE_KEY);
     else storage?.setItem(STORAGE_KEY, value);
   } catch {
     // Private mode / blocked storage: the setting just isn't remembered.
-  }
-}
-
-function safeStorage(): Storage | undefined {
-  try {
-    return typeof localStorage === "undefined" ? undefined : localStorage;
-  } catch {
-    return undefined;
   }
 }
 

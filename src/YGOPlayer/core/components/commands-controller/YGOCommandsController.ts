@@ -154,7 +154,8 @@ export class YGOCommandsController extends YGOComponent {
       // safe to just skip it and keep processing rather than let this
       // propagate uncaught and halt command processing — and every
       // control in the UI with it — forever.
-      console.error("YGOCommandsController: command exec failed, skipping it", this.currentCommand, error);
+      // Reported through the host's onError hook too, so a skipped command (a desync) is visible.
+      this.duel.logger.error("YGOCommandsController", "command exec failed, skipping it", error, this.currentCommand);
       this.finishCurrentCommand();
       setTimeout(() => this.processNextCommand());
       return;
