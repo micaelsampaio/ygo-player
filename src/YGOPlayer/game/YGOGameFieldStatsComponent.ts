@@ -1,7 +1,6 @@
 import * as THREE from "three";
 import { PlayerField } from "ygo-core";
 import { YGODuel } from "../core/YGODuel";
-import { YGOStatic } from "../core/YGOStatic";
 import { FieldStatsVisibility } from "./field-stats-visibility";
 
 export class YGOGameFieldStatsComponent {
@@ -122,7 +121,7 @@ class YGOGameFieldStatsRender {
     const planeGeometry = new THREE.PlaneGeometry(planeWidth, planeHeight);
     this.mesh = new THREE.Mesh(planeGeometry, material);
 
-    const isPlayerPov = YGOStatic.isPlayerPOV(player);
+    const isPlayerPov = this.duel.perspective.isPlayerPOV(player);
 
     if (isPlayerPov) {
       this.mesh.position.set(-8.25, 0.15 - 1.5, 2);

@@ -7,7 +7,6 @@ import { GameBackCard } from './GameBackCard';
 import { CARD_HEIGHT_SIZE, CARD_RATIO } from '../constants';
 import { GameCard } from './GameCard';
 import { Card } from 'ygo-core';
-import { YGOStatic } from '../core/YGOStatic';
 import { ActionUiMenu } from '../actions/ActionUiMenu';
 
 export class ExtraDeck extends YGOEntity implements YGOUiElement {
@@ -32,7 +31,7 @@ export class ExtraDeck extends YGOEntity implements YGOUiElement {
         this.canInteract = true;
 
         const material = new THREE.MeshBasicMaterial({ color: 0x00555, transparent: true, opacity: 0 });
-        const hoverMaterial = new THREE.MeshBasicMaterial({ color: YGOStatic.isPlayerPOV(player) ? 0x0000ff : 0xff0000, transparent: true, opacity: 0.55 });
+        const hoverMaterial = new THREE.MeshBasicMaterial({ color: this.duel.perspective.isPlayerPOV(player) ? 0x0000ff : 0xff0000, transparent: true, opacity: 0.55 });
 
         const geometry = new THREE.BoxGeometry(4, 4, 0.1);
         const cube = new THREE.Mesh(geometry, material);
@@ -62,7 +61,7 @@ export class ExtraDeck extends YGOEntity implements YGOUiElement {
             const card = new GameBackCard({ duel: this.duel, backCardPath });
             card.gameObject.position.set(this.gameObject.position.x, this.gameObject.position.y, this.gameObject.position.z + index * 0.02);
             card.gameObject.rotation.set(0, THREE.MathUtils.degToRad(180), THREE.MathUtils.degToRad(15));
-            if (!YGOStatic.isPlayerPOV(this.player)) {
+            if (!this.duel.perspective.isPlayerPOV(this.player)) {
                 card.gameObject.rotateZ(THREE.MathUtils.degToRad(180));
             }
             return card;
@@ -98,7 +97,7 @@ export class ExtraDeck extends YGOEntity implements YGOUiElement {
             const index = deckSize + i + 1;
             card.gameObject.position.set(this.gameObject.position.x, this.gameObject.position.y, this.gameObject.position.z + index * 0.02);
             card.gameObject.rotation.set(0, 0, THREE.MathUtils.degToRad(-15));
-            if (!YGOStatic.isPlayerPOV(this.player)) {
+            if (!this.duel.perspective.isPlayerPOV(this.player)) {
                 card.gameObject.rotateZ(THREE.MathUtils.degToRad(180));
             }
         }

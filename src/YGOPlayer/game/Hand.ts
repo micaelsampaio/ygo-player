@@ -5,7 +5,6 @@ import { YGOEntity } from "../core/YGOEntity";
 import { GameCardHand } from "./GameCardHand";
 import { CARD_HEIGHT_SIZE } from "../constants";
 import { GameHandZone } from "./GameHandZone";
-import { YGOStatic } from "../core/YGOStatic";
 
 export class GameHand extends YGOEntity {
   private duel: YGODuel;
@@ -86,7 +85,7 @@ export class GameHand extends YGOEntity {
 
     let handY = 0;
 
-    if (YGOStatic.isPlayerPOV(this.player)) {
+    if (this.duel.perspective.isPlayerPOV(this.player)) {
       handY = -visibleHeightAtZ / 2 + screenEdgeOffset;
 
       if (handY < -visibleHeightAtZ / 2 + minVisibleHeight) {
@@ -121,7 +120,7 @@ export class GameHand extends YGOEntity {
     this.gameHandZone.gameObject.position.y = handPivot;
 
     for (let i = 0; i < totalCards; ++i) {
-      const index = YGOStatic.isPlayerPOV(this.player) ? i : totalCards - 1 - i;
+      const index = this.duel.perspective.isPlayerPOV(this.player) ? i : totalCards - 1 - i;
       const handCard = gameField.hand.getCard(index)!;
       handCard.position = cardsTransforms[index].position;
       handCard.gameObject.position.copy(handCard.position);
@@ -154,7 +153,7 @@ export class GameHand extends YGOEntity {
     const offsetX = this.duel.core.isMobileLayout ? 0 : 1;
 
     for (let i = 0; i < totalCards; ++i) {
-      const index = YGOStatic.isPlayerPOV(this.player) ? i : totalCards - 1 - i;
+      const index = this.duel.perspective.isPlayerPOV(this.player) ? i : totalCards - 1 - i;
       const xOffset = -actualWidth / 2 + cardWidth / 2 + i * actualSpacing;
       const handZ = baseHandZ;
       const position = new THREE.Vector3(xOffset - offsetX, handY, handZ); // TODO MAKE the math mathing -1 is a dirty fix
@@ -177,7 +176,7 @@ export class GameHand extends YGOEntity {
   }
 
   public getCardsRotation() {
-    const rotation = YGOStatic.isPlayerPOV(this.player) ? new THREE.Vector3(0, 0, 0) : new THREE.Vector3(0, this.showHand ? 0 : THREE.MathUtils.degToRad(180), THREE.MathUtils.degToRad(180));
+    const rotation = this.duel.perspective.isPlayerPOV(this.player) ? new THREE.Vector3(0, 0, 0) : new THREE.Vector3(0, this.showHand ? 0 : THREE.MathUtils.degToRad(180), THREE.MathUtils.degToRad(180));
     return rotation;
   }
 

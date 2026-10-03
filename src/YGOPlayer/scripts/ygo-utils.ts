@@ -10,7 +10,6 @@ import { ExtraDeck } from "../game/ExtraDeck";
 import { Card, FieldZone, FieldZoneData } from "ygo-core";
 import { YGOGameUtils } from "ygo-core";
 import { Banish } from "../game/Banish";
-import { YGOStatic } from "../core/YGOStatic";
 import { allowedExtraMonsterZones } from "./extra-monster-zones";
 
 type CreateFieldDto = {
@@ -20,7 +19,7 @@ type CreateFieldDto = {
 
 export function createFields({ duel, fieldModel }: CreateFieldDto) {
 
-  const playerIndex = YGOStatic.playerIndex;
+  const playerIndex = duel.perspective.playerIndex;
 
   fieldModel.rotation.copy(YGOMath.degToRadEuler(90, 0, 0));
   fieldModel.position.set(0, 0, 0);
@@ -29,11 +28,11 @@ export function createFields({ duel, fieldModel }: CreateFieldDto) {
   const fieldModelP2 = fieldModel.clone();
 
   fieldModelP2.children.forEach((child: any) =>
-    parseFieldZoneChildren(child, 1 - YGOStatic.playerPOV, zones)
+    parseFieldZoneChildren(child, 1 - duel.perspective.playerPOV, zones)
   );
 
   fieldModel.children.forEach((child: any) =>
-    parseFieldZoneChildren(child, YGOStatic.playerPOV, zones)
+    parseFieldZoneChildren(child, duel.perspective.playerPOV, zones)
   );
 
   fieldModel.name = "FIELD1";
@@ -166,7 +165,7 @@ function createCardZone(
     player,
     position: zoneObject.getWorldPosition(new THREE.Vector3()),
     rotation:
-      YGOStatic.isPlayerPOV(player)
+      duel.perspective.isPlayerPOV(player)
         ? YGOMath.degToRadEuler(0, 0, 0)
         : YGOMath.degToRadEuler(0, 0, 180),
   });
@@ -282,7 +281,7 @@ export function getCardRotationFromFieldZoneData(
   if (zoneData.zone === "GY") {
     // GY do nothig let go as default rotation
   } else if (zoneData.zone === "H") {
-    if (!field.settings.showCards && !YGOStatic.isPlayerPOV(zoneData.player)) {
+    if (!field.settings.showCards && !duel.perspective.isPlayerPOV(zoneData.player)) {
       rotation.set(0, THREE.MathUtils.degToRad(180), 0);
     }
     // do nothig let go as default rotation
@@ -329,7 +328,7 @@ export function getCardRotationFromFieldZoneData(
   if (
     zoneData.zone !== "D" &&
     zoneData.zone !== "ED" &&
-    !YGOStatic.isPlayerPOV(zoneData.player)
+    !duel.perspective.isPlayerPOV(zoneData.player)
   ) {
     rotation.z += THREE.MathUtils.degToRad(180);
   }
@@ -338,11 +337,12 @@ export function getCardRotationFromFieldZoneData(
 }
 
 export function getCardRotationFromPlayerIndex(
+  duel: YGODuel,
   player: number
 ) {
   let rotation: THREE.Euler = new THREE.Euler(0, 0, 0);
 
-  if (!YGOStatic.isPlayerPOV(player)) {
+  if (!duel.perspective.isPlayerPOV(player)) {
     rotation.z += THREE.MathUtils.degToRad(180);
   }
 
@@ -585,13 +585,14 @@ export function fisherYatesShuffle<T>(array: T[]): T[] {
 const DEFAULT_OFFSET_POSITION_VEC = new THREE.Vector3(1.5, 0, 0.2);
 
 export function createOffsetPositionInMultipleEvents(
+  duel: YGODuel,
   player: number,
   cardIndex: number | undefined,
   endPosition: THREE.Vector3,
   offset: THREE.Vector3 = DEFAULT_OFFSET_POSITION_VEC
 ): THREE.Vector3 {
   const newPosition = endPosition.clone();
-  const isPOV = YGOStatic.isPlayerPOV(player);
+  const isPOV = duel.perspective.isPlayerPOV(player);
   const offsetPlayer = isPOV ? 1 : -1;
 
   if (typeof cardIndex === "number" && cardIndex > 0) {

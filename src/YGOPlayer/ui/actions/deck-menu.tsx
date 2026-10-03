@@ -3,7 +3,6 @@ import { useAnchoredMenu } from "../components/use-anchored-menu";
 import { YGODuel } from "../../core/YGODuel";
 import { CardMenu } from "../components/CardMenu";
 import { Deck } from "../../game/Deck";
-import { YGOStatic } from "../../core/YGOStatic";
 import { isDeckHidden } from "../menus/deck-search/deck-search";
 
 export function DeckMenu({ duel, deck }: { duel: YGODuel, deck: Deck, clearAction: Function, mouseEvent: React.MouseEvent }) {
@@ -37,7 +36,7 @@ export function DeckMenu({ duel, deck }: { duel: YGODuel, deck: Deck, clearActio
     const player = deck.player;
     const mainDeckSize = duel.ygo.state.fields[player].mainDeck.length;
     const field = duel.ygo.state.fields[player];
-    const canSearch = !!duel.serverActions?.room.id() && YGOStatic.isPlayerPOV(player);
+    const canSearch = !!duel.serverActions?.room.id() && duel.perspective.isPlayerPOV(player);
     // With your deck order hidden, only the server can show what's in it.
     const deckHidden = isDeckHidden(field.mainDeck);
 

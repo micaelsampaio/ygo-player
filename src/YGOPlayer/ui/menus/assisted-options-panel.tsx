@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { YGODuel } from "../../core/YGODuel";
 import { YGOClientType } from "ygo-core";
-import { YGOStatic } from "../../core/YGOStatic";
 import { HIGHLIGHT_CSS } from "../../game/meshes/highlight-frame";
 import { promptKey } from "../assist-zones";
 import { assistErrorMessage, assistUnavailableReason } from "../duel-status";
@@ -176,7 +175,7 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
   const sections = isActive ? sectionsFor(duel, result) : [];
   const prompt = isActive && result.pending === "prompt" ? result.prompt : null;
   const optionCount = sections.reduce((total, section) => total + section.rows.length, 0) + (prompt ? 1 : 0);
-  const me = YGOStatic.playerIndex;
+  const me = duel.perspective.playerIndex;
   const rowTargets: HighlightTarget[] = sections.flatMap((s) => s.rows)
     .filter((r) => r.highlight && r.code !== undefined)
     .map((r) => ({ code: r.code as number, side: me, tone: r.tone, loc: typeof r.data?.loc === "number" ? r.data.loc : undefined }));
@@ -193,7 +192,7 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
     ? carried.targets.filter((t) => t.tone !== "quick" && !rowTargets.some((r) => r.code === t.code && r.side === t.side))
     : [];
   // Held for a running animation: the old rows stay up, disabled, with no frames.
-  const highlightTargets: HighlightTarget[] = held ? [] : [...rowTargets, ...carriedTargets, ...promptTargets(prompt)];
+  const highlightTargets: HighlightTarget[] = held ? [] : [...rowTargets, ...carriedTargets, ...promptTargets(prompt, me)];
 
   useCardHighlights(duel, highlightTargets, isActive && !held ? hover : null);
   useExtraDeckHighlight(duel, !held && isActive && result.pending === "idle" && canSummonFromExtraDeck(result.options));

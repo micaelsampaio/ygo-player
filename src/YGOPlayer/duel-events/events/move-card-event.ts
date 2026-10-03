@@ -11,12 +11,9 @@ import {
   randomIntFromInterval,
 } from "../../scripts/ygo-utils";
 import { CallbackTransition } from "../utils/callback";
-import { PositionTransition } from "../utils/position-transition";
-import { RotationTransition } from "../utils/rotation-transition";
-import { ScaleTransition } from "../utils/scale-transition";
 import { Card } from "ygo-core";
 import * as THREE from "three";
-import { MultipleTasks } from "../utils/multiple-tasks";
+import { moveAndRotate } from "../utils/animation-builders";
 import { YGOCommandHandler } from "../../core/components/YGOCommandHandler";
 import { WaitForSeconds } from "../utils/wait-for-seconds";
 import { revealCardAnimation } from "./reveal-event";
@@ -180,34 +177,19 @@ export class MoveCardEventHandler extends YGOCommandHandler {
 
     playSound({ key: duel.createCdnUrl(soundKey), volume: 0.7 });
 
-    endPosition.copy(createOffsetPositionInMultipleEvents(this.props.event.player, this.props.cardIndex, endPosition));
+    endPosition.copy(createOffsetPositionInMultipleEvents(this.props.duel, this.props.event.player, this.props.cardIndex, endPosition));
 
-    if (
-      zoneData.zone === "M" ||
-      zoneData.zone === "S" ||
-      zoneData.zone === "GY" ||
-      zoneData.zone === "B"
-    ) {
-      sequence.add(
-        new MultipleTasks(
-          new PositionTransition({
-            gameObject: card.gameObject,
-            position: endPosition,
-            duration: 0.4,
-          }),
-          new RotationTransition({
-            gameObject: card.gameObject,
-            rotation: endRotation,
-            duration: 0.25,
-          }),
-          new ScaleTransition({
-            gameObject: card.gameObject,
-            scale,
-            duration: 0.25,
-          })
-        )
-      );
+    // Onto the field / GY / banishment the card lands a bit faster.
+    const toBoardOrPile = zoneData.zone === "M" || zoneData.zone === "S" || zoneData.zone === "GY" || zoneData.zone === "B";
+    sequence.add(moveAndRotate(card.gameObject, {
+      position: endPosition,
+      rotation: endRotation,
+      scale,
+      duration: toBoardOrPile ? 0.4 : 0.5,
+      rotationDuration: toBoardOrPile ? 0.25 : 0.3,
+    }));
 
+    if (toBoardOrPile) {
       if (zoneData.zone === "GY") {
         const gy = duel.fields[owner].graveyard;
         gy.createSendToGraveyardEffect({ card: card.gameObject, sequence });
@@ -216,26 +198,6 @@ export class MoveCardEventHandler extends YGOCommandHandler {
         const banish = duel.fields[owner].banishedZone;
         banish.createBanishCardEffect({ card: card.gameObject, sequence });
       }
-    } else {
-      sequence.add(
-        new MultipleTasks(
-          new PositionTransition({
-            gameObject: card.gameObject,
-            position: endPosition,
-            duration: 0.5,
-          }),
-          new RotationTransition({
-            gameObject: card.gameObject,
-            rotation: endRotation,
-            duration: 0.3,
-          }),
-          new ScaleTransition({
-            gameObject: card.gameObject,
-            scale,
-            duration: 0.3,
-          })
-        )
-      );
     }
 
     if ((originZoneData.zone === "GY" || originZoneData.zone === "B") && (zoneData.zone === "H")) {

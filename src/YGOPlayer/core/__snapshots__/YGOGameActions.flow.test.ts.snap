@@ -1,0 +1,117 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`YGOGameActions — turn, phase and player commands > addDuelNote({"note":"hi","duration":5}) execs NoteCommand 1`] = `
+{
+  "duration": 5,
+  "note": "hi",
+  "player": 1,
+}
+`;
+
+exports[`YGOGameActions — turn, phase and player commands > addDuelNote({"player":0,"note":"hi","duration":null}) execs NoteCommand 1`] = `
+{
+  "duration": -1,
+  "note": "hi",
+  "player": 0,
+}
+`;
+
+exports[`YGOGameActions — turn, phase and player commands > admitDefeat({"player":1}) execs AdmitDefeatCommand 1`] = `
+{
+  "player": 1,
+}
+`;
+
+exports[`YGOGameActions — turn, phase and player commands > diceRoll({"player":0}) execs DiceRollCommand 1`] = `
+{
+  "player": 0,
+  "rolls": 1,
+}
+`;
+
+exports[`YGOGameActions — turn, phase and player commands > drawFromDeck({"player":0}) execs DrawFromDeckCommand 1`] = `
+{
+  "numberOfCards": 1,
+  "player": 0,
+}
+`;
+
+exports[`YGOGameActions — turn, phase and player commands > flipCoin({"player":0}) execs CoinFlipCommand 1`] = `
+{
+  "coinFlips": 1,
+  "player": 0,
+}
+`;
+
+exports[`YGOGameActions — turn, phase and player commands > lifePointsTransaction({"player":0,"value":"+100"}) execs LifePointsTransactionCommand 1`] = `
+{
+  "player": 0,
+  "value": "+100",
+}
+`;
+
+exports[`YGOGameActions — turn, phase and player commands > milFromDeck({"player":1,"numberOfCards":3}) execs MillFromDeckCommand 1`] = `
+{
+  "numberOfCards": 3,
+  "player": 1,
+}
+`;
+
+exports[`YGOGameActions — turn, phase and player commands > milFromDeck({"player":1}) execs MillFromDeckCommand 1`] = `
+{
+  "numberOfCards": 1,
+  "player": 1,
+}
+`;
+
+exports[`YGOGameActions — turn, phase and player commands > setDuelPhase({"phase":"Battle Phase"}) execs DuelPhaseCommand 1`] = `
+{
+  "phase": "Battle Phase",
+}
+`;
+
+exports[`YGOGameActions — turn, phase and player commands > setPlayerState({"player":0,"currentState":"waiting","state":"thinking"}) execs PlayerStateCommand 1`] = `
+{
+  "player": 0,
+  "prevState": "waiting",
+  "state": "thinking",
+}
+`;
+
+exports[`YGOGameActions — turn, phase and player commands > setPlayerState({"player":0,"state":"thinking"}) execs PlayerStateCommand 1`] = `
+{
+  "player": 0,
+  "prevState": "idle",
+  "state": "thinking",
+}
+`;
+
+exports[`YGOGameActions — turn, phase and player commands > showExtraDeck({"player":1}) execs ShowExtraDeckCommand 1`] = `
+{
+  "player": 1,
+}
+`;
+
+exports[`YGOGameActions — turn, phase and player commands > showHand({"player":1}) execs ShowHandCommand 1`] = `
+{
+  "player": 1,
+}
+`;
+
+exports[`YGOGameActions — turn, phase and player commands > shuffleDeck({"player":0}) execs ShuffleDeckCommand 1`] = `
+{
+  "player": 0,
+}
+`;
+
+exports[`YGOGameActions — turn, phase and player commands > shuffleHand({"player":0}) execs ShuffleHandCommand 1`] = `
+{
+  "player": 0,
+}
+`;
+
+exports[`YGOGameActions — turn, phase and player commands > swapPlayerHand({"player":1}) execs SwapHandCommand 1`] = `
+{
+  "player": 1,
+}
+`;

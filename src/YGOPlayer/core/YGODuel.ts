@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { YGOPlayerCore } from "./YGOPlayerCore";
 import { YGODuelState, YGOUiElement } from "../types";
-import { YGOCore, YGOReplayData, YGOServerGameStateData, YGOGameUtils, YGOClientType, CardData, YGOCommandScope, YGOCommands, YGOPlayerRemoteActions, HIDDEN_CARD_ID, createHiddenCardData } from "ygo-core";
+import { YGOCore, YGOReplayData, YGOServerGameStateData, YGOGameUtils, YGOClientType, YGOCommandScope, YGOCommands, YGOPlayerRemoteActions } from "ygo-core";
 import { YGOEntity } from "./YGOEntity";
 import { GameController } from "../game/GameController";
 import { EventBus } from "../scripts/event-bus";
@@ -35,7 +35,8 @@ import { ActionAttackSelection } from "../actions/ActionAttackSelection";
 import { YGOClient } from "ygo-core";
 import { PromiseTask } from "../scripts/promise-task";
 import { YGOServerActions } from "./YGOServerActions";
-import { YGOStatic } from "./YGOStatic";
+import { YGOPerspective, setActivePerspective } from "./YGOPerspective";
+import { buildCorePlayers, collectCardIds, fetchCardsInto, resolveLocalPlayer, resolvePlayerPOV } from "./duel-setup";
 import { YGOAssistController } from "./YGOAssistController";
 import { YGOPlayerLogger } from "./YGOPlayerLogger";
 import type { YGOAssistActions } from "../types";
@@ -53,6 +54,8 @@ export class YGODuel {
   public state: YGODuelState;
   public core: YGOPlayerCore;
   public assets: YGOAssets;
+  /** Who plays/watches this duel and whose side is at the bottom — per duel, set in createYGO. */
+  public readonly perspective = new YGOPerspective();
   public soundController = new YGOSoundController();
   public fields: PlayerField[];
   public fieldStats!: YGOGameFieldStatsComponent;
@@ -150,49 +153,11 @@ export class YGODuel {
   }
 
   public async createYGO(gameState: YGOServerGameStateData) {
-    const ids = new Set<number>()
-    let playerIndex = gameState.players.findIndex(c => c.name === this.client.username);
+    const { playerIndex, otherPlayerIndex } = resolveLocalPlayer(gameState, this.client.username, this.client.type);
+    const { ids, revealedCards, cardsData } = collectCardIds(gameState);
+    await fetchCardsInto(cardsData, ids, this.config.actions?.fetchCardsById?.bind(this.config.actions));
 
-    if (this.client.type === YGOClientType.PLAYER && playerIndex === -1) {
-      playerIndex = 0;
-    }
-
-    const otherPlayerIndex = playerIndex >= 0 ? 1 - playerIndex : 1;
-
-    gameState.players.map((player) => {
-      player.mainDeck.forEach(id => ids.add(id));
-      player.extraDeck.forEach(id => ids.add(id));
-      player.sideDeck?.forEach(id => ids.add(id));
-    })
-
-    // Hidden information: the server sends the cards this client may not see
-    // as HIDDEN_CARD_ID placeholders, and the data of the opponent's cards
-    // revealed so far (hiddenInfo.cards) — later reveals come with each command.
-    ids.delete(HIDDEN_CARD_ID);
-    const revealedCards = gameState.hiddenInfo?.cards ?? [];
-    revealedCards.forEach(card => ids.delete(card.id));
-
-    const cardsData = new Map<number, CardData>();
-    cardsData.set(HIDDEN_CARD_ID, createHiddenCardData());
-    revealedCards.forEach(card => cardsData.set(card.id, card));
-
-    if (this.config.actions?.fetchCardsById) {
-      const cardsDataArray = await this.config.actions.fetchCardsById(Array.from(ids));
-      cardsDataArray.map(c => cardsData.set(c.id, c));
-    } else {
-      const cardsResponse = await fetch(`https://api.ygo101.com/cards?ids=${Array.from(ids).join(",")}`);
-      const cardsDataArray = await cardsResponse.json() as CardData[];
-      cardsDataArray.map(c => cardsData.set(c.id, c));
-    }
-
-    const players = gameState.players.map((player) => {
-      return {
-        name: player.name,
-        mainDeck: player.mainDeck.map(id => cardsData.get(id)!),
-        extraDeck: player.extraDeck.map(id => cardsData.get(id)!),
-        sideDeck: player.sideDeck?.map(id => cardsData.get(id)!) || [],
-      }
-    })
+    const players = buildCorePlayers(gameState, cardsData);
     const props = gameState.ygoCoreProps;
     const options = props.options || {};
     options.shuffleDecks = false;
@@ -205,9 +170,12 @@ export class YGODuel {
       cardPool: revealedCards,
     })
 
-    YGOStatic.playerIndex = playerIndex;
-    YGOStatic.otherPlayerIndex = otherPlayerIndex;
-    YGOStatic.playerPOV = Number(this.ygo.options.playerPOV) >= 0 ? Number(this.ygo.options.playerPOV) : playerIndex >= 0 ? playerIndex : 0;
+    this.perspective.set({
+      playerIndex,
+      otherPlayerIndex,
+      playerPOV: resolvePlayerPOV(this.ygo.options.playerPOV, playerIndex),
+    });
+    setActivePerspective(this.perspective);
 
     const cardsAreVisible = (this.client.type === YGOClientType.PLAYER && this.ygo.options.viewOpponentCards)
       || (this.client.type === YGOClientType.SPECTATOR && this.ygo.options.spectatorViewCards);
@@ -215,6 +183,14 @@ export class YGODuel {
     this.config.options.showCards = cardsAreVisible;
     this.config.autoChangePlayer = cardsAreVisible;
 
+    this.bindCoreEvents();
+    this.bindGameActionEvents();
+
+    this.loadingTask.completeTask();
+  }
+
+  /** The YGOCore events the duel reacts to: logs, turn and priority changes, remote actions. */
+  private bindCoreEvents() {
     this.ygo.events.on("new-log", (evenlLog) => {
       if (this.commands.isRecovering()) return;
 
@@ -234,7 +210,7 @@ export class YGODuel {
     this.ygo.events.on("set-duel-turn-priority", () => {
       this.events.dispatch("render-ui");
       if (this.continuousAccept) {
-        const localPlayer = YGOStatic.playerIndex;
+        const localPlayer = this.perspective.playerIndex;
         if (localPlayer >= 0 && this.ygo.state.turnPriority === localPlayer) {
           this.passPriority();
         }
@@ -244,7 +220,9 @@ export class YGODuel {
     this.ygo.events.on("player-remote-action", remoteData => {
       this.serverActions.ygo.setPlayerRemoteAction(remoteData);
     })
+  }
 
+  private bindGameActionEvents() {
     this.events.on("enable-game-actions", () => {
       if (!this.isGameActive) return;
       this.actionManager.actionsEnabled = true;
@@ -254,8 +232,6 @@ export class YGODuel {
       this.actionManager.clearAction();
       this.actionManager.actionsEnabled = false;
     });
-
-    this.loadingTask.completeTask();
   }
 
   public async load() {
@@ -263,61 +239,14 @@ export class YGODuel {
       // The field's look (core/field-themes.ts): its table model, if any.
       const theme = fieldTheme(this.settings.getFieldTheme());
       const tableUrl = theme.model ? `${this.config.cdnUrl}/models/${theme.model}.glb` : null;
-      await Promise.all([
-        this.assets.loadGLTF(`${this.config.cdnUrl}/models/field.glb`),
-        ...(tableUrl ? [this.assets.loadGLTF(tableUrl)] : []),
-        this.assets.loadGLTF(`${this.config.cdnUrl}/models/destroy_effect.glb`),
-        this.assets.loadGLTF(`${this.config.cdnUrl}/models/field_objects.glb`),
-        this.assets.loadImages(
-          `${this.config.cdnUrl}/images/ui/card_icons.png`,
-          `${this.config.cdnUrl}/images/ui/ic_stars128.png`,
-          `${this.config.cdnUrl}/images/ui/ic_rank128.png`,
-          `${this.config.cdnUrl}/images/ui/ic_link128.png`,
-          `${this.config.cdnUrl}/images/ui/turn_player_1.png`,
-          `${this.config.cdnUrl}/images/ui/turn_player_2.png`,
-          `${this.config.cdnUrl}/images/ui/ic_xyz_materials128.png`,
-          `${this.config.cdnUrl}/images/sprites/atlas_1.png`,
-        ),
-        this.soundController.loadSounds(
-          this.createCdnUrl("/sounds/card-place-1.ogg"),
-          this.createCdnUrl("/sounds/card-place-2.ogg"),
-          this.createCdnUrl("/sounds/card-place-3.ogg")
-        ),
-      ]);
+      await this.loadAssets(tableUrl);
 
       this.loadingTask.completeTask();
 
       await this.loadingTask.wait(); // wait for server events and download cards
 
-      const fieldModel = this.assets.models.get(`${this.config.cdnUrl}/models/field.glb`)!;
-      const gameFieldScene = tableUrl ? this.assets.models.get(tableUrl) ?? null : null;
-      if (gameFieldScene && theme.recolor) recolorModel(gameFieldScene.scene, theme.recolor);
-      this.fields = createFields({ duel: this, fieldModel: fieldModel.scene });
-      this.fieldStats = new YGOGameFieldStatsComponent(this);
-      this.entities.push(this.gameController);
-      this.duelScene.createFields({ gameField: (gameFieldScene?.scene ?? null) as unknown as THREE.Scene | null, theme }); // a GLTF root Group, used as the field scene
-      this.duelScene.createGameMusic();
-      this.gameController.getComponent<ActionCardSelection>("action_card_selection").createCardSelections();
-      this.gameController.getComponent<ActionAttackSelection>("attack_selection_action").create();
-      this.gameController.addComponent("battle_phase_controller", new BattlePhaseController("battle_phase_controller", this));
-
-      this.settings.events.on("onShowCardWhenPlayedChange", (_, showTransparentCards) => {
-        this.fields.forEach(field => {
-          field.monsterZone.forEach(zone => {
-            zone.getGameCard()?.updateTransparentCardsState(showTransparentCards);
-          })
-          field.extraMonsterZone.forEach(zone => {
-            zone.getGameCard()?.updateTransparentCardsState(showTransparentCards);
-          })
-          field.spellTrapZone.forEach(zone => {
-            zone.getGameCard()?.updateTransparentCardsState(showTransparentCards);
-          })
-        })
-      });
-
-      this.settings.events.on("onGameVolumeChange", (_, value) => this.soundController.setLayerVolume("GAME", value));
-      this.settings.events.on("onMusicVolumeChange", (_, value) => this.soundController.setLayerVolume("GAME_MUSIC", value));
-      this.settings.events.on("onGameSpeedChange", (_, value) => this.core.setTimeScale(value));
+      this.buildBoard(theme, tableUrl);
+      this.bindSettingsEvents();
 
       this.core.updateCamera();
 
@@ -327,6 +256,67 @@ export class YGODuel {
     } catch (error) {
       this.logger.error("YGODuel", "load failed:", error);
     }
+  }
+
+  /** The models, UI images and sounds every duel needs, plus the theme's table model. */
+  private loadAssets(tableUrl: string | null) {
+    return Promise.all([
+      this.assets.loadGLTF(`${this.config.cdnUrl}/models/field.glb`),
+      ...(tableUrl ? [this.assets.loadGLTF(tableUrl)] : []),
+      this.assets.loadGLTF(`${this.config.cdnUrl}/models/destroy_effect.glb`),
+      this.assets.loadGLTF(`${this.config.cdnUrl}/models/field_objects.glb`),
+      this.assets.loadImages(
+        `${this.config.cdnUrl}/images/ui/card_icons.png`,
+        `${this.config.cdnUrl}/images/ui/ic_stars128.png`,
+        `${this.config.cdnUrl}/images/ui/ic_rank128.png`,
+        `${this.config.cdnUrl}/images/ui/ic_link128.png`,
+        `${this.config.cdnUrl}/images/ui/turn_player_1.png`,
+        `${this.config.cdnUrl}/images/ui/turn_player_2.png`,
+        `${this.config.cdnUrl}/images/ui/ic_xyz_materials128.png`,
+        `${this.config.cdnUrl}/images/sprites/atlas_1.png`,
+      ),
+      this.soundController.loadSounds(
+        this.createCdnUrl("/sounds/card-place-1.ogg"),
+        this.createCdnUrl("/sounds/card-place-2.ogg"),
+        this.createCdnUrl("/sounds/card-place-3.ogg")
+      ),
+    ]);
+  }
+
+  /** The zones, the field scene, the music and the board's selection/battle components. */
+  private buildBoard(theme: ReturnType<typeof fieldTheme>, tableUrl: string | null) {
+    const fieldModel = this.assets.models.get(`${this.config.cdnUrl}/models/field.glb`)!;
+    const gameFieldScene = tableUrl ? this.assets.models.get(tableUrl) ?? null : null;
+    if (gameFieldScene && theme.recolor) recolorModel(gameFieldScene.scene, theme.recolor);
+    this.fields = createFields({ duel: this, fieldModel: fieldModel.scene });
+    this.fieldStats = new YGOGameFieldStatsComponent(this);
+    this.entities.push(this.gameController);
+    this.duelScene.createFields({ gameField: (gameFieldScene?.scene ?? null) as unknown as THREE.Scene | null, theme }); // a GLTF root Group, used as the field scene
+    this.duelScene.createGameMusic();
+    this.gameController.getComponent<ActionCardSelection>("action_card_selection").createCardSelections();
+    this.gameController.getComponent<ActionAttackSelection>("attack_selection_action").create();
+    this.gameController.addComponent("battle_phase_controller", new BattlePhaseController("battle_phase_controller", this));
+  }
+
+  /** Player settings changed mid-duel: transparent cards, volumes, game speed. */
+  private bindSettingsEvents() {
+    this.settings.events.on("onShowCardWhenPlayedChange", (_, showTransparentCards) => {
+      this.fields.forEach(field => {
+        field.monsterZone.forEach(zone => {
+          zone.getGameCard()?.updateTransparentCardsState(showTransparentCards);
+        })
+        field.extraMonsterZone.forEach(zone => {
+          zone.getGameCard()?.updateTransparentCardsState(showTransparentCards);
+        })
+        field.spellTrapZone.forEach(zone => {
+          zone.getGameCard()?.updateTransparentCardsState(showTransparentCards);
+        })
+      })
+    });
+
+    this.settings.events.on("onGameVolumeChange", (_, value) => this.soundController.setLayerVolume("GAME", value));
+    this.settings.events.on("onMusicVolumeChange", (_, value) => this.soundController.setLayerVolume("GAME_MUSIC", value));
+    this.settings.events.on("onGameSpeedChange", (_, value) => this.core.setTimeScale(value));
   }
 
   // @deprecated
@@ -530,9 +520,9 @@ export class YGODuel {
   }
 
   public passPriority() {
-    if (this.ygo?.state.turnPriority === YGOStatic.playerIndex) {
+    if (this.ygo?.state.turnPriority === this.perspective.playerIndex) {
       this.serverActions.ygo.exec({
-        command: new YGOCommands.PlayerPriorityCommand({ player: 1 - YGOStatic.playerIndex }),
+        command: new YGOCommands.PlayerPriorityCommand({ player: 1 - this.perspective.playerIndex }),
       });
     }
     this.serverActions.ygo.sendPlayerAction({ action: YGOPlayerRemoteActions.OK });
@@ -542,7 +532,7 @@ export class YGODuel {
     if (this.ygo.options.controlOpponentCards) {
       this.serverActions.ygo.setPlayerPriority(player);
     } else {
-      this.serverActions.ygo.setPlayerPriority(YGOStatic.playerIndex);
+      this.serverActions.ygo.setPlayerPriority(this.perspective.playerIndex);
     }
   }
 
@@ -636,7 +626,7 @@ export class YGODuel {
         && command.type !== "Duel Turn"
         && command.type !== "Duel Phase"
       ) {
-        this.serverActions.ygo.exec({ command: new YGOCommands.PlayerPriorityCommand({ player: YGOStatic.playerIndex }) });
+        this.serverActions.ygo.exec({ command: new YGOCommands.PlayerPriorityCommand({ player: this.perspective.playerIndex }) });
       }
     }
     this.serverActions.ygo.exec({ command })

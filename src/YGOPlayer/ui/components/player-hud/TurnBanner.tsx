@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import { YGODuel } from "../../../core/YGODuel";
-import { YGOStatic } from "../../../core/YGOStatic";
 import { useDuelTurnState } from "../../use-duel-turn-state";
 import { turnOwnerLabel } from "../../duel-status";
 
@@ -24,7 +23,7 @@ export function TurnBanner({ duel }: { duel: YGODuel }) {
     }, [turn, isPlayerClient]);
 
     const text = turnOwnerLabel({ isPlayerClient, isLocalTurn });
-    const side = YGOStatic.getPlayerCssIndex(turnPlayer);
+    const side = duel.perspective.getPlayerCssIndex(turnPlayer);
 
     return <div className="ygo-turn-banner-live" role="status" aria-live="polite">
         {visible && <div className={`ygo-turn-banner ygo-player-${side}`}>{text}</div>}

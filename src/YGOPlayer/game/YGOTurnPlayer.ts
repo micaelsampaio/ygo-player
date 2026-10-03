@@ -3,7 +3,6 @@ import { YGODuel } from "../core/YGODuel";
 import { YGOEntity } from '../core/YGOEntity';
 import { YGOMouseEvents } from '../core/components/YGOMouseEvents';
 import { YGOUiElement } from '../types';
-import { YGOStatic } from '../core/YGOStatic';
 
 export class YGOTurnPlayer extends YGOEntity implements YGOUiElement {
     public isUiElement: boolean = true;
@@ -66,7 +65,7 @@ export class YGOTurnPlayer extends YGOEntity implements YGOUiElement {
     setActivePlayer(turnPriority: number): void {
         this.turnMaterial.map = this.textures[turnPriority] || this.textures[0];
         this.turnMaterial.needsUpdate = true;
-        this.fieldTurnHoverMaterial.color.setHex(YGOStatic.isPlayerPOV(turnPriority) ? 0x0000ff : 0xff0000);
+        this.fieldTurnHoverMaterial.color.setHex(this.duel.perspective.isPlayerPOV(turnPriority) ? 0x0000ff : 0xff0000);
     }
 
     onMouseClick(): void {

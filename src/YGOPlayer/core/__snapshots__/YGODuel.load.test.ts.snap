@@ -1,0 +1,84 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`YGODuel.load > loads assets and builds the board in order (classic) 1`] = `
+{
+  "entities": 1,
+  "fields": [
+    {
+      "id": "f0",
+    },
+  ],
+  "listeners": [
+    "onShowCardWhenPlayedChange",
+    "onGameVolumeChange",
+    "onMusicVolumeChange",
+    "onGameSpeedChange",
+  ],
+  "log": [
+    "loadGLTF cdn/models/field.glb",
+    "loadGLTF cdn/models/game_field.glb",
+    "loadGLTF cdn/models/destroy_effect.glb",
+    "loadGLTF cdn/models/field_objects.glb",
+    "loadImages 8",
+    "loadSounds cdn/sounds/card-place-1.ogg,cdn/sounds/card-place-2.ogg,cdn/sounds/card-place-3.ogg",
+    "loadingTask.complete",
+    "loadingTask.wait",
+    "createFields",
+    "new FieldStats",
+    "duelScene.createFields(cdn/models/game_field.glb, classic)",
+    "duelScene.createGameMusic",
+    "action_card_selection.createCardSelections",
+    "attack_selection_action.create",
+    "new BattlePhaseController(battle_phase_controller)",
+    "addComponent battle_phase_controller",
+    "settings.on onShowCardWhenPlayedChange",
+    "settings.on onGameVolumeChange",
+    "settings.on onMusicVolumeChange",
+    "settings.on onGameSpeedChange",
+    "core.updateCamera",
+    "updateField",
+    "setClientReady",
+  ],
+}
+`;
+
+exports[`YGODuel.load > loads assets and builds the board in order (holo) 1`] = `
+{
+  "entities": 1,
+  "fields": [
+    {
+      "id": "f0",
+    },
+  ],
+  "listeners": [
+    "onShowCardWhenPlayedChange",
+    "onGameVolumeChange",
+    "onMusicVolumeChange",
+    "onGameSpeedChange",
+  ],
+  "log": [
+    "loadGLTF cdn/models/field.glb",
+    "loadGLTF cdn/models/destroy_effect.glb",
+    "loadGLTF cdn/models/field_objects.glb",
+    "loadImages 8",
+    "loadSounds cdn/sounds/card-place-1.ogg,cdn/sounds/card-place-2.ogg,cdn/sounds/card-place-3.ogg",
+    "loadingTask.complete",
+    "loadingTask.wait",
+    "createFields",
+    "new FieldStats",
+    "duelScene.createFields(null, holo)",
+    "duelScene.createGameMusic",
+    "action_card_selection.createCardSelections",
+    "attack_selection_action.create",
+    "new BattlePhaseController(battle_phase_controller)",
+    "addComponent battle_phase_controller",
+    "settings.on onShowCardWhenPlayedChange",
+    "settings.on onGameVolumeChange",
+    "settings.on onMusicVolumeChange",
+    "settings.on onGameSpeedChange",
+    "core.updateCamera",
+    "updateField",
+    "setClientReady",
+  ],
+}
+`;

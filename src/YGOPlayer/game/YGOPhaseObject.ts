@@ -5,7 +5,6 @@ import { YGOMouseEvents } from '../core/components/YGOMouseEvents';
 import { YGOUiElement } from '../types';
 import { YGOClientType, YGODuelPhase } from 'ygo-core';
 import { ActionUiMenu } from '../actions/ActionUiMenu';
-import { YGOStatic } from '../core/YGOStatic';
 import { phaseLabel, phaseObjectTooltip, turnOwnerLabel } from '../ui/duel-status';
 
 export class YGOPhaseObject extends YGOEntity implements YGOUiElement {
@@ -108,7 +107,7 @@ export class YGOPhaseObject extends YGOEntity implements YGOUiElement {
     ctx.clearRect(0, 0, canvasWidth, canvasHeight);
 
     // Background gradient
-    const playerColor = YGOStatic.isPlayerPOV(turnPlayer) ? "rgb(29, 78, 216)" : "rgb(185, 28, 28)";
+    const playerColor = this.duel.perspective.isPlayerPOV(turnPlayer) ? "rgb(29, 78, 216)" : "rgb(185, 28, 28)";
     const gradient = ctx.createLinearGradient(0, 0, 0, canvasHeight);
     gradient.addColorStop(0, playerColor);
     gradient.addColorStop(1, "black");
@@ -127,7 +126,7 @@ export class YGOPhaseObject extends YGOEntity implements YGOUiElement {
     // colour-blind or first-time players. Spectators get the player's name.
     const isPlayerClient = this.duel.client?.type === YGOClientType.PLAYER;
     const owner = isPlayerClient
-      ? turnOwnerLabel({ isPlayerClient, isLocalTurn: YGOStatic.isPlayer(turnPlayer) })
+      ? turnOwnerLabel({ isPlayerClient, isLocalTurn: this.duel.perspective.isPlayer(turnPlayer) })
       : this.duel.ygo.getField(turnPlayer)?.player?.name ?? "";
     this.fillFittedText(owner.toUpperCase(), centerX, centerY - 64, "bold", 26, canvasWidth - 24);
 

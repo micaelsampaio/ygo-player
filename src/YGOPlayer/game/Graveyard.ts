@@ -11,7 +11,6 @@ import { RotationTransition } from '../duel-events/utils/rotation-transition';
 import { WaitForSeconds } from '../duel-events/utils/wait-for-seconds';
 import { CardEmptyMesh } from './meshes/mesh-utils';
 import { MaterialOpacityTransition } from '../duel-events/utils/material-opacity';
-import { YGOStatic } from '../core/YGOStatic';
 import { PositionTransition } from '../duel-events/utils/position-transition';
 
 export class Graveyard extends YGOEntity implements YGOUiElement {
@@ -41,7 +40,7 @@ export class Graveyard extends YGOEntity implements YGOUiElement {
         this.duel.core.scene.add(cube);
         this.gameObject = cube;
 
-        if (!YGOStatic.isPlayerPOV(this.player)) {
+        if (!this.duel.perspective.isPlayerPOV(this.player)) {
             this.gameObject.rotateZ(THREE.MathUtils.degToRad(180));
         }
 

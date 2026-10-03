@@ -13,7 +13,6 @@ import { RotationTransition } from "../utils/rotation-transition";
 import { Ease } from "../../scripts/ease";
 import { ArcPositionTransition } from "../utils/arc-position-transition";
 import { randomIntFromInterval } from "../../scripts/ygo-utils";
-import { YGOStatic } from "../../core/YGOStatic";
 
 interface StartHandEventHandlerProps extends DuelEventHandlerProps {
   event: YGODuelEvents.StartHand;
@@ -63,7 +62,7 @@ export class StartHandEventHandler extends YGOCommandHandler {
     }
 
     for (let i = 0; i < cards.length; ++i) {
-      const isPlayerPov = YGOStatic.isPlayerPOV(player);
+      const isPlayerPov = duel.perspective.isPlayerPOV(player);
       const index = isPlayerPov ? i : totalCards - 1 - i;
       const cardData = cards[index];
       const card = duel.ygo.state.getCardData(cardData.id)!;

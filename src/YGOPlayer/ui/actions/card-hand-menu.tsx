@@ -4,7 +4,6 @@ import { YGODuel } from "../../core/YGODuel";
 import { Card, FieldZone } from "ygo-core";
 import { useCallback, useRef } from "react";
 import { CardMenu, CardMenuSection } from "../components/CardMenu";
-import { YGOStatic } from "../../core/YGOStatic";
 import { ActionButton, YGOIcon } from "../components/ActionButton";
 
 export function CardHandMenu({
@@ -124,7 +123,7 @@ export function CardHandMenu({
     kind: "object3d",
     object: duel.fields[card.owner].hand.getCardFromReference(card)!.gameObject,
     // The opponent's hand is at the top of the screen: open below the card.
-    below: !YGOStatic.isPlayerPOV(card.owner),
+    below: !duel.perspective.isPlayerPOV(card.owner),
   }), [card]);
 
   const player = card.owner;

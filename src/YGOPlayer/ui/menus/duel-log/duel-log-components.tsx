@@ -1,9 +1,10 @@
 import { memo } from "react";
-import { YGOStatic } from "../../../core/YGOStatic";
+import { useDuelPerspective } from "../../duel-perspective";
 
 export const DuelLogRow = memo(function ({ log, children }: { log: any, children: any }) {
 
-    const player = `ygo-player-${YGOStatic.getPlayerCssIndex(log.player)}`;
+    const perspective = useDuelPerspective();
+    const player = `ygo-player-${perspective.getPlayerCssIndex(log.player)}`;
 
     return <div className={`ygo-duel-log-row ${player}`}>
         {children}

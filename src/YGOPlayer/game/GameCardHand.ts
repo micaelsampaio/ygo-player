@@ -7,7 +7,6 @@ import { YGOMouseEvents } from "../core/components/YGOMouseEvents";
 import { ActionCardHandMenu } from "../actions/ActionCardHandMenu";
 import { CARD_DEPTH, CARD_HEIGHT_SIZE, CARD_RATIO } from "../constants";
 import { CardMaterial } from "./materials/game-card-material";
-import { YGOStatic } from "../core/YGOStatic";
 
 export class GameCardHand extends YGOEntity implements YGOUiElement {
   private duel: YGODuel;
@@ -105,7 +104,7 @@ export class GameCardHand extends YGOEntity implements YGOUiElement {
     if (!this.isUiElementHover) return;
     if (!this.card) return;
     this.gameObject.position.copy(this.position);
-    this.gameObject.position.y += YGOStatic.isPlayerPOV(this.card.owner) ? 0.3 : -0.3;
+    this.gameObject.position.y += this.duel.perspective.isPlayerPOV(this.card.owner) ? 0.3 : -0.3;
   }
 
   onMouseLeave?(event: MouseEvent): void {

@@ -1,7 +1,6 @@
 import { YGODuel } from "../../core/YGODuel";
 import { Banish as GameBanish } from "../../../YGOPlayer/game/Banish";
 import { Card } from "ygo-core";
-import { YGOStatic } from "../../core/YGOStatic";
 import { pileCardProps } from "../components/pile-menu";
 import { pileCardPressHandlers, PileViewer } from "./pile-viewer";
 
@@ -29,7 +28,7 @@ export function Banish({
     >
       {(openCardMenu) => {
         const cards = duel.ygo.state.fields[banish.player].banishedZone;
-        const isPlayerPOV = YGOStatic.isPlayerPOV(banish.player);
+        const isPlayerPOV = duel.perspective.isPlayerPOV(banish.player);
         return cards.map((card: Card) => {
           // A face-down banished card of the opponent's: its back, and no menu.
           const isVisible = card.position !== "facedown" || isPlayerPOV;

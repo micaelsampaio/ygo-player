@@ -22,10 +22,9 @@ import {
   CardActivationEffect,
   GameModalOverlayMesh,
 } from "../../game/meshes/mesh-utils";
-import { MaterialOpacityTransition } from "../utils/material-opacity";
 import { GameCardHand } from "../../game/GameCardHand";
 import { RotationTransition } from "../utils/rotation-transition";
-import { MultipleTasks } from "../utils/multiple-tasks";
+import { modalOverlayFade, moveAndRotate } from "../utils/animation-builders";
 import { startBotSpotlight, takeBotActivation } from "../bot-spotlight";
 
 interface ActivateCardHandlerProps extends DuelEventHandlerProps {
@@ -248,20 +247,12 @@ export class ActivateCardHandler extends YGOCommandHandler {
     duel.core.enableRenderOverlay();
 
     this.props.startTask(
-      new YGOTaskSequence(
-        new MaterialOpacityTransition({
-          material: modal.material,
-          duration: 0.25,
-          opacity: 0.7,
-        }),
-        new WaitForSeconds(modalDuration),
-        new MaterialOpacityTransition({
-          material: modal.material,
-          duration: 0.25,
-          opacity: 0,
-        }),
-        new CallbackTransition(() => duel.core.scene.remove(modal)),
-      )
+      modalOverlayFade(modal.material, {
+        fadeIn: 0.25,
+        hold: modalDuration,
+        fadeOut: 0.25,
+        onDone: () => duel.core.scene.remove(modal),
+      })
     );
 
     sequence.add(
@@ -292,20 +283,7 @@ export class ActivateCardHandler extends YGOCommandHandler {
         })
       )
       .add(new WaitForSeconds(0.5))
-      .add(
-        new MultipleTasks(
-          new PositionTransition({
-            gameObject: card,
-            position: startPos,
-            duration: 0.15
-          }),
-          new RotationTransition({
-            gameObject: card,
-            rotation,
-            duration: 0.15
-          }),
-        )
-      );
+      .add(moveAndRotate(card, { position: startPos, rotation, duration: 0.15 }));
   }
 
   public finish(): void {

@@ -2,7 +2,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { YGODuel } from "../../../core/YGODuel";
 import "./style.css";
 import { YGODuelEvents, YGOPlayerState } from "ygo-core";
-import { YGOStatic } from "../../../core/YGOStatic";
 import { Thinking, ViewDeck } from "./player-states";
 import { useDuelTurnState } from "../../use-duel-turn-state";
 import { turnStatusText } from "../../duel-status";
@@ -21,7 +20,7 @@ const PLAYER_STATES = {
 }
 
 export function PlayerHUD({ duel, player, visible }: { duel: YGODuel, player: number, visible: boolean }) {
-    const playerPOV = YGOStatic.isPlayerPOV(player) ? 0 : 1;
+    const playerPOV = duel.perspective.isPlayerPOV(player) ? 0 : 1;
     const field = duel.ygo.getField(player);
     const state = field.state;
     const playerName = field.player.name;

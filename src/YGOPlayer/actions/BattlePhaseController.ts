@@ -5,7 +5,6 @@ import { CardZone } from "../game/CardZone";
 import { YGODuelPhase, YGOGameUtils } from 'ygo-core';
 import { ActionAttackSelection } from './ActionAttackSelection';
 import { BattlePhaseButton } from '../game/BattlePhaseButton';
-import { YGOStatic } from '../core/YGOStatic';
 
 export class BattlePhaseController extends YGOComponent {
 
@@ -61,7 +60,7 @@ export class BattlePhaseController extends YGOComponent {
   }
 
   private showBattlePhaseIcons(turnPlayer: number) {
-    const rotationOffset = YGOStatic.isPlayerPOV(turnPlayer) ? 0 : THREE.MathUtils.degToRad(180);
+    const rotationOffset = this.duel.perspective.isPlayerPOV(turnPlayer) ? 0 : THREE.MathUtils.degToRad(180);
     const rotation = new THREE.Euler(0, 0, rotationOffset);
 
     this.attackButtons.values().forEach(attackButton => {
@@ -76,7 +75,7 @@ export class BattlePhaseController extends YGOComponent {
       attackButton.gameObject.position.copy(attackButton.position);
       attackButton.gameObject.rotation.copy(attackButton.rotation);
       attackButton.onClickCb = () => {
-        if (!this.duel.ygo.options.viewOpponentCards && !YGOStatic.isPlayerPOV(attackButton.cardZone.zoneData.player)) return;
+        if (!this.duel.ygo.options.viewOpponentCards && !this.duel.perspective.isPlayerPOV(attackButton.cardZone.zoneData.player)) return;
 
         const battleAction = this.duel.gameController.getComponent<ActionAttackSelection>("attack_selection_action")
         const zones = battleAction.getMonstersZonesToAttack(attackButton.cardZone.zoneData.player);

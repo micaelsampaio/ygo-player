@@ -3,7 +3,8 @@ import { YGODuel } from "../../../core/YGODuel";
 import { DuelLogContainer, DuelLogRow } from "./duel-log-components";
 import type { CardPosition, CommandType } from "ygo-core";
 import { memo } from "react";
-import { YGOStatic } from "../../../core/YGOStatic";
+import type { YGOPerspective } from "../../../core/YGOPerspective";
+import { useDuelPerspective } from "../../duel-perspective";
 
 import { clickableProps } from "../../components/a11y";
 const HIDE_CARD_COMMANDS = new Set<CommandType>([
@@ -28,6 +29,7 @@ export const DefaultLogRow = memo(
     duel: YGODuel;
     ygo: InstanceType<typeof YGOCore>;
   }) {
+    const perspective = useDuelPerspective();
     const card = ygo.state.getCardData(log.id)!;
 
     if (!card) {
@@ -40,8 +42,8 @@ export const DefaultLogRow = memo(
 
     const orginZone = log.originZone || log.zone;
     const zone = log.originZone && log.zone ? log.zone : undefined;
-    const originZoneClassName = getZoneData(orginZone)!;
-    const zoneClassName = getZoneData(zone)!;
+    const originZoneClassName = getZoneData(perspective, orginZone)!;
+    const zoneClassName = getZoneData(perspective, zone)!;
     const isFaceDown = SHOW_CARD_COMMANDS.has(log.type) ? false : HIDE_CARD_COMMANDS.has(log.type) ? true : log.position ? !log.position.includes("faceup") : false;
     const defenseData = isDefenseData(zone || orginZone, log.position);
 
@@ -52,7 +54,7 @@ export const DefaultLogRow = memo(
             <div className="ygo-text-sm ygo-mb-1 ygo-text-bold">{isFaceDown ? "" : card.name}</div>
             <div className="ygo-flex ygo-gap-2">
               <div className="ygo-duel-log-card">
-                {log.chainLink ? <span className={`ygo-duel-log-chain-badge ygo-player-${YGOStatic.getPlayerCssIndex(log.player)}`} aria-hidden="true">{log.chainLink}</span> : null}
+                {log.chainLink ? <span className={`ygo-duel-log-chain-badge ygo-player-${perspective.getPlayerCssIndex(log.player)}`} aria-hidden="true">{log.chainLink}</span> : null}
                 {
                   isFaceDown ? <>
                     <img
@@ -84,7 +86,7 @@ export const DefaultLogRow = memo(
                   </div>
                   {log.originZone && log.zone && <>
                     <div>
-                      <div className={`ygo-icon-game-zone-arrow ygo-player-${YGOStatic.getPlayerCssIndex(log.player)}`}></div>
+                      <div className={`ygo-icon-game-zone-arrow ygo-player-${perspective.getPlayerCssIndex(log.player)}`}></div>
                     </div>
                     <div>
                       <div className={zoneClassName}></div>
@@ -100,12 +102,12 @@ export const DefaultLogRow = memo(
   }
 );
 
-function getZoneData(zone: string | undefined) {
+function getZoneData(perspective: YGOPerspective, zone: string | undefined) {
   if (!zone) return null;
 
   const zoneData = YGOGameUtils.getZoneData(zone as any);
   const zoneId = YGOGameUtils.createZone(zoneData.zone, 0, zoneData.zoneIndex).toLowerCase();
-  let zoneStr = `ygo-icon-game-zone ygo-player-${YGOStatic.getPlayerCssIndex(zoneData.player)} ygo-icon-game-zone-container`;
+  let zoneStr = `ygo-icon-game-zone ygo-player-${perspective.getPlayerCssIndex(zoneData.player)} ygo-icon-game-zone-container`;
   if (zoneData.zone === "ORU" || zoneData.zone === "ORUEMZ") {
     zoneStr += ` ygo-icon-game-zone-oru ygo-icon-game-zone-container-rounded`;
   } else if (zoneData.zone === "M" || zoneData.zone === "S" || zoneData.zone === "EMZ") {

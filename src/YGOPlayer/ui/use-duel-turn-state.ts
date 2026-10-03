@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { YGOClientType } from "ygo-core";
 import { YGODuel } from "../core/YGODuel";
-import { YGOStatic } from "../core/YGOStatic";
 
 export interface DuelTurnState {
   turn: number;
@@ -23,8 +22,8 @@ function readTurnState(duel: YGODuel): DuelTurnState {
     turnPriority: state.turnPriority,
     phase: state.phase,
     isPlayerClient,
-    isLocalTurn: state.turnPlayer === YGOStatic.playerIndex,
-    hasPriority: state.turnPriority === YGOStatic.playerIndex,
+    isLocalTurn: state.turnPlayer === duel.perspective.playerIndex,
+    hasPriority: state.turnPriority === duel.perspective.playerIndex,
   };
 }
 

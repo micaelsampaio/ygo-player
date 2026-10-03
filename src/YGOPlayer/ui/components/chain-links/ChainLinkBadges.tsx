@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import { YGODuel } from "../../../core/YGODuel";
-import { YGOStatic } from "../../../core/YGOStatic";
 import { YGOGameUtils } from "ygo-core";
 import { getGameZone, getZonePosition } from "../../../scripts/ygo-utils";
 import { ndcToContainer } from "../../field-overlay";
@@ -80,7 +79,7 @@ export function ChainLinkBadges({ duel }: { duel: YGODuel }) {
       {placed.map((p) => (
         <div
           key={p.key}
-          className={`ygo-chain-link-badge ygo-player-${YGOStatic.getPlayerCssIndex(p.player)}${p.top ? " ygo-chain-link-top" : ""}`}
+          className={`ygo-chain-link-badge ygo-player-${duel.perspective.getPlayerCssIndex(p.player)}${p.top ? " ygo-chain-link-top" : ""}`}
           style={{ left: p.x + p.stack * 18, top: p.y - p.stack * 18 }}
           role="img"
           aria-label={`Chain Link ${p.link}: ${p.name}`}

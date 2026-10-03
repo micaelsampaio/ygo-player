@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { YGODuel } from "../../../core/YGODuel";
-import { YGOStatic } from "../../../core/YGOStatic";
 import { stopPropagationCallback } from "../../../scripts/utils";
 import { CandidateGroup, isSelectionValid, PromptData, promptTitle } from "../../assist-prompt";
 import { pileTabs } from "./pile-choice";
@@ -35,7 +34,7 @@ export function PileChoicePopup({ duel, prompt, container, selected, busy, pendi
   const tab = tabs.find((t) => t.key === tabKey) ?? tabs[0];
   const [search, setSearch] = useState("");
   const candidates = prompt.candidates ?? [];
-  const me = YGOStatic.playerIndex;
+  const me = duel.perspective.playerIndex;
   const nameOf = (code: number) => duel.ygo?.state?.getCardData(code)?.name;
   const dataOf = (code: number) => duel.ygo?.state?.getCardData(code) as any;
   const isUnselect = prompt.kind === "unselectCard";

@@ -8,7 +8,6 @@ import { Card, FieldZone, FieldZoneData } from "ygo-core";
 import { ActionCardZoneMenu } from "../actions/ActionCardZoneMenu";
 import { getCardRotation } from "../scripts/ygo-utils";
 import { YGOGameUtils } from "ygo-core";
-import { YGOStatic } from "../core/YGOStatic";
 
 export class CardZone extends YGOEntity implements YGOUiElement {
   public isUiElement: boolean = true;
@@ -253,7 +252,7 @@ export class CardZone extends YGOEntity implements YGOUiElement {
   }
 
   private canInteract() {
-    return YGOStatic.playerIndex === this.zoneData.player || this.duel.fields[this.zoneData.player].settings.controlCards;
+    return this.duel.perspective.playerIndex === this.zoneData.player || this.duel.fields[this.zoneData.player].settings.controlCards;
   }
 
   private isCardFaceDown() {

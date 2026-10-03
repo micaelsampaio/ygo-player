@@ -6,7 +6,6 @@ import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "re
 import { createPortal } from "react-dom";
 import * as THREE from "three";
 import { YGODuel } from "../../core/YGODuel";
-import { YGOStatic } from "../../core/YGOStatic";
 import { HIGHLIGHT_CSS } from "../../game/meshes/highlight-frame";
 import { useFieldSelection } from "./field-selection";
 import { EnginePlace, pickZone, placeToYgoZone, samePlace, ZoneHighlight, zoneHighlights } from "../assist-zones";
@@ -113,7 +112,7 @@ function PlaceChoice({ duel, prompt, busy, pendingKey, respond }: {
 }) {
   const [picked, setPicked] = useState<EnginePlace[]>([]);
   const need = prompt.count || 1;
-  const { onField, offField } = zoneHighlights(prompt, YGOStatic.playerIndex, picked);
+  const { onField, offField } = zoneHighlights(prompt, duel.perspective.playerIndex, picked);
   // With nothing to click on the field, the list is the only way to answer.
   const [listOpen, setListOpen] = useState(onField.length === 0);
 
@@ -169,7 +168,7 @@ function PlaceChoice({ duel, prompt, busy, pendingKey, respond }: {
  * (hand / field), else the middle of the viewer's Monster Zones, where it
  * is about to land (a card summoned from the Extra Deck, GY…). */
 function positionAnchor(duel: YGODuel, code: number | undefined): THREE.Vector3 | null {
-  const me = YGOStatic.playerIndex;
+  const me = duel.perspective.playerIndex;
   const card = code !== undefined ? findCardObjects(duel, me, code)[0] ?? null : null;
   if (card) return card.getWorldPosition(new THREE.Vector3());
   const zones = duel.fields[me]?.monsterZone ?? [];
@@ -283,7 +282,7 @@ export function PromptView({ duel, prompt, busy, pendingKey, respond, onHover }:
   const nameOf = (code: number) => duel.ygo?.state?.getCardData(code)?.name;
   // Code 0: a card the server keeps hidden from you (an opponent's hand or Set card).
   const cardName = (code: number) => (code === 0 ? "Hidden card" : nameOf(code) ?? `#${code}`);
-  const me = YGOStatic.playerIndex;
+  const me = duel.perspective.playerIndex;
   const hoverFor = (c: CardRefData) => (on: boolean) =>
     onHover(on ? { code: c.code, side: c.ctrl === prompt.player ? me : 1 - me } : null);
   const title = promptTitle(prompt, nameOf);

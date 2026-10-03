@@ -38,7 +38,7 @@ export class TargetCardEventHandler extends YGOCommandHandler {
       destroyCard = true;
 
       const position = getZonePositionFromZoneData(duel, originZoneData);
-      const rotation = getCardRotationFromPlayerIndex(originZoneData.player);
+      const rotation = getCardRotationFromPlayerIndex(duel, originZoneData.player);
 
       card.gameObject.position.copy(position);
       card.gameObject.rotation.copy(rotation);

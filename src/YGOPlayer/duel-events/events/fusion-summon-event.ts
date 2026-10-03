@@ -18,6 +18,7 @@ import {
   GameModalOverlayMesh,
 } from "../../game/meshes/mesh-utils";
 import { MaterialOpacityTransition } from "../utils/material-opacity";
+import { modalOverlayFade } from "../utils/animation-builders";
 
 interface FusionSummonEventHandlerProps extends DuelEventHandlerProps {
   event: YGODuelEvents.FusionSummon;
@@ -91,17 +92,7 @@ export class FusionSummonEventHandler extends YGOCommandHandler {
     const modal = GameModalOverlayMesh();
     duel.core.scene.add(modal);
 
-    startTask(
-      new YGOTaskSequence(
-        new WaitForSeconds(0.3),
-        new MaterialOpacityTransition({
-          material: modal.material,
-          opacity: 0.7,
-          duration: 0.25,
-        }),
-        new WaitForSeconds(1.25)
-      )
-    );
+    startTask(modalOverlayFade(modal.material, { delay: 0.3, fadeIn: 0.25, hold: 1.25 }));
 
     duel.updateHand(event.player);
     duel.fields[event.player].mainDeck.updateDeck();

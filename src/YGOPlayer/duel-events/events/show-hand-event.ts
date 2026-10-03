@@ -9,7 +9,6 @@ import { RotationTransition } from "../utils/rotation-transition";
 import { MultipleTasks } from "../utils/multiple-tasks";
 import { WaitForSeconds } from "../utils/wait-for-seconds";
 import { GameCard } from "../../game/GameCard";
-import { YGOStatic } from "../../core/YGOStatic";
 import { Ease } from "../../scripts/ease";
 
 interface ShowHandEventHandlerProps extends DuelEventHandlerProps {
@@ -40,9 +39,9 @@ export class ShowHandEventHandler extends YGOCommandHandler {
     const startRotations: THREE.Euler[] = [];
 
     // Pull toward screen center: player POV is at bottom (negative Y) → move up; opponent is at top (positive Y) → move down
-    const yOffset = YGOStatic.isPlayerPOV(player) ? 4 : -4;
+    const yOffset = duel.perspective.isPlayerPOV(player) ? 4 : -4;
     // Face-up rotation: player POV uses (0,0,0), opponent uses (0,0,π) to show face while keeping their orientation
-    const targetRotation = YGOStatic.isPlayerPOV(player)
+    const targetRotation = duel.perspective.isPlayerPOV(player)
       ? new THREE.Euler(0, 0, 0)
       : new THREE.Euler(0, 0, Math.PI);
 
@@ -52,7 +51,7 @@ export class ShowHandEventHandler extends YGOCommandHandler {
       if (!cardReference) return;
 
       // gameHand.cards is built in reversed order for non-POV players (see StartHandEventHandler)
-      const arrayIndex = YGOStatic.isPlayerPOV(player) ? index : totalCards - 1 - index;
+      const arrayIndex = duel.perspective.isPlayerPOV(player) ? index : totalCards - 1 - index;
       const handCard = gameHand.getCard(arrayIndex);
       if (!handCard) return;
 

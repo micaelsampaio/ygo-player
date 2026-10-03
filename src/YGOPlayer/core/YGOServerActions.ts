@@ -4,7 +4,6 @@ import { YGODuel } from "./YGODuel";
 import { Command } from "ygo-core";
 import { YGOTimerUtils } from "../scripts/timer-utils";
 import { YGOComponent } from "./YGOComponent";
-import { YGOStatic } from "./YGOStatic";
 import { YGOControllerCommands } from "./components/commands-controller";
 import { YGOPlayerRemoteActions } from "ygo-core";
 import { markBotActivation } from "../duel-events/bot-spotlight";
@@ -67,7 +66,7 @@ export class YGOServerActions extends YGOComponent {
 
   public getActivePlayer(): number {
     if (this.duel.ygo.options.controlTogglePriority === false) {
-      return YGOStatic.playerIndex;
+      return this.duel.perspective.playerIndex;
     }
     return this.duel.getActivePlayer();
   }
@@ -90,7 +89,7 @@ export class YGOServerActions extends YGOComponent {
       });
     },
     setPlayerPriority: (player: number) => {
-      if (!this.duel.ygo.options.controlTogglePriority) player = YGOStatic.playerIndex;
+      if (!this.duel.ygo.options.controlTogglePriority) player = this.duel.perspective.playerIndex;
 
       if (this.duel.getActivePlayer() !== player) {
         this.ygo.exec({ command: new YGOCommands.PlayerPriorityCommand({ player }) });
@@ -132,7 +131,7 @@ export class YGOServerActions extends YGOComponent {
         case YGOPlayerRemoteActions.PickExtraDeckCard: {
           const targetPlayer = data.data?.targetPlayer;
           if (targetPlayer !== undefined) {
-            if (YGOStatic.isPlayerPOV(targetPlayer)) {
+            if (this.duel.perspective.isPlayerPOV(targetPlayer)) {
               message = "Choose a card from your Extra Deck";
               this.duel.events.dispatch("set-ui-menu", {
                 group: "game-overlay",

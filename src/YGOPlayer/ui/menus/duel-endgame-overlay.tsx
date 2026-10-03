@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { YGOClientType } from "ygo-core";
 import { YGODuel } from "../../core/YGODuel";
-import { YGOStatic } from "../../core/YGOStatic";
 import { END_GAME_ACTION_LABELS, YGOEndGameAction, endGameActionsFor, endGameHeadline } from "../duel-status";
 import { AvailableReview, isShowableReview, reviewSourceOf } from "./duel-review/duel-review";
 import { DuelReviewPanel } from "./duel-review/duel-review-panel";
@@ -14,7 +13,7 @@ export function DuelEndGameOverlay({ duel, loser }: { duel: YGODuel, loser: numb
   const winnerName = duel.ygo.getField(winner)?.player?.name;
   const { text, tone } = endGameHeadline({
     isPlayerClient,
-    localPlayerLost: YGOStatic.isPlayer(loser),
+    localPlayerLost: duel.perspective.isPlayer(loser),
     winnerName,
   });
 

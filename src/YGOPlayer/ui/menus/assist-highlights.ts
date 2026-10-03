@@ -6,7 +6,6 @@
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { YGODuel } from "../../core/YGODuel";
-import { YGOStatic } from "../../core/YGOStatic";
 import { createHighlightFrame, disposeHighlightFrame, HIGHLIGHT_COLOR, HIGHLIGHT_CSS, QUICK_COLOR, QUICK_CSS, placeHighlightFrame } from "../../game/meshes/highlight-frame";
 import type { Tone } from "../assist-sections";
 import { PromptData, LOC_HAND, LOC_MZONE as LOC_M, LOC_SZONE as LOC_S } from "../assist-prompt";
@@ -145,7 +144,7 @@ export function useExtraDeckHighlight(duel: YGODuel, active: boolean) {
     };
     let timer: ReturnType<typeof setTimeout>;
     const tick = () => {
-      const target = duel.fields[YGOStatic.playerIndex]?.extraDeck?.getCardTransform() ?? null;
+      const target = duel.fields[duel.perspective.playerIndex]?.extraDeck?.getCardTransform() ?? null;
       if (entry?.target !== target) {
         drop();
         if (target) {
@@ -170,9 +169,9 @@ export function useExtraDeckHighlight(duel: YGODuel, active: boolean) {
 }
 
 /** Only cards that exist as an object on the board can be framed (hand / field). */
-export function promptTargets(prompt: PromptData | null): HighlightTarget[] {
+/** `me`: the local player (duel.perspective.playerIndex). */
+export function promptTargets(prompt: PromptData | null, me: number): HighlightTarget[] {
   if (!prompt?.candidates) return [];
-  const me = YGOStatic.playerIndex;
   return prompt.candidates
     .filter((c) => (c.loc & (LOC_HAND | LOC_M | LOC_S)) !== 0)
     .map((c) => ({ code: c.code, side: c.ctrl === prompt.player ? me : 1 - me, loc: c.loc }));

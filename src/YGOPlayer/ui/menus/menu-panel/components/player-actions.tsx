@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { YGODuel } from "../../../../core/YGODuel";
 import { YGOPlayerRemoteActions } from "ygo-core";
-import { YGOStatic } from "../../../../core/YGOStatic";
 
 const LONG_PRESS_MS = 600;
 
@@ -65,7 +64,7 @@ export function PlayerRemoteActionsComponent({ duel }: { duel: YGODuel }) {
   const wait = useCallback(() => {
     duel.continuousAccept = false;
     duel.events.dispatch("render-ui");
-    duel.serverActions.ygo.setPlayerPriority(YGOStatic.playerIndex);
+    duel.serverActions.ygo.setPlayerPriority(duel.perspective.playerIndex);
     duel.serverActions.ygo.sendPlayerAction({ action: YGOPlayerRemoteActions.WAIT });
   }, [duel]);
 

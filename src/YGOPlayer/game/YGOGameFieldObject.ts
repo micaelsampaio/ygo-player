@@ -1,6 +1,5 @@
 import { YGODuel } from "../core/YGODuel";
 import * as THREE from "three";
-import { YGOStatic } from "../core/YGOStatic";
 
 export class YGOGameFieldObject {
 
@@ -17,7 +16,7 @@ export class YGOGameFieldObject {
 
       let material: THREE.ShaderMaterial;
 
-      if (YGOStatic.isPlayerPOV(player)) {
+      if (this.duel.perspective.isPlayerPOV(player)) {
         material = createMaterial(
           new THREE.Vector4(0, 0, 1.0, 0),
           new THREE.Vector4(0, 0, 1.0, 0.2),

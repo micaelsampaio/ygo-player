@@ -14,7 +14,6 @@ import { YGOMouseEvents } from "./components/YGOMouseEvents";
 import { ActionUiMenu } from "../actions/ActionUiMenu";
 import { YGOTimer } from "../game/YGOTimer";
 import { YGOPhaseObject } from "../game/YGOPhaseObject";
-import { YGOStatic } from "./YGOStatic";
 import { YGOPlayerRemoteActions } from "ygo-core";
 import { createAtlasSprite } from "../scripts/sprite";
 import { YGOTaskSequence } from "./components/tasks/YGOTaskSequence";
@@ -139,7 +138,7 @@ export class YGODuelScene {
 
         if (gameField) {
             const clonedGameField = gameField.clone();
-            const gameFields = YGOStatic.playerPOV === 0 ? [gameField, clonedGameField] : [clonedGameField, gameField]
+            const gameFields = this.duel.perspective.playerPOV === 0 ? [gameField, clonedGameField] : [clonedGameField, gameField]
 
             gameFields[0].position.set(0, 0, 0);
             gameFields[0].rotateX(THREE.MathUtils.degToRad(90));
@@ -150,16 +149,16 @@ export class YGODuelScene {
             this.duel.core.scene.add(gameFields[0]);
             this.duel.core.scene.add(gameFields[1]);
 
-            this.gameFields.push(new YGOGameFieldObject(this.duel, gameFields[0], YGOStatic.playerPOV));
-            this.gameFields.push(new YGOGameFieldObject(this.duel, gameFields[1], 1 - YGOStatic.playerPOV));
+            this.gameFields.push(new YGOGameFieldObject(this.duel, gameFields[0], this.duel.perspective.playerPOV));
+            this.gameFields.push(new YGOGameFieldObject(this.duel, gameFields[1], 1 - this.duel.perspective.playerPOV));
         } else if (theme.build) {
             // A field generated in code: its scenery, the turn glow and pile highlights per side.
             // Bloom costs GPU time: phones (the mobile layout) get the field without it.
             if (theme.post && !this.duel.core.isMobileLayout) this.duel.core.enablePostFx(theme.post);
-            const built = (theme.build === "holo" ? buildHoloArena : buildColiseum)(this.duel, YGOStatic.playerIndex);
+            const built = (theme.build === "holo" ? buildHoloArena : buildColiseum)(this.duel, this.duel.perspective.playerIndex);
             this.duel.core.scene.add(built.root);
-            this.gameFields.push(new YGOGameFieldObject(this.duel, built.sides[0] as any, YGOStatic.playerPOV));
-            this.gameFields.push(new YGOGameFieldObject(this.duel, built.sides[1] as any, 1 - YGOStatic.playerPOV));
+            this.gameFields.push(new YGOGameFieldObject(this.duel, built.sides[0] as any, this.duel.perspective.playerPOV));
+            this.gameFields.push(new YGOGameFieldObject(this.duel, built.sides[1] as any, 1 - this.duel.perspective.playerPOV));
             if (built.update) this.duel.entities.push(new FieldAnimator(built.update));
         }
 
@@ -332,15 +331,15 @@ export class YGODuelScene {
             sprite.scale.set(0.8, 0.8, 0.8);
 
             const material = spriteBg.material as THREE.SpriteMaterial;
-            material.color.set(YGOStatic.isPlayerPOV(player) ? 0x66aaff : 0xff7777);
+            material.color.set(this.duel.perspective.isPlayerPOV(player) ? 0x66aaff : 0xff7777);
             this.duel.core.scene.add(spriteBg);
 
             obj = spriteBg;
 
-            if (YGOStatic.isPlayerPOV(player)) {
-                position.y = this.duel.fields[YGOStatic.playerIndex].hand.getCardHandPivot() + 4
+            if (this.duel.perspective.isPlayerPOV(player)) {
+                position.y = this.duel.fields[this.duel.perspective.playerIndex].hand.getCardHandPivot() + 4
             } else {
-                position.y = this.duel.fields[1 - YGOStatic.playerIndex].hand.getCardHandPivot() - 4
+                position.y = this.duel.fields[1 - this.duel.perspective.playerIndex].hand.getCardHandPivot() - 4
             }
         }
 
@@ -366,7 +365,7 @@ export class YGODuelScene {
             this.duel.soundController.playSound({ key: soundPath, volume: 0.4 });
         }
 
-        const isContinuous = action === YGOPlayerRemoteActions.ContinuousOK && !YGOStatic.isPlayerPOV(player);
+        const isContinuous = action === YGOPlayerRemoteActions.ContinuousOK && !this.duel.perspective.isPlayerPOV(player);
 
         if (isContinuous) {
             this.persistentActionSprite.set(player, obj);

@@ -3,7 +3,6 @@ import { YGODuel } from "../../core/YGODuel";
 import { Card, YGOGameUtils } from "ygo-core";
 import { pileCardProps } from "../components/pile-menu";
 import { summonableExtraDeckCodes } from "./extra-deck-highlight";
-import { YGOStatic } from "../../core/YGOStatic";
 import { pileCardPressHandlers, PileViewer } from "./pile-viewer";
 
 export function ExtraDeck({
@@ -33,7 +32,7 @@ export function ExtraDeck({
     >
       {(openCardMenu) => duel.ygo.state.fields[player].extraDeck.map((card: Card, cardIndex: number) => {
         // Assisted Mode: the viewer's own cards the engine lets them Special Summon now.
-        const offered = player === YGOStatic.playerIndex && summonable.has(card.id);
+        const offered = player === duel.perspective.playerIndex && summonable.has(card.id);
         return (
           <div key={card.index}>
             <img

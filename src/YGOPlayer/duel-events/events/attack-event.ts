@@ -9,12 +9,76 @@ import {
 } from "../../scripts/ygo-utils";
 import { CallbackTransition } from "../utils/callback";
 import { PositionTransition } from "../utils/position-transition";
-import { RotationTransition } from "../utils/rotation-transition";
 import { Ease } from "../../scripts/ease";
 import { MultipleTasks } from "../utils/multiple-tasks";
 import { ScaleTransition } from "../utils/scale-transition";
 import { MaterialOpacityTransition } from "../utils/material-opacity";
 import { WaitForSeconds } from "../utils/wait-for-seconds";
+import { liftAndSettle, moveAndRotate } from "../utils/animation-builders";
+import type { YGOTask } from "../../core/components/tasks/YGOTask";
+
+/**
+ * The attacker's lunge: it backs up and turns toward `target`, strikes it
+ * (`onImpact` at `impactAt()` raised by 0.2), backs off and returns to its
+ * original transform.
+ */
+function attackLunge({ card, target, impactAt, originalPosition, originalRotation, onImpact }: {
+  card: THREE.Object3D;
+  target: THREE.Vector3;
+  impactAt: () => THREE.Vector3;
+  originalPosition: THREE.Vector3;
+  originalRotation: THREE.Euler;
+  onImpact: (position: THREE.Vector3) => void;
+}): YGOTask[] {
+  const offset = 5;
+  const direction = new THREE.Vector3()
+    .subVectors(card.position, target)
+    .normalize();
+  const goingInPosition = card.position.clone().addScaledVector(direction, offset);
+  const goingOutPosition = card.position.clone().addScaledVector(direction, offset / 2);
+  goingInPosition.z += 3;
+  goingOutPosition.z += 1.5;
+
+  const tempDirection = new THREE.Vector3().subVectors(card.position, target);
+  const angle = Math.atan2(tempDirection.x, -tempDirection.y);
+  const newRotation = card.rotation.clone();
+  newRotation.z = angle;
+
+  return [
+    moveAndRotate(card, {
+      position: goingInPosition,
+      duration: 0.5,
+      ease: Ease.easeInOut,
+      rotation: newRotation,
+      rotationDuration: 0.25,
+      rotationEase: Ease.easeOutSine,
+    }),
+    new PositionTransition({
+      gameObject: card,
+      position: target.clone(),
+      duration: 0.25,
+      ease: Ease.easeInOut,
+    }),
+    new CallbackTransition(() => {
+      const position = impactAt();
+      position.z += 0.2;
+      onImpact(position);
+    }),
+    new PositionTransition({
+      gameObject: card,
+      position: goingOutPosition,
+      duration: 0.4,
+      ease: Ease.easeInOut,
+    }),
+    moveAndRotate(card, {
+      position: originalPosition,
+      duration: 0.2,
+      ease: Ease.easeInOut,
+      rotation: originalRotation,
+      rotationEase: Ease.easeOutSine,
+    }),
+  ];
+}
 
 interface AttackEventHandlerProps extends DuelEventHandlerProps {
   event: YGODuelEvents.Attack | YGODuelEvents.AttackDirectly;
@@ -50,19 +114,6 @@ export class AttackEventHandler extends YGOCommandHandler {
       const attackedCard = attackedCardZone.getGameCard();
       const targetAttackedPosition = attackedCard.gameObject.position.clone();
 
-      const offset = 5;
-      const direction = new THREE.Vector3()
-        .subVectors(card.gameObject.position, attackedCard.gameObject.position)
-        .normalize();
-      const goingInPosition = card.gameObject.position.clone().addScaledVector(direction, offset);
-      const goingOutPosition = card.gameObject.position.clone().addScaledVector(direction, offset / 2);
-      goingInPosition.z += 3;
-      goingOutPosition.z += 1.5;
-
-      const tempDirection = new THREE.Vector3().subVectors(card.gameObject.position, attackedCard.gameObject.position);
-      const angle = Math.atan2(tempDirection.x, -tempDirection.y);
-      const newRotation = card.gameObject.rotation.clone();
-
       if ((event as any).attackedPosition?.includes("facedown")) {
         const startPosition: THREE.Vector3 = attackedCard.gameObject.position.clone();
         const targetRotation = getCardRotationFromFieldZoneData(
@@ -75,140 +126,39 @@ export class AttackEventHandler extends YGOCommandHandler {
         attackedCard.hideCardStats();
 
         startTask(new YGOTaskSequence(
-          new PositionTransition({
-            gameObject: attackedCard.gameObject,
-            duration: 0.15,
-            position: abovePosition,
+          ...liftAndSettle(attackedCard.gameObject, {
+            above: abovePosition,
+            liftDuration: 0.15,
+            position: startPosition,
+            rotation: targetRotation,
+            settleDuration: 0.15,
+            rotationDuration: 0.2,
           }),
-          new MultipleTasks(
-            new PositionTransition({
-              gameObject: attackedCard.gameObject,
-              duration: 0.15,
-              position: startPosition,
-            }),
-            new RotationTransition({
-              gameObject: attackedCard.gameObject,
-              duration: 0.2,
-              rotation: targetRotation,
-            })
-          ),
           new CallbackTransition(() => {
             attackedCard.showCardStats();
           })
         ))
       }
-      newRotation.z = angle;
 
-      sequence.addMultiple(
-        new MultipleTasks(
-          new PositionTransition({
-            gameObject: card.gameObject,
-            position: goingInPosition,
-            duration: 0.5,
-            ease: Ease.easeInOut,
-          }),
-          new RotationTransition({
-            gameObject: card.gameObject,
-            rotation: newRotation,
-            duration: 0.25,
-            ease: Ease.easeOutSine
-          })
-        ),
-        new PositionTransition({
-          gameObject: card.gameObject,
-          position: targetAttackedPosition.clone(),
-          duration: 0.25,
-          ease: Ease.easeInOut,
-        }),
-        new CallbackTransition(() => {
-          const position = targetAttackedPosition.clone();
-          position.z += 0.2;
-          this.createAttackCollistionEffect({ startTask, position });
-        }),
-        new PositionTransition({
-          gameObject: card.gameObject,
-          position: goingOutPosition,
-          duration: 0.4,
-          ease: Ease.easeInOut,
-        }),
-        new MultipleTasks(
-          new PositionTransition({
-            gameObject: card.gameObject,
-            position: originalPosition,
-            duration: 0.2,
-            ease: Ease.easeInOut,
-          }),
-          new RotationTransition({
-            gameObject: card.gameObject,
-            rotation: originalRotation,
-            duration: 0.2,
-            ease: Ease.easeOutSine
-          })
-        )
-      )
+      sequence.addMultiple(...attackLunge({
+        card: card.gameObject,
+        target: targetAttackedPosition,
+        impactAt: () => targetAttackedPosition.clone(),
+        originalPosition,
+        originalRotation,
+        onImpact: (position) => this.createAttackCollistionEffect({ startTask, position }),
+      }));
     } else {
-      const offset = 5;
       const gameHandZone = duel.fields[1 - event.player].hand.gameHandZone;
-      const direction = new THREE.Vector3()
-        .subVectors(card.gameObject.position, gameHandZone.gameObject.position)
-        .normalize();
-      const goingInPosition = card.gameObject.position.clone().addScaledVector(direction, offset);
-      const goingOutPosition = card.gameObject.position.clone().addScaledVector(direction, offset / 2);
-      goingInPosition.z += 3;
-      goingOutPosition.z += 1.5;
 
-      const tempDirection = new THREE.Vector3().subVectors(card.gameObject.position, gameHandZone.gameObject.position);
-      const angle = Math.atan2(tempDirection.x, -tempDirection.y);
-      const newRotation = card.gameObject.rotation.clone();
-      newRotation.z = angle;
-
-      sequence.addMultiple(
-        new MultipleTasks(
-          new PositionTransition({
-            gameObject: card.gameObject,
-            position: goingInPosition,
-            duration: 0.5,
-            ease: Ease.easeInOut,
-          }),
-          new RotationTransition({
-            gameObject: card.gameObject,
-            rotation: newRotation,
-            duration: 0.25,
-            ease: Ease.easeOutSine
-          })
-        ),
-        new PositionTransition({
-          gameObject: card.gameObject,
-          position: gameHandZone.gameObject.position.clone(),
-          duration: 0.25,
-          ease: Ease.easeInOut,
-        }),
-        new CallbackTransition(() => {
-          const position = gameHandZone.gameObject.position.clone();
-          position.z += 0.2;
-          this.createAttackCollistionEffect({ startTask, position });
-        }),
-        new PositionTransition({
-          gameObject: card.gameObject,
-          position: goingOutPosition,
-          duration: 0.4,
-          ease: Ease.easeInOut,
-        }),
-        new MultipleTasks(
-          new PositionTransition({
-            gameObject: card.gameObject,
-            position: originalPosition,
-            duration: 0.2,
-            ease: Ease.easeInOut,
-          }),
-          new RotationTransition({
-            gameObject: card.gameObject,
-            rotation: originalRotation,
-            duration: 0.2,
-            ease: Ease.easeOutSine
-          })
-        )
-      )
+      sequence.addMultiple(...attackLunge({
+        card: card.gameObject,
+        target: gameHandZone.gameObject.position,
+        impactAt: () => gameHandZone.gameObject.position.clone(),
+        originalPosition,
+        originalRotation,
+        onImpact: (position) => this.createAttackCollistionEffect({ startTask, position }),
+      }));
     }
 
     sequence.add(new CallbackTransition(() => {
