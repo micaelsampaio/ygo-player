@@ -11,6 +11,7 @@ import { SelectedCardMenu } from "./menu-panel/components/selected-card-menu";
 import { ViewDeckPopup } from "./view-deck";
 import { XyzMonsterMaterialsMenu } from "./xyz-monster-materials";
 import { DuelEndGameOverlay } from "./duel-endgame-overlay";
+import { ZeroLpPrompt } from "./zero-lp-prompt";
 import { DeckSearchPopup } from "./deck-search/DeckSearchPopup";
 
 export const MENUS = {
@@ -27,6 +28,7 @@ export const MENUS = {
     "settings-menu": GameSettingsMenu,
     "duel-notes-game-event-hanlder": DuelNotesActionEventHandler,
     "duel-endgame-overlay": DuelEndGameOverlay,
+    "zero-lp-prompt": ZeroLpPrompt,
 } satisfies Record<string, ComponentType<never>>;
 
 /** The `type` of a "set-ui-menu" / "toggle-ui-menu" event that renders a component. */

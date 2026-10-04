@@ -10,6 +10,8 @@ export interface YGOConfigOptions extends YGOPropsOptions {
   showCards?: boolean
   /** Starts the field timer as a countdown of this many seconds when the board is ready (local duels). */
   duelTimerSeconds?: number
+  /** Local duels: ask whether to end the duel when a player's life points reach 0 (see ui/menus/zero-lp-prompt). */
+  zeroLpPrompt?: boolean
 }
 
 export interface YGOConfig extends YGOProps {

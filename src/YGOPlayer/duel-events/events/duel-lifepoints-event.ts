@@ -22,6 +22,12 @@ export class DuelLifePointsEventHandler extends YGOCommandHandler {
 
     duel.events.dispatch("duel-update-player-life-points", event);
 
+    // Local duels end only when someone admits defeat: at 0 LP, ask (the prompt closes itself
+    // if the hit is undone). Online duels are ended by the server instead.
+    if (duel.config.options?.zeroLpPrompt && duel.config.gameMode !== "REPLAY" && event.lifePoints === 0 && event.previousLifePoints > 0) {
+      duel.events.dispatch("set-ui-menu", { group: "game-overlay", type: "zero-lp-prompt", data: { player: event.player } });
+    }
+
     startTask(new YGOTaskSequence(
       new CallbackTransition(() => {
         if (event.previousLifePoints !== event.lifePoints) {
