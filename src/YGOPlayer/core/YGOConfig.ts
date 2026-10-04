@@ -8,6 +8,8 @@ import type { YGOPlayerErrorHandler } from "./YGOPlayerLogger";
 export interface YGOConfigOptions extends YGOPropsOptions {
   player?: number
   showCards?: boolean
+  /** Starts the field timer as a countdown of this many seconds when the board is ready (local duels). */
+  duelTimerSeconds?: number
 }
 
 export interface YGOConfig extends YGOProps {

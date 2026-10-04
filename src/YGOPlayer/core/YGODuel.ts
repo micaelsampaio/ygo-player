@@ -293,6 +293,8 @@ export class YGODuel {
     this.entities.push(this.gameController);
     this.duelScene.createFields({ gameField: (gameFieldScene?.scene ?? null) as unknown as THREE.Scene | null, theme }); // a GLTF root Group, used as the field scene
     this.duelScene.createGameMusic();
+    const timerSeconds = this.config.options?.duelTimerSeconds;
+    if (timerSeconds && timerSeconds > 0) this.duelScene.timer.startCountDown(timerSeconds);
     this.gameController.getComponent<ActionCardSelection>("action_card_selection").createCardSelections();
     this.gameController.getComponent<ActionAttackSelection>("attack_selection_action").create();
     this.gameController.addComponent("battle_phase_controller", new BattlePhaseController("battle_phase_controller", this));

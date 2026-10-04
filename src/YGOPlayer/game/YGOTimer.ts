@@ -140,7 +140,7 @@ export class YGOTimer extends YGOEntity {
 
   toString(): string {
     const totalSeconds = Math.floor(this.time);
-    const minutes = Math.floor(totalSeconds / 60) % 60;
+    const minutes = Math.floor(totalSeconds / 60); // no wrap: a 60+ minute countdown shows 75:00, not 15:00
     const seconds = totalSeconds % 60;
 
     if (minutes > 0) {
