@@ -42,6 +42,11 @@ describe("sectionsFor", () => {
     ]);
   });
 
+  it("splits activations into Activate (Spell Speed 1) and Quick effects (2+)", () => {
+    const sections = sectionsFor(duel, idle({ activatable: [ref(5, LOC_HAND), ref(1, LOC_HAND)], activatableSpeed: [1, 2] }));
+    expect(sections.slice(0, 2).map((s) => [s.title, s.rows.map((r) => r.tone)])).toEqual([["Activate", ["play"]], ["Quick effects", ["quick"]]]);
+  });
+
   it("merges two effects of one copy into one row with a count, taking the quick tone", () => {
     const sections = sectionsFor(duel, idle({
       activatable: [ref(5, LOC_HAND), ref(5, LOC_HAND)],
@@ -98,7 +103,7 @@ describe("sectionsFor", () => {
       nextPhase: null,
       options: { activatable: [ref(1, LOC_HAND)], attackable: [ref(5, LOC_MZONE, 1)], toMain2: true, toEnd: true },
     });
-    expect(sections.map((s) => s.title)).toEqual(["Activate", "Attack"]);
+    expect(sections.map((s) => s.title)).toEqual(["Quick effects", "Attack"]);
     expect(sections[0].rows[0].tone).toBe("quick");
     expect(sections[1].rows[0]).toMatchObject({ key: "Attack:5", commandType: "Attack", data: { attackingId: 5 }, highlight: false });
   });

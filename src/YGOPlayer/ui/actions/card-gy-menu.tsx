@@ -25,7 +25,7 @@ export function CardGraveyardMenu({
 
   return (
     <>
-      <CardMenu menuRef={menuRef}>
+      <CardMenu menuRef={menuRef} assist={{ duel, card, zone: "GY" }}>
         {actions.map((action) => (
           <button key={action.key} type="button" className="ygo-card-item" onClick={action.run}>
             {action.label}

@@ -3,6 +3,8 @@ import { Graveyard as GameGraveyard } from "../../../YGOPlayer/game/Graveyard";
 import { Card } from "ygo-core";
 import { pileCardProps } from "../components/pile-menu";
 import { pileCardPressHandlers, PileViewer } from "./pile-viewer";
+import { useOfferedPileCodes } from "./use-offered-pile";
+import { LOC_GRAVE } from "../assist-prompt";
 
 export function Graveyard({
   duel,
@@ -15,6 +17,9 @@ export function Graveyard({
   visible: boolean;
   hasAction: boolean;
 }) {
+  // Assisted Mode: the viewer's own GY cards with something to do now (an effect, a summon) are framed.
+  const offered = useOfferedPileCodes(duel, LOC_GRAVE);
+  const own = graveyard.player === duel.perspective.playerIndex;
   return (
     <PileViewer
       duel={duel}
@@ -34,7 +39,7 @@ export function Graveyard({
             {...pileCardProps<HTMLImageElement>((e) => openCardMenu(e, card), card.name)}
             alt={card.name}
             src={card.images.small_url}
-            className="ygo-card"
+            className={own && offered.has(card.id) ? "ygo-card ygo-card-offered" : "ygo-card"}
           />
         </div>
       ))}

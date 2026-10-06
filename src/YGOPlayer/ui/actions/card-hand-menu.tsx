@@ -178,7 +178,7 @@ export function CardHandMenu({
 
   if (!isMonster && isSpellOrTrap) {
     return <>
-      <CardMenu cols indicator playerIndex={player} menuRef={menuRef}>
+      <CardMenu cols indicator playerIndex={player} menuRef={menuRef} assist={{ duel, card, zone: originZone }}>
         {
           // FIELD SPELL
           isFieldSpell && <>
@@ -220,7 +220,7 @@ export function CardHandMenu({
 
   return (
     <>
-      <CardMenu cols indicator playerIndex={player} menuRef={menuRef}>
+      <CardMenu cols indicator playerIndex={player} menuRef={menuRef} assist={{ duel, card, zone: originZone }}>
         <ActionButton
           icon={<div className="ygo-i--normal_summon"></div>}
           disabled={freeMonsterZones === 0}

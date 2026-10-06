@@ -243,7 +243,22 @@ export function toggleSelection(prompt: PromptData, selected: number[], index: n
  * with one candidate that is a complete answer, or a zone choice with one
  * free zone. Null when there's a real choice (or a yes/no).
  */
+/**
+ * A card choice with one real answer: exactly one card must be picked and every candidate is
+ * the same card in the same place (two copies in the Deck are the same choice). Its index, or null.
+ */
+export function onlyCardAnswer(prompt: PromptData): number | null {
+  if (prompt.kind !== "card") return null;
+  const min = prompt.min ?? 1;
+  const max = prompt.max ?? min;
+  if (min !== 1 || max !== 1) return null;
+  const groups = groupCandidates(prompt.candidates ?? []);
+  return groups.length === 1 ? groups[0].indices[0] : null;
+}
+
 export function singlePromptAnswer(prompt: PromptData): any | null {
+  const only = onlyCardAnswer(prompt);
+  if (only !== null) return { indices: [only] };
   if (prompt.kind === "card" || prompt.kind === "tribute") {
     return (prompt.candidates ?? []).length === 1 && isSelectionValid(prompt, [0]) ? { indices: [0] } : null;
   }

@@ -1276,3 +1276,54 @@
         opacity: 1;
     }
 }
+
+/* Master Duel style Assisted Mode (bot duels): the engine's moves on a card's own menu, and the
+   engine's question as a dialog over the board. Flat rules on purpose (see the keyframes note). */
+.ygo-player-core .ygo-card-menu .ygo-card-item.ygo-card-item-engine {
+    grid-column: 1 / -1;
+    background-color: rgba(255, 201, 60, 0.18);
+    border: 1px solid rgba(255, 201, 60, 0.75);
+    font-weight: 700;
+}
+
+.ygo-player-core .ygo-card-menu .ygo-card-item.ygo-card-item-engine:hover,
+.ygo-player-core .ygo-card-menu .ygo-card-item.ygo-card-item-engine:focus-visible {
+    background-color: rgba(255, 201, 60, 0.32);
+}
+
+.ygo-player-core .ygo-card-menu .ygo-card-item.ygo-card-item-free-play {
+    grid-column: 1 / -1;
+    opacity: 0.7;
+    font-size: 12px;
+}
+
+.ygo-player-core .ygo-card-menu .ygo-card-menu-empty {
+    grid-column: 1 / -1;
+    font-size: 12px;
+    opacity: 0.75;
+    padding: 4px 2px;
+}
+
+.ygo-player-core .ygo-card-menu.ygo-assist-prompt-dialog {
+    top: 72px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(420px, calc(100% - 24px));
+    max-height: calc(100% - 160px);
+    z-index: 120;
+    border: 1px solid rgba(255, 201, 60, 0.6);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.55);
+}
+
+.ygo-player-core .ygo-card-menu.ygo-assist-prompt-dialog.ygo-assist-chain-dialog {
+    border-color: rgba(79, 140, 255, 0.75);
+}
+
+/* The choice dialog steps aside while a chooser on the board is open — the pile view (Deck, GY…)
+   or the position picker next to the card: that is where the choice is made.
+   Invisible, not display: none — those choosers find the board overlay they are drawn in through the
+   dialog's offsetParent, which a display: none element doesn't have (the pile view never opened). */
+.ygo-player-core .ygo-card-menu.ygo-assist-prompt-dialog:has([data-board-chooser-open]) {
+    visibility: hidden;
+    pointer-events: none;
+}

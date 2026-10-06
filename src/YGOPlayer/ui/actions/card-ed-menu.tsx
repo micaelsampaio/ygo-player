@@ -29,7 +29,7 @@ export function CardExtraDeckMenu({
 
   return (
     <>
-      <CardMenu menuRef={menuRef}>
+      <CardMenu menuRef={menuRef} assist={{ duel, card, zone: "ED" }}>
         {config.actions && (
           <>
             {actions.map((action) => (

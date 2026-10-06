@@ -6,14 +6,14 @@ import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "re
 import { createPortal } from "react-dom";
 import * as THREE from "three";
 import { YGODuel } from "../../core/YGODuel";
-import { HIGHLIGHT_CSS } from "../../game/meshes/highlight-frame";
+import { HIGHLIGHT_CSS, PICK_CSS } from "../../game/meshes/highlight-frame";
 import { useFieldSelection } from "./field-selection";
 import { EnginePlace, pickZone, placeToYgoZone, samePlace, ZoneHighlight, zoneHighlights } from "../assist-zones";
 import { PileChoicePopup } from "./pile-choice/PileChoicePopup";
 import { pileTabs, reopenLabel, usesPilePicker } from "./pile-choice/pile-choice";
 import { ndcToContainer, positionGlyph, shortPositionLabel } from "../field-overlay";
 import {
-  CardRefData, PromptData, candidateWhere, isSelectionValid, optionLabel, toggleSelection,
+  CardRefData, PromptData, candidateWhere, isSelectionValid, onlyCardAnswer, optionLabel, toggleSelection,
   groupCandidates, positionChoices, promptSubtitle, promptTitle, toggleGroupSelection, LOC_HAND, LOC_MZONE as LOC_M, LOC_SZONE as LOC_S,
 } from "../assist-prompt";
 import { findCardObjects, type HighlightTarget } from "./assist-highlights";
@@ -27,8 +27,11 @@ function useOffsetParentContainer<T extends HTMLElement>() {
   const probeRef = useRef<T | null>(null);
   const [container, setContainer] = useState<HTMLElement | null>(null);
   useLayoutEffect(() => {
-    const panel = probeRef.current?.closest(".ygo-assisted-options-panel") as HTMLElement | null;
-    setContainer((panel?.offsetParent as HTMLElement | null) ?? null);
+    // The options panel, or (Master Duel style) the choice dialog over the board: both sit in the
+    // board's overlay, which is where the pile view and the position picker are drawn.
+    const panel = probeRef.current?.closest(".ygo-assisted-options-panel, .ygo-assist-prompt-dialog") as HTMLElement | null;
+    // offsetParent is null for an element that isn't laid out: fall back to the parent it sits in.
+    setContainer((panel?.offsetParent as HTMLElement | null) ?? panel?.parentElement ?? null);
   }, []);
   return [probeRef, container] as const;
 }
@@ -58,8 +61,9 @@ function ChoiceButton({ label, where, onClick, disabled, busy, selected, highlig
       onBlur={() => onHover?.(false)}
       style={{
         display: "flex", alignItems: "center", gap: 6, textAlign: "left", fontWeight: 600, fontSize: 13,
-        ...(highlight ? { boxShadow: `inset 3px 0 0 ${HIGHLIGHT_CSS}` } : {}),
-        ...(selected ? { background: "rgba(255, 201, 60, 0.22)", outline: `1px solid ${HIGHLIGHT_CSS}` } : {}),
+        // Choices are green (PICK), like their frames on the board.
+        ...(highlight ? { boxShadow: `inset 3px 0 0 ${PICK_CSS}` } : {}),
+        ...(selected ? { background: "rgba(52, 211, 153, 0.22)", outline: `1px solid ${PICK_CSS}` } : {}),
         ...(busy ? { opacity: 1 } : {}),
       }}
     >
@@ -180,15 +184,18 @@ function positionAnchor(duel: YGODuel, code: number | undefined): THREE.Vector3 
  * The position prompt answered on the field: one button per allowed
  * position (ATK upright / DEF sideways / face-down hatched) floating next
  * to the card, in the panel's container (so it shows even with the panel
- * collapsed or moved away). The panel's own buttons stay as the fallback.
+ * collapsed or moved away). `fallback` (the same choices as buttons) shows only
+ * while the card can't be placed on screen — never both.
  * Follows the card (re-projected a few times a second: hand re-fans, window resizes).
  */
-function PositionFieldChoice({ duel, prompt, busy, pendingKey, respond }: {
+function PositionFieldChoice({ duel, prompt, busy, pendingKey, respond, fallback, inDialog }: {
   duel: YGODuel;
   prompt: PromptData;
   busy: boolean;
   pendingKey: string | null;
   respond: (key: string, data: any) => void;
+  fallback: ReactNode;
+  inDialog?: boolean;
 }) {
   const [probeRef, container] = useOffsetParentContainer<HTMLSpanElement>();
   const [point, setPoint] = useState<{ x: number; y: number } | null>(null);
@@ -221,7 +228,7 @@ function PositionFieldChoice({ duel, prompt, busy, pendingKey, respond }: {
       style={{
         position: "absolute", left: point.x, top: point.y, transform: "translate(-50%, calc(-100% - 12px))",
         flexDirection: "row", width: "auto", gap: 6, padding: 6, zIndex: 111,
-        boxShadow: `0 0 0 1px ${HIGHLIGHT_CSS}, 0 4px 14px rgba(0, 0, 0, 0.45)`,
+        boxShadow: `0 0 0 1px ${PICK_CSS}, 0 4px 14px rgba(0, 0, 0, 0.45)`,
       }}
     >
       {choices.map(({ position, label }) => {
@@ -237,7 +244,7 @@ function PositionFieldChoice({ duel, prompt, busy, pendingKey, respond }: {
             disabled={busy}
             aria-busy={pendingKey === key}
             onClick={() => respond(key, { position })}
-            style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, minWidth: 52, padding: "6px 8px", fontSize: 12, fontWeight: 700, boxShadow: `inset 0 0 0 1px ${HIGHLIGHT_CSS}` }}
+            style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, minWidth: 52, padding: "6px 8px", fontSize: 12, fontWeight: 700, boxShadow: `inset 0 0 0 1px ${PICK_CSS}` }}
           >
             <span
               aria-hidden="true"
@@ -257,7 +264,12 @@ function PositionFieldChoice({ duel, prompt, busy, pendingKey, respond }: {
     container,
   ) : null;
 
-  return <><span ref={probeRef} hidden />{overlay}</>;
+  // In the board dialog the picker is the chooser: the dialog steps aside while it shows.
+  return <>
+    <span ref={probeRef} hidden />
+    {overlay}
+    {overlay ? inDialog && <span data-board-chooser-open hidden /> : fallback}
+  </>;
 }
 
 /**
@@ -265,17 +277,24 @@ function PositionFieldChoice({ duel, prompt, busy, pendingKey, respond }: {
  * card to pick, which monster to Tribute, yes/no, an option, a position, a
  * zone). Answers with a 'Respond Prompt' choose.
  */
-export function PromptView({ duel, prompt, busy, pendingKey, respond, onHover }: {
+export function PromptView({ duel, prompt, busy, pendingKey, respond, onHover, inDialog = false }: {
   duel: YGODuel;
   prompt: PromptData;
   busy: boolean;
   pendingKey: string | null;
   respond: (key: string, data: any) => void;
   onHover: (target: HighlightTarget | null) => void;
+  /** Shown as the choice dialog over the board (Master Duel style): a pile choice is made in the
+   * pile view only, so the dialog drops its own list and hides while the pile view is open. */
+  inDialog?: boolean;
 }) {
   const [selected, setSelected] = useState<number[]>([]);
   // A choice from a pile (Deck, GY, banished, Extra Deck) opens in a pile
   // view by itself; closing it only minimizes it (the button below reopens it).
+  // One real answer (one card to pick, every candidate the same card): a single button answers it.
+  const only = onlyCardAnswer(prompt);
+  // A choice from the Deck / GY / banished / Extra Deck still opens its pile view (even with one
+  // real answer); the dialog then shows one Choose button instead of a list plus Confirm.
   const pilePicker = usesPilePicker(prompt);
   const [pickerOpen, setPickerOpen] = useState(pilePicker);
   const [probeRef, pickerContainer] = useOffsetParentContainer<HTMLDivElement>();
@@ -283,8 +302,10 @@ export function PromptView({ duel, prompt, busy, pendingKey, respond, onHover }:
   // Code 0: a card the server keeps hidden from you (an opponent's hand or Set card).
   const cardName = (code: number) => (code === 0 ? "Hidden card" : nameOf(code) ?? `#${code}`);
   const me = duel.perspective.playerIndex;
+  // With its location: hovering a Deck (or GY…) candidate must not frame a copy of the same card
+  // that happens to be in your hand or on the field. Green, like every choice.
   const hoverFor = (c: CardRefData) => (on: boolean) =>
-    onHover(on ? { code: c.code, side: c.ctrl === prompt.player ? me : 1 - me } : null);
+    onHover(on ? { code: c.code, side: c.ctrl === prompt.player ? me : 1 - me, loc: c.loc, tone: "pick" } : null);
   const title = promptTitle(prompt, nameOf);
   const subtitle = promptSubtitle(prompt, nameOf);
   const candidates = prompt.candidates ?? [];
@@ -327,6 +348,31 @@ export function PromptView({ duel, prompt, busy, pendingKey, respond, onHover }:
   switch (prompt.kind) {
     case "card":
     case "tribute": {
+      // The pile view is the chooser (cards, picks, Confirm): the dialog keeps only its reopen button.
+      if (inDialog && pilePicker) break;
+      if (only !== null) {
+        const c = candidates[only];
+        body = <div style={{ display: "flex", gap: 6 }}>
+          <button
+            className="ygo-card-item"
+            type="button"
+            disabled={busy}
+            aria-busy={pendingKey === "confirm"}
+            onClick={() => respond("confirm", { indices: [only] })}
+            onMouseEnter={() => hoverFor(c)(true)}
+            onMouseLeave={() => hoverFor(c)(false)}
+            style={{ flexGrow: 1, fontWeight: 700, fontSize: 13, justifyContent: "center", boxShadow: `inset 0 0 0 1px ${HIGHLIGHT_CSS}` }}
+          >
+            {pendingKey === "confirm" ? <span className="ygo-inline-spinner" aria-hidden="true" /> : `Choose ${cardName(c.code)}${candidateWhere(c, prompt.player) ? ` · ${candidateWhere(c, prompt.player)}` : ""}`}
+          </button>
+          {prompt.cancelable && (
+            <button className="ygo-card-item" type="button" disabled={busy} onClick={() => respond("cancel", { indices: [] })} style={{ fontSize: 13 }}>
+              Cancel
+            </button>
+          )}
+        </div>;
+        break;
+      }
       const valid = isSelectionValid(prompt, selected);
       body = <>
         {groupCandidates(candidates).map((group) => {
@@ -408,13 +454,13 @@ export function PromptView({ duel, prompt, busy, pendingKey, respond, onHover }:
       </>;
       break;
     case "position":
-      // Picked on the field, next to the card; the panel buttons are the fallback.
-      body = <>
-        <PositionFieldChoice duel={duel} prompt={prompt} busy={busy} pendingKey={pendingKey} respond={respond} />
-        {positionChoices(prompt.positions).map(({ position, label }) => (
+      // Picked on the field, next to the card; the buttons only when it can't be shown there.
+      body = <PositionFieldChoice
+        duel={duel} prompt={prompt} busy={busy} pendingKey={pendingKey} respond={respond} inDialog={inDialog}
+        fallback={positionChoices(prompt.positions).map(({ position, label }) => (
           <ChoiceButton key={position} label={label} disabled={busy} busy={pendingKey === `position:${position}`} onClick={() => respond(`position:${position}`, { position })} />
         ))}
-      </>;
+      />;
       break;
     case "place":
       body = <PlaceChoice duel={duel} prompt={prompt} busy={busy} pendingKey={pendingKey} respond={respond} />;
@@ -424,7 +470,7 @@ export function PromptView({ duel, prompt, busy, pendingKey, respond, onHover }:
   return (
     <div ref={probeRef} style={{ display: "flex", flexDirection: "column", gap: 4 }}>
       <div style={{ fontSize: 11, fontWeight: 600, opacity: 0.55, display: "flex", alignItems: "center", gap: 5, marginTop: 2 }}>
-        <span style={{ width: 7, height: 7, borderRadius: "50%", background: HIGHLIGHT_CSS, display: "inline-block" }} />
+        <span style={{ width: 7, height: 7, borderRadius: "50%", background: PICK_CSS, display: "inline-block" }} />
         Your choice
       </div>
       <div style={{ fontSize: 13, fontWeight: 700, lineHeight: 1.3 }}>{title}</div>
@@ -440,6 +486,8 @@ export function PromptView({ duel, prompt, busy, pendingKey, respond, onHover }:
         </button>
       )}
       {body}
+      {/* Marks the dialog hidden (CSS :has) while its pile view is open, so nothing covers it. */}
+      {inDialog && pilePicker && pickerOpen && <span data-board-chooser-open hidden />}
       {pilePicker && pickerOpen && pickerContainer && (
         <PileChoicePopup
           duel={duel}

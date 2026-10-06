@@ -22,10 +22,13 @@ function savePlacement(p: Placement) {
  * moved off whatever it's covering (duel log, controls, a card). Until
  * the user drags it, it stays docked on the right between the HUDs. On
  * the mobile layout it starts collapsed every duel (whatever was stored),
- * since expanded it would cover a large part of the board. */
-export function usePanelPlacement(panelRef: { current: HTMLDivElement | null }, isMobileLayout: boolean) {
+ * since expanded it would cover a large part of the board. So does
+ * `startCollapsed` (Master Duel style, where the cards and dialogs carry the game). */
+export function usePanelPlacement(panelRef: { current: HTMLDivElement | null }, isMobileLayout: boolean, startCollapsed = false) {
   const [placement, setPlacement] = useState<Placement>(loadPlacement);
-  const [mobileCollapsed, setMobileCollapsed] = useState(true);
+  const [sessionCollapsed, setSessionCollapsed] = useState(true);
+  // Collapsed state that isn't remembered: it starts collapsed every duel.
+  const perDuel = isMobileLayout || startCollapsed;
   const placementRef = useRef(placement);
   placementRef.current = placement;
 
@@ -86,13 +89,13 @@ export function usePanelPlacement(panelRef: { current: HTMLDivElement | null }, 
       : { top: 130, left: "auto", right: 20, maxHeight: "calc(100% - 340px)" }
     : { top: placement.y, left: placement.x, right: "auto", maxHeight: isMobileLayout ? "45%" : `calc(100% - ${placement.y! + 20}px)` };
 
-  const collapsed = isMobileLayout ? mobileCollapsed : placement.collapsed;
+  const collapsed = perDuel ? sessionCollapsed : placement.collapsed;
 
   return {
     style,
     collapsed,
     toggleCollapsed: () => {
-      if (isMobileLayout) setMobileCollapsed((value) => !value);
+      if (perDuel) setSessionCollapsed((value) => !value);
       else update({ ...placementRef.current, collapsed: !placementRef.current.collapsed });
     },
     resetPosition: () => update({ ...placementRef.current, x: null, y: null }),

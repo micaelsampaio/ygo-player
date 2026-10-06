@@ -9,6 +9,10 @@ export const HIGHLIGHT_CSS = `#${HIGHLIGHT_COLOR.toString(16)}`;
  * on your own open game state (amber). */
 export const QUICK_COLOR = 0x4f8cff;
 export const QUICK_CSS = `#${QUICK_COLOR.toString(16)}`;
+/** Assisted Mode's third frame: a card to pick for the effect being resolved (a cost, a target,
+ * a discard) — green, so a choice never looks like "you can activate this" (amber). */
+export const PICK_COLOR = 0x34d399;
+export const PICK_CSS = `#${PICK_COLOR.toString(16)}`;
 /** How far the soft glow reaches past the card's edge. */
 const GLOW_REACH = 0.55;
 const CORNER_RADIUS = 0.12;

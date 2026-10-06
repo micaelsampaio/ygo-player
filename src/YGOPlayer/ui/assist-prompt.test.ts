@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  singlePromptAnswer,
+  singlePromptAnswer, onlyCardAnswer,
   candidateWhere, decodeDescription, freeZones, isSelectionValid, optionLabel, positionChoices,
   promptSubtitle, promptTitle, PromptData, toggleSelection, groupCandidates, toggleGroupSelection, LOC_DECK, LOC_MZONE,
 } from "./assist-prompt";
@@ -178,5 +178,21 @@ describe("singlePromptAnswer", () => {
     expect(singlePromptAnswer({ ...base, kind: "place", count: 1, flag } as any)).toEqual({ player: 0, loc: 0x04, seq: 2 });
     expect(singlePromptAnswer({ ...base, kind: "place", count: 1, flag: 0 } as any)).toBeNull();
     expect(singlePromptAnswer({ ...base, kind: "yesNo" } as any)).toBeNull();
+  });
+});
+
+describe("onlyCardAnswer", () => {
+  const deck = (code: number, seq: number) => ({ code, ctrl: 0, loc: 0x01, seq });
+  it("takes one copy when every candidate is the same card in the same place and one must be picked", () => {
+    expect(onlyCardAnswer({ kind: "card", min: 1, max: 1, candidates: [deck(5, 3), deck(5, 7)] } as any)).toBe(0);
+  });
+  it("is null for a real choice: different cards, places, or more than one to pick", () => {
+    expect(onlyCardAnswer({ kind: "card", min: 1, max: 1, candidates: [deck(5, 3), deck(6, 7)] } as any)).toBeNull();
+    expect(onlyCardAnswer({ kind: "card", min: 1, max: 1, candidates: [deck(5, 3), { code: 5, ctrl: 0, loc: 0x10, seq: 0 }] } as any)).toBeNull();
+    expect(onlyCardAnswer({ kind: "card", min: 1, max: 2, candidates: [deck(5, 3), deck(5, 7)] } as any)).toBeNull();
+    expect(onlyCardAnswer({ kind: "tribute", min: 1, max: 1, candidates: [deck(5, 3)] } as any)).toBeNull();
+  });
+  it("makes Space answer it too", () => {
+    expect(singlePromptAnswer({ kind: "card", min: 1, max: 1, candidates: [deck(5, 3), deck(5, 7)] } as any)).toEqual({ indices: [0] });
   });
 });

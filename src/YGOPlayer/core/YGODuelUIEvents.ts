@@ -94,6 +94,8 @@ export interface YGODuelUIEvents {
     "assist-notice": (payload?: { message?: string }) => void;
     "assist-choice-start": (payload?: { code?: number }) => void;
     "assist-choice-done": (payload?: { error?: unknown; notices?: string[] }) => void;
+    /** A card menu picked one of the engine's moves (Master Duel style): the options panel sends it. */
+    "assist-choose-row": (row: { key: string; commandType: string; data: unknown }) => void;
 }
 
 export type YGODuelUIEventName = keyof YGODuelUIEvents;

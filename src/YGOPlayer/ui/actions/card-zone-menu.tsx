@@ -146,7 +146,7 @@ export function CardZoneMenu({
 
   // TOKEN MENU
   if (isToken) {
-    return <CardMenu indicator playerIndex={zoneData.player} menuRef={menuRef}>
+    return <CardMenu indicator playerIndex={zoneData.player} menuRef={menuRef} assist={{ duel, card, zone }}>
 
       {!isAttack && (
         <button type="button" className="ygo-card-item" onClick={changeBattleToATK}>
@@ -178,7 +178,7 @@ export function CardZoneMenu({
 
   if (!isMonsterZone && isSpellTrap) {
     return (
-      <CardMenu cols indicator playerIndex={zoneData.player} menuRef={menuRef}>
+      <CardMenu cols indicator playerIndex={zoneData.player} menuRef={menuRef} assist={{ duel, card, zone }}>
 
         <button type="button" className="ygo-card-item" onClick={activateCard}>
           Activate
@@ -235,7 +235,7 @@ export function CardZoneMenu({
 
   // CARD MENU
   return (
-    <CardMenu cols indicator playerIndex={zoneData.player} menuRef={menuRef}>
+    <CardMenu cols indicator playerIndex={zoneData.player} menuRef={menuRef} assist={{ duel, card, zone }}>
 
       {!isLink && (
         <>

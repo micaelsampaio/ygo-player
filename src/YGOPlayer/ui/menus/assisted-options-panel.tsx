@@ -8,13 +8,14 @@ import { useDuelTurnState } from "../use-duel-turn-state";
 import { assistPanelTitle, mustStayOpen, opponentWaitingText } from "../assist-respond";
 import { AnimationGate, createAnimationGate } from "./animation-gate";
 import { GROUP_COLLAPSE_AT } from "./special-summon-groups";
-import { canSummonFromExtraDeck } from "./extra-deck-highlight";
+import { canSummonFromExtraDeck, offeredPileCodes } from "./extra-deck-highlight";
 import { useChainStops, type ChainStops } from "./duel-preferences";
-import { singlePromptAnswer } from "../assist-prompt";
-import { AssistQueryResult, chainTopName, OptionRow, sectionsFor, spaceRow, TONE_TITLE } from "../assist-sections";
-import { HighlightTarget, promptTargets, TONE_CSS, useCardHighlights, useExtraDeckHighlight } from "./assist-highlights";
+import { singlePromptAnswer, LOC_GRAVE, LOC_REMOVED } from "../assist-prompt";
+import { AssistQueryResult, chainTopName, OptionRow, sectionsFor, spaceRow, TONE_TITLE, type Tone } from "../assist-sections";
+import { HighlightTarget, promptTargets, TONE_CSS, useCardHighlights, useExtraDeckHighlight, usePileHighlight } from "./assist-highlights";
 import { usePanelPlacement } from "./use-panel-placement";
 import { PromptView } from "./assist-prompt-view";
+import { isMasterDuelStyle } from "../assist-card-actions";
 
 /** How long the panel waits after a choice for the moves it caused to start. */
 const CHOICE_SETTLE_MS = 700;
@@ -142,6 +143,15 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
     if (carried) carried.targets = carried.targets.filter((t) => t.code !== code);
   };
 
+  // Master Duel style card menus hand their engine move to the panel, which sends it like its own rows.
+  const chooseRowRef = useRef<(row: { key: string; commandType: string; data: unknown }) => void>(() => {});
+  useEffect(() => {
+    if (!enabled) return;
+    const onChooseRow = (row: { key: string; commandType: string; data: unknown }) => chooseRowRef.current(row);
+    duel.events.on("assist-choose-row", onChooseRow);
+    return () => duel.events.off("assist-choose-row", onChooseRow);
+  }, [duel, enabled]);
+
   // Space = the panel's Continue / Don't respond row (see YGOAssistController.spaceAction).
   const spaceActionRef = useRef<() => boolean>(() => false);
   useEffect(() => {
@@ -196,8 +206,13 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
 
   useCardHighlights(duel, highlightTargets, isActive && !held ? hover : null);
   useExtraDeckHighlight(duel, !held && isActive && result.pending === "idle" && canSummonFromExtraDeck(result.options));
+  // A GY / banished card with something to do (an effect, a Special Summon from there, a chain
+  // response) lights its pile, like the Extra Deck: amber on your open game state, blue otherwise.
+  const pileTone: Tone = isActive && result.pending === "idle" ? "play" : "quick";
+  usePileHighlight(duel, () => duel.fields[me]?.graveyard?.gameObject ?? null, !held && offeredPileCodes(isActive ? result : null, LOC_GRAVE).size > 0, pileTone);
+  usePileHighlight(duel, () => duel.fields[me]?.banishedZone?.gameObject ?? null, !held && offeredPileCodes(isActive ? result : null, LOC_REMOVED).size > 0, pileTone);
   const panelRef = useRef<HTMLDivElement | null>(null);
-  const placement = usePanelPlacement(panelRef, isMobileLayout);
+  const placement = usePanelPlacement(panelRef, isMobileLayout, isMasterDuelStyle(duel));
 
   if (!enabled) return null;
 
@@ -246,6 +261,11 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
       });
   };
   const choose = (row: OptionRow) => send(row.key, row.commandType, row.data);
+  chooseRowRef.current = (row) => {
+    // send() ignores clicks while a move is still playing out: say so instead of doing nothing.
+    if (busy) { setNotice("Wait for the current move to finish, then pick again."); return; }
+    send(`card:${row.key}`, row.commandType, row.data);
+  };
   const spaceTarget = prompt ? null : spaceRow(sections);
   spaceActionRef.current = () => {
     // A focused button already answers Space itself.
@@ -267,9 +287,88 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
   const respondPrompt = (key: string, data: any) => send(`prompt:${key}`, "Respond Prompt", data);
   const promptPendingKey = pendingKey?.startsWith("prompt:") ? pendingKey.slice("prompt:".length) : null;
 
+  // One row button, shared by the panel's lists and the Master Duel style chain dialog.
+  const renderRow = (row: OptionRow) => (
+    <button
+      key={row.key}
+      className="ygo-card-item"
+      disabled={busy}
+      aria-busy={pendingKey === row.key}
+      onClick={() => choose(row)}
+      onMouseEnter={() => setHover(row.code !== undefined ? { code: row.code, side: me, tone: row.tone, loc: typeof row.data?.loc === "number" ? row.data.loc : undefined } : null)}
+      onMouseLeave={() => setHover(null)}
+      onFocus={() => setHover(row.code !== undefined ? { code: row.code, side: me, tone: row.tone, loc: typeof row.data?.loc === "number" ? row.data.loc : undefined } : null)}
+      onBlur={() => setHover(null)}
+      style={{
+        display: "flex", alignItems: "center", gap: 6, textAlign: "left", fontWeight: 600, fontSize: 13,
+        ...(row.highlight ? { boxShadow: `inset 3px 0 0 ${TONE_CSS[row.tone ?? "play"]}` } : {}),
+        // Keep the chosen row readable while the rest dim out.
+        ...(pendingKey === row.key ? { opacity: 1 } : {}),
+      }}
+    >
+      <span style={{ flexGrow: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{row.label}</span>
+      {pendingKey === row.key && <span className="ygo-inline-spinner" aria-hidden="true" />}
+      {row.count > 1 && <span style={{ opacity: 0.6, fontSize: 11 }}>×{row.count}</span>}
+      {row.where && <span style={{ opacity: 0.55, fontSize: 10, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.04em" }}>{row.where}</span>}
+      {row === spaceTarget && (
+        <kbd title="Press Space" style={{ fontFamily: "inherit", fontSize: 10, fontWeight: 600, opacity: 0.6, padding: "1px 5px", borderRadius: 3, border: "1px solid currentColor" }}>Space</kbd>
+      )}
+    </button>
+  );
+
   const stop = (e: { stopPropagation(): void }) => e.stopPropagation();
+  // Master Duel style: the engine's question is a dialog over the board, not a panel row.
+  const promptAsDialog = isMasterDuelStyle(duel);
+  // …and so is a chance to respond to something: the cards you can chain (glowing blue) and
+  // Don't respond. An open window with nothing on the chain ("Activate now", e.g. at every phase
+  // change while you hold a hand trap) stays in the panel, so it never interrupts you.
+  const realResponse = isActive && result.pending === "chain" && ((result.respond.chainLength ?? 0) > 0 || result.respond.forced);
+  const chainDialog = promptAsDialog && realResponse && sections.length > 0 ? sections[0] : null;
 
   return (
+    <>
+    {chainDialog && (
+      <div
+        className="ygo-card-menu ygo-assist-prompt-dialog ygo-assist-chain-dialog"
+        role="dialog"
+        aria-label={chainDialog.title}
+        onClick={stop}
+        onMouseDown={stop}
+        onMouseUp={stop}
+        onMouseMove={stop}
+        onWheel={stop}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", opacity: 0.6 }}>
+          <span style={{ width: 7, height: 7, borderRadius: "50%", background: TONE_CSS.quick, display: "inline-block" }} aria-hidden="true" />
+          Chain?
+        </div>
+        <div style={{ fontSize: 13, fontWeight: 700, lineHeight: 1.3 }}>{chainDialog.title}</div>
+        {chainDialog.rows.map((row) => renderRow(row))}
+      </div>
+    )}
+    {prompt && promptAsDialog && (
+      <div
+        className="ygo-card-menu ygo-assist-prompt-dialog"
+        role="dialog"
+        aria-label="Your choice"
+        onClick={stop}
+        onMouseDown={stop}
+        onMouseUp={stop}
+        onMouseMove={stop}
+        onWheel={stop}
+      >
+        <PromptView
+          key={promptKey(prompt)}
+          duel={duel}
+          prompt={prompt}
+          busy={busy}
+          pendingKey={promptPendingKey}
+          respond={respondPrompt}
+          onHover={setHover}
+          inDialog
+        />
+      </div>
+    )}
     <div
       ref={panelRef}
       className="ygo-card-menu ygo-assisted-options-panel"
@@ -355,7 +454,7 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
           {error}
         </div>
       )}
-      {prompt && (
+      {prompt && !promptAsDialog && (
         <PromptView
           key={promptKey(prompt)}
           duel={duel}
@@ -366,7 +465,13 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
           onHover={setHover}
         />
       )}
-      {!collapsed && sections.map((section) => {
+      {prompt && promptAsDialog && (
+        <div role="status" style={{ fontSize: 12, opacity: 0.8, lineHeight: 1.35 }}>Answer the question on the board.</div>
+      )}
+      {chainDialog && (
+        <div role="status" style={{ fontSize: 12, opacity: 0.8, lineHeight: 1.35 }}>Answer the question on the board.</div>
+      )}
+      {!collapsed && !chainDialog && sections.map((section) => {
         const foldable = section.rows.length > GROUP_COLLAPSE_AT;
         const open = !foldable || openGroups.has(section.title);
         return (
@@ -385,38 +490,13 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
             {section.title}
             {foldable && <span style={{ marginLeft: "auto", fontWeight: 500 }}>{open ? "▾" : `(${section.rows.length}) ▸`}</span>}
           </div>
-          {open && section.rows.map((row) => (
-            <button
-              key={row.key}
-              className="ygo-card-item"
-              disabled={busy}
-              aria-busy={pendingKey === row.key}
-              onClick={() => choose(row)}
-              onMouseEnter={() => setHover(row.code !== undefined ? { code: row.code, side: me, tone: row.tone, loc: typeof row.data?.loc === "number" ? row.data.loc : undefined } : null)}
-              onMouseLeave={() => setHover(null)}
-              onFocus={() => setHover(row.code !== undefined ? { code: row.code, side: me, tone: row.tone, loc: typeof row.data?.loc === "number" ? row.data.loc : undefined } : null)}
-              onBlur={() => setHover(null)}
-              style={{
-                display: "flex", alignItems: "center", gap: 6, textAlign: "left", fontWeight: 600, fontSize: 13,
-                ...(row.highlight ? { boxShadow: `inset 3px 0 0 ${TONE_CSS[row.tone ?? "play"]}` } : {}),
-                // Keep the chosen row readable while the rest dim out.
-                ...(pendingKey === row.key ? { opacity: 1 } : {}),
-              }}
-            >
-              <span style={{ flexGrow: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{row.label}</span>
-              {pendingKey === row.key && <span className="ygo-inline-spinner" aria-hidden="true" />}
-              {row.count > 1 && <span style={{ opacity: 0.6, fontSize: 11 }}>×{row.count}</span>}
-              {row.where && <span style={{ opacity: 0.55, fontSize: 10, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.04em" }}>{row.where}</span>}
-              {row === spaceTarget && (
-                <kbd title="Press Space" style={{ fontFamily: "inherit", fontSize: 10, fontWeight: 600, opacity: 0.6, padding: "1px 5px", borderRadius: 3, border: "1px solid currentColor" }}>Space</kbd>
-              )}
-            </button>
-          ))}
+          {open && section.rows.map((row) => renderRow(row))}
         </div>
         );
       })}
       {!collapsed && <ChainStopsControl value={chainStops} held={chainStopsHeld} onChange={setChainStops} />}
     </div>
+    </>
   );
 }
 

@@ -83,9 +83,12 @@ export function PlayerHUD({ duel, player, visible }: { duel: YGODuel, player: nu
         </div>}
         <div className="ygo-player-hud-player-content">
             {/* Text, not only the blue/red colour, so it reads for colour-blind and first-time players. */}
-            {isTurnPlayer && <div className="ygo-player-hud-turn-chip">
-                {turnStatusText(turnState)}
-            </div>}
+            <div
+                className={`ygo-player-hud-turn-chip${isTurnPlayer ? "" : " ygo-player-hud-turn-chip-idle"}`}
+                aria-hidden={isTurnPlayer ? undefined : true}
+            >
+                {isTurnPlayer ? turnStatusText(turnState) : "\u00a0"}
+            </div>
             <div className="ygo-player-hud-bar"></div>
             <div className="ygo-player-hud-name">
                 {playerName} {state !== YGOPlayerState.IDLE ? `(${state})` : ''}

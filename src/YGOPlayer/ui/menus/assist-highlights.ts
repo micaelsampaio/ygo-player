@@ -6,12 +6,12 @@
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { YGODuel } from "../../core/YGODuel";
-import { createHighlightFrame, disposeHighlightFrame, HIGHLIGHT_COLOR, HIGHLIGHT_CSS, QUICK_COLOR, QUICK_CSS, placeHighlightFrame } from "../../game/meshes/highlight-frame";
+import { createHighlightFrame, disposeHighlightFrame, HIGHLIGHT_COLOR, HIGHLIGHT_CSS, QUICK_COLOR, QUICK_CSS, PICK_COLOR, PICK_CSS, placeHighlightFrame } from "../../game/meshes/highlight-frame";
 import type { Tone } from "../assist-sections";
 import { PromptData, LOC_HAND, LOC_MZONE as LOC_M, LOC_SZONE as LOC_S } from "../assist-prompt";
 
-export const TONE_CSS: Record<Tone, string> = { play: HIGHLIGHT_CSS, quick: QUICK_CSS };
-export const TONE_COLOR: Record<Tone, number> = { play: HIGHLIGHT_COLOR, quick: QUICK_COLOR };
+export const TONE_CSS: Record<Tone, string> = { play: HIGHLIGHT_CSS, quick: QUICK_CSS, pick: PICK_CSS };
+export const TONE_COLOR: Record<Tone, number> = { play: HIGHLIGHT_COLOR, quick: QUICK_COLOR, pick: PICK_COLOR };
 
 const PULSE_MIN = 0.45;
 const PULSE_MAX = 1;
@@ -135,6 +135,16 @@ export function useCardHighlights(duel: YGODuel, targets: HighlightTarget[], hov
  * the pile's top card (it changes as the pile shrinks or grows).
  */
 export function useExtraDeckHighlight(duel: YGODuel, active: boolean) {
+  usePileHighlight(duel, () => duel.fields[duel.perspective.playerIndex]?.extraDeck?.getCardTransform() ?? null, active, "play");
+}
+
+/**
+ * The same pulsing frame on any pile of the viewer (Extra Deck, GY, banished) while something in
+ * it can be used: `target` gives the object to frame each tick (it can change as the pile changes).
+ */
+export function usePileHighlight(duel: YGODuel, target: () => THREE.Object3D | null, active: boolean, tone: Tone) {
+  const targetRef = useRef(target);
+  targetRef.current = target;
   useEffect(() => {
     if (!active) return;
     let entry: { frame: THREE.Mesh; target: THREE.Object3D } | null = null;
@@ -144,11 +154,11 @@ export function useExtraDeckHighlight(duel: YGODuel, active: boolean) {
     };
     let timer: ReturnType<typeof setTimeout>;
     const tick = () => {
-      const target = duel.fields[duel.perspective.playerIndex]?.extraDeck?.getCardTransform() ?? null;
+      const target = targetRef.current();
       if (entry?.target !== target) {
         drop();
         if (target) {
-          entry = { frame: createHighlightFrame(target, PULSE_MAX, TONE_COLOR.play), target };
+          entry = { frame: createHighlightFrame(target, PULSE_MAX, TONE_COLOR[tone]), target };
           duel.core.scene.add(entry.frame);
         }
       }
@@ -165,7 +175,7 @@ export function useExtraDeckHighlight(duel: YGODuel, active: boolean) {
       clearTimeout(timer);
       drop();
     };
-  }, [duel, active]);
+  }, [duel, active, tone]);
 }
 
 /** Only cards that exist as an object on the board can be framed (hand / field). */
@@ -174,5 +184,6 @@ export function promptTargets(prompt: PromptData | null, me: number): HighlightT
   if (!prompt?.candidates) return [];
   return prompt.candidates
     .filter((c) => (c.loc & (LOC_HAND | LOC_M | LOC_S)) !== 0)
-    .map((c) => ({ code: c.code, side: c.ctrl === prompt.player ? me : 1 - me, loc: c.loc }));
+    // Green: a card to choose, never the amber "you can play this".
+    .map((c) => ({ code: c.code, side: c.ctrl === prompt.player ? me : 1 - me, loc: c.loc, tone: "pick" as const }));
 }

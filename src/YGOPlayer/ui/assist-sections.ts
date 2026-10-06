@@ -34,10 +34,11 @@ export interface OptionRow {
 }
 
 
-export type Tone = "play" | "quick";
+export type Tone = "play" | "quick" | "pick";
 export const TONE_TITLE: Record<Tone, string> = {
   play: "Amber: usable on your own open game state (Spell Speed 1)",
   quick: "Blue: a quick effect, Quick-Play, Trap or trigger — usable in response (Spell Speed 2+)",
+  pick: "Green: a card to choose for the effect being resolved",
 };
 
 export interface Section {
@@ -118,8 +119,12 @@ export function sectionsFor(duel: YGODuel, result: AssistQueryResult): Section[]
 
   if (result.pending === "idle") {
     const { options } = result;
+    // Split by Spell Speed, so the glow colour comes with words: amber "Activate" (your open game
+    // state only) and blue "Quick effects" (Quick-Plays, Traps, hand traps: usable in response too).
+    const activate = cardRows(duel, options.activatable, "Activate", "id", true, (i) => ((options.activatableSpeed?.[i] ?? 1) >= 2 ? "quick" : "play"));
     return [
-      { title: "Activate", rows: cardRows(duel, options.activatable, "Activate", "id", true, (i) => ((options.activatableSpeed?.[i] ?? 1) >= 2 ? "quick" : "play")) },
+      { title: "Activate", rows: activate.filter((r) => r.tone !== "quick") },
+      { title: "Quick effects", rows: activate.filter((r) => r.tone === "quick") },
       // By origin (Extra Deck first), each row that exact copy; Extra Deck rows name their summon.
       ...groupSpecialSummons(options.spSummon).map((g) => ({
         title: `Special Summon · ${g.label}`,
@@ -139,7 +144,7 @@ export function sectionsFor(duel: YGODuel, result: AssistQueryResult): Section[]
   const options = (result as { options: BattleOptions }).options;
   return [
     // The Battle Phase only allows Spell Speed 2+.
-    { title: "Activate", rows: cardRows(duel, options.activatable, "Activate", "id", true, () => "quick") },
+    { title: "Quick effects", rows: cardRows(duel, options.activatable, "Activate", "id", true, () => "quick") },
     { title: "Attack", rows: cardRows(duel, options.attackable, "Attack", "attackingId") },
     nextPhaseSection,
   ].filter((s) => s.rows.length > 0);

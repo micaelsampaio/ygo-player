@@ -3,6 +3,8 @@ import { Banish as GameBanish } from "../../../YGOPlayer/game/Banish";
 import { Card } from "ygo-core";
 import { pileCardProps } from "../components/pile-menu";
 import { pileCardPressHandlers, PileViewer } from "./pile-viewer";
+import { useOfferedPileCodes } from "./use-offered-pile";
+import { LOC_REMOVED } from "../assist-prompt";
 
 export function Banish({
   duel,
@@ -15,6 +17,9 @@ export function Banish({
   visible: boolean;
   hasAction: boolean;
 }) {
+  // Assisted Mode: the viewer's own banished cards with something to do now are framed.
+  const offered = useOfferedPileCodes(duel, LOC_REMOVED);
+  const own = banish.player === duel.perspective.playerIndex;
   return (
     <PileViewer
       duel={duel}
@@ -46,7 +51,7 @@ export function Banish({
                       ? card.images.small_url
                       : duel.createCdnUrl("/images/card_back.png")
                   }
-                  className="ygo-card"
+                  className={own && isVisible && offered.has(card.id) ? "ygo-card ygo-card-offered" : "ygo-card"}
                 />
                 {isPlayerPOV && card?.position?.includes("facedown") && (
                   <div className="ygo-card-banish-fd-icon"></div>

@@ -39,8 +39,15 @@ export function isObject(value: any): value is { [key: string]: any } {
     return value !== null && typeof value === 'object';
 }
 
+/**
+ * Keeps a menu's mouse events off the 3D board. The default action is also cancelled, except
+ * for text fields and submit buttons: cancelling a submit button's click cancels its form's
+ * submit (the timer menu's countdown "Start" did nothing).
+ */
 export function stopPropagationCallback(e: any) {
-    if (!(e.target instanceof HTMLInputElement)) {
+    const target = e.target;
+    const isSubmit = typeof target?.closest === "function" && !!target.closest('button[type="submit"], input[type="submit"]');
+    if (!(target instanceof HTMLInputElement) && !isSubmit) {
         e.preventDefault();
     }
     e.stopPropagation();
