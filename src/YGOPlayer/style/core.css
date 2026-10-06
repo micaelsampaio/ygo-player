@@ -296,6 +296,17 @@
     }
 }
 
+/* Top level on purpose: an @keyframes nested inside a style rule is invalid CSS, and the website's
+   CSS minifier then dropped the whole .float-right-menu rule (the pile viewers opened off-screen). */
+@keyframes ygo-card-offered-pulse {
+    0%, 100% { box-shadow: 0 0 4px 1px rgba(255, 201, 60, 0.45); }
+    50% { box-shadow: 0 0 12px 4px rgba(255, 201, 60, 0.85); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ygo-player-core .float-right-menu .float-right-menu-cards .ygo-card-offered { animation: none; box-shadow: 0 0 8px 2px rgba(255, 201, 60, 0.7); }
+}
+
 .ygo-player-core .float-right-menu {
     position: absolute;
     top: var(--ygo-header-margin);
@@ -346,15 +357,6 @@
         outline-offset: 1px;
         border-radius: 3px;
         animation: ygo-card-offered-pulse 1.4s ease-in-out infinite;
-    }
-
-    @keyframes ygo-card-offered-pulse {
-        0%, 100% { box-shadow: 0 0 4px 1px rgba(255, 201, 60, 0.45); }
-        50% { box-shadow: 0 0 12px 4px rgba(255, 201, 60, 0.85); }
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-        .float-right-menu-cards .ygo-card-offered { animation: none; box-shadow: 0 0 8px 2px rgba(255, 201, 60, 0.7); }
     }
 
     .float-right-menu-content {
@@ -1164,19 +1166,7 @@
         animation: ygo-pulse-animation 1.5s ease-in-out infinite;
     }
 
-    @keyframes ygo-pulse-animation {
-        0% {
-            opacity: 1;
-        }
 
-        50% {
-            opacity: 0.4;
-        }
-
-        100% {
-            opacity: 1;
-        }
-    }
 
 
     .ygo-end-game-overlay {
@@ -1270,3 +1260,19 @@
 .ygo-leave-reason:hover { background: rgba(255, 255, 255, 0.12); }
 .ygo-leave-reason:focus-visible { outline: 2px solid #ffc93c; outline-offset: 2px; }
 .ygo-leave-reason-active { border-color: #ffc93c; background: rgba(255, 201, 60, 0.18); color: #ffe39a; }
+
+/* Keyframes stay at the top level: nested inside a style rule they are invalid CSS and the
+   website's CSS minifier drops rules around them (see .float-right-menu in core.css). */
+@keyframes ygo-pulse-animation {
+    0% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.4;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}

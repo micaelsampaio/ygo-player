@@ -66,10 +66,7 @@
     }
   }
 
-  @keyframes ygo-btn-active-pulse {
-    0%, 100% { box-shadow: 0 0 6px #22a855; }
-    50% { box-shadow: 0 0 14px #22a855; }
-  }
+
 
   .ygo-btn-danger {
     /* Fallback for hosts that don't define --ygo-error-color (e.g. the standalone harness). */
@@ -107,4 +104,11 @@
     padding: 12px 20px;
     font-size: 18px;
   }
+}
+
+/* Keyframes stay at the top level: nested inside a style rule they are invalid CSS and the
+   website's CSS minifier drops rules around them (see .float-right-menu in core.css). */
+@keyframes ygo-btn-active-pulse {
+  0%, 100% { box-shadow: 0 0 6px #22a855; }
+  50% { box-shadow: 0 0 14px #22a855; }
 }

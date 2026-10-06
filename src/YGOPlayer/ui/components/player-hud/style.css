@@ -219,10 +219,7 @@
         animation: ygo-pulse-badge 1.2s ease-in-out infinite;
     }
 
-    @keyframes ygo-pulse-badge {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.5; }
-    }
+
 
     @media (max-width: 768px) and (orientation: landscape) {
         .ygo-player-hud-player-content {
@@ -309,11 +306,7 @@
         }
     }
 
-    @keyframes ygo-turn-banner-in {
-        0% { opacity: 0; transform: translateY(8px); }
-        15%, 80% { opacity: 1; transform: none; }
-        100% { opacity: 0; }
-    }
+
 
     @media (prefers-reduced-motion: reduce) {
         .ygo-turn-banner {
@@ -328,4 +321,17 @@
             padding: 6px 24px;
         }
     }
+}
+
+/* Keyframes stay at the top level: nested inside a style rule they are invalid CSS and the
+   website's CSS minifier drops rules around them (see .float-right-menu in core.css). */
+@keyframes ygo-pulse-badge {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+@keyframes ygo-turn-banner-in {
+    0% { opacity: 0; transform: translateY(8px); }
+    15%, 80% { opacity: 1; transform: none; }
+    100% { opacity: 0; }
 }
