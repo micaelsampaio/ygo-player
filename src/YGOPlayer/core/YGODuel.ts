@@ -620,7 +620,38 @@ export class YGODuel {
     if (this.ygo.options.hiddenInfoClient) {
       return this.serverActions.server.requestReplay();
     }
+    // Server rooms (rules.roomId) that don't hide information — solo, bot
+    // and puzzle rooms, combo recording — hold the whole duel here, so it can
+    // be saved mid-duel.
+    if ((this.ygo.options as { roomId?: unknown }).roomId) return this.liveReplayData();
     return this.ygo.getReplayData();
+  }
+
+  /**
+   * A server room's replay as the duel stands. ygo-core's getReplayData redoes
+   * the timeline to its end first, which after an undo would replay the undone
+   * plays on this client (out of step with the server) and save them too, so
+   * those are left out: the replay ends at the current board.
+   */
+  private liveReplayData(): YGOReplayData {
+    const ygo = this.ygo;
+    const index = ygo.commands.index;
+    const all = ygo.commands.toArray();
+    const undone = all.some((cmd, i) => i > index && cmd.scope === YGOCommandScope.GAME);
+    if (!undone) return ygo.getReplayData();
+
+    const core = ygo as unknown as { hasNextCommand: () => boolean };
+    core.hasNextCommand = () => false;
+    let replay: YGOReplayData;
+    try {
+      replay = ygo.getReplayData();
+    } finally {
+      delete (core as Partial<typeof core>).hasNextCommand;
+    }
+    replay.commands = all
+      .filter((cmd, i) => i <= index || cmd.scope !== YGOCommandScope.GAME)
+      .map((cmd) => cmd.toJSON());
+    return replay;
   }
 
   execCommand(command: Command | string) {

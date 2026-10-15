@@ -2,11 +2,11 @@ import { createElement } from "react";
 import ReactDOM from "react-dom/client";
 import { YgoDuelApp } from "../ui/YgoDuelApp";
 import { YGOEndGameAction, YGOPlayerConnectToServerProps, YGOPlayerStartEditorProps, YGOPlayerStartReplayProps } from "../types";
-import { CardData, Command, YGOClientType, YGOReplayData } from "ygo-core";
+import { Command, YGOClientType, YGOReplayData } from "ygo-core";
+import { replayPropsToConfig, serverPropsToConfig } from "./component-config";
 import { YGOConfig } from "../core/YGOConfig";
 import { YGODuel } from "../core/YGODuel";
 import { EventBus } from "../scripts/event-bus";
-import { YGOPropsOptions } from "ygo-core";
 import { YGOClient } from "ygo-core";
 import { LocalYGOPlayerClient } from "../network/local-server/local-client";
 import { LocalYGOPlayerServer } from "../network/local-server/local-server";
@@ -156,59 +156,8 @@ export class YGOPlayerComponentImpl extends HTMLElement implements YGOPlayerComp
   }
 
   replay(props: YGOPlayerStartReplayProps) {
-
-    const options: YGOPropsOptions = { ...props.options || {} };
-
-    const players = props.replay.players.map(
-      (playerData, playerIndex) => {
-        const mainDeck: CardData[] = playerData.mainDeck.map((id) => {
-          const card = props.decks[playerIndex].mainDeck.find(
-            (card) => card.id === id
-          );
-          if (!card)
-            throw new Error(
-              `Card "${id}" not found in main deck of player "${playerData.name}"`
-            );
-          return card as CardData;
-        });
-
-        const extraDeck: CardData[] = playerData.extraDeck.map((id) => {
-          const card = props.decks[playerIndex].extraDeck.find(
-            (card) => card.id === id
-          );
-          if (!card)
-            throw new Error(
-              `Card "${id}" not found in extra deck of player "${playerData.name}"`
-            );
-          return card as CardData;
-        });
-
-        return {
-          name: playerData.name,
-          mainDeck,
-          extraDeck,
-        };
-      }
-    );
-
-    options.fieldState = [
-      ...props.replay.initialField || []
-    ];
-
-    const config: YGOConfig = {
-      players,
-      commands: props.replay.commands,
-      options,
-      cdnUrl: props.cdnUrl,
-      actions: props.actions,
-      gameMode: "REPLAY",
-      endGameActions: props.endGameActions,
-      onError: props.onError,
-    };
-
-    config.options.shuffleDecks = false;
-
-    const client = new LocalYGOPlayerClient(players[0]?.name || "Player 1", YGOClientType.PLAYER);
+    const config = replayPropsToConfig(props);
+    const client = new LocalYGOPlayerClient(config.players[0]?.name || "Player 1", YGOClientType.PLAYER);
     this.client = client;
     this.server = new LocalYGOPlayerServer(client, config);
 
@@ -220,16 +169,7 @@ export class YGOPlayerComponentImpl extends HTMLElement implements YGOPlayerComp
     this.client = props.client;
     this.assist = props.assist;
 
-    const config: YGOConfig = {
-      players: [],
-      commands: [],
-      options: {},
-      cdnUrl: props.cdnUrl,
-      actions: {},
-      gameMode: "EDITOR",
-      endGameActions: props.endGameActions,
-      onError: props.onError,
-    };
+    const config = serverPropsToConfig(props);
 
     this.start(config);
   }

@@ -6,7 +6,8 @@
 
 import type { PuzzleRetryRequest } from "../../domain/puzzle-retry";
 
-export type PuzzleGoal = { type: "win" } | { type: "damage"; amount: number };
+/** `record`: recording a combo (ygo-socket-server combo:start) — no verdict, nothing to solve. */
+export type PuzzleGoal = { type: "win" } | { type: "damage"; amount: number } | { type: "record" };
 export type PuzzleStatus = "playing" | "solved" | "failed";
 export type PuzzleOpponentPolicy = "pass" | "bot" | "eager";
 
@@ -32,8 +33,22 @@ const POLICIES = new Set<PuzzleOpponentPolicy>(["pass", "bot", "eager"]);
 function readGoal(value: unknown): PuzzleGoal | null {
   const goal = value as { type?: unknown; amount?: unknown } | null;
   if (goal?.type === "win") return { type: "win" };
+  if (goal?.type === "record") return { type: "record" };
   if (goal?.type === "damage" && typeof goal.amount === "number" && goal.amount > 0) return { type: "damage", amount: goal.amount };
   return null;
+}
+
+function defaultGoalText(goal: PuzzleGoal): string {
+  switch (goal.type) {
+    case "win": return "Win this turn";
+    case "damage": return `Deal ${goal.amount} damage this turn`;
+    case "record": return "";
+  }
+}
+
+/** A combo recording (puzzle goal `record`) rather than a puzzle: no goal, no verdict. */
+export function isComboRecording(view: PuzzleView | null): boolean {
+  return view?.goal.type === "record";
 }
 
 /** A PuzzleView from untrusted data, or null. */
@@ -50,7 +65,7 @@ export function readPuzzleView(value: unknown): PuzzleView | null {
     description: typeof v.description === "string" ? v.description : "",
     difficulty: typeof v.difficulty === "number" ? v.difficulty : 1,
     goal,
-    goalText: typeof v.goalText === "string" && v.goalText ? v.goalText : goal.type === "win" ? "Win this turn" : `Deal ${goal.amount} damage this turn`,
+    goalText: typeof v.goalText === "string" && v.goalText ? v.goalText : defaultGoalText(goal),
     opponentPolicy: POLICIES.has(v.opponentPolicy as PuzzleOpponentPolicy) ? (v.opponentPolicy as PuzzleOpponentPolicy) : "pass",
     ...(typeof v.hint === "string" && v.hint ? { hint: v.hint } : {}),
     status: v.status as PuzzleStatus,

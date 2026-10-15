@@ -4,6 +4,8 @@ import { YGOGameUtils } from "ygo-core";
 import { getGameZone, getZonePosition } from "../../../scripts/ygo-utils";
 import { ndcToContainer } from "../../field-overlay";
 import { ChainBoardView, chainBadges } from "./chain-links";
+import { RESOLVE_ALL_LABEL, chainModeOn, resolveLinkLabel } from "../../../domain/chain-mode";
+import { stopPropagationCallback } from "../../../scripts/utils";
 import "./style.css";
 
 /** The board as drawn: field slots and the hand from the scene objects (they
@@ -22,11 +24,16 @@ function boardView(duel: YGODuel): ChainBoardView {
 
 interface Placed { key: string; link: number; player: number; top: boolean; stack: number; x: number; y: number; name: string }
 
+/** Chain mode's floating resolve control: beside the newest badge, or docked when that card is out of view. */
+interface ResolveControl { label: string; x: number | null; y: number | null }
+
 /**
  * The chain being built, drawn on the field: a numbered badge on each card
  * with an effect on the chain (Master Duel style), the newest one marked.
- * Only server duels fill ygo-core's chain (their rules engine knows it);
- * elsewhere this draws nothing. A badge only sits on its card where the
+ * Server duels fill ygo-core's chain from their rules engine; manual /
+ * editor duels in chain mode (domain/chain-mode.ts) fill it by hand, and
+ * then a small "Resolve link N" / "Resolve all" control sits beside the
+ * newest badge. A badge only sits on its card where the
  * board shows it now: once the card has left (to a pile, banished, shuffled
  * back), its number goes. Re-projected a few times a second while a
  * chain is open (the camera or the layout can move).
@@ -34,14 +41,18 @@ interface Placed { key: string; link: number; player: number; top: boolean; stac
 export function ChainLinkBadges({ duel }: { duel: YGODuel }) {
   const ref = useRef<HTMLDivElement | null>(null);
   const [placed, setPlaced] = useState<Placed[]>([]);
+  const [control, setControl] = useState<ResolveControl | null>(null);
 
   useEffect(() => {
     const place = () => {
       const root = ref.current;
       const chain = (duel.ygo?.state as any)?.chain;
       const badges = chainBadges(chain, boardView(duel));
+      const showControl = !!root && chainModeOn(duel) && (chain?.length ?? 0) > 0;
       if (!root || badges.length === 0) {
         setPlaced((prev) => (prev.length ? [] : prev));
+        const docked: ResolveControl | null = showControl ? { label: resolveLinkLabel(chain), x: null, y: null } : null;
+        setControl((prev) => (JSON.stringify(prev) === JSON.stringify(docked) ? prev : docked));
         return;
       }
       const canvas = duel.core.renderer.domElement.getBoundingClientRect();
@@ -61,6 +72,11 @@ export function ChainLinkBadges({ duel }: { duel: YGODuel }) {
         });
       }
       setPlaced((prev) => (JSON.stringify(prev) === JSON.stringify(next) ? prev : next));
+      const top = next.find((p) => p.top);
+      const nextControl: ResolveControl | null = showControl
+        ? { label: resolveLinkLabel(chain), x: top ? top.x + top.stack * 18 + 24 : null, y: top ? top.y - top.stack * 18 : null }
+        : null;
+      setControl((prev) => (JSON.stringify(prev) === JSON.stringify(nextControl) ? prev : nextControl));
     };
     place();
     const onChange = () => place();
@@ -88,6 +104,25 @@ export function ChainLinkBadges({ duel }: { duel: YGODuel }) {
           {p.link}
         </div>
       ))}
+      {control && (
+        <div
+          className={`ygo-chain-resolve-floating${control.x === null ? " ygo-chain-resolve-docked" : ""}`}
+          style={control.x === null ? undefined : { left: control.x, top: control.y! }}
+          role="group"
+          aria-label="Resolve the chain"
+          onMouseDown={stopPropagationCallback}
+          onMouseUp={stopPropagationCallback}
+          onMouseMove={stopPropagationCallback}
+          onClick={stopPropagationCallback}
+        >
+          <button type="button" className="ygo-chain-resolve-btn" title="Resolve the newest chain link" onClick={() => duel.gameActions.resolveChainLink()}>
+            {control.label}
+          </button>
+          <button type="button" className="ygo-chain-resolve-btn" title="Resolve every link, newest first" onClick={() => duel.gameActions.resolveChain()}>
+            {RESOLVE_ALL_LABEL}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

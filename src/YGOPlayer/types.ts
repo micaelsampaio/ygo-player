@@ -106,6 +106,11 @@ export interface YGOPlayerConnectToServerProps {
   endGameActions?: YGOEndGameAction[];
   /** Sees every error the player catches and recovers from (see YGOPlayerLogger). */
   onError?: YGOPlayerErrorHandler;
+  /** Mid-duel actions, as in the editor. With `saveReplay` the game settings
+   * menu offers "Save Replay" during the duel (e.g. recording a combo). */
+  actions?: {
+    saveReplay?: (replay: YGOReplayData) => Promise<void>
+  };
 }
 
 export interface YGOAudioLayer {

@@ -5,6 +5,7 @@ import { Card, FieldZone } from "ygo-core";
 import { useCallback, useRef } from "react";
 import { CardMenu, CardMenuSection } from "../components/CardMenu";
 import { ActionButton, YGOIcon } from "../components/ActionButton";
+import { ACTIVATE_NEW_CHAIN_LABEL, activateLabel, chainMenuState, negateLinkLabel } from "../../domain/chain-mode";
 
 export function CardHandMenu({
   duel,
@@ -71,6 +72,14 @@ export function CardHandMenu({
     duel.gameActions.activateCard({ card, originZone, selectZone: false });
   }, [card, index]);
 
+  const activateSpellTrapNewChain = useCallback(() => {
+    duel.gameActions.activateCard({ card, originZone, selectZone: true, newChain: true });
+  }, [card, index]);
+
+  const activateCardNewChain = useCallback(() => {
+    duel.gameActions.activateCard({ card, originZone, selectZone: false, newChain: true });
+  }, [card, index]);
+
   const revealCard = useCallback(() => {
     duel.gameActions.revealCard({ card, originZone });
   }, [card, index]);
@@ -126,6 +135,13 @@ export function CardHandMenu({
     below: !duel.perspective.isPlayerPOV(card.owner),
   }), [card]);
 
+  const chain = chainMenuState(duel);
+  const negateLinks = chain.links.map((link) => (
+    <button key={`negate-link-${link}`} className="ygo-card-item" type="button" onClick={() => duel.gameActions.negateCard({ card, originZone, negatedLink: link })}>
+      {negateLinkLabel(link)}
+    </button>
+  ));
+
   const player = card.owner;
   const field = duel.ygo.state.fields[player];
   const freeMonsterZones = field.monsterZone.filter((zone: any) => !zone).length;
@@ -153,6 +169,7 @@ export function CardHandMenu({
       Reveal
     </button>
     {isMonster && <button className="ygo-card-item" type="button" onClick={negateCard}>Negate</button>}
+    {isMonster && negateLinks}
     {isMonster && <ActionButton className="ygo-card-item" onClick={destroy} icon={<YGOIcon icon="destroy" />}>
       Destroy
     </ActionButton>}
@@ -199,7 +216,17 @@ export function CardHandMenu({
               title={noSpellTrapZone}
               onClick={activateSpellTrap}
             >
-              {isTrap ? "Activate from Hand" : "Activate"}
+              {activateLabel(isTrap ? "Activate from Hand" : "Activate", chain)}
+            </button>}
+
+            {(isTrap || isSpell) && chain.open && <button
+              className="ygo-card-item"
+              type="button"
+              disabled={freeSpellTrapZones === 0}
+              title={noSpellTrapZone}
+              onClick={activateSpellTrapNewChain}
+            >
+              {ACTIVATE_NEW_CHAIN_LABEL}
             </button>}
 
             <button
@@ -277,8 +304,12 @@ export function CardHandMenu({
         </>}
 
         <button className="ygo-card-item" type="button" onClick={activateCard}>
-          Activate from Hand
+          {activateLabel("Activate from Hand", chain)}
         </button>
+
+        {chain.open && <button className="ygo-card-item" type="button" onClick={activateCardNewChain}>
+          {ACTIVATE_NEW_CHAIN_LABEL}
+        </button>}
 
         {moreActions}
       </CardMenu >

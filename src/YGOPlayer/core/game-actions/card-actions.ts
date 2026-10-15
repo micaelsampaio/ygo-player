@@ -2,6 +2,7 @@ import { YGOCommands, YGOGameUtils } from "ygo-core";
 import { Card, CardPosition, FieldZone } from "ygo-core";
 import { getCardZones, getXyzMonstersZones } from "../../scripts/ygo-utils";
 import { SummonActions } from "./summon-actions";
+import { chainModeOn, chainResolveOrder, currentChain, newestChainLink, nextChainLink } from "../../domain/chain-mode";
 
 /** Moves and effects on a card: set, activate, send, banish, return, flip, materials, destroy, target, negate. */
 export class CardActions extends SummonActions {
@@ -41,24 +42,73 @@ export class CardActions extends SummonActions {
     }
   }
 
+  /**
+   * Activate a card. In chain mode (manual / editor duels, see
+   * domain/chain-mode.ts) it becomes the next chain link; `newChain`
+   * resolves the open chain first and starts a new one at link 1.
+   */
   public activateCard({
     card,
     originZone,
     selectZone = false,
+    newChain = false,
   }: {
     card: Card;
     originZone: FieldZone;
     selectZone?: boolean;
+    newChain?: boolean;
   }) {
     if (this.routeAssisted("Activate", card, originZone)) return;
 
     if (selectZone) {
       this.selectZoneThen(
         () => getCardZones(this.duel, [card.originalOwner], ["S"]),
-        (zone, player) => new YGOCommands.ActivateCardCommand({ player, id: card.id, originZone, zone })
+        (zone, player) => new YGOCommands.ActivateCardCommand({ player, id: card.id, originZone, zone, ...this.chainLinkData(newChain) })
       );
     } else {
-      this.execOnCard(YGOCommands.ActivateCardCommand, { card, zone: originZone });
+      const chainLink = this.chainLinkData(newChain);
+      this.execOnCard(YGOCommands.ActivateCardCommand, { card, zone: originZone, ...chainLink });
+    }
+  }
+
+  /** The `chainLink` a manual activation carries in chain mode ({} otherwise). */
+  private chainLinkData(newChain: boolean): { chainLink?: number } {
+    if (!chainModeOn(this.duel)) return {};
+    if (newChain) {
+      this.resolveChain();
+      return { chainLink: 1 };
+    }
+    return { chainLink: nextChainLink(currentChain(this.duel)) };
+  }
+
+  /** Chain mode: the newest chain link resolves (LIFO). */
+  public resolveChainLink() {
+    const link = newestChainLink(currentChain(this.duel));
+    if (link === null) return;
+    this.clearAction();
+    this.duel.execCommand(
+      new YGOCommands.ResolveChainLinkCommand({ player: this.duel.serverActions.getActivePlayer(), link })
+    );
+  }
+
+  private pendingChainResolve: { signature: string; at: number } | null = null;
+
+  /**
+   * Chain mode: the whole open chain resolves, one ResolveChainLinkCommand
+   * per link, newest first. Commands round-trip through the server before
+   * state.chain changes, so a second call for the same chain moments later
+   * (a multi-step phase change) doesn't send them again.
+   */
+  public resolveChain() {
+    const links = chainResolveOrder(currentChain(this.duel));
+    if (links.length === 0) return;
+    const signature = links.join(",");
+    const now = Date.now();
+    if (this.pendingChainResolve?.signature === signature && now - this.pendingChainResolve.at < 2000) return;
+    this.pendingChainResolve = { signature, at: now };
+    const player = this.duel.serverActions.getActivePlayer();
+    for (const link of links) {
+      this.duel.execCommand(new YGOCommands.ResolveChainLinkCommand({ player, link }));
     }
   }
 
@@ -301,13 +351,20 @@ export class CardActions extends SummonActions {
     this.execOnCard(YGOCommands.TargetCommand, { card, originZone });
   }
 
+  /** Negate a card; `negatedLink` names the chain link it negates (data + log only). */
   public negateCard({
     card,
     originZone,
+    negatedLink,
   }: {
     card: Card;
     originZone: FieldZone;
+    negatedLink?: number;
   }) {
-    this.execOnCard(YGOCommands.NegateCommand, { card, originZone });
+    this.execOnCard(YGOCommands.NegateCommand, {
+      card,
+      originZone,
+      ...(typeof negatedLink === "number" ? { negatedLink } : {}),
+    });
   }
 }

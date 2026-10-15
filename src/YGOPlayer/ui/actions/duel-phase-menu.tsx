@@ -5,6 +5,7 @@ import { YGODuel } from "../../core/YGODuel";
 import { CardMenu } from "../components/CardMenu";
 import { YGODuelPhase, YGO_DUEL_PHASE_ORDER } from "ygo-core";
 import { PhaseName, phaseButtonState } from "./phase-buttons";
+import { RESOLVE_ALL_LABEL, chainModeOn, currentChain, resolveLinkLabel } from "../../domain/chain-mode";
 
 export function DuelPhaseActionsMenu({
   duel,
@@ -156,6 +157,8 @@ export function DuelPhaseActionsMenu({
 
   const currentTurn = duel.ygo.state.turn;
   const currentDuelPhase = duel.ygo.state.phase;
+  // Chain mode: the open chain resolves from here too (phase changes resolve it first).
+  const chain = chainModeOn(duel) ? currentChain(duel) : [];
 
   const phaseButton = (phase: YGODuelPhase) => {
     const state = phaseButtonState(phase as PhaseName, { currentPhase: currentDuelPhase, turn: currentTurn, transitioning });
@@ -186,6 +189,14 @@ export function DuelPhaseActionsMenu({
         {phaseButton(YGODuelPhase.Main2)}
         {phaseButton(YGODuelPhase.End)}
       </div>
+      {chain.length > 0 && <div className="ygo-phase-grid ygo-chain-resolve-grid">
+        <button type="button" className="ygo-card-item" onClick={() => duel.gameActions.resolveChainLink()} title="Resolve the newest chain link">
+          {resolveLinkLabel(chain)}
+        </button>
+        <button type="button" className="ygo-card-item" onClick={() => duel.gameActions.resolveChain()} title="Resolve every link, newest first">
+          {RESOLVE_ALL_LABEL}
+        </button>
+      </div>}
       <button type="button" className="ygo-card-item" onClick={nextTurn} title="End your turn and pass to your opponent">End Turn</button>
     </CardMenu>
   );

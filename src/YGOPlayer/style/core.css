@@ -122,6 +122,11 @@
     text-overflow: ellipsis;
 }
 
+/* Chain mode: "Resolve link N" / "Resolve all" under the phase grid. */
+.ygo-player-core .ygo-card-menu .ygo-phase-grid.ygo-chain-resolve-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .ygo-player-core .ygo-card-menu .ygo-card-item-divider {
     height: 1px;
     width: 100%;

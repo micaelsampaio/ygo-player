@@ -143,5 +143,13 @@
         &.ygo-player-0 { background: #2f5bff; }
         &.ygo-player-1 { background: #e0342f; }
     }
+
+    /* ChainLinkResolved rows: the badge sits inline before the text. */
+    .ygo-duel-log-chain-badge.ygo-duel-log-chain-badge-inline {
+        position: static;
+        display: inline-flex;
+        vertical-align: middle;
+        margin-right: 6px;
+    }
 }
 

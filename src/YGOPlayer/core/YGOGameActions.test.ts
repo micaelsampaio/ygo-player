@@ -185,7 +185,7 @@ describe("YGOGameActions — single-step commands", () => {
     { method: "specialSummon", args: { originZone: "GY" }, offered: ["free:M:0"], command: "SpecialSummonCommand", data: { player: 0, id: 77, originZone: "GY", zone: "Z", position: "faceup-attack" } },
     { method: "specialSummon", args: { originZone: "ED-1", position: "faceup-defense" }, offered: ["free:M:0", "free:EMZ:0"], command: "SpecialSummonCommand", data: { player: 0, id: 77, originZone: "ED-1", zone: "Z", position: "faceup-defense" } },
     { method: "setCard", args: { originZone: "H-1" }, offered: ["free:S:0"], command: "SetCardCommand", data: { player: 0, id: 77, originZone: "H-1", zone: "Z", reveal: false } },
-    { method: "activateCard", args: { originZone: "H-1", selectZone: true }, offered: ["free:S:0"], command: "ActivateCardCommand", data: { player: 0, id: 77, originZone: "H-1", zone: "Z" } },
+    { method: "activateCard", args: { originZone: "H-1", selectZone: true }, offered: ["free:S:0"], command: "ActivateCardCommand", data: { player: 0, id: 77, originZone: "H-1", zone: "Z", chainLink: 1 } }, // chain mode (default on): link 1
     { method: "toST", args: { originZone: "GY" }, offered: ["free:S:0"], command: "ToSTCommand", data: { player: 0, id: 77, originZone: "GY", zone: "Z" } },
     { method: "moveCard", args: { originZone: "free:M:1" }, offered: ["free:M:0", "free:S:0", "free:S:1"], command: "MoveCardCommand", data: { player: 0, id: 77, originZone: "free:M:1", zone: "Z", type: "Move Card" } },
     { method: "attachMaterial", args: { originZone: "GY" }, offered: ["M-5", "M-4"], command: "XYZAttachMaterialCommand", data: { player: 0, id: 77, originZone: "GY", zone: "Z" } },
@@ -226,7 +226,7 @@ describe("YGOGameActions — single-step commands", () => {
     s.actions.setCard({ card: card as any, originZone: "H-1" as any, zone: "S-2" as any, selectZone: false, reveal: true });
     expect(s.lastCommand()).toEqual({ name: "SetCardCommand", data: { player: 0, id: 77, originZone: "H-1", zone: "S-2", reveal: true } });
     s.actions.activateCard({ card: card as any, originZone: "S-1" as any });
-    expect(s.lastCommand()).toEqual({ name: "ActivateCardCommand", data: { player: 0, id: 77, zone: "S-1" } });
+    expect(s.lastCommand()).toEqual({ name: "ActivateCardCommand", data: { player: 0, id: 77, zone: "S-1", chainLink: 1 } });
     expect(s.cardSelection.startSelection).not.toHaveBeenCalled();
     expect(s.dispatched()).toEqual(["clear-ui-action", "clear-ui-action"]);
   });

@@ -33,6 +33,43 @@
   box-shadow: 0 0 0 3px rgba(255, 201, 60, 0.45), 0 2px 8px rgba(0, 0, 0, 0.55);
 }
 
+/* Chain mode: resolve control beside the newest badge (or docked at the left edge). */
+.ygo-player-core .ygo-chain-resolve-floating {
+  position: absolute;
+  transform: translateY(-50%);
+  display: flex;
+  gap: 4px;
+  pointer-events: auto;
+  padding: 3px;
+  border-radius: 8px;
+  background: rgba(10, 14, 28, 0.82);
+  border: 1px solid rgba(255, 201, 60, 0.55);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.55);
+  white-space: nowrap;
+}
+
+.ygo-player-core .ygo-chain-resolve-floating.ygo-chain-resolve-docked {
+  left: 16px;
+  top: 50%;
+}
+
+.ygo-player-core .ygo-chain-resolve-btn {
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 6px;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+.ygo-player-core .ygo-chain-resolve-btn:hover,
+.ygo-player-core .ygo-chain-resolve-btn:focus-visible {
+  background: rgba(255, 201, 60, 0.25);
+  border-color: #ffc93c;
+}
+
 @keyframes ygo-chain-link-in {
   from { transform: translate(-50%, -50%) scale(0.4); opacity: 0; }
   to { transform: translate(-50%, -50%) scale(1); opacity: 1; }

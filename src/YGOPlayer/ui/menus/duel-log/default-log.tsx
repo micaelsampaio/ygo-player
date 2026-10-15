@@ -79,6 +79,7 @@ export const DefaultLogRow = memo(
                 <div className="ygo-text-sm ygo-mb-1 ygo-text-bold ygo-text-center">
                   {log.type}
                   {log.chainLink ? <span className="ygo-duel-log-chain-link"> · Chain Link {log.chainLink}</span> : null}
+                  {log.negatedLink ? <span className="ygo-duel-log-chain-link"> · negates Chain Link {log.negatedLink}</span> : null}
                 </div>
                 <div className="ygo-flex ygo-gap-2">
                   <div>

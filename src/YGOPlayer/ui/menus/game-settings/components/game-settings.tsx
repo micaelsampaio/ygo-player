@@ -4,9 +4,12 @@ import { YGOPlayerSettings } from "../../../../core/YGOPlayerSettings";
 import { Modal } from "../../../components/Modal";
 import InputRange from "../../../components/range/InputRange";
 import { FIELD_THEMES, fieldTheme } from "../../../../core/field-themes";
+import { CHAIN_MODE_SETTING, isEngineRoom } from "../../../../domain/chain-mode";
 
 export function GameSettingsDialog({ duel }: { duel: YGODuel }) {
   const settings = duel.settings;
+  // Engine rooms (Assisted Mode / bot duels) number the chain themselves.
+  const showChainMode = !isEngineRoom(duel.ygo?.options) && duel.config?.gameMode !== "REPLAY";
   const [gameMusicVolume, setGameMusicState] = useState(() => settings.getMusicVolume());
   const [gameSoundsVolume, setGameSoundsVolumeState] = useState(() => settings.getGameVolume());
   const [gameSpeed, setGameSpeed] = useState(() => settings.getGameSpeed());
@@ -142,6 +145,19 @@ export function GameSettingsDialog({ duel }: { duel: YGODuel }) {
               Auto Start Replay when loaded
             </div>
           </div>
+
+          {showChainMode && <div className="ygo-flex ygo-mt-3">
+            <input
+              id="ygo-setting-chain-mode"
+              style={{ display: "inline-block", width: "auto" }}
+              type="checkbox"
+              checked={settings.getConfigFromPath(CHAIN_MODE_SETTING) !== false}
+              onChange={e => onChangeCheckBox(e, CHAIN_MODE_SETTING)}
+            />
+            <label htmlFor="ygo-setting-chain-mode" style={{ display: "inline-block", flexGrow: 1 }} title="Each Activate becomes the next chain link; resolve the chain link by link (it also resolves when the phase changes)">
+              Chain mode: number activations as chain links
+            </label>
+          </div>}
         </div>
 
         {/* {duel.config.actions?.reportBug && <>

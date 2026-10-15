@@ -1,5 +1,6 @@
 import { Card, FieldZone, YGOGameUtils } from "ygo-core";
 import type { YGODuel } from "../../core/YGODuel";
+import { ACTIVATE_NEW_CHAIN_LABEL, activateLabel, chainMenuState, negateLinkLabel } from "../../domain/chain-mode";
 
 /** The pile a card menu was opened from: Graveyard, Banished, (view) Deck or Extra Deck. */
 export type PileSource = "GY" | "B" | "D" | "ED";
@@ -41,6 +42,7 @@ const MOVES = {
   activateFieldSpell: { picksZone: false, run: ({ duel, card, originZone }: Ctx) => duel.gameActions.fieldSpell({ card, originZone, position: "faceup" }) },
   setFieldSpell: { picksZone: false, run: ({ duel, card, originZone }: Ctx) => duel.gameActions.fieldSpell({ card, originZone, position: "facedown" }) },
   activate: { picksZone: false, run: ({ duel, card, originZone }: Ctx) => duel.gameActions.activateCard({ card, originZone, selectZone: false }) },
+  activateNewChain: { picksZone: false, run: ({ duel, card, originZone }: Ctx) => duel.gameActions.activateCard({ card, originZone, selectZone: false, newChain: true }) },
   target: { picksZone: false, run: ({ duel, card, originZone }: Ctx) => duel.gameActions.targetCard({ card, originZone }) },
   toST: { picksZone: true, run: ({ duel, card, originZone }: Ctx) => duel.gameActions.toST({ card, originZone }) },
   setST: { picksZone: true, run: ({ duel, card, originZone }: Ctx) => duel.gameActions.setCard({ card, originZone, reveal: false }) }, // TODO FIX REVEAL
@@ -166,16 +168,31 @@ export function pileCardActions(
   { source, closeViewer }: { source: PileSource; closeViewer: () => void },
 ): PileCardAction[] {
   const ctx: Ctx = { duel, card, originZone };
+  // Chain mode (domain/chain-mode.ts): with a chain open, Activate chains to
+  // it ("Chain (link N)") or starts a new one, and Negate can name a link.
+  const chain = chainMenuState(duel);
   return MENUS[source]
     .filter(([, , visible]) => !visible || visible(ctx))
-    .map(([move, label, , close]) => ({
-      key: move,
-      label,
-      run: () => {
-        if (close ?? MOVES[move].picksZone) closeViewer();
-        MOVES[move].run(ctx);
-      },
-    }));
+    .flatMap(([move, label, , close]): PileCardAction[] => {
+      const entry = (key: string, text: string, run: () => void): PileCardAction => ({
+        key,
+        label: text,
+        run: () => {
+          if (close ?? MOVES[move].picksZone) closeViewer();
+          run();
+        },
+      });
+      const base = entry(move, move === "activate" ? activateLabel(label, chain) : label, () => MOVES[move].run(ctx));
+      if (!chain.open) return [base];
+      if (move === "activate") {
+        return [base, entry("activateNewChain", ACTIVATE_NEW_CHAIN_LABEL, () => MOVES.activateNewChain.run(ctx))];
+      }
+      if (move === "negate") {
+        return [base, ...chain.links.map((link) => entry(`negate-link-${link}`, negateLinkLabel(link), () =>
+          duel.gameActions.negateCard({ card, originZone, negatedLink: link })))];
+      }
+      return [base];
+    });
 }
 
 /** The close-ui-menu event for each pile's viewer. */

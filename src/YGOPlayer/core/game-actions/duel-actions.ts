@@ -3,6 +3,7 @@ import { assistPhaseRouteFor } from "../../domain/assist-routing";
 import { FieldZone } from "ygo-core";
 import { YGODuelPhase } from "ygo-core";
 import { CardActions } from "./card-actions";
+import { chainModeOn } from "../../domain/chain-mode";
 
 /** Deck and hand, player (life points, state, notes, dice, coin, surrender), phases and turns, battle. */
 export class DuelActions extends CardActions {
@@ -178,14 +179,22 @@ export class DuelActions extends CardActions {
       .catch((error: any) => duel.events.dispatch("assist-choice-done", { error }));
   }
 
+  /** Change phase. Chain mode: an open chain resolves first, so it never carries into the next phase. */
   public setDuelPhase({ phase }: { phase: YGODuelPhase }) {
+    this.resolveOpenChain();
     this.duel.execCommand(new YGOCommands.DuelPhaseCommand({
       phase
     }));
   }
 
+  /** Next turn. Chain mode: an open chain resolves first. */
   public nextDuelturn() {
+    this.resolveOpenChain();
     this.duel.execCommand(new YGOCommands.DuelTurnCommand());
+  }
+
+  private resolveOpenChain() {
+    if (chainModeOn(this.duel)) this.resolveChain();
   }
 
   public attack({ attackingId, attackingZone, attackedId, attackedZone, destroyAttacking, destroyAttacked, battleDamage }: {

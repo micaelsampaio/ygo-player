@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { YGODuel } from "../../core/YGODuel";
 import {
+  isComboRecording,
   nextPuzzleView,
   opponentPolicyText,
   PuzzleView,
@@ -18,13 +19,16 @@ const RETRY_RESET_MS = 10_000;
  * Engine-checked puzzles (ygo-socket-server src/puzzles/): the goal, the
  * damage dealt so far, and the server's verdict with Try again. Try again is
  * a new room, so the host starts it (the component's "puzzle-retry" event).
+ * Recording a combo (goal `record`) shows only a small label: no goal,
+ * verdict or Try again (undo stays in the controls as usual).
  */
 export function PuzzleHUD({ duel }: { duel: YGODuel }) {
   const [view, setView] = useState<PuzzleView | null>(() => readPuzzleView((duel.ygo?.options as { puzzle?: unknown } | undefined)?.puzzle));
   const [showHint, setShowHint] = useState(false);
   const [retrying, setRetrying] = useState(false);
   const [dismissed, setDismissed] = useState(false);
-  const isPuzzle = !!view;
+  const recording = isComboRecording(view);
+  const isPuzzle = !!view && !recording;
 
   useEffect(() => {
     if (!isPuzzle) return;
@@ -42,7 +46,8 @@ export function PuzzleHUD({ duel }: { duel: YGODuel }) {
     return () => clearTimeout(timer);
   }, [retrying]);
 
-  if (!view) return null;
+  // A combo recording is a plain Assisted Mode duel: no puzzle HUD.
+  if (!view || recording) return null;
 
   const progress = puzzleProgress(view);
   const result = puzzleResultTitle(view);

@@ -11,6 +11,10 @@ export interface YGOPlayerSettings {
     showFaceDownCardsTransparent: boolean
     /** The duel field's look (core/field-themes.ts); applies from the next duel. */
     fieldTheme: string
+    /** Manual / editor duels: number each Activate as the next chain link
+     * and resolve the chain link by link (domain/chain-mode.ts). Ignored in
+     * engine rooms (Assisted Mode / bot duels). */
+    chainMode: boolean
 }
 
 export interface YGOPlayerSettingsAdapterOptions {
@@ -38,7 +42,8 @@ const DEFAULT_SETTINGS: YGOPlayerSettings = {
     showCardWhenPlayed: true,
     autoStartReplay: true,
     showFaceDownCardsTransparent: true,
-    fieldTheme: "classic"
+    fieldTheme: "classic",
+    chainMode: true
 }
 
 const YGO_SETTINGS_KEY = "ygo_player_settings";

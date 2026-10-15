@@ -6,6 +6,7 @@ import { YGODuel } from "../../core/YGODuel";
 import { CardMenu, CardMenuSection } from "../components/CardMenu";
 import { GameCard } from "../../game/GameCard";
 import { ActionButton, YGOIcon } from "../components/ActionButton";
+import { ACTIVATE_NEW_CHAIN_LABEL, activateLabel, chainMenuState, negateLinkLabel } from "../../domain/chain-mode";
 
 export function CardZoneMenu({
   duel,
@@ -95,6 +96,15 @@ export function CardZoneMenu({
     });
   }, [card, zone]);
 
+  const activateCardNewChain = useCallback(() => {
+    duel.gameActions.activateCard({
+      card,
+      originZone: zone,
+      selectZone: false,
+      newChain: true,
+    });
+  }, [card, zone]);
+
   const moveCard = useCallback(() => {
     duel.gameActions.moveCard({ card, originZone: zone });
   }, [card, zone]);
@@ -120,6 +130,18 @@ export function CardZoneMenu({
   }, [card, zone]);
 
   useAnchoredMenu(duel, menuRef, () => ({ kind: "object3d", object: gameCard.gameObject }), [card]);
+
+  const chain = chainMenuState(duel);
+  const negateLinks = chain.links.map((link) => (
+    <button key={`negate-link-${link}`} className="ygo-card-item" type="button" onClick={() => duel.gameActions.negateCard({ card, originZone: zone, negatedLink: link })}>
+      {negateLinkLabel(link)}
+    </button>
+  ));
+  const activateNewChain = chain.open && (
+    <button type="button" className="ygo-card-item" onClick={activateCardNewChain}>
+      {ACTIVATE_NEW_CHAIN_LABEL}
+    </button>
+  );
 
   const zoneData = YGOGameUtils.getZoneData(zone);
   const field = duel.ygo.state.fields[player];
@@ -181,8 +203,10 @@ export function CardZoneMenu({
       <CardMenu cols indicator playerIndex={zoneData.player} menuRef={menuRef} assist={{ duel, card, zone }}>
 
         <button type="button" className="ygo-card-item" onClick={activateCard}>
-          Activate
+          {activateLabel("Activate", chain)}
         </button>
+
+        {activateNewChain}
 
         {isFaceUp && (
           <button type="button" className="ygo-card-item" onClick={setCard}>
@@ -201,6 +225,7 @@ export function CardZoneMenu({
         <CardMenuSection label="More" />
 
         <button className="ygo-card-item" type="button" onClick={negateCard}>Negate</button>
+        {negateLinks}
 
         <button type="button" className="ygo-card-item" onClick={destroyCard}>
           Destroy
@@ -267,8 +292,10 @@ export function CardZoneMenu({
       )}
 
       {isFaceUp && <button type="button" className="ygo-card-item" onClick={activateCard}>
-        Activate
+        {activateLabel("Activate", chain)}
       </button>}
+
+      {isFaceUp && activateNewChain}
 
       <button type="button" className="ygo-card-item" onClick={targetCard}>
         Target
@@ -293,6 +320,7 @@ export function CardZoneMenu({
       )}
 
       <button className="ygo-card-item" type="button" onClick={negateCard}>Negate</button>
+      {negateLinks}
 
       <ActionButton className="ygo-card-item" onClick={destroyCard} icon={<YGOIcon icon="destroy" />}>
         Destroy
