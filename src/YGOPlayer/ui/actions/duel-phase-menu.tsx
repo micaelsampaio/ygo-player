@@ -176,12 +176,12 @@ export function DuelPhaseActionsMenu({
   return (
     <CardMenu key="global-events-actions-menu" menuRef={menuRef}>
       <button type="button" className="ygo-card-item" onClick={nextPhase} title="Go to the next phase">Next Phase</button>
-      <div className="ygo-flex ygo-gap-1">
+      <div className="ygo-phase-grid">
         {phaseButton(YGODuelPhase.Draw)}
         {phaseButton(YGODuelPhase.Standby)}
         {phaseButton(YGODuelPhase.Main1)}
       </div>
-      <div className="ygo-flex ygo-gap-1">
+      <div className="ygo-phase-grid">
         {phaseButton(YGODuelPhase.Battle)}
         {phaseButton(YGODuelPhase.Main2)}
         {phaseButton(YGODuelPhase.End)}

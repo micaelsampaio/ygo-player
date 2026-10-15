@@ -101,6 +101,27 @@
         </button> */
 }
 
+/* Phase buttons: three equal columns that always fit the menu ("Standby" used to push "Main 1" out). */
+.ygo-player-core .ygo-card-menu .ygo-phase-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 4px;
+}
+
+/* The phase menu needs room for three labels per row; the other menus keep 180px. */
+.ygo-player-core .ygo-card-menu:has(.ygo-phase-grid) {
+    width: 236px;
+}
+
+.ygo-player-core .ygo-card-menu .ygo-phase-grid > .ygo-card-item {
+    min-width: 0;
+    padding: 5px 4px;
+    font-size: 13px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 .ygo-player-core .ygo-card-menu .ygo-card-item-divider {
     height: 1px;
     width: 100%;
