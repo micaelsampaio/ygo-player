@@ -9,6 +9,7 @@ import {
   newestChainLink,
   nextChainLink,
   resolveLinkLabel,
+  showResolveAll,
 } from "./chain-mode";
 
 const link = (n: number) => ({ link: n, player: 0, id: 1, zone: "M-1" as any });
@@ -51,6 +52,9 @@ describe("chain mode helpers", () => {
     expect(activateLabel("Activate from Hand", open)).toBe("Chain from Hand (link 3)");
     expect(negateLinkLabel(2)).toBe("Negate link 2");
     expect(ACTIVATE_NEW_CHAIN_LABEL).toBe("Activate as new chain");
+    expect(resolveLinkLabel([link(1)])).toBe("Resolve");
+    expect(showResolveAll([link(1)])).toBe(false);
+    expect(showResolveAll([link(1), link(2)])).toBe(true);
     expect(resolveLinkLabel([link(1), link(2)])).toBe("Resolve link 2");
 
     // engine rooms: the menus stay as they were

@@ -5,7 +5,7 @@ import { YGODuel } from "../../core/YGODuel";
 import { CardMenu } from "../components/CardMenu";
 import { YGODuelPhase, YGO_DUEL_PHASE_ORDER } from "ygo-core";
 import { PhaseName, phaseButtonState } from "./phase-buttons";
-import { RESOLVE_ALL_LABEL, chainModeOn, currentChain, resolveLinkLabel } from "../../domain/chain-mode";
+import { RESOLVE_ALL_LABEL, chainModeOn, currentChain, resolveLinkLabel, showResolveAll } from "../../domain/chain-mode";
 
 export function DuelPhaseActionsMenu({
   duel,
@@ -189,7 +189,10 @@ export function DuelPhaseActionsMenu({
         {phaseButton(YGODuelPhase.Main2)}
         {phaseButton(YGODuelPhase.End)}
       </div>
-      {chain.length > 0 && <div className="ygo-phase-grid ygo-chain-resolve-grid">
+      {chain.length === 1 && <button type="button" className="ygo-card-item" onClick={() => duel.gameActions.resolveChainLink()} title="Resolve the chain">
+        {resolveLinkLabel(chain)}
+      </button>}
+      {showResolveAll(chain) && <div className="ygo-phase-grid ygo-chain-resolve-grid">
         <button type="button" className="ygo-card-item" onClick={() => duel.gameActions.resolveChainLink()} title="Resolve the newest chain link">
           {resolveLinkLabel(chain)}
         </button>

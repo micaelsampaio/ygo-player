@@ -4,7 +4,7 @@ import { YGOGameUtils } from "ygo-core";
 import { getGameZone, getZonePosition } from "../../../scripts/ygo-utils";
 import { ndcToContainer } from "../../field-overlay";
 import { ChainBoardView, chainBadges } from "./chain-links";
-import { RESOLVE_ALL_LABEL, chainModeOn, resolveLinkLabel } from "../../../domain/chain-mode";
+import { RESOLVE_ALL_LABEL, chainModeOn, resolveLinkLabel, showResolveAll } from "../../../domain/chain-mode";
 import { stopPropagationCallback } from "../../../scripts/utils";
 import "./style.css";
 
@@ -25,7 +25,7 @@ function boardView(duel: YGODuel): ChainBoardView {
 interface Placed { key: string; link: number; player: number; top: boolean; stack: number; x: number; y: number; name: string }
 
 /** Chain mode's floating resolve control: beside the newest badge, or docked when that card is out of view. */
-interface ResolveControl { label: string; x: number | null; y: number | null }
+interface ResolveControl { label: string; all: boolean; x: number | null; y: number | null }
 
 /**
  * The chain being built, drawn on the field: a numbered badge on each card
@@ -51,7 +51,7 @@ export function ChainLinkBadges({ duel }: { duel: YGODuel }) {
       const showControl = !!root && chainModeOn(duel) && (chain?.length ?? 0) > 0;
       if (!root || badges.length === 0) {
         setPlaced((prev) => (prev.length ? [] : prev));
-        const docked: ResolveControl | null = showControl ? { label: resolveLinkLabel(chain), x: null, y: null } : null;
+        const docked: ResolveControl | null = showControl ? { label: resolveLinkLabel(chain), all: showResolveAll(chain), x: null, y: null } : null;
         setControl((prev) => (JSON.stringify(prev) === JSON.stringify(docked) ? prev : docked));
         return;
       }
@@ -74,7 +74,7 @@ export function ChainLinkBadges({ duel }: { duel: YGODuel }) {
       setPlaced((prev) => (JSON.stringify(prev) === JSON.stringify(next) ? prev : next));
       const top = next.find((p) => p.top);
       const nextControl: ResolveControl | null = showControl
-        ? { label: resolveLinkLabel(chain), x: top ? top.x + top.stack * 18 + 24 : null, y: top ? top.y - top.stack * 18 : null }
+        ? { label: resolveLinkLabel(chain), all: showResolveAll(chain), x: top ? top.x + top.stack * 18 + 24 : null, y: top ? top.y - top.stack * 18 : null }
         : null;
       setControl((prev) => (JSON.stringify(prev) === JSON.stringify(nextControl) ? prev : nextControl));
     };
@@ -118,9 +118,9 @@ export function ChainLinkBadges({ duel }: { duel: YGODuel }) {
           <button type="button" className="ygo-chain-resolve-btn" title="Resolve the newest chain link" onClick={() => duel.gameActions.resolveChainLink()}>
             {control.label}
           </button>
-          <button type="button" className="ygo-chain-resolve-btn" title="Resolve every link, newest first" onClick={() => duel.gameActions.resolveChain()}>
+          {control.all && <button type="button" className="ygo-chain-resolve-btn" title="Resolve every link, newest first" onClick={() => duel.gameActions.resolveChain()}>
             {RESOLVE_ALL_LABEL}
-          </button>
+          </button>}
         </div>
       )}
     </div>

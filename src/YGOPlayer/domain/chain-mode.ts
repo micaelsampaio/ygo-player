@@ -95,10 +95,16 @@ export function negateLinkLabel(link: number): string {
   return `Negate link ${link}`;
 }
 
-/** "Resolve link N" (the newest link). */
+/** "Resolve link N" (the newest link), or just "Resolve" when it is the only link. */
 export function resolveLinkLabel(chain: ChainLinkState[] | undefined): string {
+  if ((chain?.length ?? 0) === 1) return "Resolve";
   const link = newestChainLink(chain);
   return link === null ? "Resolve link" : `Resolve link ${link}`;
+}
+
+/** "Resolve all" only adds something once the chain has two or more links. */
+export function showResolveAll(chain: ChainLinkState[] | undefined): boolean {
+  return (chain?.length ?? 0) > 1;
 }
 
 export const RESOLVE_ALL_LABEL = "Resolve all";
