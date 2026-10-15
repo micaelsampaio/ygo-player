@@ -87,8 +87,6 @@ export function activateLabel(base: string, state: ChainMenuState): string {
   return `${chained === base ? `Chain` : chained} (link ${state.nextLink})`;
 }
 
-/** The menu entry that resolves the open chain first and starts a new one. */
-export const ACTIVATE_NEW_CHAIN_LABEL = "Activate as new chain";
 
 /** "Negate link N" */
 export function negateLinkLabel(link: number): string {

@@ -6,7 +6,7 @@ import { YGODuel } from "../../core/YGODuel";
 import { CardMenu, CardMenuSection } from "../components/CardMenu";
 import { GameCard } from "../../game/GameCard";
 import { ActionButton, YGOIcon } from "../components/ActionButton";
-import { ACTIVATE_NEW_CHAIN_LABEL, activateLabel, chainMenuState, negateLinkLabel } from "../../domain/chain-mode";
+import { activateLabel, chainMenuState, negateLinkLabel } from "../../domain/chain-mode";
 
 export function CardZoneMenu({
   duel,
@@ -96,15 +96,6 @@ export function CardZoneMenu({
     });
   }, [card, zone]);
 
-  const activateCardNewChain = useCallback(() => {
-    duel.gameActions.activateCard({
-      card,
-      originZone: zone,
-      selectZone: false,
-      newChain: true,
-    });
-  }, [card, zone]);
-
   const moveCard = useCallback(() => {
     duel.gameActions.moveCard({ card, originZone: zone });
   }, [card, zone]);
@@ -137,11 +128,6 @@ export function CardZoneMenu({
       {negateLinkLabel(link)}
     </button>
   ));
-  const activateNewChain = chain.open && (
-    <button type="button" className="ygo-card-item" onClick={activateCardNewChain}>
-      {ACTIVATE_NEW_CHAIN_LABEL}
-    </button>
-  );
 
   const zoneData = YGOGameUtils.getZoneData(zone);
   const field = duel.ygo.state.fields[player];
@@ -206,7 +192,6 @@ export function CardZoneMenu({
           {activateLabel("Activate", chain)}
         </button>
 
-        {activateNewChain}
 
         {isFaceUp && (
           <button type="button" className="ygo-card-item" onClick={setCard}>
@@ -294,8 +279,6 @@ export function CardZoneMenu({
       {isFaceUp && <button type="button" className="ygo-card-item" onClick={activateCard}>
         {activateLabel("Activate", chain)}
       </button>}
-
-      {isFaceUp && activateNewChain}
 
       <button type="button" className="ygo-card-item" onClick={targetCard}>
         Target

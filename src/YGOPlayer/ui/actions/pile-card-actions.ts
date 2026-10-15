@@ -1,6 +1,6 @@
 import { Card, FieldZone, YGOGameUtils } from "ygo-core";
 import type { YGODuel } from "../../core/YGODuel";
-import { ACTIVATE_NEW_CHAIN_LABEL, activateLabel, chainMenuState, negateLinkLabel } from "../../domain/chain-mode";
+import { activateLabel, chainMenuState, negateLinkLabel } from "../../domain/chain-mode";
 
 /** The pile a card menu was opened from: Graveyard, Banished, (view) Deck or Extra Deck. */
 export type PileSource = "GY" | "B" | "D" | "ED";
@@ -42,7 +42,6 @@ const MOVES = {
   activateFieldSpell: { picksZone: false, run: ({ duel, card, originZone }: Ctx) => duel.gameActions.fieldSpell({ card, originZone, position: "faceup" }) },
   setFieldSpell: { picksZone: false, run: ({ duel, card, originZone }: Ctx) => duel.gameActions.fieldSpell({ card, originZone, position: "facedown" }) },
   activate: { picksZone: false, run: ({ duel, card, originZone }: Ctx) => duel.gameActions.activateCard({ card, originZone, selectZone: false }) },
-  activateNewChain: { picksZone: false, run: ({ duel, card, originZone }: Ctx) => duel.gameActions.activateCard({ card, originZone, selectZone: false, newChain: true }) },
   target: { picksZone: false, run: ({ duel, card, originZone }: Ctx) => duel.gameActions.targetCard({ card, originZone }) },
   toST: { picksZone: true, run: ({ duel, card, originZone }: Ctx) => duel.gameActions.toST({ card, originZone }) },
   setST: { picksZone: true, run: ({ duel, card, originZone }: Ctx) => duel.gameActions.setCard({ card, originZone, reveal: false }) }, // TODO FIX REVEAL
@@ -184,9 +183,6 @@ export function pileCardActions(
       });
       const base = entry(move, move === "activate" ? activateLabel(label, chain) : label, () => MOVES[move].run(ctx));
       if (!chain.open) return [base];
-      if (move === "activate") {
-        return [base, entry("activateNewChain", ACTIVATE_NEW_CHAIN_LABEL, () => MOVES.activateNewChain.run(ctx))];
-      }
       if (move === "negate") {
         return [base, ...chain.links.map((link) => entry(`negate-link-${link}`, negateLinkLabel(link), () =>
           duel.gameActions.negateCard({ card, originZone, negatedLink: link })))];

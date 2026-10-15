@@ -5,7 +5,7 @@ import { Card, FieldZone } from "ygo-core";
 import { useCallback, useRef } from "react";
 import { CardMenu, CardMenuSection } from "../components/CardMenu";
 import { ActionButton, YGOIcon } from "../components/ActionButton";
-import { ACTIVATE_NEW_CHAIN_LABEL, activateLabel, chainMenuState, negateLinkLabel } from "../../domain/chain-mode";
+import { activateLabel, chainMenuState, negateLinkLabel } from "../../domain/chain-mode";
 
 export function CardHandMenu({
   duel,
@@ -70,14 +70,6 @@ export function CardHandMenu({
 
   const activateCard = useCallback(() => {
     duel.gameActions.activateCard({ card, originZone, selectZone: false });
-  }, [card, index]);
-
-  const activateSpellTrapNewChain = useCallback(() => {
-    duel.gameActions.activateCard({ card, originZone, selectZone: true, newChain: true });
-  }, [card, index]);
-
-  const activateCardNewChain = useCallback(() => {
-    duel.gameActions.activateCard({ card, originZone, selectZone: false, newChain: true });
   }, [card, index]);
 
   const revealCard = useCallback(() => {
@@ -219,16 +211,6 @@ export function CardHandMenu({
               {activateLabel(isTrap ? "Activate from Hand" : "Activate", chain)}
             </button>}
 
-            {(isTrap || isSpell) && chain.open && <button
-              className="ygo-card-item"
-              type="button"
-              disabled={freeSpellTrapZones === 0}
-              title={noSpellTrapZone}
-              onClick={activateSpellTrapNewChain}
-            >
-              {ACTIVATE_NEW_CHAIN_LABEL}
-            </button>}
-
             <button
               className="ygo-card-item"
               type="button"
@@ -306,10 +288,6 @@ export function CardHandMenu({
         <button className="ygo-card-item" type="button" onClick={activateCard}>
           {activateLabel("Activate from Hand", chain)}
         </button>
-
-        {chain.open && <button className="ygo-card-item" type="button" onClick={activateCardNewChain}>
-          {ACTIVATE_NEW_CHAIN_LABEL}
-        </button>}
 
         {moreActions}
       </CardMenu >

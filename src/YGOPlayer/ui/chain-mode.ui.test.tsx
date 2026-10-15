@@ -59,10 +59,10 @@ describe("card zone menu — chain labels", () => {
     expect(out).not.toContain("Negate link");
   });
 
-  it("Chain (link N), Activate as new chain and Negate link N with a chain open", () => {
+  it("Chain (link N) and Negate link N with a chain open, no Activate as new chain", () => {
     const out = html(fakeDuel([link(1), link(2)]));
     expect(out).toContain("Chain (link 3)");
-    expect(out).toContain("Activate as new chain");
+    expect(out).not.toContain("Activate as new chain");
     expect(out).toContain("Negate link 1");
     expect(out).toContain("Negate link 2");
   });
@@ -74,7 +74,7 @@ describe("pile card menus — chain labels", () => {
 
   it("adds the chain entries next to Activate / Negate while a chain is open", () => {
     expect(labels(fakeDuel([link(1)]))).toEqual([
-      "SS ATK", "SS DEF", "Chain (link 2)", "Activate as new chain", "Target", "TO ST", "To Hand", "Banish", "Banish FD",
+      "SS ATK", "SS DEF", "Chain (link 2)", "Target", "TO ST", "To Hand", "Banish", "Banish FD",
       "To Top Deck", "To Bottom Deck", "Negate", "Negate link 1",
     ]);
   });

@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import {
-  ACTIVATE_NEW_CHAIN_LABEL,
   activateLabel,
   chainMenuState,
   chainModeOn,
@@ -51,7 +50,6 @@ describe("chain mode helpers", () => {
     expect(activateLabel("Activate", open)).toBe("Chain (link 3)");
     expect(activateLabel("Activate from Hand", open)).toBe("Chain from Hand (link 3)");
     expect(negateLinkLabel(2)).toBe("Negate link 2");
-    expect(ACTIVATE_NEW_CHAIN_LABEL).toBe("Activate as new chain");
     expect(resolveLinkLabel([link(1)])).toBe("Resolve");
     expect(showResolveAll([link(1)])).toBe(false);
     expect(showResolveAll([link(1), link(2)])).toBe(true);
