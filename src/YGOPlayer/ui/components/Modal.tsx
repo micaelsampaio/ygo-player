@@ -4,7 +4,8 @@ import { clickableProps } from './a11y';
 
 type ModalContextType = {
     visible: boolean;
-    close: () => void;
+    /** Closes the dialog; a click's event stops here first. */
+    close: (e?: React.SyntheticEvent) => void;
 };
 
 const ModalContext = createContext<ModalContextType | undefined>(undefined);
@@ -42,7 +43,7 @@ function Dialog({
         }
     }
 
-    const closeModal = (e: React.MouseEvent) => {
+    const closeModal = (e?: React.SyntheticEvent) => {
         if (e) {
             stopPropagationCallback(e);
         }
@@ -52,7 +53,7 @@ function Dialog({
     if (!visible && !renderHidden) return null;
 
     return (
-        <ModalContext.Provider value={{ visible, close: closeModal as any }}>
+        <ModalContext.Provider value={{ visible, close: closeModal }}>
             <div className={`ygo-player-dialog-container ${embedded ? "ygo-embedded" : ""} ${visible ? 'ygo-show' : ''}`}
                 role="presentation"
                 onContextMenu={onContextClick}

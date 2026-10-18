@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { YGODuel } from "../../../core/YGODuel";
+import type { YGODuel } from "../../../core/YGODuel";
 import type { YGOCardPointerEvent } from "../../../core/YGODuelUIEvents";
 import { Card } from "ygo-core";
 import { clamp } from "three/src/math/MathUtils";
@@ -15,9 +15,9 @@ export function CardLongPressEffect({ duel }: { duel: YGODuel }) {
 
     const startTimerToDelay = () => {
         clearTimeout(timer.current);
-        timer.current = setTimeout(() => {
+        timer.current = window.setTimeout(() => {
             startTimerToOpenCard();
-        }, 300) as any as number;
+        }, 300);
     };
 
     const startTimerToOpenCard = () => {
@@ -34,7 +34,7 @@ export function CardLongPressEffect({ duel }: { duel: YGODuel }) {
 
             if (progress < 100) {
                 clearTimeout(timer.current);
-                timer.current = setTimeout(update, 16) as any as number;
+                timer.current = window.setTimeout(update, 16);
             } else {
                 openCard();
             }

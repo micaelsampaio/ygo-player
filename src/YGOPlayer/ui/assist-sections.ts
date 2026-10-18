@@ -13,11 +13,19 @@ import type { AssistQueryResult, BattleOptions } from "../domain/assist-query";
 
 export type { IdleOptions, BattleOptions, AssistQueryResult } from "../domain/assist-query";
 
+/** What an option row sends the engine with its command: a card ref ({ id | code, ctrl, loc, seq }), the next phase, or nothing. */
+export type OptionData = Readonly<Record<string, number | string>>;
+
+/** A command's data as it comes back from a duel event (a card menu's row) or an engine error: a plain object. */
+export function isCommandData(data: unknown): data is Record<string, unknown> {
+  return typeof data === "object" && data !== null && !Array.isArray(data);
+}
+
 export interface OptionRow {
   key: string;
   label: string;
   commandType: string;
-  data: any;
+  data: OptionData;
   /** The card this option acts on, if any (absent for phase-transition rows). */
   code?: number;
   /** Where the card is ("Hand", "Field", "GY", …) — shown for Activate, where it's genuinely ambiguous. */

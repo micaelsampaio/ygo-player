@@ -23,6 +23,8 @@ const InputRange: React.FC<RangeProps> = ({
   onChange,
 }) => {
   const progress = ((value - min) / (max - min)) * 100;
+  // The filled part of the track (style.css reads --progress).
+  const progressStyle: React.CSSProperties & { "--progress": string } = { "--progress": `${progress}%` };
 
   return (
     <div className="ygo-range-container">
@@ -41,7 +43,7 @@ const InputRange: React.FC<RangeProps> = ({
         value={value}
         onChange={onChange}
         onInput={onInput}
-        style={{ ['--progress' as any]: `${progress}%` }}
+        style={progressStyle}
       />
     </div>
   );

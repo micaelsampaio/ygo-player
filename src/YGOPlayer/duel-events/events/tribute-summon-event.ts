@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { DuelEventHandlerProps } from "..";
+import type { DuelEventHandlerProps } from "../types";
 import { YGODuelEvents, YGOGameUtils } from "ygo-core";
 import { YGOTaskSequence } from "../../core/components/tasks/YGOTaskSequence";
 import { GameCard } from "../../game/GameCard";

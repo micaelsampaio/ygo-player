@@ -1,4 +1,4 @@
-import { YGODuel } from "../core/YGODuel";
+import type { YGODuel } from "../core/YGODuel";
 import { YGOEntity } from "../core/YGOEntity";
 
 export class GameController extends YGOEntity {

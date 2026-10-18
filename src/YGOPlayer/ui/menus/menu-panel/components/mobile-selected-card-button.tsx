@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react"
-import { YGODuel } from "../../../../core/YGODuel";
+import type { YGODuel } from "../../../../core/YGODuel";
+import type { YGODuelUIEvents } from "../../../../core/YGODuelUIEvents";
 import { Card } from "ygo-core";
 import { stopPropagationCallback } from "../../../../scripts/utils";
 
@@ -9,9 +10,9 @@ export function MobileSelectedCardButton({ duel, toggle }: { duel: YGODuel, togg
 
     useEffect(() => {
         let card: Card | null = null;
-        const onSelectedCardChange = (data: any) => {
+        const onSelectedCardChange = (data: Parameters<YGODuelUIEvents["set-selected-card"]>[0]) => {
             if (data?.card?.id && card?.id !== data?.card?.id) {
-                card = data.card as Card;
+                card = data.card;
 
                 setGlowing(false);
                 if (glowTimeoutRef.current) clearTimeout(glowTimeoutRef.current);

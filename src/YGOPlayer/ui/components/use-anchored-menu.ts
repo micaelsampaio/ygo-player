@@ -1,4 +1,5 @@
-import { useLayoutEffect, type DependencyList, type RefObject } from "react";
+import { useCallback, useLayoutEffect, type DependencyList, type RefObject } from "react";
+import type * as THREE from "three";
 import type { YGODuel } from "../../core/YGODuel";
 import { getTransformFromCamera } from "../../scripts/ygo-utils";
 import { anchorCardMenu, hasPointerPosition, placeAboveRect, placeLeftOfRect, type AnchorRect, type MenuPosition } from "./pile-menu";
@@ -7,7 +8,7 @@ type OpeningEvent = { clientX?: unknown; clientY?: unknown; detail?: unknown } |
 
 export type MenuAnchor =
   /** Centred above a 3D object on the board (below it with `below`). */
-  | { kind: "object3d"; object: any; below?: boolean }
+  | { kind: "object3d"; object: THREE.Object3D; below?: boolean }
   /** To the left of a card element in a pile list. */
   | { kind: "left-of"; element: { getBoundingClientRect(): AnchorRect }; event?: OpeningEvent }
   /** At the pointer, or beside `element` when opened from the keyboard (see anchorCardMenu). */
@@ -53,4 +54,14 @@ export function useAnchoredMenu(
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);
+}
+
+/** The box of a card menu, as its caller holds it: useRef<HTMLDivElement>() or useRef<HTMLDivElement>(null). */
+export type MenuBoxRef = { current: HTMLDivElement | null | undefined };
+
+/** A stable ref callback for the menu's element that fills the caller's menu-box ref. */
+export function useMenuBoxRef(menuRef: MenuBoxRef | undefined) {
+  return useCallback((el: HTMLDivElement | null) => {
+    if (menuRef) menuRef.current = el;
+  }, [menuRef]);
 }

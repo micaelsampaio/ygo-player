@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { YGOEntity } from "../core/YGOEntity";
-import { YGODuel } from '../core/YGODuel';
+import type { YGODuel } from '../core/YGODuel';
 import { YGOTaskSequence } from '../core/components/tasks/YGOTaskSequence';
 import { ScaleTransition } from '../duel-events/utils/scale-transition';
 import { WaitForSeconds } from '../duel-events/utils/wait-for-seconds';

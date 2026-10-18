@@ -5,8 +5,11 @@
  * of their Link Monsters' arrows points to it.
  */
 
+/** Card data from the card API carries `linkmarkers`; ygo-core's Card type doesn't declare it. */
+type LinkCardLike = { linkmarkers?: string[] };
+
 interface FieldLike {
-  monsterZone: ({ linkmarkers?: string[] } | null | undefined)[];
+  monsterZone: (object | null | undefined)[];
   extraMonsterZone: (unknown | null | undefined)[];
 }
 
@@ -28,7 +31,7 @@ export function allowedExtraMonsterZones(fields: FieldLike[], player: number): (
     if (holdsOne) {
       // Player 1 sits across the table: their left EMZ is EMZ2-2.
       const ownSide = player === 1 ? 2 - index : index - 1;
-      const pointed = ARROWS_INTO_EMZ[ownSide].some(([zone, arrow]) => own.monsterZone?.[zone]?.linkmarkers?.includes(arrow));
+      const pointed = ARROWS_INTO_EMZ[ownSide].some(([zone, arrow]) => (own.monsterZone?.[zone] as LinkCardLike | null | undefined)?.linkmarkers?.includes(arrow));
       if (!pointed) continue;
     }
     result.push(index);

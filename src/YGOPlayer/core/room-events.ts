@@ -4,8 +4,8 @@
  * them through its YGOClient (no acks), so every answer arrives as an event
  * with the room's id; YGOServerActions turns them into duel events.
  *
- * Server side: handlers/puzzle.handler.ts (puzzle:*), room.handler.ts
- * (duel:preferences:set) and handlers/deckSearch.handler.ts (duel:deck:*).
+ * Server side: transport/handlers/puzzle.handler.ts (puzzle:*), room.handler.ts
+ * (duel:preferences:set) and transport/handlers/deckSearch.handler.ts (duel:deck:*).
  */
 
 /** Server event → the duel event (duel.events) it is dispatched as. */

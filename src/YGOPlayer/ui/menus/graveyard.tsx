@@ -1,4 +1,4 @@
-import { YGODuel } from "../../core/YGODuel";
+import type { YGODuel } from "../../core/YGODuel";
 import { Graveyard as GameGraveyard } from "../../../YGOPlayer/game/Graveyard";
 import { Card } from "ygo-core";
 import { pileCardProps } from "../components/pile-menu";

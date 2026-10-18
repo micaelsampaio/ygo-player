@@ -5,7 +5,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import * as THREE from "three";
-import { YGODuel } from "../../core/YGODuel";
+import type { YGODuel } from "../../core/YGODuel";
 import { HIGHLIGHT_CSS, PICK_CSS } from "../../game/meshes/highlight-frame";
 import { useFieldSelection } from "./field-selection";
 import { EnginePlace, pickZone, placeToYgoZone, samePlace, ZoneHighlight, zoneHighlights } from "../assist-zones";
@@ -13,7 +13,7 @@ import { PileChoicePopup } from "./pile-choice/PileChoicePopup";
 import { pileTabs, reopenLabel, usesPilePicker } from "./pile-choice/pile-choice";
 import { ndcToContainer, positionGlyph, shortPositionLabel } from "../field-overlay";
 import {
-  CardRefData, PromptData, candidateWhere, isSelectionValid, onlyCardAnswer, optionLabel, toggleSelection,
+  CardRefData, PromptData, PromptResponse, candidateWhere, isSelectionValid, onlyCardAnswer, optionLabel, toggleSelection,
   groupCandidates, positionChoices, promptSubtitle, promptTitle, toggleGroupSelection, LOC_HAND, LOC_MZONE as LOC_M, LOC_SZONE as LOC_S,
 } from "../assist-prompt";
 import { findCardObjects, type HighlightTarget } from "./assist-highlights";
@@ -112,7 +112,7 @@ function PlaceChoice({ duel, prompt, busy, pendingKey, respond }: {
   prompt: PromptData;
   busy: boolean;
   pendingKey: string | null;
-  respond: (key: string, data: any) => void;
+  respond: (key: string, data: PromptResponse) => void;
 }) {
   const [picked, setPicked] = useState<EnginePlace[]>([]);
   const need = prompt.count || 1;
@@ -193,7 +193,7 @@ function PositionFieldChoice({ duel, prompt, busy, pendingKey, respond, fallback
   prompt: PromptData;
   busy: boolean;
   pendingKey: string | null;
-  respond: (key: string, data: any) => void;
+  respond: (key: string, data: PromptResponse) => void;
   fallback: ReactNode;
   inDialog?: boolean;
 }) {
@@ -282,7 +282,7 @@ export function PromptView({ duel, prompt, busy, pendingKey, respond, onHover, i
   prompt: PromptData;
   busy: boolean;
   pendingKey: string | null;
-  respond: (key: string, data: any) => void;
+  respond: (key: string, data: PromptResponse) => void;
   onHover: (target: HighlightTarget | null) => void;
   /** Shown as the choice dialog over the board (Master Duel style): a pile choice is made in the
    * pile view only, so the dialog drops its own list and hides while the pile view is open. */

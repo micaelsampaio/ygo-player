@@ -1,17 +1,19 @@
 import { YGOCore, YGOGameUtils } from "ygo-core";
 import { YGODuel } from "../../../core/YGODuel";
 import { DuelLogContainer, DuelLogRow } from "./duel-log-components";
-import type { CardPosition, CommandType } from "ygo-core";
+import type { CardPosition, FieldZone } from "ygo-core";
+import type { CardMoveLog } from "./log-row-props";
+import { pileCardPressHandlers } from "../pile-viewer";
 import { memo } from "react";
 import type { YGOPerspective } from "../../../core/YGOPerspective";
 import { useDuelPerspective } from "../../duel-perspective";
 
 import { clickableProps } from "../../components/a11y";
-const HIDE_CARD_COMMANDS = new Set<CommandType>([
+const HIDE_CARD_COMMANDS = new Set<CardMoveLog["type"]>([
   "Draw From Deck"
 ])
 
-const SHOW_CARD_COMMANDS = new Set<CommandType>([
+const SHOW_CARD_COMMANDS = new Set<CardMoveLog["type"]>([
   "To Hand",
   "To Extra Deck",
   "Destroy",
@@ -25,12 +27,12 @@ export const DefaultLogRow = memo(
     duel,
     ygo,
   }: {
-    log: any;
+    log: CardMoveLog;
     duel: YGODuel;
     ygo: InstanceType<typeof YGOCore>;
   }) {
     const perspective = useDuelPerspective();
-    const card = ygo.state.getCardData(log.id)!;
+    const card = log.id === undefined ? null : ygo.state.getCardData(log.id);
 
     if (!card) {
       return <DuelLogRow log={log}>
@@ -63,10 +65,7 @@ export const DefaultLogRow = memo(
                     />
                   </> : <>
                     <img
-                      onMouseDown={(event: any) => duel.events.dispatch("on-card-mouse-down", { card, event })}
-                      onMouseUp={(event: any) => duel.events.dispatch("on-card-mouse-up", { card, event })}
-                      onTouchStart={(event: any) => duel.events.dispatch("on-card-mouse-down", { card, event })}
-                      onTouchEnd={(event: any) => duel.events.dispatch("on-card-mouse-up", { card, event })}
+                      {...pileCardPressHandlers(duel, card)}
                       {...clickableProps(() => duel.gameActions.setSelectedCard({ player: log.player, card }), card.name)}
                       src={card.images.small_url}
                       style={{ width: "45px", transform: defenseData }}
@@ -103,10 +102,10 @@ export const DefaultLogRow = memo(
   }
 );
 
-function getZoneData(perspective: YGOPerspective, zone: string | undefined) {
+function getZoneData(perspective: YGOPerspective, zone: FieldZone | undefined) {
   if (!zone) return null;
 
-  const zoneData = YGOGameUtils.getZoneData(zone as any);
+  const zoneData = YGOGameUtils.getZoneData(zone);
   const zoneId = YGOGameUtils.createZone(zoneData.zone, 0, zoneData.zoneIndex).toLowerCase();
   let zoneStr = `ygo-icon-game-zone ygo-player-${perspective.getPlayerCssIndex(zoneData.player)} ygo-icon-game-zone-container`;
   if (zoneData.zone === "ORU" || zoneData.zone === "ORUEMZ") {
@@ -120,7 +119,7 @@ function getZoneData(perspective: YGOPerspective, zone: string | undefined) {
   return zoneStr
 }
 
-function isDefenseData(zone: CardPosition | undefined, position: CardPosition | undefined) {
+function isDefenseData(zone: FieldZone | undefined, position: CardPosition | undefined) {
 
   if (zone?.startsWith("M") || zone?.startsWith("EMZ")) {
     if (position?.includes("defense") || position?.includes("facedown")) {

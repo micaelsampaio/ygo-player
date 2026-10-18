@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { YGOComponent } from "../YGOComponent";
-import { YGODuel } from "../YGODuel";
+import type { YGODuel } from "../YGODuel";
 import { YGOUiElement } from '../../types';
 import { EventBus } from '../../scripts/event-bus';
 

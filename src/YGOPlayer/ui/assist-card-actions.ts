@@ -8,13 +8,13 @@ import type { YGODuel } from "../core/YGODuel";
 import type { AssistQueryResult } from "../domain/assist-query";
 import { zoneToLocation } from "../domain/assist-routing";
 import { LOC_MZONE, LOC_SZONE } from "./assist-prompt";
-import { OptionRow, sectionsFor } from "./assist-sections";
+import { OptionData, OptionRow, sectionsFor } from "./assist-sections";
 
 export interface CardActionRow {
   key: string;
   label: string;
   commandType: string;
-  data: any;
+  data: OptionData;
 }
 
 const LABELS: Record<string, string> = {

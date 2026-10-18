@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { DuelEventHandlerProps } from "..";
+import type { DuelEventHandlerProps } from "../types";
 import { YGODuelEvents, YGOGameUtils, Card } from "ygo-core";
 import { YGOTaskSequence } from "../../core/components/tasks/YGOTaskSequence";
 import { GameCard } from "../../game/GameCard";
@@ -16,6 +16,7 @@ import {
   CardEmptyMesh,
   createCardPopSummonEffectSequence,
   GameModalOverlayMesh,
+  disposeEffectMesh,
 } from "../../game/meshes/mesh-utils";
 import { MaterialOpacityTransition } from "../utils/material-opacity";
 import { modalOverlayFade } from "../utils/animation-builders";
@@ -51,7 +52,7 @@ export class FusionSummonEventHandler extends YGOCommandHandler {
     const hasMaterials = event.materials.length > 0;
 
     // Initial setup of cards in a circle
-    this.cards = event.materials.map((material: any, i: any) => {
+    this.cards = event.materials.map((material, i) => {
       const zoneData = YGOGameUtils.getZoneData(material.zone);
       const cardZone = getGameZone(duel, zoneData)!;
       let card: GameCard;
@@ -87,7 +88,7 @@ export class FusionSummonEventHandler extends YGOCommandHandler {
       duel.core.sceneOverlay.add(cardOverlay);
 
       return cardOverlay;
-    }).filter(c => c) as any;
+    }).filter((c): c is THREE.Object3D => !!c);
 
     const modal = GameModalOverlayMesh();
     duel.core.scene.add(modal);
@@ -304,7 +305,7 @@ export class FusionSummonEventHandler extends YGOCommandHandler {
         })
       ),
       new CallbackTransition(() => {
-        duel.core.scene.remove(modal);
+        disposeEffectMesh(modal);
         cardZone?.setGameCard(fusionCard);
         cardZone?.updateCard();
         duel.core.clearSceneOverlay();

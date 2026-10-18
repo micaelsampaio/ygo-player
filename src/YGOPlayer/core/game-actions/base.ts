@@ -2,9 +2,10 @@ import { YGOClientType } from "ygo-core";
 import { ASSIST_FREE_FORM_NOTICE, AssistMove, assistRouteFor } from "../../domain/assist-routing";
 import type { CardRefData } from "../../domain/assist-prompt";
 import { Card, FieldZone } from "ygo-core";
+import type { Command } from "ygo-core";
 import { ActionCardSelection } from "../../actions/ActionSelectCard";
 import { CardZone } from "../../game/CardZone";
-import { YGODuel } from "../YGODuel";
+import type { YGODuel } from "../YGODuel";
 
 /**
  * YGOGameActions, split by action family: this base holds what every family
@@ -74,14 +75,14 @@ export class GameActionsBase {
       // Continue past the open window, then make the move if the engine now lists it.
       : controller.choose({ commandType: "Pass", data: {} })
         .then(() => controller.query())
-        .then((next: any) => {
+        .then((next) => {
           const again = assistRouteFor(next, move, card.id, originZone);
           if (again.kind === "choose") return choose(again.ref);
           return { notices: [`${card.name ?? "That card"} can't do that right now.`] };
         });
     done
-      .then((res: any) => duel.events.dispatch("assist-choice-done", { notices: res?.notices }))
-      .catch((error: any) => duel.events.dispatch("assist-choice-done", { error }));
+      .then((res) => duel.events.dispatch("assist-choice-done", { notices: res?.notices }))
+      .catch((error: unknown) => duel.events.dispatch("assist-choice-done", { error }));
     return true;
   }
 
@@ -91,7 +92,7 @@ export class GameActionsBase {
    */
   protected selectZoneThen(
     getZones: () => CardZone[],
-    build: (zone: FieldZone, player: number) => any,
+    build: (zone: FieldZone, player: number) => Command,
     { skipIfNoZones = false }: { skipIfNoZones?: boolean } = {}
   ) {
     this.clearAction();
@@ -114,13 +115,15 @@ export class GameActionsBase {
    * changeBattlePosition, toDeck and disapear leave it as is.
    */
   protected execOnCard(
-    CommandClass: new (data: any) => any,
-    { card, player, ...extra }: { card: Card; player?: number; [key: string]: any },
+    CommandClass: new (data: never) => Command,
+    { card, player, ...extra }: { card: Card; player?: number; [key: string]: unknown },
     { clear = true }: { clear?: boolean } = {}
   ) {
     if (clear) this.clearAction();
+    // Each command class types its own data; this one builds { player, id, ...extra } for any of them.
+    const CardCommand = CommandClass as new (data: Record<string, unknown>) => Command;
     this.duel.execCommand(
-      new CommandClass({
+      new CardCommand({
         player: player ?? this.duel.serverActions.getActivePlayer(),
         id: card.id,
         ...extra,

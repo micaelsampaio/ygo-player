@@ -1,4 +1,4 @@
-import type { KeyboardEvent, SyntheticEvent } from "react";
+import type { KeyboardEvent, MouseEvent as ReactMouseEvent, SyntheticEvent, TouchEvent as ReactTouchEvent } from "react";
 import { isActivationKey } from "./a11y";
 
 /**
@@ -125,4 +125,17 @@ export function pileCardProps<T extends Element>(open: (event: SyntheticEvent<T>
       open(event);
     },
   };
+}
+
+/**
+ * The mouse event a card press in a pile list hands the duel's "on-card-mouse-down/up" events
+ * (the long-press preview reads its type, button and position). A mouse press passes its native
+ * event; a touch passes one at the touch point, keeping the touch's type so no button is read.
+ */
+export function cardPointerEvent(event: ReactMouseEvent | ReactTouchEvent): MouseEvent {
+  if ("touches" in event) {
+    const touch = event.changedTouches[0] ?? event.touches[0];
+    return new MouseEvent(event.type, { clientX: touch?.clientX ?? 0, clientY: touch?.clientY ?? 0 });
+  }
+  return event.nativeEvent;
 }

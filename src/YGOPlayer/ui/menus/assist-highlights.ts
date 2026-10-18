@@ -5,7 +5,7 @@
  */
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
-import { YGODuel } from "../../core/YGODuel";
+import type { YGODuel } from "../../core/YGODuel";
 import { createHighlightFrame, disposeHighlightFrame, HIGHLIGHT_COLOR, HIGHLIGHT_CSS, QUICK_COLOR, QUICK_CSS, PICK_COLOR, PICK_CSS, placeHighlightFrame } from "../../game/meshes/highlight-frame";
 import type { Tone } from "../assist-sections";
 import { PromptData, LOC_HAND, LOC_MZONE as LOC_M, LOC_SZONE as LOC_S } from "../assist-prompt";

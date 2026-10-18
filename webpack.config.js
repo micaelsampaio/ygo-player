@@ -16,6 +16,16 @@ export default {
     },
     clean: true,
   },
+  // React comes from the host app (a peerDependency), so the page runs one
+  // copy of it. three and ygo-core stay bundled: ygo101-web does not depend on
+  // three, and its docker build drops dist/index.js straight into node_modules.
+  externalsType: "module",
+  externals: {
+    react: "react",
+    "react-dom": "react-dom",
+    "react-dom/client": "react-dom/client",
+    "react/jsx-runtime": "react/jsx-runtime",
+  },
   resolve: {
     extensions: [".ts", ".tsx", ".js", ".jsx", ".css"],
     fullySpecified: false

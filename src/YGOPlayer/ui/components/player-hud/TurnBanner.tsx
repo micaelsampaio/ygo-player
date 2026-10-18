@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { YGODuel } from "../../../core/YGODuel";
+import type { YGODuel } from "../../../core/YGODuel";
 import { useDuelTurnState } from "../../use-duel-turn-state";
 import { turnOwnerLabel } from "../../duel-status";
 

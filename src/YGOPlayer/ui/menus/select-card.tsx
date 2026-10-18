@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { YGODuel } from "../../core/YGODuel";
+import { useCallback, useEffect, useMemo, useRef, useState, type SyntheticEvent } from "react";
+import type { YGODuel } from "../../core/YGODuel";
 import { Card, FieldZone, FieldZoneId } from "ygo-core";
 import { YGOGameUtils } from "ygo-core";
 import { CardZoneKV } from "../../types";
@@ -52,7 +52,7 @@ export function SelectCardPopup({
     if (!filter.field) return [];
     const cards: { card: Card; zone: FieldZone }[] = [];
 
-    field.monsterZone.forEach((card: any, index: any) => {
+    field.monsterZone.forEach((card, index) => {
       if (!card) return false;
 
       let showCard = false;
@@ -68,7 +68,7 @@ export function SelectCardPopup({
       });
     });
 
-    field.extraMonsterZone.forEach((card: any, index: any) => {
+    field.extraMonsterZone.forEach((card, index) => {
       if (!card) return false;
 
       let showCard = false;
@@ -89,7 +89,7 @@ export function SelectCardPopup({
     if (!filter.field) return [];
     const cards: { card: Card; zone: FieldZone }[] = [];
 
-    field.hand.forEach((card: any, index: any) => {
+    field.hand.forEach((card, index) => {
       if (!card) return false;
 
       let showCard = false;
@@ -106,7 +106,7 @@ export function SelectCardPopup({
     return cards;
   }, [field, filter]);
 
-  const close = useCallback((e: any) => {
+  const close = useCallback((e: SyntheticEvent) => {
     stopPropagationCallback(e);
     duel.events.dispatch("close-ui-menu", { group: "game-popup" });
   }, []);

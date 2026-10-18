@@ -1,7 +1,7 @@
-import { memo } from "react";
+import { memo, type ReactNode } from "react";
 import { useDuelPerspective } from "../../duel-perspective";
 
-export const DuelLogRow = memo(function ({ log, children }: { log: any, children: any }) {
+export const DuelLogRow = memo(function ({ log, children }: { log: { player: number }, children: ReactNode }) {
 
     const perspective = useDuelPerspective();
     const player = `ygo-player-${perspective.getPlayerCssIndex(log.player)}`;
@@ -11,7 +11,7 @@ export const DuelLogRow = memo(function ({ log, children }: { log: any, children
     </div>
 });
 
-export function DuelLogContainer({ children }: { children: any }) {
+export function DuelLogContainer({ children }: { children: ReactNode }) {
     return <div className="ygo-duel-log-content">
         {children}
     </div>

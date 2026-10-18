@@ -1,9 +1,9 @@
 import { YGOTask } from "../../core/components/tasks/YGOTask";
 
 export class CallbackTransition extends YGOTask {
-    private cb: Function;
+    private cb: () => void;
 
-    constructor(cb: Function) {
+    constructor(cb: () => void) {
         super();
         this.cb = cb;
     }

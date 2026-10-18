@@ -1,5 +1,5 @@
 import { useCallback, useEffect } from "react";
-import { YGODuel } from "../../core/YGODuel";
+import type { YGODuel } from "../../core/YGODuel";
 import { removeFocusFromActiveElement } from "../../scripts/utils";
 import { YGOCommandsControllerState } from "../../core/components/commands-controller/YGOCommandsController";
 import { undoTooltip } from "../duel-status";

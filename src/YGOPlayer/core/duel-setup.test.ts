@@ -1,7 +1,7 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { YGOClientType, HIDDEN_CARD_ID } from "ygo-core";
 import type { CardData, YGOServerGameStateData } from "ygo-core";
-import { buildCorePlayers, collectCardIds, fetchCardsInto, resolveLocalPlayer, resolvePlayerPOV } from "./duel-setup";
+import { buildCorePlayers, collectCardIds, createMissingCardData, fetchCardsInto, resolveLocalPlayer, resolvePlayerPOV } from "./duel-setup";
 
 const players = [
   { name: "alice", mainDeck: [1, 2, HIDDEN_CARD_ID], extraDeck: [3], sideDeck: [4] },
@@ -53,21 +53,75 @@ describe("collectCardIds", () => {
 });
 
 describe("fetchCardsInto", () => {
+  afterEach(() => { vi.unstubAllGlobals(); });
+
   it("uses the host's fetchCardsById", async () => {
     const map = new Map<number, CardData>();
     const fetchCardsById = vi.fn(async (ids: number[]) => ids.map(id => ({ id }) as CardData));
-    await fetchCardsInto(map, [1, 2], fetchCardsById);
+    await fetchCardsInto(map, [1, 2], { fetchCardsById, apiUrl: "https://api.example" });
     expect(fetchCardsById).toHaveBeenCalledWith([1, 2]);
     expect([...map.keys()]).toEqual([1, 2]);
   });
-  it("falls back to the public API", async () => {
+
+  it("falls back to the host's apiUrl, never to a hard-coded host", async () => {
     const map = new Map<number, CardData>();
-    const fetchMock = vi.fn(async () => ({ json: async () => [{ id: 9 }] }));
+    const fetchMock = vi.fn(async () => ({ ok: true, status: 200, json: async () => [{ id: 9 }, { id: 10 }] }));
     vi.stubGlobal("fetch", fetchMock);
-    await fetchCardsInto(map, [9, 10], undefined);
-    vi.unstubAllGlobals();
-    expect(fetchMock).toHaveBeenCalledWith("https://api.ygo101.com/cards?ids=9,10");
-    expect([...map.keys()]).toEqual([9]);
+    await fetchCardsInto(map, [9, 10], { apiUrl: "http://localhost:5000/" });
+    expect(fetchMock).toHaveBeenCalledWith("http://localhost:5000/cards?ids=9,10");
+    expect([...map.keys()]).toEqual([9, 10]);
+  });
+
+  // F1: a hidden-info PvP room has no card to download; the empty request
+  // (`/cards?ids=`) got a 400 whose body broke the JSON parse, and the duel never loaded.
+  it("requests nothing when there is no card to download", async () => {
+    const map = new Map<number, CardData>();
+    const fetchMock = vi.fn();
+    const fetchCardsById = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    await fetchCardsInto(map, [], { fetchCardsById, apiUrl: "https://api.example" });
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(fetchCardsById).not.toHaveBeenCalled();
+    expect(map.size).toBe(0);
+  });
+
+  it("does not throw on an error response: reports it and fills the ids with unknown cards", async () => {
+    const map = new Map<number, CardData>();
+    const onError = vi.fn();
+    vi.stubGlobal("fetch", vi.fn(async () => ({ ok: false, status: 400, json: async () => { throw new SyntaxError("Unexpected token 'M'"); } })));
+    await expect(fetchCardsInto(map, [7], { apiUrl: "https://api.example", onError })).resolves.toBeUndefined();
+    expect(onError).toHaveBeenCalledWith(expect.objectContaining({ message: "Card data request failed: HTTP 400" }));
+    expect(map.get(7)).toEqual(createMissingCardData(7));
+  });
+
+  it("does not throw when the host's lookup rejects or a card is missing from its answer", async () => {
+    const map = new Map<number, CardData>();
+    const onError = vi.fn();
+    await fetchCardsInto(map, [1], { fetchCardsById: async () => { throw new Error("offline"); }, onError });
+    expect(onError).toHaveBeenCalledTimes(1);
+    expect(map.get(1)?.id).toBe(1);
+
+    const partial = new Map<number, CardData>();
+    await fetchCardsInto(partial, [1, 2], { fetchCardsById: async () => [{ id: 1, name: "One" } as CardData], onError });
+    expect(partial.get(1)?.name).toBe("One");
+    expect(partial.get(2)).toEqual(createMissingCardData(2));
+  });
+
+  it("without any host source it requests nothing and reports it", async () => {
+    const map = new Map<number, CardData>();
+    const fetchMock = vi.fn();
+    const onError = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    await fetchCardsInto(map, [3], { onError });
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(onError).toHaveBeenCalledTimes(1);
+    expect(map.get(3)).toEqual(createMissingCardData(3));
+  });
+
+  it("a throwing onError hook does not break the setup", async () => {
+    const map = new Map<number, CardData>();
+    await expect(fetchCardsInto(map, [3], { onError: () => { throw new Error("hook"); } })).resolves.toBeUndefined();
+    expect(map.has(3)).toBe(true);
   });
 });
 

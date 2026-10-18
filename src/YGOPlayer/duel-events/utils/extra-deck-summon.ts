@@ -1,9 +1,9 @@
 import * as THREE from "three";
 import { Card, FieldZone, YGOGameUtils } from "ygo-core";
-import type { DuelEventHandlerProps } from "..";
+import type { DuelEventHandlerProps } from "../types";
 import { YGOTaskSequence } from "../../core/components/tasks/YGOTaskSequence";
 import { GameCard } from "../../game/GameCard";
-import { CardEmptyMesh, createCardPopSummonEffectSequence, GameModalOverlayMesh } from "../../game/meshes/mesh-utils";
+import { CardEmptyMesh, createCardPopSummonEffectSequence, GameModalOverlayMesh, disposeEffectMesh } from "../../game/meshes/mesh-utils";
 import {
   getCardPositionInFrontOfCamera,
   getCardRotationFromFieldZoneData,
@@ -145,7 +145,7 @@ export function extraDeckSummonSequence(
         card.gameObject.visible = true;
         cardZone?.setGameCard(card);
         duel.core.disableRenderOverlay();
-        duel.core.scene.remove(modal);
+        disposeEffectMesh(modal);
         props.onCompleted();
       })
     );

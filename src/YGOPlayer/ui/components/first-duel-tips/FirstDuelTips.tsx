@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import { YGOClientType } from "ygo-core";
-import { YGODuel } from "../../../core/YGODuel";
+import type { YGODuel } from "../../../core/YGODuel";
 import {
   FIRST_DUEL_TIPS,
   dismissFirstDuelTips,

@@ -1,11 +1,11 @@
 import * as THREE from 'three';
-import { YGODuel } from "../core/YGODuel";
+import type { YGODuel } from "../core/YGODuel";
 import { YGOEntity } from "../core/YGOEntity";
-import { YGOUiElement } from "../types";
-import { YGOMouseEvents } from '../core/components/YGOMouseEvents';
+import type { YGOUiElement } from "../types";
+import type { YGOMouseEvents } from '../core/components/YGOMouseEvents';
 import { GameBackCard } from './GameBackCard';
 import { CARD_HEIGHT_SIZE, CARD_RATIO } from '../constants';
-import { GameCard } from './GameCard';
+import type { GameCard } from './GameCard';
 import { Card } from 'ygo-core';
 import { ActionUiMenu } from '../actions/ActionUiMenu';
 

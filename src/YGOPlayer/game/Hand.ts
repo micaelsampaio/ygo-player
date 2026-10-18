@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { Card } from "ygo-core";
-import { YGODuel } from "../core/YGODuel";
+import type { YGODuel } from "../core/YGODuel";
 import { YGOEntity } from "../core/YGOEntity";
 import { GameCardHand } from "./GameCardHand";
 import { CARD_HEIGHT_SIZE } from "../constants";
@@ -78,7 +78,7 @@ export class GameHand extends YGOEntity {
     const camera = this.duel.camera;
     const distance = camera.position.z;
     const baseHandZ = 6;
-    const fov = ((camera as any).fov * Math.PI) / 180;
+    const fov = ((camera as THREE.PerspectiveCamera).fov * Math.PI) / 180;
     const visibleHeightAtZ = 2 * Math.tan(fov / 2) * Math.abs(distance - baseHandZ);
     const screenEdgeOffset = 0.15;
     const minVisibleHeight = cardHeight * 0.1;

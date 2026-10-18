@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { Card } from "ygo-core";
-import { YGODuel } from "../core/YGODuel";
+import type { YGODuel } from "../core/YGODuel";
 import { GameFieldLocation } from "../types";
 import { YGOMath } from "../core/YGOMath";
 import { CARD_DEPTH, CARD_HEIGHT_SIZE, CARD_RATIO } from "../constants";

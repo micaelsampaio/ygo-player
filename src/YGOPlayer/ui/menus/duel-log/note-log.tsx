@@ -1,7 +1,8 @@
 import { memo, useMemo } from "react"
+import type { YGODuelEvents } from "ygo-core"
 import { DuelLogContainer, DuelLogRow } from "./duel-log-components"
 
-export const NoteLogRow = memo(function SimpleLogRowComponent({ log }: { log: any }) {
+export const NoteLogRow = memo(function SimpleLogRowComponent({ log }: { log: YGODuelEvents.Note }) {
 
   const notes = useMemo(() => {
     return String(log.note || "No content").split("\n").map((line: string) => <div>{line}</div>);

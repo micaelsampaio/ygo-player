@@ -1,41 +1,44 @@
 import { getStorage } from "./safe-storage";
 
-export function getJsonFromLocalStorage(key: string, defaultValue: any = {}) {
+export function getJsonFromLocalStorage(key: string, defaultValue: unknown = {}): unknown {
     try {
         const storage = getStorage();
         if (!storage) return defaultValue;
         const json = JSON.parse(storage.getItem(key)!);
         return json;
-    } catch (error) {
+    } catch {
         return defaultValue;
     }
 }
 
-export function safeStringify(value: any): string {
+export function safeStringify(value: unknown): string {
     try {
         return JSON.stringify(value);
-    } catch (error) {
+    } catch {
         return "{}";
     }
 }
 
-export function deepMerge<T = any>(target: any, source: any): T {
-    for (const key in source) {
-        if (source.hasOwnProperty(key)) {
-            const targetValue = target[key];
-            const sourceValue = source[key];
+/** Merges `source` into `target` in place (nested objects too) and returns `target`. */
+export function deepMerge<T extends object>(target: object, source: unknown): T {
+    const into = target as Record<string, unknown>;
+    const from = source as Record<string, unknown>;
+    for (const key in from) {
+        if (Object.prototype.hasOwnProperty.call(from, key)) {
+            const targetValue = into[key];
+            const sourceValue = from[key];
 
             if (isObject(targetValue) && isObject(sourceValue)) {
-                target[key] = deepMerge(targetValue, sourceValue);
+                into[key] = deepMerge(targetValue, sourceValue);
             } else {
-                target[key] = sourceValue;
+                into[key] = sourceValue;
             }
         }
     }
     return target as T;
 }
 
-export function isObject(value: any): value is { [key: string]: any } {
+export function isObject(value: unknown): value is Record<string, unknown> {
     return value !== null && typeof value === 'object';
 }
 
@@ -44,8 +47,8 @@ export function isObject(value: any): value is { [key: string]: any } {
  * for text fields and submit buttons: cancelling a submit button's click cancels its form's
  * submit (the timer menu's countdown "Start" did nothing).
  */
-export function stopPropagationCallback(e: any) {
-    const target = e.target;
+export function stopPropagationCallback(e: Pick<Event, "target" | "preventDefault" | "stopPropagation">) {
+    const target = e.target as Element | null;
     const isSubmit = typeof target?.closest === "function" && !!target.closest('button[type="submit"], input[type="submit"]');
     if (!(target instanceof HTMLInputElement) && !isSubmit) {
         e.preventDefault();

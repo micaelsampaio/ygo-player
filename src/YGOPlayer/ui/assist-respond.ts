@@ -3,7 +3,7 @@
  * viewer inside it — their chain window (chain a set Trap, a Quick-Play, a
  * hand trap, or don't respond) or a choice the opponent's effect makes them
  * take. In a duel against the bot, its turn is paused until they answer
- * (ygo-socket-server bot-duel/botTurnPause.ts). The panel says so, and
+ * (ygo-socket-server bot/duel/botTurnPause.ts). The panel says so, and
  * stays open for it.
  */
 

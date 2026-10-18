@@ -57,20 +57,58 @@ export function collectCardIds(gameState: Pick<YGOServerGameStateData, "players"
   return { ids: Array.from(ids), revealedCards, cardsData };
 }
 
-/** Downloads `ids` (through the host's fetchCardsById when given) into `cardsData`. */
+/** Where the card data of a server room comes from: what the host injected. */
+export interface CardDataSource {
+  /** The host's own lookup (preferred). */
+  fetchCardsById?: (ids: number[]) => Promise<CardData[]>;
+  /** The host's card API base URL: `${apiUrl}/cards?ids=…`. */
+  apiUrl?: string;
+  /** Sees a failed or impossible download; the duel still loads. */
+  onError?: (error: unknown) => void;
+}
+
+/** Card data shown for an id whose data could not be downloaded: an unknown card that keeps its id. */
+export function createMissingCardData(id: number): CardData {
+  return { ...createHiddenCardData(), id };
+}
+
+async function downloadCards(ids: number[], source: CardDataSource): Promise<CardData[]> {
+  if (source.fetchCardsById) return source.fetchCardsById(ids);
+  if (!source.apiUrl) throw new Error(`No card data source: the host gave neither fetchCardsById nor apiUrl, ${ids.length} card(s) unknown`);
+
+  const response = await fetch(`${source.apiUrl.replace(/\/+$/, "")}/cards?ids=${ids.join(",")}`);
+  if (!response.ok) throw new Error(`Card data request failed: HTTP ${response.status}`);
+  const data: unknown = await response.json();
+  if (!Array.isArray(data)) throw new Error("Card data response is not a list");
+  return data as CardData[];
+}
+
+/**
+ * Downloads `ids` from the host's source into `cardsData`. Nothing is
+ * requested when there is nothing to download (a hidden-info room, where
+ * every card this client may see so far is already known). It never
+ * throws: a failed download is reported to `onError` and the ids it could
+ * not get are filled with unknown cards, so the duel still loads.
+ */
 export async function fetchCardsInto(
   cardsData: Map<number, CardData>,
   ids: number[],
-  fetchCardsById: ((ids: number[]) => Promise<CardData[]>) | undefined,
+  source: CardDataSource,
 ): Promise<void> {
-  if (fetchCardsById) {
-    const cardsDataArray = await fetchCardsById(ids);
-    cardsDataArray.map(c => cardsData.set(c.id, c));
-  } else {
-    const cardsResponse = await fetch(`https://api.ygo101.com/cards?ids=${ids.join(",")}`);
-    const cardsDataArray = await cardsResponse.json() as CardData[];
-    cardsDataArray.map(c => cardsData.set(c.id, c));
+  if (ids.length === 0) return;
+
+  try {
+    const cardsDataArray = await downloadCards(ids, source);
+    cardsDataArray.forEach(c => { if (c && typeof c.id === "number") cardsData.set(c.id, c); });
+  } catch (error) {
+    try {
+      source.onError?.(error);
+    } catch {
+      // A failing host hook must not break the duel's setup.
+    }
   }
+
+  ids.forEach(id => { if (!cardsData.has(id)) cardsData.set(id, createMissingCardData(id)); });
 }
 
 /** The players' decks with every id replaced by its card data. */

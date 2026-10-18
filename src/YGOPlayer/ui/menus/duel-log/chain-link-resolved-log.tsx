@@ -1,5 +1,5 @@
 import { memo } from "react";
-import type { YGOCore } from "ygo-core";
+import type { YGOCore, YGODuelEvents } from "ygo-core";
 import { DuelLogContainer, DuelLogRow } from "./duel-log-components";
 import { useDuelPerspective } from "../../duel-perspective";
 
@@ -14,7 +14,7 @@ export const ChainLinkResolvedLogRow = memo(function ChainLinkResolvedLogRow({
   log,
   ygo,
 }: {
-  log: any;
+  log: YGODuelEvents.ChainLinkResolved;
   ygo?: InstanceType<typeof YGOCore>;
 }) {
   const perspective = useDuelPerspective();

@@ -29,11 +29,11 @@ describe("CardMenu in Master Duel style", () => {
 
   it("is the plain menu outside assisted bot duels, and for the opponent's cards", () => {
     expect(renderToStaticMarkup(<CardMenu assist={{ duel: duel({ botDuel: false }), card, zone: "H-1" }}><button>Free move</button></CardMenu>)).toContain("Free move");
-    expect(renderToStaticMarkup(<CardMenu assist={{ duel: duel(), card: { id: 100, owner: 1 }, zone: "H2-1" }}><button>Free move</button></CardMenu>)).toContain("Free move");
+    expect(renderToStaticMarkup(<CardMenu assist={{ duel: duel(), card: { ...card, owner: 1 }, zone: "H2-1" }}><button>Free move</button></CardMenu>)).toContain("Free move");
   });
 
   it("says when the card has no move right now", () => {
-    const html = renderToStaticMarkup(<CardMenu assist={{ duel: duel(), card: { id: 999, owner: 0 }, zone: "H-1" }}><button>Free move</button></CardMenu>);
+    const html = renderToStaticMarkup(<CardMenu assist={{ duel: duel(), card: { ...card, id: 999 }, zone: "H-1" }}><button>Free move</button></CardMenu>);
     expect(html).toContain("No moves for this card right now");
   });
 });

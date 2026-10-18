@@ -21,6 +21,18 @@ export class YGOPerspective {
   isOtherPlayer = (player: number) => this.otherPlayerIndex === player;
   /** `player`'s side is drawn at the bottom of the board. */
   isPlayerPOV = (player: number) => this.playerPOV === player;
+  /**
+   * The side shown as "this client's": the local player's, or — for a
+   * spectator, whose playerIndex is -1 — the side drawn at the bottom.
+   * Always a real player index (0 or 1), unlike playerIndex.
+   */
+  get localSide(): number {
+    return this.playerIndex >= 0 ? this.playerIndex : this.playerPOV >= 0 ? this.playerPOV : 0;
+  }
+  /** The side opposite localSide. */
+  get otherSide(): number {
+    return this.playerIndex >= 0 ? this.otherPlayerIndex : 1 - this.localSide;
+  }
   /** 0 for the bottom (POV) side, 1 for the top side — the `ygo-player-N` CSS class. */
   getPlayerCssIndex = (player: number) => (this.isPlayerPOV(player) ? 0 : 1);
 }

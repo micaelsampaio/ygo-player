@@ -1,6 +1,6 @@
 import { BaseControllerCommand } from "./commands";
-import { YGODuel } from "../../YGODuel";
-import { YGOCommandsControllerState } from "./YGOCommandsController";
+import type { YGODuel } from "../../YGODuel";
+import { YGOCommandsControllerState } from "./state";
 
 export class Play extends BaseControllerCommand {
   constructor(private duel: YGODuel, private commandId: number) {

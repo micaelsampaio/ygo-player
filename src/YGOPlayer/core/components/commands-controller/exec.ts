@@ -1,7 +1,7 @@
 import { Command, YGOCommandScope } from "ygo-core";
 import { BaseControllerCommand, ControllerCommandTag } from "./commands";
-import { YGODuel } from "../../YGODuel";
-import { YGOCommandsControllerState } from "./YGOCommandsController";
+import type { YGODuel } from "../../YGODuel";
+import { YGOCommandsControllerState } from "./state";
 
 export class Exec extends BaseControllerCommand {
 

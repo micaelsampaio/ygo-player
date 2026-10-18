@@ -1,8 +1,9 @@
 import { memo } from "react";
+import type { YGODuelEvents } from "ygo-core";
 import { DuelLogContainer, DuelLogRow } from "./duel-log-components";
 
 /** The chain finished resolving (server duels: the rules engine says so). */
-export const ChainResolvedLogRow = memo(function ChainResolvedLogRow({ log }: { log: any }) {
+export const ChainResolvedLogRow = memo(function ChainResolvedLogRow({ log }: { log: YGODuelEvents.ChainResolved }) {
   const links = Number(log.links) || 0;
   return (
     <DuelLogRow log={log}>

@@ -1,6 +1,7 @@
 import { memo } from "react";
-import { TimelineCommandProps } from "../../timeline";
+import type { TimelineCommandProps } from "../types";
 import { TimelineCommandTooltip } from "../tooltips";
+import { sameTimelineRow } from "../timeline-state";
 
 export const DefaultTimelineCommand = memo(function (props: TimelineCommandProps) {
     const { command, commandClass, onCommandClick } = props;
@@ -12,9 +13,9 @@ export const DefaultTimelineCommand = memo(function (props: TimelineCommandProps
         {icon && <div className={icon}></div>}
         <TimelineCommandTooltip {...props} />
     </button>
-});
+}, sameTimelineRow);
 
-const icons: any = {
+const icons: Partial<Record<string, string>> = {
     "Link Summon": "command-timeline-icon command-timeline-icon-link-summon",
     "XYZ Summon": "command-timeline-icon command-timeline-icon-xyz-summon",
     "Fusion Summon": "command-timeline-icon command-timeline-icon-fusion-summon",

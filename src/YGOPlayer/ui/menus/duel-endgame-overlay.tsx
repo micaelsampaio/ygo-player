@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { YGOClientType } from "ygo-core";
-import { YGODuel } from "../../core/YGODuel";
+import type { YGODuel } from "../../core/YGODuel";
 import { END_GAME_ACTION_LABELS, YGOEndGameAction, endGameActionsFor, endGameHeadline } from "../duel-status";
 import { AvailableReview, isShowableReview, reviewSourceOf } from "./duel-review/duel-review";
 import { DuelReviewPanel } from "./duel-review/duel-review-panel";

@@ -1,11 +1,11 @@
 import * as THREE from 'three';
-import { YGODuel } from "../core/YGODuel";
+import type { YGODuel } from "../core/YGODuel";
 import { YGOEntity } from '../core/YGOEntity';
-import { YGOMouseEvents } from '../core/components/YGOMouseEvents';
-import { YGOUiElement } from '../types';
+import type { YGOMouseEvents } from '../core/components/YGOMouseEvents';
+import type { YGOUiElement } from '../types';
 import { YGOClientType, YGODuelPhase } from 'ygo-core';
 import { ActionUiMenu } from '../actions/ActionUiMenu';
-import { phaseLabel, phaseObjectTooltip, turnOwnerLabel } from '../ui/duel-status';
+import { phaseLabel, phaseObjectTooltip, turnOwnerLabel } from '../domain/turn-status';
 
 export class YGOPhaseObject extends YGOEntity implements YGOUiElement {
   public isUiElement: boolean = true;

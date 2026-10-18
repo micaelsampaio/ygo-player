@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { YGOEntity } from "../core/YGOEntity";
-import { YGODuel } from '../core/YGODuel';
+import type { YGODuel } from '../core/YGODuel';
 import { CARD_DEPTH, CARD_HEIGHT_SIZE, CARD_RATIO } from '../constants';
 
 export class GameBackCard extends YGOEntity {

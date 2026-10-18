@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { YGODuel } from "../../core/YGODuel";
+import type { YGODuel } from "../../core/YGODuel";
 import { Card, YGOGameUtils } from "ygo-core";
 import { pileCardProps } from "../components/pile-menu";
 import { summonableExtraDeckCodes } from "./extra-deck-highlight";
@@ -16,8 +16,8 @@ export function ExtraDeck({
   visible: boolean;
   hasAction: boolean;
 }) {
-  const [summonable, setSummonable] = useState<Set<number>>(() => summonableExtraDeckCodes(duel.assistController.options as any));
-  useEffect(() => duel.assistController.subscribe((res) => setSummonable(summonableExtraDeckCodes(res as any))), [duel]);
+  const [summonable, setSummonable] = useState<Set<number>>(() => summonableExtraDeckCodes(duel.assistController.options));
+  useEffect(() => duel.assistController.subscribe((res) => setSummonable(summonableExtraDeckCodes(res))), [duel]);
 
   return (
     <PileViewer

@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { YGODuel } from "../../../core/YGODuel";
+import { useCallback, useEffect, useRef, useState, type ComponentType } from "react";
+import type { YGODuel } from "../../../core/YGODuel";
 import { stopPropagationCallback } from "../../../scripts/utils";
 import { GameSettingsDialog } from "./components/game-settings";
 import { GamControlsDialog } from "./components/game-controls";
@@ -20,7 +20,7 @@ const LEAVE_REASONS: Array<{ id: string; label: string }> = [
 
 export { SETTINGS_MODAL_TYPE };
 
-const MODALS: any = {
+const MODALS: Record<SETTINGS_MODAL_TYPE, ComponentType<{ duel: YGODuel; close: () => void }>> = {
     [SETTINGS_MODAL_TYPE.SETTINGS]: GameSettingsDialog,
     [SETTINGS_MODAL_TYPE.CONTROLS]: GamControlsDialog
 }
@@ -108,7 +108,7 @@ export function GameSettingsMenu({ duel, currentMenu = SETTINGS_MODAL_TYPE.SETTI
         }
     }, [isVisible]);
 
-    const MODAL = MODALS[modal?.id as any];
+    const MODAL = modal?.id != null ? MODALS[modal.id] : undefined;
     const mobileClass = isMobile ? `ygo-mobile-view-${mobileView}` : "";
 
     return <>

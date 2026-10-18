@@ -1,4 +1,4 @@
-import { DuelEventHandlerProps } from "..";
+import type { DuelEventHandlerProps } from "../types";
 import { YGODuelEvents, YGOGameUtils } from "ygo-core";
 import { YGOTaskSequence } from "../../core/components/tasks/YGOTaskSequence";
 import {
@@ -11,14 +11,12 @@ import * as THREE from "three";
 import { YGOCommandHandler } from "../../core/components/YGOCommandHandler";
 import { Card } from "ygo-core";
 import { GameCard } from "../../game/GameCard";
-import { Graveyard } from "../../game/Graveyard";
+import type { Graveyard } from "../../game/Graveyard";
 import { MultipleTasks } from "../utils/multiple-tasks";
 import { ScaleTransition } from "../utils/scale-transition";
-import { createSquareWithTopMiddlePivot } from "../../game/meshes/mesh-utils";
-import { YGOAnimationObject } from "../../game/YGOAnimationObject";
+import type { YGOAnimationObject } from "../../game/YGOAnimationObject";
 import { MaterialOpacityTransition } from "../utils/material-opacity";
 import { UpdateTask } from "../utils/update-task";
-import { WaitForSeconds } from "../utils/wait-for-seconds";
 
 interface DestroyEventHandlerProps extends DuelEventHandlerProps {
   event: YGODuelEvents.Destroy;
@@ -184,7 +182,7 @@ export class DestroyCardEventHandler extends YGOCommandHandler {
       ),
       new CallbackTransition(() => {
         mesh.visible = false;
-        updateDestroyEffectSizeTask.finish();
+        updateDestroyEffectSizeTask.setTaskCompleted();
       })
     );
 
@@ -192,7 +190,13 @@ export class DestroyCardEventHandler extends YGOCommandHandler {
 
     sequence.add(
       new CallbackTransition(() => {
-        duel.core.scene.remove(mesh);
+        // The flash and spread have faded out by now; drop all three planes
+        // (their textures are shared assets, so only geometry and materials go).
+        for (const effectMesh of [mesh, flashMesh, spreadMesh]) {
+          duel.core.scene.remove(effectMesh);
+          effectMesh.geometry.dispose();
+          effectMesh.material.dispose();
+        }
         cardZone?.setCard(null);
         card.destroy();
         this.props.onCompleted();

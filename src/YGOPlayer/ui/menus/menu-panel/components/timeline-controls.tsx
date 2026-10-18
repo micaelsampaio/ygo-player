@@ -1,5 +1,5 @@
 import { YGOCommandsControllerState } from "../../../../core/components/commands-controller/YGOCommandsController";
-import { YGODuel } from "../../../../core/YGODuel";
+import type { YGODuel } from "../../../../core/YGODuel";
 import { undoTooltip } from "../../../duel-status";
 
 export function GameTimelineControls({ duel }: { duel: YGODuel }) {

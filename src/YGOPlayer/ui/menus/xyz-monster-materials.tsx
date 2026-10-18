@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { YGODuel } from "../../core/YGODuel";
+import type { YGODuel } from "../../core/YGODuel";
 import { ActionUiMenu } from "../../actions/ActionUiMenu";
 import { Card, FieldZone } from "ygo-core";
 import { stopPropagationCallback } from "../../scripts/utils";

@@ -1,6 +1,6 @@
 /**
  * "Review my plays" — the post-duel review of a bot duel (ygo-socket-server's
- * `duel:bot:review`, see bot-duel/botDuelLog.ts there): the human's
+ * `duel:bot:review`, see bot/duel/botDuelLog.ts there): the human's
  * decisions scored with the bot's choice model and the key moments where the
  * model preferred another option.
  *

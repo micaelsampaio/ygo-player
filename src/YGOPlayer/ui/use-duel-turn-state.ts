@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { YGOClientType } from "ygo-core";
-import { YGODuel } from "../core/YGODuel";
+import type { YGODuel } from "../core/YGODuel";
 
 export interface DuelTurnState {
   turn: number;

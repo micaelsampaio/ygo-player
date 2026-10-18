@@ -130,7 +130,7 @@ export function buildColiseum(duel: YGODuel, viewer: number): BuiltField {
   const edgePts = roundedRect(b.minX - 0.05, b.minY - 0.05, b.width + 0.1, b.height + 0.1, 1.15).getPoints(24).map((p) => new THREE.Vector3(p.x, p.y, 0.0));
   const edgePath = new THREE.CurvePath<THREE.Vector3>();
   for (let i = 0; i < edgePts.length - 1; i++) edgePath.add(new THREE.LineCurve3(edgePts[i], edgePts[i + 1]));
-  root.add(new THREE.Mesh(new THREE.TubeGeometry(edgePath as any, 240, 0.09, 6, true), goldMat));
+  root.add(new THREE.Mesh(new THREE.TubeGeometry(edgePath, 240, 0.09, 6, true), goldMat));
 
   // Zones: stone tiles with the filigree and glyph inlaid in gold.
   const inlays: Array<{ mat: THREE.MeshStandardMaterial; owner: number }> = [];

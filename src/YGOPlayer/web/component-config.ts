@@ -43,15 +43,20 @@ export function replayPropsToConfig(props: YGOPlayerStartReplayProps): YGOConfig
 /**
  * A server room's config (YGOPlayerComponent.connectToServer): the players,
  * commands and rules come from the server. Of the host's actions only
- * saveReplay, so the settings menu offers "Save Replay" only when given.
+ * saveReplay (so the settings menu offers "Save Replay" only when given)
+ * and fetchCardsById, which with apiUrl is where the room's cards come from.
  */
 export function serverPropsToConfig(props: YGOPlayerConnectToServerProps): YGOConfig {
+  const actions: YGOConfig["actions"] = {};
+  if (props.actions?.saveReplay) actions.saveReplay = props.actions.saveReplay;
+  if (props.actions?.fetchCardsById) actions.fetchCardsById = props.actions.fetchCardsById;
   return {
     players: [],
     commands: [],
     options: {},
     cdnUrl: props.cdnUrl,
-    actions: props.actions?.saveReplay ? { saveReplay: props.actions.saveReplay } : {},
+    apiUrl: props.apiUrl,
+    actions,
     gameMode: "EDITOR",
     endGameActions: props.endGameActions,
     onError: props.onError,

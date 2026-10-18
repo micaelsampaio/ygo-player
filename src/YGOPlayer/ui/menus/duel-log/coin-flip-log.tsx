@@ -1,10 +1,11 @@
 import { memo } from "react";
+import type { YGODuelEvents } from "ygo-core";
 import { DuelLogContainer, DuelLogRow } from "./duel-log-components";
 
 export const CoinFlipLogRow = memo(function ({
   log,
 }: {
-  log: any;
+  log: YGODuelEvents.CoinFlip;
 }) {
   return (
     <DuelLogRow log={log}>
@@ -15,7 +16,7 @@ export const CoinFlipLogRow = memo(function ({
           </div>
           <div className="ygo-flex ygo-flex-col ygo-gap-1" style={{ flexWrap: "wrap" }}>
             {
-              Array.isArray(log.result) && log.result?.map((result: any) => {
+              Array.isArray(log.result) && log.result?.map((result) => {
                 return <div className="ygo-space-y-2">
 
                   {

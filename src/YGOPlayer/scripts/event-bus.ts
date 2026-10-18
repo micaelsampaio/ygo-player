@@ -2,7 +2,7 @@ interface EventBusArguments {
     signal: AbortSignal
 }
 
-export class EventBus<T extends Record<keyof (T), (...args: any[]) => void>> {
+export class EventBus<T extends Record<keyof (T), (...args: never[]) => void>> {
     private events: Map<keyof T, Function[]>;
 
     constructor() {

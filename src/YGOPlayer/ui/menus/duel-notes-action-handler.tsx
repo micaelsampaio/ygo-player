@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Card, YGODuelEvents } from "ygo-core";
-import { YGODuel } from "../../core/YGODuel";
+import type { YGODuel } from "../../core/YGODuel";
 import { stopPropagationCallback } from "../../scripts/utils";
 
 export function DuelNotesActionEventHandler({
@@ -73,9 +73,9 @@ export function DuelNotesActionEventHandler({
   const handleClose = () => {
     setVisible(false);
 
-    timer.current = setTimeout(() => {
+    timer.current = window.setTimeout(() => {
       complete();
-    }, 300) as any as number;
+    }, 300);
   };
 
   return (

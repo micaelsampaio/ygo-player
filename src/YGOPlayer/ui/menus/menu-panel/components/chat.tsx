@@ -1,6 +1,6 @@
 import { ChangeEvent, FormEvent, ReactNode, useEffect, useRef, useState } from "react";
 import { YGOTextArea } from "../../../components/TextArea";
-import { YGODuel } from "../../../../core/YGODuel";
+import type { YGODuel } from "../../../../core/YGODuel";
 
 /** Hard cap the server accepts for one chat message. */
 export const CHAT_MAX_LENGTH = 100;
@@ -67,7 +67,7 @@ export function Chat({ duel }: { duel: YGODuel }) {
   }, []);
 
   useEffect(() => {
-    const handler = (data: any) => {
+    const handler = (data: { username: string; message: string }) => {
       const chatMessage: ChatMessage = {
         key: crypto.randomUUID(),
         username: data.username,
@@ -76,7 +76,7 @@ export function Chat({ duel }: { duel: YGODuel }) {
       };
       setChatMessages((prev) => [...prev, chatMessage]);
     };
-    const systemHandler = (data: any) => {
+    const systemHandler = (data: { message: string }) => {
       const chatMessage: ChatMessage = {
         key: crypto.randomUUID(),
         username: "",
@@ -151,7 +151,7 @@ export function Chat({ duel }: { duel: YGODuel }) {
             placeholder="Type a message…"
             aria-label="Chat message"
             maxLength={CHAT_MAX_LENGTH}
-            onKeyDown={(e: any) => {
+            onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
                 e.stopPropagation();

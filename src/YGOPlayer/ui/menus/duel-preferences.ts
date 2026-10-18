@@ -1,6 +1,6 @@
 /**
  * The player's own settings for a server duel (ygo-socket-server
- * duel:preferences:set, utils/duelPreferences.ts). For now one:
+ * duel:preferences:set, engine/duelPreferences.ts). For now one:
  * chainStops — in Assisted Mode, which of your chain windows pause for you
  * (the bot's turn waits there too):
  *  - "auto": only when you have a card you can chain (the default);

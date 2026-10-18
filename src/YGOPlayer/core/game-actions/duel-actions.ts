@@ -1,5 +1,6 @@
 import { YGOClientType, YGOCommands, YGOGameUtils, YGOPlayerState } from "ygo-core";
 import { assistPhaseRouteFor } from "../../domain/assist-routing";
+import type { AssistQueryResult } from "../../domain/assist-query";
 import { FieldZone } from "ygo-core";
 import { YGODuelPhase } from "ygo-core";
 import { CardActions } from "./card-actions";
@@ -155,7 +156,7 @@ export class DuelActions extends CardActions {
 
     const query = () => controller.query();
     const walk = async (): Promise<{ notices?: string[] }> => {
-      let current: any = controller.options;
+      let current: AssistQueryResult | null = controller.options;
       for (const [i, phase] of steps.entries()) {
         let route = assistPhaseRouteFor(current, phase);
         if (route.kind === "continueFirst" && i === 0) {
@@ -176,7 +177,7 @@ export class DuelActions extends CardActions {
     duel.events.dispatch("assist-choice-start", {});
     return walk()
       .then((res) => duel.events.dispatch("assist-choice-done", { notices: res?.notices }))
-      .catch((error: any) => duel.events.dispatch("assist-choice-done", { error }));
+      .catch((error: unknown) => duel.events.dispatch("assist-choice-done", { error }));
   }
 
   /** Change phase. Chain mode: an open chain resolves first, so it never carries into the next phase. */

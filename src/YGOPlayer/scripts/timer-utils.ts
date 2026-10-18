@@ -2,6 +2,7 @@ export class YGOTimerUtils {
   private timers: number[] = []
 
   setTimeout(callback: () => void, delay?: number) {
+    // The DOM's setTimeout returns a number; Node's (tests) returns a Timeout, which clearTimeout also takes.
     const timer = setTimeout(() => {
       this.timers = this.timers.filter(t => t !== timer);
       callback();
@@ -11,10 +12,10 @@ export class YGOTimerUtils {
   }
 
   requestAnimationFrame(callback: () => void) {
-    const timer = requestAnimationFrame(() => {
+    const timer: number = requestAnimationFrame(() => {
       this.timers = this.timers.filter(t => t !== timer);
       callback();
-    }) as unknown as number;
+    });
     this.timers.push(timer);
     return timer;
   }

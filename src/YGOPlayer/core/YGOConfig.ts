@@ -16,6 +16,9 @@ export interface YGOConfigOptions extends YGOPropsOptions {
 
 export interface YGOConfig extends YGOProps {
   cdnUrl: string
+  /** The host's card API base URL, used to download a server room's cards
+   * when `actions.fetchCardsById` is not given. */
+  apiUrl?: string
   gameMode: "EDITOR" | "REPLAY"
   autoChangePlayer?: boolean
   options: YGOConfigOptions

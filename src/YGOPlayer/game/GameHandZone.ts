@@ -1,8 +1,8 @@
 import * as THREE from 'three';
 import { Object3D } from "three";
-import { YGOUiElement } from "../types";
-import { YGODuel } from "../core/YGODuel";
-import { YGOMouseEvents } from "../core/components/YGOMouseEvents";
+import type { YGOUiElement } from "../types";
+import type { YGODuel } from "../core/YGODuel";
+import type { YGOMouseEvents } from "../core/components/YGOMouseEvents";
 
 export class GameHandZone implements YGOUiElement {
   public player: number;

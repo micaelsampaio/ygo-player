@@ -2,7 +2,7 @@
 // new Move card
 // on complete -> start
 import * as THREE from "three";
-import { DuelEventHandlerProps } from "..";
+import type { DuelEventHandlerProps } from "../types";
 import { YGODuelEvents, YGOGameUtils } from "ygo-core";
 import { YGOTaskSequence } from "../../core/components/tasks/YGOTaskSequence";
 import { YGOCommandHandler } from "../../core/components/YGOCommandHandler";
@@ -19,6 +19,7 @@ import {
   CardNegationEffect,
   GameCardGrayscale,
   GameModalOverlayMesh,
+  disposeEffectMesh,
 } from "../../game/meshes/mesh-utils";
 import { MaterialOpacityTransition } from "../utils/material-opacity";
 import { MultipleTasks } from "../utils/multiple-tasks";
@@ -44,7 +45,7 @@ export class NegateCardHandler extends YGOCommandHandler {
     const sequence = new YGOTaskSequence();
     const field = duel.fields[zoneData.player];
     let modalDuration = 0.4;
-    let negationDelay = 0;
+    const negationDelay = 0;
 
     if (duel.settings.getConfigFromPath("showCardWhenPlayed")) {
       duel.gameActions.setSelectedCard({
@@ -181,7 +182,7 @@ export class NegateCardHandler extends YGOCommandHandler {
           duration: 0.25,
           opacity: 0,
         }),
-        new CallbackTransition(() => duel.core.scene.remove(modal)),
+        new CallbackTransition(() => disposeEffectMesh(modal)),
       )
     );
 

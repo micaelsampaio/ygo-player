@@ -64,4 +64,21 @@ describe("YGOStatic (deprecated shim)", () => {
     expect(YGOStatic.playerIndex).toBe(0);
     expect(a.playerIndex).toBe(1);
   });
+
+  // F2: a spectator's playerIndex is -1; the HUD read getField(-1) and crashed.
+  it("localSide/otherSide are always real players: the local player's, else the POV side", () => {
+    const player = new YGOPerspective();
+    player.set({ playerIndex: 1, otherPlayerIndex: 0, playerPOV: 0 });
+    expect([player.localSide, player.otherSide]).toEqual([1, 0]);
+
+    const spectator = new YGOPerspective();
+    spectator.set({ playerIndex: -1, otherPlayerIndex: 1, playerPOV: 0 });
+    expect([spectator.localSide, spectator.otherSide]).toEqual([0, 1]);
+
+    spectator.set({ playerIndex: -1, otherPlayerIndex: 1, playerPOV: 1 });
+    expect([spectator.localSide, spectator.otherSide]).toEqual([1, 0]);
+
+    spectator.set({ playerIndex: -1, otherPlayerIndex: 1, playerPOV: -1 });
+    expect([spectator.localSide, spectator.otherSide]).toEqual([0, 1]);
+  });
 });

@@ -1,4 +1,4 @@
-import { DuelEventHandlerProps } from "..";
+import type { DuelEventHandlerProps } from "../types";
 import { YGODuelEvents, YGOGameUtils } from "ygo-core";
 import { YGOTaskSequence } from "../../core/components/tasks/YGOTaskSequence";
 import { YGOCommandHandler } from "../../core/components/YGOCommandHandler";

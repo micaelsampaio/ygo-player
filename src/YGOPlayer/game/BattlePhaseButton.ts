@@ -1,8 +1,8 @@
 import * as THREE from "three";
-import { YGODuel } from "../core/YGODuel";
-import { YGOUiElement } from "../types";
-import { YGOMouseEvents } from "../core/components/YGOMouseEvents";
-import { CardZone } from "./CardZone";
+import type { YGODuel } from "../core/YGODuel";
+import type { YGOUiElement } from "../types";
+import type { YGOMouseEvents } from "../core/components/YGOMouseEvents";
+import type { CardZone } from "./CardZone";
 
 export class BattlePhaseButton implements YGOUiElement {
   public gameObject: THREE.Mesh;

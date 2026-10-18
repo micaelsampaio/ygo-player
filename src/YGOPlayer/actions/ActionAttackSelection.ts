@@ -1,13 +1,13 @@
 import * as THREE from 'three';
-import { YGOAction } from "../core/components/YGOAction";
+import type { YGOAction } from "../core/components/YGOAction";
 import { YGOComponent } from "../core/YGOComponent";
-import { YGODuel } from "../core/YGODuel";
+import type { YGODuel } from "../core/YGODuel";
 import { createCardSelectionGeometry } from "../game/meshes/CardSelectionMesh";
-import { CardZone } from '../game/CardZone';
+import type { CardZone } from '../game/CardZone';
 import { Ease } from '../scripts/ease';
 import { lerp } from 'three/src/math/MathUtils';
-import { GameHandZone } from '../game/GameHandZone';
-import { BattlePhaseButton } from '../game/BattlePhaseButton';
+import type { GameHandZone } from '../game/GameHandZone';
+import type { BattlePhaseButton } from '../game/BattlePhaseButton';
 
 enum STATE { SELECTION, PRE_ATTACK_MENU }
 export class ActionAttackSelection extends YGOComponent implements YGOAction {

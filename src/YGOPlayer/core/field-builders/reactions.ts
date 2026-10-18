@@ -3,13 +3,14 @@
  * shockwave out from its zone. Rings are pooled; each lives ~0.8 s.
  */
 import * as THREE from "three";
+import type { FieldZone, YGODuelEvents } from "ygo-core";
 import type { YGODuel } from "../YGODuel";
 import { getZonePosition } from "../../scripts/ygo-utils";
 
 const TRIGGERS = new Set(["Normal Summon", "Tribute Summon", "Special Summon", "Synchro Summon", "Link Summon", "Fusion Summon", "XYZ Summon", "Activate"]);
 const LIFE = 0.8;
 
-export function zoneShockwaves(duel: YGODuel, root: THREE.Object3D, color: (log: any) => THREE.Color) {
+export function zoneShockwaves(duel: YGODuel, root: THREE.Object3D, color: (log: YGODuelEvents.DuelLog) => THREE.Color) {
   const pool: Array<{ mesh: THREE.Mesh; mat: THREE.ShaderMaterial; age: number }> = [];
   const make = () => {
     const mat = new THREE.ShaderMaterial({
@@ -35,8 +36,9 @@ export function zoneShockwaves(duel: YGODuel, root: THREE.Object3D, color: (log:
     pool.push(item);
     return item;
   };
-  const spawn = (log: any) => {
-    const zone = log?.zone;
+  const spawn = (log: YGODuelEvents.DuelLog) => {
+    // Summon and activation logs all carry the zone the card is in.
+    const zone = (log as { zone?: FieldZone }).zone;
     if (!zone || !/^(M|S|EMZ|F)/.test(String(zone))) return;
     let pos: THREE.Vector3;
     try { pos = getZonePosition(duel, zone); } catch { return; }
@@ -46,7 +48,7 @@ export function zoneShockwaves(duel: YGODuel, root: THREE.Object3D, color: (log:
     item.mesh.position.set(pos.x, pos.y, 0.08);
     item.mesh.visible = true;
   };
-  duel.ygo.events.on("new-log", (log: any) => {
+  duel.ygo.events.on("new-log", (log) => {
     if (duel.commands?.isRecovering?.()) return;
     if (TRIGGERS.has(log?.type)) spawn(log);
   });

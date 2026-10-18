@@ -1,4 +1,4 @@
-import { DuelEventHandlerProps } from "..";
+import type { DuelEventHandlerProps } from "../types";
 import { YGODuelEvents } from "ygo-core";
 import { YGOCommandHandler } from "../../core/components/YGOCommandHandler";
 
@@ -8,7 +8,7 @@ interface AdmitDefeatEventHandlerProps extends DuelEventHandlerProps {
 
 export class AdmitDefeatEventHandler extends YGOCommandHandler {
   private props: AdmitDefeatEventHandlerProps;
-  private timeoutId?: number;
+  private timeoutId?: ReturnType<typeof setTimeout>;
 
   constructor(props: AdmitDefeatEventHandlerProps) {
     super("admit_defeat_command");
@@ -34,7 +34,7 @@ export class AdmitDefeatEventHandler extends YGOCommandHandler {
         player: this.props.event.player
       });
       this.props.onCompleted();
-    }, 0) as unknown as number;
+    }, 0);
   }
 
   public finish(): void {

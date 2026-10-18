@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { YGODuel } from "../../core/YGODuel";
+import type { YGODuel } from "../../core/YGODuel";
 import {
   isComboRecording,
   nextPuzzleView,

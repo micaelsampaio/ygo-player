@@ -1,5 +1,6 @@
 import { YGOCommands, YGOGameUtils } from "ygo-core";
 import { Card, CardPosition, FieldZone } from "ygo-core";
+import type { Command } from "ygo-core";
 import { CardZone } from "../../game/CardZone";
 import { getCardZones, getGameZone, getMonstersZones } from "../../scripts/ygo-utils";
 import { CardZoneKV } from "../../types";
@@ -22,7 +23,7 @@ export class SummonActions extends GameActionsBase {
   }
 
   private extraDeckIndex(card: Card): number {
-    return this.duel.ygo.state.fields[card.originalOwner].extraDeck.findIndex((c: any) => c === card);
+    return this.duel.ygo.state.fields[card.originalOwner].extraDeck.findIndex((c) => c === card);
   }
 
   /** The Extra Deck zone `card` is summoned from (ED-n, 1-based). */
@@ -46,7 +47,7 @@ export class SummonActions extends GameActionsBase {
     zoneTypes: ("M" | "EMZ")[];
     freedZones: CardZone[];
     showConfirm?: boolean;
-    build: (zone: FieldZone) => any;
+    build: (zone: FieldZone) => Command;
   }) {
     const zonesToSummon = getCardZones(this.duel, [card.originalOwner], zoneTypes);
     freedZones.forEach((z) => zonesToSummon.push(z));
@@ -80,7 +81,7 @@ export class SummonActions extends GameActionsBase {
       materials: { id: number; zone: FieldZone }[];
       originZone: FieldZone;
       zone: FieldZone;
-    }) => any;
+    }) => Command;
   }) {
     if (this.routeExtraDeckSummon(card)) return;
     this.clearAction();
@@ -152,7 +153,7 @@ export class SummonActions extends GameActionsBase {
       () => {
         // Allow selecting Extra Monster Zones only when origin is actually Extra Deck
         const zoneTypes: ("M" | "S" | "F" | "EMZ")[] = ["M"];
-        const zoneData = originZone ? YGOGameUtils.getZoneData(originZone as any) : null;
+        const zoneData = originZone ? YGOGameUtils.getZoneData(originZone) : null;
         if (zoneData && zoneData.zone === "ED") {
           zoneTypes.push("EMZ");
         }

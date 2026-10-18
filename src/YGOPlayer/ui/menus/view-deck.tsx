@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { YGODuel } from "../../core/YGODuel";
+import type { YGODuel } from "../../core/YGODuel";
 import { Card, YGOPlayerState } from "ygo-core";
 import { ActionUiMenu } from "../../actions/ActionUiMenu";
 import { Deck } from "../../../YGOPlayer/game/Deck";
@@ -7,6 +7,7 @@ import { YGOGameUtils } from "ygo-core";
 import { stopPropagationCallback } from "../../scripts/utils";
 import { clickableProps } from "../components/a11y";
 import { pileCardProps } from "../components/pile-menu";
+import { pileCardPressHandlers } from "./pile-viewer";
 
 const NO_CARDS: never[] = [];
 
@@ -82,7 +83,7 @@ export function ViewDeckPopup({
     let searchTypes = Object.values(typesOfCards).some((v) => v);
 
     const cardsToSearch = cards
-      .filter((card: any) => {
+      .filter((card) => {
         let showCard = !searchTypes;
 
         if (typesOfCards.monster && YGOGameUtils.isMonster(card))
@@ -179,10 +180,7 @@ export function ViewDeckPopup({
             {cardsToShow.map((card: Card) => (
               <img
                 key={card.index}
-                onMouseDown={(event: any) => duel.events.dispatch("on-card-mouse-down", { card, event })}
-                onMouseUp={(event: any) => duel.events.dispatch("on-card-mouse-up", { card, event })}
-                onTouchStart={(event: any) => duel.events.dispatch("on-card-mouse-down", { card, event })}
-                onTouchEnd={(event: any) => duel.events.dispatch("on-card-mouse-up", { card, event })}
+                {...pileCardPressHandlers(duel, card)}
                 onClick={(e) => onCardClick(e, card)}
                 {...pileCardProps<HTMLImageElement>((e) => onCardClick(e, card), card.name)}
                 alt={card.name}
@@ -204,7 +202,7 @@ function CardIcon({
 }: {
   selected: boolean;
   type: "monster" | "spell" | "trap";
-  onClick?: any;
+  onClick?: () => void;
 }) {
   const className =
     type === "spell"

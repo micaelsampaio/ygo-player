@@ -32,7 +32,7 @@ export function CardZoneAttackMenuAction({
 
   clearAction: () => void
 }) {
-  const [battleInfo, setBattleInfo] = useState<YGOBattleInfo>({} as any)
+  const [battleInfo, setBattleInfo] = useState<YGOBattleInfo>(() => calculateBattleInfo(attackingCard, attackedCard))
   const menuRef = useRef<HTMLDivElement>();
   const propsChanges = [attackingCard, attackedCard, attackedZone, attackingZone];
 

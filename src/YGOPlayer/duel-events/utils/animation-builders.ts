@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { YGOTask } from "../../core/components/tasks/YGOTask";
+import type { YGOTask } from "../../core/components/tasks/YGOTask";
 import { YGOTaskSequence } from "../../core/components/tasks/YGOTaskSequence";
 import { CallbackTransition } from "./callback";
 import { MaterialOpacityTransition } from "./material-opacity";

@@ -17,6 +17,7 @@ vi.mock("../../game/meshes/mesh-utils", () => ({
   CardEmptyMesh: vi.fn(() => mesh()),
   GameModalOverlayMesh: vi.fn(() => mesh()),
   createCardPopSummonEffectSequence: vi.fn(),
+  disposeEffectMesh: vi.fn(),
 }));
 const zones = new Map<string, any>();
 vi.mock("../../scripts/ygo-utils", () => ({

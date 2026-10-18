@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { YGOGameUtils } from "ygo-core";
+import { YGOGameUtils, type FieldZone } from "ygo-core";
 import type { YGODuel } from "../../core/YGODuel";
 import type { ActionCardSelection } from "../../actions/ActionSelectCard";
 import type { CardZone } from "../../game/CardZone";
@@ -13,7 +13,7 @@ export interface FieldSelectionItem<T> {
 }
 
 export interface FieldSelectionOptions<T> {
-  /** "zone": any zone; "card": only zones that hold a card. */
+  /** "zone": every listed zone; "card": only zones that hold a card. */
   selectionType: "zone" | "card";
   onPick: (value: T) => void;
   /** Called when the player dismisses the glow (Esc / click away); omit to let it come back on the next enable-game-actions. */
@@ -39,7 +39,8 @@ export function startFieldSelection<T>(duel: YGODuel, items: FieldSelectionItem<
     if (disposed || (id !== -1 && selection.isSelecting(id))) return;
     const byZone = new Map<CardZone, T>();
     for (const item of items) {
-      const cardZone = getGameZone(duel, YGOGameUtils.getZoneData(item.zone as any));
+      // A zone id that names no field zone ("S-9") finds no CardZone and is skipped.
+      const cardZone = getGameZone(duel, YGOGameUtils.getZoneData(item.zone as FieldZone));
       if (cardZone && (opts.selectionType === "zone" || cardZone.getCardReference())) byZone.set(cardZone, item.value);
     }
     if (byZone.size === 0) return;

@@ -1,4 +1,4 @@
-import { YGODuel } from "../../core/YGODuel";
+import type { YGODuel } from "../../core/YGODuel";
 import { Banish as GameBanish } from "../../../YGOPlayer/game/Banish";
 import { Card } from "ygo-core";
 import { pileCardProps } from "../components/pile-menu";

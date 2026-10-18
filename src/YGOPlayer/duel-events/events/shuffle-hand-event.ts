@@ -1,14 +1,12 @@
-import { DuelEventHandlerProps } from "..";
+import type { DuelEventHandlerProps } from "../types";
 import { YGODuelEvents } from "ygo-core";
 import { YGOTaskSequence } from "../../core/components/tasks/YGOTaskSequence";
 import { CallbackTransition } from "../utils/callback";
 import { YGOCommandHandler } from "../../core/components/YGOCommandHandler";
 import { PositionTransition } from "../utils/position-transition";
-import { fisherYatesShuffle } from "../../scripts/ygo-utils";
 import { MultipleTasks } from "../utils/multiple-tasks";
 import { ScaleTransition } from "../utils/scale-transition";
-import { YGOTask } from "../../core/components/tasks/YGOTask";
-import { Ease } from "../../scripts/ease";
+import type { YGOTask } from "../../core/components/tasks/YGOTask";
 import { WaitForSeconds } from "../utils/wait-for-seconds";
 
 interface ShuffleHandEventHandlerProps extends DuelEventHandlerProps {

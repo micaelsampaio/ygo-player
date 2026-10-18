@@ -26,7 +26,7 @@ export function CardDeckMenu({
   useAnchoredMenu(duel, menuRef, () => ({
     kind: "pointer",
     element: htmlCardElement ?? (mouseEvent?.target instanceof Element ? mouseEvent.target : null),
-    event: mouseEvent as any,
+    event: mouseEvent,
   }), [card, mouseEvent, htmlCardElement]);
 
   return (

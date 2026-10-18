@@ -1,6 +1,5 @@
-import { TextGeometry } from "three/examples/jsm/Addons.js";
 import * as THREE from "three";
-import { YGODuel } from "../core/YGODuel";
+import type { YGODuel } from "../core/YGODuel";
 import { Card } from "ygo-core";
 import { YGOGameUtils } from "ygo-core";
 import { YGOMath } from "../core/YGOMath";
@@ -23,6 +22,7 @@ export class GameCardStats {
 
   private texture: THREE.Texture;
   private mesh: THREE.Mesh;
+  private destroyed = false;
 
   constructor({
     parent,
@@ -68,8 +68,12 @@ export class GameCardStats {
   }
 
   destroy() {
-    this.canvas = null as any;
+    this.destroyed = true;
+    // Shrink the backing store so the 2D canvas memory is released with the GPU copy.
+    this.canvas.width = this.canvas.height = 0;
     this.texture.dispose();
+    (this.mesh.material as THREE.Material).dispose();
+    this.mesh.geometry.dispose();
     this.parent.remove(this.mesh);
   }
 
@@ -90,7 +94,7 @@ export class GameCardStats {
   }
 
   render() {
-    if (!this.canvas) return;
+    if (this.destroyed) return;
     if (!this.needsUpdate()) return;
 
     const isPlayer1 = this.duel.perspective.isPlayerPOV(this.card.owner);
@@ -245,7 +249,7 @@ export class GameCardStats {
     this.ctx.strokeText(levelStr, x, y);
     this.ctx.fillText(levelStr, x, y);
 
-    this.level = level as any;
+    this.level = level;
   }
 
   renderMaterials() {
@@ -256,7 +260,7 @@ export class GameCardStats {
     const isPlayer1 = this.duel.perspective.isPlayerPOV(this.card.owner);
     const materials = this.card.materials.length;
     const materialsStr = String(materials);
-    let iconPath = `${this.duel.config.cdnUrl}/images/ui/ic_xyz_materials128.png`;
+    const iconPath = `${this.duel.config.cdnUrl}/images/ui/ic_xyz_materials128.png`;
 
     const x = isPlayer1 ? 30 : this.canvas.width - 30;
     const y = isPlayer1 ? this.canvas.height - 50 : 55;

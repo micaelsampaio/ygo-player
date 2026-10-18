@@ -2,7 +2,7 @@
 // new Move card
 // on complete -> start
 import * as THREE from "three";
-import { DuelEventHandlerProps } from "..";
+import type { DuelEventHandlerProps } from "../types";
 import { YGODuelEvents, YGOGameUtils } from "ygo-core";
 import { YGOTaskSequence } from "../../core/components/tasks/YGOTaskSequence";
 import { YGOCommandHandler } from "../../core/components/YGOCommandHandler";
@@ -43,7 +43,7 @@ export class ChangeCardPositionHandler extends YGOCommandHandler {
       ...this.props,
       event: {
         ...event,
-        type: event.type as any,
+        type: event.type,
         id: event.id,
         originZone: event.originZone!,
         zone: event.zone,

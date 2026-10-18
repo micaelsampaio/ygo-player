@@ -76,7 +76,7 @@ export function GlobalEventsActionsMenu({
 
   useAnchoredMenu(duel, menuRef, () => ({ kind: "object3d", object: transform }), [transform]);
 
-  const freeMonsterZones = field.monsterZone.filter((zone: any) => !zone).length;
+  const freeMonsterZones = field.monsterZone.filter((zone) => !zone).length;
 
   return (
     <>

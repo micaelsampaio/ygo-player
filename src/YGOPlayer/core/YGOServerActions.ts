@@ -1,10 +1,10 @@
 import { JSONCommand, YGOClient, YGOCommands, YGOGameUtils, YGOServerGameStateData } from "ygo-core";
-import type { YGOCommandPayload, YGOServerCommandRequest } from "ygo-core";
-import { YGODuel } from "./YGODuel";
+import type { YGOCommandPayload, YGOReplayData, YGOServerCommandRequest } from "ygo-core";
+import type { YGODuel } from "./YGODuel";
 import { Command } from "ygo-core";
 import { YGOTimerUtils } from "../scripts/timer-utils";
 import { YGOComponent } from "./YGOComponent";
-import { YGOControllerCommands } from "./components/commands-controller";
+import { Exec } from "./components/commands-controller/exec";
 import { YGOPlayerRemoteActions } from "ygo-core";
 import { markBotActivation } from "../duel-events/bot-spotlight";
 import { duelRoomId, roomEventFor } from "./room-events";
@@ -13,6 +13,16 @@ import { duelRoomId, roomEventFor } from "./room-events";
 const TIMELINE_MOVES = new Set([
   "ygo:commands:previous", "ygo:commands:next", "ygo:commands:play", "ygo:commands:goto_command",
 ]);
+
+/** The fields of a server message read before knowing which message it is. */
+type ServerMessageFields = { type?: string; reason?: unknown; replay?: YGOReplayData; error?: unknown };
+
+/** A player index carried in a remote action's payload (e.g. RevealExtraDeck's sourcePlayer). */
+function payloadPlayer(payload: unknown, key: "sourcePlayer" | "targetPlayer"): number | undefined {
+  if (!payload || typeof payload !== "object") return undefined;
+  const value = (payload as Record<string, unknown>)[key];
+  return typeof value === "number" ? value : undefined;
+}
 
 export class YGOServerActions extends YGOComponent {
   private timers: YGOTimerUtils;
@@ -35,7 +45,7 @@ export class YGOServerActions extends YGOComponent {
       this.client.send("client:ready");
     },
     /** The server's full replay (hidden information: only once the match is over). */
-    requestReplay: (timeoutMs = 5000): Promise<any> => {
+    requestReplay: (timeoutMs = 5000): Promise<YGOReplayData> => {
       return new Promise((resolve, reject) => {
         const timer = setTimeout(() => {
           this.replayRequests = this.replayRequests.filter(r => r.resolve !== resolve);
@@ -62,7 +72,7 @@ export class YGOServerActions extends YGOComponent {
     },
   }
 
-  private replayRequests: { resolve: (replay: any) => void, reject: (error: Error) => void, timer: ReturnType<typeof setTimeout> }[] = [];
+  private replayRequests: { resolve: (replay: YGOReplayData) => void, reject: (error: Error) => void, timer: ReturnType<typeof setTimeout> }[] = [];
 
   public getActivePlayer(): number {
     if (this.duel.ygo.options.controlTogglePriority === false) {
@@ -95,7 +105,7 @@ export class YGOServerActions extends YGOComponent {
         this.ygo.exec({ command: new YGOCommands.PlayerPriorityCommand({ player }) });
       }
     },
-    setPlayerRemoteAction: (data: { player: number, action: YGOPlayerRemoteActions, data?: any }) => {
+    setPlayerRemoteAction: (data: { player: number, action: YGOPlayerRemoteActions, data?: unknown }) => {
 
       let message = "";
       const playerName = this.duel.ygo.getField(data.player).player.name;
@@ -117,7 +127,7 @@ export class YGOServerActions extends YGOComponent {
           message = playerName + " says \"Wait\"";
           break;
         case YGOPlayerRemoteActions.RevealExtraDeck: {
-          const sourcePlayer = data.data?.sourcePlayer;
+          const sourcePlayer = payloadPlayer(data.data, "sourcePlayer");
           if (sourcePlayer !== undefined) {
             message = playerName + " revealed their Extra Deck";
             this.duel.events.dispatch("set-ui-menu", {
@@ -129,7 +139,7 @@ export class YGOServerActions extends YGOComponent {
           break;
         }
         case YGOPlayerRemoteActions.PickExtraDeckCard: {
-          const targetPlayer = data.data?.targetPlayer;
+          const targetPlayer = payloadPlayer(data.data, "targetPlayer");
           if (targetPlayer !== undefined) {
             if (this.duel.perspective.isPlayerPOV(targetPlayer)) {
               message = "Choose a card from your Extra Deck";
@@ -154,7 +164,7 @@ export class YGOServerActions extends YGOComponent {
         message
       });
     },
-    sendPlayerAction: ({ action, data }: { action: YGOPlayerRemoteActions, data?: any }) => {
+    sendPlayerAction: ({ action, data }: { action: YGOPlayerRemoteActions, data?: unknown }) => {
 
       if (action !== YGOPlayerRemoteActions.CancelContinuousOK) {
         if (Date.now() < this.nextPlayerActionCooldown) return;
@@ -214,15 +224,16 @@ export class YGOServerActions extends YGOComponent {
     })
   }
 
-  public async processServerCommand(eventName: string, data: any) {
+  public async processServerCommand(eventName: string, data: unknown) {
     // puzzle:state, duel:preferences, duel:deck:* (room-events.ts).
     const roomEvent = roomEventFor(eventName, data, this.room.id());
     if (roomEvent) {
       this.duel.events.dispatch(roomEvent, data);
       return;
     }
+    const message = (data ?? undefined) as ServerMessageFields | undefined;
 
-    if (eventName === "server:exec" && TIMELINE_MOVES.has(data?.type)) {
+    if (eventName === "server:exec" && TIMELINE_MOVES.has(message?.type ?? "")) {
       // After the move is queued below.
       this.timers.setTimeout(() => this.onTimelineMoved(), 1);
     }
@@ -230,7 +241,7 @@ export class YGOServerActions extends YGOComponent {
     // Private duels: the server refused a command (e.g. acting on the other
     // player's hidden cards — ygo-core YGOGameServer.acceptPlayerCommand).
     if (eventName === "server:exec-rejected") {
-      const reason = typeof data?.reason === "string" && data.reason ? data.reason : "That action isn't allowed";
+      const reason = typeof message?.reason === "string" && message.reason ? message.reason : "That action isn't allowed";
       this.duel.events.dispatch("system-chat-message", { message: `Not allowed: ${reason}` });
       return;
     }
@@ -240,8 +251,8 @@ export class YGOServerActions extends YGOComponent {
       this.replayRequests = [];
       requests.forEach(({ resolve, reject, timer }) => {
         clearTimeout(timer);
-        if (data?.replay) resolve(data.replay);
-        else reject(new Error(data?.error || "Replay not available"));
+        if (message?.replay) resolve(message.replay);
+        else reject(new Error(typeof message?.error === "string" && message.error ? message.error : "Replay not available"));
       });
       return;
     }
@@ -274,7 +285,7 @@ export class YGOServerActions extends YGOComponent {
         command.timestamp = eventData.command.timestamp;
         // Bot duels: the bot's activation gets a spotlight when it plays.
         if (!this.duel.commands.isRecovering()) markBotActivation(this.duel, eventData.command);
-        this.duel.commands.exec(new YGOControllerCommands.Exec(this.duel, command));
+        this.duel.commands.exec(new Exec(this.duel, command));
       } else if (payload.type === "ygo:commands:previous") {
         const commandId = payload.data.commandId;
         this.duel.commands.previousCommand({ commandId });

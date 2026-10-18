@@ -1,5 +1,5 @@
 import { useCallback, useEffect } from "react";
-import { YGODuel } from "../../core/YGODuel";
+import type { YGODuel } from "../../core/YGODuel";
 
 const stopPointer = (e: React.SyntheticEvent) => e.stopPropagation();
 

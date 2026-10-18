@@ -52,10 +52,10 @@ export class YGOPlayerSettingsAdapter {
     private data: YGOPlayerSettings;
     private autoSave: boolean;
     public events: EventBus<YGOPlayerSettingsEvents>;
-    private saveTimer: number;
+    private saveTimer: ReturnType<typeof setTimeout> | undefined;
     constructor(options?: YGOPlayerSettingsAdapterOptions) {
         this.autoSave = typeof options?.autoSave !== "undefined" ? !!options?.autoSave : true;
-        this.saveTimer = 0;
+        this.saveTimer = undefined;
         this.data = this.loadConfig();
         this.events = new EventBus();
     }
@@ -152,7 +152,7 @@ export class YGOPlayerSettingsAdapter {
             clearTimeout(this.saveTimer);
             this.saveTimer = setTimeout(() => {
                 this.save();
-            }, 1000) as any as number;
+            }, 1000);
         }
     }
 

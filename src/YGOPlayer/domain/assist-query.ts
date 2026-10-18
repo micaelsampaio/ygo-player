@@ -29,8 +29,9 @@ export interface BattleOptions {
  * the engine's — see guidedView in ygo-socket-server's assistOptions.ts. */
 export type AssistQueryResult =
   | { available: false }
-  | { available: true; pending: "idle"; options: IdleOptions; nextPhase?: string | null }
-  | { available: true; pending: "battle"; options: BattleOptions; nextPhase?: string | null }
+  /** `ygoPhase`: the engine's current phase, as a ygo-core phase name. */
+  | { available: true; pending: "idle"; options: IdleOptions; nextPhase?: string | null; ygoPhase?: string }
+  | { available: true; pending: "battle"; options: BattleOptions; nextPhase?: string | null; ygoPhase?: string }
   /** The human's own chain window: chain a card, or don't respond. */
   | { available: true; pending: "chain"; respond: { activatable: CardRefData[]; canPass: boolean; forced: boolean; chainLength?: number; chain?: CardRefData[] } }
   /** An effect's follow-up choice the engine is holding for the human. */

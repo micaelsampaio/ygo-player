@@ -1,4 +1,4 @@
-import { YGODuel } from "../core/YGODuel";
+import type { YGODuel } from "../core/YGODuel";
 import * as THREE from "three";
 
 export class YGOGameFieldObject {

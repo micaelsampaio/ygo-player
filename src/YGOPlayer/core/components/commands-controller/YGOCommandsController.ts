@@ -1,16 +1,17 @@
 import { YGOCommandScope, YGODuelEvents } from "ygo-core";
 import { YGOComponent } from "../../YGOComponent";
-import { YGODuel } from "../../YGODuel";
-import { YGOTask } from "../tasks/YGOTask";
+import type { YGODuel } from "../../YGODuel";
+import type { YGOTask } from "../tasks/YGOTask";
 import { ControllerCommand, ControllerCommandTag } from "./commands";
 import { getDuelEventHandler } from "../../../duel-events";
-import { YGOControllerCommands } from ".";
+import { YGOCommandsControllerState } from "./state";
+import { ExecCommandHandler } from "./exec-command-handler";
+import { Goto } from "./goto";
+import { Play } from "./play";
+import { Redo } from "./redo";
+import { Undo } from "./undo";
 
-export enum YGOCommandsControllerState {
-  IDLE = "idle",
-  PLAYING = "playing",
-  PLAYING_COMMAND = "playing_command"
-}
+export { YGOCommandsControllerState };
 
 export class YGOCommandsController extends YGOComponent {
   private state: YGOCommandsControllerState;
@@ -22,10 +23,10 @@ export class YGOCommandsController extends YGOComponent {
   private currentCommand: ControllerCommand | undefined;
 
   private pauseRequestedCommandId: boolean | number;
-  private timerOnCompleteEvent: number;
-  private timerToRequestNextCommand: number;
-  private timerOnNextCommand: number;
-  private timerToStartNewCommand: number;
+  private timerOnCompleteEvent: ReturnType<typeof setTimeout> | undefined;
+  private timerToRequestNextCommand: ReturnType<typeof setTimeout> | undefined;
+  private timerOnNextCommand: ReturnType<typeof setTimeout> | undefined;
+  private timerToStartNewCommand: ReturnType<typeof setTimeout> | undefined;
 
   constructor(duel: YGODuel) {
     super("duel_events_controller");
@@ -37,10 +38,10 @@ export class YGOCommandsController extends YGOComponent {
     this.recovering = false;
     this.pauseRequestedCommandId = false;
 
-    this.timerOnCompleteEvent = -1;
-    this.timerOnNextCommand = -1;
-    this.timerToStartNewCommand = -1;
-    this.timerToRequestNextCommand = -1;
+    this.timerOnCompleteEvent = undefined;
+    this.timerOnNextCommand = undefined;
+    this.timerToStartNewCommand = undefined;
+    this.timerToRequestNextCommand = undefined;
   }
 
   isRecovering() {
@@ -77,7 +78,7 @@ export class YGOCommandsController extends YGOComponent {
   }
 
   public play({ commandId }: { commandId: number }) {
-    this.exec(new YGOControllerCommands.Play(this.duel, commandId));
+    this.exec(new Play(this.duel, commandId));
   }
 
   public pause({ commandId }: { commandId: number }) {
@@ -85,15 +86,15 @@ export class YGOCommandsController extends YGOComponent {
   }
 
   public nextCommand({ commandId }: { commandId: number }) {
-    this.exec(new YGOControllerCommands.Redo(this.duel, commandId))
+    this.exec(new Redo(this.duel, commandId))
   }
 
   public previousCommand({ commandId }: { commandId: number }) {
-    this.exec(new YGOControllerCommands.Undo(this.duel, commandId))
+    this.exec(new Undo(this.duel, commandId))
   }
 
   public goToCommand({ commandId }: { commandId: number }) {
-    this.exec(new YGOControllerCommands.Goto(this.duel, commandId))
+    this.exec(new Goto(this.duel, commandId))
   }
 
   exec(command: ControllerCommand) {
@@ -189,7 +190,7 @@ export class YGOCommandsController extends YGOComponent {
       clearTimeout(this.timerToRequestNextCommand)
       this.timerToRequestNextCommand = setTimeout(() => {
         this.duel.serverActions.controls.play(); // keep playing
-      }, 100) as unknown as number;
+      }, 100);
       return;
     }
 
@@ -222,7 +223,7 @@ export class YGOCommandsController extends YGOComponent {
       this.timerOnCompleteEvent = setTimeout(() => {
         this.finishCurrentCommand();
         this.processNextCommand();
-      }) as unknown as number;
+      });
     };
 
     const startTask = (task: YGOTask) => {
@@ -254,8 +255,19 @@ export class YGOCommandsController extends YGOComponent {
       onCompleted,
     };
 
-    const handlerInstance = new handler(props);
-    this.exec(new YGOControllerCommands.ExecCommandHandler(this.duel, handlerInstance))
+    // The log is dispatched from inside the core's command exec: a handler
+    // that throws here would abort that command half-way (its later steps,
+    // the hidden-info update), so the live board drifts from the server's.
+    // Only the animation is skipped; the board is redrawn from the core's
+    // state once the queue empties (onProcessesCompleted → updateField).
+    let handlerInstance: InstanceType<typeof handler>;
+    try {
+      handlerInstance = new handler(props);
+    } catch (error) {
+      this.duel.logger.error("YGOCommandsController", "duel log handler failed, skipping its animation", error, log);
+      return;
+    }
+    this.exec(new ExecCommandHandler(this.duel, handlerInstance))
   }
 
 

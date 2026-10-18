@@ -13,7 +13,7 @@ export class CardMaterial extends THREE.MeshBasicMaterial {
 
         this.linearCorrection = parameters.linearCorrection ?? 1.8;
 
-        this.onBeforeCompile = (shader: any) => {
+        this.onBeforeCompile = (shader) => {
             shader.fragmentShader = shader.fragmentShader.replace(
                 '#include <map_fragment>',
                 `
@@ -46,13 +46,13 @@ export class CardMaterial extends THREE.MeshBasicMaterial {
     }
 }
 
-export interface CardMaterialGrayscaleParameters extends THREE.MeshBasicMaterialParameters { }
+export type CardMaterialGrayscaleParameters = THREE.MeshBasicMaterialParameters;
 
 export class CardMaterialGrayscale extends THREE.MeshBasicMaterial {
     constructor(parameters: CardMaterialGrayscaleParameters = {}) {
         super(parameters);
 
-        this.onBeforeCompile = (shader: any) => {
+        this.onBeforeCompile = (shader) => {
             shader.fragmentShader = shader.fragmentShader.replace(
                 '#include <map_fragment>',
                 `
@@ -111,7 +111,7 @@ export class CardTransparentOverlay extends THREE.MeshBasicMaterial {
             maxOpacity: { value: this.maxOpacity }
         };
 
-        this.onBeforeCompile = (shader: any) => {
+        this.onBeforeCompile = (shader) => {
             shader.uniforms.backTexture = this.uniforms.backTexture;
             shader.uniforms.animationDuration = this.uniforms.animationDuration;
             shader.uniforms.minOpacity = this.uniforms.minOpacity;

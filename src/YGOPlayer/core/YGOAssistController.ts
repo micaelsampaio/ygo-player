@@ -1,15 +1,29 @@
+import type { CardData } from "ygo-core";
 import type { AssistQueryResult } from "../domain/assist-query";
 
-export type AssistAction = { commandType: string; data: any };
+export type AssistAction = { commandType: string; data: Record<string, unknown> };
 
-/** What the controller needs from the duel (YGODuel satisfies it). */
-export interface AssistControllerHost {
-  assist?: { query(): Promise<any>; choose(action: AssistAction): Promise<any> };
-  events: { dispatch(event: string, payload?: any): void; on(event: string, cb: (payload: any) => void): void; off(event: string, cb: (payload: any) => void): void };
-  ygo?: { state?: { registerCardData?(cards: any): void } };
+/** What the engine answers a choice with: notices to show, e.g. the bot's response. */
+export type AssistChoiceResult = { notices?: string[] };
+
+/** The notices in a choice's answer (the judge sends them as is, see YGOAssistActions). */
+function choiceResult(res: unknown): AssistChoiceResult {
+  const notices = (res as { notices?: unknown } | null | undefined)?.notices;
+  return Array.isArray(notices) ? { notices: notices.filter((n): n is string => typeof n === "string") } : {};
 }
 
 export type AssistOptionsListener = (options: AssistQueryResult | null) => void;
+
+/** What the controller needs from the duel (YGODuel satisfies it). */
+export interface AssistControllerHost {
+  assist?: { query(): Promise<unknown>; choose(action: AssistAction): Promise<unknown> };
+  events: {
+    dispatch(event: "assist-options", options: AssistQueryResult | null): void;
+    on(event: "assist-options", cb: AssistOptionsListener): void;
+    off(event: "assist-options", cb: AssistOptionsListener): void;
+  };
+  ygo?: { state?: { registerCardData?(cards: CardData[]): void } };
+}
 
 /**
  * Assisted Mode: the one owner of the engine's current options for this
@@ -51,15 +65,16 @@ export class YGOAssistController {
     try {
       let res: AssistQueryResult;
       try {
-        res = await assist.query();
+        // The engine's options as the judge reports them (ygo-socket-server duel:assist:query).
+        res = (await assist.query()) as AssistQueryResult;
       } catch (error) {
         if (this.requestId === requestId) this.publish(null);
         throw error;
       }
       // Card data the server sent for the cards these options name (a Deck
       // card this client never saw), so names and art show.
-      const cards = (res as { cards?: unknown[] } | null)?.cards;
-      if (Array.isArray(cards) && cards.length) this.host.ygo?.state?.registerCardData?.(cards as any);
+      const cards = (res as { cards?: CardData[] } | null)?.cards;
+      if (Array.isArray(cards) && cards.length) this.host.ygo?.state?.registerCardData?.(cards);
       if (this.requestId === requestId) this.publish(res);
       return res;
     } finally {
@@ -72,9 +87,9 @@ export class YGOAssistController {
     return this.query().then(() => undefined, () => undefined);
   }
 
-  choose(action: AssistAction): Promise<any> {
+  choose(action: AssistAction): Promise<AssistChoiceResult> {
     if (!this.host.assist) return Promise.reject(new Error("Assisted Mode is not available"));
-    return this.host.assist.choose(action);
+    return this.host.assist.choose(action).then(choiceResult);
   }
 
   /** Drops the current options (and any answer still on its way). */

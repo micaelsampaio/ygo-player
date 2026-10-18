@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { YGODuel } from '../core/YGODuel';
+import type { YGODuel } from '../core/YGODuel';
 import { YGOUiElement } from '../types';
 import { YGOMouseEvents } from '../core/components/YGOMouseEvents';
 import { YGOComponent } from './YGOComponent';

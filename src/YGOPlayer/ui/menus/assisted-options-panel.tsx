@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { YGODuel } from "../../core/YGODuel";
+import type { YGODuel } from "../../core/YGODuel";
 import { YGOClientType } from "ygo-core";
 import { HIGHLIGHT_CSS } from "../../game/meshes/highlight-frame";
 import { promptKey } from "../assist-zones";
@@ -10,8 +10,8 @@ import { AnimationGate, createAnimationGate } from "./animation-gate";
 import { GROUP_COLLAPSE_AT } from "./special-summon-groups";
 import { canSummonFromExtraDeck, offeredPileCodes } from "./extra-deck-highlight";
 import { useChainStops, type ChainStops } from "./duel-preferences";
-import { singlePromptAnswer, LOC_GRAVE, LOC_REMOVED } from "../assist-prompt";
-import { AssistQueryResult, chainTopName, OptionRow, sectionsFor, spaceRow, TONE_TITLE, type Tone } from "../assist-sections";
+import { singlePromptAnswer, LOC_GRAVE, LOC_REMOVED, type PromptResponse } from "../assist-prompt";
+import { AssistQueryResult, chainTopName, isCommandData, OptionRow, sectionsFor, spaceRow, TONE_TITLE, type Tone } from "../assist-sections";
 import { HighlightTarget, promptTargets, TONE_CSS, useCardHighlights, useExtraDeckHighlight, usePileHighlight } from "./assist-highlights";
 import { usePanelPlacement } from "./use-panel-placement";
 import { PromptView } from "./assist-prompt-view";
@@ -144,10 +144,10 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
   };
 
   // Master Duel style card menus hand their engine move to the panel, which sends it like its own rows.
-  const chooseRowRef = useRef<(row: { key: string; commandType: string; data: unknown }) => void>(() => {});
+  const chooseRowRef = useRef<(row: { key: string; commandType: string; data: Record<string, unknown> }) => void>(() => {});
   useEffect(() => {
     if (!enabled) return;
-    const onChooseRow = (row: { key: string; commandType: string; data: unknown }) => chooseRowRef.current(row);
+    const onChooseRow = ({ data, ...row }: { key: string; commandType: string; data: unknown }) => { if (isCommandData(data)) chooseRowRef.current({ ...row, data }); };
     duel.events.on("assist-choose-row", onChooseRow);
     return () => duel.events.off("assist-choose-row", onChooseRow);
   }, [duel, enabled]);
@@ -237,21 +237,21 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
       hasPriority: turnState.hasPriority,
     });
 
-  const send = (key: string, commandType: string, data: any) => {
+  const send = (key: string, commandType: string, data: Record<string, unknown>) => {
     if (busy || !duel.assist) return;
-    if (commandType === "Activate" && typeof data?.id === "number") forgetCarried(data.id);
+    if (commandType === "Activate" && typeof data.id === "number") forgetCarried(data.id);
     setPendingKey(key);
     setError(null);
     setHover(null);
     controller.choose({ commandType, data })
-      .then((res: any) => {
+      .then((res) => {
         // e.g. "Bot activated Ash Blossom & Joyous Spring in response to your Bonfire"
         if (Array.isArray(res?.notices) && res.notices.length) setNotice(res.notices.join(" · "));
       })
-      .catch((err: any) => {
+      .catch((err: unknown) => {
         // Most commonly "stale options" — the real engine's state moved on
         // between query and click. Not fatal: refresh() below re-syncs.
-        duel.logger.warn("AssistedOptionsPanel", "choice rejected", err?.error ?? err);
+        duel.logger.warn("AssistedOptionsPanel", "choice rejected", (isCommandData(err) ? err.error : undefined) ?? err);
         setError(assistErrorMessage(err));
       })
       .finally(() => {
@@ -284,7 +284,7 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
     choose(row);
     return true;
   };
-  const respondPrompt = (key: string, data: any) => send(`prompt:${key}`, "Respond Prompt", data);
+  const respondPrompt = (key: string, data: PromptResponse) => send(`prompt:${key}`, "Respond Prompt", data);
   const promptPendingKey = pendingKey?.startsWith("prompt:") ? pendingKey.slice("prompt:".length) : null;
 
   // One row button, shared by the panel's lists and the Master Duel style chain dialog.

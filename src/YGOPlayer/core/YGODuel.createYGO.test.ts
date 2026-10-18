@@ -84,6 +84,38 @@ describe("YGODuel.createYGO", () => {
     expect([duel.config.options.showCards, duel.config.autoChangePlayer]).toEqual([undefined, undefined]);
   });
 
+  // F1: a hidden-info PvP room (every deck id the placeholder 0) used to fetch
+  // `https://api.ygo101.com/cards?ids=` — a 400 whose body broke the JSON parse — and never loaded.
+  it("a hidden-info room loads without downloading anything", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    try {
+      const { duel, log, gameState } = stubDuel({ username: "bob", type: YGOClientType.PLAYER });
+      duel.config = { cdnUrl: "cdn", options: {}, actions: {} };
+      gameState.players = [
+        { name: "alice", mainDeck: [0, 0], extraDeck: [0] },
+        { name: "bob", mainDeck: [0], extraDeck: [] },
+      ];
+      await duel.createYGO(gameState);
+      expect(fetchMock).not.toHaveBeenCalled();
+      expect(h.cores.at(-1).props.players[1].mainDeck.map((c: any) => c.id)).toEqual([0]);
+      expect(log).toContain("loadingTask.complete");
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("a failed card download is reported and the duel still loads", async () => {
+    const { duel, log, gameState } = stubDuel({ username: "bob", type: YGOClientType.PLAYER });
+    const error = vi.fn();
+    duel.logger = { error };
+    duel.config = { cdnUrl: "cdn", options: {}, actions: { fetchCardsById: async () => { throw new Error("HTTP 500"); } } };
+    await duel.createYGO(gameState);
+    expect(error).toHaveBeenCalledWith("YGODuel.createYGO", "could not download the duel's card data", expect.any(Error));
+    expect(h.cores.at(-1).props.players[0].mainDeck.map((c: any) => c.id)).toEqual([1, 2]);
+    expect(log).toContain("loadingTask.complete");
+  });
+
   it("two duels keep their own perspective", async () => {
     const a = stubDuel({ username: "alice", type: YGOClientType.PLAYER });
     const b = stubDuel({ username: "bob", type: YGOClientType.PLAYER });

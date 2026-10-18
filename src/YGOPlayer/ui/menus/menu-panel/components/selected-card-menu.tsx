@@ -1,5 +1,5 @@
 import { Card, YGOGameUtils } from "ygo-core";
-import { YGODuel } from "../../../../core/YGODuel";
+import type { YGODuel } from "../../../../core/YGODuel";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { stopPropagationCallback } from "../../../../scripts/utils";
 
@@ -31,7 +31,7 @@ export function SelectedCardMenu({
   }, [card]);
 
   useEffect(() => {
-    duel.events.on("set-selected-card", (data: any) => {
+    duel.events.on("set-selected-card", (data) => {
       if (!data.card) return;
       const card = data.card;
       setCard(card)
@@ -112,6 +112,11 @@ export function SelectedCardMenu({
 }
 
 
+/** The API's card type label ("Quick-Play Spell", "Counter Trap"…), or "" when the card data has none. */
+function humanReadableCardType(card: Card): string {
+  return "humanReadableCardType" in card && typeof card.humanReadableCardType === "string" ? card.humanReadableCardType : "";
+}
+
 export function parseSelectedCard(card: Card | null) {
   if (!card) return null;
 
@@ -142,7 +147,7 @@ export function parseSelectedCard(card: Card | null) {
   } else if (isSpell) {
     colorClassName = "ygo-spell-card-bg";
     borderColorClassName = "ygo-spell-card-border";
-    const type = (card as any).humanReadableCardType;
+    const type = humanReadableCardType(card);
     cardTypeName = type;
 
     if (type === "Field Spell") {
@@ -170,7 +175,7 @@ export function parseSelectedCard(card: Card | null) {
   } else if (isTrap) {
     colorClassName = "ygo-trap-card-bg";
     borderColorClassName = "ygo-trap-card-border";
-    const type = (card as any).humanReadableCardType;
+    const type = humanReadableCardType(card);
     cardTypeName = type;
 
     if (type === "Counter Trap") {

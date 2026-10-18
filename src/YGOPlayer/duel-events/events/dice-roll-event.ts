@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { DuelEventHandlerProps } from "..";
+import type { DuelEventHandlerProps } from "../types";
 import { YGODuelEvents } from "ygo-core";
 import { YGOTaskSequence } from "../../core/components/tasks/YGOTaskSequence";
 import { CallbackTransition } from "../utils/callback";

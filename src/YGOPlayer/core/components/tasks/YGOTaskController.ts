@@ -1,5 +1,5 @@
 import { YGOComponent } from "../../YGOComponent";
-import { YGODuel } from "../../YGODuel";
+import type { YGODuel } from "../../YGODuel";
 import { YGOTask } from "./YGOTask";
 
 interface TaskEvents {

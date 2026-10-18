@@ -1,8 +1,8 @@
 import * as THREE from 'three';
-import { YGODuel } from "../core/YGODuel";
+import type { YGODuel } from "../core/YGODuel";
 import { YGOEntity } from "../core/YGOEntity";
-import { YGOUiElement } from "../types";
-import { YGOMouseEvents } from '../core/components/YGOMouseEvents';
+import type { YGOUiElement } from "../types";
+import type { YGOMouseEvents } from '../core/components/YGOMouseEvents';
 import { YGOTaskSequence } from '../core/components/tasks/YGOTaskSequence';
 import { CallbackTransition } from '../duel-events/utils/callback';
 import { ScaleTransition } from '../duel-events/utils/scale-transition';

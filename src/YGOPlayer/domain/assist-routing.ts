@@ -6,7 +6,17 @@
  * the engine can't follow. Pure lookup; the glue lives in YGOGameActions.
  */
 import { CardRefData, LOC_DECK, LOC_EXTRA, LOC_GRAVE, LOC_HAND, LOC_MZONE, LOC_REMOVED, LOC_SZONE } from "./assist-prompt";
+import type { AssistQueryResult, IdleOptions } from "./assist-query";
 import { emzSeqFor } from "./assist-zones";
+
+/** The assisted query result the panel last saw (null before the first query). */
+type AssistResult = AssistQueryResult | null | undefined;
+
+/** The open chain window's state; older servers may leave `respond` out. */
+function respondState(result: Extract<AssistQueryResult, { pending: "chain" }>): { chainLength?: number; canPass: boolean } {
+  const respond: Partial<typeof result.respond> = result.respond ?? {};
+  return { chainLength: respond.chainLength, canPass: !!respond.canPass };
+}
 
 export type AssistMove = "Activate" | "Normal Summon" | "Special Summon" | "Set Monster" | "Set ST";
 
@@ -32,10 +42,10 @@ export function zoneToLocation(zone: string | undefined | null): { loc: number; 
 }
 
 /** The option list a card-menu move maps to, in the assisted query result the panel last saw. */
-function listFor(result: any, move: AssistMove): CardRefData[] {
+function listFor(result: AssistResult, move: AssistMove): CardRefData[] {
   if (!result?.available) return [];
   if (result.pending === "idle") {
-    const o = result.options ?? {};
+    const o: Partial<IdleOptions> = result.options ?? {};
     switch (move) {
       case "Activate": return o.activatable ?? [];
       case "Normal Summon": return o.summonable ?? [];
@@ -54,7 +64,7 @@ function listFor(result: any, move: AssistMove): CardRefData[] {
  * exact zone when the ygo zone names one), or null when the move isn't an
  * option right now.
  */
-export function findAssistOption(result: any, move: AssistMove, code: number, zone: string | undefined | null): CardRefData | null {
+export function findAssistOption(result: AssistResult, move: AssistMove, code: number, zone: string | undefined | null): CardRefData | null {
   const where = zoneToLocation(zone);
   if (!where) return null;
   const matches = listFor(result, move).filter((ref) => ref.code === code && (ref.loc & where.loc) !== 0);
@@ -83,13 +93,13 @@ export const RESPOND_FIRST_NOTICE = "Respond to the chain first: chain a card, o
  * wanting to make one means "no, carry on": Continue, then the move. With a
  * chain on the way, a free-form move would only be rejected by the engine.
  */
-export function assistRouteFor(result: any, move: AssistMove, code: number, zone: string | undefined | null): AssistRoute {
+export function assistRouteFor(result: AssistResult, move: AssistMove, code: number, zone: string | undefined | null): AssistRoute {
   const ref = findAssistOption(result, move, code, zone);
   if (ref) return { kind: "choose", ref };
   if (result?.available && result.pending === "chain") {
-    const { chainLength, canPass } = result.respond ?? {};
+    const { chainLength, canPass } = respondState(result);
     if (chainLength === 0 && canPass) return { kind: "continueFirst" };
-    if (chainLength > 0) return { kind: "blocked", message: RESPOND_FIRST_NOTICE };
+    if ((chainLength ?? 0) > 0) return { kind: "blocked", message: RESPOND_FIRST_NOTICE };
   }
   return { kind: "freeForm" };
 }
@@ -111,11 +121,11 @@ export type AssistPhaseRoute =
  * or the Battle Phase (a legal skip). Going through the engine is what lets a
  * chain stop of "Always" pause at the new phase's window.
  */
-export function assistPhaseRouteFor(result: any, phase: string): AssistPhaseRoute {
+export function assistPhaseRouteFor(result: AssistResult, phase: string): AssistPhaseRoute {
   if (!result?.available) return { kind: "freeForm" };
   if (result.pending === "prompt") return { kind: "blocked", message: ANSWER_PROMPT_FIRST_NOTICE };
   if (result.pending === "chain") {
-    const { chainLength, canPass } = result.respond ?? {};
+    const { chainLength, canPass } = respondState(result);
     if (chainLength === 0 && canPass) return { kind: "continueFirst" };
     return { kind: "blocked", message: RESPOND_FIRST_NOTICE };
   }

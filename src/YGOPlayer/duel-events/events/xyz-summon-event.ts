@@ -1,4 +1,4 @@
-import { DuelEventHandlerProps } from "..";
+import type { DuelEventHandlerProps } from "../types";
 import { YGODuelEvents, YGOGameUtils } from "ygo-core";
 import { YGOTaskSequence } from "../../core/components/tasks/YGOTaskSequence";
 import { GameCard } from "../../game/GameCard";
@@ -15,7 +15,7 @@ import { Card } from "ygo-core";
 import { CallbackTransition } from "../utils/callback";
 import { YGOCommandHandler } from "../../core/components/YGOCommandHandler";
 import { MultipleTasks } from "../utils/multiple-tasks";
-import { createCardPopSummonEffectSequence, GameModalOverlayMesh } from "../../game/meshes/mesh-utils";
+import { createCardPopSummonEffectSequence, GameModalOverlayMesh, disposeEffectMesh } from "../../game/meshes/mesh-utils";
 import { MaterialOpacityTransition } from "../utils/material-opacity";
 import { extraDeckSummonPopDistance } from "../utils/extra-deck-summon";
 
@@ -80,7 +80,7 @@ export class XYZSummonEventHandler extends YGOCommandHandler {
           opacity: 0,
           duration: 0.15,
         }),
-        new CallbackTransition(() => duel.core.scene.remove(modal)),
+        new CallbackTransition(() => disposeEffectMesh(modal)),
       )
     );
 

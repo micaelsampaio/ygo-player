@@ -1,6 +1,6 @@
-import { YGOCore, YGODuelEvents } from "ygo-core";
-import { YGOTask } from "../core/components/tasks/YGOTask";
-import { YGODuel } from "../core/YGODuel";
+import { YGODuelEvents } from "ygo-core";
+import type { YGOCommandHandler } from "../core/components/YGOCommandHandler";
+import type { DuelEventHandlerClass } from "./types";
 import { ActivateCardHandler } from "./events/activate-card-event";
 import { ChangeCardPositionHandler } from "./events/change-card-position";
 import { DestroyCardEventHandler } from "./events/destroy-card-event";
@@ -32,21 +32,14 @@ import { CoinFlipEventHandler } from "./events/coin-flip-event";
 import { DiceRollEventHandler } from "./events/dice-roll-event";
 import { AdmitDefeatEventHandler } from "./events/admit-defeat-event";
 
-export interface DuelEventHandlerProps {
-  duel: YGODuel;
-  ygo: InstanceType<typeof YGOCore>;
-  onCompleted: () => void;
-  playSound: (options: {
-    key: string;
-    layer?: string;
-    volume?: number;
-    loop?: boolean;
-    onComplete?: () => void;
-  }) => void;
-  startTask: (task: YGOTask) => void;
-}
+export type { DuelEventHandlerClass, DuelEventHandlerProps } from "./types";
 
-const events: any = {
+/**
+ * Log type -> handler class. Each handler narrows `event` to the log shapes
+ * of the types it is registered under, so the map only knows they are
+ * handlers; getDuelEventHandler hands one out for the log being played.
+ */
+const events: Record<string, new (props: never) => YGOCommandHandler> = {
   /// Move Card
   [YGODuelEvents.LogType.NormalSummon]: MoveCardEventHandler,
   [YGODuelEvents.LogType.SpecialSummon]: MoveCardEventHandler,
@@ -106,7 +99,7 @@ const events: any = {
   DEFAULT: UpdateFieldEvent,
 };
 
-export function getDuelEventHandler(event: YGODuelEvents.DuelLog): any {
+export function getDuelEventHandler(event: YGODuelEvents.DuelLog): DuelEventHandlerClass {
   const eventHandler = events[event.type] || events.DEFAULT;
-  return eventHandler;
+  return eventHandler as DuelEventHandlerClass;
 }

@@ -7,7 +7,7 @@ import { YGOAnimationObject } from "../game/YGOAnimationObject";
 import { YGOGameFieldObject } from "../game/YGOGameFieldObject";
 import { YGOTurnPlayer } from "../game/YGOTurnPlayer";
 import { PoolObjects } from "./PoolObjects";
-import { YGODuel } from "./YGODuel";
+import type { YGODuel } from "./YGODuel";
 import { YGOEntity } from "./YGOEntity";
 import { YGOUiElement } from "../types";
 import { YGOMouseEvents } from "./components/YGOMouseEvents";
@@ -80,6 +80,7 @@ export class YGODuelScene {
                     volume: 0.2,
                     loop: true
                 });
+                if (!sound) return;
                 const audio = sound.element;
                 const isPlaying = () => !audio.paused && !audio.ended && audio.readyState > 2;
                 if (!isPlaying()) {
@@ -100,6 +101,7 @@ export class YGODuelScene {
                 volume: 0.2,
                 loop: true
             });
+            if (!sound) return;
             const audio = sound.element;
             const isPlaying = () => !audio.paused && !audio.ended && audio.readyState > 2;
             if (!isPlaying()) {
@@ -155,7 +157,7 @@ export class YGODuelScene {
             // A field generated in code: its scenery, the turn glow and pile highlights per side.
             // Bloom costs GPU time: phones (the mobile layout) get the field without it.
             if (theme.post && !this.duel.core.isMobileLayout) this.duel.core.enablePostFx(theme.post);
-            const built = (theme.build === "holo" ? buildHoloArena : buildColiseum)(this.duel, this.duel.perspective.playerIndex);
+            const built = (theme.build === "holo" ? buildHoloArena : buildColiseum)(this.duel, this.duel.perspective.localSide);
             this.duel.core.scene.add(built.root);
             this.gameFields.push(new YGOGameFieldObject(this.duel, built.sides[0] as any, this.duel.perspective.playerPOV));
             this.gameFields.push(new YGOGameFieldObject(this.duel, built.sides[1] as any, 1 - this.duel.perspective.playerPOV));
@@ -337,9 +339,9 @@ export class YGODuelScene {
             obj = spriteBg;
 
             if (this.duel.perspective.isPlayerPOV(player)) {
-                position.y = this.duel.fields[this.duel.perspective.playerIndex].hand.getCardHandPivot() + 4
+                position.y = this.duel.fields[this.duel.perspective.localSide].hand.getCardHandPivot() + 4
             } else {
-                position.y = this.duel.fields[1 - this.duel.perspective.playerIndex].hand.getCardHandPivot() - 4
+                position.y = this.duel.fields[1 - this.duel.perspective.localSide].hand.getCardHandPivot() - 4
             }
         }
 

@@ -237,7 +237,7 @@ export class CardActions extends SummonActions {
   public moveCard({ card, originZone }: { card: Card; originZone: FieldZone }) {
     this.selectZoneThen(
       () => {
-        const zonesToMove: any = ["M", "S"];
+        const zonesToMove: ("M" | "S" | "F")[] = ["M", "S"];
         if (YGOGameUtils.isFieldSpell(card)) zonesToMove.push("F");
         return getCardZones(this.duel, [0, 1], zonesToMove).filter((c) => c.zone !== originZone);
       },

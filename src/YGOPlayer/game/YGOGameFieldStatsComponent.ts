@@ -1,6 +1,6 @@
 import * as THREE from "three";
-import { PlayerField } from "ygo-core";
-import { YGODuel } from "../core/YGODuel";
+import type { Card, PlayerField } from "ygo-core";
+import type { YGODuel } from "../core/YGODuel";
 import { FieldStatsVisibility } from "./field-stats-visibility";
 
 export class YGOGameFieldStatsComponent {
@@ -67,6 +67,9 @@ export class YGOGameFieldStatsComponent {
     window.removeEventListener("mouseup", this.onMouseUp);
     window.removeEventListener("blur", this.onBlur);
     this.visibility.clear();
+    for (let i = 0; i < this.stats.length; ++i) {
+      this.stats[i].destroy();
+    }
   }
 
   private applyVisibility(visible: boolean) {
@@ -236,20 +239,6 @@ class YGOGameFieldStatsRender {
     this.canvasTexture.needsUpdate = true;
   }
 
-  private drawSection(
-    x: number,
-    y: number,
-    width: number,
-    height: number,
-    isMain: boolean
-  ) {
-    const ctx = this.ctx;
-
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.3)";
-    ctx.lineWidth = 1;
-    ctx.strokeRect(x, y, width, height);
-  }
-
   private drawIcon(
     spriteX: number,
     spriteY: number,
@@ -306,6 +295,25 @@ class YGOGameFieldStatsRender {
     this.gyCounter.mesh.visible = false;
     this.banishedZoneCounter.mesh.visible = false;
   }
+
+  destroy() {
+    this.duel.core.scene.remove(this.mesh);
+    disposeMesh(this.mesh);
+    this.handCounter.destroy();
+    this.deckCounter.destroy();
+    this.extraDeckCounter.destroy();
+    this.gyCounter.destroy();
+    this.banishedZoneCounter.destroy();
+  }
+}
+
+/** Free a mesh's geometry, material and the canvas texture it owns. Never use it on a
+ * mesh whose map comes from the YGOAssets cache. */
+function disposeMesh(mesh: THREE.Mesh) {
+  mesh.geometry.dispose();
+  const material = mesh.material as THREE.MeshBasicMaterial;
+  material.map?.dispose();
+  material.dispose();
 }
 
 class CardZoneCounter {
@@ -313,20 +321,22 @@ class CardZoneCounter {
   private cardMaterial: THREE.MeshBasicMaterial;
   private badgeCanvas: HTMLCanvasElement;
   private badgeTexture: THREE.CanvasTexture;
+  private badgeMesh: THREE.Mesh;
+  private cardMesh: THREE.Mesh;
   private currentUrl = "";
-  private loader = new THREE.TextureLoader();
 
-  constructor(duel: YGODuel, pivot: THREE.Vector3, private getCards: () => any[]) {
+  constructor(private duel: YGODuel, pivot: THREE.Vector3, private getCards: () => Card[]) {
     this.mesh = new THREE.Group();
     this.mesh.position.copy(pivot);
 
     this.cardMaterial = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0 });
-    this.mesh.add(new THREE.Mesh(new THREE.PlaneGeometry(1.5, 2.25), this.cardMaterial));
+    this.cardMesh = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 2.25), this.cardMaterial);
+    this.mesh.add(this.cardMesh);
 
     this.badgeCanvas = document.createElement("canvas");
     this.badgeCanvas.width = this.badgeCanvas.height = 60;
     this.badgeTexture = new THREE.CanvasTexture(this.badgeCanvas);
-    const badgeMesh = new THREE.Mesh(
+    const badgeMesh = this.badgeMesh = new THREE.Mesh(
       new THREE.PlaneGeometry(0.75, 0.75),
       new THREE.MeshBasicMaterial({ map: this.badgeTexture, transparent: true })
     );
@@ -344,11 +354,15 @@ class CardZoneCounter {
     if (url !== this.currentUrl) {
       this.currentUrl = url;
       if (url) {
-        this.loader.load(url, tex => {
+        // Card images are shared through the asset cache (the same texture the field
+        // card uses), so swapping the map never needs a dispose here.
+        this.duel.assets.loadTexture(url).then(tex => {
+          // A newer top card may have replaced this one while it was loading.
+          if (this.currentUrl !== url) return;
           this.cardMaterial.map = tex;
           this.cardMaterial.opacity = 1;
           this.cardMaterial.needsUpdate = true;
-        });
+        }, error => this.duel.logger.swallowed("CardZoneCounter.render", error, { url }));
       } else {
         this.cardMaterial.map = null;
         this.cardMaterial.opacity = 0;
@@ -367,17 +381,26 @@ class CardZoneCounter {
     ctx.fillText(cards.length.toString(), 30, 30);
     this.badgeTexture.needsUpdate = true;
   }
+
+  destroy() {
+    this.duel.core.scene.remove(this.mesh);
+    disposeMesh(this.badgeMesh);
+    // The card map belongs to the asset cache: detach it, don't dispose it.
+    this.cardMaterial.map = null;
+    this.cardMaterial.dispose();
+    this.cardMesh.geometry.dispose();
+  }
 }
 
 class CounterRender {
 
-  private currentValue: any;
+  private currentValue: number;
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
   public mesh: THREE.Mesh;
   private canvasTexture: THREE.CanvasTexture;
 
-  constructor(private duel: YGODuel, private pivot: THREE.Vector3, private getValue: any) {
+  constructor(private duel: YGODuel, private pivot: THREE.Vector3, private getValue: () => number) {
     this.canvas = document.createElement("canvas");
     this.ctx = this.canvas.getContext("2d")!;
     this.currentValue = -1;
@@ -440,5 +463,8 @@ class CounterRender {
     this.canvasTexture.needsUpdate = true;
   }
 
-
+  destroy() {
+    this.duel.core.scene.remove(this.mesh);
+    disposeMesh(this.mesh);
+  }
 }

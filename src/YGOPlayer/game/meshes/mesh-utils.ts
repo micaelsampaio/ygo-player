@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { YGODuel } from '../../core/YGODuel';
+import type { YGODuel } from '../../core/YGODuel';
 import { YGOTaskSequence } from '../../core/components/tasks/YGOTaskSequence';
 import { ScaleTransition } from '../../duel-events/utils/scale-transition';
 import { MultipleTasks } from '../../duel-events/utils/multiple-tasks';
@@ -9,7 +9,11 @@ import { CARD_DEPTH, CARD_HEIGHT_SIZE, CARD_RATIO } from '../../constants';
 import { Card } from 'ygo-core';
 import { CallbackTransition } from '../../duel-events/utils/callback';
 import { CardMaterialGrayscale } from '../materials/game-card-material';
-import { isCardTransformFlipDown } from '../../scripts/ygo-utils';
+import { isCardTransformFlipDown } from '../zone-transforms';
+import type { YGOTask } from '../../core/components/tasks/YGOTask';
+
+type StartTask = (task: YGOTask) => void;
+type PlaySound = (options: { key: string; volume?: number }) => void;
 
 export function CardEmptyMesh({ material, card, color, depth = CARD_DEPTH, transparent }: { material?: THREE.Material, color?: THREE.ColorRepresentation, depth?: number, card?: THREE.Object3D, transparent?: boolean } | undefined = {}) {
     const height = CARD_HEIGHT_SIZE, width = height / CARD_RATIO;
@@ -25,8 +29,28 @@ export function CardEmptyMesh({ material, card, color, depth = CARD_DEPTH, trans
     return mesh;
 }
 
+let unitPlaneGeometry: THREE.PlaneGeometry | undefined;
+
+/** One 1x1 plane shared by the modal dimmer and the particle effects (they scale it). */
+function getUnitPlaneGeometry(): THREE.PlaneGeometry {
+    if (!unitPlaneGeometry) unitPlaneGeometry = new THREE.PlaneGeometry(1, 1);
+    return unitPlaneGeometry;
+}
+
+/**
+ * Take a one-shot effect mesh out of the scene and free its material (and its own
+ * geometry, unless it uses the shared unit plane). Textures come from the asset cache
+ * and are left alone.
+ */
+export function disposeEffectMesh(mesh: THREE.Mesh) {
+    mesh.removeFromParent();
+    if (mesh.geometry !== unitPlaneGeometry) mesh.geometry.dispose();
+    const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+    materials.forEach(material => material.dispose());
+}
+
 export function GameModalOverlayMesh() {
-    const modalGeometry = new THREE.PlaneGeometry(1, 1);
+    const modalGeometry = getUnitPlaneGeometry();
     const modalMaterial = new THREE.MeshBasicMaterial({
         color: 0x000000,
         transparent: true,
@@ -43,9 +67,9 @@ export function GameModalOverlayMesh() {
     return modalPlane;
 }
 
-export function CardActivationEffect({ duel, delay = 0, card, startTask, playSound }: { duel: YGODuel, delay?: number, card: THREE.Object3D, startTask: any, playSound: any }) {
+export function CardActivationEffect({ duel, delay = 0, card, startTask, playSound }: { duel: YGODuel, delay?: number, card: THREE.Object3D, startTask: StartTask, playSound: PlaySound }) {
 
-    const modalGeometry = new THREE.PlaneGeometry(1, 1);
+    const modalGeometry = getUnitPlaneGeometry();
     const isFlipedDown = isCardTransformFlipDown(card);
 
     for (let i = 0; i < 2; ++i) {
@@ -88,15 +112,17 @@ export function CardActivationEffect({ duel, delay = 0, card, startTask, playSou
                     scale: new THREE.Vector3(size * 1, size * 1, size * 1),
                     duration: 0.3
                 }),
-            )
+            ),
+            // Faded out: drop it, or every activation leaves two more planes on the card.
+            new CallbackTransition(() => disposeEffectMesh(mesh))
         ));
         card.add(mesh);
     }
 }
 
-export function CardNegationEffect({ duel, delay: propsDelay = 0, card, startTask }: { duel: YGODuel, delay?: number, card: THREE.Object3D, startTask: any }) {
+export function CardNegationEffect({ duel, delay: propsDelay = 0, card, startTask }: { duel: YGODuel, delay?: number, card: THREE.Object3D, startTask: StartTask }) {
 
-    const modalGeometry = new THREE.PlaneGeometry(1, 1);
+    const modalGeometry = getUnitPlaneGeometry();
     const delay = propsDelay + 0.2;
     for (let i = 0; i < 3; ++i) {
         const frontTexture = duel.assets.getTexture(`${duel.config.cdnUrl}/images/particles/spark_0${i + 1}.png`);
@@ -117,6 +143,7 @@ export function CardNegationEffect({ duel, delay: propsDelay = 0, card, startTas
             new WaitForSeconds(0.05),
             new CallbackTransition(() => {
                 mesh.visible = false;
+                disposeEffectMesh(mesh);
             })
         ));
         card.add(mesh);
@@ -127,7 +154,7 @@ function randomIntFromInterval(min: number, max: number): number { // min and ma
     return Math.floor(Math.random() * (max - min + 1) + min);
 }
 
-export function createCardPopSummonEffectSequence({ duel, card, startTask, cardData }: { duel: YGODuel, card: THREE.Object3D, startTask: any, cardData: Card }) {
+export function createCardPopSummonEffectSequence({ duel, card, startTask, cardData }: { duel: YGODuel, card: THREE.Object3D, startTask: StartTask, cardData: Card }) {
     const height = CARD_HEIGHT_SIZE, width = height / CARD_RATIO;
 
     if (!cardData) return;
@@ -168,7 +195,8 @@ export function createCardPopSummonEffectSequence({ duel, card, startTask, cardD
             material: cardPlane.material,
             opacity: 0,
             duration: 0.15
-        })
+        }),
+        new CallbackTransition(() => disposeEffectMesh(cardPlane))
     ));
 }
 

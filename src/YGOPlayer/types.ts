@@ -89,17 +89,20 @@ export interface YGOPlayerStartReplayProps {
  * (kaibaNet.emitEvent), since judge/adapter access lives server-side in
  * ygo-socket-server, entirely outside ygo-core's own command/log system. */
 export interface YGOAssistActions {
-  query(): Promise<any>;
-  choose(action: { commandType: string; data: any }): Promise<any>;
+  query(): Promise<unknown>;
+  choose(action: { commandType: string; data: unknown }): Promise<unknown>;
   /** Bot duels: the post-duel review of the player's plays (ygo-socket-server `duel:bot:review`), shown as "Review my plays" on the end-of-duel overlay. */
-  review?(): Promise<any>;
+  review?(): Promise<unknown>;
   /** Bot duels: why the player is surrendering (ygo-socket-server `duel:bot:feedback`), optional. */
-  leaveFeedback?(reason: string): Promise<any>;
+  leaveFeedback?(reason: string): Promise<unknown>;
 }
 
 export interface YGOPlayerConnectToServerProps {
   client: YGOClient
   cdnUrl: string;
+  /** The card API base URL the room's cards are downloaded from
+   * (`${apiUrl}/cards?ids=…`) when `actions.fetchCardsById` is not given. */
+  apiUrl?: string;
   assist?: YGOAssistActions;
   /** Next steps offered on the end-of-duel overlay; handled via the
    * component's "end-game-action" event. */
@@ -110,6 +113,8 @@ export interface YGOPlayerConnectToServerProps {
    * menu offers "Save Replay" during the duel (e.g. recording a combo). */
   actions?: {
     saveReplay?: (replay: YGOReplayData) => Promise<void>
+    /** Downloads the room's cards (preferred over `apiUrl`). */
+    fetchCardsById?: (ids: number[]) => Promise<CardData[]>
   };
 }
 

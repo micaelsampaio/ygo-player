@@ -6,13 +6,15 @@
  * duel so there's one way to search.
  */
 
+import type { CardData } from "ygo-core";
+
 export type DeckTakeTarget = "hand" | "graveyard" | "banish";
 
 export interface DeckSearchEntry {
   id: number;
   count: number;
-  /** Card data without images (the client builds them, registerCardData). */
-  card?: { id: number; name?: string; type?: string; frameType?: string; [key: string]: unknown };
+  /** The card's data as the server sends it, without images (the client builds them, registerCardData). */
+  card?: CardData;
 }
 
 export interface DeckContents {

@@ -155,7 +155,11 @@ export class YGODuel {
   public async createYGO(gameState: YGOServerGameStateData) {
     const { playerIndex, otherPlayerIndex } = resolveLocalPlayer(gameState, this.client.username, this.client.type);
     const { ids, revealedCards, cardsData } = collectCardIds(gameState);
-    await fetchCardsInto(cardsData, ids, this.config.actions?.fetchCardsById?.bind(this.config.actions));
+    await fetchCardsInto(cardsData, ids, {
+      fetchCardsById: this.config.actions?.fetchCardsById?.bind(this.config.actions),
+      apiUrl: this.config.apiUrl,
+      onError: (error) => this.logger.error("YGODuel.createYGO", "could not download the duel's card data", error),
+    });
 
     const players = buildCorePlayers(gameState, cardsData);
     const props = gameState.ygoCoreProps;
@@ -501,7 +505,7 @@ export class YGODuel {
   }
 
   public destroy(entity: YGOEntity) {
-    const uiElement = entity as unknown as YGOUiElement;
+    const uiElement: YGOUiElement = entity;
 
     if (uiElement.isUiElement) {
       this.gameController
@@ -640,7 +644,7 @@ export class YGODuel {
     const undone = all.some((cmd, i) => i > index && cmd.scope === YGOCommandScope.GAME);
     if (!undone) return ygo.getReplayData();
 
-    const core = ygo as unknown as { hasNextCommand: () => boolean };
+    const core: { hasNextCommand: () => boolean } = ygo;
     core.hasNextCommand = () => false;
     let replay: YGOReplayData;
     try {

@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { DuelEventHandlerProps } from "..";
+import type { DuelEventHandlerProps } from "../types";
 import { YGODuelEvents, YGOGameUtils } from "ygo-core";
 import { YGOTaskSequence } from "../../core/components/tasks/YGOTaskSequence";
 import { GameCard } from "../../game/GameCard";
@@ -15,7 +15,7 @@ import { Ease } from "../../scripts/ease";
 import { createCardSelectionGeometry } from "../../game/meshes/CardSelectionMesh";
 import { ScaleTransition } from "../utils/scale-transition";
 import { MaterialOpacityTransition } from "../utils/material-opacity";
-import { YGODuel } from "../../core/YGODuel";
+import type { YGODuel } from "../../core/YGODuel";
 import type { YGOTask } from "../../core/components/tasks/YGOTask";
 import { liftAndSettle, moveAndRotate } from "../utils/animation-builders";
 

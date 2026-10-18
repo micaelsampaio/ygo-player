@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { DuelEventHandlerProps } from "..";
+import type { DuelEventHandlerProps } from "../types";
 import { YGODuelEvents, YGOGameUtils } from "ygo-core";
 import { YGOTaskSequence } from "../../core/components/tasks/YGOTaskSequence";
 import { YGOCommandHandler } from "../../core/components/YGOCommandHandler";
@@ -92,10 +92,13 @@ export class AttackEventHandler extends YGOCommandHandler {
 
   public start(): void {
     const { duel, startTask, onCompleted } = this.props;
-    const event = this.props.event as (YGODuelEvents.Attack | YGODuelEvents.AttackDirectly);
+    const { event } = this.props;
+    // Both logs route here; read them field by field, an attack on a monster
+    // being the one that carries `attackedId`.
+    const { attackingZone, attackedId, attackedZone, attackedPosition } = event as Partial<YGODuelEvents.Attack>;
+    const { originZone } = event as Partial<YGODuelEvents.AttackDirectly>;
 
-    const originZone = (event as any).attackingZone || (event as any).originZone;
-    const originZoneData = YGOGameUtils.getZoneData(originZone);
+    const originZoneData = YGOGameUtils.getZoneData((attackingZone || originZone)!);
     const cardZone = getGameZone(duel, originZoneData)!;
     const card = cardZone.getGameCard();
     const originalPosition = card.gameObject.position.clone();
@@ -107,14 +110,13 @@ export class AttackEventHandler extends YGOCommandHandler {
     duel.core.textureLoader.load(duel.createCdnUrl("/images/particles/circle_03.png"))
     duel.core.textureLoader.load(duel.createCdnUrl("/images/particles/star_07.png"))
 
-    if ((event as any).attackedId) {
-      const { attackedZone } = (event as any);
-      const attackedZoneData = YGOGameUtils.getZoneData(attackedZone);
+    if (attackedId) {
+      const attackedZoneData = YGOGameUtils.getZoneData(attackedZone!);
       const attackedCardZone = getGameZone(duel, attackedZoneData)!;
       const attackedCard = attackedCardZone.getGameCard();
       const targetAttackedPosition = attackedCard.gameObject.position.clone();
 
-      if ((event as any).attackedPosition?.includes("facedown")) {
+      if (attackedPosition?.includes("facedown")) {
         const startPosition: THREE.Vector3 = attackedCard.gameObject.position.clone();
         const targetRotation = getCardRotationFromFieldZoneData(
           duel,
@@ -173,7 +175,10 @@ export class AttackEventHandler extends YGOCommandHandler {
   public finish(): void {
   }
 
-  private createAttackCollistionEffect({ startTask, position }: any) {
+  private createAttackCollistionEffect({ startTask, position }: {
+    startTask: DuelEventHandlerProps["startTask"];
+    position: THREE.Vector3;
+  }) {
     const { duel } = this.props;
     const circleTexture = duel.core.textureLoader.load(duel.createCdnUrl("/images/particles/circle_03.png"));
     const circle = new THREE.Mesh(

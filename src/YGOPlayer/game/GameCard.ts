@@ -1,11 +1,17 @@
 import * as THREE from "three";
 import { YGOEntity } from "../core/YGOEntity";
-import { YGODuel } from "../core/YGODuel";
+import type { YGODuel } from "../core/YGODuel";
 import { Card, FieldZoneData } from "ygo-core";
 import { YGOGameUtils } from "ygo-core";
 import { GameCardStats } from "./GameCardStats";
-import { CARD_DEPTH, CARD_HEIGHT_SIZE, CARD_RATIO } from "../constants";
 import { CardMaterial, CardTransparentOverlay } from "./materials/game-card-material";
+import {
+  buildCardFaceMaterials,
+  disposeCardMaterials,
+  getCardColorMaterial,
+  getCardGeometry,
+  getCardPlaneGeometry,
+} from "./materials/card-mesh-resources";
 
 export class GameCard extends YGOEntity {
   private duel: YGODuel;
@@ -16,6 +22,8 @@ export class GameCard extends YGOEntity {
   private cardStats: GameCardStats | undefined;
   private hasStats: boolean;
   private zoneData: FieldZoneData | undefined;
+  /** Materials created by this card (front/back faces); the shared edge material is not included. */
+  private ownedMaterials: THREE.Material[] = [];
 
   constructor({
     duel,
@@ -34,23 +42,10 @@ export class GameCard extends YGOEntity {
     this.player = player;
     this.hasStats = stats;
 
-    const height = CARD_HEIGHT_SIZE, width = height / CARD_RATIO, depth = CARD_DEPTH;
-    const geometry = new THREE.BoxGeometry(width, height, depth);
+    // Placeholder faces until setCard runs; geometry and placeholders are shared by all cards.
+    const materials = buildCardFaceMaterials(getCardColorMaterial(0xff00ff), getCardColorMaterial(0xff0000));
 
-    const frontMaterial = new THREE.MeshBasicMaterial({ color: 0xff00ff }); // Depth
-    const backMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 }); // Depth
-    const depthMaterial = new THREE.MeshBasicMaterial({ color: 0xb5b5b5 }); // Depth
-
-    const materials = [
-      depthMaterial, // Right (depth)
-      depthMaterial, // Left (depth)
-      depthMaterial, // Top (depth)
-      depthMaterial, // Bottom (depth)
-      frontMaterial, // Front
-      backMaterial, // Back
-    ];
-
-    this.gameObject = new THREE.Mesh(geometry, materials);
+    this.gameObject = new THREE.Mesh(getCardGeometry(), materials);
 
     this.duel.core.scene.add(this.gameObject);
 
@@ -64,19 +59,13 @@ export class GameCard extends YGOEntity {
     const backTexture = this.duel.assets.getTexture(this.duel.fields[card.originalOwner || this.player || 0].settings.backCardPath);
     const frontMaterial = new CardMaterial({ map: frontTexture }); // Front with texture
     const backMaterial = new THREE.MeshBasicMaterial({ map: backTexture }); // Back
-    const depthMaterial = new THREE.MeshBasicMaterial({ color: 0xb5b5b5 }); // Depth
 
-    const materials = [
-      depthMaterial, // Right (depth)
-      depthMaterial, // Left (depth)
-      depthMaterial, // Top (depth)
-      depthMaterial, // Bottom (depth)
-      frontMaterial, // Front
-      backMaterial, // Back
-    ];
+    // The textures belong to the asset cache; only the materials wrapping them are ours.
+    disposeCardMaterials(this.ownedMaterials);
+    this.ownedMaterials = [frontMaterial, backMaterial];
 
     const mesh = this.gameObject as THREE.Mesh;
-    mesh.material = materials;
+    mesh.material = buildCardFaceMaterials(frontMaterial, backMaterial);
 
     this.gameObject.name = "FIELD_CARD" + card.name;
   }
@@ -148,10 +137,7 @@ export class GameCard extends YGOEntity {
 
     this.gameObject.visible = false;
 
-    const height = CARD_HEIGHT_SIZE, width = height / CARD_RATIO;
-    const planeGeometry = new THREE.PlaneGeometry(width, height);
-
-    this.transparentCard = new THREE.Mesh(planeGeometry, transparentMaterial);
+    this.transparentCard = new THREE.Mesh(getCardPlaneGeometry(), transparentMaterial);
     this.duel.core.scene.add(this.transparentCard);
 
     this.showTransparentCard();
@@ -217,7 +203,13 @@ export class GameCard extends YGOEntity {
 
   destroy() {
     this.destroyCardStats();
-    if (this.transparentCard) this.duel.core.scene.remove(this.transparentCard);
+    if (this.transparentCard) {
+      this.duel.core.scene.remove(this.transparentCard);
+      disposeCardMaterials(this.transparentCard.material);
+      this.transparentCard = undefined;
+    }
+    disposeCardMaterials(this.ownedMaterials);
+    this.ownedMaterials = [];
     this.duel.destroy(this);
   }
 }

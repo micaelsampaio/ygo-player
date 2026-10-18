@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { YGODuel } from "../../../core/YGODuel";
+import type { CardData } from "ygo-core";
+import type { YGODuel } from "../../../core/YGODuel";
 import { stopPropagationCallback } from "../../../scripts/utils";
 import {
   DECK_TAKE_LABELS,
@@ -37,7 +38,7 @@ export function DeckSearchPopup({ duel, visible = true }: { duel: YGODuel; visib
       const res = readDeckContents(data);
       if ("error" in res) { setError(res.error); return; }
       // Card data for cards this client only holds as placeholders.
-      duel.ygo.state.registerCardData(res.contents.cards.map((c) => c.card).filter(Boolean) as any);
+      duel.ygo.state.registerCardData(res.contents.cards.map((c) => c.card).filter((card): card is CardData => !!card));
       setContents(res.contents);
       setError(null);
     };

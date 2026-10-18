@@ -1,12 +1,12 @@
-import { DuelEventHandlerProps } from "..";
+import type { DuelEventHandlerProps } from "../types";
 import { YGOCommandHandler } from "../../core/components/YGOCommandHandler";
 
 export class UpdateFieldEvent extends YGOCommandHandler {
-    private timer: number;
+    private timer: ReturnType<typeof setTimeout> | undefined;
 
     constructor(private props: DuelEventHandlerProps) {
         super("update_field_command");
-        this.timer = -1;
+        this.timer = undefined;
     }
 
     public start(): void {
@@ -14,7 +14,7 @@ export class UpdateFieldEvent extends YGOCommandHandler {
 
         this.timer = setTimeout(() => {
             this.props.onCompleted();
-        }, 0) as unknown as number;
+        }, 0);
     }
 
     public finish(): void {

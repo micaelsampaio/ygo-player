@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { DuelEventHandlerProps } from "..";
+import type { DuelEventHandlerProps } from "../types";
 import { YGODuelEvents } from "ygo-core";
 import { YGOTaskSequence } from "../../core/components/tasks/YGOTaskSequence";
 import { CallbackTransition } from "../utils/callback";
@@ -7,7 +7,7 @@ import { MultipleTasks } from "../utils/multiple-tasks";
 import { YGOCommandHandler } from "../../core/components/YGOCommandHandler";
 import { WaitForSeconds } from "../utils/wait-for-seconds";
 import { Card } from "ygo-core";
-import { YGODuel } from "../../core/YGODuel";
+import type { YGODuel } from "../../core/YGODuel";
 import { GameCardHand } from "../../game/GameCardHand";
 import { RotationTransition } from "../utils/rotation-transition";
 import { Ease } from "../../scripts/ease";
@@ -15,7 +15,8 @@ import { ArcPositionTransition } from "../utils/arc-position-transition";
 import { randomIntFromInterval } from "../../scripts/ygo-utils";
 
 interface StartHandEventHandlerProps extends DuelEventHandlerProps {
-  event: YGODuelEvents.StartHand;
+  /** SwapHand also deals its new hand through this handler. */
+  event: YGODuelEvents.StartHand | YGODuelEvents.SwapHand;
 }
 
 export class StartHandEventHandler extends YGOCommandHandler {

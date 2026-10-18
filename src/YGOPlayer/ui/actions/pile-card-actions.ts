@@ -21,7 +21,7 @@ export function pileOriginZone(duel: YGODuel, card: Card, source: PileSource): F
       : source === "B"
         ? duel.ygo.state.fields[player].banishedZone
         : duel.ygo.state.fields[player].extraDeck;
-  const cardIndex = pile.findIndex((c: any) => c === card);
+  const cardIndex = pile.findIndex((c) => c === card);
   return YGOGameUtils.createZone(source, player, cardIndex + 1);
 }
 

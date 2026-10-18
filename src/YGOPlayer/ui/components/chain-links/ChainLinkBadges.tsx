@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { YGODuel } from "../../../core/YGODuel";
+import type { YGODuel } from "../../../core/YGODuel";
 import { YGOGameUtils } from "ygo-core";
 import { getGameZone, getZonePosition } from "../../../scripts/ygo-utils";
 import { ndcToContainer } from "../../field-overlay";
@@ -46,7 +46,7 @@ export function ChainLinkBadges({ duel }: { duel: YGODuel }) {
   useEffect(() => {
     const place = () => {
       const root = ref.current;
-      const chain = (duel.ygo?.state as any)?.chain;
+      const chain = duel.ygo?.state?.chain;
       const badges = chainBadges(chain, boardView(duel));
       const showControl = !!root && chainModeOn(duel) && (chain?.length ?? 0) > 0;
       if (!root || badges.length === 0) {

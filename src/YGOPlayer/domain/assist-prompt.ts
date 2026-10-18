@@ -256,7 +256,10 @@ export function onlyCardAnswer(prompt: PromptData): number | null {
   return groups.length === 1 ? groups[0].indices[0] : null;
 }
 
-export function singlePromptAnswer(prompt: PromptData): any | null {
+/** What a prompt is answered with: the picked candidate indices, or a zone. */
+export type PromptAnswer = { indices: number[] } | { player: number; loc: number; seq: number };
+
+export function singlePromptAnswer(prompt: PromptData): PromptAnswer | null {
   const only = onlyCardAnswer(prompt);
   if (only !== null) return { indices: [only] };
   if (prompt.kind === "card" || prompt.kind === "tribute") {

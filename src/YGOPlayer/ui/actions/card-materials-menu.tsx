@@ -2,7 +2,7 @@ import { useCallback, useRef } from "react";
 import { useAnchoredMenu } from "../components/use-anchored-menu";
 import { Card, FieldZone } from "ygo-core";
 import { YGODuel } from "../../core/YGODuel";
-import { UiGameConfig } from "../YGOUiController";
+import type { UiGameConfig } from "../ui-types";
 import { CardMenu } from "../components/CardMenu";
 
 export function CardMaterialsMenu({

@@ -2,7 +2,7 @@
 // new Move card
 // on complete -> start
 import * as THREE from "three";
-import { DuelEventHandlerProps } from "..";
+import type { DuelEventHandlerProps } from "../types";
 import { YGODuelEvents, YGOGameUtils } from "ygo-core";
 import { YGOTaskSequence } from "../../core/components/tasks/YGOTaskSequence";
 import { YGOCommandHandler } from "../../core/components/YGOCommandHandler";
@@ -21,6 +21,7 @@ import { ChangeCardPositionHandler } from "./change-card-position";
 import {
   CardActivationEffect,
   GameModalOverlayMesh,
+  disposeEffectMesh,
 } from "../../game/meshes/mesh-utils";
 import { GameCardHand } from "../../game/GameCardHand";
 import { RotationTransition } from "../utils/rotation-transition";
@@ -251,7 +252,7 @@ export class ActivateCardHandler extends YGOCommandHandler {
         fadeIn: 0.25,
         hold: modalDuration,
         fadeOut: 0.25,
-        onDone: () => duel.core.scene.remove(modal),
+        onDone: () => disposeEffectMesh(modal),
       })
     );
 

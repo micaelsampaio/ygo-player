@@ -2,29 +2,33 @@ import { Command, YGOCommandScope } from "ygo-core";
 import { YGODuel } from "../../core/YGODuel";
 import { DefaultTimelineCommand } from "./timeline/commands/default-command";
 import { removeFocusFromActiveElement, stopPropagationCallback } from "../../scripts/utils";
-import { useRef } from "react";
+import { memo, useCallback, useRef, useSyncExternalStore } from "react";
+import { getCommandClass, subscribeTimeline, timelineSnapshot } from "./timeline/timeline-state";
 
-export interface TimelineCommandProps {
-  duel: YGODuel
-  command: Command
-  index: number
-  commandClass: string
-  onCommandClick: (command: Command) => void
-}
+export type { TimelineCommandProps } from "./timeline/types";
 
-export function TimeLine({ duel }: { duel: YGODuel }) {
+/**
+ * The replay/duel timeline. It re-renders only when the current command or
+ * the command list changes, and each row is memoised, so a step re-renders
+ * just the rows whose class changed (the old and the new current command).
+ */
+export const TimeLine = memo(function TimeLine({ duel }: { duel: YGODuel }) {
   const mouseEnterTime = useRef(Date.now());
-  if (!duel.ygo) return null;
-  const commands = duel.ygo.commands;
-  const currentCommand = duel.ygo.commands.index;
+  const subscribe = useCallback((onChange: () => void) => subscribeTimeline(duel, onChange), [duel]);
+  const snapshot = () => timelineSnapshot(duel);
+  useSyncExternalStore(subscribe, snapshot, snapshot);
 
-  const onCommandClick = (command: Command) => {
+  const onCommandClick = useCallback((command: Command) => {
     if (Date.now() <= mouseEnterTime.current) return;
     setTimeout(() => {
       removeFocusFromActiveElement();
     });
     duel.serverActions.controls.goToCommand(command)
-  };
+  }, [duel]);
+
+  if (!duel.ygo) return null;
+  const commands = duel.ygo.commands;
+  const currentCommand = commands.index;
 
   return (
     <div
@@ -34,28 +38,20 @@ export function TimeLine({ duel }: { duel: YGODuel }) {
       role="presentation"
       onClick={stopPropagationCallback}
     >
-      {commands.map((command: any, index: any) => {
+      {commands.map((command, index) => {
         if (command.scope !== YGOCommandScope.GAME) return null;
 
-        const commandClass = getCommandClass(index, currentCommand);
-        const Command = DefaultTimelineCommand;
         return (
-          <Command
+          <DefaultTimelineCommand
             key={index}
             duel={duel}
             command={command}
             index={index}
-            commandClass={commandClass}
+            commandClass={getCommandClass(index, currentCommand)}
             onCommandClick={onCommandClick}
           />
         );
       })}
     </div>
   );
-}
-
-export function getCommandClass(index: number, currentCommand: number) {
-  if (index === currentCommand) return "current";
-  if (index < currentCommand) return "prev";
-  return "next";
-}
+});

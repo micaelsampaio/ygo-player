@@ -1,7 +1,8 @@
 import * as THREE from "three";
+import type { YGODuel } from "../core/YGODuel";
 
 export function createAtlasSprite(
-  duel: any,
+  duel: YGODuel,
   path: string,
   x: number,
   y: number,

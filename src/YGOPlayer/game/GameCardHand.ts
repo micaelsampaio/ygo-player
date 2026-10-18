@@ -1,12 +1,17 @@
 import * as THREE from "three";
 import { YGOEntity } from "../core/YGOEntity";
-import { YGODuel } from "../core/YGODuel";
+import type { YGODuel } from "../core/YGODuel";
 import { Card } from "ygo-core";
 import { YGOUiElement } from "../types";
 import { YGOMouseEvents } from "../core/components/YGOMouseEvents";
 import { ActionCardHandMenu } from "../actions/ActionCardHandMenu";
-import { CARD_DEPTH, CARD_HEIGHT_SIZE, CARD_RATIO } from "../constants";
 import { CardMaterial } from "./materials/game-card-material";
+import {
+  buildCardFaceMaterials,
+  disposeCardMaterials,
+  getCardColorMaterial,
+  getCardGeometry,
+} from "./materials/card-mesh-resources";
 
 export class GameCardHand extends YGOEntity implements YGOUiElement {
   private duel: YGODuel;
@@ -24,29 +29,18 @@ export class GameCardHand extends YGOEntity implements YGOUiElement {
 
   private visibleFrontMaterial: THREE.Material | undefined;
   private hiddenFrontMaterial: THREE.Material | undefined;
+  /** Materials created by this card (front/back faces); shared edge/placeholder materials are not included. */
+  private ownedMaterials: THREE.Material[] = [];
 
   constructor({ duel, player }: { duel: YGODuel; player: number }) {
     super();
 
     this.duel = duel;
 
-    const height = CARD_HEIGHT_SIZE, width = height / CARD_RATIO, depth = CARD_DEPTH;
-    const geometry = new THREE.BoxGeometry(width, height, depth);
-
-    const frontMaterial = new THREE.MeshBasicMaterial({ color: 0x0000ff }); // Depth
-    const backMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 }); // Depth
-    const depthMaterial = new THREE.MeshBasicMaterial({ color: 0xb5b5b5 }); // Depth
-
-    const materials = [
-      depthMaterial, // Right (depth)
-      depthMaterial, // Left (depth)
-      depthMaterial, // Top (depth)
-      depthMaterial, // Bottom (depth)
-      frontMaterial, // Front
-      backMaterial, // Back
-    ];
+    // Placeholder faces until setCard runs; geometry and placeholders are shared by all cards.
+    const materials = buildCardFaceMaterials(getCardColorMaterial(0x0000ff), getCardColorMaterial(0xff0000));
     this.handIndex = 0;
-    this.gameObject = new THREE.Mesh(geometry, materials);
+    this.gameObject = new THREE.Mesh(getCardGeometry(), materials);
     this.position = this.gameObject.position;
     this.duel.core.scene.add(this.gameObject);
     this.duel.gameController.getComponent<YGOMouseEvents>("mouse_events")?.registerElement(this);
@@ -54,7 +48,7 @@ export class GameCardHand extends YGOEntity implements YGOUiElement {
     this.player = player;
     this.isVisible = true;
     this.startMouseClickTime = -1;
-    (this.gameObject as any).isUiCardElement = true;
+    this.gameObject.userData.isUiCardElement = true;
   }
 
   onMouseClick?(event: MouseEvent): void {
@@ -142,31 +136,26 @@ export class GameCardHand extends YGOEntity implements YGOUiElement {
     const backTexture = this.duel.assets.getTexture(this.duel.fields[card?.originalOwner || this.player || 0].settings.backCardPath);
     const frontMaterial = new CardMaterial({ map: frontTexture }); // Front with texture
     const backMaterial = new THREE.MeshBasicMaterial({ map: backTexture }); // Back
-    const depthMaterial = new THREE.MeshBasicMaterial({ color: 0xb5b5b5 }); // Depth
+
+    // The textures belong to the asset cache; only the materials wrapping them are ours.
+    disposeCardMaterials(this.ownedMaterials);
+    this.ownedMaterials = [frontMaterial, backMaterial];
 
     this.visibleFrontMaterial = frontMaterial;
-    this.hiddenFrontMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 });
-
-    const materials = [
-      depthMaterial, // Right (depth)
-      depthMaterial, // Left (depth)
-      depthMaterial, // Top (depth)
-      depthMaterial, // Bottom (depth)
-      frontMaterial, // Front
-      backMaterial, // Back
-    ];
+    this.hiddenFrontMaterial = getCardColorMaterial(0x000000);
 
     const mesh = this.gameObject as THREE.Mesh;
-    mesh.material = materials;
+    mesh.material = buildCardFaceMaterials(frontMaterial, backMaterial);
   }
 
   updateMaterial() {
 
     if (!this.card) return;
 
-    const mesh = this.gameObject as THREE.Mesh
-    const material: any = mesh.material;
-    material[4] = this.isVisible ? this.visibleFrontMaterial : this.hiddenFrontMaterial;
+    const mesh = this.gameObject as THREE.Mesh;
+    const front = this.isVisible ? this.visibleFrontMaterial : this.hiddenFrontMaterial;
+    if (!Array.isArray(mesh.material) || !front) return;
+    mesh.material[4] = front;
   }
 
   setActive(status: boolean) {
@@ -189,6 +178,9 @@ export class GameCardHand extends YGOEntity implements YGOUiElement {
   }
 
   destroy() {
+    disposeCardMaterials(this.ownedMaterials);
+    this.ownedMaterials = [];
+    this.visibleFrontMaterial = undefined;
     this.duel.destroy(this);
   }
 }

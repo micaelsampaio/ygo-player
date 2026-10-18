@@ -10,18 +10,19 @@ import { WaitForSeconds } from "./utils/wait-for-seconds";
  * activation plays, so a bot move, and especially its chain response to
  * the human's own action, reads as its own moment instead of blending
  * into what came before. ygo-socket-server tags those ActivateCardCommands
- * with `source: "bot"` (bot-duel/botPacing.ts). All timings are task
+ * with `source: "bot"` (bot/duel/botPacing.ts). All timings are task
  * seconds, so the viewer's game speed setting scales them.
  */
 export const BOT_COMMAND_SOURCE = "bot";
 /** The pause before the bot's activation starts. */
 export const BOT_SPOTLIGHT_BEAT = 0.45;
 
-interface CommandLike { type?: string; commandId?: number; data?: any }
+interface CommandLike { type?: string; commandId?: number; data?: unknown }
 
 /** An ActivateCardCommand the server tagged as the bot's. */
 export function isBotActivation(command: CommandLike | null | undefined): boolean {
-  return command?.type === "ActivateCardCommand" && command.data?.source === BOT_COMMAND_SOURCE;
+  const data = command?.data as { source?: unknown } | null | undefined;
+  return command?.type === "ActivateCardCommand" && data?.source === BOT_COMMAND_SOURCE;
 }
 
 /** Where the activated card sits when the spotlight starts: where it's played from, if it moves. */

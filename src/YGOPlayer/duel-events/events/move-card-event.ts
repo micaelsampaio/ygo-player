@@ -1,6 +1,6 @@
-import { DuelEventHandlerProps } from "..";
-import { FieldZoneData, YGOGameUtils } from "ygo-core";
-import { MoveCardCommandData } from "ygo-core";
+import type { DuelEventHandlerProps } from "../types";
+import { YGODuelEvents, YGOGameUtils } from "ygo-core";
+import type { CardPosition, FieldZone, MoveCardCommandData, PlayerField } from "ygo-core";
 import { YGOTaskSequence } from "../../core/components/tasks/YGOTaskSequence";
 import { GameCard } from "../../game/GameCard";
 import {
@@ -18,23 +18,64 @@ import { YGOCommandHandler } from "../../core/components/YGOCommandHandler";
 import { WaitForSeconds } from "../utils/wait-for-seconds";
 import { revealCardAnimation } from "./reveal-event";
 
-interface MoveMultileCardCommandData {
+/**
+ * One card move: a MoveCard-shaped duel log, or one built by another handler
+ * (activate, tribute, change position) that moves a card first.
+ */
+type MoveSingleCardEvent = Omit<MoveCardCommandData, "type"> & {
+  type?: YGODuelEvents.DuelLogType;
+  /** MoveCardCommand logs: the card's original owner. */
+  owner?: number;
+  ids?: undefined;
+};
+
+/** A batch move (e.g. a multi-card Banish): played as one move per `ids` entry. */
+interface MoveMultipleCardsEvent {
   player: number;
-  id: number;
+  type?: YGODuelEvents.DuelLogType;
+  id?: number;
   ids: {
     id: number,
-    originZone: FieldZoneData,
-    zone: FieldZoneData,
+    originZone: FieldZone,
+    zone: FieldZone,
+    owner?: number,
+    position?: CardPosition,
   }[]
   originZone?: never;
   zone?: never
 }
 
+type MoveCardEvent = MoveSingleCardEvent | MoveMultipleCardsEvent;
+
+function isMultipleCardsMove(event: MoveCardEvent | undefined): event is MoveMultipleCardsEvent {
+  return Array.isArray(event?.ids);
+}
+
 interface MoveCardEventHandlerProps extends DuelEventHandlerProps {
-  event: MoveCardCommandData | MoveMultileCardCommandData;
+  event: MoveCardEvent;
   startCommandDelay?: number;
   cardReference?: Card
   cardIndex?: number
+}
+
+/**
+ * The exact slot a move landed in when its destination names none: a
+ * MoveCard log keeps the requested zone, and a server command may ask for
+ * "H2" or "B" (the core then appends to the hand, or puts the card on top of
+ * the banished zone). Any other zone, or a card not found there, is returned
+ * as is.
+ */
+export function exactLandedZone(fields: PlayerField[] | undefined, id: number | undefined, zone: FieldZone): FieldZone {
+  if (!fields || id === undefined) return zone;
+  const { zone: zoneId, player, zoneIndex } = YGOGameUtils.getZoneData(zone);
+  if (zoneIndex !== -1 || (zoneId !== "H" && zoneId !== "B")) return zone;
+
+  const field = fields[player];
+  if (!field) return zone;
+  const index = zoneId === "H"
+    ? field.hand.map(card => card?.id).lastIndexOf(id)
+    : field.banishedZone.findIndex(card => card?.id === id);
+  return index === -1 ? zone : YGOGameUtils.createZone(zoneId, player, index + 1);
 }
 
 export class MoveCardEventHandler extends YGOCommandHandler {
@@ -44,6 +85,14 @@ export class MoveCardEventHandler extends YGOCommandHandler {
   constructor(props: MoveCardEventHandlerProps) {
     super("move_card_command");
     this.props = props;
+
+    // "H2"/"B" (no slot) cannot be looked up or animated to: use the slot the card landed in.
+    // A copy: the log itself stays as the core recorded it.
+    if (!isMultipleCardsMove(props.event) && props.event.zone) {
+      const zone = exactLandedZone(props.ygo?.state?.getPlayersField?.(), props.event.id, props.event.zone);
+      if (zone !== props.event.zone) this.props = { ...props, event: { ...props.event, zone } };
+    }
+
     const event = this.props.event;
 
     if (this.props.cardReference) {
@@ -51,14 +100,14 @@ export class MoveCardEventHandler extends YGOCommandHandler {
     }
 
     if (!this.cardReference) {
-      if (this.props.event.id) {
+      if (event.id) {
         this.cardReference = this.props.ygo.state.getCardById(event.id, event.zone!);
       }
     }
   }
 
   public start(): void {
-    if (Array.isArray((this.props as any).event?.ids)) return this.startMultiple(this.props);
+    if (isMultipleCardsMove(this.props.event)) return this.startMultiple(this.props.event);
 
     if (!this.cardReference) return this.props.onCompleted();
 
@@ -66,14 +115,14 @@ export class MoveCardEventHandler extends YGOCommandHandler {
     let card: GameCard | undefined = undefined;
 
     const { event: eventData, startCommandDelay: delay = 0, duel, playSound } = this.props;
-    const event = eventData as MoveCardCommandData;
+    const event = eventData as MoveSingleCardEvent;
     const sequence = new YGOTaskSequence();
     const originZoneData = YGOGameUtils.getZoneData(event.originZone)!;
     const zoneData = YGOGameUtils.getZoneData(event.zone)!;
 
     const originCardZone = getGameZone(duel, originZoneData);
     const cardZone = getGameZone(duel, zoneData);
-    const owner = (event as any).owner ?? this.cardReference.originalOwner ?? this.cardReference.owner;
+    const owner = event.owner ?? this.cardReference.originalOwner ?? this.cardReference.owner;
 
     if (delay > 0) sequence.add(new WaitForSeconds(delay));
 
@@ -120,8 +169,8 @@ export class MoveCardEventHandler extends YGOCommandHandler {
       originZoneData
     ).clone();
 
-    let endPosition = getZonePositionFromZoneData(duel, zoneData);
-    let endRotation = getCardRotationFromFieldZoneData(
+    const endPosition = getZonePositionFromZoneData(duel, zoneData);
+    const endRotation = getCardRotationFromFieldZoneData(
       duel,
       this.cardReference,
       zoneData
@@ -233,11 +282,9 @@ export class MoveCardEventHandler extends YGOCommandHandler {
     this.props.startTask(sequence);
   }
 
-  public startMultiple(props: any): void {
-    const event = this.props.event as MoveMultileCardCommandData;
-
+  public startMultiple(event: MoveMultipleCardsEvent): void {
     let completedTasks = 0;
-    let tasks = event.ids.length;
+    const tasks = event.ids.length;
 
     const completeTask = () => {
       ++completedTasks;
@@ -262,13 +309,13 @@ export class MoveCardEventHandler extends YGOCommandHandler {
           cardReference,
           cardIndex: index - completedTasks,
           event: {
-            ...this.props.event,
+            ...event,
             ...data,
             id: data.id,
             originZone: data.originZone,
             zone: data.zone,
             ids: undefined,
-          } as any,
+          },
           onCompleted: () => {
             completeTask();
           }

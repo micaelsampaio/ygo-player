@@ -1,16 +1,17 @@
-import { useEffect, useMemo, type ReactNode } from "react";
+import { useEffect, useMemo, type MouseEvent, type ReactNode, type TouchEvent } from "react";
 import { Card } from "ygo-core";
-import { YGODuel } from "../../core/YGODuel";
+import type { YGODuel } from "../../core/YGODuel";
 import { ActionUiMenu } from "../../actions/ActionUiMenu";
 import { stopPropagationCallback } from "../../scripts/utils";
+import { cardPointerEvent } from "../components/pile-menu";
 
 /** The duel's card press events for a card in a pile list (long-press preview, drag…). */
 export function pileCardPressHandlers(duel: YGODuel, card: Card) {
   return {
-    onMouseDown: (event: any) => duel.events.dispatch("on-card-mouse-down", { card, event }),
-    onMouseUp: (event: any) => duel.events.dispatch("on-card-mouse-up", { card, event }),
-    onTouchStart: (event: any) => duel.events.dispatch("on-card-mouse-down", { card, event }),
-    onTouchEnd: (event: any) => duel.events.dispatch("on-card-mouse-up", { card, event }),
+    onMouseDown: (event: MouseEvent) => duel.events.dispatch("on-card-mouse-down", { card, event: cardPointerEvent(event) }),
+    onMouseUp: (event: MouseEvent) => duel.events.dispatch("on-card-mouse-up", { card, event: cardPointerEvent(event) }),
+    onTouchStart: (event: TouchEvent) => duel.events.dispatch("on-card-mouse-down", { card, event: cardPointerEvent(event) }),
+    onTouchEnd: (event: TouchEvent) => duel.events.dispatch("on-card-mouse-up", { card, event: cardPointerEvent(event) }),
   };
 }
 

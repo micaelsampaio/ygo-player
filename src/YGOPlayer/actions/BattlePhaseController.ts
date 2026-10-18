@@ -1,9 +1,9 @@
 import * as THREE from 'three';
 import { YGOComponent } from "../core/YGOComponent";
-import { YGODuel } from "../core/YGODuel";
-import { CardZone } from "../game/CardZone";
+import type { YGODuel } from "../core/YGODuel";
+import type { CardZone } from "../game/CardZone";
 import { YGODuelPhase, YGOGameUtils } from 'ygo-core';
-import { ActionAttackSelection } from './ActionAttackSelection';
+import type { ActionAttackSelection } from './ActionAttackSelection';
 import { BattlePhaseButton } from '../game/BattlePhaseButton';
 
 export class BattlePhaseController extends YGOComponent {

@@ -1,6 +1,6 @@
 import { BaseControllerCommand, ControllerCommandTag } from "./commands";
 import { YGOCommandHandler } from "../YGOCommandHandler";
-import { YGODuel } from "../../YGODuel";
+import type { YGODuel } from "../../YGODuel";
 
 export class ExecCommandHandler extends BaseControllerCommand {
 

@@ -1,177 +1,21 @@
 import * as THREE from "three";
-import { YGODuel } from "../core/YGODuel";
-import { YGOMath } from "../core/YGOMath";
-import { PlayerField } from "../game/PlayerField";
-import { CardZone } from "../game/CardZone";
-import { GameHand } from "../game/Hand";
-import { Deck } from "../game/Deck";
-import { Graveyard } from "../game/Graveyard";
-import { ExtraDeck } from "../game/ExtraDeck";
-import { Card, FieldZone, FieldZoneData } from "ygo-core";
+import type { YGODuel } from "../core/YGODuel";
+import type { CardZone } from "../game/CardZone";
+import { Card, FieldZone } from "ygo-core";
 import { YGOGameUtils } from "ygo-core";
-import { Banish } from "../game/Banish";
 import { allowedExtraMonsterZones } from "./extra-monster-zones";
 
-type CreateFieldDto = {
-  duel: YGODuel;
-  fieldModel: THREE.Object3D;
-};
-
-export function createFields({ duel, fieldModel }: CreateFieldDto) {
-
-  const playerIndex = duel.perspective.playerIndex;
-
-  fieldModel.rotation.copy(YGOMath.degToRadEuler(90, 0, 0));
-  fieldModel.position.set(0, 0, 0);
-
-  const zones: { [key: string]: THREE.Mesh } = {};
-  const fieldModelP2 = fieldModel.clone();
-
-  fieldModelP2.children.forEach((child: any) =>
-    parseFieldZoneChildren(child, 1 - duel.perspective.playerPOV, zones)
-  );
-
-  fieldModel.children.forEach((child: any) =>
-    parseFieldZoneChildren(child, duel.perspective.playerPOV, zones)
-  );
-
-  fieldModel.name = "FIELD1";
-  fieldModelP2.name = "FIELD2";
-
-  fieldModelP2.rotateY(THREE.MathUtils.degToRad(180));
-
-  duel.core.scene.add(fieldModel);
-  duel.core.scene.add(fieldModelP2);
-
-  const fields: PlayerField[] = [];
-
-  for (let player = 0; player < 2; ++player) {
-    const isPlayer = player === playerIndex;
-    const showCards = !!(isPlayer || duel.config.options.showCards)
-    const controlCards = !!(isPlayer || (showCards && duel.ygo.options.controlOpponentCards))
-    //const controlCards = true;
-    const field = new PlayerField();
-    const playerSufix = player === 0 ? "" : "2";
-    field.playerIndex = player;
-    field.settings.showCards = showCards;
-    field.settings.controlCards = controlCards;
-    field.settings.backCardPath = duel.createCdnUrl("/images/card_back.png");
-
-    for (let i = 0; i < 5; ++i) {
-      const monsterZoneId: any = `M${playerSufix}-${i + 1}`;
-      const spellZoneId: any = `S${playerSufix}-${i + 1}`;
-
-      const monsterZone = createCardZone(
-        duel,
-        player,
-        monsterZoneId,
-        zones[monsterZoneId]
-      );
-      const spellZone = createCardZone(
-        duel,
-        player,
-        spellZoneId,
-        zones[spellZoneId]
-      );
-
-      field.monsterZone.push(monsterZone);
-      field.spellTrapZone.push(spellZone);
-    }
-
-    const mainDeckZone = YGOGameUtils.createZone("D", player);
-    const extraDeckZone = YGOGameUtils.createZone("ED", player);
-    const gyZone = YGOGameUtils.createZone("GY", player);
-    const banishZone = YGOGameUtils.createZone("B", player);
-
-    const mainDeckPosition = zones[mainDeckZone].getWorldPosition(
-      new THREE.Vector3()
-    );
-    const extraDeckPosition = zones[extraDeckZone].getWorldPosition(
-      new THREE.Vector3()
-    );
-    const gyPosition = zones[gyZone].getWorldPosition(new THREE.Vector3());
-    const banishPosition = zones[banishZone].getWorldPosition(
-      new THREE.Vector3()
-    );
-
-    field.mainDeck = new Deck({
-      duel,
-      player,
-      zone: mainDeckZone,
-      position: mainDeckPosition,
-      backCardPath: field.settings.backCardPath
-    });
-    field.extraDeck = new ExtraDeck({
-      duel,
-      player,
-      zone: extraDeckZone,
-      position: extraDeckPosition,
-      backCardPath: field.settings.backCardPath
-    });
-    field.graveyard = new Graveyard({
-      duel,
-      player,
-      zone: gyZone,
-      position: gyPosition,
-    });
-    field.banishedZone = new Banish({
-      duel,
-      player,
-      zone: banishZone,
-      position: banishPosition,
-    });
-
-    const fieldZoneId: FieldZone = YGOGameUtils.createZone("F", player);
-    field.fieldZone = createCardZone(
-      duel,
-      player,
-      fieldZoneId,
-      zones[fieldZoneId]
-    );
-    field.hand = new GameHand(duel, player);
-    field.hand.showHand = field.settings.showCards;
-
-    field.mainDeck.canInteract = controlCards;
-    field.extraDeck.canInteract = controlCards;
-
-    fields.push(field);
-  }
-
-  for (let i = 0; i < 2; ++i) {
-    const extraMonsterZoneGlobalId: any = `EMZ-${i + 1}`;
-    const extraMonsterZoneId: any = `EMZ-${i + 1}`;
-    const extraMonsterZone = createCardZone(
-      duel,
-      0,
-      extraMonsterZoneId,
-      zones[extraMonsterZoneGlobalId]
-    );
-    fields[0].extraMonsterZone.push(extraMonsterZone);
-    fields[1].extraMonsterZone.push(extraMonsterZone);
-  }
-
-  return fields;
-}
-
-function createCardZone(
-  duel: YGODuel,
-  player: number,
-  zone: FieldZone,
-  zoneObject: THREE.Mesh
-): CardZone {
-  const cardZone = new CardZone({
-    duel,
-    zone,
-    player,
-    position: zoneObject.getWorldPosition(new THREE.Vector3()),
-    rotation:
-      duel.perspective.isPlayerPOV(player)
-        ? YGOMath.degToRadEuler(0, 0, 0)
-        : YGOMath.degToRadEuler(0, 0, 180),
-  });
-
-  return cardZone;
-}
+export { createFields } from "../game/create-fields";
+export {
+  getCardRotation,
+  getCardRotationFromFieldZoneData,
+  getCardRotationFromPlayerIndex,
+  getZonePosition,
+  getZonePositionFromZoneData,
+  isFieldZone,
+  getGameZone,
+  isCardTransformFlipDown,
+} from "../game/zone-transforms";
 
 export function getMonstersZones(duel: YGODuel, players: number[]): CardZone[] {
   const result: CardZone[] = [];
@@ -236,12 +80,12 @@ export function getCardZones(
         case "EMZ": {
           // One EMZ per player (a second only through a Link Arrow); the
           // pair is shared, so never the one the opponent holds.
-          const allowed = allowedExtraMonsterZones(duel.ygo.state.fields as any, player);
+          const allowed = allowedExtraMonsterZones(duel.ygo.state.fields, player);
           zonesToFind = duel.fields[player].extraMonsterZone.filter(
             (zone, i) => allowed.includes((i + 1) as 1 | 2)
           );
           zonesToFind.forEach((zone) => {
-            zone.zone = `EMZ${player === 0 ? "" : "2"}-${zone.zoneData.zoneIndex}` as any;
+            zone.zone = `EMZ${player === 0 ? "" : "2"}-${zone.zoneData.zoneIndex}` as FieldZone;
             zone.zoneData.player = player;
           });
           break;
@@ -265,166 +109,12 @@ export function getCardZones(
   return result;
 }
 
-export function getCardRotation(duel: YGODuel, card: Card, zone: FieldZone) {
-  const zoneData = YGOGameUtils.getZoneData(zone);
-  return getCardRotationFromFieldZoneData(duel, card, zoneData);
-}
-
-export function getCardRotationFromFieldZoneData(
-  duel: YGODuel,
-  card: Card,
-  zoneData: FieldZoneData
-) {
-  let rotation: THREE.Euler = new THREE.Euler(0, 0, 0);
-  const field = duel.fields[zoneData.player];
-
-  if (zoneData.zone === "GY") {
-    // GY do nothig let go as default rotation
-  } else if (zoneData.zone === "H") {
-    if (!field.settings.showCards && !duel.perspective.isPlayerPOV(zoneData.player)) {
-      rotation.set(0, THREE.MathUtils.degToRad(180), 0);
-    }
-    // do nothig let go as default rotation
-  } else if (zoneData.zone === "ED") {
-    if (YGOGameUtils.isPendulumCard(card)) {
-      rotation = new THREE.Euler(0, 0, THREE.MathUtils.degToRad(-15));
-    } else {
-      rotation = field.extraDeck.getCardTransform().rotation;
-    }
-  } else if (zoneData.zone === "D") {
-    rotation = field.mainDeck.getCardTransform().rotation;
-  } else if (zoneData.zone === "B") {
-    if (YGOGameUtils.isFaceDown(card)) {
-      rotation.y = THREE.MathUtils.degToRad(-180);
-    }
-    rotation.z = THREE.MathUtils.degToRad(90);
-  } else if (zoneData.zone === "S") {
-    if (YGOGameUtils.isFaceDown(card)) {
-      rotation.y = THREE.MathUtils.degToRad(180);
-    }
-  } else if (zoneData.zone === "F") {
-    if (YGOGameUtils.isFaceDown(card)) {
-      rotation.y = THREE.MathUtils.degToRad(180);
-    }
-  } else {
-    // monster or extra monster zone
-    if (!YGOGameUtils.isLinkMonster(card)) {
-      // TODO FIX DEF NOT WORKING
-      if (YGOGameUtils.isFaceDown(card)) {
-        rotation.y = THREE.MathUtils.degToRad(180);
-        if (YGOGameUtils.isDefense(card)) {
-          rotation.z = THREE.MathUtils.degToRad(-90);
-        }
-      } else {
-        if (YGOGameUtils.isDefense(card)) {
-          rotation.z = THREE.MathUtils.degToRad(90);
-        }
-      }
-    }
-  }
-
-  rotation = rotation.clone();
-
-  if (
-    zoneData.zone !== "D" &&
-    zoneData.zone !== "ED" &&
-    !duel.perspective.isPlayerPOV(zoneData.player)
-  ) {
-    rotation.z += THREE.MathUtils.degToRad(180);
-  }
-
-  return rotation;
-}
-
-export function getCardRotationFromPlayerIndex(
-  duel: YGODuel,
-  player: number
-) {
-  let rotation: THREE.Euler = new THREE.Euler(0, 0, 0);
-
-  if (!duel.perspective.isPlayerPOV(player)) {
-    rotation.z += THREE.MathUtils.degToRad(180);
-  }
-
-  return rotation;
-}
-
-export function getZonePosition(duel: YGODuel, zone: FieldZone) {
-  const zoneData = YGOGameUtils.getZoneData(zone);
-  return getZonePositionFromZoneData(duel, zoneData);
-}
-
-export function getZonePositionFromZoneData(
-  duel: YGODuel,
-  zoneData: FieldZoneData
-) {
-  let position: THREE.Vector3;
-  const zoneIndex = zoneData.zoneIndex! - 1;
-  const field = duel.fields[zoneData.player];
-
-  if (zoneData.zone === "M") {
-    position = field.monsterZone[zoneIndex].position;
-  } else if (zoneData.zone === "S") {
-    position = field.spellTrapZone[zoneIndex].position;
-  } else if (zoneData.zone === "H") {
-    const cardInHand = field.hand.getCard(zoneIndex);
-    position = cardInHand
-      ? cardInHand.gameObject.position
-      : field.monsterZone[0].position;
-  } else if (zoneData.zone === "EMZ") {
-    position = field.extraMonsterZone[zoneIndex].position;
-  } else if (zoneData.zone === "GY") {
-    position = field.graveyard.cardPosition;
-  } else if (zoneData.zone === "B") {
-    position = field.banishedZone.cardPosition;
-  } else if (zoneData.zone === "D") {
-    position = field.mainDeck.getCardTransform().position;
-  } else if (zoneData.zone === "ED") {
-    position = field.extraDeck.getCardTransform().position.clone();
-    position.z += 0.2;
-  } else if (zoneData.zone === "F") {
-    position = field.fieldZone.gameObject.position;
-  } else {
-    position = field.monsterZone[0].position;
-  }
-
-  return position.clone();
-}
-
-const FIELD_ZONES = ["M", "S", "F", "EMZ", "ORU", "ORUEMZ"];
-export function isFieldZone(zoneData: FieldZoneData) {
-  return FIELD_ZONES.includes(zoneData.zone);
-}
-
-export function getGameZone(
-  duel: YGODuel,
-  zoneData: FieldZoneData
-): CardZone | null {
-  const field = duel.fields[zoneData.player];
-
-  if (isFieldZone(zoneData)) {
-    switch (zoneData.zone) {
-      case "F":
-        return field.fieldZone;
-      case "S":
-        return field.spellTrapZone[zoneData.zoneIndex - 1];
-      case "EMZ":
-      case "ORUEMZ":
-        return field.extraMonsterZone[zoneData.zoneIndex - 1];
-      default:
-        return field.monsterZone[zoneData.zoneIndex - 1];
-    }
-  }
-
-  return null;
-}
-
 export function getTransformFromCamera(
   duel: YGODuel,
-  gameObject: any
+  gameObject: THREE.Object3D
 ): { x: number; y: number; width: number; height: number } {
-  const width = gameObject.geometry.parameters.width;
-  const height = gameObject.geometry.parameters.height;
+  // Card and zone meshes are planes or boxes, whose geometry keeps its own size.
+  const { width, height } = (gameObject as THREE.Mesh<THREE.PlaneGeometry | THREE.BoxGeometry>).geometry.parameters;
 
   const corners = [
     new THREE.Vector3(-width / 2, -height / 2, 0), // bottom-left
@@ -490,31 +180,6 @@ export function getScreenPositionFromWorld(
 }
 
 
-function parseFieldZoneChildren(child: THREE.Mesh, player: number, zones: any) {
-  if (child.isMesh) {
-    const position = child.getWorldPosition(new THREE.Vector3());
-    position.z += 0.05;
-
-    // PUT THIS TRUE IF YOU WANT TO SEE THE MODELS
-    child.visible = false;
-
-    // child.material = new THREE.MeshBasicMaterial({
-    //     color: 0x0000ff,
-    //     transparent: true,
-    //     opacity: 0.2,
-    //     side: THREE.DoubleSide // Make the material double-sided
-    // });
-
-    const zoneData = YGOGameUtils.getZoneData(child.name as any);
-    const zoneName = YGOGameUtils.createZone(
-      zoneData.zone,
-      player,
-      zoneData.zoneIndex
-    );
-    zones[zoneName] = child;
-  }
-}
-
 export function getCardPositionInFrontOfCamera({ duel, distance = 4 }: { duel: YGODuel, distance?: number }) {
   const camera = duel.core.camera;
   const direction = new THREE.Vector3();
@@ -564,16 +229,6 @@ export function calculateBattleInfo(attackingCard: Card, attackedCard: Card): YG
     battleDamage,
   };
 }
-export function isCardTransformFlipDown(obj: any, tolerance = 10): boolean {
-  if (!obj) return true;
-
-  const yDeg = (obj.rotation.y * 180) / Math.PI;
-  const normalizedY = ((yDeg + 180) % 360) - 180;
-
-  return Math.abs(normalizedY + 180) < tolerance;
-}
-
-
 export function fisherYatesShuffle<T>(array: T[]): T[] {
   for (let i = array.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));

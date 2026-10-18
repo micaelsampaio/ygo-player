@@ -1,12 +1,10 @@
 import * as THREE from "three";
-import { DuelEventHandlerProps } from "..";
+import type { DuelEventHandlerProps } from "../types";
 import { YGODuelEvents, YGOGameUtils } from "ygo-core";
 import { YGOTaskSequence } from "../../core/components/tasks/YGOTaskSequence";
 import { YGOCommandHandler } from "../../core/components/YGOCommandHandler";
-import { ScaleTransition } from "../utils/scale-transition";
 import { CardEmptyMesh } from "../../game/meshes/mesh-utils";
 import { MaterialOpacityTransition } from "../utils/material-opacity";
-import { getGameZone } from "../../scripts/ygo-utils";
 import { CallbackTransition } from "../utils/callback";
 import { MultipleTasks } from "../utils/multiple-tasks";
 import { PositionTransition } from "../utils/position-transition";

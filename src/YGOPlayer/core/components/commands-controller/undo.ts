@@ -1,6 +1,5 @@
-import { YGODuel } from "../../YGODuel";
+import type { YGODuel } from "../../YGODuel";
 import { BaseControllerCommand, ControllerCommandTag } from "./commands";
-import { YGOCommandsControllerState } from "./YGOCommandsController";
 
 export class Undo extends BaseControllerCommand {
 

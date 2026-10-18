@@ -1,5 +1,5 @@
 import { createElement } from "react";
-import ReactDOM from "react-dom/client";
+import { createRoot, type Root } from "react-dom/client";
 import { YgoDuelApp } from "../ui/YgoDuelApp";
 import { YGOEndGameAction, YGOPlayerConnectToServerProps, YGOPlayerStartEditorProps, YGOPlayerStartReplayProps } from "../types";
 import { Command, YGOClientType, YGOReplayData } from "ygo-core";
@@ -11,6 +11,7 @@ import { YGOClient } from "ygo-core";
 import { LocalYGOPlayerClient } from "../network/local-server/local-client";
 import { LocalYGOPlayerServer } from "../network/local-server/local-server";
 import type { PuzzleRetryRequest } from "../ui/puzzle/puzzle-state";
+import { clearDebugGlobal, exposeDebugGlobal } from "./debug-global";
 
 export interface YGOPlayerComponentEvents {
   init: (args: { instance: YGOPlayerComponent; duel: YGODuel }) => void;
@@ -56,7 +57,7 @@ export interface YGOPlayerComponent extends HTMLElement {
 }
 
 export class YGOPlayerComponentImpl extends HTMLElement implements YGOPlayerComponent {
-  private root: ReactDOM.Root | undefined;
+  private root: Root | undefined;
   public client!: YGOClient;
   public duel!: YGODuel;
   public server: LocalYGOPlayerServer | undefined;
@@ -70,9 +71,8 @@ export class YGOPlayerComponentImpl extends HTMLElement implements YGOPlayerComp
     super();
     this.events = new EventBus();
 
-    if (window.location.href.startsWith("http://localhost")) {
-      (window as any).YGO_WEB_COMPONENT = this;
-    }
+    // Devtools handle, opt-in only (see debug-global.ts).
+    exposeDebugGlobal(window, this);
   }
 
   connectedCallback() {
@@ -84,7 +84,7 @@ export class YGOPlayerComponentImpl extends HTMLElement implements YGOPlayerComp
     container.style.width = "100%";
     container.style.height = "100%";
 
-    this.root = ReactDOM.createRoot(container); // Create a root for React 18
+    this.root = createRoot(container); // Create a root for React 18
   }
 
   disconnectedCallback() {
@@ -203,6 +203,10 @@ export class YGOPlayerComponentImpl extends HTMLElement implements YGOPlayerComp
 
     while (this.firstChild) {
       this.removeChild(this.firstChild);
+    }
+
+    if (typeof window !== "undefined") {
+      clearDebugGlobal(window, this);
     }
   }
 }

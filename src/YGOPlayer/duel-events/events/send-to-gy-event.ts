@@ -1,4 +1,4 @@
-import { DuelEventHandlerProps } from "..";
+import type { DuelEventHandlerProps } from "../types";
 import { YGODuelEvents } from "ygo-core";
 import { YGOCommandHandler } from "../../core/components/YGOCommandHandler";
 import { MoveCardEventHandler } from "./move-card-event";
@@ -17,7 +17,7 @@ export class SendToGyEventHandler extends YGOCommandHandler {
     this.timers = new YGOTimerUtils();
 
     if (!this.props.event.reason) {
-      this.childCommand = new MoveCardEventHandler(props as any);
+      this.childCommand = new MoveCardEventHandler(props);
     }
   }
 

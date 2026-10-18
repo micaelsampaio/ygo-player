@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { YGODuel } from "../../../../core/YGODuel";
+import type { YGODuel } from "../../../../core/YGODuel";
 import { YGOPlayerRemoteActions } from "ygo-core";
 
 const LONG_PRESS_MS = 600;

@@ -44,12 +44,12 @@ export class YGOSoundController extends YGOComponent {
         volume?: number;
         loop?: boolean;
         onComplete?: () => void;
-    }): YGOAudioClip {
+    }): YGOAudioClip | null {
         const audioClip = this.getSound(key);
 
         if (!audioClip) {
             this.logger.warn("YGOSoundController", `Sound ${key} could not be loaded.`);
-            return null as any;
+            return null;
         }
 
         const audio = audioClip.element;
@@ -59,7 +59,7 @@ export class YGOSoundController extends YGOComponent {
         const targetLayer = layer ? this.layers.find(l => l.name === layer) : this.layers[0];
         if (!targetLayer) {
             this.logger.warn("YGOSoundController", `Layer "${layer}" not found.`);
-            return null as any;
+            return null;
         }
 
         if (targetLayer.useTimeScale) {

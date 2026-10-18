@@ -1,8 +1,8 @@
 import * as THREE from 'three';
-import { YGODuel } from "../core/YGODuel";
+import type { YGODuel } from "../core/YGODuel";
 import { YGOEntity } from "../core/YGOEntity";
-import { YGOUiElement } from "../types";
-import { YGOMouseEvents } from '../core/components/YGOMouseEvents';
+import type { YGOUiElement } from "../types";
+import type { YGOMouseEvents } from '../core/components/YGOMouseEvents';
 import { CardEmptyMesh } from './meshes/mesh-utils';
 import { CallbackTransition } from '../duel-events/utils/callback';
 import { WaitForSeconds } from '../duel-events/utils/wait-for-seconds';
@@ -126,7 +126,7 @@ export class Banish extends YGOEntity implements YGOUiElement {
         cardEffect.scale.set(1.01, 1.01, 1.01);
         cardEffect.material.opacity = 1;
 
-        const rotation: THREE.Euler = new THREE.Euler(0, 0, THREE.MathUtils.degToRad(90) + (this.duel.perspective.isPlayerPOV(this.player) ? 0 : 180));
+        const rotation: THREE.Euler = new THREE.Euler(0, 0, THREE.MathUtils.degToRad(90 + (this.duel.perspective.isPlayerPOV(this.player) ? 0 : 180)));
 
         sequence.addMultiple(
             new CallbackTransition(() => {

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { YGODuel } from "../../core/YGODuel";
+import type { YGODuel } from "../../core/YGODuel";
 import { stopPropagationCallback } from "../../scripts/utils";
 
 export function BottomRightActions({ duel, showMenus, toggleMenus }: { duel: YGODuel, showMenus: boolean, toggleMenus: () => void }) {

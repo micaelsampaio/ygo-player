@@ -1,12 +1,12 @@
 import * as THREE from "three";
-import { YGODuel } from "../core/YGODuel";
+import type { YGODuel } from "../core/YGODuel";
 import { YGOEntity } from "../core/YGOEntity";
-import { YGOUiElement } from "../types";
-import { YGOMouseEvents } from "../core/components/YGOMouseEvents";
+import type { YGOUiElement } from "../types";
+import type { YGOMouseEvents } from "../core/components/YGOMouseEvents";
 import { GameCard } from "./GameCard";
 import { Card, FieldZone, FieldZoneData } from "ygo-core";
-import { ActionCardZoneMenu } from "../actions/ActionCardZoneMenu";
-import { getCardRotation } from "../scripts/ygo-utils";
+import type { ActionCardZoneMenu } from "../actions/ActionCardZoneMenu";
+import { getCardRotation } from "./zone-transforms";
 import { YGOGameUtils } from "ygo-core";
 
 export class CardZone extends YGOEntity implements YGOUiElement {
@@ -239,7 +239,7 @@ export class CardZone extends YGOEntity implements YGOUiElement {
       this.zoneData.player !== this.card.cardReference.originalOwner
     ) {
       this.zoneData.player = this.card.cardReference.originalOwner;
-      this.zone = `EMZ${this.zoneData.player === 0 ? "" : "2"}-${this.zoneData.zoneIndex}` as any;
+      this.zone = `EMZ${this.zoneData.player === 0 ? "" : "2"}-${this.zoneData.zoneIndex}` as FieldZone;
     }
   }
 

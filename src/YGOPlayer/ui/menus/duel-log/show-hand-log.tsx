@@ -1,11 +1,12 @@
 import { YGODuel } from "../../../core/YGODuel";
 import { memo } from "react";
+import type { YGODuelEvents } from "ygo-core";
 import { DuelLogContainer, DuelLogRow } from "./duel-log-components";
 
 export const ShowHandLogRow = memo(function ({
   log,
 }: {
-  log: any;
+  log: YGODuelEvents.ShowHand;
   duel: YGODuel;
 }) {
   return (

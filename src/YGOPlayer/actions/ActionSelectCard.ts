@@ -1,9 +1,9 @@
 import * as THREE from 'three';
-import { YGOMouseEvents } from "../core/components/YGOMouseEvents";
+import type { YGOMouseEvents } from "../core/components/YGOMouseEvents";
 import { YGOComponent } from "../core/YGOComponent";
-import { YGODuel } from "../core/YGODuel";
-import { YGOAction } from '../core/components/YGOAction';
-import { CardZone } from '../game/CardZone';
+import type { YGODuel } from "../core/YGODuel";
+import type { YGOAction } from '../core/components/YGOAction';
+import type { CardZone } from '../game/CardZone';
 import { createCardSelectionGeometry } from '../game/meshes/CardSelectionMesh';
 import { MultipleTasks } from '../duel-events/utils/multiple-tasks';
 import { PositionTransition } from '../duel-events/utils/position-transition';
@@ -13,7 +13,7 @@ import { YGOGameUtils } from 'ygo-core';
 import { getResolutionInfo } from '../scripts/use-device-resolution-info';
 import { YGOTimerUtils } from '../scripts/timer-utils';
 import { getScreenPositionFromWorld } from '../scripts/ygo-utils';
-import { selectionOpacity } from '../ui/assist-zones';
+import { selectionOpacity } from '../domain/assist-zones';
 
 type CardSelectionType = "card" | "zone";
 
@@ -94,7 +94,7 @@ export class ActionCardSelection extends YGOComponent implements YGOAction {
             cardzone.onClickCb = () => this.onCardZoneClick(cardzone);
         }
 
-        this.mouseEvents.onClickCb = ({ elements }: any) => {
+        this.mouseEvents.onClickCb = ({ elements }) => {
             if (elements.length > 0) {
                 const clickElement = elements[0].object;
                 const selectedZone = this.zones.find(zone => zone.gameObject === clickElement);

@@ -47,11 +47,10 @@ export abstract class YGOEntity {
             return comp || null;
         }
 
-        const index = Object.values(this.components).findIndex(c => c === component);
+        const key = Object.keys(this.components).find(name => this.components[name] === component);
 
-        if (index === -1) return null;
+        if (key === undefined) return null;
 
-        const key = Object.keys(component)[index];
         const comp = this.components[key] as T;
         delete this.components[key];
 

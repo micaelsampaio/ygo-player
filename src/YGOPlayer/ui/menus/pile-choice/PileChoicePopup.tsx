@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
-import { YGODuel } from "../../../core/YGODuel";
+import type { YGODuel } from "../../../core/YGODuel";
 import { stopPropagationCallback } from "../../../scripts/utils";
 import { CandidateGroup, isSelectionValid, PromptData, promptTitle } from "../../assist-prompt";
 import { pileTabs } from "./pile-choice";
@@ -36,7 +36,7 @@ export function PileChoicePopup({ duel, prompt, container, selected, busy, pendi
   const candidates = prompt.candidates ?? [];
   const me = duel.perspective.playerIndex;
   const nameOf = (code: number) => duel.ygo?.state?.getCardData(code)?.name;
-  const dataOf = (code: number) => duel.ygo?.state?.getCardData(code) as any;
+  const dataOf = (code: number) => duel.ygo?.state?.getCardData(code);
   const isUnselect = prompt.kind === "unselectCard";
   const valid = !isUnselect && isSelectionValid(prompt, selected);
   const max = prompt.max ?? 1;

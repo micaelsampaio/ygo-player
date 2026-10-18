@@ -136,8 +136,8 @@ export function CardHandMenu({
 
   const player = card.owner;
   const field = duel.ygo.state.fields[player];
-  const freeMonsterZones = field.monsterZone.filter((zone: any) => !zone).length;
-  const freeSpellTrapZones = field.spellTrapZone.filter((zone: any) => !zone).length;
+  const freeMonsterZones = field.monsterZone.filter((zone) => !zone).length;
+  const freeSpellTrapZones = field.spellTrapZone.filter((zone) => !zone).length;
   const isFieldSpell = YGOGameUtils.isFieldSpell(card);
   const isSpell = !isFieldSpell && YGOGameUtils.isSpell(card);
   const isTrap = YGOGameUtils.isTrap(card);

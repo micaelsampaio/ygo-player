@@ -1,4 +1,4 @@
-import { YGODuel } from "../../core/YGODuel";
+import type { YGODuel } from "../../core/YGODuel";
 import { Card } from "ygo-core";
 import { useMemo, useRef } from "react";
 import { parseSelectedCard } from "./menu-panel/components/selected-card-menu";

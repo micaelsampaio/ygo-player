@@ -1,14 +1,15 @@
-import { YGOAction } from "../core/components/YGOAction";
-import { YGODuel } from "../core/YGODuel";
+import type { YGOAction } from "../core/components/YGOAction";
+import type { YGODuel } from "../core/YGODuel";
 
 export class ActionUiMenu implements YGOAction {
     public name = "action-ui-menu";
     private duel: YGODuel;
     public eventType: string = "";
-    public eventData: any = null;
+    /** Spread into the menu as props. */
+    public eventData: Record<string, unknown>;
     public unsubscribeKeyEvents?: () => void;
 
-    constructor(duel: YGODuel, { eventType, eventData = null }: { eventType: string, eventData?: any }) {
+    constructor(duel: YGODuel, { eventType, eventData = {} }: { eventType: string, eventData?: Record<string, unknown> }) {
         this.duel = duel;
         this.eventType = eventType;
         this.eventData = eventData;

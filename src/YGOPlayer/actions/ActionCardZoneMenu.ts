@@ -1,10 +1,22 @@
-import { YGOAction } from "../core/components/YGOAction";
-import { YGODuel } from "../core/YGODuel";
+import type { YGOAction } from "../core/components/YGOAction";
+import type { YGODuel } from "../core/YGODuel";
+import type { Card, FieldZone } from "ygo-core";
+import type { GameCard } from "../game/GameCard";
+
+/** The clicked field card; spread into the card-zone menu as props. */
+export interface CardZoneMenuData {
+    duel: YGODuel;
+    gameCard: GameCard | null;
+    card: Card;
+    zone: FieldZone;
+    mouseEvent: MouseEvent;
+}
 
 export class ActionCardZoneMenu implements YGOAction {
     public name = "card-zone-menu";
     private duel: YGODuel;
-    private data: any;
+    /** Set by setData before the action starts. */
+    private data?: CardZoneMenuData;
     public unsubscribeKeyEvents?: () => void;
 
 
@@ -12,7 +24,7 @@ export class ActionCardZoneMenu implements YGOAction {
         this.duel = duel;
     }
 
-    public setData(data: any) {
+    public setData(data: CardZoneMenuData) {
         this.data = data;
     }
 

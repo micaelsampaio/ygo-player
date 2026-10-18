@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import { clampPanelPosition } from "./panel-position";
 import { safeGetItem, safeSetItem } from "../../scripts/safe-storage";
 
@@ -80,14 +80,14 @@ export function usePanelPlacement(panelRef: { current: HTMLDivElement | null }, 
     window.addEventListener("pointerup", onUp);
   };
 
-  const docked = placement.x === null || placement.y === null;
-  const style: Record<string, any> = docked
+  const { x, y } = placement;
+  const style: CSSProperties = x === null || y === null
     ? isMobileLayout
       // Below the (scaled-down) opponent HUD, kept narrow so the board stays visible.
       ? { top: 90, left: "auto", right: 12, maxHeight: "45%" }
       // Docked on the right between the two player HUDs (opponent: top 20px, you: bottom 100px).
       : { top: 130, left: "auto", right: 20, maxHeight: "calc(100% - 340px)" }
-    : { top: placement.y, left: placement.x, right: "auto", maxHeight: isMobileLayout ? "45%" : `calc(100% - ${placement.y! + 20}px)` };
+    : { top: y, left: x, right: "auto", maxHeight: isMobileLayout ? "45%" : `calc(100% - ${y + 20}px)` };
 
   const collapsed = perDuel ? sessionCollapsed : placement.collapsed;
 

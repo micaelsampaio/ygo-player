@@ -12,6 +12,7 @@ import * as THREE from "three";
 const h = vi.hoisted(() => ({
   log: [] as string[],
   register: (() => { }) as (obj: unknown, label: string) => void,
+  dispose: (() => { }) as (obj: unknown) => void,
   zones: new Map<string, any>(),
   flipDown: false,
 }));
@@ -46,6 +47,7 @@ vi.mock("../../game/meshes/mesh-utils", async () => {
     CardEmptyMesh: () => mesh("CardEmpty"),
     CardActivationEffect: (args: any) => h.log.push(`CardActivationEffect(delay=${args.delay ?? "-"})`),
     createCardPopSummonEffectSequence: () => h.log.push("createCardPopSummonEffectSequence"),
+    disposeEffectMesh: (m: any) => h.dispose(m),
   };
 });
 vi.mock("../bot-spotlight", () => ({ takeBotActivation: () => false, startBotSpotlight: vi.fn() }));
@@ -112,6 +114,8 @@ function setup() {
     h.register(o, o?.type ?? "obj");
     return ids.get(o);
   };
+  // disposeEffectMesh takes the mesh out of its scene (the modal lives in `scene`).
+  h.dispose = (o: any) => h.log.push(`scene.remove(${name(o)})`);
   const camera = new THREE.PerspectiveCamera();
   camera.position.set(0, -10, 20);
   camera.lookAt(0, 0, 0);

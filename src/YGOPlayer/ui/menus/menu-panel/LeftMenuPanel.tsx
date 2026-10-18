@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { YGODuel } from "../../../core/YGODuel";
+import type { YGODuel } from "../../../core/YGODuel";
 import { Chat } from "./components/chat";
 import { SelectedCardMenu } from "./components/selected-card-menu";
 import { stopPropagationCallback } from "../../../scripts/utils";

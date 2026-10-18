@@ -1,10 +1,11 @@
 import { memo } from "react";
+import type { YGODuelEvents } from "ygo-core";
 import { DuelLogContainer, DuelLogRow } from "./duel-log-components";
 
 export const DiceRollLogRow = memo(function ({
   log,
 }: {
-  log: any;
+  log: YGODuelEvents.DiceRoll;
 }) {
   return (
     <DuelLogRow log={log}>

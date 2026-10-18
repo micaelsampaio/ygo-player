@@ -1,10 +1,13 @@
 import { useCallback, useState } from "react";
-import { YGODuel } from "../../../../core/YGODuel";
-import { YGOPlayerSettings } from "../../../../core/YGOPlayerSettings";
+import type { YGODuel } from "../../../../core/YGODuel";
+import type { YGOPlayerSettings } from "../../../../core/YGOPlayerSettings";
 import { Modal } from "../../../components/Modal";
 import InputRange from "../../../components/range/InputRange";
 import { FIELD_THEMES, fieldTheme } from "../../../../core/field-themes";
 import { CHAIN_MODE_SETTING, isEngineRoom } from "../../../../domain/chain-mode";
+
+/** The settings a checkbox toggles. */
+type BooleanSetting = { [K in keyof YGOPlayerSettings]: YGOPlayerSettings[K] extends boolean ? K : never }[keyof YGOPlayerSettings];
 
 export function GameSettingsDialog({ duel }: { duel: YGODuel }) {
   const settings = duel.settings;
@@ -29,9 +32,9 @@ export function GameSettingsDialog({ duel }: { duel: YGODuel }) {
     setGameSoundsVolumeState(volume);
   }
 
-  const onChangeCheckBox = (e: React.ChangeEvent<HTMLInputElement>, id: keyof YGOPlayerSettings) => {
+  const onChangeCheckBox = (e: React.ChangeEvent<HTMLInputElement>, id: BooleanSetting) => {
     const value = e.target?.checked;
-    settings.setConfigFromPath(id, value as any);
+    settings.setConfigFromPath(id, value);
 
     // if (e.target) e.target.blur();
 

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { YGODuel } from "../../../core/YGODuel";
+import type { YGODuel } from "../../../core/YGODuel";
 import "./style.css";
 import { YGODuelEvents, YGOPlayerState } from "ygo-core";
 import { Thinking, ViewDeck } from "./player-states";

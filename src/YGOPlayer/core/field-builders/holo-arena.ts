@@ -83,7 +83,7 @@ export function buildHoloArena(duel: YGODuel, viewer: number): BuiltField {
   const rimPath = new THREE.CurvePath<THREE.Vector3>();
   const edge = roundedRectPath(b.minX - 0.05, b.minY - 0.05, b.width + 0.1, b.height + 0.1, 1.45).getPoints(24).map((p) => new THREE.Vector3(p.x, p.y, 0.0));
   for (let i = 0; i < edge.length - 1; i++) rimPath.add(new THREE.LineCurve3(edge[i], edge[i + 1]));
-  const rim = new THREE.Mesh(new THREE.TubeGeometry(rimPath as any, 240, 0.06, 6, true), new THREE.MeshBasicMaterial({ color: CYAN.clone().multiplyScalar(1.7), toneMapped: false }));
+  const rim = new THREE.Mesh(new THREE.TubeGeometry(rimPath, 240, 0.06, 6, true), new THREE.MeshBasicMaterial({ color: CYAN.clone().multiplyScalar(1.7), toneMapped: false }));
   root.add(rim);
 
   // Centre line and the halves' faint tint, with a slow scan (additive).
