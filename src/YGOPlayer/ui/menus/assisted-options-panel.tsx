@@ -11,7 +11,7 @@ import { GROUP_COLLAPSE_AT } from "./special-summon-groups";
 import { canSummonFromExtraDeck, offeredPileCodes } from "./extra-deck-highlight";
 import { useChainStops, type ChainStops } from "./duel-preferences";
 import { singlePromptAnswer, LOC_GRAVE, LOC_REMOVED, type PromptResponse } from "../assist-prompt";
-import { AssistQueryResult, chainTopName, isCommandData, OptionRow, sectionsFor, spaceRow, TONE_TITLE, type Tone } from "../assist-sections";
+import { afterContinueSection, AssistQueryResult, carriedActivation, chainTopName, isCommandData, OptionRow, sectionsFor, spaceRow, TONE_TITLE, type Tone } from "../assist-sections";
 import { HighlightTarget, promptTargets, TONE_CSS, useCardHighlights, useExtraDeckHighlight, usePileHighlight } from "./assist-highlights";
 import { usePanelPlacement } from "./use-panel-placement";
 import { PromptView } from "./assist-prompt-view";
@@ -135,12 +135,15 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [duel, enabled]);
 
-  const lastPlayTargetsRef = useRef<{ turn?: number; phase?: string; targets: HighlightTarget[] } | null>(null);
+  const lastPlayTargetsRef = useRef<{ turn?: number; phase?: string; targets: HighlightTarget[]; rows: OptionRow[] } | null>(null);
   // The card just activated: its effect may be spent (once per turn), so it
   // doesn't keep a carried-over glow.
   const forgetCarried = (code: number) => {
     const carried = lastPlayTargetsRef.current;
-    if (carried) carried.targets = carried.targets.filter((t) => t.code !== code);
+    if (carried) {
+      carried.targets = carried.targets.filter((t) => t.code !== code);
+      carried.rows = carried.rows.filter((r) => r.code !== code);
+    }
   };
 
   // Master Duel style card menus hand their engine move to the panel, which sends it like its own rows.
@@ -182,11 +185,10 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
   }, [notice]);
 
   const isActive = enabled && result.available;
-  const sections = isActive ? sectionsFor(duel, result) : [];
+  const baseSections = isActive ? sectionsFor(duel, result) : [];
   const prompt = isActive && result.pending === "prompt" ? result.prompt : null;
-  const optionCount = sections.reduce((total, section) => total + section.rows.length, 0) + (prompt ? 1 : 0);
   const me = duel.perspective.playerIndex;
-  const rowTargets: HighlightTarget[] = sections.flatMap((s) => s.rows)
+  const rowTargets: HighlightTarget[] = baseSections.flatMap((s) => s.rows)
     .filter((r) => r.highlight && r.code !== undefined)
     .map((r) => ({ code: r.code as number, side: me, tone: r.tone, loc: typeof r.data?.loc === "number" ? r.data.loc : undefined }));
   // Your own empty chain window (after a card resolved, a summon, a phase
@@ -194,13 +196,18 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
   // open game state are still usable — the card menu continues past the
   // window first — so their amber glow stays, from this phase's last options.
   if (isActive && result.pending === "idle") {
-    lastPlayTargetsRef.current = { turn: duel.ygo?.state?.turn, phase: duel.ygo?.state?.phase, targets: rowTargets };
+    lastPlayTargetsRef.current = { turn: duel.ygo?.state?.turn, phase: duel.ygo?.state?.phase, targets: rowTargets, rows: baseSections.flatMap((sec) => sec.rows) };
   }
   const carried = lastPlayTargetsRef.current;
   const openWindow = isActive && result.pending === "chain" && result.respond.chainLength === 0 && turnState.isLocalTurn;
-  const carriedTargets = openWindow && carried && carried.turn === duel.ygo?.state?.turn && carried.phase === duel.ygo?.state?.phase
-    ? carried.targets.filter((t) => t.tone !== "quick" && !rowTargets.some((r) => r.code === t.code && r.side === t.side))
+  const carriedNow = openWindow && carried && carried.turn === duel.ygo?.state?.turn && carried.phase === duel.ygo?.state?.phase ? carried : null;
+  const carriedTargets = carriedNow
+    ? carriedNow.targets.filter((t) => t.tone !== "quick" && !rowTargets.some((r) => r.code === t.code && r.side === t.side))
     : [];
+  // …and the panel names them (Continue, then the activation), so the glow matches what it lists.
+  const afterContinue = carriedNow ? afterContinueSection(carriedNow.rows, baseSections) : null;
+  const sections = afterContinue ? [...baseSections, afterContinue] : baseSections;
+  const optionCount = sections.reduce((total, section) => total + section.rows.length, 0) + (prompt ? 1 : 0);
   // Held for a running animation: the old rows stay up, disabled, with no frames.
   const highlightTargets: HighlightTarget[] = held ? [] : [...rowTargets, ...carriedTargets, ...promptTargets(prompt, me)];
 
@@ -260,7 +267,33 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
         refresh();
       });
   };
-  const choose = (row: OptionRow) => send(row.key, row.commandType, row.data);
+  // An After Continue row: pass the open window, then activate the card in the new options.
+  const sendAfterContinue = (row: OptionRow) => {
+    if (busy || !duel.assist) return;
+    if (row.code !== undefined) forgetCarried(row.code);
+    setPendingKey(row.key);
+    setError(null);
+    setHover(null);
+    controller.choose({ commandType: "Pass", data: {} })
+      .then(() => controller.query())
+      .then((next) => {
+        const data = carriedActivation(next, row);
+        if (!data) { setNotice(`${row.label} can't be activated now.`); return; }
+        return controller.choose({ commandType: "Activate", data }).then((res) => {
+          if (Array.isArray(res?.notices) && res.notices.length) setNotice(res.notices.join(" · "));
+        });
+      })
+      .catch((err: unknown) => {
+        duel.logger.warn("AssistedOptionsPanel", "after-continue choice rejected", (isCommandData(err) ? err.error : undefined) ?? err);
+        setError(assistErrorMessage(err));
+      })
+      .finally(() => {
+        setPendingKey(null);
+        holdAfterChoice();
+        refresh();
+      });
+  };
+  const choose = (row: OptionRow) => (row.afterContinue ? sendAfterContinue(row) : send(row.key, row.commandType, row.data));
   chooseRowRef.current = (row) => {
     // send() ignores clicks while a move is still playing out: say so instead of doing nothing.
     if (busy) { setNotice("Wait for the current move to finish, then pick again."); return; }

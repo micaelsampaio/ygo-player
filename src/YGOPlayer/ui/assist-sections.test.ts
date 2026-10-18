@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { chainTopName, sectionsFor, spaceRow, type AssistQueryResult } from "./assist-sections";
+import { AFTER_CONTINUE_TITLE, afterContinueSection, carriedActivation, chainTopName, sectionsFor, spaceRow, type AssistQueryResult } from "./assist-sections";
 import { LOC_EXTRA, LOC_GRAVE, LOC_HAND, LOC_MZONE, LOC_SZONE } from "./assist-prompt";
 
 const CARDS: Record<number, { name: string; type?: string }> = {
@@ -152,5 +152,32 @@ describe("spaceRow / chainTopName", () => {
     expect(chainTopName(duel, [ref(1, LOC_HAND), ref(2, LOC_SZONE)])).toBe("Bonfire");
     expect(chainTopName(duel, [])).toBeUndefined();
     expect(chainTopName(duel, undefined)).toBeUndefined();
+  });
+});
+
+describe("After Continue (your own empty chain window)", () => {
+  const mainPhase = sectionsFor(duel, idle({ activatable: [ref(5, LOC_HAND, 2), ref(1, LOC_HAND)], activatableSpeed: [1, 2] }));
+  const carried = mainPhase.flatMap((s) => s.rows);
+  const openWindow = sectionsFor(duel, { available: true, pending: "chain", respond: { activatable: [], canPass: true, forced: false, chainLength: 0 } });
+
+  it("lists the cards still glowing amber, after Continue, never the quick ones", () => {
+    const section = afterContinueSection(carried, openWindow);
+    expect(section?.title).toBe(AFTER_CONTINUE_TITLE);
+    expect(section?.rows.map((r) => [r.key, r.label, r.afterContinue])).toEqual([[`after:Activate:5:0:${LOC_HAND}`, "Lurrie", true]]);
+    // Space still takes Continue.
+    expect(spaceRow([...openWindow, section!])?.commandType).toBe("Pass");
+  });
+
+  it("has nothing when the window already lists the card, or nothing was carried", () => {
+    const listed = sectionsFor(duel, { available: true, pending: "chain", respond: { activatable: [ref(5, LOC_HAND)], canPass: true, forced: false, chainLength: 0 } });
+    expect(afterContinueSection(carried, listed)).toBeNull();
+    expect(afterContinueSection([], openWindow)).toBeNull();
+  });
+
+  it("finds the card again in the options after Continue (its hand slot may have moved)", () => {
+    const row = afterContinueSection(carried, openWindow)!.rows[0];
+    expect(carriedActivation(idle({ activatable: [ref(5, LOC_HAND, 0)] }), row)).toEqual({ id: 5, ctrl: 0, loc: LOC_HAND, seq: 0 });
+    expect(carriedActivation(idle({ activatable: [ref(5, LOC_GRAVE)] }), row)).toBeNull();
+    expect(carriedActivation({ available: true, pending: "chain", respond: { activatable: [], canPass: true, forced: false, chainLength: 0 } }, row)).toBeNull();
   });
 });
