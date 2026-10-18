@@ -39,8 +39,6 @@ export interface OptionRow {
   /** The glow's kind: "play" (amber) — Spell Speed 1, only on your own open
    * game state; "quick" (blue) — Spell Speed 2+ or a chain response. */
   tone?: Tone;
-  /** A card you can play once the open window is passed: Continue first, then this activation. */
-  afterContinue?: boolean;
 }
 
 
@@ -158,28 +156,4 @@ export function sectionsFor(duel: YGODuel, result: AssistQueryResult): Section[]
     { title: "Attack", rows: cardRows(duel, options.attackable, "Attack", "attackingId") },
     nextPhaseSection,
   ].filter((s) => s.rows.length > 0);
-}
-
-export const AFTER_CONTINUE_TITLE = "After Continue";
-
-/**
- * Your own empty chain window (after a card resolved, a summon, a phase change) lists only what
- * can be chained; the cards you could play on the open game state still glow amber (from this
- * phase's last options). This section names them, so the panel says what the glow means: each
- * row passes the window, then activates the card. Null when there is none.
- */
-export function afterContinueSection(carried: OptionRow[], current: Section[]): Section | null {
-  const listed = new Set(current.flatMap((sec) => sec.rows).map((r) => r.code));
-  const rows = carried
-    .filter((r) => r.commandType === "Activate" && r.tone !== "quick" && r.code !== undefined && !listed.has(r.code))
-    .map((r) => ({ ...r, key: `after:${r.key}`, afterContinue: true }));
-  return rows.length ? { title: AFTER_CONTINUE_TITLE, rows } : null;
-}
-
-/** The engine ref of a carried row's card in a new idle result (same card, same location), or null. */
-export function carriedActivation(result: AssistQueryResult | null | undefined, row: OptionRow): OptionData | null {
-  if (!result?.available || result.pending !== "idle") return null;
-  const loc = typeof row.data.loc === "number" ? row.data.loc : undefined;
-  const ref = result.options.activatable.find((r) => r.code === row.code && (loc === undefined || r.loc === loc));
-  return ref ? { id: ref.code, ctrl: ref.ctrl, loc: ref.loc, seq: ref.seq } : null;
 }
