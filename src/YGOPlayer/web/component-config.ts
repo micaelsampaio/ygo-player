@@ -33,6 +33,7 @@ export function replayPropsToConfig(props: YGOPlayerStartReplayProps): YGOConfig
     commands: props.replay.commands,
     options,
     cdnUrl: props.cdnUrl,
+    apiUrl: props.apiUrl,
     actions: props.actions,
     gameMode: "REPLAY",
     endGameActions: props.endGameActions,

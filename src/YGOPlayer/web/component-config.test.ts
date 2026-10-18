@@ -114,3 +114,10 @@ describe("serverPropsToConfig", () => {
     expect(config.endGameActions).toBe(endGameActions);
   });
 });
+
+describe("card source for replays", () => {
+  it("passes the host's apiUrl through, so cards outside the decks can be downloaded", () => {
+    expect(replayPropsToConfig(replayProps({ apiUrl: "https://api.example" } as never)).apiUrl).toBe("https://api.example");
+  });
+});
+

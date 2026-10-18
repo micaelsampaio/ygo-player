@@ -58,6 +58,9 @@ export interface YGOReplayDeckData {
 
 export interface YGOPlayerStartEditorProps {
   cdnUrl: string;
+  /** The card API base URL the duel's cards are downloaded from
+   * (`${apiUrl}/cards?ids=…`) when they are not in the decks given. */
+  apiUrl?: string;
   players: YGOPlayerData[];
   commands: YGOSerializedCommand[];
   options: YGOPropsOptions;
@@ -72,6 +75,9 @@ export interface YGOPlayerStartEditorProps {
 
 export interface YGOPlayerStartReplayProps {
   cdnUrl: string;
+  /** The card API base URL the duel's cards are downloaded from
+   * (`${apiUrl}/cards?ids=…`) when they are not in the decks given. */
+  apiUrl?: string;
   decks: YGOReplayDeckData[];
   replay: YGOReplayData;
   options: YGOPropsOptions;

@@ -141,6 +141,7 @@ export class YGOPlayerComponentImpl extends HTMLElement implements YGOPlayerComp
 
     const config: YGOConfig = {
       cdnUrl: props.cdnUrl,
+      apiUrl: props.apiUrl,
       commands: props.commands,
       players: props.players,
       options: props.options,
