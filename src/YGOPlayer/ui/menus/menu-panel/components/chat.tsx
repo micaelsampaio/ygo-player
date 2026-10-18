@@ -2,6 +2,30 @@ import { ChangeEvent, FormEvent, ReactNode, useEffect, useRef, useState } from "
 import { YGOTextArea } from "../../../components/TextArea";
 import type { YGODuel } from "../../../../core/YGODuel";
 
+/** What a replay's chat panel reads off ygo-core: its command queue and position in it. */
+type ReplayCommands = {
+  index: number;
+  at(index: number): { baseType?: string; data?: unknown } | undefined;
+};
+
+/**
+ * The chat a replay has reached: its ChatCommands up to the current command
+ * (ygo-core keeps index on the last command played, chat around it included).
+ * ChatCommand only announces itself the first time it runs (when the replay
+ * loads, before this panel listens), so a replay reads its chat off the log.
+ */
+export function replayChatMessages(commands: ReplayCommands): Array<{ username: string; message: string }> {
+  const out: Array<{ username: string; message: string }> = [];
+  for (let i = 0; i <= commands.index; i++) {
+    const command = commands.at(i);
+    if (command?.baseType !== "ChatCommand") continue;
+    const data = (command.data ?? {}) as { username?: unknown; message?: unknown };
+    if (typeof data.message !== "string") continue;
+    out.push({ username: typeof data.username === "string" ? data.username : "", message: data.message });
+  }
+  return out;
+}
+
 /** Hard cap the server accepts for one chat message. */
 export const CHAT_MAX_LENGTH = 100;
 
@@ -22,6 +46,7 @@ export function Chat({ duel }: { duel: YGODuel }) {
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const shouldAutoScroll = useRef(true);
+  const isReplay = duel.config.gameMode === "REPLAY";
 
   const toggleChat = () => {
     setIsChatHidden(prev => !prev);
@@ -67,14 +92,29 @@ export function Chat({ duel }: { duel: YGODuel }) {
   }, []);
 
   useEffect(() => {
-    const handler = (data: { username: string; message: string }) => {
-      const chatMessage: ChatMessage = {
-        key: crypto.randomUUID(),
-        username: data.username,
-        owner: data.username === duel.client.username,
-        message: data.message.split(/\n/g).map((line: string, index: number) => <div key={index}>{line}</div>),
+    const toChatMessage = (data: { username: string; message: string }, key: string): ChatMessage => ({
+      key,
+      username: data.username,
+      owner: data.username === duel.client.username,
+      message: data.message.split(/\n/g).map((line: string, index: number) => <div key={index}>{line}</div>),
+    });
+
+    if (isReplay) {
+      // A replay: the chat up to where it stands, again on every step, seek or rewind.
+      const sync = () => setChatMessages(replayChatMessages(duel.ygo.commands).map((m, i) => toChatMessage(m, `replay-${i}`)));
+      sync();
+      duel.ygo.events.on("command-redo", sync);
+      duel.ygo.events.on("command-undo", sync);
+      duel.events.on("commands-process-completed", sync);
+      return () => {
+        duel.ygo.events.off("command-redo", sync);
+        duel.ygo.events.off("command-undo", sync);
+        duel.events.off("commands-process-completed", sync);
       };
-      setChatMessages((prev) => [...prev, chatMessage]);
+    }
+
+    const handler = (data: { username: string; message: string }) => {
+      setChatMessages((prev) => [...prev, toChatMessage(data, crypto.randomUUID())]);
     };
     const systemHandler = (data: { message: string }) => {
       const chatMessage: ChatMessage = {
@@ -93,7 +133,7 @@ export function Chat({ duel }: { duel: YGODuel }) {
       duel.ygo.events.off("chat-message", handler);
       duel.events.off("system-chat-message", systemHandler);
     };
-  }, [duel]);
+  }, [duel, isReplay]);
 
   useEffect(() => {
     if (shouldAutoScroll.current) {
@@ -121,7 +161,7 @@ export function Chat({ duel }: { duel: YGODuel }) {
       </div>
       <div className={`ygo-chat-container ${isChatHidden ? "ygo-hidden" : ""}`}>
         <div className="ygo-chat-messages" ref={messagesContainerRef}>
-          {chatMessages.length === 0 && <div className="ygo-chat-empty">No messages yet. Say hi to your opponent.</div>}
+          {chatMessages.length === 0 && <div className="ygo-chat-empty">{isReplay ? "No messages yet." : "No messages yet. Say hi to your opponent."}</div>}
           {chatMessages.map((msg) => {
 
             if (msg.system) {
@@ -144,7 +184,7 @@ export function Chat({ duel }: { duel: YGODuel }) {
           <div ref={messagesEndRef} />
         </div>
 
-        <form className="ygo-chat-input" onSubmit={submitMessage}>
+        {!isReplay && <form className="ygo-chat-input" onSubmit={submitMessage}>
           <YGOTextArea
             className="ygo-single-line"
             ref={textareaRef}
@@ -175,7 +215,7 @@ export function Chat({ duel }: { duel: YGODuel }) {
               Send
             </button>
           </div>
-        </form>
+        </form>}
       </div>
     </div>
   );
