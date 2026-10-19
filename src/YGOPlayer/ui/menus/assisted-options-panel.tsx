@@ -41,6 +41,10 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
   const [loading, setLoading] = useState(true);
   // The row whose choice is in flight (spinner on it, every row disabled).
   const [pendingKey, setPendingKey] = useState<string | null>(null);
+  // The prompt just answered: its dialog closes at once instead of staying up, greyed out,
+  // while the moves the answer caused play out. Kept by identity, so the server's next prompt
+  // (a new object, even one asking the same thing again) shows; cleared if the answer fails.
+  const [answeredPrompt, setAnsweredPrompt] = useState<unknown>(null);
   // Long groups (a full Extra Deck) fold behind their title; the ones opened, by title.
   const [openGroups, setOpenGroups] = useState<Set<string>>(() => new Set());
   const toggleGroup = (title: string) => setOpenGroups((prev) => {
@@ -231,6 +235,7 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
         if (Array.isArray(res?.notices) && res.notices.length) setNotice(res.notices.join(" · "));
       })
       .catch((err: unknown) => {
+        setAnsweredPrompt(null);
         // Most commonly "stale options" — the real engine's state moved on
         // between query and click. Not fatal: refresh() below re-syncs.
         duel.logger.warn("AssistedOptionsPanel", "choice rejected", (isCommandData(err) ? err.error : undefined) ?? err);
@@ -266,7 +271,11 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
     choose(row);
     return true;
   };
-  const respondPrompt = (key: string, data: PromptResponse) => send(`prompt:${key}`, "Respond Prompt", data);
+  const respondPrompt = (key: string, data: PromptResponse) => {
+    if (busy) return;
+    setAnsweredPrompt(prompt);
+    send(`prompt:${key}`, "Respond Prompt", data);
+  };
   const promptPendingKey = pendingKey?.startsWith("prompt:") ? pendingKey.slice("prompt:".length) : null;
 
   // One row button, shared by the panel's lists and the Master Duel style chain dialog.
@@ -332,7 +341,7 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
         {chainDialog.rows.map((row) => renderRow(row))}
       </div>
     )}
-    {prompt && promptAsDialog && (
+    {prompt && promptAsDialog && prompt !== answeredPrompt && (
       <div
         className="ygo-card-menu ygo-assist-prompt-dialog"
         role="dialog"
