@@ -9,6 +9,7 @@ import { TimeLine } from "./menus/timeline";
 import { BottomRightActions } from "./menus/bottom-right-actions";
 import { PlayerHUD } from "./components/player-hud/PlayerHUD";
 import { TurnBanner } from "./components/player-hud/TurnBanner";
+import { WaitingBanner } from "./components/player-hud/WaitingBanner";
 import { CardLongPressEffect } from "./components/card-long-press-effect/CardLongPressEffect";
 import { useDeviceResolutionInfo } from "../scripts/use-device-resolution-info";
 import { LeftMenuPanel } from "./menus/menu-panel/LeftMenuPanel";
@@ -181,6 +182,7 @@ export function YGOUiController({ duel }: { duel: YGODuel }) {
         <RenderUiRefresh duel={duel}>{() => <BottomRightActions duel={duel} showMenus={showFloatingMenus} toggleMenus={() => setShowFloatingMenus(value => !value)} />}</RenderUiRefresh>
         <RenderUiRefresh duel={duel}>{() => <PlayerHUDs duel={duel} visible={showFloatingMenus} />}</RenderUiRefresh>
         <TurnBanner duel={duel} />
+        <WaitingBanner duel={duel} />
         <CardLongPressEffect duel={duel} />
         {/* <RotateYourPhoneModal isPortrait={isPortrait} isMobile={isMobile} /> */}
         <RenderUiRefresh duel={duel}>{() => <LeftMenuPanel duel={duel} isMobileLayout={isMobileLayout} showMenus={showFloatingMenus} />}</RenderUiRefresh>

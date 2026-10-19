@@ -94,6 +94,12 @@ function cardRows(
   return [...byKey.values()];
 }
 
+/** "3 cards can be chained": how many of a chain window's rows activate something (not the pass row). */
+export function chainableText(rows: readonly Pick<OptionRow, "commandType">[]): string | null {
+  const n = rows.filter((r) => r.commandType !== "Pass").length;
+  return n > 0 ? `${n} ${n === 1 ? "card" : "cards"} can be chained` : null;
+}
+
 /** The row Space takes: Continue / Don't respond, else the only option there is. */
 export function spaceRow(sections: Section[]): OptionRow | null {
   const rows = sections.flatMap((s) => s.rows);

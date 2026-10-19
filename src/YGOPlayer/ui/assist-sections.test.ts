@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { chainTopName, sectionsFor, spaceRow, type AssistQueryResult } from "./assist-sections";
+import { chainTopName, chainableText, sectionsFor, spaceRow, type AssistQueryResult } from "./assist-sections";
 import { LOC_EXTRA, LOC_GRAVE, LOC_HAND, LOC_MZONE, LOC_SZONE } from "./assist-prompt";
 
 const CARDS: Record<number, { name: string; type?: string }> = {
@@ -152,5 +152,13 @@ describe("spaceRow / chainTopName", () => {
     expect(chainTopName(duel, [ref(1, LOC_HAND), ref(2, LOC_SZONE)])).toBe("Bonfire");
     expect(chainTopName(duel, [])).toBeUndefined();
     expect(chainTopName(duel, undefined)).toBeUndefined();
+  });
+});
+
+describe("chainableText", () => {
+  it("counts the rows that activate something, not the pass row", () => {
+    expect(chainableText([{ commandType: "Activate" }, { commandType: "Activate" }, { commandType: "Activate" }, { commandType: "Pass" }])).toBe("3 cards can be chained");
+    expect(chainableText([{ commandType: "Activate" }, { commandType: "Pass" }])).toBe("1 card can be chained");
+    expect(chainableText([{ commandType: "Pass" }])).toBeNull();
   });
 });

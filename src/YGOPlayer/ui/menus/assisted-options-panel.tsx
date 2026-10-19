@@ -11,7 +11,7 @@ import { GROUP_COLLAPSE_AT } from "./special-summon-groups";
 import { canSummonFromExtraDeck, offeredPileCodes } from "./extra-deck-highlight";
 import { useChainStops, type ChainStops } from "./duel-preferences";
 import { singlePromptAnswer, LOC_GRAVE, LOC_REMOVED, type PromptResponse } from "../assist-prompt";
-import { AssistQueryResult, chainTopName, isCommandData, OptionRow, sectionsFor, spaceRow, TONE_TITLE, type Tone } from "../assist-sections";
+import { AssistQueryResult, chainTopName, chainableText, isCommandData, OptionRow, sectionsFor, spaceRow, TONE_TITLE, type Tone } from "../assist-sections";
 import { HighlightTarget, promptTargets, TONE_CSS, useCardHighlights, useExtraDeckHighlight, usePileHighlight } from "./assist-highlights";
 import { usePanelPlacement } from "./use-panel-placement";
 import { PromptView } from "./assist-prompt-view";
@@ -302,9 +302,12 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
   // Master Duel style: the engine's question is a dialog over the board, not a panel row.
   const promptAsDialog = isMasterDuelStyle(duel);
   // …and so is a chance to respond to something: the cards you can chain (glowing blue) and
-  // Don't respond. An open window with nothing on the chain ("Activate now", e.g. at every phase
+  // Don't respond. That is after something happened: a link on the chain, a forced chain, or
+  // the engine saying these cards answer the event (`responding`: a summon you could negate, an
+  // optional "when summoned" trigger). An open game state ("Activate now", e.g. at every phase
   // change while you hold a hand trap) stays in the panel, so it never interrupts you.
-  const realResponse = isActive && result.pending === "chain" && ((result.respond.chainLength ?? 0) > 0 || result.respond.forced);
+  const realResponse = isActive && result.pending === "chain" &&
+    ((result.respond.chainLength ?? 0) > 0 || result.respond.forced || result.respond.responding === true);
   const chainDialog = promptAsDialog && realResponse && sections.length > 0 ? sections[0] : null;
 
   return (
@@ -325,6 +328,7 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
           Chain?
         </div>
         <div style={{ fontSize: 13, fontWeight: 700, lineHeight: 1.3 }}>{chainDialog.title}</div>
+        {chainableText(chainDialog.rows) && <div style={{ fontSize: 12, opacity: 0.75 }}>{chainableText(chainDialog.rows)}</div>}
         {chainDialog.rows.map((row) => renderRow(row))}
       </div>
     )}
