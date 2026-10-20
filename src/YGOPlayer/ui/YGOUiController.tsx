@@ -11,6 +11,7 @@ import { PlayerHUD } from "./components/player-hud/PlayerHUD";
 import { TurnBanner } from "./components/player-hud/TurnBanner";
 import { WaitingBanner } from "./components/player-hud/WaitingBanner";
 import { PhaseBanner } from "./components/player-hud/PhaseBanner";
+import { PresenceReporter } from "./components/player-hud/PresenceReporter";
 import { CardLongPressEffect } from "./components/card-long-press-effect/CardLongPressEffect";
 import { useDeviceResolutionInfo } from "../scripts/use-device-resolution-info";
 import { LeftMenuPanel } from "./menus/menu-panel/LeftMenuPanel";
@@ -185,6 +186,7 @@ export function YGOUiController({ duel }: { duel: YGODuel }) {
         <TurnBanner duel={duel} />
         <WaitingBanner duel={duel} />
         <PhaseBanner duel={duel} />
+        <PresenceReporter duel={duel} />
         <CardLongPressEffect duel={duel} />
         {/* <RotateYourPhoneModal isPortrait={isPortrait} isMobile={isMobile} /> */}
         <RenderUiRefresh duel={duel}>{() => <LeftMenuPanel duel={duel} isMobileLayout={isMobileLayout} showMenus={showFloatingMenus} />}</RenderUiRefresh>
