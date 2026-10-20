@@ -25,13 +25,14 @@ export function ChainStopsControl({ value, held, onChange }: { value: ChainStops
   };
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 5, marginTop: 4, paddingTop: 8, borderTop: "1px solid rgba(255, 255, 255, 0.08)" }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+      {/* Label above the switch: four segments next to it overflowed the panel (Bluff cut off). */}
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "stretch", gap: 5 }}>
         <span id="ygo-chain-stops-label" style={{ fontSize: 12, fontWeight: 600 }}>Chain stops</span>
         <div
           role="radiogroup"
           aria-labelledby="ygo-chain-stops-label"
           aria-describedby="ygo-chain-stops-hint"
-          style={{ display: "flex", padding: 2, borderRadius: 6, background: "rgba(0, 0, 0, 0.35)", border: "1px solid rgba(255, 255, 255, 0.1)" }}
+          style={{ display: "flex", width: "100%", boxSizing: "border-box", padding: 2, borderRadius: 6, background: "rgba(0, 0, 0, 0.35)", border: "1px solid rgba(255, 255, 255, 0.1)" }}
         >
           {CHAIN_STOP_CHOICES.map((c, i) => {
             const active = c.value === value;
@@ -49,7 +50,7 @@ export function ChainStopsControl({ value, held, onChange }: { value: ChainStops
                   if (e.key === "ArrowLeft" || e.key === "ArrowUp") { e.preventDefault(); pick(i - 1); }
                 }}
                 style={{
-                  border: "none", cursor: "pointer", borderRadius: 4, padding: "3px 8px",
+                  flex: 1, minWidth: 0, border: "none", cursor: "pointer", borderRadius: 4, padding: "3px 4px",
                   fontSize: 12, fontWeight: 600, lineHeight: 1.3,
                   color: active ? "#111" : "inherit",
                   background: active ? HIGHLIGHT_CSS : "transparent",
