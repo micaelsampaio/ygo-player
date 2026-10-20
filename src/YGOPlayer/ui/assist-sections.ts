@@ -124,7 +124,7 @@ export function sectionsFor(duel: YGODuel, result: AssistQueryResult): Section[]
     if (result.respond.canPass) {
       rows.push({ key: "pass", label: passLabel(chainLength), commandType: "Pass", data: {}, count: 1, highlight: false });
     }
-    return [{ title: respondSectionTitle(chainLength, chainTopName(duel, result.respond.chain)), rows }];
+    return [{ title: respondSectionTitle(chainLength, chainTopName(duel, result.respond.chain), result.respond.timing), rows }];
   }
   const nextPhaseSection: Section = {
     title: "Next Phase",

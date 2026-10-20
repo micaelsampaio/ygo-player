@@ -43,9 +43,31 @@ export function passLabel(chainLength: number | undefined): string {
   return chainLength === 0 ? "Continue" : "Don't respond";
 }
 
-/** The chain window's section title: what the viewer would be doing. */
-export function respondSectionTitle(chainLength: number | undefined, respondingTo?: string): string {
-  if (chainLength === 0) return "Activate now";
+/**
+ * The phase moment an open chain window belongs to, from the engine's hint timing (ocgcore
+ * field.h TIMING_*): "End of Main Phase", "Start of Battle Phase"... The phase moments take
+ * precedence over the events that share a window with them; null when it names none of them.
+ */
+const TIMING_MOMENTS: ReadonlyArray<[number, string]> = [
+  [0x4, "End of Main Phase"],
+  [0x8, "Start of Battle Phase"],
+  [0x10, "End of Battle Phase"],
+  [0x20, "End Phase"],
+  [0x2, "Standby Phase"],
+  [0x1, "Draw Phase"],
+];
+export function timingMoment(timing: number | undefined): string | null {
+  if (!timing) return null;
+  return TIMING_MOMENTS.find(([flag]) => (timing & flag) !== 0)?.[1] ?? null;
+}
+
+/** The chain window's section title: what the viewer would be doing. An open window at a phase
+ * moment names it ("End of Main Phase: activate a card?"), like Dueling Nexus's prompt. */
+export function respondSectionTitle(chainLength: number | undefined, respondingTo?: string, timing?: number): string {
+  if (chainLength === 0) {
+    const moment = timingMoment(timing);
+    return moment ? `${moment}: activate a card?` : "Activate now";
+  }
   if (chainLength) return `Respond to ${chainTarget(chainLength, respondingTo)}`;
   return "Respond";
 }

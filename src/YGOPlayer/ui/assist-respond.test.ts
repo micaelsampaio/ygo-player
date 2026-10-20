@@ -45,6 +45,12 @@ describe("chain-aware wording", () => {
     expect(respondSectionTitle(0)).toBe("Activate now");
     expect(respondSectionTitle(undefined)).toBe("Respond");
     expect(respondSectionTitle(1, "Fairy Tail - Luna")).toBe("Respond to Fairy Tail - Luna (chain link 1)");
+    // An open window names the phase moment the engine opened it at.
+    expect(respondSectionTitle(0, undefined, 0x4)).toBe("End of Main Phase: activate a card?");
+    expect(respondSectionTitle(0, undefined, 0x20 | 0x8000)).toBe("End Phase: activate a card?");
+    expect(respondSectionTitle(0, undefined, 0x40)).toBe("Activate now");
+    // A chain link keeps its own title whatever the timing.
+    expect(respondSectionTitle(2, "Ash", 0x4)).toBe("Respond to Ash (chain link 2)");
   });
 
   it("words the waiting line and title by the chain", () => {
