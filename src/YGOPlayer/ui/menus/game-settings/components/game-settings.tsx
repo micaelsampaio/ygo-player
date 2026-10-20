@@ -5,6 +5,37 @@ import { Modal } from "../../../components/Modal";
 import InputRange from "../../../components/range/InputRange";
 import { FIELD_THEMES, fieldTheme } from "../../../../core/field-themes";
 import { CHAIN_MODE_SETTING, isEngineRoom } from "../../../../domain/chain-mode";
+import { YGOClientType } from "ygo-core";
+import { ChainStopsControl } from "../../chain-stops-control";
+import { storedChainStops, storeChainStops, type ChainStops } from "../../duel-preferences";
+
+/**
+ * Chain stops, in every duel type (one setting, remembered across duels). An engine duel
+ * (AI / Assisted) uses the live one (duel.chainStops, synced with the server); a manual duel has
+ * no rules engine to know what you could activate, so Off passes for you (like holding OK) and the
+ * others stop at every action, as manual duels always have.
+ */
+function ChainStopsSetting({ duel }: { duel: YGODuel }) {
+  const [manual, setManual] = useState<ChainStops>(() => storedChainStops());
+  const live = duel.chainStops;
+  const value = live ? live.value : manual;
+  const onChange = (next: ChainStops) => {
+    if (live) live.set(next);
+    else {
+      storeChainStops(next);
+      setManual(next);
+      duel.events.dispatch("render-ui");
+    }
+  };
+  return <div className="ygo-mt-4">
+    <ChainStopsControl value={value} held={false} onChange={onChange} />
+    {!isEngineRoom(duel.ygo?.options) && (
+      <div className="ygo-mt-1" style={{ fontSize: 11, opacity: 0.6 }}>
+        Manual duel: Off passes for you; Auto, Always and Bluff stop at every action.
+      </div>
+    )}
+  </div>;
+}
 
 /** The settings a checkbox toggles. */
 type BooleanSetting = { [K in keyof YGOPlayerSettings]: YGOPlayerSettings[K] extends boolean ? K : never }[keyof YGOPlayerSettings];
@@ -109,6 +140,8 @@ export function GameSettingsDialog({ duel }: { duel: YGODuel }) {
             </button>
           </div>
         </div>
+
+        {duel.client?.type === YGOClientType.PLAYER && duel.config?.gameMode !== "REPLAY" && <ChainStopsSetting duel={duel} />}
 
         <div className="ygo-mt-6">
           <div>Game Settings</div>

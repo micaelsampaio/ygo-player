@@ -9,7 +9,8 @@ import { assistPanelTitle, mustStayOpen, opponentWaitingText } from "../assist-r
 import { AnimationGate, createAnimationGate } from "./animation-gate";
 import { GROUP_COLLAPSE_AT } from "./special-summon-groups";
 import { canSummonFromExtraDeck, offeredPileCodes } from "./extra-deck-highlight";
-import { useChainStops, type ChainStops } from "./duel-preferences";
+import { useChainStops } from "./duel-preferences";
+import { ChainStopsControl } from "./chain-stops-control";
 import { singlePromptAnswer, LOC_GRAVE, LOC_REMOVED, type PromptResponse } from "../assist-prompt";
 import { AssistQueryResult, chainTopName, chainableText, isCommandData, OptionRow, sectionsFor, spaceRow, TONE_TITLE, type Tone } from "../assist-sections";
 import { HighlightTarget, promptTargets, TONE_CSS, useCardHighlights, useExtraDeckHighlight, usePileHighlight } from "./assist-highlights";
@@ -492,72 +493,5 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
       {!collapsed && <ChainStopsControl value={chainStops} held={chainStopsHeld} onChange={setChainStops} />}
     </div>
     </>
-  );
-}
-
-const CHAIN_STOP_CHOICES: ReadonlyArray<{ value: ChainStops; label: string; hint: string }> = [
-  { value: "auto", label: "Auto", hint: "Pauses when you have a card you can chain." },
-  { value: "always", label: "Always", hint: "Pauses at every chance to respond, even with nothing to chain, so your speed gives nothing away." },
-  { value: "off", label: "Off", hint: "Never pauses unless a chain is forced. Faster, but your hand traps and set cards stay unused." },
-];
-
-/**
- * "Chain stops": which of your chain windows pause for you — Auto, Always or
- * Off, as in Master Duel. Holding OK shows here as Off (`held`), for as long as it lasts. A labelled segmented switch at the foot of the
- * panel, split from the options by a hairline, with a line on what the
- * current choice does.
- */
-function ChainStopsControl({ value, held, onChange }: { value: ChainStops; held: boolean; onChange: (value: ChainStops) => void }) {
-  const refs = useRef<Array<HTMLButtonElement | null>>([]);
-  const current = CHAIN_STOP_CHOICES.find((c) => c.value === value) ?? CHAIN_STOP_CHOICES[0];
-  const pick = (i: number) => {
-    const n = CHAIN_STOP_CHOICES.length;
-    const index = (i + n) % n;
-    onChange(CHAIN_STOP_CHOICES[index].value);
-    refs.current[index]?.focus();
-  };
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 5, marginTop: 4, paddingTop: 8, borderTop: "1px solid rgba(255, 255, 255, 0.08)" }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-        <span id="ygo-chain-stops-label" style={{ fontSize: 12, fontWeight: 600 }}>Chain stops</span>
-        <div
-          role="radiogroup"
-          aria-labelledby="ygo-chain-stops-label"
-          aria-describedby="ygo-chain-stops-hint"
-          style={{ display: "flex", padding: 2, borderRadius: 6, background: "rgba(0, 0, 0, 0.35)", border: "1px solid rgba(255, 255, 255, 0.1)" }}
-        >
-          {CHAIN_STOP_CHOICES.map((c, i) => {
-            const active = c.value === value;
-            return (
-              <button
-                key={c.value}
-                ref={(el) => { refs.current[i] = el; }}
-                type="button"
-                role="radio"
-                aria-checked={active}
-                tabIndex={active ? 0 : -1}
-                onClick={() => onChange(c.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "ArrowRight" || e.key === "ArrowDown") { e.preventDefault(); pick(i + 1); }
-                  if (e.key === "ArrowLeft" || e.key === "ArrowUp") { e.preventDefault(); pick(i - 1); }
-                }}
-                style={{
-                  border: "none", cursor: "pointer", borderRadius: 4, padding: "3px 8px",
-                  fontSize: 12, fontWeight: 600, lineHeight: 1.3,
-                  color: active ? "#111" : "inherit",
-                  background: active ? HIGHLIGHT_CSS : "transparent",
-                  opacity: active ? 1 : 0.7,
-                }}
-              >
-                {c.label}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-      <div id="ygo-chain-stops-hint" style={{ fontSize: 11, lineHeight: 1.35, opacity: 0.6 }}>
-        {held ? "Off while OK is held: ends at the next turn or your next move." : current.hint}
-      </div>
-    </div>
   );
 }

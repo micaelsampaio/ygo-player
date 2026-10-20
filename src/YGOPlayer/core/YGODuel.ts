@@ -1,4 +1,6 @@
 import * as THREE from "three";
+import { isEngineRoom } from "../domain/chain-mode";
+import { storedChainStops } from "../ui/menus/duel-preferences";
 import { YGOPlayerCore } from "./YGOPlayerCore";
 import { YGODuelState, YGOUiElement } from "../types";
 import { YGOCore, YGOReplayData, YGOServerGameStateData, YGOGameUtils, YGOClientType, YGOCommandScope, YGOCommands, YGOPlayerRemoteActions } from "ygo-core";
@@ -87,7 +89,7 @@ export class YGODuel {
   public continuousAccept: boolean = false;
   /** Assisted Mode server duels: the Chain stops setting (ui/menus/duel-preferences.ts),
    * so the OK button can show and change it. Null elsewhere. */
-  public chainStops: { value: "auto" | "always" | "off"; set(value: "auto" | "always" | "off"): void } | null = null;
+  public chainStops: { value: "auto" | "always" | "bluff" | "off"; set(value: "auto" | "always" | "bluff" | "off"): void } | null = null;
   private loadingTask: PromiseTask;
 
   constructor({
@@ -213,7 +215,8 @@ export class YGODuel {
 
     this.ygo.events.on("set-duel-turn-priority", () => {
       this.events.dispatch("render-ui");
-      if (this.continuousAccept) {
+      // Holding OK, or chain stops Off in a manual duel (no engine to pass for them): pass on.
+      if (this.continuousAccept || (!isEngineRoom(this.ygo.options) && this.client?.type === YGOClientType.PLAYER && storedChainStops() === "off")) {
         const localPlayer = this.perspective.playerIndex;
         if (localPlayer >= 0 && this.ygo.state.turnPriority === localPlayer) {
           this.passPriority();

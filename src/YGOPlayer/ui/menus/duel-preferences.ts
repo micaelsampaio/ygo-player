@@ -3,8 +3,9 @@
  * duel:preferences:set, engine/duelPreferences.ts). For now one:
  * chainStops — in Assisted Mode, which of your chain windows pause for you
  * (the bot's turn waits there too):
- *  - "auto": only when you have a card you can chain (the default);
- *  - "always": every window, even with nothing to chain;
+ *  - "auto": when you have a card that answers what just happened (the default);
+ *  - "always": every window where you have something to activate, phase changes included;
+ *  - "bluff": every window, even with nothing to activate;
  *  - "off": never, unless the chain is forced — the rest are passed for you.
  *
  * The server keeps it per duel; the last choice is remembered in this
@@ -14,13 +15,13 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { YGODuel } from "../../core/YGODuel";
 import { getStorage } from "../../scripts/safe-storage";
 
-export type ChainStops = "auto" | "always" | "off";
+export type ChainStops = "auto" | "always" | "bluff" | "off";
 
 export interface DuelPreferences {
   chainStops?: ChainStops;
 }
 
-const CHAIN_STOPS: readonly ChainStops[] = ["auto", "always", "off"];
+const CHAIN_STOPS: readonly ChainStops[] = ["auto", "always", "bluff", "off"];
 const STORAGE_KEY = "ygo-player:chain-stops";
 /** The older on/off switch. Not carried over — Assisted Mode starts on Auto — only cleared. */
 const LEGACY_STORAGE_KEY = "ygo-player:stop-at-every-window";
@@ -53,13 +54,14 @@ export function readPreferences(data: unknown): DuelPreferences | null {
   if (!prefs || typeof prefs !== "object") return null;
   const { chainStops, stopAtEveryWindow } = prefs as { chainStops?: unknown; stopAtEveryWindow?: unknown };
   if (isChainStops(chainStops)) return { chainStops };
-  if (typeof stopAtEveryWindow === "boolean") return { chainStops: stopAtEveryWindow ? "always" : "auto" };
+  // The older switch meant every window, nothing to chain or not: Bluff now.
+  if (typeof stopAtEveryWindow === "boolean") return { chainStops: stopAtEveryWindow ? "bluff" : "auto" };
   return {};
 }
 
 /** What duel:preferences:set carries for `mode` (stopAtEveryWindow for servers that predate chainStops). */
 export function preferencesPayload(mode: ChainStops) {
-  return { chainStops: mode, stopAtEveryWindow: mode === "always" };
+  return { chainStops: mode, stopAtEveryWindow: mode === "bluff" };
 }
 
 /**

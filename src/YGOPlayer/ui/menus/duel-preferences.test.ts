@@ -25,13 +25,15 @@ describe("chain stops preference", () => {
 
   it("reads the server's reply, including an older server's boolean", () => {
     expect(readPreferences({ preferences: { chainStops: "off", stopAtEveryWindow: false } })).toEqual({ chainStops: "off" });
-    expect(readPreferences({ preferences: { stopAtEveryWindow: true } })).toEqual({ chainStops: "always" });
+    // The older switch meant every window, nothing to chain or not: Bluff.
+    expect(readPreferences({ preferences: { stopAtEveryWindow: true } })).toEqual({ chainStops: "bluff" });
     expect(readPreferences({ preferences: { chainStops: "nope" } })).toEqual({});
     expect(readPreferences(null)).toBeNull();
   });
 
   it("sends the older boolean alongside for servers that predate chainStops", () => {
-    expect(preferencesPayload("always")).toEqual({ chainStops: "always", stopAtEveryWindow: true });
+    expect(preferencesPayload("bluff")).toEqual({ chainStops: "bluff", stopAtEveryWindow: true });
+    expect(preferencesPayload("always")).toEqual({ chainStops: "always", stopAtEveryWindow: false });
     expect(preferencesPayload("off")).toEqual({ chainStops: "off", stopAtEveryWindow: false });
   });
 });
