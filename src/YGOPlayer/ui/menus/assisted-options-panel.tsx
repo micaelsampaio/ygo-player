@@ -5,7 +5,7 @@ import { HIGHLIGHT_CSS } from "../../game/meshes/highlight-frame";
 import { promptKey } from "../assist-zones";
 import { assistErrorMessage, assistUnavailableReason } from "../duel-status";
 import { useDuelTurnState } from "../use-duel-turn-state";
-import { assistPanelTitle, mustStayOpen, opponentWaitingText } from "../assist-respond";
+import { assistPanelTitle, mustStayOpen, opponentWaitingText, yourChainLinkText } from "../assist-respond";
 import { AnimationGate, createAnimationGate } from "./animation-gate";
 import { GROUP_COLLAPSE_AT } from "./special-summon-groups";
 import { canSummonFromExtraDeck, offeredPileCodes } from "./extra-deck-highlight";
@@ -20,6 +20,12 @@ import { isMasterDuelStyle } from "../assist-card-actions";
 
 /** How long the panel waits after a choice for the moves it caused to start. */
 const CHOICE_SETTLE_MS = 700;
+
+/** A prompt that finishes the human's own move (where to put the card, in which position). */
+export function isOwnMovePrompt(result: AssistQueryResult | null | undefined): boolean {
+  const prompt = (result as { pending?: string; prompt?: { kind?: string } } | null | undefined);
+  return prompt?.pending === "prompt" && (prompt.prompt?.kind === "place" || prompt.prompt?.kind === "position");
+}
 
 const ERROR_VISIBLE_MS = 6000;
 const NOTICE_VISIBLE_MS = 6000;
@@ -97,6 +103,9 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
     // Don't ask the server anything in a room that never enabled assisted mode.
     if (!enabled) return;
     const unsubscribe = controller.subscribe((options) => {
+      // The zone / position of the move just chosen: the engine asks before anything of it plays
+      // and nothing comes in between, so it shows at once instead of after the choice's settle.
+      if (isOwnMovePrompt(options)) settleUntilRef.current = 0;
       if (!gate.offer(options ?? { available: false })) setHeld(true);
       setLoading(false);
     });
@@ -319,6 +328,11 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
   const realResponse = isActive && result.pending === "chain" &&
     ((result.respond.chainLength ?? 0) > 0 || result.respond.forced || result.respond.responding === true);
   const chainDialog = promptAsDialog && realResponse && sections.length > 0 ? sections[0] : null;
+  // "1 card can be chained · Your card would be chain link 2": the title's link is the effect
+  // already on the chain, not the card a response would add.
+  const chainDialogSubtitle = chainDialog
+    ? [chainableText(chainDialog.rows), chainableText(chainDialog.rows) ? yourChainLinkText(chainLength) : null].filter(Boolean).join(" · ")
+    : "";
 
   return (
     <>
@@ -338,7 +352,7 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
           Chain?
         </div>
         <div style={{ fontSize: 13, fontWeight: 700, lineHeight: 1.3 }}>{chainDialog.title}</div>
-        {chainableText(chainDialog.rows) && <div style={{ fontSize: 12, opacity: 0.75 }}>{chainableText(chainDialog.rows)}</div>}
+        {chainDialogSubtitle && <div style={{ fontSize: 12, opacity: 0.75 }}>{chainDialogSubtitle}</div>}
         {chainDialog.rows.map((row) => renderRow(row))}
       </div>
     )}

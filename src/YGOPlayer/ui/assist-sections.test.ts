@@ -115,7 +115,7 @@ describe("sectionsFor", () => {
       respond: { activatable: [ref(1, LOC_HAND)], canPass: true, forced: false, chainLength: 1, chain: [ref(2, LOC_SZONE, 0, 1)] },
     });
     expect(sections).toHaveLength(1);
-    expect(sections[0].title).toBe("Respond to Bonfire (chain link 1)");
+    expect(sections[0].title).toBe("Respond to Bonfire's effect (chain link 1)");
     expect(sections[0].rows.map((r) => [r.key, r.label, r.commandType, r.tone])).toEqual([
       [`Activate:1:0:${LOC_HAND}`, "Ash Blossom", "Activate", "quick"],
       ["pass", "Don't respond", "Pass", undefined],

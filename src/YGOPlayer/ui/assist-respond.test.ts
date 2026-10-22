@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { assistPanelTitle, mustStayOpen, opponentWaitingText, passLabel, respondSectionTitle } from "./assist-respond";
+import { assistPanelTitle, mustStayOpen, opponentWaitingText, passLabel, respondSectionTitle, yourChainLinkText } from "./assist-respond";
 
 describe("opponentWaitingText", () => {
   it("tells the viewer the bot's turn is paused for their response or choice", () => {
@@ -44,13 +44,18 @@ describe("chain-aware wording", () => {
     expect(respondSectionTitle(1)).toBe("Respond to chain link 1");
     expect(respondSectionTitle(0)).toBe("Activate now");
     expect(respondSectionTitle(undefined)).toBe("Respond");
-    expect(respondSectionTitle(1, "Fairy Tail - Luna")).toBe("Respond to Fairy Tail - Luna (chain link 1)");
+    expect(respondSectionTitle(1, "Fairy Tail - Luna")).toBe("Respond to Fairy Tail - Luna's effect (chain link 1)");
+    // Nothing on the chain, but a summon just happened: the title names it, not a chain link.
+    expect(respondSectionTitle(0, undefined, 0, "the Normal Summon of Blazing Cartesia, the Virtuous")).toBe("Respond to the Normal Summon of Blazing Cartesia, the Virtuous");
+    expect(yourChainLinkText(0)).toBe("Your card would be chain link 1");
+    expect(yourChainLinkText(1)).toBe("Your card would be chain link 2");
+    expect(yourChainLinkText(undefined)).toBeNull();
     // An open window names the phase moment the engine opened it at.
     expect(respondSectionTitle(0, undefined, 0x4)).toBe("End of Main Phase: activate a card?");
     expect(respondSectionTitle(0, undefined, 0x20 | 0x8000)).toBe("End Phase: activate a card?");
     expect(respondSectionTitle(0, undefined, 0x40)).toBe("Activate now");
     // A chain link keeps its own title whatever the timing.
-    expect(respondSectionTitle(2, "Ash", 0x4)).toBe("Respond to Ash (chain link 2)");
+    expect(respondSectionTitle(2, "Ash", 0x4)).toBe("Respond to Ash's effect (chain link 2)");
   });
 
   it("words the waiting line and title by the chain", () => {
@@ -59,7 +64,7 @@ describe("chain-aware wording", () => {
     expect(opponentWaitingText({ pending: "chain", isLocalTurn: false, botDuel: true, chainLength: 0 }))
       .toBe("The bot's turn is paused: activate a card now, or choose Continue.");
     expect(opponentWaitingText({ pending: "chain", isLocalTurn: false, botDuel: true, chainLength: 1, respondingTo: "Fairy Tail - Luna" }))
-      .toBe("The bot's turn is paused: respond to Fairy Tail - Luna (chain link 1), or choose Don't respond.");
+      .toBe("The bot's turn is paused: respond to Fairy Tail - Luna's effect (chain link 1), or choose Don't respond.");
     expect(assistPanelTitle({ pending: "chain", isLocalTurn: false, chainLength: 0 })).toBe("Your options");
     expect(assistPanelTitle({ pending: "chain", isLocalTurn: false, chainLength: 3 })).toBe("Respond");
   });

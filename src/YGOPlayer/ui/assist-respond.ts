@@ -28,9 +28,15 @@ export function opponentWaitingText({ pending, isLocalTurn, botDuel, chainLength
   return `${who}: chain a card, or choose ${passLabel(chainLength)}.`;
 }
 
-/** "Fairy Tail - Luna (chain link 1)", or "chain link 1" without a name. */
+/** "Fairy Tail - Luna's effect (chain link 1)", or "chain link 1" without a name: the link is
+ * the effect already on the chain, not the card the viewer would chain (see yourChainLinkText). */
 function chainTarget(chainLength: number, respondingTo?: string): string {
-  return respondingTo ? `${respondingTo} (chain link ${chainLength})` : `chain link ${chainLength}`;
+  return respondingTo ? `${respondingTo}'s effect (chain link ${chainLength})` : `chain link ${chainLength}`;
+}
+
+/** The link a card chained now would be: "Your card would be chain link 2". */
+export function yourChainLinkText(chainLength: number | undefined): string | null {
+  return chainLength === undefined ? null : `Your card would be chain link ${chainLength + 1}`;
 }
 
 /**
@@ -63,10 +69,12 @@ export function timingMoment(timing: number | undefined): string | null {
 
 /** The chain window's section title: what the viewer would be doing. An open window at a phase
  * moment names it ("End of Main Phase: activate a card?"), like Dueling Nexus's prompt. */
-export function respondSectionTitle(chainLength: number | undefined, respondingTo?: string, timing?: number): string {
+export function respondSectionTitle(chainLength: number | undefined, respondingTo?: string, timing?: number, event?: string | null): string {
   if (chainLength === 0) {
     const moment = timingMoment(timing);
-    return moment ? `${moment}: activate a card?` : "Activate now";
+    if (moment) return `${moment}: activate a card?`;
+    // Nothing on the chain yet, but something just happened (a summon, an attack): name it.
+    return event ? `Respond to ${event}` : "Activate now";
   }
   if (chainLength) return `Respond to ${chainTarget(chainLength, respondingTo)}`;
   return "Respond";

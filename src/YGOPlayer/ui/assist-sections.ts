@@ -116,6 +116,24 @@ export function chainTopName(duel: YGODuel, chain: CardRefData[] | undefined): s
   return top ? duel.ygo.state.getCardData(top.code)?.name : undefined;
 }
 
+const RESPONDABLE_EVENTS: Record<string, string> = {
+  "Normal Summon": "the Normal Summon of", "Tribute Summon": "the Tribute Summon of", "Special Summon": "the Special Summon of",
+  "Fusion Summon": "the Fusion Summon of", "Synchro Summon": "the Synchro Summon of", "XYZ Summon": "the Xyz Summon of",
+  "XYZ Overlay Summon": "the Xyz Summon of", "Link Summon": "the Link Summon of", "Flip Summon": "the Flip Summon of",
+  "Attack": "the attack of", "Attack Directly": "the direct attack of",
+};
+
+/** What an open chain window answers when nothing is on the chain: the board's last summon or
+ * attack ("the Normal Summon of Blazing Cartesia"); null when the engine says nothing happened. */
+export function respondEventText(duel: YGODuel, responding: boolean | undefined): string | null {
+  if (!responding) return null;
+  const last = duel.ygo?.duelLog?.logs?.at(-1) as { type?: string; id?: number } | undefined;
+  const what = last?.type ? RESPONDABLE_EVENTS[last.type] : undefined;
+  if (!what || last?.id === undefined) return null;
+  const name = duel.ygo.state.getCardData(last.id)?.name;
+  return name ? `${what} ${name}` : null;
+}
+
 export function sectionsFor(duel: YGODuel, result: AssistQueryResult): Section[] {
   if (!result.available || result.pending === "prompt") return [];
   if (result.pending === "chain") {
@@ -124,7 +142,7 @@ export function sectionsFor(duel: YGODuel, result: AssistQueryResult): Section[]
     if (result.respond.canPass) {
       rows.push({ key: "pass", label: passLabel(chainLength), commandType: "Pass", data: {}, count: 1, highlight: false });
     }
-    return [{ title: respondSectionTitle(chainLength, chainTopName(duel, result.respond.chain), result.respond.timing), rows }];
+    return [{ title: respondSectionTitle(chainLength, chainTopName(duel, result.respond.chain), result.respond.timing, respondEventText(duel, result.respond.responding)), rows }];
   }
   const nextPhaseSection: Section = {
     title: "Next Phase",
