@@ -53,12 +53,6 @@ export function DuelLogMenu({ duel, menus }: { duel: YGODuel; menus: UiMenuState
   const scrollBottomRef = useRef<boolean>(true);
   const scrollTimerRef = useRef<number>(-1);
 
-  const undo = () => {
-    duel.commands.startRecover();
-    duel.ygo.undo();
-    duel.updateField();
-    duel.commands.endRecover();
-  };
 
   const scrollToBottom = () => {
     if (duelLogsContainer.current) {
@@ -129,6 +123,19 @@ export function DuelLogMenu({ duel, menus }: { duel: YGODuel; menus: UiMenuState
       onMouseDown={stopPropagationCallback}
       onMouseUp={stopPropagationCallback}
     >
+      {/* Its own close, shown on phones (duel-log.css): there the log covers its floating button. */}
+      <div className="ygo-duel-log-header">
+        <span>Duel log</span>
+        <button
+          type="button"
+          className="ygo-duel-log-close"
+          aria-label="Close duel log"
+          title="Close (D)"
+          onClick={() => duel.events.dispatch("toggle-ui-menu", { group: "game-overlay", type: "duel-log" })}
+        >
+          ✕
+        </button>
+      </div>
       <div className="ygo-logs">
         {logs.map((log, index) => {
           if (log.type === YGODuelEvents.LogType.Target) return null;
@@ -145,14 +152,7 @@ export function DuelLogMenu({ duel, menus }: { duel: YGODuel; menus: UiMenuState
           );
         })}
 
-        {logs?.length > 0 && <div className="ygo-flex ygo-mt-2 ygo-p-2">
-          <button className="ygo-btn ygo-btn-action ygo-flex-grow-1" onClick={undo}>
-            <div>Undo Action</div>
-            <div className="ygo-btn-right-icon">
-              <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3"><path d="M280-200v-80h284q63 0 109.5-40T720-420q0-60-46.5-100T564-560H312l104 104-56 56-200-200 200-200 56 56-104 104h252q97 0 166.5 63T800-420q0 94-69.5 157T564-200H280Z" /></svg>
-            </div>
-          </button>
-        </div>}
+
       </div>
     </div>
   );

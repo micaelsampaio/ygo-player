@@ -86,7 +86,8 @@
 .ygo-player-core {
 
     @media (max-width: 767px),
-    (min-width: 768px) and (max-width: 1024px) and (orientation: portrait) {
+    (min-width: 768px) and (max-width: 1024px) and (orientation: portrait),
+    (max-height: 500px) {
         .game-actions-bottom-right {
             display: flex;
             flex-direction: column-reverse;
@@ -123,4 +124,18 @@
             height: 60px;
         }
     }
+}
+
+/* Undo / Redo: stroke icons, dimmed while there is nothing to undo. */
+.ygo-player-core .ygo-floating-button .ygo-undo-icon {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.ygo-player-core .ygo-floating-button:disabled {
+    opacity: 0.4;
+    cursor: default;
 }

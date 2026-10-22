@@ -3,7 +3,6 @@ import type { YGODuel } from "../../../../core/YGODuel";
 import type { YGOPlayerSettings } from "../../../../core/YGOPlayerSettings";
 import { Modal } from "../../../components/Modal";
 import InputRange from "../../../components/range/InputRange";
-import { FIELD_THEMES, fieldTheme } from "../../../../core/field-themes";
 import { CHAIN_MODE_SETTING, isEngineRoom } from "../../../../domain/chain-mode";
 import { YGOClientType } from "ygo-core";
 import { ChainStopsControl } from "../../chain-stops-control";
@@ -11,29 +10,31 @@ import { storedChainStops, storeChainStops, type ChainStops } from "../../duel-p
 
 /**
  * Chain stops, in every duel type (one setting, remembered across duels). An engine duel
- * (AI / Assisted) uses the live one (duel.chainStops, synced with the server); a manual duel has
- * no rules engine to know what you could activate, so Off passes for you (like holding OK) and the
- * others stop at every action, as manual duels always have.
+ * (AI / Assisted) has the full control, synced with the server (duel.chainStops). A manual duel
+ * has no rules engine to know what you could activate, so it only has two states: pass for you
+ * (stored as Off) or stop at every action (Auto).
  */
 function ChainStopsSetting({ duel }: { duel: YGODuel }) {
   const [manual, setManual] = useState<ChainStops>(() => storedChainStops());
   const live = duel.chainStops;
-  const value = live ? live.value : manual;
-  const onChange = (next: ChainStops) => {
+  if (live && isEngineRoom(duel.ygo?.options)) {
+    return <div className="ygo-mt-4">
+      <ChainStopsControl value={live.value} held={false} onChange={(next) => live.set(next)} />
+    </div>;
+  }
+  const autoPass = manual === "off";
+  const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const next: ChainStops = e.target.checked ? "off" : "auto";
     if (live) live.set(next);
-    else {
-      storeChainStops(next);
-      setManual(next);
-      duel.events.dispatch("render-ui");
-    }
+    storeChainStops(next);
+    setManual(next);
+    duel.events.dispatch("render-ui");
   };
-  return <div className="ygo-mt-4">
-    <ChainStopsControl value={value} held={false} onChange={onChange} />
-    {!isEngineRoom(duel.ygo?.options) && (
-      <div className="ygo-mt-1" style={{ fontSize: 11, opacity: 0.6 }}>
-        Manual duel: Off passes for you; Auto, Always and Bluff stop at every action.
-      </div>
-    )}
+  return <div className="ygo-flex ygo-mt-3">
+    <input id="ygo-setting-auto-pass" style={{ display: "inline-block", width: "auto" }} type="checkbox" checked={autoPass} onChange={onChange} />
+    <label htmlFor="ygo-setting-auto-pass" style={{ display: "inline-block", flexGrow: 1 }} title="Pass priority for you every time, like holding OK">
+      Pass automatically when it's my priority
+    </label>
   </div>;
 }
 
@@ -43,13 +44,13 @@ type BooleanSetting = { [K in keyof YGOPlayerSettings]: YGOPlayerSettings[K] ext
 export function GameSettingsDialog({ duel }: { duel: YGODuel }) {
   const settings = duel.settings;
   // Engine rooms (Assisted Mode / bot duels) number the chain themselves.
-  const showChainMode = !isEngineRoom(duel.ygo?.options) && duel.config?.gameMode !== "REPLAY";
+  const isReplay = duel.config?.gameMode === "REPLAY";
+  const isPlaying = duel.client?.type === YGOClientType.PLAYER && !isReplay;
+  // Manual duels (no rules engine): chain numbering, auto-pass and auto-placing are theirs.
+  const isManual = isPlaying && !isEngineRoom(duel.ygo?.options);
   const [gameMusicVolume, setGameMusicState] = useState(() => settings.getMusicVolume());
   const [gameSoundsVolume, setGameSoundsVolumeState] = useState(() => settings.getGameVolume());
   const [gameSpeed, setGameSpeed] = useState(() => settings.getGameSpeed());
-  const [field, setField] = useState(() => fieldTheme(settings.getFieldTheme()).id);
-  // The board is built once per duel, so a new field shows from the next duel.
-  const loadedField = useState(() => fieldTheme(settings.getFieldTheme()).id)[0];
 
   const setGameMusicVolume = (e: React.ChangeEvent<HTMLInputElement>) => {
     const volume = Number(e.target.value);
@@ -103,26 +104,6 @@ export function GameSettingsDialog({ duel }: { duel: YGODuel }) {
         </div>
 
         <div className="ygo-mt-4">
-          <div id="ygo-field-theme-label">Field</div>
-          <div className="ygo-flex ygo-gap-1 ygo-mt-2" role="radiogroup" aria-labelledby="ygo-field-theme-label">
-            {FIELD_THEMES.map((t) => (
-              <button
-                key={t.id}
-                type="button"
-                role="radio"
-                aria-checked={field === t.id}
-                title={t.description}
-                className={`ygo-btn ygo-btn-action ygo-px-0 ygo-flex-grow-1${field === t.id ? " ygo-btn-action-active" : ""}`}
-                onClick={() => { settings.setFieldTheme(t.id); setField(t.id); }}
-              >
-                {t.name}
-              </button>
-            ))}
-          </div>
-          {field !== loadedField && <div className="ygo-mt-1" style={{ fontSize: 12, opacity: 0.7 }}>Shows from your next duel.</div>}
-        </div>
-
-        <div className="ygo-mt-4">
           <div>Game Speed</div>
 
           <div className="ygo-flex ygo-gap-1 ygo-mt-2">
@@ -141,7 +122,7 @@ export function GameSettingsDialog({ duel }: { duel: YGODuel }) {
           </div>
         </div>
 
-        {duel.client?.type === YGOClientType.PLAYER && duel.config?.gameMode !== "REPLAY" && <ChainStopsSetting duel={duel} />}
+        {isPlaying && isEngineRoom(duel.ygo?.options) && <ChainStopsSetting duel={duel} />}
 
         <div className="ygo-mt-6">
           <div>Game Settings</div>
@@ -170,7 +151,7 @@ export function GameSettingsDialog({ duel }: { duel: YGODuel }) {
             </div>
           </div>
 
-          <div className="ygo-flex ygo-mt-3">
+          {isReplay && <div className="ygo-flex ygo-mt-3">
             <input
               style={{ display: "inline-block", width: "auto" }}
               type="checkbox"
@@ -180,9 +161,25 @@ export function GameSettingsDialog({ duel }: { duel: YGODuel }) {
             <div style={{ display: "inline-block", flexGrow: 1 }}>
               Auto Start Replay when loaded
             </div>
-          </div>
+          </div>}
 
-          {showChainMode && <div className="ygo-flex ygo-mt-3">
+          {isManual && <div className="ygo-flex ygo-mt-3">
+            <input
+              id="ygo-setting-auto-place"
+              style={{ display: "inline-block", width: "auto" }}
+              type="checkbox"
+              checked={!!settings.getConfigFromPath("autoPlaceZone")}
+              onChange={e => onChangeCheckBox(e, "autoPlaceZone")}
+            />
+            <label htmlFor="ygo-setting-auto-place" style={{ display: "inline-block", flexGrow: 1 }} title="Summon, set and move cards to the leftmost free zone without choosing one">
+              Place cards in the first free zone automatically
+            </label>
+          </div>}
+
+          {/* Solo: both sides are yours, so there's nobody to pass to. */}
+          {isManual && !duel.ygo?.options?.controlOpponentCards && <ChainStopsSetting duel={duel} />}
+
+          {isManual && <div className="ygo-flex ygo-mt-3">
             <input
               id="ygo-setting-chain-mode"
               style={{ display: "inline-block", width: "auto" }}

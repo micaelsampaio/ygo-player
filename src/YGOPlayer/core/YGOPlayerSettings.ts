@@ -15,6 +15,8 @@ export interface YGOPlayerSettings {
      * and resolve the chain link by link (domain/chain-mode.ts). Ignored in
      * engine rooms (Assisted Mode / bot duels). */
     chainMode: boolean
+    /** Manual duels: a card goes straight to the leftmost free zone instead of asking which one. */
+    autoPlaceZone: boolean
 }
 
 export interface YGOPlayerSettingsAdapterOptions {
@@ -43,7 +45,8 @@ const DEFAULT_SETTINGS: YGOPlayerSettings = {
     autoStartReplay: true,
     showFaceDownCardsTransparent: true,
     fieldTheme: "classic",
-    chainMode: true
+    chainMode: true,
+    autoPlaceZone: false
 }
 
 const YGO_SETTINGS_KEY = "ygo_player_settings";

@@ -42,6 +42,7 @@ export function ChainStopsControl({ value, held, onChange }: { value: ChainStops
                 ref={(el) => { refs.current[i] = el; }}
                 type="button"
                 role="radio"
+                className="ygo-chain-stop-option"
                 aria-checked={active}
                 tabIndex={active ? 0 : -1}
                 // Not focused by a click: Space stays the panel's Continue (arrow keys still move here).

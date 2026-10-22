@@ -41,7 +41,11 @@ import { YGOPerspective, setActivePerspective } from "./YGOPerspective";
 import { buildCorePlayers, collectCardIds, fetchCardsInto, resolveLocalPlayer, resolvePlayerPOV } from "./duel-setup";
 import { YGOAssistController } from "./YGOAssistController";
 import { YGOPlayerLogger } from "./YGOPlayerLogger";
+import { canDriveTurn, endTurn, goToNextPhase } from "../domain/phase-navigation";
 import type { YGOAssistActions } from "../types";
+
+/** YGOActionManager's resting action: nothing is open. */
+const IDLE_ACTION_NAME = "IDLE";
 
 declare global {
   interface Window {
@@ -215,8 +219,11 @@ export class YGODuel {
 
     this.ygo.events.on("set-duel-turn-priority", () => {
       this.events.dispatch("render-ui");
-      // Holding OK, or chain stops Off in a manual duel (no engine to pass for them): pass on.
-      if (this.continuousAccept || (!isEngineRoom(this.ygo.options) && this.client?.type === YGOClientType.PLAYER && storedChainStops() === "off")) {
+      // Holding OK, or chain stops Off in a manual duel against someone (no engine to pass for
+      // them): pass on. Not in solo, where passing only hands priority to your other side.
+      const manualAutoPass = !isEngineRoom(this.ygo.options) && !this.ygo.options.controlOpponentCards
+        && this.client?.type === YGOClientType.PLAYER && storedChainStops() === "off";
+      if (this.continuousAccept || manualAutoPass) {
         const localPlayer = this.perspective.playerIndex;
         if (localPlayer >= 0 && this.ygo.state.turnPriority === localPlayer) {
           this.passPriority();
@@ -572,7 +579,25 @@ export class YGODuel {
     }, {
       keys: "k",
       action: "passPriority"
+    }, {
+      keys: "n",
+      action: "nextPhase"
+    }, {
+      keys: "e",
+      action: "endTurn"
     }]);
+
+    this.globalHotKeysManager.on("nextPhase", () => {
+      if (!canDriveTurn(this)) return;
+      this.clearActions();
+      goToNextPhase(this);
+    });
+
+    this.globalHotKeysManager.on("endTurn", () => {
+      if (!canDriveTurn(this)) return;
+      this.clearActions();
+      void endTurn(this);
+    });
 
     this.globalHotKeysManager.on("passPriority", () => {
       this.passPriority();
@@ -604,6 +629,13 @@ export class YGODuel {
     });
 
     this.globalHotKeysManager.on("escPressed", () => {
+      // Esc first backs out of what you're doing (a card menu, picking a zone); with nothing open
+      // it brings up Settings.
+      const action = this.actionManager.action;
+      if (action && action.name !== IDLE_ACTION_NAME && !action.uncancellable) {
+        this.clearActions();
+        return;
+      }
       this.events.dispatch("toggle-ui-menu", { group: "game-overlay", type: "settings-menu", data: { currentMenu: SETTINGS_MODAL_TYPE.SETTINGS } });
     });
 

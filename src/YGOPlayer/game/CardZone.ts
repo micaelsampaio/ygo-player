@@ -8,6 +8,7 @@ import { Card, FieldZone, FieldZoneData } from "ygo-core";
 import type { ActionCardZoneMenu } from "../actions/ActionCardZoneMenu";
 import { getCardRotation } from "./zone-transforms";
 import { YGOGameUtils } from "ygo-core";
+import { cancelCardPreview, previewCardOnHover } from "./hover-preview";
 
 export class CardZone extends YGOEntity implements YGOUiElement {
   public isUiElement: boolean = true;
@@ -152,10 +153,13 @@ export class CardZone extends YGOEntity implements YGOUiElement {
 
   onMouseEnter(event: MouseEvent): void {
     this.mesh.material = this.hoverMaterial;
+    const card = this.getCardReference();
+    if (card && this.canViewCard()) previewCardOnHover(this.duel, this.zoneData.player, card);
   }
 
   onMouseLeave(event: MouseEvent): void {
     this.mesh.material = this.normalMaterial;
+    cancelCardPreview();
   }
 
   setCard(card: Card | null) {

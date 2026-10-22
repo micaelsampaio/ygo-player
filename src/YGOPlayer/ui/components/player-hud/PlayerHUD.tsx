@@ -90,6 +90,8 @@ export function PlayerHUD({ duel, player, visible }: { duel: YGODuel, player: nu
                 {isTurnPlayer ? turnStatusText(turnState) : "\u00a0"}
             </div>
             <div className="ygo-player-hud-bar"></div>
+            {/* Name and LP on one row keeps the HUD short, leaving the duel log room between the two. */}
+            <div className="ygo-player-hud-main">
             <div className="ygo-player-hud-name">
                 {playerName} {state !== YGOPlayerState.IDLE ? `(${state})` : ''}
             </div>
@@ -119,6 +121,7 @@ export function PlayerHUD({ duel, player, visible }: { duel: YGODuel, player: nu
                     currentLp={field.lp}
                     onApply={applyLifePoints}
                     onClose={closeLpEditor} />}
+            </div>
             </div>
             <div className="ygo-player-hud-bar"></div>
         </div>

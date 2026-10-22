@@ -26,12 +26,13 @@
   }
 
   .ygo-left-menu-collapse {
+    /* Centred on the 46px header, which starts at the panel's 16px padding. */
     position: absolute;
-    top: 18px;
+    top: 23px;
     right: 6px;
     z-index: 1;
-    width: 26px;
-    height: 26px;
+    width: 32px;
+    height: 32px;
     border: none;
     border-radius: var(--ygo-border-radius-small);
     background: rgba(255, 255, 255, 0.08);
@@ -50,9 +51,9 @@
     }
   }
 
-  /* Leave room for the collapse button beside the tab bar. */
+  /* Leave room for the collapse button beside the header. */
   .ygo-left-menu-panel:not(.ygo-left-menu-collapsed) > .ygo-left-top-menus {
-    margin-right: 30px;
+    margin-right: 38px;
   }
 
   .ygo-left-menu-collapsed .ygo-left-menu-collapse {
@@ -72,25 +73,54 @@
     padding: 16px;
     align-items: center;
     justify-content: center;
+    /* A full-height strip: only its buttons take taps, the board behind stays playable. */
+    pointer-events: none;
+
+    & > * {
+      pointer-events: auto;
+    }
+  }
+
+  .ygo-player-actions-compact .ygo-ui-icon {
+    width: 24px;
+    height: 24px;
   }
 
   .ygo-left-top-menus {
     display: flex;
-    font-weight: bold;
+    align-items: center;
+    gap: 6px;
+    min-height: 46px;
+  }
+
+  .ygo-left-panel-title {
+    flex: 1;
+    margin: 0;
     font-size: 16px;
-    border: 1px solid var(--ygo-border-color);
+    font-weight: bold;
+  }
 
-    &>div {
-      padding: 10px 10px;
+  /* Same square as the collapse button beside it. */
+  .ygo-left-panel-icon-button {
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: var(--ygo-border-radius-small);
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--ygo-text-color);
+    cursor: pointer;
 
-      &.ygo-selected {
-        background-color: var(--ygo-primary-color);
-      }
+    &:hover {
+      background: rgba(255, 255, 255, 0.18);
+    }
 
-      &:hover {
-        cursor: pointer;
-        background-color: var(--ygo-border-color);
-      }
+    &:focus-visible {
+      outline: 2px solid var(--ygo-primary-color);
+      outline-offset: 1px;
     }
   }
 
@@ -263,7 +293,8 @@
 }
 
 @media (max-width: 767px),
-(min-width: 768px) and (max-width: 1024px) and (orientation: portrait) {
+(min-width: 768px) and (max-width: 1024px) and (orientation: portrait),
+    (max-height: 500px) {
   .ygo-player-core {
     .ygo-left-menu-panel {
       width: 0px;

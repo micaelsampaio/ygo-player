@@ -73,9 +73,13 @@ export function CardZoneAttackMenuAction({
     container.style.left = x - size.width / 2 + width / 2 + "px";
   }, propsChanges);
 
+  // Typed as text so "-" can be typed on the way to a negative number.
+  const [damageText, setDamageText] = useState(() => String(battleInfo.battleDamage ?? 0));
+
   useEffect(() => {
     const battleInfo = calculateBattleInfo(attackingCard, attackedCard);
     setBattleInfo(battleInfo);
+    setDamageText(String(battleInfo.battleDamage ?? 0));
   }, propsChanges)
 
   return (
@@ -84,38 +88,42 @@ export function CardZoneAttackMenuAction({
         Only Attack (Manual)
       </button>
       <div className="ygo-card-item-divider"></div>
-      <div>
+      <label className="ygo-flex ygo-gap-1" style={{ alignItems: "center" }}>
         <input
           style={{ display: "inline-block", width: "auto" }}
           type="checkbox"
-          checked={battleInfo?.attacking?.destroyed}
-        // onChange={e => onChangeCheckBox(e, "showCardWhenPlayed")}
+          checked={!!battleInfo?.attacking?.destroyed}
+          onChange={(e) => setBattleInfo((b) => ({ ...b, attacking: { destroyed: e.target.checked } }))}
         />
-        Destroy Attacking
-      </div>
+        Destroy the attacker
+      </label>
 
-      <div>
+      <label className="ygo-flex ygo-gap-1" style={{ alignItems: "center" }}>
         <input
           style={{ display: "inline-block", width: "auto" }}
           type="checkbox"
-          checked={battleInfo?.attacked?.destroyed}
-        // onChange={e => onChangeCheckBox(e, "showCardWhenPlayed")}
+          checked={!!battleInfo?.attacked?.destroyed}
+          onChange={(e) => setBattleInfo((b) => ({ ...b, attacked: { destroyed: e.target.checked } }))}
         />
-        Destroy Attacked
-      </div>
+        Destroy the attacked monster
+      </label>
 
       <div className="ygo-mt-2">
-        <label htmlFor="">Battle Damage</label>
+        <label htmlFor="ygo-battle-damage">Battle damage</label>
         <div className="ygo-pt-2">
-          <YGOInput value={battleInfo?.battleDamage?.toString()} />
+          <YGOInput
+            id="ygo-battle-damage"
+            inputMode="numeric"
+            value={damageText}
+            onChange={(e) => {
+              setDamageText(e.target.value);
+              const value = Number(e.target.value);
+              if (Number.isFinite(value)) setBattleInfo((b) => ({ ...b, battleDamage: value }));
+            }}
+          />
         </div>
         <div className="ygo-mt-1" style={{ opacity: 0.6, fontSize: "12px" }}>
-          <div>
-            Positive Value P{(1 - player + 1)}
-          </div>
-          <div>
-            Negative value P{player + 1}
-          </div>
+          Positive: Player {2 - player} takes it. Negative: Player {player + 1} does.
         </div>
       </div>
 

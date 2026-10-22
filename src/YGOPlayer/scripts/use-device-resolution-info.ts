@@ -30,14 +30,19 @@ interface DeviceResolutionInfo {
   height: number;
 }
 
+/**
+ * When the duel uses the phone layout: narrow screens, portrait tablets, and short screens (a phone
+ * held sideways), which have no room for the desktop side panel. The CSS layout queries match it.
+ */
+export const MOBILE_LAYOUT_QUERY =
+  "(max-width: 767px), (min-width: 768px) and (max-width: 1024px) and (orientation: portrait), (max-height: 500px)";
+
 export function getResolutionInfo(): DeviceResolutionInfo {
   const width = window.innerWidth;
   const height = window.innerHeight;
   const isPortrait = height > width;
   const { isMobile, isTablet } = getDeviceType();
-  const isMobileLayout = window.matchMedia(
-    "(max-width: 767px), (min-width: 768px) and (max-width: 1024px) and (orientation: portrait)"
-  ).matches;
+  const isMobileLayout = window.matchMedia(MOBILE_LAYOUT_QUERY).matches;
   const result = { isMobile, isMobileLayout, isTablet, isPortrait, width, height };
   return result;
 }

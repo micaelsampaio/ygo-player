@@ -52,15 +52,10 @@ export class SummonActions extends GameActionsBase {
     const zonesToSummon = getCardZones(this.duel, [card.originalOwner], zoneTypes);
     freedZones.forEach((z) => zonesToSummon.push(z));
 
-    this.cardSelection.startSelection({
-      zones: zonesToSummon,
-      selectionType: "zone",
-      ...(showConfirm === undefined ? {} : { showConfirm }),
-      onSelectionCompleted: (cardZone: CardZone) => {
-        this.duel.execCommand(build(cardZone.zone));
-        this.clearAction();
-      },
-    });
+    this.pickZone(zonesToSummon, (cardZone: CardZone) => {
+      this.duel.execCommand(build(cardZone.zone));
+      this.clearAction();
+    }, { showConfirm });
   }
 
   /**

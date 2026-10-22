@@ -6,6 +6,7 @@ import type { Command } from "ygo-core";
 import { ActionCardSelection } from "../../actions/ActionSelectCard";
 import { CardZone } from "../../game/CardZone";
 import type { YGODuel } from "../YGODuel";
+import { leftmostZone } from "../../domain/zone-order";
 
 /**
  * YGOGameActions, split by action family: this base holds what every family
@@ -100,12 +101,23 @@ export class GameActionsBase {
     const zones = getZones();
     if (skipIfNoZones && zones.length === 0) return;
 
+    this.pickZone(zones, (cardZone) => this.duel.execCommand(build(cardZone.zone, player)));
+  }
+
+  /**
+   * Have the player pick one of `zones` on the field, or, with the "auto place" setting on, take
+   * the leftmost free one at once (Main Monster / Spell & Trap zones before the Extra Monster Zones).
+   */
+  protected pickZone(zones: CardZone[], onPicked: (cardZone: CardZone) => void, { showConfirm }: { showConfirm?: boolean } = {}) {
+    if (this.duel.settings?.getConfigFromPath("autoPlaceZone") && zones.length > 0) {
+      onPicked(leftmostZone(zones));
+      return;
+    }
     this.cardSelection.startSelection({
       zones,
       selectionType: "zone",
-      onSelectionCompleted: (cardZone: CardZone) => {
-        this.duel.execCommand(build(cardZone.zone, player));
-      },
+      ...(showConfirm === undefined ? {} : { showConfirm }),
+      onSelectionCompleted: onPicked,
     });
   }
 

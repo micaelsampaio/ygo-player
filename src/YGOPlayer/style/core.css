@@ -133,16 +133,6 @@
     background-color: rgba(255, 255, 255, 0.25);
 }
 
-.ygo-player-core .ygo-card-menu .ygo-card-menu-section {
-    grid-column: 1 / -1;
-    padding-top: 4px;
-    border-top: 1px solid rgba(255, 255, 255, 0.25);
-    font-size: 11px;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.6);
-}
-
 .ygo-player-core .ygo-card-menu .ygo-timer-countdown-form {
     display: flex;
     flex-direction: column;
@@ -1125,7 +1115,8 @@
 
         /* mobile, tablet */
         @media (max-width: 767px),
-        (min-width: 768px) and (max-width: 1024px) and (orientation: portrait) {
+        (min-width: 768px) and (max-width: 1024px) and (orientation: portrait),
+    (max-height: 500px) {
             top: 10px;
             left: 50%;
             bottom: unset;
@@ -1251,7 +1242,8 @@
 
     /* mobile, tablet */
     @media (max-width: 767px),
-    (min-width: 768px) and (max-width: 1024px) and (orientation: portrait) {
+    (min-width: 768px) and (max-width: 1024px) and (orientation: portrait),
+    (max-height: 500px) {
         .ygo-mobile-layout-visible {
             display: block;
         }
@@ -1352,4 +1344,26 @@
 .ygo-player-core .ygo-card-menu.ygo-assist-prompt-dialog:has([data-board-chooser-open]) {
     visibility: hidden;
     pointer-events: none;
+}
+
+/* Touch screens: menu rows and small controls big enough for a finger. */
+@media (pointer: coarse) {
+    .ygo-player-core .ygo-card-menu .ygo-card-item {
+        min-height: 40px;
+        font-size: 15px;
+    }
+
+    .ygo-player-core .ygo-card-menu .ygo-phase-grid > .ygo-card-item {
+        min-height: 40px;
+    }
+
+    .ygo-player-core .ygo-chain-stop-option {
+        min-height: 36px;
+    }
+
+    .ygo-player-core .ygo-card-menu input[type="checkbox"] {
+        width: 22px !important;
+        height: 22px;
+    }
+
 }

@@ -165,9 +165,6 @@ export class YGOPlayerCore {
         const center = box.getCenter(new THREE.Vector3());
         const size = box.getSize(new THREE.Vector3());
 
-        this.isMobileLayout ? this.mobileMapBounds : this.mapBounds
-
-
         const activeBounds = this.isMobileLayout ? this.mobileMapBounds : this.mapBounds;
         ((activeBounds as THREE.Mesh).material as THREE.MeshBasicMaterial).color.set(0x00ff00);
 
@@ -235,9 +232,9 @@ export class YGOPlayerCore {
     }
 
     public setIsMobileLayout(isMobile: boolean) {
-        if (this.isMobileLayout != isMobile) {
-            this.resize();
-        }
+        if (this.isMobileLayout === isMobile) return;
+        // Set first: resize() fits the camera to the layout's bounds.
         this.isMobileLayout = isMobile;
+        this.resize();
     }
 }

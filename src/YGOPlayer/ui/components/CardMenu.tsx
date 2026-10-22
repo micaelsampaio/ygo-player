@@ -59,7 +59,24 @@ export function CardMenu({ menuRef, children, indicator, playerIndex, cols, x, y
 
 }
 
-/** Full-width label that starts a new group in a card menu (e.g. "More"). */
-export function CardMenuSection({ label }: { label: string }) {
-    return <div className="ygo-card-menu-section" role="presentation">{label}</div>
+// Remembered for the session: once you open "More", menus keep it open.
+let moreOpenPref = false;
+
+/**
+ * The less common moves (destroy, banish, to deck…) folded behind a "More" toggle, so a card's
+ * menu opens on the few moves you usually want.
+ */
+export function CardMenuMore({ children }: { children?: ReactNode }) {
+    const [open, setOpen] = useState(moreOpenPref);
+    return <>
+        <button
+            type="button"
+            className="ygo-card-item ygo-card-item-free-play"
+            aria-expanded={open}
+            onClick={() => setOpen((o) => { moreOpenPref = !o; return !o; })}
+        >
+            {open ? "Fewer moves" : "More moves…"}
+        </button>
+        {open && children}
+    </>
 }

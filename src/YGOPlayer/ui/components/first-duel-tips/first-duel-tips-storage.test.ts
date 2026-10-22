@@ -3,6 +3,7 @@ import {
   FIRST_DUEL_TIPS,
   FIRST_DUEL_TIPS_KEY,
   dismissFirstDuelTips,
+  duelTipsKind,
   hasDismissedFirstDuelTips,
   shouldOfferFirstDuelTips,
 } from "./first-duel-tips-storage";
@@ -21,19 +22,20 @@ const throwingStorage = {
 };
 
 describe("first-duel tips storage", () => {
-  it("is not dismissed until dismissed", () => {
+  it("is not dismissed until dismissed, separately per kind of duel", () => {
     const storage = memoryStorage();
-    expect(hasDismissedFirstDuelTips(storage)).toBe(false);
-    dismissFirstDuelTips(storage);
-    expect(storage.getItem(FIRST_DUEL_TIPS_KEY)).toBe("1");
-    expect(hasDismissedFirstDuelTips(storage)).toBe(true);
+    expect(hasDismissedFirstDuelTips("solo", storage)).toBe(false);
+    dismissFirstDuelTips("solo", storage);
+    expect(storage.getItem(`${FIRST_DUEL_TIPS_KEY}:solo`)).toBe("1");
+    expect(hasDismissedFirstDuelTips("solo", storage)).toBe(true);
+    expect(hasDismissedFirstDuelTips("bot", storage)).toBe(false);
   });
 
   it("never throws when storage is blocked or missing", () => {
-    expect(hasDismissedFirstDuelTips(throwingStorage)).toBe(false);
-    expect(() => dismissFirstDuelTips(throwingStorage)).not.toThrow();
-    expect(hasDismissedFirstDuelTips(null)).toBe(false);
-    expect(() => dismissFirstDuelTips(null)).not.toThrow();
+    expect(hasDismissedFirstDuelTips("bot", throwingStorage)).toBe(false);
+    expect(() => dismissFirstDuelTips("bot", throwingStorage)).not.toThrow();
+    expect(hasDismissedFirstDuelTips("bot", null)).toBe(false);
+    expect(() => dismissFirstDuelTips("bot", null)).not.toThrow();
   });
 });
 
@@ -44,8 +46,16 @@ describe("shouldOfferFirstDuelTips", () => {
     expect(shouldOfferFirstDuelTips({ isPlayerClient: false, gameMode: "DUEL" })).toBe(false);
   });
 
-  it("keeps the tour short", () => {
-    expect(FIRST_DUEL_TIPS.length).toBeGreaterThanOrEqual(3);
-    expect(FIRST_DUEL_TIPS.length).toBeLessThanOrEqual(4);
+  it("keeps every tour short", () => {
+    for (const tips of Object.values(FIRST_DUEL_TIPS)) {
+      expect(tips.length).toBeGreaterThanOrEqual(3);
+      expect(tips.length).toBeLessThanOrEqual(4);
+    }
+  });
+
+  it("picks the tips for the kind of duel", () => {
+    expect(duelTipsKind({ engineRoom: true, controlsBothSides: false })).toBe("bot");
+    expect(duelTipsKind({ engineRoom: false, controlsBothSides: true })).toBe("solo");
+    expect(duelTipsKind({ engineRoom: false, controlsBothSides: false })).toBe("pvp");
   });
 });

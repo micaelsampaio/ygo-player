@@ -3,7 +3,7 @@ import { useAnchoredMenu } from "../components/use-anchored-menu";
 import { YGODuel } from "../../core/YGODuel";
 import { Card, FieldZone } from "ygo-core";
 import { useCallback, useRef } from "react";
-import { CardMenu, CardMenuSection } from "../components/CardMenu";
+import { CardMenu, CardMenuMore } from "../components/CardMenu";
 import { ActionButton, YGOIcon } from "../components/ActionButton";
 import { activateLabel, chainMenuState, negateLinkLabel } from "../../domain/chain-mode";
 
@@ -151,7 +151,8 @@ export function CardHandMenu({
 
   // Shared "More" group: the less common moves, with full labels.
   const moreActions = <>
-    <CardMenuSection label="More" />
+    {isMonster && negateLinks}
+    <CardMenuMore>
     {hasXyzMonstersInField && (
       <button className="ygo-card-item" type="button" onClick={attachMaterial}>
         Attach to Xyz
@@ -161,7 +162,6 @@ export function CardHandMenu({
       Reveal
     </button>
     {isMonster && <button className="ygo-card-item" type="button" onClick={negateCard}>Negate</button>}
-    {isMonster && negateLinks}
     {isMonster && <ActionButton className="ygo-card-item" onClick={destroy} icon={<YGOIcon icon="destroy" />}>
       Destroy
     </ActionButton>}
@@ -183,6 +183,7 @@ export function CardHandMenu({
     <button className="ygo-card-item" type="button" onClick={toST}>
       To Spell/Trap Zone
     </button>
+    </CardMenuMore>
   </>;
 
   if (!isMonster && isSpellOrTrap) {

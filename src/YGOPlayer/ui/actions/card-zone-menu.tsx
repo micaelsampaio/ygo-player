@@ -3,7 +3,7 @@ import { useAnchoredMenu } from "../components/use-anchored-menu";
 import { YGOGameUtils } from "ygo-core";
 import { Card, FieldZone } from "ygo-core";
 import { YGODuel } from "../../core/YGODuel";
-import { CardMenu, CardMenuSection } from "../components/CardMenu";
+import { CardMenu, CardMenuMore } from "../components/CardMenu";
 import { GameCard } from "../../game/GameCard";
 import { ActionButton, YGOIcon } from "../components/ActionButton";
 import { activateLabel, chainMenuState, negateLinkLabel } from "../../domain/chain-mode";
@@ -207,10 +207,12 @@ export function CardZoneMenu({
           Move
         </button>
 
-        <CardMenuSection label="More" />
+        {/* Only while a chain is open, so kept out of "More". */}
+        {negateLinks}
+
+        <CardMenuMore>
 
         <button className="ygo-card-item" type="button" onClick={negateCard}>Negate</button>
-        {negateLinks}
 
         <button type="button" className="ygo-card-item" onClick={destroyCard}>
           Destroy
@@ -240,6 +242,7 @@ export function CardZoneMenu({
           </button>
           {deckMoves}
         </>}
+        </CardMenuMore>
       </CardMenu>)
   }
 
@@ -294,7 +297,9 @@ export function CardZoneMenu({
         Move
       </button>
 
-      <CardMenuSection label="More" />
+      {negateLinks}
+
+      <CardMenuMore>
 
       {canAttachMaterial && (
         <button type="button" className="ygo-card-item" onClick={attachMaterial}>
@@ -303,7 +308,6 @@ export function CardZoneMenu({
       )}
 
       <button className="ygo-card-item" type="button" onClick={negateCard}>Negate</button>
-      {negateLinks}
 
       <ActionButton className="ygo-card-item" onClick={destroyCard} icon={<YGOIcon icon="destroy" />}>
         Destroy
@@ -336,6 +340,7 @@ export function CardZoneMenu({
       {deckMoves}
 
       <button type="button" className="ygo-card-item" onClick={changeCardStats}>Change ATK/DEF/Level</button>
+      </CardMenuMore>
     </CardMenu>
   );
 }

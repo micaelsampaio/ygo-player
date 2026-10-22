@@ -6,6 +6,7 @@ import { YGOUiElement } from "../types";
 import { YGOMouseEvents } from "../core/components/YGOMouseEvents";
 import { ActionCardHandMenu } from "../actions/ActionCardHandMenu";
 import { CardMaterial } from "./materials/game-card-material";
+import { cancelCardPreview, previewCardOnHover } from "./hover-preview";
 import {
   buildCardFaceMaterials,
   disposeCardMaterials,
@@ -99,9 +100,14 @@ export class GameCardHand extends YGOEntity implements YGOUiElement {
     if (!this.card) return;
     this.gameObject.position.copy(this.position);
     this.gameObject.position.y += this.duel.perspective.isPlayerPOV(this.card.owner) ? 0.3 : -0.3;
+    // An opponent's hand only shows when their cards are visible to you.
+    if (this.duel.perspective.isPlayerPOV(this.card.owner) || this.duel.fields[this.player].settings.showCards) {
+      previewCardOnHover(this.duel, this.player, this.card);
+    }
   }
 
   onMouseLeave?(event: MouseEvent): void {
+    cancelCardPreview();
     if (!this.isVisible) return;
     if (this.isActive) return;
     if (!this.isUiElementHover) return;

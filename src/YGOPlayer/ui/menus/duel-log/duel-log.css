@@ -1,8 +1,10 @@
 .ygo-player-core .ygo-duel-log-container {
     position: absolute;
     right: 0px;
-    top: var(--ygo-header-margin);
-    bottom: var(--ygo-footer-margin);
+    /* Desktop: between the two player HUDs (opponent flush at the top, you at bottom 100px, each
+       86px tall) so names and LP stay visible. The phone layout keeps the header/footer margins. */
+    top: 98px;
+    bottom: 198px;
     width: 250px;
     color: #FFF;
     background-color: var(--ygo-overlay-background-color);
@@ -11,6 +13,40 @@
     overflow-y: auto;
     border-radius: 10px;
     z-index: 5;
+}
+
+/* Phones only: there the log covers the floating button that opens and closes it. */
+.ygo-player-core .ygo-duel-log-container .ygo-duel-log-header {
+    display: none;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 4px 4px 12px;
+    font-size: 13px;
+    font-weight: bold;
+    background-color: var(--ygo-background-color);
+    border-bottom: 1px solid var(--ygo-border-color);
+}
+
+.ygo-player-core .ygo-duel-log-container .ygo-duel-log-close {
+    width: 36px;
+    height: 36px;
+    border: none;
+    border-radius: 999px;
+    background: transparent;
+    color: #fff;
+    font-size: 16px;
+    cursor: pointer;
+
+    &:hover {
+        background-color: var(--ygo-float-button-bg-color-hover);
+    }
+
+    &:focus-visible {
+        outline: 2px solid var(--ygo-primary-color);
+    }
 }
 
 .ygo-player-core {
@@ -153,3 +189,16 @@
     }
 }
 
+@media (max-width: 767px),
+(max-width: 1024px) and (orientation: landscape),
+(min-width: 768px) and (max-width: 1024px) and (orientation: portrait),
+(max-height: 500px) {
+    .ygo-player-core .ygo-duel-log-container {
+        top: var(--ygo-header-margin);
+        bottom: var(--ygo-footer-margin);
+    }
+
+    .ygo-player-core .ygo-duel-log-container .ygo-duel-log-header {
+        display: flex;
+    }
+}

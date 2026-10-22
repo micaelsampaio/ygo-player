@@ -1,15 +1,17 @@
+import { Fragment } from "react";
 import { Modal } from "../../../components/Modal";
 
 const shortcuts = [
-  { keys: ["Arrow Left"], action: "Previous Duel Event" },
-  { keys: ["Arrow Right"], action: "Next Duel Event" },
+  { keys: ["N"], action: "Next phase" },
+  { keys: ["E"], action: "End turn" },
+  { keys: ["K"], action: "Pass priority" },
+  { keys: ["Arrow Left"], action: "Undo (previous duel event)" },
+  { keys: ["Arrow Right"], action: "Redo (next duel event)" },
   { keys: ["Space"], action: "Play / Pause · Assisted Mode: Continue / Don't respond, or the only option" },
-  { keys: ["Esc"], action: "Open / Close menu" },
-  { keys: ["Esc"], action: "Open Settings" },
-  { keys: ["C"], action: "Toggle Game Controls" },
-  { keys: ["D"], action: "Toggle Duel Log" },
-  { keys: ["Shift", "P"], action: "Open Shortcuts Information" },
-  { keys: ["K"], action: "Pass Priority" },
+  { keys: ["Esc"], action: "Cancel what you're doing · with nothing open, Settings" },
+  { keys: ["D"], action: "Toggle duel log" },
+  { keys: ["C"], action: "Toggle replay controls" },
+  { keys: ["Shift", "P"], action: "Keyboard shortcuts" },
 ];
 
 export function GamControlsDialog({ close }: { close: () => void }) {
@@ -21,21 +23,23 @@ export function GamControlsDialog({ close }: { close: () => void }) {
       </Modal.Header>
       <Modal.Body>
         <table className="ygo-simple-table ygo-w-full">
+          <tbody>
           {shortcuts.map(({ keys, action }, index) => (
-            <tr key={index}>
+            <tr key={action}>
               <td className="ygo-text-lg">{action}</td>
               <td>
-                <div className="ygo-flex ygo-items-center ygo-justify-center ygo-w-full ygo-pt-2 ygo-pb-2" style={{ gap: "6Dpx" }}>
+                <div className="ygo-flex ygo-items-center ygo-justify-center ygo-w-full ygo-pt-2 ygo-pb-2" style={{ gap: "6px" }}>
                   {keys.map((key, index2) => {
-                    return <>
-                      <div className="ygo-key" key={index + " " + index2}>{key}</div>
+                    return <Fragment key={key}>
+                      <div className="ygo-key">{key}</div>
                       {index2 < keys.length - 1 && <div>+</div>}
-                    </>
+                    </Fragment>
                   })}
                 </div>
               </td>
             </tr>
           ))}
+          </tbody>
         </table>
       </Modal.Body>
     </Modal.Dialog >

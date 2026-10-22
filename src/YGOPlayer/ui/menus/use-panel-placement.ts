@@ -85,8 +85,8 @@ export function usePanelPlacement(panelRef: { current: HTMLDivElement | null }, 
     ? isMobileLayout
       // Below the (scaled-down) opponent HUD, kept narrow so the board stays visible.
       ? { top: 90, left: "auto", right: 12, maxHeight: "45%" }
-      // Docked on the right between the two player HUDs (opponent: top 20px, you: bottom 100px).
-      : { top: 130, left: "auto", right: 20, maxHeight: "calc(100% - 340px)" }
+      // Docked on the right between the two player HUDs (opponent: flush top, you: bottom 100px; 86px each).
+      : { top: 98, left: "auto", right: 20, maxHeight: "calc(100% - 296px)" }
     : { top: y, left: x, right: "auto", maxHeight: isMobileLayout ? "45%" : `calc(100% - ${y + 20}px)` };
 
   const collapsed = perDuel ? sessionCollapsed : placement.collapsed;

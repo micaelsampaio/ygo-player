@@ -1,10 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { YGODuel } from "../../../../core/YGODuel";
 import { YGOPlayerRemoteActions } from "ygo-core";
+import { isEngineRoom } from "../../../../domain/chain-mode";
 
 const LONG_PRESS_MS = 600;
 
-export function PlayerRemoteActionsComponent({ duel }: { duel: YGODuel }) {
+/**
+ * Pass/OK, plus Think and Wait for a human opponent (they mean nothing to the bot). `compact`
+ * is the phone version: OK alone, as a floating button.
+ */
+export function PlayerRemoteActionsComponent({ duel, compact = false }: { duel: YGODuel; compact?: boolean }) {
+  const vsHuman = !isEngineRoom(duel.ygo.options);
   // Lit for a held OK, and in Assisted Mode for Chain stops Off (the same thing, kept on).
   const isLit = () => duel.continuousAccept || duel.chainStops?.value === "off";
   const [continuousAccept, setContinuousAccept] = useState(isLit);
@@ -68,9 +74,11 @@ export function PlayerRemoteActionsComponent({ duel }: { duel: YGODuel }) {
     duel.serverActions.ygo.sendPlayerAction({ action: YGOPlayerRemoteActions.WAIT });
   }, [duel]);
 
-  return <div className="ygo-player-actions-menu">
+  return <div className={compact ? "ygo-player-actions-compact" : "ygo-player-actions-menu"}>
     <button
-      className={`ygo-btn ygo-btn-action${continuousAccept ? " ygo-btn-action-active" : ""}`}
+      className={compact
+        ? `ygo-floating-button${continuousAccept ? " ygo-floating-button-active" : ""}`
+        : `ygo-btn ygo-btn-action${continuousAccept ? " ygo-btn-action-active" : ""}`}
       type="button"
       onPointerDown={onOkPointerDown}
       onPointerUp={onOkPointerUp}
@@ -83,11 +91,13 @@ export function PlayerRemoteActionsComponent({ duel }: { duel: YGODuel }) {
     >
       <div className="ygo-ui-icon ygo-p-action-ok"></div>
     </button>
+    {vsHuman && !compact && <>
     <button className="ygo-btn ygo-btn-action" type="button" onClick={thinking} aria-label="Thinking" title="Thinking: tell your opponent you need a moment">
       <div className="ygo-ui-icon ygo-p-action-think"></div>
     </button>
     <button className="ygo-btn ygo-btn-action" type="button" onClick={wait} aria-label="Wait" title="Wait: ask your opponent to hold, you want to respond">
       <div className="ygo-ui-icon ygo-p-action-wait"></div>
     </button>
+    </>}
   </div>
 }

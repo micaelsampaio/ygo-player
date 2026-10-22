@@ -1,11 +1,12 @@
 .ygo-player-core {
     .ygo-first-duel-tips {
+        /* Bottom left, over the side panel's chat: engine prompts and card menus open over the
+           field, and the tips must not hide them. */
         position: fixed;
-        top: 90px;
-        left: 50%;
-        transform: translateX(-50%);
+        bottom: 20px;
+        left: 16px;
         z-index: 120;
-        width: min(340px, calc(100vw - 32px));
+        width: min(300px, calc(100vw - 32px));
         box-sizing: border-box;
         padding: 12px 14px;
         border: 1px solid var(--ygo-primary-color);
@@ -55,5 +56,17 @@
         align-items: center;
         justify-content: space-between;
         gap: var(--ygo-gap-sm);
+    }
+}
+
+/* Phone layout: no side panel, so the tips sit mid-screen between the two sides' zones. */
+@media (max-width: 767px),
+(min-width: 768px) and (max-width: 1024px) and (orientation: portrait),
+(max-height: 500px) {
+    .ygo-player-core .ygo-first-duel-tips {
+        bottom: auto;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
     }
 }
