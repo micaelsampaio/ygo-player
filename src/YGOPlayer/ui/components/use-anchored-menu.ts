@@ -16,7 +16,7 @@ export type MenuAnchor =
 
 /**
  * Positions a card menu (`menuRef`, measured after render) at its anchor,
- * kept inside the viewport, whenever `deps` change. `getAnchor` runs inside
+ * kept inside the viewport, whenever `deps` change and whenever its size does. `getAnchor` runs inside
  * the layout effect. A menu opened from the keyboard (an opening event with
  * no pointer position) gets focus on its first button, so its actions are
  * one Tab away.
@@ -29,22 +29,29 @@ export function useAnchoredMenu(
 ) {
   useLayoutEffect(() => {
     const container = menuRef.current!;
-    const { width, height } = container.getBoundingClientRect();
-    const size = { width, height };
-    const viewport = { width: window.innerWidth, height: window.innerHeight };
     const anchor = getAnchor();
+    const place = () => {
+      const { width, height } = container.getBoundingClientRect();
+      const size = { width, height };
+      const viewport = { width: window.innerWidth, height: window.innerHeight };
 
-    let position: MenuPosition;
-    if (anchor.kind === "object3d") {
-      position = placeAboveRect(getTransformFromCamera(duel, anchor.object), size, viewport, { below: anchor.below });
-    } else if (anchor.kind === "left-of") {
-      position = placeLeftOfRect(anchor.element.getBoundingClientRect(), size, viewport);
-    } else {
-      position = anchorCardMenu(anchor.event, anchor.element, size, viewport);
-    }
+      let position: MenuPosition;
+      if (anchor.kind === "object3d") {
+        position = placeAboveRect(getTransformFromCamera(duel, anchor.object), size, viewport, { below: anchor.below });
+      } else if (anchor.kind === "left-of") {
+        position = placeLeftOfRect(anchor.element.getBoundingClientRect(), size, viewport);
+      } else {
+        position = anchorCardMenu(anchor.event, anchor.element, size, viewport);
+      }
 
-    container.style.top = position.top + "px";
-    container.style.left = position.left + "px";
+      container.style.top = position.top + "px";
+      container.style.left = position.left + "px";
+    };
+    place();
+    // A menu that grows after it opened (Show free-play moves) is placed again, or it would run
+    // off the bottom of the screen from where its smaller self fitted.
+    const resized = typeof ResizeObserver === "undefined" ? undefined : new ResizeObserver(place);
+    resized?.observe(container);
 
     const fromKeyboard = anchor.kind === "pointer"
       ? !hasPointerPosition(anchor.event)
@@ -52,6 +59,7 @@ export function useAnchoredMenu(
     if (fromKeyboard) {
       container.querySelector<HTMLButtonElement>("button")?.focus();
     }
+    return () => resized?.disconnect();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);
 }
