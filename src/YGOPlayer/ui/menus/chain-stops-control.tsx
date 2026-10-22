@@ -44,6 +44,8 @@ export function ChainStopsControl({ value, held, onChange }: { value: ChainStops
                 role="radio"
                 aria-checked={active}
                 tabIndex={active ? 0 : -1}
+                // Not focused by a click: Space stays the panel's Continue (arrow keys still move here).
+                onMouseDown={(e) => e.preventDefault()}
                 onClick={() => onChange(c.value)}
                 onKeyDown={(e) => {
                   if (e.key === "ArrowRight" || e.key === "ArrowDown") { e.preventDefault(); pick(i + 1); }

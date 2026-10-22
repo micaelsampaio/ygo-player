@@ -21,6 +21,9 @@ import { isMasterDuelStyle } from "../assist-card-actions";
 /** How long the panel waits after a choice for the moves it caused to start. */
 const CHOICE_SETTLE_MS = 700;
 
+/** Mouse clicks don't focus the panel's own controls: Space stays the panel's Continue / Next Phase. */
+export const keepFocusOff = (e: { preventDefault(): void }) => e.preventDefault();
+
 /** A prompt that finishes the human's own move (where to put the card, in which position). */
 export function isOwnMovePrompt(result: AssistQueryResult | null | undefined): boolean {
   const prompt = (result as { pending?: string; prompt?: { kind?: string } } | null | undefined);
@@ -407,6 +410,9 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
         </span>
         <button
           onPointerDown={stop}
+          // A click doesn't leave focus here, or Space (the panel's Continue / Next Phase) would
+          // press this button again and fold the panel.
+          onMouseDown={keepFocusOff}
           onClick={placement.toggleCollapsed}
           aria-label={collapsed ? "Expand options" : "Collapse options"}
           aria-expanded={!collapsed}
