@@ -1,0 +1,90 @@
+.ygo-player-core .ygo-battle-forecast-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 7;
+}
+
+/* Above the target by default (the arrow comes from below); under it for a direct attack (top of the board). */
+.ygo-player-core .ygo-battle-forecast {
+  position: absolute;
+  transform: translate(-50%, calc(-100% - 56px));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 12px 7px;
+  border-radius: 8px;
+  background: rgba(10, 14, 28, 0.84);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6);
+  color: #fff;
+  font-family: "Barlow Condensed", "Arial Narrow", sans-serif;
+  white-space: nowrap;
+  pointer-events: none;
+  animation: ygo-battle-forecast-in 140ms ease-out;
+}
+
+.ygo-player-core .ygo-battle-forecast.ygo-battle-forecast-below {
+  transform: translate(-50%, 56px);
+}
+
+.ygo-player-core .ygo-battle-forecast-stats {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 22px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.ygo-player-core .ygo-battle-forecast-stat small {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  margin-right: 3px;
+  opacity: 0.75;
+}
+
+.ygo-player-core .ygo-battle-forecast-stat.ygo-player-0 { color: #7fa2ff; }
+.ygo-player-core .ygo-battle-forecast-stat.ygo-player-1 { color: #ff7a73; }
+
+.ygo-player-core .ygo-battle-forecast-vs {
+  font-size: 12px;
+  font-weight: 800;
+  color: #ffc93c;
+  letter-spacing: 0.08em;
+}
+
+.ygo-player-core .ygo-battle-forecast-outcome {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.ygo-player-core .ygo-battle-forecast-destroys .ygo-battle-forecast-outcome,
+.ygo-player-core .ygo-battle-forecast-direct .ygo-battle-forecast-outcome { color: #ffc93c; }
+.ygo-player-core .ygo-battle-forecast-destroyed .ygo-battle-forecast-outcome,
+.ygo-player-core .ygo-battle-forecast-both .ygo-battle-forecast-outcome { color: #ff5a4f; }
+
+.ygo-player-core .ygo-battle-forecast-damage {
+  font-size: 18px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: #ff7a73;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
+}
+
+.ygo-player-core .ygo-battle-forecast-damage.ygo-battle-forecast-damage-you { color: #ff3b3b; }
+
+@keyframes ygo-battle-forecast-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ygo-player-core .ygo-battle-forecast { animation: none; }
+}

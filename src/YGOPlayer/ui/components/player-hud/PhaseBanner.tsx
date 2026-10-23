@@ -12,7 +12,7 @@ export function showsPhaseBanner(prev: { turn: number; phase: string } | null, n
     return prev.turn === next.turn && prev.phase !== next.phase;
 }
 
-/** Dueling Nexus-style "Battle Phase" label at the top of the field on each phase change, in
+/** Master Duel-style "Battle Phase" sweep across the middle of the field on each phase change, in
  * every mode (manual duels too: it only reads the phase the 3D phase coin shows). */
 export function PhaseBanner({ duel }: { duel: YGODuel }) {
     const { turn, phase, isPlayerClient } = useDuelTurnState(duel);
@@ -21,15 +21,20 @@ export function PhaseBanner({ duel }: { duel: YGODuel }) {
 
     useEffect(() => {
         const next = { turn, phase };
-        const show = showsPhaseBanner(last.current, next, isPlayerClient);
+        const prev = last.current;
+        const show = showsPhaseBanner(prev, next, isPlayerClient);
         last.current = next;
-        if (!show) return;
+        if (!show) {
+            // A new turn or duel: a banner still up would lose its hide timer (this run cleared it).
+            if (!prev || prev.turn !== next.turn) setShown(null);
+            return;
+        }
         setShown(phaseLabel(phase));
         const timer = setTimeout(() => setShown(null), PHASE_BANNER_MS);
         return () => clearTimeout(timer);
     }, [turn, phase, isPlayerClient]);
 
     return <div className="ygo-phase-banner-wrap" role="status" aria-live="polite">
-        {shown && <div className="ygo-phase-banner">{shown}</div>}
+        {shown && <div key={shown} className={`ygo-phase-banner${/battle/i.test(shown) ? " ygo-phase-battle" : ""}`}>{shown}</div>}
     </div>;
 }

@@ -8,6 +8,10 @@ import { Ease } from '../scripts/ease';
 import { lerp } from 'three/src/math/MathUtils';
 import type { GameHandZone } from '../game/GameHandZone';
 import type { BattlePhaseButton } from '../game/BattlePhaseButton';
+import { AimArrow } from '../duel-events/utils/battle-fx';
+
+/** The pointer snaps the aiming arrow to a target this close to it (board units). */
+const AIM_SNAP = 4;
 
 enum STATE { SELECTION, PRE_ATTACK_MENU }
 export class ActionAttackSelection extends YGOComponent implements YGOAction {
@@ -18,6 +22,12 @@ export class ActionAttackSelection extends YGOComponent implements YGOAction {
   private opacityValue: number = 0.0;
   private card: CardZone | undefined;
   private attackButton!: BattlePhaseButton;
+  private aimArrow: AimArrow | null = null;
+  private directTarget: THREE.Vector3 | null = null;
+  private readonly raycaster = new THREE.Raycaster();
+  private aimPlayer = 0;
+  /** The target the arrow is snapped to ("" none, "direct", else a zone), for the "attack-aim" event. */
+  private aimKey = "";
 
   constructor(private duel: YGODuel) {
     super("attack_selection_action");
@@ -59,10 +69,13 @@ export class ActionAttackSelection extends YGOComponent implements YGOAction {
   startSelection({ player, attackButton, cardZone, zones, directAttack }: { player: number, attackButton: BattlePhaseButton, cardZone: CardZone, zones: CardZone[], directAttack?: boolean }) {
     this.duel.actionManager.setAction(this);
     this.attackButton = attackButton;
+    this.aimPlayer = player;
 
+    this.directTarget = null;
     if (directAttack) {
       const playerId = "P" + (1 - player);
       const gameHandZone = this.duel.fields[1 - player].hand.gameHandZone;
+      this.directTarget = gameHandZone.gameObject.position.clone();
       this.selectionZones.get(playerId)!.cardSelection.visible = true;
       gameHandZone.gameObject.visible = true;
       gameHandZone.onClickCb = () => {
@@ -134,9 +147,49 @@ export class ActionAttackSelection extends YGOComponent implements YGOAction {
       const yOscillator = Math.sin(this.time / 2) * 0.5;
       this.card.getGameCard().gameObject.position.y = startY + yOscillator;
     }
+
+    if (this.state === STATE.SELECTION && this.card) this.updateAimArrow();
+    else { this.aimArrow?.hide(); this.setAim(null); }
+  }
+
+  /** The aiming arrow from the attacker to the pointer on the board, snapped to the target under it. */
+  private updateAimArrow() {
+    const from = this.card!.position;
+    const pointer = this.duel.mouseEvents.mousePositionOnScreen;
+    this.raycaster.setFromCamera(new THREE.Vector2(pointer.x, pointer.y), this.duel.core.camera);
+    const board = new THREE.Plane(new THREE.Vector3(0, 0, 1), -from.z);
+    const hit = this.raycaster.ray.intersectPlane(board, new THREE.Vector3());
+    if (!hit) { this.setAim(null); return this.aimArrow?.hide(); }
+    const targets = [...(this.zones ?? []).map((z) => ({ pos: z.position, zone: z.zone })), ...(this.directTarget ? [{ pos: this.directTarget, zone: null }] : [])];
+    let to = hit;
+    let best = AIM_SNAP;
+    let snapped: { pos: THREE.Vector3; zone: string | null } | null = null;
+    for (const t of targets) {
+      const d = Math.hypot(t.pos.x - hit.x, t.pos.y - hit.y);
+      if (d < best) { best = d; to = t.pos; snapped = t; }
+    }
+    this.setAim(snapped);
+    if (!this.aimArrow) this.aimArrow = new AimArrow(this.duel);
+    this.aimArrow.show(from, to, this.duel.core.unscaledDeltaTime);
+  }
+
+  /** Tells the UI (battle forecast) when the snapped target changes. */
+  private setAim(target: { pos: THREE.Vector3; zone: string | null } | null) {
+    const key = !target || !this.card ? "" : target.zone ?? "direct";
+    if (key === this.aimKey) return;
+    this.aimKey = key;
+    this.duel.events.dispatch("attack-aim", !target || !this.card ? null : {
+      player: this.aimPlayer,
+      attackerZone: this.card.zone,
+      targetZone: target.zone,
+      direct: target.zone === null,
+      position: { x: target.pos.x, y: target.pos.y, z: target.pos.z },
+    });
   }
 
   onActionEnd() {
+    this.setAim(null);
+    this.aimArrow?.hide();
     this.hideCardSelection();
 
     this.attackButton?.gameObject.rotation.copy(this.attackButton.rotation);

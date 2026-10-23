@@ -128,6 +128,11 @@ export function PlayerHUD({ duel, player, visible }: { duel: YGODuel, player: nu
     </div>
 }
 
+/** How long the LP counter takes to roll to a new value at normal speed. */
+const LP_ROLL_MS = 700;
+
+const lpRollReduced = () => typeof window !== "undefined" && !!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+
 function usePlayerLp(duel: YGODuel, player: number): { LP: number, lifePointsState: LifePointsState } {
     const field = duel.ygo.getField(player);
     const [lps, setLps] = useState<number>(field.lp);
@@ -140,26 +145,31 @@ function usePlayerLp(duel: YGODuel, player: number): { LP: number, lifePointsSta
             cancelAnimationFrame(animationRef.current);
         }
         const state = oldLps > newLps ? LifePointsState.DECREASING : oldLps < newLps ? LifePointsState.INCREASING : LifePointsState.IDLE;
-        const step = oldLps > newLps ? -Math.ceil((oldLps - newLps) / 20) : Math.ceil((newLps - oldLps) / 20);
-        let current = oldLps;
-
+        if (lpRollReduced()) {
+            setLps(newLps);
+            setLifePointsState(LifePointsState.IDLE);
+            animationRef.current = null;
+            return;
+        }
+        // Time-based, eased and at the duel's speed: a big hit rolls fast, then settles on the number.
+        const duration = LP_ROLL_MS / Math.max(0.5, duel.core.timeScale || 1);
+        const startedAt = performance.now();
         setLifePointsState(state);
 
-        const animate = () => {
-            current += step;
-
-            if ((step < 0 && current <= newLps) || (step > 0 && current >= newLps)) {
-                setLps(newLps); setLifePointsState(state);
+        const animate = (now: number) => {
+            const k = Math.min(1, (now - startedAt) / duration);
+            const eased = 1 - (1 - k) ** 3;
+            if (k >= 1) {
+                setLps(newLps);
                 setLifePointsState(LifePointsState.IDLE);
                 animationRef.current = null;
                 return;
             }
-
-            setLps(current);
+            setLps(Math.round(oldLps + (newLps - oldLps) * eased));
             animationRef.current = requestAnimationFrame(animate);
         };
 
-        animate();
+        animationRef.current = requestAnimationFrame(animate);
     };
 
     useEffect(() => {

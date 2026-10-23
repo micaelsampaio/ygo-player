@@ -37,7 +37,7 @@ vi.mock("../../scripts/ygo-utils", async () => {
   };
 });
 
-import { MoveCardEventHandler, exactLandedZone } from "./move-card-event";
+import { MoveCardEventHandler, exactLandedZone, isBattleDestruction } from "./move-card-event";
 
 type Props = ConstructorParameters<typeof MoveCardEventHandler>[0];
 
@@ -227,5 +227,36 @@ describe("MoveCardEventHandler — a destination without a slot (real core)", ()
     core.exec(new YGOCommands.MoveCardCommand({ player: 0, id: 101, originZone: "M-1", zone: "B", type: "Banish" } as never));
     const banish = logs.at(-1) as Props["event"];
     expect(() => new MoveCardEventHandler({ ...setup(banish).props, ygo: core as never, event: banish })).not.toThrow();
+  });
+});
+
+describe("isBattleDestruction", () => {
+  const L = YGODuelEvents.LogType;
+  const attack = { type: L.Attack, player: 0, commandId: 1, attackingId: 10, attackingZone: "M-1", attackedId: 20, attackedZone: "M2-3" };
+  const move = (id: number, originZone: string, zone = "GY2", type: string = L.MoveCard) =>
+    ({ type, player: 0, commandId: 2, id, originZone, zone }) as never;
+
+  it("is the attacked or the attacking monster going from its zone to the GY after the attack", () => {
+    const destroyed = move(20, "M2-3");
+    expect(isBattleDestruction([attack, { type: L.LifePoints, player: 1, commandId: 2 }, destroyed] as never, destroyed)).toBe(true);
+    const attacker = move(10, "M-1", "GY");
+    expect(isBattleDestruction([attack, attacker] as never, attacker)).toBe(true);
+  });
+
+  it("finds a copied log by its command", () => {
+    const destroyed = move(20, "M2-3");
+    expect(isBattleDestruction([attack, destroyed] as never, { ...(destroyed as object) } as never)).toBe(true);
+  });
+
+  it("is not another monster, another move, a labelled move, or after the phase changed", () => {
+    const other = move(30, "M2-2");
+    expect(isBattleDestruction([attack, other] as never, other)).toBe(false);
+    const banished = move(20, "M2-3", "B2");
+    expect(isBattleDestruction([attack, banished] as never, banished)).toBe(false);
+    const sent = move(20, "M2-3", "GY2", L.SendToGY);
+    expect(isBattleDestruction([attack, sent] as never, sent)).toBe(false);
+    const later = move(20, "M2-3");
+    expect(isBattleDestruction([attack, { type: L.DuelPhase, player: 0, commandId: 2 }, later] as never, later)).toBe(false);
+    expect(isBattleDestruction(undefined, later)).toBe(false);
   });
 });

@@ -1,11 +1,17 @@
 import { YGOAudioClip, YGOAudioLayer } from "../types";
 import { YGOComponent } from "./YGOComponent";
 import { YGOPlayerLogger } from "./YGOPlayerLogger";
+import { SFX_GAIN, SfxBufferCache, SfxName } from "./sfx/battle-sfx";
+
+type AudioContextCtor = new () => AudioContext;
 
 export class YGOSoundController extends YGOComponent {
     private sounds: Map<string, YGOAudioClip[]>;
     private layers: YGOAudioLayer[];
     private timeScale: number;
+    /** Lazily created on the first synthesized effect; null when Web Audio is unavailable. */
+    private audioContext: AudioContext | null | undefined;
+    private sfxBuffers = new SfxBufferCache();
 
     constructor(private logger: YGOPlayerLogger = new YGOPlayerLogger()) {
         super("audio_controller");
@@ -96,6 +102,58 @@ export class YGOSoundController extends YGOComponent {
         }
 
         return instance;
+    }
+
+    /**
+     * The shared AudioContext for synthesized effects, created on first use.
+     * Null where Web Audio is missing (jsdom, very old browsers).
+     */
+    public getAudioContext(): AudioContext | null {
+        if (this.audioContext !== undefined) return this.audioContext;
+        const g = globalThis as unknown as { AudioContext?: AudioContextCtor; webkitAudioContext?: AudioContextCtor };
+        const Ctor = g.AudioContext ?? g.webkitAudioContext;
+        try {
+            this.audioContext = Ctor ? new Ctor() : null;
+        } catch {
+            this.audioContext = null;
+        }
+        return this.audioContext;
+    }
+
+    /**
+     * Plays a procedurally synthesized effect (core/sfx/battle-sfx.ts) on a
+     * layer ("GAME" by default), honoring that layer's volume (0 = muted) and,
+     * on a time-scaled layer, the game speed (the effect is rendered shorter,
+     * not pitched up). Returns false when nothing was played.
+     */
+    public playSfx(name: SfxName, { layer = "GAME", volume = 1 }: { layer?: string; volume?: number } = {}): boolean {
+        const targetLayer = this.layers.find(l => l.name === layer);
+        if (!targetLayer || !targetLayer.enabled) return false;
+        const gain = volume * SFX_GAIN[name] * targetLayer.volume;
+        if (!(gain > 0)) return false;
+
+        const ctx = this.getAudioContext();
+        if (!ctx) return false;
+        // Autoplay policy: a context made before a user gesture starts suspended.
+        if (ctx.state === "suspended") ctx.resume().catch(() => { });
+
+        try {
+            const speed = targetLayer.useTimeScale ? this.timeScale : 1;
+            const source = ctx.createBufferSource();
+            source.buffer = this.sfxBuffers.get(ctx, name, speed);
+            const gainNode = ctx.createGain();
+            gainNode.gain.value = gain;
+            source.connect(gainNode).connect(ctx.destination);
+            source.onended = () => {
+                source.disconnect();
+                gainNode.disconnect();
+            };
+            source.start();
+            return true;
+        } catch (error) {
+            this.logger.warn("YGOSoundController", `Sfx ${name} could not be played.`, error);
+            return false;
+        }
     }
 
     public async loadSound(path: string) {
@@ -198,5 +256,8 @@ export class YGOSoundController extends YGOComponent {
             })
         });
         this.sounds.clear();
+        this.sfxBuffers.clear();
+        this.audioContext?.close().catch(() => { });
+        this.audioContext = null;
     }
 }

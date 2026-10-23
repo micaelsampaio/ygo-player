@@ -4,6 +4,7 @@ import App from "./App";
 import DuelPage from "./DuelPage";
 import LobbyPage from "./LobbyPage";
 import { ThreeTestsPage } from "./ThreeTests";
+import BattleDemoPage from "./battle-demo/BattleDemoPage";
 
 const Router: React.FC = () => {
   return (
@@ -13,6 +14,7 @@ const Router: React.FC = () => {
         <Route path="/duel" element={<DuelPage />} />
         <Route path="/duel/:lobbyId" element={<DuelPage />} />
         <Route path="/lobby" element={<LobbyPage />} />
+        <Route path="/battle-demo" element={<BattleDemoPage />} />
         <Route path="/three/test" element={<ThreeTestsPage />} />
       </Routes>
     </BrowserRouter>

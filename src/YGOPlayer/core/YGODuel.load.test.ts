@@ -11,6 +11,7 @@ vi.mock("../scripts/ygo-utils", () => ({ createFields: () => { h.log.push("creat
 vi.mock("../game/YGOGameFieldStatsComponent", () => ({ YGOGameFieldStatsComponent: class { constructor() { h.log.push("new FieldStats"); } } }));
 vi.mock("../actions/BattlePhaseController", () => ({ BattlePhaseController: class { constructor(name: string) { h.log.push(`new BattlePhaseController(${name})`); } } }));
 vi.mock("./field-theme-scene", () => ({ recolorModel: () => h.log.push("recolorModel") }));
+vi.mock("./sfx/battle-sfx-hooks", () => ({ bindBattleSfx: () => { } }));
 
 import { YGODuel } from "./YGODuel";
 

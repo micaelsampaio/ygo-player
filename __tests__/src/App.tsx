@@ -175,6 +175,9 @@ function App() {
                 <Tab id="three_test" href="/three/test">
                   Test Scene
                 </Tab>
+                <Tab id="battle_demo" href="/battle-demo">
+                  Battle Demo
+                </Tab>
               </TabList>
 
               <TabContent id="duel">

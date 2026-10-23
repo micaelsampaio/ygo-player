@@ -27,6 +27,7 @@ import { Command } from "ygo-core";
 import { YGOMapClick } from "./YGOMapClick";
 import { YGOGameFieldStatsComponent } from "../game/YGOGameFieldStatsComponent";
 import { YGOSoundController } from "./YGOSoundController";
+import { bindBattleSfx } from "./sfx/battle-sfx-hooks";
 import { YGOPlayerSettingsAdapter } from "./YGOPlayerSettings";
 import { fieldTheme } from "./field-themes";
 import { recolorModel } from "./field-theme-scene";
@@ -314,6 +315,7 @@ export class YGODuel {
     this.gameController.getComponent<ActionCardSelection>("action_card_selection").createCardSelections();
     this.gameController.getComponent<ActionAttackSelection>("attack_selection_action").create();
     this.gameController.addComponent("battle_phase_controller", new BattlePhaseController("battle_phase_controller", this));
+    bindBattleSfx(this); // synthesized attack swing / hit / phase sounds (core/sfx)
   }
 
   /** Player settings changed mid-duel: transparent cards, volumes, game speed. */

@@ -17,6 +17,7 @@ import { ScaleTransition } from "../utils/scale-transition";
 import type { YGOAnimationObject } from "../../game/YGOAnimationObject";
 import { MaterialOpacityTransition } from "../utils/material-opacity";
 import { UpdateTask } from "../utils/update-task";
+import { CardShatterTask } from "../utils/card-shatter";
 
 interface DestroyEventHandlerProps extends DuelEventHandlerProps {
   event: YGODuelEvents.Destroy;
@@ -63,6 +64,8 @@ export class DestroyCardEventHandler extends YGOCommandHandler {
     }
 
     card.hideCardStats();
+    // The card breaks into shards (from its current transform and visible face) as it disappears.
+    this.props.startTask(new CardShatterTask(duel, card.gameObject));
     card.gameObject.visible = false;
 
     startPosition.z += 0.05;

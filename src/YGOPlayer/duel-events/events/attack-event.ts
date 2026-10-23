@@ -16,6 +16,18 @@ import { MaterialOpacityTransition } from "../utils/material-opacity";
 import { WaitForSeconds } from "../utils/wait-for-seconds";
 import { liftAndSettle, moveAndRotate } from "../utils/animation-builders";
 import type { YGOTask } from "../../core/components/tasks/YGOTask";
+import {
+  AttackArrowTask,
+  CameraShakeTask,
+  ChargeGlowTask,
+  ImpactSparksTask,
+  ImpactStreaksTask,
+  RecoilTask,
+  ScreenFlashTask,
+  particleTexture,
+  prefersReducedMotion,
+} from "../utils/battle-fx";
+import { CARD_HEIGHT_SIZE, CARD_RATIO } from "../../constants";
 
 /**
  * The attacker's lunge: it backs up and turns toward `target`, strikes it
@@ -87,7 +99,7 @@ interface AttackEventHandlerProps extends DuelEventHandlerProps {
 export class AttackEventHandler extends YGOCommandHandler {
 
   constructor(private props: AttackEventHandlerProps) {
-    super("change_card_position_handler");
+    super("attack_handler");
   }
 
   public start(): void {
@@ -104,11 +116,15 @@ export class AttackEventHandler extends YGOCommandHandler {
     const originalPosition = card.gameObject.position.clone();
     const originalRotation = card.gameObject.rotation.clone();
 
+    const originalScale = card.gameObject.scale.clone();
     const sequence = new YGOTaskSequence();
 
+    // Anticipation: the attacker swells and glows while it backs up, snapping back on the dash.
+    startTask(new ChargeGlowTask(duel, card.gameObject, { width: CARD_HEIGHT_SIZE / CARD_RATIO, height: CARD_HEIGHT_SIZE }, 0.5, 0.25));
+
     // pre load textures
-    duel.core.textureLoader.load(duel.createCdnUrl("/images/particles/circle_03.png"))
-    duel.core.textureLoader.load(duel.createCdnUrl("/images/particles/star_07.png"))
+    // Warm the cache so the hit's sprites are ready by the impact.
+    for (const name of ["circle_03", "star_07", "trace_01", "light_01"]) particleTexture(duel, name);
 
     if (attackedId) {
       const attackedZoneData = YGOGameUtils.getZoneData(attackedZone!);
@@ -148,8 +164,15 @@ export class AttackEventHandler extends YGOCommandHandler {
         impactAt: () => targetAttackedPosition.clone(),
         originalPosition,
         originalRotation,
-        onImpact: (position) => this.createAttackCollistionEffect({ startTask, position }),
+        onImpact: (position) => {
+          this.onImpact(position);
+          // The defender is knocked back along the attack (and shakes); its fate comes in a later event.
+          const push = new THREE.Vector3().subVectors(targetAttackedPosition, originalPosition);
+          startTask(new RecoilTask(attackedCard.gameObject, push));
+        },
       }));
+      // The arrow streams from the attacker to its target during the wind-up and fades on the hit.
+      startTask(new AttackArrowTask(duel, originalPosition, targetAttackedPosition));
     } else {
       const gameHandZone = duel.fields[1 - event.player].hand.gameHandZone;
 
@@ -159,12 +182,14 @@ export class AttackEventHandler extends YGOCommandHandler {
         impactAt: () => gameHandZone.gameObject.position.clone(),
         originalPosition,
         originalRotation,
-        onImpact: (position) => this.createAttackCollistionEffect({ startTask, position }),
+        onImpact: (position) => this.onImpact(position, true),
       }));
+      startTask(new AttackArrowTask(duel, originalPosition, gameHandZone.gameObject.position.clone()));
     }
 
     sequence.add(new CallbackTransition(() => {
       card.gameObject.position.copy(originalPosition);
+      card.gameObject.scale.copy(originalScale);
 
       onCompleted();
     }));
@@ -175,12 +200,33 @@ export class AttackEventHandler extends YGOCommandHandler {
   public finish(): void {
   }
 
-  private createAttackCollistionEffect({ startTask, position }: {
+  /**
+   * The hit: rings + flare, radial speed streaks, sparks, a white screen flash and a camera shake
+   * (all bigger on a direct attack; streaks/sparks/flash/shake skipped under reduced motion), then where
+   * it struck, for the damage number.
+   */
+  private onImpact(position: THREE.Vector3, direct = false) {
+    const { duel, startTask, event } = this.props;
+    this.createAttackCollisionEffect({ startTask, position });
+    if (!prefersReducedMotion()) {
+      startTask(new ImpactStreaksTask(duel, position, direct
+        ? { count: 10, length: 13, width: 1.8, duration: 0.4 }
+        : { count: 7, length: 9, width: 1.4, duration: 0.35 }));
+      startTask(new ScreenFlashTask(duel, direct ? 0.85 : 0.5, direct ? 0.16 : 0.12));
+      startTask(new ImpactSparksTask(duel, position, direct
+        ? { count: 20, speed: 34, color: 0xffc04a, duration: 0.55 }
+        : { count: 12, speed: 26, duration: 0.45 }));
+    }
+    startTask(new CameraShakeTask(duel, direct ? 0.9 : 0.6, direct ? 0.4 : 0.3));
+    duel.events.dispatch("battle-impact", { position: { x: position.x, y: position.y, z: position.z }, player: 1 - event.player });
+  }
+
+  private createAttackCollisionEffect({ startTask, position }: {
     startTask: DuelEventHandlerProps["startTask"];
     position: THREE.Vector3;
   }) {
     const { duel } = this.props;
-    const circleTexture = duel.core.textureLoader.load(duel.createCdnUrl("/images/particles/circle_03.png"));
+    const circleTexture = particleTexture(duel, "circle_03");
     const circle = new THREE.Mesh(
       new THREE.PlaneGeometry(20, 20, 20),
       new THREE.MeshBasicMaterial({
@@ -204,7 +250,7 @@ export class AttackEventHandler extends YGOCommandHandler {
       new THREE.MeshBasicMaterial({
         color: 0xFFDE21,
         transparent: true,
-        map: duel.core.textureLoader.load(duel.createCdnUrl("/images/particles/star_07.png"))
+        map: particleTexture(duel, "star_07")
       })
     );
     duel.core.scene.add(flare);
@@ -251,9 +297,11 @@ export class AttackEventHandler extends YGOCommandHandler {
       ),
       new WaitForSeconds(0.5),
       new CallbackTransition(() => {
-        duel.core.scene.remove(circle);
-        duel.core.scene.remove(circleLarge);
-        duel.core.scene.remove(flare);
+        for (const mesh of [circle, circleLarge, flare]) {
+          duel.core.scene.remove(mesh);
+          mesh.geometry.dispose();
+          mesh.material.dispose();
+        }
       })
     ));
 

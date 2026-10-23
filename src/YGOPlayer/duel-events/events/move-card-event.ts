@@ -17,6 +17,7 @@ import { moveAndRotate } from "../utils/animation-builders";
 import { YGOCommandHandler } from "../../core/components/YGOCommandHandler";
 import { WaitForSeconds } from "../utils/wait-for-seconds";
 import { revealCardAnimation } from "./reveal-event";
+import { DestroyCardEventHandler } from "./destroy-card-event";
 
 /**
  * One card move: a MoveCard-shaped duel log, or one built by another handler
@@ -78,13 +79,57 @@ export function exactLandedZone(fields: PlayerField[] | undefined, id: number | 
   return index === -1 ? zone : YGOGameUtils.createZone(zoneId, player, index + 1);
 }
 
+/** How many logs back a battle destruction still looks for its attack (a damage step's chain can add a few). */
+const BATTLE_LOOKBACK = 40;
+
+/**
+ * Whether a plain "Move Card" from a Monster Zone to the GY is a monster destroyed by the
+ * attack just before it. Engine duels (ocgcore) report a battle's result only as card moves,
+ * so the Attack log naming that monster's zone (attacker or attacked), with no phase or turn
+ * change and no other attack in between, is what marks it. Found by walking back from the
+ * move's own log in the duel log (the same object the commands controller plays, else the
+ * last log of its command).
+ */
+export function isBattleDestruction(logs: readonly YGODuelEvents.DuelLog[] | undefined, event: MoveCardEvent): boolean {
+  if (!logs || isMultipleCardsMove(event)) return false;
+  if (event.type !== YGODuelEvents.LogType.MoveCard) return false;
+  const origin = String(event.originZone ?? "");
+  if (!/^(M|EMZ)2?-/.test(origin) || !/^GY/.test(String(event.zone ?? ""))) return false;
+
+  let index = logs.lastIndexOf(event as unknown as YGODuelEvents.DuelLog);
+  if (index === -1) {
+    const commandId = (event as { commandId?: number }).commandId;
+    if (commandId === undefined) return false;
+    index = logs.findLastIndex((log) => log.commandId === commandId);
+    if (index === -1) return false;
+  }
+
+  for (let i = index - 1; i >= 0 && i >= index - BATTLE_LOOKBACK; i--) {
+    const log = logs[i];
+    if (log.type === YGODuelEvents.LogType.Attack) {
+      const attack = log as YGODuelEvents.Attack;
+      return (attack.attackedZone === origin && attack.attackedId === event.id)
+        || (attack.attackingZone === origin && attack.attackingId === event.id);
+    }
+    if (log.type === YGODuelEvents.LogType.AttackDirectly || log.type === YGODuelEvents.LogType.DuelPhase || log.type === YGODuelEvents.LogType.DuelTurn) {
+      return false;
+    }
+  }
+  return false;
+}
+
 export class MoveCardEventHandler extends YGOCommandHandler {
   private props: MoveCardEventHandlerProps;
   private cardReference: Card | undefined;
+  /** A monster destroyed by battle: played as a destruction (the card shatters) instead of a move. */
+  private battleDestruction: boolean;
 
   constructor(props: MoveCardEventHandlerProps) {
     super("move_card_command");
     this.props = props;
+    // Only the log itself (not a move another handler builds) can be a battle's result.
+    this.battleDestruction = !props.cardReference && !props.startCommandDelay
+      && isBattleDestruction(props.ygo?.duelLog?.logs, props.event);
 
     // "H2"/"B" (no slot) cannot be looked up or animated to: use the slot the card landed in.
     // A copy: the log itself stays as the core recorded it.
@@ -108,6 +153,15 @@ export class MoveCardEventHandler extends YGOCommandHandler {
 
   public start(): void {
     if (isMultipleCardsMove(this.props.event)) return this.startMultiple(this.props.event);
+
+    if (this.battleDestruction) {
+      const { event, ...props } = this.props;
+      const destroy = new DestroyCardEventHandler({
+        ...props,
+        event: { ...event, type: YGODuelEvents.LogType.Destroy } as YGODuelEvents.Destroy,
+      });
+      return destroy.start();
+    }
 
     if (!this.cardReference) return this.props.onCompleted();
 

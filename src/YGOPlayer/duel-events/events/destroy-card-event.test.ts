@@ -83,6 +83,9 @@ describe("DestroyCardEventHandler", () => {
 
     new DestroyCardEventHandler(s.props).start();
     expect(card.gameObject.visible).toBe(false);
+    // The card shatters: 18 shards and a white flash, in place of the card.
+    const shatter = s.scene.children.find((c) => c.children.length === 1 && c.children[0].children.length === 19);
+    expect(shatter).toBeDefined();
     expect(s.props.playSound).toHaveBeenCalledWith(expect.objectContaining({ key: "/sounds/crack.ogg" }));
     expect(s.effect.playAll).toHaveBeenCalled();
     expect(s.props.onCompleted).not.toHaveBeenCalled();
