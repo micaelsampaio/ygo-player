@@ -356,7 +356,9 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
       />
     )}
     {prompt && promptAsDialog && prompt !== answeredPrompt && (
-      <MdPromptDialog label="Your choice" resetKey={promptKey(prompt)}>
+      // A zone choice is answered on the board (the zones glow): a slim hint at the top instead of
+      // the full dialog, which covered the very zones to click.
+      <MdPromptDialog label="Your choice" resetKey={promptKey(prompt)} className={prompt.kind === "place" ? "ygo-md-prompt-compact" : undefined}>
         <PromptView
           key={promptKey(prompt)}
           duel={duel}

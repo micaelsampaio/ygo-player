@@ -506,3 +506,18 @@
     top: -38px;
   }
 }
+
+/* A zone choice: a slim hint at the top of the field (the zones themselves glow and are clicked
+   on the board), not the big lower-middle dialog that covered them. "Pick from a list" stays. */
+.ygo-player-core .ygo-card-menu.ygo-assist-prompt-dialog.ygo-md-prompt.ygo-md-prompt-compact {
+  top: 12px;
+  bottom: auto;
+  width: auto;
+  min-width: min(320px, calc(100% - 24px));
+  max-width: min(440px, calc(100% - 24px));
+  max-height: min(50%, calc(100% - 140px));
+}
+
+.ygo-player-core .ygo-md-prompt-compact .ygo-md-prompt-peek {
+  display: none;
+}
