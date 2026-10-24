@@ -1,12 +1,12 @@
 /* Master Duel-style card detail: shared by the selected card panel (left side, and the mobile
    aside) and the card highlight dialog (menus/card-highlight.css adds the dialog's layout). */
 .ygo-player-core {
-    /* The look both share: dark navy translucent box, thin blue-grey edge, soft top glow. */
+    /* The look both share: a near-black translucent box, a thin light edge, a faint top sheen (matches the site). */
     .ygo-md-surface {
-        --ygo-md-panel-bg: rgba(10, 20, 42, 0.9);
-        --ygo-md-panel-edge: rgba(126, 168, 230, 0.35);
-        --ygo-md-accent: rgba(196, 222, 255, 0.85);
-        --ygo-md-header-bg: linear-gradient(180deg, rgba(40, 58, 96, 0.95), rgba(20, 32, 60, 0.95));
+        --ygo-md-panel-bg: rgba(14, 14, 16, 0.94);
+        --ygo-md-panel-edge: rgba(255, 255, 255, 0.14);
+        --ygo-md-accent: rgba(235, 235, 240, 0.8);
+        --ygo-md-header-bg: linear-gradient(180deg, rgba(42, 42, 46, 0.96), rgba(24, 24, 27, 0.96));
         --ygo-md-strip-monster: linear-gradient(90deg, #8a4a14, #b8661f 60%, rgba(184, 102, 31, 0.55));
         --ygo-md-strip-spell: linear-gradient(90deg, #0a6a45, #129268 60%, rgba(18, 146, 104, 0.55));
         --ygo-md-strip-trap: linear-gradient(90deg, #7a2d6c, #a8418f 60%, rgba(168, 65, 143, 0.55));
@@ -17,7 +17,7 @@
         border: 1px solid var(--ygo-md-panel-edge);
         border-radius: 2px;
         background:
-            radial-gradient(120% 60% at 50% 0%, rgba(54, 92, 160, 0.28), transparent 70%),
+            radial-gradient(120% 60% at 50% 0%, rgba(255, 255, 255, 0.05), transparent 70%),
             var(--ygo-md-panel-bg);
         box-shadow: 0 6px 22px rgba(0, 0, 0, 0.55), inset 0 0 0 1px rgba(0, 0, 0, 0.4);
         color: var(--ygo-text-color);
@@ -112,7 +112,7 @@
             aspect-ratio: 59 / 86;
             object-fit: cover;
             border: 1px solid rgba(0, 0, 0, 0.6);
-            box-shadow: 0 0 0 1px rgba(160, 190, 240, 0.25), 0 3px 10px rgba(0, 0, 0, 0.6);
+            box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12), 0 3px 10px rgba(0, 0, 0, 0.6);
         }
     }
 
@@ -170,7 +170,7 @@
     .ygo-md-card-id {
         margin-top: auto;
         font-size: var(--ygo-font-xs);
-        color: rgba(200, 215, 240, 0.55);
+        color: rgba(220, 220, 228, 0.5);
         font-variant-numeric: tabular-nums;
     }
 
@@ -203,10 +203,10 @@
         padding: 8px 12px 12px;
         font-size: var(--ygo-font-sm);
         line-height: 1.5;
-        color: #eef2fa;
-        background: rgba(4, 10, 24, 0.35);
+        color: #ececef;
+        background: rgba(0, 0, 0, 0.3);
         scrollbar-width: thin;
-        scrollbar-color: rgba(160, 190, 240, 0.45) transparent;
+        scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
         overflow-wrap: anywhere;
 
         & > div + div {
@@ -218,7 +218,7 @@
         }
 
         &::-webkit-scrollbar-thumb {
-            background-color: rgba(160, 190, 240, 0.45);
+            background-color: rgba(255, 255, 255, 0.25);
             border-radius: 3px;
         }
     }

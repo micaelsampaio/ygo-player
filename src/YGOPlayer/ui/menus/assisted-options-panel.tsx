@@ -228,7 +228,9 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
   // A held prompt is the one thing the engine is waiting on — keep it on
   // screen even when the panel is collapsed. So is a chain window during the
   // opponent's turn: in a bot duel its turn is paused until you answer.
-  const collapsed = placement.collapsed && !mustStayOpen(decision);
+  // In the Master Duel style the question has its own dialog, so the panel can fold even then.
+  const mustOpen = mustStayOpen(decision) && !isMasterDuelStyle(duel);
+  const collapsed = placement.collapsed && !mustOpen;
   // The server says whether this is a bot duel (older servers: the duel's own option).
   const botDuel = !!(result as { botDuel?: boolean }).botDuel || !!(duel.ygo?.options as { botDuel?: unknown } | undefined)?.botDuel;
   const waitingText = opponentWaitingText({ ...decision, botDuel, respondingTo });
@@ -400,7 +402,7 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
         <span style={{ flexGrow: 1, fontSize: 11, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", opacity: 0.55, whiteSpace: "nowrap" }}>
           {assistPanelTitle(decision)}{collapsed && optionCount > 0 ? ` (${optionCount})` : ""}
         </span>
-        <button
+        {!mustOpen && <button
           onPointerDown={stop}
           // A click doesn't leave focus here, or Space (the panel's Continue / Next Phase) would
           // press this button again and fold the panel.
@@ -409,10 +411,16 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
           aria-label={collapsed ? "Expand options" : "Collapse options"}
           aria-expanded={!collapsed}
           title={collapsed ? "Expand" : "Collapse"}
-          style={{ background: "none", border: "none", color: "inherit", cursor: "pointer", padding: "0 2px", fontSize: 14, opacity: 0.7, lineHeight: 1 }}
+          // A finger-sized target on phones (the old 14px arrow was hard to hit).
+          style={{
+            background: "none", border: "none", color: "inherit", cursor: "pointer", opacity: 0.8, lineHeight: 1,
+            ...(isMobileLayout
+              ? { minWidth: 36, minHeight: 36, margin: "-8px -6px -8px 0", fontSize: 18, display: "flex", alignItems: "center", justifyContent: "center" }
+              : { padding: "0 2px", fontSize: 14 }),
+          }}
         >
           {collapsed ? "▸" : "▾"}
-        </button>
+        </button>}
       </div>
       {statusText && (!collapsed || !isActive) && (
         <div

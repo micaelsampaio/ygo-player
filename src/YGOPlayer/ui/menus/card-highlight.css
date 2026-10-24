@@ -31,7 +31,7 @@
             aspect-ratio: 59 / 86;
             object-fit: cover;
             border: 1px solid rgba(0, 0, 0, 0.6);
-            box-shadow: 0 0 0 1px rgba(160, 190, 240, 0.3), 0 6px 18px rgba(0, 0, 0, 0.65);
+            box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12), 0 6px 18px rgba(0, 0, 0, 0.65);
         }
     }
 
@@ -42,7 +42,7 @@
         display: flex;
         flex-direction: column;
         border: 1px solid var(--ygo-md-panel-edge);
-        background: rgba(4, 10, 24, 0.25);
+        background: rgba(0, 0, 0, 0.25);
     }
 
     .ygo-md-card-header.ygo-md-highlight-header {
