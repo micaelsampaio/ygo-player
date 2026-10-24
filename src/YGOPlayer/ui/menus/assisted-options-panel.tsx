@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { YGODuel } from "../../core/YGODuel";
+import type { AssistChooseRowEvent } from "../../core/YGODuelUIEvents";
 import { YGOClientType } from "ygo-core";
 import { HIGHLIGHT_CSS } from "../../game/meshes/highlight-frame";
 import { promptKey } from "../assist-zones";
@@ -154,10 +155,11 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
   }, [duel, enabled]);
 
   // Master Duel style card menus hand their engine move to the panel, which sends it like its own rows.
-  const chooseRowRef = useRef<(row: { key: string; commandType: string; data: Record<string, unknown> }) => void>(() => {});
+  // A drop from the hand does too, with where it went (its zone / position answer what the engine asks next).
+  const chooseRowRef = useRef<(row: { key: string; commandType: string; data: Record<string, unknown>; drop?: AssistChooseRowEvent["drop"] }) => void>(() => {});
   useEffect(() => {
     if (!enabled) return;
-    const onChooseRow = ({ data, ...row }: { key: string; commandType: string; data: unknown }) => { if (isCommandData(data)) chooseRowRef.current({ ...row, data }); };
+    const onChooseRow = ({ data, ...row }: AssistChooseRowEvent) => { if (isCommandData(data)) chooseRowRef.current({ ...row, data }); };
     duel.events.on("assist-choose-row", onChooseRow);
     return () => duel.events.off("assist-choose-row", onChooseRow);
   }, [duel, enabled]);
@@ -266,6 +268,7 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
   chooseRowRef.current = (row) => {
     // send() ignores clicks while a move is still playing out: say so instead of doing nothing.
     if (busy) { setNotice("Wait for the current move to finish, then pick again."); return; }
+    if (row.drop) controller.setDropIntent({ ...row.drop, at: Date.now() });
     send(`card:${row.key}`, row.commandType, row.data);
   };
   const spaceTarget = prompt ? null : spaceRow(sections);

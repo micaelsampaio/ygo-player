@@ -15,6 +15,8 @@ export interface CardActionRow {
   label: string;
   commandType: string;
   data: OptionData;
+  /** Copies / effects folded into the row (two Activate effects of one card: 2). */
+  count: number;
 }
 
 const LABELS: Record<string, string> = {
@@ -65,7 +67,7 @@ export function cardActionRows(duel: YGODuel, result: AssistQueryResult | null, 
         : base;
     if (seen.has(row.key)) continue;
     seen.add(row.key);
-    out.push({ key: row.key, label, commandType: row.commandType, data: row.data });
+    out.push({ key: row.key, label, commandType: row.commandType, data: row.data, count: row.count });
   }
   return out;
 }

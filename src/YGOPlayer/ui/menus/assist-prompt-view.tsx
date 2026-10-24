@@ -18,6 +18,7 @@ import {
   decodeDescription,
 } from "../assist-prompt";
 import { findCardObjects, type HighlightTarget } from "./assist-highlights";
+import { dropPlaceAnswer, dropPositionAnswer } from "../../domain/hand-drag";
 import { groupByLocation, PROMPT_KEYWORDS } from "./prompt-dialog/prompt-dialog";
 import { CardThumbGroups, MdButton, MdFooter, PromptQuestion, type ThumbView } from "./prompt-dialog/PromptDialog";
 
@@ -128,7 +129,19 @@ function PlaceChoice({ duel, prompt, busy, pendingKey, respond }: {
     if (result.done) respond(`zone:${place.player}:${place.loc}:${place.seq}`, result.data);
     else setPicked(result.picked);
   };
-  const field = useFieldZoneSelection(duel, onField, !busy, pick);
+  // A card just dropped on a zone from the hand: that zone is the answer (when the engine offers it).
+  const dropPlace = picked.length === 0
+    ? dropPlaceAnswer(prompt, duel.assistController.dropIntent, duel.perspective.playerIndex, Date.now())
+    : null;
+  const dropPlaceKey = dropPlace ? `${dropPlace.player}:${dropPlace.loc}:${dropPlace.seq}` : "";
+  useEffect(() => {
+    if (!dropPlace || busy) return;
+    duel.assistController.markDropPlaced();
+    pick(dropPlace);
+    // dropPlaceKey is dropPlace's identity (rebuilt every render).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dropPlaceKey, busy]);
+  const field = useFieldZoneSelection(duel, onField, !busy && !dropPlace, pick);
   const listed = [...onField.map((z) => ({ ...z.place, label: z.label })), ...offField];
 
   return <>
@@ -346,6 +359,15 @@ export function PromptView({ duel, prompt, busy, pendingKey, respond, onHover, i
   useEffect(() => {
     return duel.assistController.setHandPick((player: number, code: number) => handPickRef.current(player, code));
   }, [duel]);
+  // A card just dropped from the hand: its position question is answered by the drop (summon: face-up
+  // Attack, Set: face-down Defense) when that position is offered.
+  const dropPosition = dropPositionAnswer(prompt, duel.assistController.dropIntent, Date.now());
+  useEffect(() => {
+    if (dropPosition === null || busy) return;
+    duel.assistController.clearDropIntent();
+    respond(`position:${dropPosition}`, { position: dropPosition });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dropPosition, busy]);
 
   const pickerPopup = pilePicker && pickerOpen && pickerContainer && (
     <PileChoicePopup

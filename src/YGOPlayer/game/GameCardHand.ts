@@ -73,7 +73,13 @@ export class GameCardHand extends YGOEntity implements YGOUiElement {
       this.duel.actionManager.clearAction();
       return;
     }
-    
+
+    this.openMenu(event);
+  }
+
+  /** Opens this card's menu (a click on it; a drop that could mean more than one move). */
+  openMenu(event: MouseEvent): void {
+    const action = this.duel.actionManager.getAction<ActionCardHandMenu>("card-hand-menu");
     this.duel.gameActions.setSelectedCard({
       player: this.player,
       card: this.card

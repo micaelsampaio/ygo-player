@@ -120,4 +120,57 @@ describe("YGOAssistController", () => {
     removePick();
     expect(s.controller.handPick).toBeNull();
   });
+
+  describe("drop intent (drag from the hand)", () => {
+    const prompt = { available: true, pending: "prompt", prompt: { kind: "place" } } as any;
+    const intent = { code: 1, zone: "M-2", faceDown: false, at: 0 };
+
+    it("lives through the move's prompts and ends on the next non-prompt answer", async () => {
+      const s = setup();
+      s.controller.setDropIntent(intent);
+      await s.controller.choose({ commandType: "Normal Summon", data: { id: 1 } });
+      const q1 = s.controller.query();
+      s.pending[0].resolve(prompt);
+      await q1;
+      expect(s.controller.dropIntent).toEqual(intent);
+      s.controller.markDropPlaced();
+      expect(s.controller.dropIntent?.placed).toBe(true);
+      const q2 = s.controller.query();
+      s.pending[1].resolve(a);
+      await q2;
+      expect(s.controller.dropIntent).toBeNull();
+    });
+
+    it("is kept while the move is still on its way, even if an answer comes in meanwhile", async () => {
+      const s = setup();
+      const choice = deferred<any>();
+      s.host.assist.choose.mockImplementationOnce(() => choice.promise);
+      s.controller.setDropIntent(intent);
+      const chosen = s.controller.choose({ commandType: "Normal Summon", data: { id: 1 } });
+      const q = s.controller.query();
+      s.pending[0].resolve(a);
+      await q;
+      expect(s.controller.dropIntent).toEqual(intent);
+      choice.resolve({});
+      await chosen;
+    });
+
+    it("drops answers to queries sent before the drop", async () => {
+      const s = setup();
+      const before = s.controller.query();
+      s.controller.setDropIntent(intent);
+      s.pending[0].resolve(a);
+      await before;
+      expect(s.published()).toEqual([]);
+      expect(s.controller.dropIntent).toEqual(intent);
+    });
+
+    it("ends when the move is refused", async () => {
+      const s = setup();
+      s.host.assist.choose.mockImplementationOnce(async () => { throw new Error("stale"); });
+      s.controller.setDropIntent(intent);
+      await expect(s.controller.choose({ commandType: "Normal Summon", data: {} })).rejects.toThrow("stale");
+      expect(s.controller.dropIntent).toBeNull();
+    });
+  });
 });

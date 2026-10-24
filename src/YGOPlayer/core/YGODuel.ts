@@ -9,6 +9,7 @@ import { GameController } from "../game/GameController";
 import { EventBus } from "../scripts/event-bus";
 import type { YGODuelUIEvents } from "./YGODuelUIEvents";
 import { YGOMouseEvents } from "./components/YGOMouseEvents";
+import { YGOHandDrag } from "./components/YGOHandDrag";
 import { createFields } from "../scripts/ygo-utils";
 import { PlayerField } from "../game/PlayerField";
 import { GameCardHand } from "../game/GameCardHand";
@@ -83,6 +84,8 @@ export class YGODuel {
   public assistController: YGOAssistController = new YGOAssistController(this);
   public gameController: GameController;
   public mouseEvents: YGOMouseEvents;
+  /** Drag and drop from the hand (Assisted Mode installs what a drop means). */
+  public handDrag: YGOHandDrag;
   public tasks: YGOTaskController;
   public commands: YGOCommandsController;
   public deltaTime: number = 0;
@@ -127,6 +130,7 @@ export class YGODuel {
     this.commands = new YGOCommandsController(this);
     this.soundController = new YGOSoundController(this.logger);
     this.mouseEvents = new YGOMouseEvents(this);
+    this.handDrag = new YGOHandDrag(this);
     this.assets = new YGOAssets(this);
     this.events = new EventBus();
     this.isGameActive = true;
@@ -140,6 +144,7 @@ export class YGODuel {
     this.gameController.addComponent("action_card_selection", new ActionCardSelection({ duel: this }));
     this.gameController.addComponent("attack_selection_action", new ActionAttackSelection(this));
     this.gameController.addComponent("map-click-zone", new YGOMapClick(this));
+    this.gameController.addComponent("hand_drag", this.handDrag);
     this.gameController.addComponent("server_actions", this.serverActions);
     this.actionManager.actions.set("card-hand-menu", new ActionCardHandMenu(this));
     this.actionManager.actions.set("card-zone-menu", new ActionCardZoneMenu(this));

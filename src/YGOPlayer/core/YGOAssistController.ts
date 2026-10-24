@@ -1,5 +1,6 @@
 import type { CardData } from "ygo-core";
 import type { AssistQueryResult } from "../domain/assist-query";
+import { keepsDropIntent, type DropIntent } from "../domain/hand-drag";
 
 export type AssistAction = { commandType: string; data: Record<string, unknown> };
 
@@ -42,8 +43,12 @@ export class YGOAssistController {
   /** A click on a hand card picks it for an effect's choice — returns true when it did. */
   public handPick: ((player: number, code: number) => boolean) | null = null;
 
+  /** A card just dragged from the hand: its zone and position answer the engine's questions about that move. */
+  public dropIntent: DropIntent | null = null;
+
   private requestId = 0;
   private pending = 0;
+  private choosing = 0;
 
   constructor(private host: AssistControllerHost) {}
 
@@ -89,7 +94,30 @@ export class YGOAssistController {
 
   choose(action: AssistAction): Promise<AssistChoiceResult> {
     if (!this.host.assist) return Promise.reject(new Error("Assisted Mode is not available"));
-    return this.host.assist.choose(action).then(choiceResult);
+    this.choosing++;
+    return this.host.assist.choose(action).then(choiceResult, (error: unknown) => {
+      // The move was refused: nothing of it follows for the drop to answer.
+      this.dropIntent = null;
+      throw error;
+    }).finally(() => { this.choosing--; });
+  }
+
+  /**
+   * A drop from the hand is about to send its move: remember where it went. Answers to queries
+   * sent before it are dropped (they'd show the board from before the move, and end the intent).
+   */
+  setDropIntent(intent: DropIntent): void {
+    this.requestId++;
+    this.dropIntent = intent;
+  }
+
+  /** The drop's zone answered the engine's zone question (it answers no second one). */
+  markDropPlaced(): void {
+    if (this.dropIntent) this.dropIntent = { ...this.dropIntent, placed: true };
+  }
+
+  clearDropIntent(): void {
+    this.dropIntent = null;
   }
 
   /** Drops the current options (and any answer still on its way). */
@@ -121,6 +149,8 @@ export class YGOAssistController {
   }
 
   private publish(options: AssistQueryResult | null) {
+    // The drop's move is over once the engine stops asking about it (and no answer is on its way).
+    if (this.dropIntent && this.choosing === 0 && !keepsDropIntent(options)) this.dropIntent = null;
     this.options = options;
     this.host.events.dispatch("assist-options", options);
   }

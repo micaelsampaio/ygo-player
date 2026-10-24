@@ -1,5 +1,6 @@
 import type { Card, YGODuelEvents, YGOReplayData } from "ygo-core";
 import type { AssistQueryResult } from "../domain/assist-query";
+import type { DropIntent } from "../domain/hand-drag";
 import type { YGOEndGameAction } from "../domain/end-game";
 import type { PuzzleRetryRequest } from "../domain/puzzle-retry";
 import type { GameCard } from "../game/GameCard";
@@ -109,7 +110,29 @@ export interface YGODuelUIEvents {
     "assist-choice-start": (payload?: { code?: number }) => void;
     "assist-choice-done": (payload?: { error?: unknown; notices?: string[] }) => void;
     /** A card menu picked one of the engine's moves (Master Duel style): the options panel sends it. */
-    "assist-choose-row": (row: { key: string; commandType: string; data: unknown }) => void;
+    "assist-choose-row": (row: AssistChooseRowEvent) => void;
+
+    /** Dragging a card from the hand (core/components/YGOHandDrag): what the overlay shows; null when it ends. */
+    "hand-drag-state": (state: HandDragUiState | null) => void;
+}
+
+/** A move picked from a card menu, or made by dropping a hand card (`drop`: where it went). */
+export interface AssistChooseRowEvent {
+    key: string;
+    commandType: string;
+    data: unknown;
+    drop?: Omit<DropIntent, "at">;
+}
+
+export interface HandDragUiState {
+    /** The Set chip is a target (the card can be Set). */
+    set: boolean;
+    /** The pointer is over the Set chip. */
+    overSet: boolean;
+    /** Shift is held (a monster dropped on a zone is Set). */
+    shift: boolean;
+    /** The zone under the pointer is a target. */
+    overZone: boolean;
 }
 
 export type YGODuelUIEventName = keyof YGODuelUIEvents;

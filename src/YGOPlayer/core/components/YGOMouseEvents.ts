@@ -14,6 +14,21 @@ export interface YGOMouseEventsEvents {
     click: (args: MouseClickArgs) => void;
 }
 
+/**
+ * Drags that start on a game object (YGOHandDrag: a card dragged from the hand) get the pointer
+ * events here; while one is dragging, hover and click handling stand aside.
+ */
+export interface YGOPointerDragHandler {
+    /** A pointer went down on the canvas over `element` (the hand card preferred, as for clicks). */
+    onPointerDown(event: PointerEvent, element: YGOUiElement | null): void;
+    onPointerMove(event: PointerEvent): void;
+    onPointerUp(event: PointerEvent): void;
+    onPointerCancel(event: PointerEvent): void;
+    isDragging(): boolean;
+    /** True once for the click that ends a drag (it is not a click on what lies under the pointer). */
+    consumeClick(): boolean;
+}
+
 export class YGOMouseEvents extends YGOComponent {
     private elements: Set<YGOUiElement>;
     private camera: THREE.Camera;
@@ -25,6 +40,7 @@ export class YGOMouseEvents extends YGOComponent {
     public events: EventBus<YGOMouseEventsEvents>;
 
     public onClickCb: ((args: MouseClickArgs) => void) | null | undefined;
+    public dragHandler: YGOPointerDragHandler | null = null;
     // Spread as React props on the player root (YgoDuelApp), whose handlers get React mouse events.
     public eventsReference: any = {};
 
@@ -43,6 +59,38 @@ export class YGOMouseEvents extends YGOComponent {
         this.eventsReference.onMouseUp = this.event_OnMouseUp.bind(this);
         this.eventsReference.onMouseMove = this.event_OnMouseMove.bind(this);
         this.eventsReference.onClick = this.event_OnMouseClick.bind(this);
+        // Pointer events (mouse and touch alike) only feed drags; clicks and hover stay on the mouse events.
+        this.eventsReference.onPointerDown = (e: { nativeEvent: PointerEvent }) => this.event_OnPointerDown(e.nativeEvent);
+        this.eventsReference.onPointerMove = (e: { nativeEvent: PointerEvent }) => this.dragHandler?.onPointerMove(e.nativeEvent);
+        this.eventsReference.onPointerUp = (e: { nativeEvent: PointerEvent }) => this.dragHandler?.onPointerUp(e.nativeEvent);
+        this.eventsReference.onPointerCancel = (e: { nativeEvent: PointerEvent }) => this.dragHandler?.onPointerCancel(e.nativeEvent);
+    }
+
+    /** The objects among `objects` under the screen point (same projection as the clicks). */
+    public raycastObjects(clientX: number, clientY: number, objects: THREE.Object3D[]): THREE.Intersection[] {
+        const mouse = new THREE.Vector2((clientX / window.innerWidth) * 2 - 1, -(clientY / window.innerHeight) * 2 + 1);
+        this.raycaster.setFromCamera(mouse, this.camera);
+        return this.raycaster.intersectObjects(objects, false);
+    }
+
+    /** The camera ray through a screen point (same projection as the clicks). */
+    public rayAt(clientX: number, clientY: number): THREE.Ray {
+        const mouse = new THREE.Vector2((clientX / window.innerWidth) * 2 - 1, -(clientY / window.innerHeight) * 2 + 1);
+        this.raycaster.setFromCamera(mouse, this.camera);
+        return this.raycaster.ray.clone();
+    }
+
+    private event_OnPointerDown(event: PointerEvent) {
+        if (!this.dragHandler) return;
+        const elements = this.getIntersectsElements(event);
+        const element = this.getCardInHandFromInterseptions(elements)?.object ?? elements[0]?.object;
+        this.dragHandler.onPointerDown(event, element?.uiElementRef ?? null);
+    }
+
+    /** A drag took over the pointer: whatever was hovered is left. */
+    public leaveHover(event: MouseEvent) {
+        this.hoverElement?.onMouseLeave?.(event);
+        this.hoverElement = null;
     }
 
     public onDestroy(): void {
@@ -113,6 +161,11 @@ export class YGOMouseEvents extends YGOComponent {
     }
 
     private event_OnMouseClick(event: MouseEvent) {
+        // The click a drag ends with: the drop already happened.
+        if (this.dragHandler?.consumeClick()) {
+            this.mouseDownElement = null;
+            return;
+        }
         const elements = this.getIntersectsElements(event);
         const elementCardInHand = this.getCardInHandFromInterseptions(elements);
 
@@ -140,6 +193,7 @@ export class YGOMouseEvents extends YGOComponent {
     }
 
     private event_OnMouseMove(event: MouseEvent) {
+        if (this.dragHandler?.isDragging()) return;
         const elements = this.getIntersectsElements(event);
         const elementCardInHand = this.getCardInHandFromInterseptions(elements);
 

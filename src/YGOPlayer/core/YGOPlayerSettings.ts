@@ -20,6 +20,8 @@ export interface YGOPlayerSettings {
     /** Fewer animations: no attack arrow, shake, flash, streaks, sparks, shatter or coin flips;
      * effects become plain fades (as with the OS "reduce motion" setting). */
     reduceAnimations: boolean
+    /** Assisted Mode: drag a card from the hand onto a zone to play it (core/components/YGOHandDrag). */
+    dragFromHand: boolean
 }
 
 export interface YGOPlayerSettingsAdapterOptions {
@@ -50,7 +52,8 @@ const DEFAULT_SETTINGS: YGOPlayerSettings = {
     fieldTheme: "classic",
     chainMode: true,
     autoPlaceZone: false,
-    reduceAnimations: false
+    reduceAnimations: false,
+    dragFromHand: true
 }
 
 const YGO_SETTINGS_KEY = "ygo_player_settings";

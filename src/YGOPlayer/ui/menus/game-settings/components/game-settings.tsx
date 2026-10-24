@@ -5,6 +5,7 @@ import { Modal } from "../../../components/Modal";
 import InputRange from "../../../components/range/InputRange";
 import { CHAIN_MODE_SETTING, isEngineRoom } from "../../../../domain/chain-mode";
 import { YGOClientType } from "ygo-core";
+import { handDragAvailable } from "../../../../core/components/YGOHandDrag";
 import { ChainStopsControl } from "../../chain-stops-control";
 import { storedChainStops, storeChainStops, type ChainStops } from "../../duel-preferences";
 
@@ -151,6 +152,19 @@ export function GameSettingsDialog({ duel }: { duel: YGODuel }) {
               Reduce animations
             </label>
           </div>
+
+          {isPlaying && handDragAvailable(duel) && <div className="ygo-flex ygo-mt-3">
+            <input
+              id="ygo-setting-drag-from-hand"
+              style={{ display: "inline-block", width: "auto" }}
+              type="checkbox"
+              checked={settings.getConfigFromPath("dragFromHand") !== false}
+              onChange={e => onChangeCheckBox(e, "dragFromHand")}
+            />
+            <label htmlFor="ygo-setting-drag-from-hand" style={{ display: "inline-block", flexGrow: 1 }} title="Drag a card onto a glowing zone to Summon or Set it (Shift, or the Set chip: Set). Clicking a card still opens its menu">
+              Drag cards from the hand
+            </label>
+          </div>}
 
           <div className="ygo-flex ygo-mt-3">
             <input
