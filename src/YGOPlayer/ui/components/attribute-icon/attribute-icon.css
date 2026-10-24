@@ -1,0 +1,6 @@
+.ygo-player-core .ygo-attribute-icon {
+    display: block;
+    flex-shrink: 0;
+    overflow: visible;
+    user-select: none;
+}

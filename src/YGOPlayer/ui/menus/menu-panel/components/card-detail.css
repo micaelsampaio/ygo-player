@@ -1,6 +1,8 @@
-/* Master Duel-style selected card panel (left side, and the mobile aside). */
+/* Master Duel-style card detail: shared by the selected card panel (left side, and the mobile
+   aside) and the card highlight dialog (menus/card-highlight.css adds the dialog's layout). */
 .ygo-player-core {
-    .ygo-selected-card-menu.ygo-md-card-panel {
+    /* The look both share: dark navy translucent box, thin blue-grey edge, soft top glow. */
+    .ygo-md-surface {
         --ygo-md-panel-bg: rgba(10, 20, 42, 0.9);
         --ygo-md-panel-edge: rgba(126, 168, 230, 0.35);
         --ygo-md-accent: rgba(196, 222, 255, 0.85);
@@ -11,15 +13,7 @@
         --ygo-md-condensed: "Barlow Condensed", "Arial Narrow", sans-serif;
 
         position: relative;
-        container-type: inline-size;
         box-sizing: border-box;
-        height: 100%;
-        min-height: 0;
-        overflow: hidden;
-        display: flex;
-        flex-direction: column;
-        gap: 0;
-        padding: 0;
         border: 1px solid var(--ygo-md-panel-edge);
         border-radius: 2px;
         background:
@@ -27,6 +21,17 @@
             var(--ygo-md-panel-bg);
         box-shadow: 0 6px 22px rgba(0, 0, 0, 0.55), inset 0 0 0 1px rgba(0, 0, 0, 0.4);
         color: var(--ygo-text-color);
+    }
+
+    .ygo-selected-card-menu.ygo-md-card-panel {
+        container-type: inline-size;
+        height: 100%;
+        min-height: 0;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+        padding: 0;
 
         /* Skeleton while nothing is selected. */
         & > .ygo-flex {
@@ -81,33 +86,12 @@
         text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
     }
 
+    /* The attribute / Spell / Trap icon next to the name (components/attribute-icon). */
     .ygo-md-badge {
-        flex-shrink: 0;
-        width: 26px;
-        height: 26px;
-        border-radius: 50%;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 15px;
-        font-weight: 700;
-        line-height: 1;
-        color: #fff;
-        border: 1.5px solid rgba(255, 255, 255, 0.75);
-        box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5), 0 1px 4px rgba(0, 0, 0, 0.6);
-        text-shadow: 0 1px 1px rgba(0, 0, 0, 0.6);
-        background: radial-gradient(circle at 35% 30%, var(--ygo-md-badge-hi, #999), var(--ygo-md-badge-lo, #333));
+        width: 28px;
+        height: 28px;
+        filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.6));
     }
-
-    .ygo-md-badge-dark { --ygo-md-badge-hi: #b05fd6; --ygo-md-badge-lo: #4a1466; }
-    .ygo-md-badge-light { --ygo-md-badge-hi: #ffe680; --ygo-md-badge-lo: #b88a00; color: #3a2a00; text-shadow: none; }
-    .ygo-md-badge-earth { --ygo-md-badge-hi: #c79a6a; --ygo-md-badge-lo: #5a3a1c; }
-    .ygo-md-badge-water { --ygo-md-badge-hi: #6fc3ff; --ygo-md-badge-lo: #0d4f9e; }
-    .ygo-md-badge-fire { --ygo-md-badge-hi: #ff7a5c; --ygo-md-badge-lo: #a3140c; }
-    .ygo-md-badge-wind { --ygo-md-badge-hi: #8df08d; --ygo-md-badge-lo: #1d7a2a; }
-    .ygo-md-badge-divine { --ygo-md-badge-hi: #fff1b0; --ygo-md-badge-lo: #b0821c; color: #3a2a00; text-shadow: none; }
-    .ygo-md-badge-spell { --ygo-md-badge-hi: #4fe0b0; --ygo-md-badge-lo: #06684a; }
-    .ygo-md-badge-trap { --ygo-md-badge-hi: #f07ad6; --ygo-md-badge-lo: #7a1d66; }
 
     .ygo-md-card-body {
         display: flex;

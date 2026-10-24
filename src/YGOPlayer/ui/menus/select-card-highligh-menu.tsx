@@ -1,10 +1,18 @@
 import type { YGODuel } from "../../core/YGODuel";
 import { Card } from "ygo-core";
-import { useMemo, useRef } from "react";
+import { useEffect, useId, useMemo, useRef } from "react";
 import { parseSelectedCard } from "./menu-panel/components/selected-card-menu";
 import { Modal } from "../components/Modal";
+import { AttributeIcon } from "../components/attribute-icon/AttributeIcon";
+import { bindEscapeToCancel } from "../components/escape-to-cancel";
+import { cardBadge, cardFrameKind, cardNameFontSize, cardTypeStrip } from "./menu-panel/components/card-detail-info";
+import { CardDetailStats } from "./menu-panel/components/card-detail-stats";
 
 import { clickableProps } from "../components/a11y";
+import "./menu-panel/components/card-detail.css";
+import "./card-highlight.css";
+
+/** The enlarged card (click the card name / art in the panel, or long-press a card). */
 export function SelectedCardHighlightedMenu({
   duel,
   card,
@@ -14,95 +22,62 @@ export function SelectedCardHighlightedMenu({
   card: Card;
   visible: boolean;
 }) {
-  const menuRef = useRef<HTMLDivElement>(null);
+  const closeRef = useRef<HTMLDivElement>(null);
+  const nameId = useId();
   const cardData = useMemo(() => parseSelectedCard(card), [card]);
+  const open = visible && !!card && !!cardData;
 
   const closeDialog = () => {
     duel.events.dispatch("close-ui-menu", { group: "card-highlight" });
   }
 
-  if (!visible) return null;
-  if (!card) return null;
-  if (!cardData) return null;
+  // Escape closes the dialog (before the global Escape that opens Settings).
+  useEffect(() => {
+    if (!open) return;
+    return bindEscapeToCancel(document, () => duel.events.dispatch("close-ui-menu", { group: "card-highlight" }));
+  }, [open, duel]);
 
-  return <Modal.Dialog close={closeDialog} visible onContextMenu={() => {
+  // Move focus into the dialog, and give it back to whatever opened it on close.
+  useEffect(() => {
+    if (!open) return;
+    const previous = document.activeElement as HTMLElement | null;
+    closeRef.current?.focus({ preventScroll: true });
+    return () => previous?.focus?.({ preventScroll: true });
+  }, [open]);
+
+  if (!open || !cardData) return null;
+
+  const badge = cardBadge(card);
+  const frame = cardFrameKind(card);
+
+  return <Modal.Dialog close={closeDialog} visible className="ygo-md-highlight-dialog" labelledBy={nameId} onContextMenu={() => {
     duel.events.dispatch("close-ui-menu", { type: "selected-card-highlight" });
   }}>
-    <Modal.Body>
-      <div className="ygo-card-highlight ygo-flex ygo-gap-4">
-        <div>
-          <img src={card.images.small_url} className="ygo-card" />
-        </div>
+    <div className={`ygo-md-surface ygo-md-highlight ygo-md-frame-${frame}`}>
+      <span className="ygo-md-corners" aria-hidden="true" />
 
-        <div className="ygo-flex ygo-flex-col ygo-gap-2" style={{ maxHeight: "80dvh", width: "100%" }}>
-
-          <div className="ygo-flex ygo-gap-4 ygo-items-center ygo-justify-center">
-            <div className={`ygo-text-xl ygo-p-1 ygo-flex-grow-1 ${cardData.colorClassName}`}>
-              {card.name}
-            </div>
-            <div>
-              <div className="ygo-close" {...clickableProps(closeDialog, 'Close')}></div>
-            </div>
-          </div>
-
-          {
-            (cardData.isSpell || cardData.isTrap) && <>
-              <div className="ygo-card-stats">
-                <div>{cardData.cardTypeName}</div>
-              </div>
-            </>
-          }
-
-          {
-            cardData.isMonster && <>
-              <div className="ygo-flex ygo-gap-2 ygo-p-1">
-
-                {
-                  cardData.isLinkMonster && <div className="ygo-card-stats">
-                    <div className="ygo-card-stats-icon ygo-card-stats-icon-link-monster"></div>
-                    <div>{card.linkval ?? "0"}</div>
-                  </div>
-                }
-                {
-                  cardData.isXyzMonster && <div className="ygo-card-stats">
-                    <div className="ygo-card-stats-icon ygo-card-stats-icon-rank"></div>
-                    <div>{card.level ?? "0"}</div>
-                  </div>
-                }
-                {
-                  (!cardData.isLinkMonster && !cardData.isXyzMonster && cardData.isMonster) && <div className="ygo-card-stats">
-                    <div className="ygo-card-stats-icon ygo-card-stats-icon-level"></div>
-                    <div>{card.level ?? "0"}</div>
-                  </div>
-                }
-
-                <div className="ygo-card-stats">
-                  <div className="ygo-card-stats-icon ygo-card-stats-icon-atk"></div>
-                  <div>{card.atk ?? "0"}</div>
-                </div>
-
-                {!cardData.isLinkMonster && <>
-                  <div className="ygo-card-stats">
-                    <div className="ygo-card-stats-icon ygo-card-stats-icon-def"></div>
-                    <div>{card.def ?? "0"}</div>
-                  </div>
-                </>}
-              </div>
-
-            </>
-          }
-
-          <div className={`ygo-content-card-type-border ygo-p-1 ${cardData.borderColorClassName} `}>
-            {cardData.type}
-          </div>
-
-          <div className="ygo-text-lg ygo-p-1 ygo-scroll-y">
-            {cardData.cardDescription}
-          </div>
-        </div>
-
+      <div className="ygo-md-highlight-art">
+        <img src={card.images.small_url} alt={card.name} />
       </div>
-    </Modal.Body>
-  </Modal.Dialog >
-    ;
+
+      <div className="ygo-md-highlight-info">
+        <div className="ygo-md-card-header ygo-md-highlight-header">
+          <h2 id={nameId} className="ygo-md-card-name" title={card.name} style={{ fontSize: cardNameFontSize(card.name, 28) }}>{card.name}</h2>
+          {badge && <AttributeIcon kind={badge.key} className="ygo-md-badge" />}
+          <div ref={closeRef} className="ygo-close ygo-md-highlight-close" {...clickableProps(closeDialog, "Close")}></div>
+        </div>
+
+        <CardDetailStats card={card} subtype={cardData} className="ygo-md-highlight-stats">
+          <div className="ygo-md-card-id">#{card.id}</div>
+        </CardDetailStats>
+
+        <div className={`ygo-md-type-strip ygo-md-type-strip-${frame}`}>{cardTypeStrip(card)}</div>
+
+        {/* Focusable so keyboard users can scroll long effects. */}
+        <div className="ygo-md-card-description ygo-md-highlight-description" tabIndex={0} aria-label="Card text">
+          {cardData.cardDescription}
+        </div>
+      </div>
+    </div>
+  </Modal.Dialog>;
 }

@@ -88,4 +88,9 @@ describe("cardNameFontSize", () => {
     expect(cardNameFontSize("Apollousa, Bow of the Goddess")).toBe(16);
     expect(cardNameFontSize("Blue-Eyes Alternative Ultimate Dragon X")).toBe(12);
   });
+
+  it("scales the steps for a wider header", () => {
+    expect(cardNameFontSize("Ash Blossom", 30)).toBe(30);
+    expect(cardNameFontSize("Blue-Eyes Alternative Ultimate Dragon X", 30)).toBe(18);
+  });
 });

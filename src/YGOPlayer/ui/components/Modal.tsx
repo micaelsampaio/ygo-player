@@ -25,6 +25,8 @@ function Dialog({
     embedded,
     close,
     onContextMenu,
+    className,
+    labelledBy,
     children,
 }: {
     visible: boolean;
@@ -33,6 +35,10 @@ function Dialog({
     embedded?: boolean
     close: () => void;
     onContextMenu?: () => void,
+    /** Extra class on the dialog box, for dialogs that bring their own look. */
+    className?: string;
+    /** id of the element that names the dialog (aria-labelledby). */
+    labelledBy?: string;
     children: React.ReactNode;
 }) {
 
@@ -60,7 +66,7 @@ function Dialog({
                 onClick={close}
                 onMouseMove={stopPropagationCallback}
             >
-                <div className={`ygo-player-dialog ${size ? `ygo-${size}` : ''}`} role="dialog" aria-modal="true" onClick={stopPropagationCallback}>
+                <div className={`ygo-player-dialog ${size ? `ygo-${size}` : ''} ${className || ''}`} role="dialog" aria-modal="true" aria-labelledby={labelledBy} onClick={stopPropagationCallback}>
                     {children}
                 </div>
             </div>

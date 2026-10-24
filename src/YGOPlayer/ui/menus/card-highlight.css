@@ -1,0 +1,186 @@
+/* Card highlight dialog: big art left, Master Duel-style detail right. The look (surface, header,
+   stats, type strip, text) comes from menu-panel/components/card-detail.css; this adds the layout. */
+.ygo-player-core {
+    .ygo-player-dialog.ygo-md-highlight-dialog {
+        background: transparent;
+        border: none;
+        border-radius: 0;
+        width: min(880px, calc(100vw - 32px));
+        max-width: none;
+        max-height: calc(100dvh - 32px);
+        animation: ygo-md-highlight-in 180ms ease-out;
+    }
+
+    .ygo-md-highlight {
+        display: flex;
+        gap: 18px;
+        min-height: 0;
+        max-height: calc(100dvh - 32px);
+        padding: 18px;
+    }
+
+    .ygo-md-highlight-art {
+        flex: 0 0 auto;
+        width: min(320px, 40%);
+        align-self: flex-start;
+
+        img {
+            display: block;
+            width: 100%;
+            height: auto;
+            aspect-ratio: 59 / 86;
+            object-fit: cover;
+            border: 1px solid rgba(0, 0, 0, 0.6);
+            box-shadow: 0 0 0 1px rgba(160, 190, 240, 0.3), 0 6px 18px rgba(0, 0, 0, 0.65);
+        }
+    }
+
+    .ygo-md-highlight-info {
+        flex: 1 1 auto;
+        min-width: 0;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        border: 1px solid var(--ygo-md-panel-edge);
+        background: rgba(4, 10, 24, 0.25);
+    }
+
+    .ygo-md-card-header.ygo-md-highlight-header {
+        min-height: 52px;
+        padding: 8px 10px 8px 14px;
+        cursor: default;
+
+        .ygo-md-card-name {
+            margin: 0;
+        }
+
+        .ygo-md-badge {
+            width: 38px;
+            height: 38px;
+        }
+    }
+
+    .ygo-close.ygo-md-highlight-close {
+        flex-shrink: 0;
+        width: 28px;
+        height: 28px;
+        margin-left: 2px;
+        border-radius: 2px;
+
+        &:focus-visible {
+            outline: 2px solid var(--ygo-md-accent);
+            outline-offset: 1px;
+        }
+    }
+
+    .ygo-md-card-stats.ygo-md-highlight-stats {
+        flex: 0 0 auto;
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px 18px;
+        padding: 10px 14px;
+
+        .ygo-md-stat {
+            font-size: 22px;
+        }
+
+        .ygo-md-stat-subtype {
+            font-size: 18px;
+        }
+
+        .ygo-md-icon {
+            width: 24px;
+            height: 24px;
+        }
+
+        .ygo-md-card-id {
+            margin: 0 0 0 auto;
+        }
+    }
+
+    .ygo-md-highlight .ygo-md-type-strip {
+        font-size: 18px;
+        padding: 5px 14px;
+    }
+
+    .ygo-md-card-description.ygo-md-highlight-description {
+        min-height: 80px;
+        padding: 10px 14px 14px;
+        font-size: var(--ygo-font-md, 15px);
+        line-height: 1.55;
+
+        &:focus-visible {
+            outline: 1px solid var(--ygo-md-accent);
+            outline-offset: -2px;
+        }
+    }
+
+    /* Narrow screens: art above the text, the whole box within the viewport, the text scrolling. */
+    @media (max-width: 640px) {
+        .ygo-player-dialog.ygo-md-highlight-dialog {
+            width: calc(100vw - 32px);
+        }
+
+        .ygo-md-highlight {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 12px;
+            padding: 12px;
+        }
+
+        .ygo-md-highlight-art {
+            align-self: center;
+            width: auto;
+            /* Leave at least ~45% of the height for the text. */
+            height: min(38dvh, 300px);
+
+            img {
+                width: auto;
+                height: 100%;
+            }
+        }
+
+        .ygo-md-card-header.ygo-md-highlight-header .ygo-md-badge {
+            width: 32px;
+            height: 32px;
+        }
+
+        .ygo-md-card-stats.ygo-md-highlight-stats {
+            gap: 6px 14px;
+            padding: 8px 12px;
+
+            .ygo-md-stat {
+                font-size: 19px;
+            }
+        }
+
+        .ygo-md-card-description.ygo-md-highlight-description {
+            min-height: 60px;
+            font-size: var(--ygo-font-sm);
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .ygo-player-dialog.ygo-md-highlight-dialog {
+            animation: none;
+        }
+    }
+}
+
+/* "Reduce animations" in the game settings. */
+.ygo-player-core.ygo-reduce-motion .ygo-player-dialog.ygo-md-highlight-dialog {
+    animation: none;
+}
+
+@keyframes ygo-md-highlight-in {
+    from {
+        opacity: 0;
+        transform: translateY(8px) scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}

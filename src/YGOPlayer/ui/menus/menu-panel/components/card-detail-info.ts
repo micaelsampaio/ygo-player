@@ -1,12 +1,13 @@
 import { Card, YGOGameUtils } from "ygo-core";
+import { isAttributeIconKind, type AttributeIconKind } from "../../../components/attribute-icon/attribute-icon-spec";
 
 /** Display helpers for the Master Duel-style selected card panel. Pure: no DOM, no React. */
 
 export type CardFrameKind = "monster" | "spell" | "trap";
 
 export interface CardBadge {
-  /** CSS modifier: an attribute in lower case ("dark", "light"…), "spell" or "trap". */
-  key: string;
+  /** Icon kind / CSS modifier: an attribute in lower case ("dark", "light"…), "spell" or "trap". */
+  key: AttributeIconKind;
   /** The single kanji Master Duel prints in the badge. */
   glyph: string;
   /** Accessible label ("DARK", "Spell"…). */
@@ -36,8 +37,9 @@ export function cardBadge(card: Card): CardBadge | null {
   if (kind === "trap") return { key: "trap", glyph: "罠", label: "Trap" };
   const attribute = String(card.attribute || "").toUpperCase();
   const glyph = ATTRIBUTE_GLYPHS[attribute];
-  if (!glyph) return null;
-  return { key: attribute.toLowerCase(), glyph, label: attribute };
+  const key = attribute.toLowerCase();
+  if (!glyph || !isAttributeIconKind(key)) return null;
+  return { key, glyph, label: attribute };
 }
 
 export interface CardLevelInfo {
@@ -90,12 +92,16 @@ export function cardTypeStrip(card: Card): string {
   return card.race ? `[${card.race}]` : "";
 }
 
-/** Header font size (px) that keeps long names on one line in the ~270px panel. */
-export function cardNameFontSize(name: string): number {
+/**
+ * Header font size (px) that keeps long names on one line in the ~270px panel. `max` scales the
+ * steps for wider headers (the highlight dialog): 20 is the panel's size for short names.
+ */
+export function cardNameFontSize(name: string, max = 20): number {
   const length = (name || "").length;
-  if (length <= 18) return 20;
-  if (length <= 24) return 18;
-  if (length <= 30) return 16;
-  if (length <= 38) return 14;
-  return 12;
+  let size = 12;
+  if (length <= 18) size = 20;
+  else if (length <= 24) size = 18;
+  else if (length <= 30) size = 16;
+  else if (length <= 38) size = 14;
+  return max === 20 ? size : Math.round((size * max) / 20);
 }
