@@ -5,6 +5,19 @@ import { YGOConfig } from "../core/YGOConfig";
 import { useDeviceResolutionInfo } from "../scripts/use-device-resolution-info";
 import { YGOClient } from "ygo-core";
 
+/** The "Reduce animations" setting, kept in sync for the root class that stops CSS animations. */
+function useReduceAnimations(duel: YGODuel | undefined): boolean {
+    const [reduce, setReduce] = useState(false);
+    useEffect(() => {
+        if (!duel) return;
+        const read = () => setReduce(!!duel.settings.getConfigFromPath("reduceAnimations"));
+        read();
+        duel.settings.events.on("onSettingsChanged", read);
+        return () => duel.settings.events.off("onSettingsChanged", read);
+    }, [duel]);
+    return reduce;
+}
+
 export function YgoDuelApp({ config, client, bind: onBind, start: onStart }: { client: YGOClient, bind?: (duel: YGODuel) => void, config: YGOConfig, start?: (duel: YGODuel) => void }) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [duel, setDuel] = useState<YGODuel>();
@@ -45,7 +58,8 @@ export function YgoDuelApp({ config, client, bind: onBind, start: onStart }: { c
         }
     }, [duel])
 
-    return <div className={`ygo-player-core ${isMobile ? "ygo-is-mobile" : ""}`} id="ygo-player-core" {...duel?.mouseEvents.eventsReference}>
+    const reduce = useReduceAnimations(duel);
+    return <div className={`ygo-player-core ${isMobile ? "ygo-is-mobile" : ""}${reduce ? " ygo-reduce-motion" : ""}`} id="ygo-player-core" {...duel?.mouseEvents.eventsReference}>
         <canvas id='ygo-canvas' ref={canvasRef} style={{ width: "100%", height: "100%" }}>
         </canvas>
         {duel && <YGOUiController duel={duel}></YGOUiController>}

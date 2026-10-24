@@ -85,3 +85,27 @@ export function chainBadgeZone(badge: Pick<ChainBadge, "zone" | "id">, board: Ch
       return null;
   }
 }
+
+/** Master Duel draws the newest link biggest: full size for the top link,
+ * each older one a step smaller, never below `min`. */
+export function chainBadgeScale(link: number, topLink: number, { step = 0.14, min = 0.6 } = {}): number {
+  const behind = Math.max(0, topLink - link);
+  return Math.max(min, 1 - behind * step);
+}
+
+/**
+ * What left between two renders (a link resolved, or its card left view),
+ * with the delay its exit animation waits: the chain resolves top-down, so
+ * when several go at once (the whole chain cleared) the newest goes first and
+ * each older link `stepMs` later. `top` is the link that goes first (by
+ * default the newest one leaving), so badges and chain segments leaving
+ * together share one schedule.
+ */
+export function exitingItems<T extends { key: string; link: number }>(
+  prev: T[], next: T[], { stepMs = 160, top }: { stepMs?: number; top?: number } = {},
+): { item: T; delay: number }[] {
+  const kept = new Set(next.map((n) => n.key));
+  const gone = prev.filter((p) => !kept.has(p.key)).sort((a, b) => b.link - a.link);
+  const first = top ?? gone[0]?.link ?? 0;
+  return gone.map((item) => ({ item, delay: Math.max(0, first - item.link) * stepMs }));
+}

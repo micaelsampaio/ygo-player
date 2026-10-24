@@ -27,6 +27,8 @@ import { GameCardHand } from "../../game/GameCardHand";
 import { RotationTransition } from "../utils/rotation-transition";
 import { modalOverlayFade, moveAndRotate } from "../utils/animation-builders";
 import { startBotSpotlight, takeBotActivation } from "../bot-spotlight";
+import { chainLinkLiftTasks } from "../utils/chain-fx";
+import { MultipleTasks } from "../utils/multiple-tasks";
 
 interface ActivateCardHandlerProps extends DuelEventHandlerProps {
   event: YGODuelEvents.Activate;
@@ -275,16 +277,16 @@ export class ActivateCardHandler extends YGOCommandHandler {
     const position = startPos.clone();
     const rotation = card.rotation.clone();
     position.add(axis);
+    const lift = new PositionTransition({ gameObject: card, position, duration: 0.25 });
+    const settle = moveAndRotate(card, { position: startPos, rotation, duration: 0.15 });
+    // A chain link (Master Duel): the lifted card also grows, tilts and gets a golden rim (chain-fx.ts).
+    const chain = this.props.event.chainLink
+      ? chainLinkLiftTasks(card, { liftDuration: 0.25, holdDuration: 0.5, settleDuration: 0.15 })
+      : null;
     seq
-      .add(
-        new PositionTransition({
-          gameObject: card,
-          position,
-          duration: 0.25,
-        })
-      )
+      .add(chain ? new MultipleTasks(lift, chain.lift) : lift)
       .add(new WaitForSeconds(0.5))
-      .add(moveAndRotate(card, { position: startPos, rotation, duration: 0.15 }));
+      .add(chain ? new MultipleTasks(settle, chain.settle) : settle);
   }
 
   public finish(): void {

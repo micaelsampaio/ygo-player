@@ -1,0 +1,277 @@
+/* Master Duel-style selected card panel (left side, and the mobile aside). */
+.ygo-player-core {
+    .ygo-selected-card-menu.ygo-md-card-panel {
+        --ygo-md-panel-bg: rgba(10, 20, 42, 0.9);
+        --ygo-md-panel-edge: rgba(126, 168, 230, 0.35);
+        --ygo-md-accent: rgba(196, 222, 255, 0.85);
+        --ygo-md-header-bg: linear-gradient(180deg, rgba(40, 58, 96, 0.95), rgba(20, 32, 60, 0.95));
+        --ygo-md-strip-monster: linear-gradient(90deg, #8a4a14, #b8661f 60%, rgba(184, 102, 31, 0.55));
+        --ygo-md-strip-spell: linear-gradient(90deg, #0a6a45, #129268 60%, rgba(18, 146, 104, 0.55));
+        --ygo-md-strip-trap: linear-gradient(90deg, #7a2d6c, #a8418f 60%, rgba(168, 65, 143, 0.55));
+        --ygo-md-condensed: "Barlow Condensed", "Arial Narrow", sans-serif;
+
+        position: relative;
+        container-type: inline-size;
+        box-sizing: border-box;
+        height: 100%;
+        min-height: 0;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+        padding: 0;
+        border: 1px solid var(--ygo-md-panel-edge);
+        border-radius: 2px;
+        background:
+            radial-gradient(120% 60% at 50% 0%, rgba(54, 92, 160, 0.28), transparent 70%),
+            var(--ygo-md-panel-bg);
+        box-shadow: 0 6px 22px rgba(0, 0, 0, 0.55), inset 0 0 0 1px rgba(0, 0, 0, 0.4);
+        color: var(--ygo-text-color);
+
+        /* Skeleton while nothing is selected. */
+        & > .ygo-flex {
+            padding: 12px;
+        }
+    }
+
+    /* Thin bracket corners, drawn by one overlay so the content stays clean. */
+    .ygo-md-corners {
+        position: absolute;
+        inset: 3px;
+        pointer-events: none;
+        z-index: 2;
+        --c: var(--ygo-md-accent);
+        --l: 12px;
+        --w: 1.5px;
+        background:
+            linear-gradient(var(--c), var(--c)) top left / var(--l) var(--w),
+            linear-gradient(var(--c), var(--c)) top left / var(--w) var(--l),
+            linear-gradient(var(--c), var(--c)) top right / var(--l) var(--w),
+            linear-gradient(var(--c), var(--c)) top right / var(--w) var(--l),
+            linear-gradient(var(--c), var(--c)) bottom left / var(--l) var(--w),
+            linear-gradient(var(--c), var(--c)) bottom left / var(--w) var(--l),
+            linear-gradient(var(--c), var(--c)) bottom right / var(--l) var(--w),
+            linear-gradient(var(--c), var(--c)) bottom right / var(--w) var(--l);
+        background-repeat: no-repeat;
+    }
+
+    .ygo-md-card-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 40px;
+        padding: 6px 8px 6px 12px;
+        background: var(--ygo-md-header-bg);
+        border-bottom: 1px solid var(--ygo-md-panel-edge);
+        cursor: pointer;
+        flex-shrink: 0;
+    }
+
+    .ygo-md-card-name {
+        flex: 1;
+        min-width: 0;
+        font-family: var(--ygo-md-condensed);
+        font-weight: 700;
+        line-height: 1.1;
+        letter-spacing: 0.01em;
+        color: var(--ygo-heading-color);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+    }
+
+    .ygo-md-badge {
+        flex-shrink: 0;
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 15px;
+        font-weight: 700;
+        line-height: 1;
+        color: #fff;
+        border: 1.5px solid rgba(255, 255, 255, 0.75);
+        box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5), 0 1px 4px rgba(0, 0, 0, 0.6);
+        text-shadow: 0 1px 1px rgba(0, 0, 0, 0.6);
+        background: radial-gradient(circle at 35% 30%, var(--ygo-md-badge-hi, #999), var(--ygo-md-badge-lo, #333));
+    }
+
+    .ygo-md-badge-dark { --ygo-md-badge-hi: #b05fd6; --ygo-md-badge-lo: #4a1466; }
+    .ygo-md-badge-light { --ygo-md-badge-hi: #ffe680; --ygo-md-badge-lo: #b88a00; color: #3a2a00; text-shadow: none; }
+    .ygo-md-badge-earth { --ygo-md-badge-hi: #c79a6a; --ygo-md-badge-lo: #5a3a1c; }
+    .ygo-md-badge-water { --ygo-md-badge-hi: #6fc3ff; --ygo-md-badge-lo: #0d4f9e; }
+    .ygo-md-badge-fire { --ygo-md-badge-hi: #ff7a5c; --ygo-md-badge-lo: #a3140c; }
+    .ygo-md-badge-wind { --ygo-md-badge-hi: #8df08d; --ygo-md-badge-lo: #1d7a2a; }
+    .ygo-md-badge-divine { --ygo-md-badge-hi: #fff1b0; --ygo-md-badge-lo: #b0821c; color: #3a2a00; text-shadow: none; }
+    .ygo-md-badge-spell { --ygo-md-badge-hi: #4fe0b0; --ygo-md-badge-lo: #06684a; }
+    .ygo-md-badge-trap { --ygo-md-badge-hi: #f07ad6; --ygo-md-badge-lo: #7a1d66; }
+
+    .ygo-md-card-body {
+        display: flex;
+        gap: 10px;
+        padding: 10px 10px 8px;
+        flex-shrink: 0;
+    }
+
+    .ygo-md-card-image {
+        flex: 0 0 44%;
+        max-width: 140px;
+        cursor: pointer;
+
+        img {
+            display: block;
+            width: 100%;
+            height: auto;
+            aspect-ratio: 59 / 86;
+            object-fit: cover;
+            border: 1px solid rgba(0, 0, 0, 0.6);
+            box-shadow: 0 0 0 1px rgba(160, 190, 240, 0.25), 0 3px 10px rgba(0, 0, 0, 0.6);
+        }
+    }
+
+    .ygo-md-card-stats {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        padding-top: 2px;
+    }
+
+    .ygo-md-stat {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        font-family: var(--ygo-md-condensed);
+        font-size: 19px;
+        font-weight: 700;
+        line-height: 1;
+        color: var(--ygo-heading-color);
+        font-variant-numeric: tabular-nums;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
+    }
+
+    .ygo-md-stat-subtype {
+        font-size: 15px;
+        line-height: 1.15;
+
+        & > span:last-child {
+            min-width: 0;
+            overflow-wrap: anywhere;
+        }
+    }
+
+    .ygo-md-icon {
+        width: 20px;
+        height: 20px;
+        flex-shrink: 0;
+        filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.6));
+    }
+
+    .ygo-card-stats.ygo-md-subtype-icon {
+        margin: 0;
+        flex-shrink: 0;
+
+        .ygo-card-stats-icon {
+            width: 20px;
+            height: 20px;
+            min-width: 20px;
+            min-height: 20px;
+        }
+    }
+
+    .ygo-md-card-id {
+        margin-top: auto;
+        font-size: var(--ygo-font-xs);
+        color: rgba(200, 215, 240, 0.55);
+        font-variant-numeric: tabular-nums;
+    }
+
+    .ygo-md-type-strip {
+        flex-shrink: 0;
+        padding: 4px 12px;
+        font-family: var(--ygo-md-condensed);
+        font-size: 16px;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        color: #fff;
+        text-shadow: 0 1px 1px rgba(0, 0, 0, 0.6);
+        border-top: 1px solid rgba(255, 255, 255, 0.18);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.45);
+        overflow-wrap: anywhere;
+
+        &:empty {
+            display: none;
+        }
+    }
+
+    .ygo-md-type-strip-monster { background: var(--ygo-md-strip-monster); }
+    .ygo-md-type-strip-spell { background: var(--ygo-md-strip-spell); }
+    .ygo-md-type-strip-trap { background: var(--ygo-md-strip-trap); }
+
+    .ygo-md-card-description {
+        flex: 1 1 auto;
+        min-height: 60px;
+        overflow-y: auto;
+        padding: 8px 12px 12px;
+        font-size: var(--ygo-font-sm);
+        line-height: 1.5;
+        color: #eef2fa;
+        background: rgba(4, 10, 24, 0.35);
+        scrollbar-width: thin;
+        scrollbar-color: rgba(160, 190, 240, 0.45) transparent;
+        overflow-wrap: anywhere;
+
+        & > div + div {
+            margin-top: 6px;
+        }
+
+        &::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        &::-webkit-scrollbar-thumb {
+            background-color: rgba(160, 190, 240, 0.45);
+            border-radius: 3px;
+        }
+    }
+
+    /* Narrow panels: stack the art above the stats. */
+    @container (max-width: 220px) {
+        .ygo-md-card-body {
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .ygo-md-card-image {
+            flex: none;
+            width: 60%;
+        }
+
+        .ygo-md-card-stats {
+            flex-direction: row;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 6px 12px;
+        }
+
+        .ygo-md-card-id {
+            width: 100%;
+            text-align: center;
+        }
+    }
+}
+
+/* Mobile aside: the aside scrolls, so let the panel grow with its text. */
+.ygo-player-core .ygo-aside-content .ygo-selected-card-menu.ygo-md-card-panel {
+    height: auto;
+    min-height: 100%;
+    overflow: visible;
+
+    .ygo-md-card-description {
+        overflow-y: visible;
+    }
+}

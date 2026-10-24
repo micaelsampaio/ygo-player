@@ -1,140 +1,207 @@
 .ygo-player-core {
+    /*
+     * Master Duel-style HUD: hexagonal avatar frame, angled name bar, big condensed "LP 8000".
+     * The local player's plate reads left→right; the opponent's is mirrored (avatar on the right).
+     */
     .ygo-player-hud {
+        --ygo-hud-accent: 70, 150, 255;
+        --ygo-hud-accent-deep: 22, 58, 140;
+        --ygo-hud-font: "Barlow Condensed", "Arial Narrow", Arial, sans-serif;
         position: absolute;
         padding: 5px;
         color: #FFF;
+        font-family: var(--ygo-hud-font);
         font-weight: bold;
 
         &.ygo-player-0 {
             right: 20px;
             bottom: 100px;
-
-            .ygo-player-hud-bar {
-                background-image: linear-gradient(90deg, rgba(0, 0, 255, 0) 0%, rgba(0, 0, 255, 1) 10%, rgba(0, 0, 255, 1) 90%, rgba(0, 0, 255, 0) 100%);
-            }
         }
 
         &.ygo-player-1 {
+            --ygo-hud-accent: 255, 84, 72;
+            --ygo-hud-accent-deep: 130, 22, 22;
             right: 20px;
-            /* Flush with the top: the duel log below it gets the room. */
             top: 0;
-
-            .ygo-player-hud-bar {
-                left: 100px;
-                background-image: linear-gradient(90deg, rgba(255, 0, 0, 0) 0%, rgba(255, 0, 0, 1) 10%, rgba(255, 0, 0, 1) 90%, rgba(255, 0, 0, 0) 100%);
-            }
         }
     }
 
-    /* Fixed width: the turn row's text changes every phase and must not resize the HUD. */
     .ygo-player-hud-player-content {
-        width: 280px;
+        width: 300px;
     }
 
-    /* Turn player's HUD: a text chip ("Your turn · Main Phase 1") plus a
-       coloured edge — blue for the POV side, red for the other, matching the bars. */
     .ygo-player-hud-turn-chip {
-        /* A row of the HUD column like the name and LP rows: same left fade, text at the same 20px. */
         display: block;
         margin-bottom: 4px;
-        padding: 3px 8px 3px 20px;
-        font-size: 12px;
-        font-weight: bold;
-        letter-spacing: 0.04em;
+        padding: 3px 18px 3px 20px;
+        font-size: 13px;
+        font-weight: 700;
+        font-style: italic;
+        letter-spacing: 0.06em;
         text-transform: uppercase;
         color: #fff;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+        background-image: linear-gradient(90deg, rgba(var(--ygo-hud-accent-deep), 0) 0%, rgba(var(--ygo-hud-accent-deep), 0.95) 12%, rgba(var(--ygo-hud-accent), 0.85) 70%, rgba(var(--ygo-hud-accent), 0) 100%);
 
-        /* Not the turn player: the row keeps its height so the name and LP don't jump. */
         &.ygo-player-hud-turn-chip-idle {
             visibility: hidden;
         }
     }
 
-    .ygo-player-hud.ygo-player-0 .ygo-player-hud-turn-chip {
-        background-image: linear-gradient(90deg, rgba(29, 78, 216, 0) 0%, rgba(29, 78, 216, 1) 10%, rgba(29, 78, 216, 1) 80%, rgba(29, 78, 216, 0) 100%);
-    }
-
     .ygo-player-hud.ygo-player-1 .ygo-player-hud-turn-chip {
-        background-image: linear-gradient(90deg, rgba(185, 28, 28, 0) 0%, rgba(185, 28, 28, 1) 10%, rgba(185, 28, 28, 1) 80%, rgba(185, 28, 28, 0) 100%);
+        text-align: right;
+        background-image: linear-gradient(270deg, rgba(var(--ygo-hud-accent-deep), 0) 0%, rgba(var(--ygo-hud-accent-deep), 0.95) 12%, rgba(var(--ygo-hud-accent), 0.85) 70%, rgba(var(--ygo-hud-accent), 0) 100%);
     }
 
-    .ygo-player-hud.ygo-player-hud-active-turn {
-        &.ygo-player-0 .ygo-player-hud-main {
-            box-shadow: inset 4px 0 0 rgb(59, 130, 246);
-        }
-
-        &.ygo-player-1 .ygo-player-hud-main {
-            box-shadow: inset 4px 0 0 rgb(239, 68, 68);
-        }
-    }
-
-    /* Name and LP side by side, on one dark strip. */
-    .ygo-player-hud-main {
+    .ygo-player-hud-row {
         display: flex;
         align-items: center;
-        gap: 8px;
-        background-image: linear-gradient(90deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.7) 10%, rgba(0, 0, 0, 0.7) 85%, rgba(0, 0, 0, 0) 100%);
+    }
 
-        .ygo-player-hud-name {
-            flex: 1;
-            min-width: 0;
-            background-image: none;
-        }
+    .ygo-player-hud.ygo-player-1 .ygo-player-hud-row {
+        flex-direction: row-reverse;
+    }
 
-        .ygo-player-hud-lp {
-            padding-left: 0;
-            padding-right: 20px;
-            font-size: 24px;
-            background-image: none;
+    /* Hexagonal frame: an accent-gradient hexagon with a dark hexagon inset, the initial inside. */
+    .ygo-player-hud-avatar {
+        --ygo-hex: polygon(50% 0%, 95% 25%, 95% 75%, 50% 100%, 5% 75%, 5% 25%);
+        position: relative;
+        z-index: 1;
+        flex: none;
+        width: 66px;
+        height: 74px;
+        filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.7));
+    }
 
-            .ygo-lp-text {
-                font-size: 14px;
-            }
-        }
+    .ygo-player-hud-avatar-hex {
+        width: 100%;
+        height: 100%;
+        display: grid;
+        place-items: center;
+        clip-path: var(--ygo-hex);
+        background: linear-gradient(160deg, #f4f7ff 0%, rgb(var(--ygo-hud-accent)) 38%, rgb(var(--ygo-hud-accent-deep)) 100%);
+    }
+
+    .ygo-player-hud-avatar-inner {
+        width: calc(100% - 8px);
+        height: calc(100% - 8px);
+        display: grid;
+        place-items: center;
+        clip-path: var(--ygo-hex);
+        background: radial-gradient(circle at 50% 35%, rgba(var(--ygo-hud-accent), 0.55) 0%, rgba(10, 14, 30, 0.96) 70%);
+        font-size: 32px;
+        font-weight: 800;
+        line-height: 1;
+        text-shadow: 0 0 8px rgba(var(--ygo-hud-accent), 0.9), 0 2px 2px rgba(0, 0, 0, 0.8);
+    }
+
+    /* The turn player's frame glows (filter on the unclipped wrapper, so the hexagon doesn't cut it off). */
+    .ygo-player-hud.ygo-player-hud-active-turn .ygo-player-hud-avatar {
+        filter: drop-shadow(0 0 6px rgba(var(--ygo-hud-accent), 0.95)) drop-shadow(0 2px 3px rgba(0, 0, 0, 0.7));
+    }
+
+    .ygo-player-hud.ygo-player-hud-active-turn .ygo-player-hud-bar {
+        height: 3px;
+    }
+
+    .ygo-player-hud-main {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        margin-left: -12px;
+    }
+
+    .ygo-player-hud.ygo-player-1 .ygo-player-hud-main {
+        margin-left: 0;
+        margin-right: -12px;
+    }
+
+    /* Angled name bar: a slanted plate tucked under the avatar. */
+    .ygo-player-hud-name {
+        align-self: flex-start;
+        max-width: 100%;
+        box-sizing: border-box;
+        padding: 3px 22px 3px 20px;
+        font-size: 16px;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+        background: linear-gradient(90deg, rgba(12, 16, 32, 0.96) 0%, rgba(24, 32, 58, 0.92) 100%);
+        clip-path: polygon(0 0, 100% 0, calc(100% - 12px) 100%, 0 100%);
+    }
+
+    .ygo-player-hud.ygo-player-1 .ygo-player-hud-name {
+        align-self: flex-end;
+        padding: 3px 20px 3px 22px;
+        text-align: right;
+        clip-path: polygon(0 0, 100% 0, 100% 100%, 12px 100%);
     }
 
     .ygo-player-hud-bar {
         height: 2px;
+        background-image: linear-gradient(90deg, rgba(var(--ygo-hud-accent), 1) 0%, rgba(var(--ygo-hud-accent), 0.9) 70%, rgba(var(--ygo-hud-accent), 0) 100%);
+        box-shadow: 0 0 6px rgba(var(--ygo-hud-accent), 0.8);
     }
 
-    .ygo-player-hud-name {
-        padding-top: 4px;
-        padding-bottom: 4px;
-        padding-left: 20px;
-        font-size: 14px;
-        font-weight: bold;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        background-image: linear-gradient(90deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.4) 10%, rgba(0, 0, 0, 0.4) 80%, rgba(0, 0, 0, 0) 100%);
+    .ygo-player-hud.ygo-player-1 .ygo-player-hud-bar {
+        background-image: linear-gradient(270deg, rgba(var(--ygo-hud-accent), 1) 0%, rgba(var(--ygo-hud-accent), 0.9) 70%, rgba(var(--ygo-hud-accent), 0) 100%);
     }
 
     .ygo-player-hud-lp {
-        padding-top: 4px;
-        padding-bottom: 4px;
-        padding-left: 20px;
-        font-size: 30px;
-        font-weight: bold;
-        background-image: linear-gradient(90deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.7) 10%, rgba(0, 0, 0, 0.7) 80%, rgba(0, 0, 0, 0) 100%);
-        color: white;
+        align-items: baseline;
+        padding: 0 20px 2px 22px;
+        font-size: 40px;
+        font-weight: 700;
+        line-height: 1.05;
+        color: #fff;
+        background-image: linear-gradient(90deg, rgba(6, 10, 22, 0.88) 0%, rgba(6, 10, 22, 0.75) 70%, rgba(6, 10, 22, 0) 100%);
+        transition: color 0.2s ease-out;
 
-        &.ygo-lp-increasing {
-            color: #00f;
-        }
-
-        &.ygo-lp-decreasing {
-            color: #f00;
+        .ygo-lp-text {
+            font-size: 18px;
+            font-weight: 600;
+            font-style: italic;
+            letter-spacing: 0.04em;
+            color: rgba(220, 230, 255, 0.85);
         }
 
         .ygo-lp-value {
+            min-width: 4.2ch;
+            font-variant-numeric: tabular-nums;
+            letter-spacing: 0.04em;
+            text-shadow: 0 0 10px rgba(var(--ygo-hud-accent), 0.35), 0 2px 2px rgba(0, 0, 0, 0.85);
             cursor: pointer;
         }
 
-        .ygo-lp-text {
-            font-size: 20px;
+        &.ygo-lp-increasing {
+            color: #5fd8ff;
+        }
+
+        &.ygo-lp-decreasing {
+            color: #ff4d4d;
+        }
+    }
+
+    .ygo-player-hud.ygo-player-1 .ygo-player-hud-lp {
+        justify-content: flex-end;
+        padding: 0 22px 2px 20px;
+        background-image: linear-gradient(270deg, rgba(6, 10, 22, 0.88) 0%, rgba(6, 10, 22, 0.75) 70%, rgba(6, 10, 22, 0) 100%);
+
+        .ygo-lp-value {
+            text-align: right;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .ygo-player-hud-lp {
+            transition: none;
         }
     }
 
@@ -271,7 +338,16 @@
         }
 
         .ygo-player-hud-lp {
-            font-size: 20px;
+            font-size: 26px;
+        }
+
+        .ygo-player-hud-avatar {
+            width: 48px;
+            height: 54px;
+        }
+
+        .ygo-player-hud-avatar-inner {
+            font-size: 22px;
         }
 
         .ygo-lp-text {
@@ -355,11 +431,10 @@
         }
     }
 
-    /* "Battle Phase" (PhaseBanner): a Master Duel-style sweep across the middle of the field on
-       each phase change (red for the Battle Phase), clicks pass through. */
+    /* "Battle Phase" (PhaseBanner): a slim label at the top of the field, clicks pass through. */
     .ygo-phase-banner-wrap {
         position: absolute;
-        top: 44%;
+        top: 3%;
         left: 0;
         right: 0;
         display: flex;
@@ -369,51 +444,20 @@
     }
 
     .ygo-phase-banner {
-        --ygo-phase-accent: 96, 170, 255;
-        position: relative;
-        min-width: min(560px, 90%);
-        padding: 10px 64px;
-        background: linear-gradient(90deg, transparent, rgba(8, 14, 30, 0.88) 18%, rgba(8, 14, 30, 0.88) 82%, transparent);
+        min-width: 260px;
+        padding: 6px 24px;
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        border-radius: 4px;
+        background: rgba(15, 23, 42, 0.85);
         color: #fff;
-        font-family: "Barlow Condensed", "Arial Narrow", sans-serif;
-        font-size: clamp(24px, 4.2vw, 40px);
-        font-style: italic;
-        font-weight: 700;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
+        font-size: 14px;
         text-align: center;
-        text-shadow: 0 0 12px rgba(var(--ygo-phase-accent), 0.9), 0 2px 2px rgba(0, 0, 0, 0.6);
-        animation: ygo-phase-sweep 1.5s cubic-bezier(0.2, 0.8, 0.2, 1) both;
-    }
-
-    .ygo-phase-banner::before,
-    .ygo-phase-banner::after {
-        content: "";
-        position: absolute;
-        left: 8%;
-        right: 8%;
-        height: 2px;
-        background: linear-gradient(90deg, transparent, rgba(var(--ygo-phase-accent), 1), transparent);
-        box-shadow: 0 0 10px rgba(var(--ygo-phase-accent), 0.8);
-    }
-
-    .ygo-phase-banner::before { top: 0; }
-    .ygo-phase-banner::after { bottom: 0; }
-
-    .ygo-phase-banner.ygo-phase-battle {
-        --ygo-phase-accent: 255, 92, 64;
-    }
-
-    @keyframes ygo-phase-sweep {
-        0% { opacity: 0; transform: translateX(-24%) skewX(-12deg); }
-        18% { opacity: 1; transform: translateX(0) skewX(0); }
-        78% { opacity: 1; transform: translateX(0) skewX(0); }
-        100% { opacity: 0; transform: translateX(24%) skewX(-12deg); }
+        animation: ygo-waiting-banner-in 0.15s ease-out;
     }
 
     @media (prefers-reduced-motion: reduce) {
         .ygo-phase-banner {
-            animation: ygo-phase-fade 1.5s linear both;
+            animation: none;
         }
     }
 

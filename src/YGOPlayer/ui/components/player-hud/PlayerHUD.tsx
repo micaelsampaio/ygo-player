@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { prefersReducedMotion } from "../../../duel-events/utils/battle-fx";
 import type { YGODuel } from "../../../core/YGODuel";
 import "./style.css";
 import { YGODuelEvents, YGOPlayerState } from "ygo-core";
@@ -6,6 +7,7 @@ import { Thinking, ViewDeck } from "./player-states";
 import { useDuelTurnState } from "../../use-duel-turn-state";
 import { turnStatusText } from "../../duel-status";
 import { LifePointsPopover } from "./LifePointsPopover";
+import { formatLifePoints, playerInitial } from "./hud-format";
 
 enum LifePointsState {
     IDLE,
@@ -82,48 +84,51 @@ export function PlayerHUD({ duel, player, visible }: { duel: YGODuel, player: nu
             }
         </div>}
         <div className="ygo-player-hud-player-content">
-            {/* Text, not only the blue/red colour, so it reads for colour-blind and first-time players. */}
             <div
                 className={`ygo-player-hud-turn-chip${isTurnPlayer ? "" : " ygo-player-hud-turn-chip-idle"}`}
                 aria-hidden={isTurnPlayer ? undefined : true}
             >
                 {isTurnPlayer ? turnStatusText(turnState) : "\u00a0"}
             </div>
-            <div className="ygo-player-hud-bar"></div>
-            {/* Name and LP on one row keeps the HUD short, leaving the duel log room between the two. */}
-            <div className="ygo-player-hud-main">
-            <div className="ygo-player-hud-name">
-                {playerName} {state !== YGOPlayerState.IDLE ? `(${state})` : ''}
-            </div>
-            <div className="ygo-player-hud-lp-anchor">
-                <div
-                    className={`ygo-player-hud-lp ${lpsClass} ygo-flex ygo-gap-1${canEditLp ? " ygo-player-hud-lp-editable" : ""}`}
-                    onClick={toggleLifePointsEditor}
-                    role={canEditLp ? "button" : undefined}
-                    tabIndex={canEditLp ? 0 : undefined}
-                    aria-haspopup={canEditLp ? "dialog" : undefined}
-                    aria-expanded={canEditLp ? lpEditorOpen : undefined}
-                    aria-label={canEditLp ? `${playerName}: ${LP} LP. Change life points` : undefined}
-                    title={canEditLp ? "Change life points" : undefined}
-                    onKeyDown={e => {
-                        if (canEditLp && (e.key === "Enter" || e.key === " ")) {
-                            e.preventDefault();
-                            toggleLifePointsEditor();
-                        }
-                    }}
-                >
-                    <span className="ygo-lp-text" style={{ marginTop: "auto" }}>
-                        LP</span>
-                    <span className="ygo-lp-value">{LP}</span>
+            <div className="ygo-player-hud-row">
+                <div className="ygo-player-hud-avatar" aria-hidden="true">
+                    <div className="ygo-player-hud-avatar-hex">
+                        <div className="ygo-player-hud-avatar-inner">{playerInitial(playerName)}</div>
+                    </div>
                 </div>
-                {lpEditorOpen && canEditLp && <LifePointsPopover
-                    playerName={playerName}
-                    currentLp={field.lp}
-                    onApply={applyLifePoints}
-                    onClose={closeLpEditor} />}
+                <div className="ygo-player-hud-main">
+                    <div className="ygo-player-hud-name">
+                        {playerName} {state !== YGOPlayerState.IDLE ? `(${state})` : ''}
+                    </div>
+                    <div className="ygo-player-hud-bar"></div>
+                    <div className="ygo-player-hud-lp-anchor">
+                        <div
+                            className={`ygo-player-hud-lp ${lpsClass} ygo-flex ygo-gap-1${canEditLp ? " ygo-player-hud-lp-editable" : ""}`}
+                            onClick={toggleLifePointsEditor}
+                            role={canEditLp ? "button" : undefined}
+                            tabIndex={canEditLp ? 0 : undefined}
+                            aria-haspopup={canEditLp ? "dialog" : undefined}
+                            aria-expanded={canEditLp ? lpEditorOpen : undefined}
+                            aria-label={canEditLp ? `${playerName}: ${LP} LP. Change life points` : undefined}
+                            title={canEditLp ? "Change life points" : undefined}
+                            onKeyDown={e => {
+                                if (canEditLp && (e.key === "Enter" || e.key === " ")) {
+                                    e.preventDefault();
+                                    toggleLifePointsEditor();
+                                }
+                            }}
+                        >
+                            <span className="ygo-lp-text">LP</span>
+                            <span className="ygo-lp-value">{formatLifePoints(LP)}</span>
+                        </div>
+                        {lpEditorOpen && canEditLp && <LifePointsPopover
+                            playerName={playerName}
+                            currentLp={field.lp}
+                            onApply={applyLifePoints}
+                            onClose={closeLpEditor} />}
+                    </div>
+                </div>
             </div>
-            </div>
-            <div className="ygo-player-hud-bar"></div>
         </div>
     </div>
 }
@@ -131,7 +136,7 @@ export function PlayerHUD({ duel, player, visible }: { duel: YGODuel, player: nu
 /** How long the LP counter takes to roll to a new value at normal speed. */
 const LP_ROLL_MS = 700;
 
-const lpRollReduced = () => typeof window !== "undefined" && !!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+const lpRollReduced = () => prefersReducedMotion();
 
 function usePlayerLp(duel: YGODuel, player: number): { LP: number, lifePointsState: LifePointsState } {
     const field = duel.ygo.getField(player);

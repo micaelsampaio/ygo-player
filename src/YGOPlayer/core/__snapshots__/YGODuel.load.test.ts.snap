@@ -13,6 +13,7 @@ exports[`YGODuel.load > loads assets and builds the board in order (classic) 1`]
     "onGameVolumeChange",
     "onMusicVolumeChange",
     "onGameSpeedChange",
+    "onSettingsChanged",
   ],
   "log": [
     "loadGLTF cdn/models/field.glb",
@@ -35,6 +36,7 @@ exports[`YGODuel.load > loads assets and builds the board in order (classic) 1`]
     "settings.on onGameVolumeChange",
     "settings.on onMusicVolumeChange",
     "settings.on onGameSpeedChange",
+    "settings.on onSettingsChanged",
     "core.updateCamera",
     "updateField",
     "setClientReady",
@@ -55,6 +57,7 @@ exports[`YGODuel.load > loads assets and builds the board in order (holo) 1`] = 
     "onGameVolumeChange",
     "onMusicVolumeChange",
     "onGameSpeedChange",
+    "onSettingsChanged",
   ],
   "log": [
     "loadGLTF cdn/models/field.glb",
@@ -76,6 +79,7 @@ exports[`YGODuel.load > loads assets and builds the board in order (holo) 1`] = 
     "settings.on onGameVolumeChange",
     "settings.on onMusicVolumeChange",
     "settings.on onGameSpeedChange",
+    "settings.on onSettingsChanged",
     "core.updateCamera",
     "updateField",
     "setClientReady",

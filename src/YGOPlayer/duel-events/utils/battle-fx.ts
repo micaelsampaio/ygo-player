@@ -2,9 +2,22 @@ import * as THREE from "three";
 import { YGOTask } from "../../core/components/tasks/YGOTask";
 import type { YGODuel } from "../../core/YGODuel";
 
-/** The viewer asked for less motion: shakes and sweeps are skipped (the attack still plays). */
+let reducedBySetting = false;
+
+/** The player's "Reduce animations" setting (YGOPlayerSettings.reduceAnimations), set by the duel. */
+export function setReducedAnimations(value: boolean) {
+  reducedBySetting = value;
+}
+
+/** Whether the "Reduce animations" setting is on (the attack arrow is skipped too, not only faded). */
+export function animationsReducedBySetting(): boolean {
+  return reducedBySetting;
+}
+
+/** The viewer asked for less motion (the OS setting, or the player's "Reduce animations"):
+ * shakes and sweeps are skipped (the attack still plays). */
 export function prefersReducedMotion(): boolean {
-  return typeof window !== "undefined" && !!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+  return reducedBySetting || (typeof window !== "undefined" && !!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches);
 }
 
 let chevronTexture: THREE.CanvasTexture | null = null;
@@ -18,9 +31,10 @@ function getChevronTexture(): THREE.CanvasTexture | null {
   canvas.height = 64;
   const ctx = canvas.getContext("2d");
   if (!ctx) return null;
+  // A faint glow behind the chevrons (kept low: a strong band showed as a rectangle).
   const glow = ctx.createLinearGradient(0, 0, 0, 64);
   glow.addColorStop(0, "rgba(120,190,255,0)");
-  glow.addColorStop(0.5, "rgba(120,190,255,0.35)");
+  glow.addColorStop(0.5, "rgba(120,190,255,0.14)");
   glow.addColorStop(1, "rgba(120,190,255,0)");
   ctx.fillStyle = glow;
   ctx.fillRect(0, 0, 128, 64);
@@ -41,13 +55,46 @@ function getChevronTexture(): THREE.CanvasTexture | null {
   return chevronTexture;
 }
 
+let arrowFadeTexture: THREE.CanvasTexture | null = null;
+
+/** The arrow's alpha: fades in from the attacker, out toward the tip, and softly at both edges, so
+ * the band never shows where it starts and ends. Not repeated (it spans the whole arrow). */
+function getArrowFadeTexture(): THREE.CanvasTexture | null {
+  if (arrowFadeTexture) return arrowFadeTexture;
+  if (typeof document === "undefined") return null;
+  const canvas = document.createElement("canvas");
+  canvas.width = 256;
+  canvas.height = 32;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return null;
+  const along = ctx.createLinearGradient(0, 0, 256, 0);
+  along.addColorStop(0, "#000");
+  along.addColorStop(0.22, "#fff");
+  along.addColorStop(0.82, "#fff");
+  along.addColorStop(1, "#000");
+  ctx.fillStyle = along;
+  ctx.fillRect(0, 0, 256, 32);
+  // Feather the long edges: multiply by a vertical fade.
+  ctx.globalCompositeOperation = "multiply";
+  const across = ctx.createLinearGradient(0, 0, 0, 32);
+  across.addColorStop(0, "#000");
+  across.addColorStop(0.25, "#fff");
+  across.addColorStop(0.75, "#fff");
+  across.addColorStop(1, "#000");
+  ctx.fillStyle = across;
+  ctx.fillRect(0, 0, 256, 32);
+  arrowFadeTexture = new THREE.CanvasTexture(canvas);
+  return arrowFadeTexture;
+}
+
 /** The arrow's mesh: a chevron band pivoted at its start (scale x is its length), drawn over the board. */
 function createArrowMesh(width: number): { mesh: THREE.Mesh; material: THREE.MeshBasicMaterial } | null {
   const texture = getChevronTexture();
   if (!texture) return null;
   const map = texture.clone();
   map.needsUpdate = true;
-  const material = new THREE.MeshBasicMaterial({ map, transparent: true, depthWrite: false, depthTest: false, blending: THREE.AdditiveBlending, opacity: 0 });
+  const alphaMap = getArrowFadeTexture() ?? undefined;
+  const material = new THREE.MeshBasicMaterial({ map, alphaMap, transparent: true, depthWrite: false, depthTest: false, blending: THREE.AdditiveBlending, opacity: 0 });
   const geometry = new THREE.PlaneGeometry(1, width);
   geometry.translate(0.5, 0, 0);
   const mesh = new THREE.Mesh(geometry, material);
@@ -82,7 +129,9 @@ export class AimArrow {
     const dy = to.y - from.y;
     const length = Math.hypot(dx, dy);
     mesh.visible = length > 1;
-    mesh.position.set(from.x, from.y, Math.max(from.z, to.z) + 0.6);
+    // On the board at the attacker's height: the direct-attack target (the hand zone) sits high
+    // above the field, and the arrow raised to it drifted off the cards in the camera's perspective.
+    mesh.position.set(from.x, from.y, from.z + 0.6);
     mesh.rotation.z = Math.atan2(dy, dx);
     mesh.scale.x = Math.max(0.001, length);
     material.map!.repeat.set(Math.max(1, length / (this.width * 2)), 1);
@@ -116,13 +165,13 @@ export class AttackArrowTask extends YGOTask {
     const dir = new THREE.Vector3().subVectors(this.to, this.from);
     dir.z = 0;
     this.length = dir.length();
-    const arrow = this.length < 0.5 ? null : createArrowMesh(this.width);
+    const arrow = this.length < 0.5 || reducedBySetting ? null : createArrowMesh(this.width);
     if (!arrow) return this.completeTask();
     // Pivot at the attacker's end, so scaling x grows it toward the target.
     this.mesh = arrow.mesh;
     this.material = arrow.material;
     this.material.map!.repeat.set(Math.max(1, this.length / (this.width * 2)), 1);
-    this.mesh.position.set(this.from.x, this.from.y, Math.max(this.from.z, this.to.z) + 0.6);
+    this.mesh.position.set(this.from.x, this.from.y, this.from.z + 0.6);
     this.mesh.rotation.z = Math.atan2(dir.y, dir.x);
     this.mesh.scale.set(0.001, 1, 1);
     this.duel.core.scene.add(this.mesh);

@@ -28,6 +28,7 @@ import { YGOMapClick } from "./YGOMapClick";
 import { YGOGameFieldStatsComponent } from "../game/YGOGameFieldStatsComponent";
 import { YGOSoundController } from "./YGOSoundController";
 import { bindBattleSfx } from "./sfx/battle-sfx-hooks";
+import { animationsReducedBySetting, setReducedAnimations } from "../duel-events/utils/battle-fx";
 import { YGOPlayerSettingsAdapter } from "./YGOPlayerSettings";
 import { fieldTheme } from "./field-themes";
 import { recolorModel } from "./field-theme-scene";
@@ -337,6 +338,15 @@ export class YGODuel {
     this.settings.events.on("onGameVolumeChange", (_, value) => this.soundController.setLayerVolume("GAME", value));
     this.settings.events.on("onMusicVolumeChange", (_, value) => this.soundController.setLayerVolume("GAME_MUSIC", value));
     this.settings.events.on("onGameSpeedChange", (_, value) => this.core.setTimeScale(value));
+    const reduceSetting = () => !!this.settings.getConfigFromPath?.("reduceAnimations");
+    setReducedAnimations(reduceSetting());
+    this.settings.events.on("onSettingsChanged", () => {
+      const reduce = reduceSetting();
+      if (reduce !== animationsReducedBySetting()) {
+        setReducedAnimations(reduce);
+        this.events.dispatch("render-ui");
+      }
+    });
   }
 
   // @deprecated

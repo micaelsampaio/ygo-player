@@ -15,8 +15,11 @@ import { ndcToContainer, positionGlyph, shortPositionLabel } from "../field-over
 import {
   CardRefData, PromptData, PromptResponse, candidateWhere, isSelectionValid, onlyCardAnswer, optionLabel, toggleSelection,
   groupCandidates, positionChoices, promptSubtitle, promptTitle, toggleGroupSelection, LOC_HAND, LOC_MZONE as LOC_M, LOC_SZONE as LOC_S,
+  decodeDescription,
 } from "../assist-prompt";
 import { findCardObjects, type HighlightTarget } from "./assist-highlights";
+import { groupByLocation, PROMPT_KEYWORDS } from "./prompt-dialog/prompt-dialog";
+import { CardThumbGroups, MdButton, MdFooter, PromptQuestion, type ThumbView } from "./prompt-dialog/PromptDialog";
 
 /**
  * The panel's container (its offsetParent), found from an element rendered
@@ -344,12 +347,159 @@ export function PromptView({ duel, prompt, busy, pendingKey, respond, onHover, i
     return duel.assistController.setHandPick((player: number, code: number) => handPickRef.current(player, code));
   }, [duel]);
 
+  const pickerPopup = pilePicker && pickerOpen && pickerContainer && (
+    <PileChoicePopup
+      duel={duel}
+      prompt={prompt}
+      container={pickerContainer}
+      selected={selected}
+      busy={busy}
+      pendingKey={pendingKey}
+      onToggle={(group) => setSelected((prev) => toggleGroupSelection(prompt, prev, group))}
+      onPick={(i) => respond(`pick:${i}`, { index: i })}
+      onConfirm={() => respond("confirm", { indices: selected })}
+      onCancel={prompt.cancelable ? () => respond("cancel", { indices: [] }) : undefined}
+      onFinish={prompt.finishable || prompt.cancelable ? () => respond("finish", { index: -1 }) : undefined}
+      onClose={() => setPickerOpen(false)}
+    />
+  );
+
+  if (inDialog) {
+    const imageOf = (code: number) => (code === 0 ? undefined : duel.ygo?.state?.getCardData(code)?.images?.small_url);
+    const subjectCode = prompt.code || decodeDescription(prompt.description)?.code;
+    const terms = [
+      ...PROMPT_KEYWORDS,
+      subjectCode ? nameOf(subjectCode) : undefined,
+      ...candidates.map((c) => (c.code ? nameOf(c.code) : undefined)),
+    ];
+    const thumbGroups = (thumbs: Array<{ view: ThumbView; ref: CardRefData }>) =>
+      groupByLocation(thumbs, (t) => t.ref, prompt.player).map((g) => ({ ...g, items: g.items.map((t) => t.view) }));
+    const cancelButton = prompt.cancelable && (
+      <MdButton variant="secondary" disabled={busy} busy={pendingKey === "cancel"} onClick={() => respond("cancel", { indices: [] })}>Cancel</MdButton>
+    );
+    let dialogBody: ReactNode = null;
+    let footer: ReactNode = null;
+    switch (prompt.kind) {
+      case "card":
+      case "tribute": {
+        if (pilePicker) {
+          footer = <MdButton variant="primary" onClick={() => setPickerOpen(true)}>{reopenLabel(pileTabs(prompt))}</MdButton>;
+          break;
+        }
+        if (only !== null) {
+          const c = candidates[only];
+          const confirmOnly = () => respond("confirm", { indices: [only] });
+          dialogBody = <CardThumbGroups disabled={busy} groups={thumbGroups([{
+            ref: c,
+            view: {
+              key: `only:${only}`, code: c.code, name: cardName(c.code), imageUrl: imageOf(c.code), selected: true,
+              badge: candidates.length > 1 ? `×${candidates.length}` : undefined, onClick: confirmOnly, onHover: hoverFor(c),
+            },
+          }])} />;
+          footer = <>
+            {cancelButton}
+            <MdButton variant="primary" disabled={busy} busy={pendingKey === "confirm"} onClick={confirmOnly}>Confirm</MdButton>
+          </>;
+          break;
+        }
+        const valid = isSelectionValid(prompt, selected);
+        const multi = (prompt.max ?? 1) > 1;
+        const singlePick = !multi && (prompt.min ?? 1) <= 1;
+        dialogBody = <CardThumbGroups disabled={busy} groups={thumbGroups(groupCandidates(candidates).map((group) => {
+          const c = candidates[group.indices[0]];
+          const copies = group.indices.length;
+          const picked = group.indices.filter((i) => selected.includes(i)).length;
+          return {
+            ref: c,
+            view: {
+              key: group.key, code: c.code, name: cardName(c.code), imageUrl: imageOf(c.code), selected: picked > 0,
+              badge: copies > 1 ? `×${copies}` : undefined,
+              check: picked > 0 ? (multi && copies > 1 ? String(picked) : "✓") : undefined,
+              onClick: () => setSelected((prev) => toggleGroupSelection(prompt, prev, group)),
+              onDoubleClick: singlePick ? () => respond("confirm", { indices: [group.indices[0]] }) : undefined,
+              onHover: hoverFor(c),
+            },
+          };
+        }))} />;
+        footer = <>
+          {cancelButton}
+          <MdButton variant="primary" disabled={busy || !valid} busy={pendingKey === "confirm"} onClick={() => respond("confirm", { indices: selected })}>
+            {`Confirm${multi ? ` (${selected.length})` : ""}`}
+          </MdButton>
+        </>;
+        break;
+      }
+      case "unselectCard":
+        dialogBody = <CardThumbGroups disabled={busy} groups={thumbGroups(candidates.map((c, i) => ({
+          ref: c,
+          view: {
+            key: `${i}:${c.code}:${c.loc}:${c.seq}`, code: c.code, name: cardName(c.code), imageUrl: imageOf(c.code),
+            selected: !!c.selected, check: c.selected ? "✓" : undefined, busy: pendingKey === `pick:${i}`,
+            onClick: () => respond(`pick:${i}`, { index: i }), onHover: hoverFor(c),
+          },
+        })))} />;
+        if (prompt.finishable || prompt.cancelable) {
+          footer = <MdButton variant={prompt.finishable ? "primary" : "secondary"} disabled={busy} busy={pendingKey === "finish"} onClick={() => respond("finish", { index: -1 })}>
+            {prompt.finishable ? "Done" : "Cancel"}
+          </MdButton>;
+        }
+        break;
+      case "effectYesNo":
+      case "yesNo": {
+        const image = subjectCode ? imageOf(subjectCode) : undefined;
+        dialogBody = image ? (
+          <div className="ygo-md-prompt-subject">
+            <img src={image} alt={nameOf(subjectCode as number) ?? ""} className="ygo-md-prompt-thumb-img" draggable={false} />
+          </div>
+        ) : null;
+        footer = <>
+          <MdButton variant="secondary" disabled={busy} busy={pendingKey === "no"} onClick={() => respond("no", { yes: 0 })}>No</MdButton>
+          <MdButton variant="primary" disabled={busy} busy={pendingKey === "yes"} onClick={() => respond("yes", { yes: 1 })}>Yes</MdButton>
+        </>;
+        break;
+      }
+      case "option":
+        dialogBody = <div className="ygo-md-prompt-options">
+          {(prompt.options ?? []).map((desc, i) => (
+            <MdButton key={`${i}:${desc}`} variant="secondary" className="ygo-md-prompt-option" disabled={busy} busy={pendingKey === `option:${i}`} onClick={() => respond(`option:${i}`, { option: i })}>
+              {optionLabel(desc, i, nameOf)}
+            </MdButton>
+          ))}
+        </div>;
+        break;
+      case "position":
+        dialogBody = <PositionFieldChoice
+          duel={duel} prompt={prompt} busy={busy} pendingKey={pendingKey} respond={respond} inDialog
+          fallback={<div className="ygo-md-prompt-options">
+            {positionChoices(prompt.positions).map(({ position, label }) => (
+              <MdButton key={position} variant="secondary" className="ygo-md-prompt-option" disabled={busy} busy={pendingKey === `position:${position}`} onClick={() => respond(`position:${position}`, { position })}>
+                {label}
+              </MdButton>
+            ))}
+          </div>}
+        />;
+        break;
+      case "place":
+        dialogBody = <div className="ygo-md-prompt-place"><PlaceChoice duel={duel} prompt={prompt} busy={busy} pendingKey={pendingKey} respond={respond} /></div>;
+        break;
+    }
+    return (
+      <div ref={probeRef} className="ygo-md-prompt-view">
+        <PromptQuestion text={title} sub={subtitle} terms={terms} />
+        {dialogBody}
+        {footer && <MdFooter>{footer}</MdFooter>}
+        {/* Marks the dialog hidden (CSS :has) while its pile view is open, so nothing covers it. */}
+        {pilePicker && pickerOpen && <span data-board-chooser-open hidden />}
+        {pickerPopup}
+      </div>
+    );
+  }
+
   let body: ReactNode = null;
   switch (prompt.kind) {
     case "card":
     case "tribute": {
       // The pile view is the chooser (cards, picks, Confirm): the dialog keeps only its reopen button.
-      if (inDialog && pilePicker) break;
       if (only !== null) {
         const c = candidates[only];
         body = <div style={{ display: "flex", gap: 6 }}>
@@ -486,24 +636,7 @@ export function PromptView({ duel, prompt, busy, pendingKey, respond, onHover, i
         </button>
       )}
       {body}
-      {/* Marks the dialog hidden (CSS :has) while its pile view is open, so nothing covers it. */}
-      {inDialog && pilePicker && pickerOpen && <span data-board-chooser-open hidden />}
-      {pilePicker && pickerOpen && pickerContainer && (
-        <PileChoicePopup
-          duel={duel}
-          prompt={prompt}
-          container={pickerContainer}
-          selected={selected}
-          busy={busy}
-          pendingKey={pendingKey}
-          onToggle={(group) => setSelected((prev) => toggleGroupSelection(prompt, prev, group))}
-          onPick={(i) => respond(`pick:${i}`, { index: i })}
-          onConfirm={() => respond("confirm", { indices: selected })}
-          onCancel={prompt.cancelable ? () => respond("cancel", { indices: [] }) : undefined}
-          onFinish={prompt.finishable || prompt.cancelable ? () => respond("finish", { index: -1 }) : undefined}
-          onClose={() => setPickerOpen(false)}
-        />
-      )}
+      {pickerPopup}
     </div>
   );
 }

@@ -1,0 +1,508 @@
+/* Master Duel style prompt dialog (chain window + engine prompts in bot duels).
+   Flat rules and top-level keyframes on purpose: the website's CSS minifier drops rules around
+   nested keyframes (see the note in style/core.css). The selectors carry .ygo-md-prompt on top of
+   core.css's .ygo-assist-prompt-dialog so they win whatever the stylesheet order. */
+
+.ygo-player-core .ygo-md-prompt {
+  --md-cut: 14px;
+  --md-navy-top: #12203d;
+  --md-navy-bottom: #070d1b;
+  --md-edge: rgba(196, 214, 245, 0.6);
+  --md-lime: #c8f53a;
+  --md-lime-soft: rgba(200, 245, 58, 0.35);
+  --md-keyword: #ffd84a;
+  --md-group: rgba(30, 78, 170, 0.55);
+  --md-group-edge: rgba(92, 150, 255, 0.75);
+  --md-glow: #ffe066;
+}
+
+.ygo-player-core .ygo-card-menu.ygo-assist-prompt-dialog.ygo-md-prompt {
+  top: auto;
+  bottom: clamp(84px, 16%, 190px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(600px, calc(100% - 24px));
+  max-height: min(72%, calc(100% - 140px));
+  padding: 0;
+  gap: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  overflow: visible;
+  isolation: isolate;
+  filter: drop-shadow(0 12px 28px rgba(0, 0, 0, 0.6));
+  animation: ygo-md-prompt-in 180ms ease-out;
+  color: #eef3ff;
+}
+
+/* The frame: a light 1px edge (::before) under the navy fill (::after), both cut at two corners. */
+.ygo-player-core .ygo-md-prompt::before,
+.ygo-player-core .ygo-md-prompt::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  clip-path: polygon(var(--md-cut) 0, 100% 0, 100% calc(100% - var(--md-cut)), calc(100% - var(--md-cut)) 100%, 0 100%, 0 var(--md-cut));
+  pointer-events: none;
+}
+
+.ygo-player-core .ygo-md-prompt::before {
+  inset: 0;
+  background: linear-gradient(180deg, var(--md-edge), rgba(120, 150, 210, 0.35));
+}
+
+.ygo-player-core .ygo-md-prompt::after {
+  inset: 1px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent 38px),
+    linear-gradient(180deg, var(--md-navy-top), var(--md-navy-bottom));
+}
+
+.ygo-player-core .ygo-md-prompt-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 18px 14px;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.ygo-player-core .ygo-md-prompt-view {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Peek: only the chevron tab stays, the board shows; the prompt is still held. */
+.ygo-player-core .ygo-md-prompt.is-peeking::before,
+.ygo-player-core .ygo-md-prompt.is-peeking::after,
+.ygo-player-core .ygo-md-prompt.is-peeking .ygo-md-prompt-content {
+  display: none;
+}
+
+.ygo-player-core .ygo-md-prompt.is-peeking {
+  filter: none;
+  min-height: 0;
+}
+
+.ygo-player-core .ygo-md-prompt-peek {
+  position: absolute;
+  top: -32px;
+  right: 0;
+  width: 46px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid var(--md-edge);
+  border-bottom: 0;
+  background: linear-gradient(180deg, #1a2c52, var(--md-navy-top));
+  color: #4fb6ff;
+  cursor: pointer;
+  clip-path: polygon(10px 0, 100% 0, 100% 100%, 0 100%, 0 10px);
+}
+
+.ygo-player-core .ygo-md-prompt.is-peeking .ygo-md-prompt-peek {
+  border-bottom: 1px solid var(--md-edge);
+  box-shadow: 0 0 0 1px rgba(79, 182, 255, 0.4), 0 0 14px rgba(79, 182, 255, 0.45);
+}
+
+.ygo-player-core .ygo-md-prompt-peek:hover,
+.ygo-player-core .ygo-md-prompt-peek:focus-visible {
+  color: #9ad6ff;
+  outline: none;
+}
+
+.ygo-player-core .ygo-md-prompt-chevron {
+  transition: transform 160ms ease-out;
+}
+
+.ygo-player-core .ygo-md-prompt.is-peeking .ygo-md-prompt-chevron {
+  transform: rotate(180deg);
+}
+
+/* The question: centered, key words in yellow. */
+.ygo-player-core .ygo-md-prompt-question {
+  text-align: center;
+  padding: 0 34px;
+}
+
+.ygo-player-core .ygo-md-prompt-question-text {
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.35;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+
+.ygo-player-core .ygo-md-prompt-keyword {
+  color: var(--md-keyword);
+}
+
+.ygo-player-core .ygo-md-prompt-question-sub {
+  margin-top: 4px;
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+/* Candidate cards: one blue rounded group per location with a small location tab. */
+.ygo-player-core .ygo-md-prompt-groups {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 18px 12px;
+  padding-top: 14px;
+}
+
+.ygo-player-core .ygo-md-prompt-group {
+  position: relative;
+  padding: 12px 10px 10px;
+  border-radius: 10px;
+  background: linear-gradient(180deg, var(--md-group), rgba(18, 48, 120, 0.55));
+  border: 1px solid var(--md-group-edge);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  max-width: 100%;
+}
+
+.ygo-player-core .ygo-md-prompt-group.is-opponent {
+  background: linear-gradient(180deg, rgba(150, 40, 60, 0.5), rgba(100, 24, 42, 0.5));
+  border-color: rgba(255, 110, 130, 0.7);
+}
+
+.ygo-player-core .ygo-md-prompt-group-tab {
+  position: absolute;
+  top: -14px;
+  left: 8px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 8px 0 6px;
+  border-radius: 12px 12px 4px 4px;
+  background: #1b4fb4;
+  border: 1px solid var(--md-group-edge);
+  color: #e6efff;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.ygo-player-core .ygo-md-prompt-group.is-opponent .ygo-md-prompt-group-tab {
+  background: #8a2338;
+  border-color: rgba(255, 110, 130, 0.7);
+}
+
+.ygo-player-core .ygo-md-prompt-thumbs {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+.ygo-player-core .ygo-md-prompt-thumb {
+  --thumb-w: 72px;
+  position: relative;
+  width: var(--thumb-w);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: transform 120ms ease-out, box-shadow 120ms ease-out;
+  touch-action: manipulation;
+}
+
+.ygo-player-core .ygo-md-prompt-thumb-img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 59 / 86;
+  object-fit: cover;
+  border-radius: 3px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.55);
+}
+
+.ygo-player-core .ygo-md-prompt-thumb-back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  font-size: 9px;
+  line-height: 1.2;
+  text-align: center;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255, 170, 60, 0.35), transparent 55%),
+    linear-gradient(135deg, #4a2412, #1d0e07);
+  border: 1px solid rgba(255, 190, 110, 0.45);
+}
+
+.ygo-player-core .ygo-md-prompt-thumb:hover:not(:disabled),
+.ygo-player-core .ygo-md-prompt-thumb:focus-visible {
+  transform: translateY(-3px);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.7);
+}
+
+.ygo-player-core .ygo-md-prompt-thumb.is-selected {
+  transform: translateY(-3px);
+  box-shadow: 0 0 0 2px var(--md-glow), 0 0 14px 4px rgba(255, 224, 102, 0.7);
+}
+
+.ygo-player-core .ygo-md-prompt-thumb:disabled {
+  cursor: default;
+}
+
+.ygo-player-core .ygo-md-prompt-thumb-badge {
+  position: absolute;
+  right: -4px;
+  bottom: -4px;
+  min-width: 20px;
+  padding: 1px 5px;
+  border-radius: 9px;
+  background: #0b1324;
+  border: 1px solid var(--md-group-edge);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.ygo-player-core .ygo-md-prompt-thumb-check {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--md-glow);
+  color: #1d1600;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.ygo-player-core .ygo-md-prompt-thumb-busy {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+/* A yes/no prompt's card. */
+.ygo-player-core .ygo-md-prompt-subject {
+  display: flex;
+  justify-content: center;
+}
+
+.ygo-player-core .ygo-md-prompt-subject .ygo-md-prompt-thumb-img {
+  width: 80px;
+  box-shadow: 0 0 0 2px var(--md-group-edge), 0 4px 12px rgba(0, 0, 0, 0.6);
+}
+
+/* Option / position lists: full-width angled rows. */
+.ygo-player-core .ygo-md-prompt-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.ygo-player-core .ygo-md-prompt .ygo-md-prompt-button.ygo-md-prompt-option {
+  width: 100%;
+  max-width: none;
+  justify-content: flex-start;
+  text-align: left;
+}
+
+/* The zone prompt's fallback list keeps its rows: restyled to sit in the navy panel. */
+.ygo-player-core .ygo-md-prompt-place {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ygo-player-core .ygo-md-prompt .ygo-md-prompt-place .ygo-card-item {
+  background-color: rgba(30, 60, 120, 0.55);
+  border: 1px solid rgba(120, 160, 230, 0.4);
+  border-radius: 4px;
+  color: #eef3ff;
+}
+
+/* Footer: two angled buttons (Cancel / Effect Activation), lime edge when they can be used. */
+.ygo-player-core .ygo-md-prompt-footer {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding-top: 2px;
+}
+
+.ygo-player-core .ygo-md-prompt-button {
+  --btn-cut: 12px;
+  --btn-edge: var(--md-lime);
+  --btn-text: #eef8d2;
+  position: relative;
+  isolation: isolate;
+  flex: 1 1 0;
+  min-width: 132px;
+  max-width: 220px;
+  min-height: 44px;
+  padding: 8px 18px 8px 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 0;
+  background: none;
+  color: var(--btn-text);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: filter 120ms ease-out;
+}
+
+.ygo-player-core .ygo-md-prompt-button::before,
+.ygo-player-core .ygo-md-prompt-button::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  clip-path: polygon(var(--btn-cut) 0, 100% 0, 100% calc(100% - var(--btn-cut)), calc(100% - var(--btn-cut)) 100%, 0 100%, 0 var(--btn-cut));
+  pointer-events: none;
+}
+
+.ygo-player-core .ygo-md-prompt-button::before {
+  inset: 0;
+  background: var(--btn-edge);
+}
+
+.ygo-player-core .ygo-md-prompt-button::after {
+  inset: 1.5px;
+  background:
+    linear-gradient(118deg, var(--btn-edge) 0 9px, transparent 9px),
+    linear-gradient(180deg, #1a1d24, #040507);
+}
+
+.ygo-player-core .ygo-md-prompt-button.is-primary:not(:disabled) {
+  --btn-text: var(--md-lime);
+  filter: drop-shadow(0 0 6px var(--md-lime-soft));
+}
+
+.ygo-player-core .ygo-md-prompt-button:hover:not(:disabled),
+.ygo-player-core .ygo-md-prompt-button:focus-visible {
+  outline: none;
+  filter: brightness(1.18) drop-shadow(0 0 8px var(--md-lime-soft));
+}
+
+.ygo-player-core .ygo-md-prompt-button:disabled {
+  --btn-edge: rgba(150, 160, 175, 0.4);
+  --btn-text: rgba(200, 205, 215, 0.45);
+  cursor: default;
+}
+
+.ygo-player-core .ygo-md-prompt-button[aria-busy="true"] {
+  --btn-text: var(--md-lime);
+}
+
+.ygo-player-core .ygo-md-prompt-button-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ygo-player-core .ygo-md-prompt-kbd {
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 600;
+  opacity: 0.55;
+  padding: 1px 5px;
+  border-radius: 3px;
+  border: 1px solid currentColor;
+}
+
+@keyframes ygo-md-prompt-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 14px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ygo-player-core .ygo-card-menu.ygo-assist-prompt-dialog.ygo-md-prompt {
+    animation: none;
+  }
+
+  .ygo-player-core .ygo-md-prompt-thumb,
+  .ygo-player-core .ygo-md-prompt-chevron,
+  .ygo-player-core .ygo-md-prompt-button {
+    transition: none;
+  }
+
+  .ygo-player-core .ygo-md-prompt-thumb:hover:not(:disabled),
+  .ygo-player-core .ygo-md-prompt-thumb.is-selected {
+    transform: none;
+  }
+}
+
+/* Phones: a wider, lower panel and smaller cards; the buttons stay finger-sized. */
+@media (max-width: 640px) {
+  .ygo-player-core .ygo-card-menu.ygo-assist-prompt-dialog.ygo-md-prompt {
+    width: calc(100% - 16px);
+    bottom: clamp(64px, 12%, 140px);
+    max-height: calc(100% - 110px);
+  }
+
+  .ygo-player-core .ygo-md-prompt-content {
+    padding: 14px 12px 12px;
+    gap: 10px;
+  }
+
+  .ygo-player-core .ygo-md-prompt-question {
+    padding: 0 28px 0 8px;
+  }
+
+  .ygo-player-core .ygo-md-prompt-question-text {
+    font-size: 14px;
+  }
+
+  .ygo-player-core .ygo-md-prompt-thumb {
+    --thumb-w: 56px;
+  }
+
+  .ygo-player-core .ygo-md-prompt-group-label {
+    display: none;
+  }
+
+  .ygo-player-core .ygo-md-prompt-button {
+    min-width: 0;
+    font-size: 14px;
+  }
+}
+
+@media (pointer: coarse) {
+  .ygo-player-core .ygo-md-prompt-button {
+    min-height: 48px;
+  }
+
+  .ygo-player-core .ygo-md-prompt-peek {
+    width: 52px;
+    height: 38px;
+    top: -38px;
+  }
+}

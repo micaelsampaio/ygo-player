@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ChainBoardView, chainBadgeZone, chainBadges } from "./chain-links";
+import { ChainBoardView, chainBadgeScale, chainBadgeZone, chainBadges, exitingItems } from "./chain-links";
 
 describe("chainBadges", () => {
   it("numbers the links in order, marks the newest, and steps apart links sharing a zone", () => {
@@ -77,5 +77,34 @@ describe("chainBadgeZone", () => {
     expect(chainBadgeZone({ id: 3, zone: "B" }, view({}, {}, { B: [3] }))).toBe("B");
     expect(chainBadgeZone({ id: 3, zone: "D" }, view({}, {}, {}))).toBeNull();
     expect(chainBadgeZone({ id: 3, zone: "ED" }, view({}, {}, {}))).toBeNull();
+  });
+});
+
+describe("chainBadgeScale", () => {
+  it("draws the newest link biggest, each older one a step smaller, never below the floor", () => {
+    expect(chainBadgeScale(4, 4)).toBe(1);
+    expect(chainBadgeScale(3, 4)).toBeCloseTo(0.86);
+    expect(chainBadgeScale(2, 4)).toBeCloseTo(0.72);
+    expect(chainBadgeScale(1, 9)).toBe(0.6);
+    expect(chainBadgeScale(5, 4)).toBe(1); // a stale top: never bigger than full size
+  });
+});
+
+describe("exitingItems", () => {
+  const item = (link: number) => ({ key: `${link}`, link });
+
+  it("returns what left, newest first, each older link a step later (top-down resolution)", () => {
+    const gone = exitingItems([item(1), item(2), item(3)], [], { stepMs: 100 });
+    expect(gone.map((g) => [g.item.link, g.delay])).toEqual([[3, 0], [2, 100], [1, 200]]);
+  });
+
+  it("is empty when nothing left, and a single resolved link goes at once", () => {
+    expect(exitingItems([item(1), item(2)], [item(1), item(2)])).toEqual([]);
+    expect(exitingItems([item(1), item(2)], [item(1)]).map((g) => [g.item.link, g.delay])).toEqual([[2, 0]]);
+  });
+
+  it("shares a schedule through `top` (segments leave with their badge)", () => {
+    const segs = [{ key: "1>2", link: 2 }, { key: "2>3", link: 3 }];
+    expect(exitingItems(segs, [], { stepMs: 100, top: 3 }).map((g) => [g.item.key, g.delay])).toEqual([["2>3", 0], ["1>2", 100]]);
   });
 });

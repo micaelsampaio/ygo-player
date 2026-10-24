@@ -141,6 +141,19 @@ export function GameSettingsDialog({ duel }: { duel: YGODuel }) {
 
           <div className="ygo-flex ygo-mt-3">
             <input
+              id="ygo-setting-reduce-animations"
+              style={{ display: "inline-block", width: "auto" }}
+              type="checkbox"
+              checked={!!settings.getConfigFromPath("reduceAnimations")}
+              onChange={e => onChangeCheckBox(e, "reduceAnimations")}
+            />
+            <label htmlFor="ygo-setting-reduce-animations" style={{ display: "inline-block", flexGrow: 1 }} title="No attack arrow, screen shake, flashes, sparks, card shatter or coin flips: effects just fade">
+              Reduce animations
+            </label>
+          </div>
+
+          <div className="ygo-flex ygo-mt-3">
+            <input
               style={{ display: "inline-block", width: "auto" }}
               type="checkbox"
               checked={settings.getConfigFromPath("showFaceDownCardsTransparent")}

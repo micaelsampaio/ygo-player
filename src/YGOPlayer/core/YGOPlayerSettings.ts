@@ -17,6 +17,9 @@ export interface YGOPlayerSettings {
     chainMode: boolean
     /** Manual duels: a card goes straight to the leftmost free zone instead of asking which one. */
     autoPlaceZone: boolean
+    /** Fewer animations: no attack arrow, shake, flash, streaks, sparks, shatter or coin flips;
+     * effects become plain fades (as with the OS "reduce motion" setting). */
+    reduceAnimations: boolean
 }
 
 export interface YGOPlayerSettingsAdapterOptions {
@@ -46,7 +49,8 @@ const DEFAULT_SETTINGS: YGOPlayerSettings = {
     showFaceDownCardsTransparent: true,
     fieldTheme: "classic",
     chainMode: true,
-    autoPlaceZone: false
+    autoPlaceZone: false,
+    reduceAnimations: false
 }
 
 const YGO_SETTINGS_KEY = "ygo_player_settings";

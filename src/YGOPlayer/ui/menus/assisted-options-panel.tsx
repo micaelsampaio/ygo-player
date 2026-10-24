@@ -17,6 +17,8 @@ import { HighlightTarget, promptTargets, TONE_CSS, useCardHighlights, useExtraDe
 import { usePanelPlacement } from "./use-panel-placement";
 import { PromptView } from "./assist-prompt-view";
 import { isMasterDuelStyle } from "../assist-card-actions";
+import { ChainPromptDialog } from "./prompt-dialog/ChainPromptDialog";
+import { MdPromptDialog } from "./prompt-dialog/PromptDialog";
 
 /** How long the panel waits after a choice for the moves it caused to start. */
 const CHOICE_SETTLE_MS = 700;
@@ -340,36 +342,21 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
   return (
     <>
     {chainDialog && (
-      <div
-        className="ygo-card-menu ygo-assist-prompt-dialog ygo-assist-chain-dialog"
-        role="dialog"
-        aria-label={chainDialog.title}
-        onClick={stop}
-        onMouseDown={stop}
-        onMouseUp={stop}
-        onMouseMove={stop}
-        onWheel={stop}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", opacity: 0.6 }}>
-          <span style={{ width: 7, height: 7, borderRadius: "50%", background: TONE_CSS.quick, display: "inline-block" }} aria-hidden="true" />
-          Chain?
-        </div>
-        <div style={{ fontSize: 13, fontWeight: 700, lineHeight: 1.3 }}>{chainDialog.title}</div>
-        {chainDialogSubtitle && <div style={{ fontSize: 12, opacity: 0.75 }}>{chainDialogSubtitle}</div>}
-        {chainDialog.rows.map((row) => renderRow(row))}
-      </div>
+      <ChainPromptDialog
+        duel={duel}
+        title={chainDialog.title}
+        subtitle={chainDialogSubtitle}
+        rows={chainDialog.rows}
+        chainLength={chainLength}
+        respondingTo={respondingTo}
+        busy={busy}
+        pendingKey={pendingKey}
+        choose={choose}
+        onHover={(row) => setHover(row?.code !== undefined ? { code: row.code, side: me, tone: row.tone, loc: typeof row.data?.loc === "number" ? row.data.loc : undefined } : null)}
+      />
     )}
     {prompt && promptAsDialog && prompt !== answeredPrompt && (
-      <div
-        className="ygo-card-menu ygo-assist-prompt-dialog"
-        role="dialog"
-        aria-label="Your choice"
-        onClick={stop}
-        onMouseDown={stop}
-        onMouseUp={stop}
-        onMouseMove={stop}
-        onWheel={stop}
-      >
+      <MdPromptDialog label="Your choice" resetKey={promptKey(prompt)}>
         <PromptView
           key={promptKey(prompt)}
           duel={duel}
@@ -380,7 +367,7 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
           onHover={setHover}
           inDialog
         />
-      </div>
+      </MdPromptDialog>
     )}
     <div
       ref={panelRef}

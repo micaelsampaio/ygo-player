@@ -1367,3 +1367,12 @@
     }
 
 }
+
+/* "Reduce animations" (game settings): the overlays' CSS animations stop, like prefers-reduced-motion
+   (damage numbers, chain links and prompts then just appear and go). */
+.ygo-player-core.ygo-reduce-motion *,
+.ygo-player-core.ygo-reduce-motion *::before,
+.ygo-player-core.ygo-reduce-motion *::after {
+    animation: none !important;
+    transition: none !important;
+}
