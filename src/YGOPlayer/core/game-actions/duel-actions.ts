@@ -180,6 +180,41 @@ export class DuelActions extends CardActions {
       .catch((error: unknown) => duel.events.dispatch("assist-choice-done", { error }));
   }
 
+  /**
+   * Assisted Mode, End Turn while already in the End Phase: the engine may still hold the player's
+   * own End Phase window there (a Quick-Play they could chain). Ending the turn passes it through
+   * the engine, which hands the turn over server-side — a free-form Duel Turn would flip the board
+   * to the opponent's turn while the engine is still in this one (room d2b13f17: the bot's turn
+   * then paused on "End Phase: activate a card?"). Returns null when the engine isn't holding a
+   * window for the player: the caller ends the turn free-form.
+   */
+  public endTurnAssisted(): Promise<void> | null {
+    const duel = this.duel;
+    if (!duel.assist || duel.client?.type !== YGOClientType.PLAYER || !duel.ygo?.options?.assistedMode) return null;
+    const controller = duel.assistController;
+    const first = assistPhaseRouteFor(controller.options, YGODuelPhase.End);
+    if (first.kind !== "continueFirst" && first.kind !== "blocked") return null;
+    this.clearAction();
+    if (first.kind === "blocked") {
+      duel.events.dispatch("assist-notice", { message: first.message });
+      return Promise.resolve();
+    }
+    const turnPlayer = duel.ygo.state.turnPlayer;
+    const walk = async () => {
+      let current: AssistQueryResult | null = controller.options;
+      // Each of the player's End Phase windows, until the engine hands the turn over.
+      for (let i = 0; i < 5 && assistPhaseRouteFor(current, YGODuelPhase.End).kind === "continueFirst"; i++) {
+        await controller.choose({ commandType: "Pass", data: {} });
+        if (duel.ygo.state.turnPlayer !== turnPlayer || duel.ygo.state.phase !== YGODuelPhase.End) break;
+        current = await controller.query();
+      }
+    };
+    duel.events.dispatch("assist-choice-start", {});
+    return walk()
+      .then(() => duel.events.dispatch("assist-choice-done", {}))
+      .catch((error: unknown) => duel.events.dispatch("assist-choice-done", { error }));
+  }
+
   /** Change phase. Chain mode: an open chain resolves first, so it never carries into the next phase. */
   public setDuelPhase({ phase }: { phase: YGODuelPhase }) {
     this.resolveOpenChain();

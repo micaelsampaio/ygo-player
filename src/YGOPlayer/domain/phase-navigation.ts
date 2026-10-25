@@ -72,6 +72,12 @@ export function goToNextPhase(duel: YGODuel): void {
 export function endTurn(duel: YGODuel): Promise<void> {
   const { phase, turn } = duel.ygo.state;
   if (phaseSteps(phase, YGODuelPhase.End, turn) === null) return Promise.resolve();
+  // Already in the End Phase with the engine holding the player's window there: pass it through
+  // the engine (it hands the turn over), never flip the turn ahead of it.
+  if (phase === YGODuelPhase.End) {
+    const assisted = duel.gameActions.endTurnAssisted();
+    if (assisted) return assisted;
+  }
   const walk = walkToPhase(duel, YGODuelPhase.End);
   if (walk.assisted) return walk.done;
   return walk.done.then(() => {
