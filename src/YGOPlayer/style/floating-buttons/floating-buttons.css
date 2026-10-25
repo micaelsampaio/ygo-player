@@ -183,13 +183,19 @@
     background: #f5b93a;
 }
 
-.ygo-player-core .ygo-card-menu.ygo-chain-stops-popover {
+.ygo-player-core .ygo-chain-stops-hint {
     position: absolute;
     right: 0;
     bottom: calc(100% + 12px);
-    top: auto;
-    left: auto;
-    width: 240px;
+    width: 220px;
     max-width: calc(100vw - 24px);
+    padding: 8px 10px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 6px;
+    background: rgba(14, 14, 16, 0.94);
+    color: #ececef;
+    font-size: 12px;
+    line-height: 1.35;
+    pointer-events: none;
     z-index: 120;
 }
