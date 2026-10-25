@@ -36,3 +36,14 @@ export type AssistQueryResult =
   | { available: true; pending: "chain"; respond: { activatable: CardRefData[]; canPass: boolean; forced: boolean; chainLength?: number; responding?: boolean; timing?: number; chain?: CardRefData[] } }
   /** An effect's follow-up choice the engine is holding for the human. */
   | { available: true; pending: "prompt"; prompt: PromptData };
+
+/**
+ * A chain window whose chain hasn't reached the board yet: the engine asks you to respond to a
+ * link (say the bot's chain link 1) while the logs that show that activation are still on their
+ * way (the bot's moves are paced). Shown now, the question would come before the card is seen
+ * being activated, so it waits until the board's chain is as long as the engine's.
+ */
+export function chainAheadOfBoard(result: AssistQueryResult | null | undefined, boardChainLength: number): boolean {
+  if (!result || !result.available || result.pending !== "chain") return false;
+  return (result.respond.chainLength ?? 0) > boardChainLength;
+}

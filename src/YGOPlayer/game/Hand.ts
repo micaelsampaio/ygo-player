@@ -5,6 +5,7 @@ import { YGOEntity } from "../core/YGOEntity";
 import { GameCardHand } from "./GameCardHand";
 import { CARD_HEIGHT_SIZE } from "../constants";
 import { GameHandZone } from "./GameHandZone";
+import { stopPulse } from "./object-pulse";
 
 export class GameHand extends YGOEntity {
   private duel: YGODuel;
@@ -124,7 +125,9 @@ export class GameHand extends YGOEntity {
       const handCard = gameField.hand.getCard(index)!;
       handCard.position = cardsTransforms[index].position;
       handCard.gameObject.position.copy(handCard.position);
-      handCard.gameObject.scale.copy(cardsTransforms[i].scale);
+      // A double-click pulse still running would end on the old layout's scale.
+      stopPulse(handCard.gameObject);
+      handCard.gameObject.scale.copy(cardsTransforms[index].scale);
       handCard.gameObject.rotation.setFromVector3(cardRotation);
       handCard.gameObject.visible = true;
       handCard.setIsVisible(this.duel.fields[this.player].settings.controlCards);

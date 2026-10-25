@@ -15,6 +15,8 @@ export interface ActivationBannerContent {
   label: string;
   name: string;
   chainLink?: number;
+  /** The card's effect text, trimmed (the banner clamps it to a few lines). */
+  text?: string;
 }
 
 export interface ActivationBannerItem extends ActivationBannerContent {
@@ -22,7 +24,7 @@ export interface ActivationBannerItem extends ActivationBannerContent {
 }
 
 /** How long a banner stays up at 1x speed (its CSS animation is the same length). */
-export const ACTIVATION_BANNER_MS = 1600;
+export const ACTIVATION_BANNER_MS = 3200;
 /** Most banners stacked at once: an older one leaves early when a newer one comes. */
 export const MAX_ACTIVATION_BANNERS = 3;
 
@@ -60,6 +62,7 @@ export function activationBanner(
     label: activationLabel(kind),
     name: event.name!.trim(),
     chainLink: event.chainLink && event.chainLink > 0 ? event.chainLink : undefined,
+    text: event.desc?.replace(/\s+/g, " ").trim() || undefined,
   };
 }
 

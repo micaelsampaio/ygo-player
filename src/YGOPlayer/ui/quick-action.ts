@@ -7,11 +7,9 @@
  * A single click still opens the card menu: at once, or — when the card has a quick action —
  * after the double-click window, so a double-click doesn't flash the menu first.
  */
-import * as THREE from "three";
 import { YGOGameUtils, type Card } from "ygo-core";
 import type { YGODuel } from "../core/YGODuel";
 import { handDragAvailable } from "../core/components/YGOHandDrag";
-import { prefersReducedMotion } from "../duel-events/utils/battle-fx";
 import { quickActionRow, type QuickActionPlace } from "../domain/default-action";
 import { createDoubleTapDetector, menuOpenDelay, type DoubleTapDetector } from "../domain/double-tap";
 import { zoneToLocation } from "../domain/assist-routing";
@@ -129,19 +127,8 @@ export function positionPromptFor(duel: YGODuel, code: number | undefined): bool
   return prompt?.kind === "position" && prompt.code === code && doubleClickPosition(prompt.positions) !== null;
 }
 
-/** A brief scale pulse on a card on the board (none with reduced motion). */
-export function pulseObject(object: THREE.Object3D | null | undefined, { durationMs = 240, amount = 0.12 } = {}) {
-  if (!object || prefersReducedMotion() || typeof requestAnimationFrame !== "function") return;
-  const base = object.scale.clone();
-  const start = performance.now();
-  const step = (now: number) => {
-    const t = Math.min(1, (now - start) / durationMs);
-    object.scale.copy(base).multiplyScalar(1 + amount * Math.sin(Math.PI * t));
-    if (t < 1) requestAnimationFrame(step);
-    else object.scale.copy(base);
-  };
-  requestAnimationFrame(step);
-}
+/** A brief scale pulse on a card on the board (none with reduced motion); it always ends on the card's rest scale. */
+export { pulseObject } from "../game/object-pulse";
 
 /** The same pulse on a card in a pile list (CSS: .ygo-card-quick-pulse, off with reduced motion). */
 export function pulseElement(element: Element | null | undefined) {

@@ -60,3 +60,12 @@ describe("activationBannerMs", () => {
     expect(activationBannerMs(undefined)).toBe(ACTIVATION_BANNER_MS);
   });
 });
+
+describe("activation banner text", () => {
+  it("carries the card's effect text, whitespace collapsed", async () => {
+    const { activationBanner } = await import("./activation-banner");
+    const b = activationBanner({ cardId: 1, name: "Eclipse Twins", player: 1, desc: "Line one.\n\nLine  two." }, { isOpponent: true, enabled: true, recovering: false });
+    expect(b?.text).toBe("Line one. Line two.");
+    expect(activationBanner({ cardId: 1, name: "X", player: 1 }, { isOpponent: true, enabled: true, recovering: false })?.text).toBeUndefined();
+  });
+});

@@ -19,6 +19,21 @@ import { PromptView } from "./assist-prompt-view";
 import { isMasterDuelStyle } from "../assist-card-actions";
 import { ChainPromptDialog } from "./prompt-dialog/ChainPromptDialog";
 import { MdPromptDialog } from "./prompt-dialog/PromptDialog";
+import { chainAheadOfBoard } from "../../domain/assist-query";
+import { zoneHighlights } from "../../domain/assist-zones";
+
+/**
+ * A one-zone choice with zones to click on the board needs no hint: the zones glow. The prompt
+ * view stays mounted (it wires the board's zone clicks) but hidden. With no zone on the board
+ * (the list is the only way) or several zones to pick (the "Picked 1 of 2" count), it shows.
+ */
+export function zoneHintHidden(prompt: { kind?: string; count?: number } & Parameters<typeof zoneHighlights>[0], me: number): boolean {
+  if (prompt.kind !== "place" || (prompt.count ?? 1) > 1) return false;
+  return zoneHighlights(prompt, me).onField.length > 0;
+}
+
+/** The longest a chain question waits for its activation to reach the board. */
+const CHAIN_AHEAD_MAX_MS = 3000;
 
 /** How long the panel waits after a choice for the moves it caused to start. */
 const CHOICE_SETTLE_MS = 700;
@@ -80,6 +95,9 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
   // rows disabled and unframed. Released on the next enable-game-actions
   // (the queue drained), with a poll as the backstop.
   const [held, setHeld] = useState(false);
+  // The last answer was a chain window ahead of the board (chainAheadOfBoard): keep asking.
+  const chainAheadRef = useRef(false);
+  const aheadSinceRef = useRef(0);
   const gateRef = useRef<AnimationGate<AssistQueryResult> | null>(null);
   // Right after a choice the server's answer can arrive before the moves it
   // caused (the bot's response, paced on the server): the board is still
@@ -112,6 +130,19 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
       // The zone / position of the move just chosen: the engine asks before anything of it plays
       // and nothing comes in between, so it shows at once instead of after the choice's settle.
       if (isOwnMovePrompt(options)) settleUntilRef.current = 0;
+      // A chain question about a link the board hasn't shown yet waits (re-asked on the next
+      // enable-game-actions, when that activation has played).
+      // Never longer than CHAIN_AHEAD_MAX_MS: a board that doesn't track that chain still gets asked.
+      const ahead = chainAheadOfBoard(options, duel.ygo?.state?.chain?.length ?? 0);
+      if (ahead && !aheadSinceRef.current) aheadSinceRef.current = Date.now();
+      if (ahead && Date.now() - aheadSinceRef.current < CHAIN_AHEAD_MAX_MS) {
+        chainAheadRef.current = true;
+        setHeld(true);
+        setLoading(false);
+        return;
+      }
+      chainAheadRef.current = false;
+      aheadSinceRef.current = 0;
       if (!gate.offer(options ?? { available: false })) setHeld(true);
       setLoading(false);
     });
@@ -176,6 +207,11 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
   useEffect(() => {
     if (!held) return;
     const timer = setInterval(() => {
+      if (chainAheadRef.current) {
+        // Still waiting for the chain's activation to reach the board: ask again once it's idle.
+        if (!duel.commands?.isBusy?.() && duel.assistController.inFlight === 0) void controller.refresh();
+        return;
+      }
       if (!gate.flush() && !gate.holding && !duel.commands?.isBusy?.() && duel.assistController.inFlight === 0) setHeld(false);
     }, 250);
     return () => clearInterval(timer);
@@ -363,7 +399,7 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
     {prompt && promptAsDialog && prompt !== answeredPrompt && (
       // A zone choice is answered on the board (the zones glow): a slim hint at the top instead of
       // the full dialog, which covered the very zones to click.
-      <MdPromptDialog label="Your choice" resetKey={promptKey(prompt)} className={prompt.kind === "place" ? "ygo-md-prompt-compact" : undefined}>
+      <MdPromptDialog label="Your choice" resetKey={promptKey(prompt)} className={prompt.kind === "place" ? (zoneHintHidden(prompt, me) ? "ygo-md-prompt-compact ygo-md-prompt-hidden" : "ygo-md-prompt-compact") : undefined}>
         <PromptView
           key={promptKey(prompt)}
           duel={duel}

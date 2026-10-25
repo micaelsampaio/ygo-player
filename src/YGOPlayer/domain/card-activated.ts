@@ -7,4 +7,6 @@ export interface CardActivatedEvent {
   /** The player who activated it. */
   player: number;
   chainLink?: number;
+  /** The card's effect text (shown under its name). */
+  desc?: string;
 }

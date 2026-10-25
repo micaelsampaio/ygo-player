@@ -14,9 +14,9 @@ interface Shown extends ActivationBannerItem {
 }
 
 /**
- * Master Duel-style banner for the opponent's activations: a slim text label
- * in the upper middle of the field ("▲ Opponent activated a Trap" over the
- * card's name and chain link). Purely visual: it never holds the duel's
+ * Master Duel-style banner for the opponent's activations, top right under their HUD:
+ * "▲ Opponent activated a Trap", the card's name and chain link, and its effect text
+ * (a few lines). Purely visual: it never holds the duel's
  * animations, and clicks pass through. Up to three stack, newest on top.
  */
 export function ActivationBanner({ duel }: { duel: YGODuel }) {
@@ -68,6 +68,7 @@ export function ActivationBanner({ duel }: { duel: YGODuel }) {
               <span className="ygo-activation-banner-card">{s.name}</span>
               {s.chainLink ? <span className="ygo-activation-banner-cl"> · CL {s.chainLink}</span> : null}
             </div>
+            {s.text && <div className="ygo-activation-banner-text">{s.text}</div>}
           </div>
         );
       })}

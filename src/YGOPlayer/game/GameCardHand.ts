@@ -43,7 +43,9 @@ export class GameCardHand extends YGOEntity implements YGOUiElement {
     const materials = buildCardFaceMaterials(getCardColorMaterial(0x0000ff), getCardColorMaterial(0xff0000));
     this.handIndex = 0;
     this.gameObject = new THREE.Mesh(getCardGeometry(), materials);
-    this.position = this.gameObject.position;
+    // The card's rest place in the hand (Hand.render sets it): a copy, never the object's own
+    // position — hover lifts, drags and their slide back move the object and return it here.
+    this.position = this.gameObject.position.clone();
     this.duel.core.scene.add(this.gameObject);
     this.duel.gameController.getComponent<YGOMouseEvents>("mouse_events")?.registerElement(this);
     this.isActive = false;

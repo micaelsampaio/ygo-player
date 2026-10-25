@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import * as THREE from "three";
 import { YGOClientType } from "ygo-core";
 import { YGOHandDrag, handDragAvailable, type HandDropProvider } from "./YGOHandDrag";
+import { pulseObject } from "../../game/object-pulse";
 
 function zone(id: string, occupied = false) {
   const gameObject = new THREE.Mesh(new THREE.PlaneGeometry(4, 4));
@@ -100,6 +101,53 @@ describe("YGOHandDrag", () => {
     expect(s.provider.drop).not.toHaveBeenCalled();
     for (let i = 0; i < 30; i++) s.drag.update();
     expect(s.card.gameObject.position.toArray()).toEqual(s.card.position.toArray());
+  });
+
+  // Regression: the card must always come back to its rest transform, or the Assisted Mode frame
+  // around it (and the card itself) ends up enlarged / out of place in the hand.
+  const dragAndDropElsewhere = (s: ReturnType<typeof setup>, frames: number) => {
+    s.drag.onPointerDown(s.pointer("pointerdown", 100, 500), s.card as any);
+    s.drag.onPointerMove(s.pointer("pointermove", 100, 480));
+    for (let i = 0; i < 3; i++) s.drag.update();
+    s.drag.onPointerUp(s.pointer("pointerup", 50, 50));
+    for (let i = 0; i < frames; i++) s.drag.update();
+  };
+  const expectRest = (s: ReturnType<typeof setup>, scale = [1, 1, 1]) => {
+    const o = s.card.gameObject;
+    o.scale.toArray().forEach((v, i) => expect(v).toBeCloseTo(scale[i], 10));
+    o.position.toArray().forEach((v, i) => expect(v).toBeCloseTo(s.card.position.toArray()[i], 10));
+    expect([o.rotation.x, o.rotation.y, o.rotation.z]).toEqual([0, 0, 0]);
+  };
+
+  it("a drag started while the card still slides back ends on the rest transform, not the mid-return one", () => {
+    const s = setup();
+    dragAndDropElsewhere(s, 3); // still lifted and leaning, mid slide back
+    expect(s.card.gameObject.scale.x).toBeGreaterThan(1);
+    dragAndDropElsewhere(s, 30);
+    expectRest(s);
+  });
+
+  it("a drag started during a double-click pulse ends on the rest scale", () => {
+    const frames: Array<(t: number) => void> = [];
+    vi.stubGlobal("requestAnimationFrame", (cb: (t: number) => void) => frames.push(cb));
+    vi.stubGlobal("cancelAnimationFrame", vi.fn());
+    const s = setup();
+    pulseObject(s.card.gameObject);
+    const start = performance.now();
+    frames.splice(0).forEach((cb) => cb(start + 120)); // the pulse's peak
+    expect(s.card.gameObject.scale.x).toBeGreaterThan(1.1);
+    dragAndDropElsewhere(s, 30);
+    frames.splice(0).forEach((cb) => cb(start + 1000)); // a stale pulse frame changes nothing
+    expectRest(s);
+  });
+
+  it("the card lands on its slot's scale in the hand's live layout", () => {
+    const s = setup();
+    const hand = s.duel.fields[0].hand;
+    hand.cards = [s.card];
+    hand.getCardsTransforms = () => [{ position: s.card.position.clone(), scale: new THREE.Vector3(0.98, 0.98, 1) }];
+    dragAndDropElsewhere(s, 30);
+    expectRest(s, [0.98, 0.98, 1]);
   });
 
   it("Escape cancels a drag", () => {

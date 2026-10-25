@@ -49,19 +49,33 @@ void main() {
   #include <colorspace_fragment>
 }`;
 
+const DEFAULT_SIZE = new THREE.Vector2(2.5, 3.5);
+const scratchScale = new THREE.Vector3();
+const scratchSize = new THREE.Vector3();
+
+/** The target's size on the board right now: its mesh times its live world scale. */
+function targetSize(target: THREE.Object3D, out: THREE.Vector2): THREE.Vector2 {
+  const geometry = (target as THREE.Mesh).geometry as THREE.BufferGeometry | undefined;
+  if (!geometry) return out.copy(DEFAULT_SIZE);
+  if (!geometry.boundingBox) geometry.computeBoundingBox();
+  geometry.boundingBox!.getSize(scratchSize);
+  // World scale: a hand card's size also comes from the hand it sits in.
+  target.getWorldScale(scratchScale);
+  return out.set(scratchSize.x * Math.abs(scratchScale.x), scratchSize.y * Math.abs(scratchScale.y));
+}
+
+interface FrameData {
+  /** The card size the frame's geometry was built for. */
+  builtSize: THREE.Vector2;
+  /** The object the frame follows on every render (followHighlightTarget), if any. */
+  follow?: THREE.Object3D;
+}
+
+const frameData = (frame: THREE.Mesh): FrameData | undefined => frame.userData.highlightFrame as FrameData | undefined;
+
 /** A frame sized to the object's own mesh (hand and field cards differ in size). */
 export function createHighlightFrame(target: THREE.Object3D, opacity = 1, color = HIGHLIGHT_COLOR): THREE.Mesh {
-  let width = 2.5, height = 3.5;
-  const geometry = (target as THREE.Mesh).geometry as THREE.BufferGeometry | undefined;
-  if (geometry) {
-    if (!geometry.boundingBox) geometry.computeBoundingBox();
-    const size = new THREE.Vector3();
-    geometry.boundingBox!.getSize(size);
-    // World scale: a hand card's size also comes from the hand it sits in.
-    const scale = target.getWorldScale(new THREE.Vector3());
-    width = size.x * scale.x;
-    height = size.y * scale.y;
-  }
+  const { x: width, y: height } = targetSize(target, new THREE.Vector2());
   const material = new THREE.ShaderMaterial({
     vertexShader,
     fragmentShader,
@@ -82,21 +96,75 @@ export function createHighlightFrame(target: THREE.Object3D, opacity = 1, color 
   material.opacity = opacity;
   const frame = new THREE.Mesh(new THREE.PlaneGeometry(width + GLOW_REACH * 2, height + GLOW_REACH * 2), material);
   // Callers pulse `material.opacity` (the Material API): the shader reads it here.
-  frame.onBeforeRender = () => { material.uniforms.uOpacity.value = material.opacity; };
+  const data: FrameData = { builtSize: new THREE.Vector2(width, height) };
+  frame.userData.highlightFrame = data;
+  frame.onBeforeRender = () => {
+    material.uniforms.uOpacity.value = material.opacity;
+    // Glued to its card on every rendered frame, not only on the caller's tick: a hover lift, a
+    // drag, its slide back or a double-click pulse never shows the frame a step behind the card.
+    // (modelViewMatrix is computed from matrixWorld right after this hook.)
+    const target = data.follow;
+    if (target) {
+      placeHighlightFrame(frame, target);
+      frame.updateMatrixWorld(true);
+    }
+  };
   frame.renderOrder = 10;
   return frame;
+}
+
+/**
+ * The frame follows `target` on every render (placeHighlightFrame from its onBeforeRender), on
+ * top of the caller's own placement. For frames at the scene root (not chain-fx's rim, a child of
+ * its card).
+ */
+export function followHighlightTarget(frame: THREE.Mesh, target: THREE.Object3D) {
+  const data = frameData(frame);
+  if (!data) return;
+  data.follow = target;
+  // Its last matrix may be anywhere (a card dragged off screen): never culled on that.
+  frame.frustumCulled = false;
+}
+
+/** Whether the object is still on the board (in a scene, and shown) — a frame on it may show. */
+export function isOnBoard(target: THREE.Object3D): boolean {
+  let node: THREE.Object3D | null = target;
+  while (node) {
+    if (!node.visible) return false;
+    if ((node as THREE.Scene).isScene) return true;
+    node = node.parent;
+  }
+  return false;
 }
 
 const scratchPosition = new THREE.Vector3();
 const scratchQuaternion = new THREE.Quaternion();
 
-/** Moves the frame onto the target's live world transform. */
+const scratchLiveSize = new THREE.Vector2();
+
+/**
+ * Moves the frame onto the target's live world transform — position, rotation AND size: the frame
+ * was built for the card's size when it was created, and a card's scale changes afterwards (the
+ * hand's layout, a drag's lift, a double-click pulse), so the frame is rescaled to match.
+ */
 export function placeHighlightFrame(frame: THREE.Mesh, target: THREE.Object3D) {
   target.getWorldPosition(scratchPosition);
   target.getWorldQuaternion(scratchQuaternion);
   frame.position.copy(scratchPosition);
   frame.position.z += 0.06; // toward the camera, regardless of the card's own flip
   frame.quaternion.copy(scratchQuaternion);
+  const data = frameData(frame);
+  const material = frame.material as THREE.ShaderMaterial;
+  const half = material.uniforms?.uHalf?.value as THREE.Vector2 | undefined;
+  if (!data || !half) return;
+  const { x: width, y: height } = targetSize(target, scratchLiveSize);
+  half.set(width / 2, height / 2);
+  // The geometry is (built + 2 reach); the glow's reach stays the same in world units.
+  frame.scale.set(
+    (width + GLOW_REACH * 2) / (data.builtSize.x + GLOW_REACH * 2),
+    (height + GLOW_REACH * 2) / (data.builtSize.y + GLOW_REACH * 2),
+    1,
+  );
 }
 
 export function disposeHighlightFrame(scene: THREE.Scene, frame: THREE.Mesh) {

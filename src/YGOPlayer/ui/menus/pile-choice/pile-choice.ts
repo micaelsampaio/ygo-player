@@ -8,6 +8,7 @@
  * one, even in a Deck the board keeps hidden), grouped per pile; copies of
  * a card in one pile are one choice (groupCandidates), as in the panel.
  */
+import type { DoubleTapDetector } from "../../../domain/double-tap";
 import { CandidateGroup, groupCandidates, LOC_DECK, LOC_EXTRA, LOC_GRAVE, LOC_HAND, LOC_MZONE, LOC_REMOVED, LOC_SZONE, PromptData } from "../../assist-prompt";
 
 export type PileKind = "deck" | "gy" | "banished" | "extra" | "hand" | "field";
@@ -65,4 +66,15 @@ export function reopenLabel(tabs: PileTab[]): string {
   const count = tabs.reduce((n, t) => n + t.choices.length, 0);
   const where = tabs.length === 1 ? tabs[0].label : "the list";
   return `Choose from ${where} (${count})`;
+}
+
+/**
+ * What a click on a choice in the pile view is. With the "Double-click for the quick action"
+ * setting on (`taps` given), the second click of a double-click (double-tap: a tap fires a click
+ * too) on the same card is a "double" — the card is picked and the choice confirmed when that
+ * completes it (domain/assist-prompt.ts doublePickAnswer, as on the board and in the choice
+ * dialog). Every other click is a "toggle", as before.
+ */
+export function pileChoiceClick(taps: DoubleTapDetector | null, key: string, x: number, y: number, now: number): "toggle" | "double" {
+  return taps?.tap(key, x, y, now) ? "double" : "toggle";
 }

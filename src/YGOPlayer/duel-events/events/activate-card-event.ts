@@ -131,6 +131,7 @@ export class ActivateCardHandler extends YGOCommandHandler {
       frameType: cardReference?.frameType,
       player: event.player,
       chainLink: event.chainLink,
+      desc: cardReference?.desc,
     });
 
     if (duel.settings.getConfigFromPath("showCardWhenPlayed")) {

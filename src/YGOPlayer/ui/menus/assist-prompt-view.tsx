@@ -10,6 +10,7 @@ import { HIGHLIGHT_CSS, PICK_CSS } from "../../game/meshes/highlight-frame";
 import { useFieldSelection } from "./field-selection";
 import { EnginePlace, pickZone, placeToYgoZone, samePlace, ZoneHighlight, zoneHighlights } from "../assist-zones";
 import { PileChoicePopup } from "./pile-choice/PileChoicePopup";
+import { quickActionEnabled } from "../quick-action";
 import { pileTabs, reopenLabel, usesPilePicker } from "./pile-choice/pile-choice";
 import { ndcToContainer, positionGlyph, shortPositionLabel } from "../field-overlay";
 import {
@@ -20,6 +21,7 @@ import {
 import type { PromptDoublePickTarget } from "../../core/YGOAssistController";
 import { findCardObjects, type HighlightTarget } from "./assist-highlights";
 import { dropPlaceAnswer, dropPositionAnswer } from "../../domain/hand-drag";
+import { promptOptionLabel } from "../../domain/assist-option-label";
 import { groupByLocation, PROMPT_KEYWORDS } from "./prompt-dialog/prompt-dialog";
 import { CardThumbGroups, MdButton, MdFooter, PromptQuestion, type ThumbView } from "./prompt-dialog/PromptDialog";
 
@@ -443,7 +445,9 @@ export function PromptView({ duel, prompt, busy, pendingKey, respond, onHover, i
       selected={selected}
       busy={busy}
       pendingKey={pendingKey}
-      onToggle={(group) => setSelected((prev) => toggleGroupSelection(prompt, prev, group))}
+      onToggle={(group) => { noteClick(group.key); select(toggleGroupSelection(prompt, selectedRef.current, group)); }}
+      // Double-click / double-tap a card: picked, and confirmed when that completes the choice (as on the board).
+      onDoublePick={quickActionEnabled(duel) ? (group) => doublePick(group, group.key) : undefined}
       onPick={(i) => respond(`pick:${i}`, { index: i })}
       onConfirm={() => respond("confirm", { indices: selected })}
       onCancel={prompt.cancelable ? () => respond("cancel", { indices: [] }) : undefined}
@@ -551,7 +555,7 @@ export function PromptView({ duel, prompt, busy, pendingKey, respond, onHover, i
         dialogBody = <div className="ygo-md-prompt-options">
           {(prompt.options ?? []).map((desc, i) => (
             <MdButton key={`${i}:${desc}`} variant="secondary" className="ygo-md-prompt-option" disabled={busy} busy={pendingKey === `option:${i}`} onClick={() => respond(`option:${i}`, { option: i })}>
-              {optionLabel(desc, i, nameOf)}
+              {promptOptionLabel(prompt, desc, i, nameOf)}
             </MdButton>
           ))}
         </div>;
@@ -688,7 +692,7 @@ export function PromptView({ duel, prompt, busy, pendingKey, respond, onHover, i
     case "option":
       body = <>
         {(prompt.options ?? []).map((desc, i) => (
-          <ChoiceButton key={`${i}:${desc}`} label={optionLabel(desc, i, nameOf)} disabled={busy} busy={pendingKey === `option:${i}`} onClick={() => respond(`option:${i}`, { option: i })} />
+          <ChoiceButton key={`${i}:${desc}`} label={promptOptionLabel(prompt, desc, i, nameOf)} disabled={busy} busy={pendingKey === `option:${i}`} onClick={() => respond(`option:${i}`, { option: i })} />
         ))}
       </>;
       break;

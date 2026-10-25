@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 vi.mock("../../game/meshes/highlight-frame", () => ({
-  createHighlightFrame: vi.fn(), disposeHighlightFrame: vi.fn(), placeHighlightFrame: vi.fn(),
+  createHighlightFrame: vi.fn(), disposeHighlightFrame: vi.fn(), placeHighlightFrame: vi.fn(), followHighlightTarget: vi.fn(), isOnBoard: vi.fn(() => true),
   HIGHLIGHT_COLOR: 1, HIGHLIGHT_CSS: "a", QUICK_COLOR: 2, QUICK_CSS: "b", PICK_COLOR: 3, PICK_CSS: "c",
 }));
 import { promptTargets } from "./assist-highlights";

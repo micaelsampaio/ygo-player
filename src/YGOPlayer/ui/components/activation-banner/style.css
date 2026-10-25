@@ -1,11 +1,10 @@
-/* The opponent's activations (ActivationBanner): a slim text banner in the upper middle of
-   the field, newest on top, clicks pass through. Dark neutral panel, red accent edge. */
+/* The opponent's activations (ActivationBanner): a text banner at the top right, under the
+   opponent's HUD, newest on top, clicks pass through. Dark neutral panel, red accent edge. */
 .ygo-player-core .ygo-activation-banners {
   position: absolute;
-  top: 22%;
-  left: 50%;
-  transform: translateX(-50%);
-  width: min(360px, calc(100% - 32px));
+  top: 104px;
+  right: 16px;
+  width: min(320px, calc(100% - 32px));
   display: flex;
   flex-direction: column;
   align-items: stretch;
@@ -28,7 +27,7 @@
   color: #fff;
   text-align: left;
   overflow: hidden;
-  animation: ygo-activation-banner 1.6s cubic-bezier(0.2, 0.8, 0.25, 1) both;
+  animation: ygo-activation-banner 3.2s cubic-bezier(0.2, 0.8, 0.25, 1) both;
 }
 
 /* Older banners sit under the newest one, a little dimmer (opacity belongs to the animation). */
@@ -77,10 +76,6 @@
 }
 
 @media (max-width: 480px) {
-  .ygo-player-core .ygo-activation-banners {
-    top: 18%;
-  }
-
   .ygo-player-core .ygo-activation-banner-name {
     font-size: 17px;
   }
@@ -106,4 +101,24 @@
 @keyframes ygo-activation-banner-fade {
   0%, 100% { opacity: 0; }
   10%, 85% { opacity: 1; }
+}
+
+/* The card's effect text under its name, clamped to three lines. */
+.ygo-player-core .ygo-activation-banner-text {
+  margin-top: 3px;
+  font-size: 12px;
+  line-height: 1.35;
+  color: rgba(236, 236, 240, 0.85);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+@media (max-width: 640px) {
+  .ygo-player-core .ygo-activation-banners {
+    top: 72px;
+    right: 8px;
+    width: min(280px, calc(100% - 16px));
+  }
 }

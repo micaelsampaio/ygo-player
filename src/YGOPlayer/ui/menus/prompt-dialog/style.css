@@ -521,3 +521,8 @@
 .ygo-player-core .ygo-md-prompt-compact .ygo-md-prompt-peek {
   display: none;
 }
+
+/* A one-zone choice answered on the board (the zones glow): the hint stays mounted, unseen. */
+.ygo-player-core .ygo-card-menu.ygo-assist-prompt-dialog.ygo-md-prompt.ygo-md-prompt-hidden {
+  display: none;
+}

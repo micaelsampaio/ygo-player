@@ -137,3 +137,14 @@ describe("undoTooltip", () => {
     expect(undoTooltip(undefined)).toBeUndefined();
   });
 });
+
+describe("zoneHintHidden", () => {
+  it("hides the zone hint for one zone with zones to click; keeps it for the list or several zones", async () => {
+    const { zoneHintHidden } = await import("./menus/assisted-options-panel");
+    expect(zoneHintHidden(place({ flag: flagFree([{ loc: M, seq: 0 }, { loc: M, seq: 2 }]) }), 0)).toBe(true);
+    // Only a zone the board doesn't draw (Pendulum): the list is the only way.
+    expect(zoneHintHidden(place({ flag: flagFree([{ loc: S, seq: 6 }]) }), 0)).toBe(false);
+    // Two zones to pick: the "Picked 1 of 2" count stays.
+    expect(zoneHintHidden(place({ count: 2, flag: flagFree([{ loc: M, seq: 0 }, { loc: M, seq: 1 }]) }), 0)).toBe(false);
+  });
+});

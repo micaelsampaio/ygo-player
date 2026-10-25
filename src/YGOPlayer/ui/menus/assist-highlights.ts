@@ -6,7 +6,7 @@
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import type { YGODuel } from "../../core/YGODuel";
-import { createHighlightFrame, disposeHighlightFrame, HIGHLIGHT_COLOR, HIGHLIGHT_CSS, QUICK_COLOR, QUICK_CSS, PICK_COLOR, PICK_CSS, placeHighlightFrame } from "../../game/meshes/highlight-frame";
+import { createHighlightFrame, disposeHighlightFrame, followHighlightTarget, HIGHLIGHT_COLOR, HIGHLIGHT_CSS, isOnBoard, QUICK_COLOR, QUICK_CSS, PICK_COLOR, PICK_CSS, placeHighlightFrame } from "../../game/meshes/highlight-frame";
 import type { Tone } from "../assist-sections";
 import { PromptData, LOC_HAND, LOC_MZONE as LOC_M, LOC_SZONE as LOC_S } from "../assist-prompt";
 
@@ -98,6 +98,7 @@ export function useCardHighlights(duel: YGODuel, targets: HighlightTarget[], hov
       for (const [key, { target, tone }] of desired) {
         if (frames.has(key)) continue;
         const frame = createHighlightFrame(target, PULSE_MAX, TONE_COLOR[tone]);
+        followHighlightTarget(frame, target);
         duel.core.scene.add(frame);
         frames.set(key, { frame, target });
       }
@@ -110,7 +111,9 @@ export function useCardHighlights(duel: YGODuel, targets: HighlightTarget[], hov
       const opacity = PULSE_MIN + (PULSE_MAX - PULSE_MIN) * ((Math.sin(t * Math.PI * 2) + 1) / 2);
       for (const { frame, target } of framesRef.current.values()) {
         placeHighlightFrame(frame, target);
-        frame.visible = target.visible;
+        // A card that left the board (destroyed, re-laid out into a new object) shows no frame
+        // until the next reconcile drops it.
+        frame.visible = isOnBoard(target);
         (frame.material as THREE.MeshBasicMaterial).opacity = opacity;
       }
       timer = setTimeout(tick, 32);
@@ -159,13 +162,14 @@ export function usePileHighlight(duel: YGODuel, target: () => THREE.Object3D | n
         drop();
         if (target) {
           entry = { frame: createHighlightFrame(target, PULSE_MAX, TONE_COLOR[tone]), target };
+          followHighlightTarget(entry.frame, target);
           duel.core.scene.add(entry.frame);
         }
       }
       if (entry) {
         const t = (Date.now() % PULSE_PERIOD_MS) / PULSE_PERIOD_MS;
         placeHighlightFrame(entry.frame, entry.target);
-        entry.frame.visible = entry.target.visible;
+        entry.frame.visible = isOnBoard(entry.target);
         (entry.frame.material as THREE.MeshBasicMaterial).opacity = PULSE_MIN + (PULSE_MAX - PULSE_MIN) * ((Math.sin(t * Math.PI * 2) + 1) / 2);
       }
       timer = setTimeout(tick, 32);

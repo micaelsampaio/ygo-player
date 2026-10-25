@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type { YGODuel } from "../../../core/YGODuel";
 import { stopPropagationCallback } from "../../../scripts/utils";
 import { CandidateGroup, isSelectionValid, PromptData, promptTitle } from "../../assist-prompt";
-import { pileTabs } from "./pile-choice";
+import { createDoubleTapDetector, type DoubleTapDetector } from "../../../domain/double-tap";
+import { pileChoiceClick, pileTabs } from "./pile-choice";
 import "./style.css";
 
 /**
@@ -12,8 +13,10 @@ import "./style.css";
  * Picking follows the prompt exactly as the panel's list does (it shares
  * its selection and responses); closing only minimizes it — the panel
  * keeps a button to bring it back.
+ * A double-click (double-tap) on a card picks it and confirms when that completes the choice
+ * (`onDoublePick`, given while the "Double-click for the quick action" setting is on).
  */
-export function PileChoicePopup({ duel, prompt, container, selected, busy, pendingKey, onToggle, onPick, onConfirm, onCancel, onFinish, onClose }: {
+export function PileChoicePopup({ duel, prompt, container, selected, busy, pendingKey, onToggle, onDoublePick, onPick, onConfirm, onCancel, onFinish, onClose }: {
   duel: YGODuel;
   prompt: PromptData;
   container: HTMLElement;
@@ -22,6 +25,8 @@ export function PileChoicePopup({ duel, prompt, container, selected, busy, pendi
   busy: boolean;
   pendingKey: string | null;
   onToggle: (group: CandidateGroup) => void;
+  /** "card" prompts: the second click of a double-click on `group` (its first click toggled it). Absent: no double-click. */
+  onDoublePick?: (group: CandidateGroup) => void;
   /** "unselectCard" prompts: each pick is sent at once. */
   onPick: (index: number) => void;
   onConfirm: () => void;
@@ -40,6 +45,8 @@ export function PileChoicePopup({ duel, prompt, container, selected, busy, pendi
   const isUnselect = prompt.kind === "unselectCard";
   const valid = !isUnselect && isSelectionValid(prompt, selected);
   const max = prompt.max ?? 1;
+  const tapsRef = useRef<DoubleTapDetector | null>(null);
+  tapsRef.current ??= createDoubleTapDetector();
 
   useEffect(() => {
     const unsubscribe = duel.globalHotKeysManager.on("escPressed", onClose);
@@ -106,7 +113,11 @@ export function PileChoicePopup({ duel, prompt, container, selected, busy, pendi
                   aria-busy={busyHere}
                   onMouseEnter={() => showInfo(code)}
                   onFocus={() => showInfo(code)}
-                  onClick={() => (isUnselect ? onPick(group.indices[0]) : onToggle(group))}
+                  onClick={(e) => {
+                    if (isUnselect) { onPick(group.indices[0]); return; }
+                    if (onDoublePick && pileChoiceClick(tapsRef.current, group.key, e.clientX, e.clientY, Date.now()) === "double") onDoublePick(group);
+                    else onToggle(group);
+                  }}
                 >
                   <img src={dataOf(code)?.images?.small_url} alt="" className="ygo-card" />
                   {copies > 1 && <span className="ygo-pile-choice-copies">×{copies}</span>}

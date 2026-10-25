@@ -11,6 +11,7 @@ import { createCardSelectionGeometry } from "../../game/meshes/CardSelectionMesh
 import { HIGHLIGHT_COLOR, PICK_COLOR } from "../../game/meshes/highlight-frame";
 import { prefersReducedMotion } from "../../duel-events/utils/battle-fx";
 import { selectionOpacity } from "../../domain/assist-zones";
+import { stopPulse } from "../../game/object-pulse";
 import {
   dragTilt, gestureDecision, TOUCH_LONG_PRESS_MS, TOUCH_SLOP_PX, type DropTarget, type DropZoneState, type HandDropTargets,
 } from "../../domain/hand-drag";
@@ -304,7 +305,10 @@ export class YGOHandDrag extends YGOComponent implements YGOPointerDragHandler {
     this.duel.events.dispatch("on-card-mouse-up", { card: null, event });
     try { this.canvas?.setPointerCapture(candidate.pointerId); } catch { /* the pointer is already gone */ }
 
-    // A card still sliding back from an earlier drag is taken over.
+    // A card still sliding back from an earlier drag is taken over, and a double-click pulse
+    // still running on it ends: the drag lifts from the card's REST scale, not a mid-animation one
+    // (which the slide back would then restore for good — an enlarged card in the hand).
+    const resting = this.restScale(card);
     this.returning = this.returning.filter((r) => r.card !== card);
 
     const zones = new Map<string, CardZone>();
@@ -330,7 +334,7 @@ export class YGOHandDrag extends YGOComponent implements YGOPointerDragHandler {
       moved: Math.hypot(x - candidate.x, y - candidate.y) > TOUCH_SLOP_PX,
       velocityX: 0,
       lastMoveTime: performance.now(),
-      scale: card.gameObject.scale.clone(),
+      scale: resting,
       rotation: this.handRotation(card),
       unsubscribeEsc: this.duel.globalHotKeysManager.on("escPressed", () => this.cancel()),
       time: 0,
@@ -339,6 +343,21 @@ export class YGOHandDrag extends YGOComponent implements YGOPointerDragHandler {
     window.addEventListener("keydown", this.onKey);
     window.addEventListener("keyup", this.onKey);
     this.publishUi();
+  }
+
+  /**
+   * The scale the card has at rest in the hand: its slot in the hand's layout, else the end of a
+   * running pulse / slide back, else its scale now. Ends a running pulse.
+   */
+  private restScale(card: GameCardHand): THREE.Vector3 {
+    const pulseBase = stopPulse(card.gameObject);
+    const hand = this.duel.fields[card.player]?.hand;
+    const slot = hand?.cards && typeof hand.getCardsTransforms === "function" && hand.cards.includes(card)
+      ? hand.getCardsTransforms(hand.cards.length)[card.handIndex]
+      : undefined;
+    if (slot) return slot.scale.clone();
+    const returning = this.returning.find((r) => r.card === card);
+    return (returning?.scale ?? pulseBase ?? card.gameObject.scale).clone();
   }
 
   /** The rotation cards have in this hand (its fan is flat: one for all). */
@@ -383,6 +402,7 @@ export class YGOHandDrag extends YGOComponent implements YGOPointerDragHandler {
     });
   }
 
+  /** The card back on its rest transform (its hand slot: card.position, the hand's rotation and scale). */
   private restore(card: GameCardHand, rotation: THREE.Euler, scale: THREE.Vector3) {
     card.gameObject.position.copy(card.position);
     card.gameObject.rotation.copy(rotation);
@@ -487,7 +507,8 @@ export class YGOHandDrag extends YGOComponent implements YGOPointerDragHandler {
         THREE.MathUtils.lerp(r.fromRotation.z, r.rotation.z, k),
       );
       object.scale.lerpVectors(r.fromScale, r.scale, k);
-      if (r.t >= 1) { this.restore(r.card, r.rotation, r.scale); return false; }
+      // Lands on the live slot: the hand may have re-laid out while the card slid back.
+      if (r.t >= 1) { this.restore(r.card, r.rotation, this.restScale(r.card)); return false; }
       return true;
     });
   }
