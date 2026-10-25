@@ -153,6 +153,19 @@ export function GameSettingsDialog({ duel }: { duel: YGODuel }) {
             </label>
           </div>
 
+          <div className="ygo-flex ygo-mt-3">
+            <input
+              id="ygo-setting-opponent-activations"
+              style={{ display: "inline-block", width: "auto" }}
+              type="checkbox"
+              checked={settings.getConfigFromPath("showOpponentActivations") !== false}
+              onChange={e => onChangeCheckBox(e, "showOpponentActivations")}
+            />
+            <label htmlFor="ygo-setting-opponent-activations" style={{ display: "inline-block", flexGrow: 1 }} title="A banner names each card the opponent activates, with its chain link">
+              Show the opponent's activations
+            </label>
+          </div>
+
           {isPlaying && handDragAvailable(duel) && <div className="ygo-flex ygo-mt-3">
             <input
               id="ygo-setting-drag-from-hand"

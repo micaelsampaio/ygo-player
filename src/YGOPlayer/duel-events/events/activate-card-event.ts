@@ -124,6 +124,15 @@ export class ActivateCardHandler extends YGOCommandHandler {
     const field = duel.fields[zoneData.player];
     let modalDuration = 0.4;
 
+    // The opponent's activations get a banner (ui/components/activation-banner); purely visual.
+    duel.events.dispatch("card-activated", {
+      cardId: event.id,
+      name: cardReference?.name,
+      frameType: cardReference?.frameType,
+      player: event.player,
+      chainLink: event.chainLink,
+    });
+
     if (duel.settings.getConfigFromPath("showCardWhenPlayed")) {
       duel.gameActions.setSelectedCard({
         player: zoneData.player,

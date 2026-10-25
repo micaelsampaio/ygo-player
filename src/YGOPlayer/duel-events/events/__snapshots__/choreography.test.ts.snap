@@ -27,6 +27,7 @@ exports[`duel-event choreography > activate from B2-1 1`] = `
     "19 Modal#2 p0,0,0 r0,0,0 s1,1,1 o0 v1",
   ],
   "log": [
+    "dispatch(card-activated)",
     "setSelectedCard(1,7,true)",
     "new GameCard(7)",
     "card.destroy",
@@ -71,6 +72,7 @@ exports[`duel-event choreography > activate from GY-1 1`] = `
     "19 Modal#2 p0,0,0 r0,0,0 s1,1,1 o0 v1",
   ],
   "log": [
+    "dispatch(card-activated)",
     "setSelectedCard(0,7,true)",
     "new GameCard(7)",
     "card.destroy",
@@ -116,6 +118,7 @@ exports[`duel-event choreography > activate from hand (face down false) 1`] = `
     "19 Modal#2 p0,0,0 r0,0,0 s1,1,1 o0 v1",
   ],
   "log": [
+    "dispatch(card-activated)",
     "setSelectedCard(0,7,true)",
     "setIsVisible(true)",
     "overlay.add(Object3D#1)",
@@ -160,6 +163,7 @@ exports[`duel-event choreography > activate from hand (face down true) 1`] = `
     "25 Modal#2 p0,0,0 r0,0,0 s1,1,1 o0 v1",
   ],
   "log": [
+    "dispatch(card-activated)",
     "setSelectedCard(0,7,true)",
     "setIsVisible(true)",
     "overlay.add(Object3D#1)",
@@ -204,6 +208,7 @@ exports[`duel-event choreography > activate on the field 1`] = `
     "19 Modal#2 p0,0,0 r0,0,0 s1,1,1 o0 v1",
   ],
   "log": [
+    "dispatch(card-activated)",
     "setSelectedCard(0,7,true)",
     "fieldCard.hideCardStats",
     "overlay.add(Object3D#1)",

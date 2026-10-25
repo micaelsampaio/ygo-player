@@ -12,6 +12,7 @@ import { TurnBanner } from "./components/player-hud/TurnBanner";
 import { WaitingBanner } from "./components/player-hud/WaitingBanner";
 import { PhaseBanner } from "./components/player-hud/PhaseBanner";
 import { DamageNumbers } from "./components/player-hud/DamageNumbers";
+import { ActivationBanner } from "./components/activation-banner/ActivationBanner";
 import { BattleForecast } from "./components/battle-forecast/BattleForecast";
 import { PresenceReporter } from "./components/player-hud/PresenceReporter";
 import { CardLongPressEffect } from "./components/card-long-press-effect/CardLongPressEffect";
@@ -190,6 +191,7 @@ export function YGOUiController({ duel }: { duel: YGODuel }) {
         <WaitingBanner duel={duel} />
         <PhaseBanner duel={duel} />
         <DamageNumbers duel={duel} />
+        <ActivationBanner duel={duel} />
         <BattleForecast duel={duel} />
         <PresenceReporter duel={duel} />
         <CardLongPressEffect duel={duel} />

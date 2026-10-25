@@ -1,0 +1,109 @@
+/* The opponent's activations (ActivationBanner): a slim text banner in the upper middle of
+   the field, newest on top, clicks pass through. Dark neutral panel, red accent edge. */
+.ygo-player-core .ygo-activation-banners {
+  position: absolute;
+  top: 22%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(360px, calc(100% - 32px));
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  pointer-events: none;
+  z-index: 106;
+}
+
+.ygo-player-core .ygo-activation-banner {
+  --ygo-activation-accent: 255, 84, 72;
+  position: relative;
+  padding: 5px 14px 6px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-left: 3px solid rgb(var(--ygo-activation-accent));
+  border-radius: 3px;
+  background:
+    linear-gradient(90deg, rgba(var(--ygo-activation-accent), 0.22) 0%, rgba(var(--ygo-activation-accent), 0) 55%),
+    rgba(8, 9, 12, 0.86);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.55);
+  color: #fff;
+  text-align: left;
+  overflow: hidden;
+  animation: ygo-activation-banner 1.6s cubic-bezier(0.2, 0.8, 0.25, 1) both;
+}
+
+/* Older banners sit under the newest one, a little dimmer (opacity belongs to the animation). */
+.ygo-player-core .ygo-activation-banner + .ygo-activation-banner {
+  filter: brightness(0.78);
+}
+
+.ygo-player-core .ygo-activation-banner-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(var(--ygo-activation-accent), 1);
+  line-height: 1.2;
+}
+
+.ygo-player-core .ygo-activation-banner-label > span {
+  font-size: 9px;
+}
+
+.ygo-player-core .ygo-activation-spell .ygo-activation-banner-label,
+.ygo-player-core .ygo-activation-trap .ygo-activation-banner-label {
+  color: #ffd27a;
+}
+
+.ygo-player-core .ygo-activation-banner-name {
+  display: flex;
+  min-width: 0;
+  font-family: "Barlow Condensed", "Arial Narrow", sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.15;
+  white-space: nowrap;
+}
+
+.ygo-player-core .ygo-activation-banner-card {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ygo-player-core .ygo-activation-banner-cl {
+  flex-shrink: 0;
+  color: #ffd27a;
+  white-space: pre;
+}
+
+@media (max-width: 480px) {
+  .ygo-player-core .ygo-activation-banners {
+    top: 18%;
+  }
+
+  .ygo-player-core .ygo-activation-banner-name {
+    font-size: 17px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ygo-player-core .ygo-activation-banner {
+    animation-name: ygo-activation-banner-fade;
+    animation-timing-function: linear;
+  }
+}
+
+/* Keyframes stay at the top level (see player-hud/style.css). Slides in with a slight skew,
+   holds, slides on and fades. */
+@keyframes ygo-activation-banner {
+  0% { opacity: 0; transform: translateX(-28px) skewX(-12deg); }
+  12% { opacity: 1; transform: translateX(3px) skewX(-3deg); }
+  18% { transform: translateX(0) skewX(0); }
+  84% { opacity: 1; transform: translateX(0) skewX(0); }
+  100% { opacity: 0; transform: translateX(22px) skewX(-8deg); }
+}
+
+@keyframes ygo-activation-banner-fade {
+  0%, 100% { opacity: 0; }
+  10%, 85% { opacity: 1; }
+}

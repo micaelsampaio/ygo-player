@@ -1,4 +1,5 @@
 import type { Card, YGODuelEvents, YGOReplayData } from "ygo-core";
+import type { CardActivatedEvent } from "../domain/card-activated";
 import type { AssistQueryResult } from "../domain/assist-query";
 import type { DropIntent } from "../domain/hand-drag";
 import type { YGOEndGameAction } from "../domain/end-game";
@@ -90,6 +91,8 @@ export interface YGODuelUIEvents {
     /** An attack struck: the board point it hit (a damage number shows there) and the defending player. */
     "battle-impact": (args: { position: { x: number; y: number; z: number }; player: number }) => void;
     /** The attack aiming arrow snapped onto a target (`direct` for the opponent's side), or null when it left it / aiming ended. */
+    /** A card's effect was activated (the Activate handler): the opponent's get a banner (ActivationBanner). */
+    "card-activated": (args: CardActivatedEvent) => void;
     "attack-aim": (args: YGOAttackAimEvent | null) => void;
     "system-chat-message": (args: { message: string }) => void;
 

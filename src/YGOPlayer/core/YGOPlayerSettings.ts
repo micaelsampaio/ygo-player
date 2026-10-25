@@ -24,6 +24,8 @@ export interface YGOPlayerSettings {
     dragFromHand: boolean
     /** Assisted Mode: double-click (double-tap) a card for its quick action (ui/quick-action.ts). */
     doubleClickAction: boolean
+    /** A Master Duel-style banner naming each card the opponent activates (ui/components/activation-banner). */
+    showOpponentActivations: boolean
 }
 
 export interface YGOPlayerSettingsAdapterOptions {
@@ -56,7 +58,8 @@ const DEFAULT_SETTINGS: YGOPlayerSettings = {
     autoPlaceZone: false,
     reduceAnimations: false,
     dragFromHand: true,
-    doubleClickAction: true
+    doubleClickAction: true,
+    showOpponentActivations: true
 }
 
 const YGO_SETTINGS_KEY = "ygo_player_settings";
