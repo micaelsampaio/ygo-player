@@ -323,6 +323,22 @@
     .ygo-player-core .float-right-menu .float-right-menu-cards .ygo-card-offered { animation: none; box-shadow: 0 0 8px 2px rgba(255, 201, 60, 0.7); }
 }
 
+/* Assisted Mode: a double-click ran a pile card's quick action (ui/quick-action.ts pulseElement). */
+@keyframes ygo-card-quick-pulse {
+    0%, 100% { transform: scale(1); filter: brightness(1); }
+    50% { transform: scale(1.08); filter: brightness(1.35); }
+}
+
+.ygo-player-core .float-right-menu .float-right-menu-cards .ygo-card-quick-pulse {
+    animation: ygo-card-quick-pulse 0.3s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ygo-player-core .float-right-menu .float-right-menu-cards .ygo-card-quick-pulse { animation: none; }
+}
+
+.ygo-player-core.ygo-reduce-motion .float-right-menu .float-right-menu-cards .ygo-card-quick-pulse { animation: none; }
+
 .ygo-player-core .float-right-menu {
     position: absolute;
     top: var(--ygo-header-margin);

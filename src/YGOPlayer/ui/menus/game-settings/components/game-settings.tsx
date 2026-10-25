@@ -166,6 +166,19 @@ export function GameSettingsDialog({ duel }: { duel: YGODuel }) {
             </label>
           </div>}
 
+          {isPlaying && handDragAvailable(duel) && <div className="ygo-flex ygo-mt-3">
+            <input
+              id="ygo-setting-double-click-action"
+              style={{ display: "inline-block", width: "auto" }}
+              type="checkbox"
+              checked={settings.getConfigFromPath("doubleClickAction") !== false}
+              onChange={e => onChangeCheckBox(e, "doubleClickAction")}
+            />
+            <label htmlFor="ygo-setting-double-click-action" style={{ display: "inline-block", flexGrow: 1 }} title="Double-click (or double-tap) a card to run its one obvious move: its only effect, its summon, its attack, or the card the effect asks for. A single click still opens its menu">
+              Double-click for the quick action
+            </label>
+          </div>}
+
           <div className="ygo-flex ygo-mt-3">
             <input
               style={{ display: "inline-block", width: "auto" }}

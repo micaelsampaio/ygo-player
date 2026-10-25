@@ -15,8 +15,9 @@ import { ndcToContainer, positionGlyph, shortPositionLabel } from "../field-over
 import {
   CardRefData, PromptData, PromptResponse, candidateWhere, isSelectionValid, onlyCardAnswer, optionLabel, toggleSelection,
   groupCandidates, positionChoices, promptSubtitle, promptTitle, toggleGroupSelection, LOC_HAND, LOC_MZONE as LOC_M, LOC_SZONE as LOC_S,
-  decodeDescription,
+  decodeDescription, doubleClickPosition, doublePickAnswer, type CandidateGroup,
 } from "../assist-prompt";
+import type { PromptDoublePickTarget } from "../../core/YGOAssistController";
 import { findCardObjects, type HighlightTarget } from "./assist-highlights";
 import { dropPlaceAnswer, dropPositionAnswer } from "../../domain/hand-drag";
 import { groupByLocation, PROMPT_KEYWORDS } from "./prompt-dialog/prompt-dialog";
@@ -288,6 +289,9 @@ function PositionFieldChoice({ duel, prompt, busy, pendingKey, respond, fallback
   </>;
 }
 
+/** How long a click is remembered as the possible first half of a double-click. */
+const DOUBLE_CLICK_MEMORY_MS = 600;
+
 /**
  * "Your choice": an effect prompt the engine is holding for the human (which
  * card to pick, which monster to Tribute, yes/no, an option, a position, a
@@ -336,11 +340,37 @@ export function PromptView({ duel, prompt, busy, pendingKey, respond, onHover, i
       return zone ? [{ index, zone }] : [];
     })
     : [];
+  // The selection as of the last click (state lags a render), and what it was before the click
+  // that may be the first of a double-click (doublePickAnswer toggles once from there).
+  const selectedRef = useRef(selected);
+  selectedRef.current = selected;
+  const select = (next: number[]) => { selectedRef.current = next; setSelected(next); };
+  const gestureRef = useRef<{ key: string | number; before: number[]; at: number } | null>(null);
+  const noteClick = (key: string | number) => {
+    const g = gestureRef.current;
+    const now = Date.now();
+    // The second click of a double-click keeps the first one's "before".
+    if (g && g.key === key && now - g.at <= DOUBLE_CLICK_MEMORY_MS) return;
+    gestureRef.current = { key, before: selectedRef.current, at: now };
+  };
+  const beforeGesture = (key: string | number) => {
+    const g = gestureRef.current;
+    gestureRef.current = null;
+    return g && g.key === key && Date.now() - g.at <= DOUBLE_CLICK_MEMORY_MS ? g.before : selectedRef.current;
+  };
   const pickOnField = (index: number) => {
     if (prompt.kind === "unselectCard") { respond(`pick:${index}`, { index }); return; }
     // One card to choose: clicking it is the answer. Several: it's one of the picks (then Confirm).
     if ((prompt.max ?? 1) <= 1 && (prompt.min ?? 1) <= 1) { respond("confirm", { indices: [index] }); return; }
-    setSelected((prev) => toggleSelection(prompt, prev, index));
+    noteClick(index);
+    select(toggleSelection(prompt, selectedRef.current, index));
+  };
+  /** A double-click on a candidate (board card or dialog thumbnail): pick it, confirm when that completes the choice. */
+  const doublePick = (pick: number | CandidateGroup, key: string | number) => {
+    if (busy) return;
+    const answer = doublePickAnswer(prompt, beforeGesture(key), pick);
+    select(answer.selected);
+    if (answer.confirm) respond("confirm", { indices: answer.selected });
   };
   useFieldCardSelection(duel, fieldTargets, !busy && !(pilePicker && pickerOpen), pickOnField);
   // …and candidates in the hand by clicking the card in the hand (they have
@@ -358,6 +388,42 @@ export function PromptView({ duel, prompt, busy, pendingKey, respond, onHover, i
   };
   useEffect(() => {
     return duel.assistController.setHandPick((player: number, code: number) => handPickRef.current(player, code));
+  }, [duel]);
+  // A double-click on a board card (ui/quick-action.ts): a candidate is picked (and confirmed when
+  // that completes the choice); the card a position question is about takes face-up Attack.
+  const doublePickRef = useRef<(target: PromptDoublePickTarget) => boolean>(() => false);
+  doublePickRef.current = (target) => {
+    if (prompt.kind === "position") {
+      if (target.code !== prompt.code) return false;
+      const position = doubleClickPosition(prompt.positions);
+      if (position === null) return false;
+      duel.actionManager.clearAction();
+      duel.events.dispatch("clear-ui-action");
+      if (!busy) respond(`position:${position}`, { position });
+      return true;
+    }
+    if (!cardPrompt || (pilePicker && pickerOpen)) return false;
+    let index: number | undefined;
+    const g = gestureRef.current;
+    if (target.kind === "zone") {
+      index = candidates.findIndex((c) => (c.loc & (LOC_M | LOC_S)) !== 0
+        && placeToYgoZone({ player: c.ctrl, loc: c.loc & LOC_M ? LOC_M : LOC_S, seq: c.seq }, prompt.player, me) === target.zone);
+      if (index < 0) return false;
+    } else {
+      const matches = candidates
+        .map((c, i) => ({ c, i }))
+        .filter(({ c }) => (c.loc & LOC_HAND) !== 0 && c.code === target.code && (c.ctrl === prompt.player ? me : 1 - me) === target.player);
+      if (matches.length === 0) return false;
+      // The copy the double-click's first click picked.
+      index = (matches.find((m) => g?.key === m.i) ?? matches.find((m) => !selectedRef.current.includes(m.i)) ?? matches[0]).i;
+    }
+    // Its first click already answered a single pick / an unselect: nothing more to do.
+    if (prompt.kind === "unselectCard" || (prompt.max ?? 1) <= 1) return true;
+    doublePick(index, index);
+    return true;
+  };
+  useEffect(() => {
+    return duel.assistController.setPromptDoublePick((target) => doublePickRef.current(target));
   }, [duel]);
   // A card just dropped from the hand: its position question is answered by the drop (summon: face-up
   // Attack, Set: face-down Defense) when that position is offered.
@@ -437,8 +503,9 @@ export function PromptView({ duel, prompt, busy, pendingKey, respond, onHover, i
               key: group.key, code: c.code, name: cardName(c.code), imageUrl: imageOf(c.code), selected: picked > 0,
               badge: copies > 1 ? `×${copies}` : undefined,
               check: picked > 0 ? (multi && copies > 1 ? String(picked) : "✓") : undefined,
-              onClick: () => setSelected((prev) => toggleGroupSelection(prompt, prev, group)),
-              onDoubleClick: singlePick ? () => respond("confirm", { indices: [group.indices[0]] }) : undefined,
+              onClick: () => { noteClick(group.key); select(toggleGroupSelection(prompt, selectedRef.current, group)); },
+              // Single pick: picks and confirms; several: toggles once, confirming when that completes it.
+              onDoubleClick: singlePick ? () => respond("confirm", { indices: [group.indices[0]] }) : multi ? () => doublePick(group, group.key) : undefined,
               onHover: hoverFor(c),
             },
           };

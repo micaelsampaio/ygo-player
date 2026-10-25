@@ -9,6 +9,8 @@ import type { ActionCardZoneMenu } from "../actions/ActionCardZoneMenu";
 import { getCardRotation } from "./zone-transforms";
 import { YGOGameUtils } from "ygo-core";
 import { cancelCardPreview, previewCardOnHover } from "./hover-preview";
+import { markClickHandled } from "../core/components/YGOMouseEvents";
+import { cancelPendingMenu, openMenuAfterTap, positionPromptFor, pulseObject, quickActionFor, registerTap, runQuickAction } from "../ui/quick-action";
 
 export class CardZone extends YGOEntity implements YGOUiElement {
   public isUiElement: boolean = true;
@@ -106,29 +108,56 @@ export class CardZone extends YGOEntity implements YGOUiElement {
       })
     }
 
+    // Assisted Mode: the second click of a double-click on a card picks it for an effect's choice
+    // (the click is then done: the field selection must not take it as a click away).
+    const isDouble = !!this.getCardReference() && registerTap(this.duel, this, event);
+    if (isDouble && this.duel.assistController.promptDoublePick?.({ kind: "zone", zone: this.zone, code: this.getCardReference()!.id })) {
+      event.preventDefault();
+      event.stopPropagation();
+      markClickHandled(event);
+      return;
+    }
+
     if (!this.onClickCb) {
       event.preventDefault();
       event.stopPropagation();
 
       if (this.getCardReference() && this.startMouseClickTime + 1000 < Date.now()) return;
 
-      if (this.getCardReference()) {
-        if (this.duel.config.autoChangePlayer) {
-          this.duel.setActivePlayer(this.player);
-        }
+      const cardRef = this.getCardReference();
+      if (cardRef) {
+        const gameCard = this.card;
+        const openMenu = () => {
+          if (this.card !== gameCard) return;
+          if (this.duel.config.autoChangePlayer) {
+            this.duel.setActivePlayer(this.player);
+          }
 
-        const action =
-          this.duel.actionManager.getAction<ActionCardZoneMenu>(
-            "card-zone-menu"
-          );
-        action.setData({
-          duel: this.duel,
-          gameCard: this.card,
-          card: this.card!.cardReference,
-          zone: this.zone,
-          mouseEvent: event,
-        });
-        this.duel.actionManager.setActionNextFrame(action);
+          const action =
+            this.duel.actionManager.getAction<ActionCardZoneMenu>(
+              "card-zone-menu"
+            );
+          action.setData({
+            duel: this.duel,
+            gameCard: this.card,
+            card: this.card!.cardReference,
+            zone: this.zone,
+            mouseEvent: event,
+          });
+          this.duel.actionManager.setActionNextFrame(action);
+        };
+        // …or runs its quick action (ui/quick-action.ts); a single click on a card that has one
+        // waits out the double-click window before opening its menu.
+        const row = quickActionFor(this.duel, cardRef, this.zone, "field", this.zoneData.player);
+        if (isDouble && row) {
+          runQuickAction(this.duel, row);
+          pulseObject(gameCard?.gameObject);
+        } else if (isDouble) {
+          cancelPendingMenu(this.duel);
+          openMenu();
+        } else {
+          openMenuAfterTap(this.duel, !!row || positionPromptFor(this.duel, cardRef.id), openMenu);
+        }
       } else {
         this.duel.actionManager.clearAction();
         this.duel.events.dispatch("clear-ui-action");

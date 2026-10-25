@@ -7,6 +7,7 @@ import { YGOMouseEvents } from "../core/components/YGOMouseEvents";
 import { ActionCardHandMenu } from "../actions/ActionCardHandMenu";
 import { CardMaterial } from "./materials/game-card-material";
 import { cancelCardPreview, previewCardOnHover } from "./hover-preview";
+import { cancelPendingMenu, openMenuAfterTap, positionPromptFor, pulseObject, quickActionFor, registerTap, runQuickAction } from "../ui/quick-action";
 import {
   buildCardFaceMaterials,
   disposeCardMaterials,
@@ -65,16 +66,42 @@ export class GameCardHand extends YGOEntity implements YGOUiElement {
       return;
     };
 
+    // Assisted Mode: the second click of a double-click picks the card for an effect's choice, or
+    // runs its quick action (ui/quick-action.ts); with neither, its menu stays open.
+    if (registerTap(this.duel, this, event)) {
+      if (this.duel.assistController.promptDoublePick?.({ kind: "hand", player: this.player, code: this.card.id })) return;
+      const row = quickActionFor(this.duel, this.card, this.handZone(), "hand", this.player);
+      if (row) {
+        runQuickAction(this.duel, row, { fromHand: this.card.id });
+        pulseObject(this.gameObject);
+        return;
+      }
+      cancelPendingMenu(this.duel);
+      this.openMenu(event);
+      return;
+    }
+
     if (this.duel.assistController.handPick?.(this.player, this.card.id)) return;
 
     const action = this.duel.actionManager.getAction<ActionCardHandMenu>("card-hand-menu");
 
     if (this.duel.actionManager.action === action && action.data.card === this.card) {
+      cancelPendingMenu(this.duel);
       this.duel.actionManager.clearAction();
       return;
     }
 
-    this.openMenu(event);
+    // A card with a quick action waits out the double-click window before opening its menu.
+    const card = this.card;
+    const hasQuickAction = !!quickActionFor(this.duel, card, this.handZone(), "hand", this.player) || positionPromptFor(this.duel, card?.id);
+    openMenuAfterTap(this.duel, hasQuickAction, () => {
+      if (this.isVisible && this.card === card) this.openMenu(event);
+    });
+  }
+
+  /** The hand zone id the card menu reads ("H-2", "H2-1"). */
+  private handZone(): string {
+    return `H${this.player === 1 ? "2" : ""}-${this.handIndex + 1}`;
   }
 
   /** Opens this card's menu (a click on it; a drop that could mean more than one move). */

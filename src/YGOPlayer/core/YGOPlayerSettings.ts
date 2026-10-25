@@ -22,6 +22,8 @@ export interface YGOPlayerSettings {
     reduceAnimations: boolean
     /** Assisted Mode: drag a card from the hand onto a zone to play it (core/components/YGOHandDrag). */
     dragFromHand: boolean
+    /** Assisted Mode: double-click (double-tap) a card for its quick action (ui/quick-action.ts). */
+    doubleClickAction: boolean
 }
 
 export interface YGOPlayerSettingsAdapterOptions {
@@ -53,7 +55,8 @@ const DEFAULT_SETTINGS: YGOPlayerSettings = {
     chainMode: true,
     autoPlaceZone: false,
     reduceAnimations: false,
-    dragFromHand: true
+    dragFromHand: true,
+    doubleClickAction: true
 }
 
 const YGO_SETTINGS_KEY = "ygo_player_settings";

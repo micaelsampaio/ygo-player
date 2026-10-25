@@ -11,7 +11,6 @@ import { AnimationGate, createAnimationGate } from "./animation-gate";
 import { GROUP_COLLAPSE_AT } from "./special-summon-groups";
 import { canSummonFromExtraDeck, offeredPileCodes } from "./extra-deck-highlight";
 import { useChainStops } from "./duel-preferences";
-import { ChainStopsControl } from "./chain-stops-control";
 import { singlePromptAnswer, LOC_GRAVE, LOC_REMOVED, type PromptResponse } from "../assist-prompt";
 import { AssistQueryResult, chainTopName, chainableText, isCommandData, OptionRow, sectionsFor, spaceRow, TONE_TITLE, type Tone } from "../assist-sections";
 import { HighlightTarget, promptTargets, TONE_CSS, useCardHighlights, useExtraDeckHighlight, usePileHighlight } from "./assist-highlights";
@@ -72,7 +71,8 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
   const turnState = useDuelTurnState(duel);
 
   const enabled = !!duel.assist && duel.client.type === YGOClientType.PLAYER && !!duel.ygo?.options?.assistedMode;
-  const [chainStops, setChainStops, chainStopsHeld] = useChainStops(duel, enabled);
+  // Publishes the setting on duel.chainStops (shown and changed on the bottom-right chain button).
+  useChainStops(duel, enabled);
 
   // A new result waits for the running animation (the card being activated,
   // the bot's spotlight, the moves queued after it) to finish before it
@@ -510,7 +510,7 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
         </div>
         );
       })}
-      {!collapsed && <ChainStopsControl value={chainStops} held={chainStopsHeld} onChange={setChainStops} />}
+      {/* Chain stops live on the chain button with the bottom-right buttons (chain-stops-button.tsx). */}
     </div>
     </>
   );

@@ -271,3 +271,38 @@ export function singlePromptAnswer(prompt: PromptData): PromptAnswer | null {
   }
   return null;
 }
+
+/**
+ * Whether `indices` completes a card / Tribute choice exactly: a valid answer that reached the
+ * required count (min) or the most allowed (max). A Tribute choice is complete once the
+ * Tributes are enough (their release values reach min).
+ */
+export function completesSelection(prompt: PromptData, indices: number[]): boolean {
+  if (!isSelectionValid(prompt, indices)) return false;
+  if (prompt.kind === "tribute") return true;
+  return indices.length === (prompt.min ?? 0) || indices.length === (prompt.max ?? 0);
+}
+
+/**
+ * A double-click (double-tap) on a candidate of a card / Tribute choice. `before` is the selection
+ * as it was before the gesture (its first click may already have toggled the card). A single-pick
+ * choice picks the card and confirms. A multi-pick choice toggles it once, like a click, and
+ * confirms when that completes the selection exactly (completesSelection). `pick` is a candidate
+ * index, or a group of identical copies (a dialog thumbnail).
+ */
+export function doublePickAnswer(prompt: PromptData, before: number[], pick: number | CandidateGroup): { selected: number[]; confirm: boolean } {
+  const index = typeof pick === "number" ? pick : pick.indices[0];
+  if ((prompt.max ?? 1) <= 1) return { selected: [index], confirm: true };
+  const selected = typeof pick === "number" ? toggleSelection(prompt, before, pick) : toggleGroupSelection(prompt, before, pick);
+  return { selected, confirm: completesSelection(prompt, selected) };
+}
+
+/**
+ * A double-click on the card a position question is about: face-up Attack when offered, else the
+ * only position offered; null when there is a real choice without Attack (the buttons answer it).
+ */
+export function doubleClickPosition(mask: number | undefined): number | null {
+  const offered = positionChoices(mask).map((c) => c.position);
+  if (offered.includes(0x1)) return 0x1;
+  return offered.length === 1 ? offered[0] : null;
+}

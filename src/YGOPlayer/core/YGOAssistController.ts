@@ -2,6 +2,9 @@ import type { CardData } from "ygo-core";
 import type { AssistQueryResult } from "../domain/assist-query";
 import { keepsDropIntent, type DropIntent } from "../domain/hand-drag";
 
+/** A board card double-clicked during an effect's card choice: a hand card, or the card in a field zone. */
+export type PromptDoublePickTarget = { kind: "hand"; player: number; code: number } | { kind: "zone"; zone: string; code: number };
+
 export type AssistAction = { commandType: string; data: Record<string, unknown> };
 
 /** What the engine answers a choice with: notices to show, e.g. the bot's response. */
@@ -42,6 +45,9 @@ export class YGOAssistController {
   public spaceAction: (() => boolean) | null = null;
   /** A click on a hand card picks it for an effect's choice — returns true when it did. */
   public handPick: ((player: number, code: number) => boolean) | null = null;
+  /** A double-click on a board card while an effect asks for a card: picks it (and confirms when
+   * that completes the choice) — returns true when the card is a candidate (ui/quick-action.ts). */
+  public promptDoublePick: ((target: PromptDoublePickTarget) => boolean) | null = null;
 
   /** A card just dragged from the hand: its zone and position answer the engine's questions about that move. */
   public dropIntent: DropIntent | null = null;
@@ -145,6 +151,14 @@ export class YGOAssistController {
     this.handPick = pick;
     return () => {
       if (this.handPick === pick) this.handPick = null;
+    };
+  }
+
+  /** Installs the double-click pick handler; the returned function removes it (if still the current one). */
+  setPromptDoublePick(pick: (target: PromptDoublePickTarget) => boolean): () => void {
+    this.promptDoublePick = pick;
+    return () => {
+      if (this.promptDoublePick === pick) this.promptDoublePick = null;
     };
   }
 

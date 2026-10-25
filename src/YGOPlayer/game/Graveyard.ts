@@ -12,6 +12,7 @@ import { WaitForSeconds } from '../duel-events/utils/wait-for-seconds';
 import { CardEmptyMesh } from './meshes/mesh-utils';
 import { MaterialOpacityTransition } from '../duel-events/utils/material-opacity';
 import { PositionTransition } from '../duel-events/utils/position-transition';
+import { registerTap } from "../ui/quick-action";
 
 export class Graveyard extends YGOEntity implements YGOUiElement {
 
@@ -58,6 +59,9 @@ export class Graveyard extends YGOEntity implements YGOUiElement {
     }
 
     onMouseClick(event: MouseEvent): void {
+        // Assisted Mode: a single click already opens the viewer, so a double-click's second click
+        // leaves it open instead of closing it again (ui/quick-action.ts).
+        if (registerTap(this.duel, this, event)) return;
         const eventName = this.isMenuVisible ? "close-ui-menu" : "set-ui-menu";
         this.duel.events.dispatch(eventName, { group: "game-overlay", type: "gy", data: { graveyard: this } })
     }

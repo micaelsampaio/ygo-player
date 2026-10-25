@@ -29,6 +29,15 @@ export interface YGOPointerDragHandler {
     consumeClick(): boolean;
 }
 
+/** Marks a click its element fully answered (a double-click's pick): nothing else takes it. */
+export function markClickHandled(event: MouseEvent) {
+    (event as MouseEvent & { ygoClickHandled?: boolean }).ygoClickHandled = true;
+}
+
+function isClickHandled(event: MouseEvent): boolean {
+    return !!(event as MouseEvent & { ygoClickHandled?: boolean }).ygoClickHandled;
+}
+
 export class YGOMouseEvents extends YGOComponent {
     private elements: Set<YGOUiElement>;
     private camera: THREE.Camera;
@@ -183,7 +192,9 @@ export class YGOMouseEvents extends YGOComponent {
             }
         }
 
-        if (this.onClickCb) {
+        if (isClickHandled(event)) {
+            // e.g. a double-click picked a card for an effect: an active field selection must not take it as a click away.
+        } else if (this.onClickCb) {
             this.onClickCb({ event, elements });
         } else {
             this.events.dispatch("click", { event, elements });

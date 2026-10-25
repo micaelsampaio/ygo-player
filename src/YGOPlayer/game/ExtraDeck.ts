@@ -8,6 +8,7 @@ import { CARD_HEIGHT_SIZE, CARD_RATIO } from '../constants';
 import type { GameCard } from './GameCard';
 import { Card } from 'ygo-core';
 import { ActionUiMenu } from '../actions/ActionUiMenu';
+import { cancelPendingMenu, openMenuAfterTap, quickActionEnabled, registerTap } from "../ui/quick-action";
 
 export class ExtraDeck extends YGOEntity implements YGOUiElement {
 
@@ -124,12 +125,23 @@ export class ExtraDeck extends YGOEntity implements YGOUiElement {
 
     onMouseClick(event: MouseEvent): void {
         if (!this.canInteract) return;
-        if (this.duel.config.autoChangePlayer) {
-            this.duel.setActivePlayer(this.player);
+        // Assisted Mode, your Extra Deck: a double-click opens its list (the menu's "View Extra
+        // Deck"); a single click opens the menu after the double-click window (ui/quick-action.ts).
+        const own = this.duel.perspective.isPlayer(this.player);
+        if (own && registerTap(this.duel, this, event)) {
+            cancelPendingMenu(this.duel);
+            this.duel.actionManager.clearAction();
+            this.duel.events.dispatch("set-ui-menu", { group: "game-overlay", type: "extra-deck", data: { player: this.player, extraDeck: this } });
+            return;
         }
+        openMenuAfterTap(this.duel, own && quickActionEnabled(this.duel), () => {
+            if (this.duel.config.autoChangePlayer) {
+                this.duel.setActivePlayer(this.player);
+            }
 
-        this.action.eventData = { duel: this.duel, player: this.player, extraDeck: this };
-        this.duel.actionManager.setAction(this.action);
+            this.action.eventData = { duel: this.duel, player: this.player, extraDeck: this };
+            this.duel.actionManager.setAction(this.action);
+        });
     }
 
     onMouseEnter(): void {

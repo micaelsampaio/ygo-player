@@ -139,3 +139,57 @@
     opacity: 0.4;
     cursor: default;
 }
+
+/* Chain stops button (Master Duel's chain button): the mode as a badge under the icon, the
+   choices in a small panel above the button. */
+.ygo-player-core .ygo-chain-stops-button-wrap {
+    position: relative;
+    display: inline-flex;
+}
+
+.ygo-player-core .ygo-chain-stops-button {
+    position: relative;
+}
+
+.ygo-player-core .ygo-chain-stops-badge {
+    position: absolute;
+    left: 50%;
+    bottom: -6px;
+    transform: translateX(-50%);
+    padding: 0 5px;
+    border-radius: 999px;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    line-height: 14px;
+    white-space: nowrap;
+    color: #111;
+    background: #c8f53a;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+    pointer-events: none;
+}
+
+.ygo-player-core .ygo-chain-stops-badge.ygo-chain-stops-off {
+    color: #fff;
+    background: #555a63;
+}
+
+.ygo-player-core .ygo-chain-stops-badge.ygo-chain-stops-auto {
+    color: #fff;
+    background: #2f7be0;
+}
+
+.ygo-player-core .ygo-chain-stops-badge.ygo-chain-stops-bluff {
+    background: #f5b93a;
+}
+
+.ygo-player-core .ygo-card-menu.ygo-chain-stops-popover {
+    position: absolute;
+    right: 0;
+    bottom: calc(100% + 12px);
+    top: auto;
+    left: auto;
+    width: 240px;
+    max-width: calc(100vw - 24px);
+    z-index: 120;
+}

@@ -3,7 +3,11 @@ import { Card } from "ygo-core";
 import type { YGODuel } from "../../core/YGODuel";
 import { ActionUiMenu } from "../../actions/ActionUiMenu";
 import { stopPropagationCallback } from "../../scripts/utils";
-import { cardPointerEvent } from "../components/pile-menu";
+import { cardPointerEvent, hasPointerPosition } from "../components/pile-menu";
+import { cancelPendingMenu, openMenuAfterTap, pulseElement, quickActionFor, registerTap, runQuickAction } from "../quick-action";
+
+/** The zone the card menu of each pile viewer reads (assist-card-actions.ts). */
+const PILE_ZONES: Record<string, string> = { "card-gy-menu": "GY", "card-banish-menu": "B", "card-extra-deck-menu": "ED" };
 
 /** The duel's card press events for a card in a pile list (long-press preview, drag…). */
 export function pileCardPressHandlers(duel: YGODuel, card: Card) {
@@ -66,18 +70,41 @@ export function PileViewer({
   if (!visible) return null;
   if (!duel.ygo) return null;
 
-  const openCardMenu: OpenPileCardMenu = (e, card) => {
+  const showCardMenu = (e: React.SyntheticEvent, card: Card, htmlCardElement: EventTarget | null) => {
     action.eventData = {
       duel,
       card,
       mouseEvent: e,
-      htmlCardElement: e.currentTarget,
+      htmlCardElement,
     };
     duel.actionManager.setAction(action);
     duel.gameActions.setSelectedCard({
       player,
       card,
     });
+  };
+
+  // Assisted Mode: a double-click on your card runs its quick action (ui/quick-action.ts); a single
+  // click on a card that has one waits out the double-click window before opening its menu.
+  // From the keyboard (no pointer) the menu opens at once.
+  const zone = PILE_ZONES[menuEventType];
+  const openCardMenu: OpenPileCardMenu = (e, card) => {
+    const element = e.currentTarget;
+    const pointer = hasPointerPosition(e as unknown as { clientX?: unknown; clientY?: unknown; detail?: unknown });
+    if (!zone || !pointer) { showCardMenu(e, card, element); return; }
+    const pos = e as unknown as { clientX: number; clientY: number };
+    const row = quickActionFor(duel, card, zone, "pile", player);
+    if (registerTap(duel, card, pos)) {
+      if (row) {
+        runQuickAction(duel, row);
+        pulseElement(element as Element);
+        return;
+      }
+      cancelPendingMenu(duel);
+      showCardMenu(e, card, element);
+      return;
+    }
+    openMenuAfterTap(duel, !!row, () => showCardMenu(e, card, element));
   };
 
   return (
