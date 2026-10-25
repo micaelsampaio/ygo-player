@@ -1,5 +1,5 @@
-import { YGOClientType, YGOCommands, YGOGameUtils, YGOPlayerState } from "ygo-core";
-import { assistPhaseRouteFor } from "../../domain/assist-routing";
+import { YGOClientType, YGOCommands, YGOGameUtils, YGOPlayerState, YGO_DUEL_PHASE_ORDER } from "ygo-core";
+import { assistPhaseRouteFor, openPhaseWindow } from "../../domain/assist-routing";
 import type { AssistQueryResult } from "../../domain/assist-query";
 import { FieldZone } from "ygo-core";
 import { YGODuelPhase } from "ygo-core";
@@ -155,21 +155,31 @@ export class DuelActions extends CardActions {
     }
 
     const query = () => controller.query();
+    // The board may already be at a step: the server shows the phase of the window it offers
+    // (a Standby Phase window turns the board's Draw Phase into Standby).
+    const reached = (phase: YGODuelPhase) =>
+      YGO_DUEL_PHASE_ORDER.indexOf(duel.ygo.state.phase) >= YGO_DUEL_PHASE_ORDER.indexOf(phase);
     const walk = async (): Promise<{ notices?: string[] }> => {
       let current: AssistQueryResult | null = controller.options;
       for (const [i, phase] of steps.entries()) {
-        let route = assistPhaseRouteFor(current, phase);
-        if (route.kind === "continueFirst" && i === 0) {
+        // Each open window on the way (a phase moment, nothing to respond to) is passed: the player
+        // asked to move on. The first step passes any window the route allows.
+        for (let n = 0; n < 5 && !reached(phase); n++) {
+          const route = assistPhaseRouteFor(current, phase);
+          if (route.kind !== "continueFirst" || (i > 0 && !openPhaseWindow(current))) break;
           await controller.choose({ commandType: "Pass", data: {} });
           current = await query();
-          route = assistPhaseRouteFor(current, phase);
         }
+        if (reached(phase)) continue;
+        const route = assistPhaseRouteFor(current, phase);
         if (route.kind === "blocked") return { notices: [route.message] };
+        // A window something happened in (a summon to respond to, a forced chain): stop there.
+        if (route.kind === "continueFirst") return {};
         if (route.kind !== "choose") return i === 0 ? { notices: [`Can't go to ${phase} right now.`] } : {};
         await controller.choose({ commandType: "Duel Phase", data: { phase } });
         current = await query();
-        // A window (or an effect's choice) the engine left open for the player: stop here.
-        if (current?.available && (current.pending === "chain" || current.pending === "prompt")) return {};
+        // An effect's choice the engine left open for the player: stop here.
+        if (current?.available && current.pending === "prompt") return {};
       }
       return {};
     };

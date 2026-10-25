@@ -85,13 +85,33 @@ describe("YGOGameActions — Assisted Mode card-menu routing", () => {
 });
 
 describe("YGOGameActions — Assisted Mode phase menu", () => {
-  it("walks phase by phase through the engine, publishing each answer, and stops at an open window", async () => {
+  it("walks phase by phase through the engine, publishing each answer, passing the open windows on the way", async () => {
     const battle = idle({ ygoPhase: "Battle", nextPhase: "Main Phase 2" });
-    const s = setup(idle({ ygoPhase: "Main Phase 1", nextPhase: "Battle" }), [battle, openWindow]);
+    const main2 = idle({ ygoPhase: "Main Phase 2", nextPhase: "End" });
+    const end = idle({ ygoPhase: "End" });
+    const s = setup(idle({ ygoPhase: "Main Phase 1", nextPhase: "Battle" }), [battle, openWindow, main2, end]);
     await s.actions.goToPhaseAssisted(["Battle", "Main Phase 2", "End"] as any);
-    expect(s.assist.choose.mock.calls.map((c) => c[0].data.phase)).toEqual(["Battle", "Main Phase 2"]);
-    expect(s.duel.assistController.options).toBe(openWindow);
-    expect(s.events("assist-options")).toEqual([battle, openWindow]);
+    expect(s.assist.choose.mock.calls.map((c) => c[0].commandType === "Pass" ? "Pass" : c[0].data.phase)).toEqual(["Battle", "Main Phase 2", "Pass", "End"]);
+    expect(s.duel.assistController.options).toBe(end);
+    expect(s.events("assist-choice-done")).toEqual([{ notices: undefined }]);
+  });
+
+  it("stops at a window something happened in (a summon to respond to)", async () => {
+    const responding = { ...openWindow, respond: { ...openWindow.respond, responding: true } };
+    const s = setup(idle({ ygoPhase: "Main Phase 1", nextPhase: "Battle" }), [responding]);
+    await s.actions.goToPhaseAssisted(["Battle", "Main Phase 2", "End"] as any);
+    expect(s.assist.choose.mock.calls.map((c) => c[0].data.phase)).toEqual(["Battle"]);
+    expect(s.duel.assistController.options).toBe(responding);
+  });
+
+  it("skips a step the board already shows (the server showed the window's phase)", async () => {
+    // ygoPhase is the board's: Standby, with Main Phase 1 the next step.
+    const atStandby = idle({ ygoPhase: "Standby", nextPhase: "Main Phase 1" });
+    const s = setup(openWindow, [atStandby, idle({ ygoPhase: "Main Phase 1", nextPhase: "End" }), idle({ ygoPhase: "End" })]);
+    // The board moved to Standby for the Standby Phase window.
+    s.duel.ygo.state.phase = "Standby";
+    await s.actions.goToPhaseAssisted(["Standby", "Main Phase 1", "End"] as any);
+    expect(s.assist.choose.mock.calls.map((c) => c[0].commandType === "Pass" ? "Pass" : c[0].data.phase)).toEqual(["Pass", "Main Phase 1", "End"]);
     expect(s.events("assist-choice-done")).toEqual([{ notices: undefined }]);
   });
 

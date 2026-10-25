@@ -79,7 +79,13 @@ export function endTurn(duel: YGODuel): Promise<void> {
     if (assisted) return assisted;
   }
   const walk = walkToPhase(duel, YGODuelPhase.End);
-  if (walk.assisted) return walk.done;
+  // Reached the End Phase through the engine: its End Phase window (Always) is passed too, so the
+  // turn ends in one go. Stopped earlier (a window to respond to): stays there.
+  if (walk.assisted) {
+    return walk.done.then(() => {
+      if (duel.ygo.state.phase === YGODuelPhase.End) return duel.gameActions.endTurnAssisted() ?? undefined;
+    });
+  }
   return walk.done.then(() => {
     duel.gameActions.nextDuelturn();
     duel.gameActions.setDuelPhase({ phase: YGODuelPhase.Draw });

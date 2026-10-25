@@ -62,16 +62,26 @@ const TIMING_MOMENTS: ReadonlyArray<[number, string]> = [
   [0x2, "Standby Phase"],
   [0x1, "Draw Phase"],
 ];
-export function timingMoment(timing: number | undefined): string | null {
+/** The phases a Draw / Standby Phase hint can be stale for, by the board's phase (ygoPhase). */
+const BOARD_PHASE_MOMENTS: Record<string, string> = { "Draw": "Draw Phase", "Standby": "Standby Phase", "Main Phase 1": "Main Phase 1" };
+
+/**
+ * The moment's name. The engine's hint timing stays at its last value, so a Draw / Standby Phase
+ * hint can outlive its phase (a Main Phase 1 window read "Draw Phase"): with the board's phase
+ * known (the server shows the window's phase on the board), that phase names it instead.
+ */
+export function timingMoment(timing: number | undefined, boardPhase?: string): string | null {
   if (!timing) return null;
-  return TIMING_MOMENTS.find(([flag]) => (timing & flag) !== 0)?.[1] ?? null;
+  const moment = TIMING_MOMENTS.find(([flag]) => (timing & flag) !== 0)?.[1] ?? null;
+  if ((moment === "Draw Phase" || moment === "Standby Phase") && boardPhase && BOARD_PHASE_MOMENTS[boardPhase]) return BOARD_PHASE_MOMENTS[boardPhase];
+  return moment;
 }
 
 /** The chain window's section title: what the viewer would be doing. An open window at a phase
  * moment names it ("End of Main Phase: activate a card?"), like Dueling Nexus's prompt. */
-export function respondSectionTitle(chainLength: number | undefined, respondingTo?: string, timing?: number, event?: string | null): string {
+export function respondSectionTitle(chainLength: number | undefined, respondingTo?: string, timing?: number, event?: string | null, boardPhase?: string): string {
   if (chainLength === 0) {
-    const moment = timingMoment(timing);
+    const moment = timingMoment(timing, boardPhase);
     if (moment) return `${moment}: activate a card?`;
     // Nothing on the chain yet, but something just happened (a summon, an attack): name it.
     return event ? `Respond to ${event}` : "Activate now";

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { assistPanelTitle, mustStayOpen, opponentWaitingText, passLabel, respondSectionTitle, yourChainLinkText } from "./assist-respond";
+import { assistPanelTitle, mustStayOpen, opponentWaitingText, passLabel, respondSectionTitle, timingMoment, yourChainLinkText } from "./assist-respond";
 
 describe("opponentWaitingText", () => {
   it("tells the viewer the bot's turn is paused for their response or choice", () => {
@@ -67,5 +67,15 @@ describe("chain-aware wording", () => {
       .toBe("The bot's turn is paused: respond to Fairy Tail - Luna's effect (chain link 1), or choose Don't respond.");
     expect(assistPanelTitle({ pending: "chain", isLocalTurn: false, chainLength: 0 })).toBe("Your options");
     expect(assistPanelTitle({ pending: "chain", isLocalTurn: false, chainLength: 3 })).toBe("Respond");
+  });
+});
+
+describe("timingMoment with the board's phase", () => {
+  it("names a stale Draw / Standby Phase hint by the phase the board shows", () => {
+    expect(timingMoment(0x1, "Main Phase 1")).toBe("Main Phase 1");
+    expect(timingMoment(0x2, "Standby")).toBe("Standby Phase");
+    expect(timingMoment(0x2)).toBe("Standby Phase");
+    // Other moments keep their own name.
+    expect(timingMoment(0x4, "Main Phase 1")).toBe("End of Main Phase");
   });
 });

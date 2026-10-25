@@ -33,7 +33,7 @@ export type AssistQueryResult =
   | { available: true; pending: "idle"; options: IdleOptions; nextPhase?: string | null; ygoPhase?: string }
   | { available: true; pending: "battle"; options: BattleOptions; nextPhase?: string | null; ygoPhase?: string }
   /** The human's own chain window: chain a card, or don't respond. */
-  | { available: true; pending: "chain"; respond: { activatable: CardRefData[]; canPass: boolean; forced: boolean; chainLength?: number; responding?: boolean; timing?: number; chain?: CardRefData[] } }
+  | { available: true; pending: "chain"; respond: { activatable: CardRefData[]; canPass: boolean; forced: boolean; chainLength?: number; responding?: boolean; timing?: number; chain?: CardRefData[] }; ygoPhase?: string }
   /** An effect's follow-up choice the engine is holding for the human. */
   | { available: true; pending: "prompt"; prompt: PromptData };
 

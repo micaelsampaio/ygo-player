@@ -134,3 +134,13 @@ export function assistPhaseRouteFor(result: AssistResult, phase: string): Assist
   if (phase === "End" && (result.ygoPhase === "Main Phase 1" || result.ygoPhase === "Battle")) return { kind: "choose" };
   return { kind: "freeForm" };
 }
+
+/**
+ * An open window at a phase moment with nothing to respond to (no chain, not forced, nothing just
+ * happened): a jump through the phases passes it, as the player asked to move on.
+ */
+export function openPhaseWindow(result: AssistResult): boolean {
+  if (!result?.available || result.pending !== "chain") return false;
+  const respond: Partial<typeof result.respond> = result.respond ?? {};
+  return respond.chainLength === 0 && !!respond.canPass && !respond.forced && respond.responding !== true;
+}
