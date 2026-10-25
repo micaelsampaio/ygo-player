@@ -9,13 +9,8 @@ vi.mock("../../game/GameCardHand", async () => {
     GameCardHand: class {
       gameObject = new THREE.Object3D();
       card: unknown;
-      // GameCardHand's `position` is its game object's position.
-      get position() {
-        return this.gameObject.position;
-      }
-      set position(value: THREE.Vector3) {
-        this.gameObject.position.copy(value);
-      }
+      // GameCardHand's `position` is its rest place in the hand: a copy, not the object's position.
+      position = new THREE.Vector3();
       setCard(card: unknown) {
         this.card = card;
       }

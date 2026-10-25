@@ -3,6 +3,7 @@ import { HIDDEN_CARD_ID } from "ygo-core";
 import {
   ACTIVATION_BANNER_MS,
   activationBanner,
+  bannerTopUnderHud,
   activationBannerMs,
   activationTitle,
   isHiddenActivation,
@@ -67,5 +68,15 @@ describe("activation banner text", () => {
     const b = activationBanner({ cardId: 1, name: "Eclipse Twins", player: 1, desc: "Line one.\n\nLine  two." }, { isOpponent: true, enabled: true, recovering: false });
     expect(b?.text).toBe("Line one. Line two.");
     expect(activationBanner({ cardId: 1, name: "X", player: 1 }, { isOpponent: true, enabled: true, recovering: false })?.text).toBeUndefined();
+  });
+});
+
+describe("bannerTopUnderHud", () => {
+  it("sits the banners just under the opponent's HUD", () => {
+    expect(bannerTopUnderHud({ bottom: 140 }, { top: 20 })).toBe(128);
+  });
+  it("leaves the stylesheet's top when there is no HUD to measure", () => {
+    expect(bannerTopUnderHud(null, { top: 0 })).toBeNull();
+    expect(bannerTopUnderHud({ bottom: 0 }, { top: 0 })).toBeNull();
   });
 });

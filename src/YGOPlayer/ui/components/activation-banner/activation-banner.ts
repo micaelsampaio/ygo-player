@@ -81,3 +81,16 @@ export function activationBannerMs(timeScale: number | undefined): number {
   const scale = typeof timeScale === "number" && timeScale > 1 ? timeScale : 1;
   return Math.round(ACTIVATION_BANNER_MS / scale);
 }
+
+/** The gap between the opponent's HUD and the banners under it. */
+export const BANNER_HUD_GAP_PX = 8;
+
+/**
+ * The banners' top (px, in their positioned parent) just under the opponent's HUD, whose size
+ * changes with the layout (scaled on phones and tablets, a turn chip on some turns). Null when
+ * there is no HUD to measure: the stylesheet's top then applies.
+ */
+export function bannerTopUnderHud(hud: { bottom: number } | null | undefined, parent: { top: number } | null | undefined): number | null {
+  if (!hud || !parent || !(hud.bottom > parent.top)) return null;
+  return Math.round(hud.bottom - parent.top + BANNER_HUD_GAP_PX);
+}

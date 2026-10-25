@@ -130,8 +130,10 @@ export class StartHandEventHandler extends YGOCommandHandler {
     });
 
     cardInHand.setCard(card);
+    // Rest place = its hand slot; the card itself starts on the deck (position is a copy, so the
+    // object has to be placed on its own).
     cardInHand.position.copy(position);
-    cardInHand.position.copy(startPosition);
+    cardInHand.gameObject.position.copy(startPosition);
     cardInHand.gameObject.rotation.copy(startRotation);
 
     const sequence = new YGOTaskSequence(

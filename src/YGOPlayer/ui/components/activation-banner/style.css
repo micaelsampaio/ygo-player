@@ -2,7 +2,7 @@
    opponent's HUD, newest on top, clicks pass through. Dark neutral panel, red accent edge. */
 .ygo-player-core .ygo-activation-banners {
   position: absolute;
-  top: 104px;
+  top: 132px;
   right: 16px;
   width: min(320px, calc(100% - 32px));
   display: flex;

@@ -373,7 +373,9 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
   // change while you hold a hand trap) stays in the panel, so it never interrupts you.
   const realResponse = isActive && result.pending === "chain" &&
     ((result.respond.chainLength ?? 0) > 0 || result.respond.forced || result.respond.responding === true);
-  const chainDialog = promptAsDialog && realResponse && sections.length > 0 ? sections[0] : null;
+  // Gone once answered (busy: the choice in flight, then the board playing it out): a question you
+  // already answered is never left on screen, disabled.
+  const chainDialog = promptAsDialog && realResponse && !busy && sections.length > 0 ? sections[0] : null;
   // "1 card can be chained · Your card would be chain link 2": the title's link is the effect
   // already on the chain, not the card a response would add.
   const chainDialogSubtitle = chainDialog

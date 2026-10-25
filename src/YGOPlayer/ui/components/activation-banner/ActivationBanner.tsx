@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { YGODuel } from "../../../core/YGODuel";
 import {
   activationBanner,
   activationBannerMs,
   activationTitle,
+  bannerTopUnderHud,
   pushActivationBanner,
   type ActivationBannerItem,
 } from "./activation-banner";
@@ -22,6 +23,16 @@ interface Shown extends ActivationBannerItem {
 export function ActivationBanner({ duel }: { duel: YGODuel }) {
   const [shown, setShown] = useState<Shown[]>([]);
   const nextId = useRef(0);
+  const ref = useRef<HTMLDivElement>(null);
+  const [top, setTop] = useState<number | null>(null);
+
+  // Just under the opponent's HUD, measured whenever a banner shows (its size depends on the layout).
+  useLayoutEffect(() => {
+    if (shown.length === 0) return;
+    const el = ref.current;
+    const hud = el?.closest(".ygo-player-core")?.querySelector(".ygo-player-hud.ygo-player-1");
+    setTop(bannerTopUnderHud(hud?.getBoundingClientRect(), (el?.offsetParent ?? el?.parentElement)?.getBoundingClientRect()));
+  }, [shown.length]);
 
   useEffect(() => {
     const abort = new AbortController();
@@ -53,7 +64,7 @@ export function ActivationBanner({ duel }: { duel: YGODuel }) {
   }, [duel]);
 
   return (
-    <div className="ygo-activation-banners" role="status" aria-live="polite">
+    <div ref={ref} className="ygo-activation-banners" role="status" aria-live="polite" style={top !== null ? { top } : undefined}>
       {shown.map((s) => {
         const title = activationTitle(s);
         return (
