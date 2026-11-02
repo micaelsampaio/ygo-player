@@ -18,9 +18,10 @@ export const TurnOrderLogRow = memo(function TurnOrderLogRow({
       <DuelLogContainer>
         <div>
           <div className="ygo-text-sm ygo-text-bold">Coin Toss</div>
-          <div className="ygo-flex ygo-gap-1 ygo-items-center">
-            <div className="ygo-ui-icon ygo-coin-head"></div>
-            <div>{winner} won · {choice}</div>
+          <div className="ygo-flex ygo-gap-2 ygo-items-center">
+            {/* A fixed square: in a row with the text the 50px sprite was squeezed into an oval. */}
+            <div className="ygo-ui-icon ygo-coin-head" style={{ width: 36, height: 36, flexShrink: 0 }}></div>
+            <div style={{ minWidth: 0 }}>{winner} won · {choice}</div>
           </div>
         </div>
       </DuelLogContainer>
