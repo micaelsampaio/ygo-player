@@ -54,3 +54,17 @@ describe("DefaultLogRow", () => {
     expect(html).toContain("ygo-icon-game-zone-arrow");
   });
 });
+
+describe("isRevealOfItsToHand", () => {
+  it("hides a search's reveal right after its To Hand, nothing else", async () => {
+    const { isRevealOfItsToHand } = await import("./duel-log");
+    const logs = [
+      { type: "To Hand", id: 1 },
+      { type: "Reveal", id: 1 },
+      { type: "Reveal", id: 1 },
+      { type: "To Hand", id: 2 },
+      { type: "Reveal", id: 3 },
+    ] as any[];
+    expect(logs.map((_, i) => isRevealOfItsToHand(logs, i))).toEqual([false, true, false, false, false]);
+  });
+});

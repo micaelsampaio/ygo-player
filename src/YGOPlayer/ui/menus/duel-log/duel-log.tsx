@@ -43,6 +43,16 @@ function rowFor(log: YGODuelEvents.DuelLog): ComponentType<LogRowProps> {
   return (COMPONENTS[log.type] ?? DefaultLogRow) as ComponentType<LogRowProps>;
 }
 
+/**
+ * A search's reveal (ToHandCommand's reveal: the card shown from the hand) is part of its "To
+ * Hand" row: the board shows it, the log doesn't list it again.
+ */
+export function isRevealOfItsToHand(logs: YGODuelEvents.DuelLog[], index: number): boolean {
+  const log = logs[index] as { type: string; id?: number };
+  const prev = logs[index - 1] as { type: string; id?: number } | undefined;
+  return log.type === YGODuelEvents.LogType.Reveal && prev?.type === "To Hand" && prev.id === log.id;
+}
+
 export function DuelLogMenu({ duel, menus }: { duel: YGODuel; menus: UiMenuState[] }) {
   // The core sends the same array each time, so it is kept by reference and a
   // version bump re-renders, instead of copying every log on every update.
@@ -141,6 +151,7 @@ export function DuelLogMenu({ duel, menus }: { duel: YGODuel; menus: UiMenuState
       <div className="ygo-logs">
         {logs.map((log, index) => {
           if (log.type === YGODuelEvents.LogType.Target) return null;
+          if (isRevealOfItsToHand(logs, index)) return null;
           const Component = rowFor(log);
 
           return (
