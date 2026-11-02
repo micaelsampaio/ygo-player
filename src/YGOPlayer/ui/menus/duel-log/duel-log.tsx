@@ -10,6 +10,7 @@ import { stopPropagationCallback } from "../../../scripts/utils";
 import { DuelPhaseLogRow } from "./duel-log-phase";
 import { DuelTurnLogRow } from "./duel-log-turn";
 import { CoinFlipLogRow } from "./coin-flip-log";
+import { TurnOrderLogRow } from "./turn-order-log";
 import { DiceRollLogRow } from "./dice-roll-log";
 import { AdmitDefeatLogRow } from "./admit-defeat-log";
 import { ShowHandLogRow } from "./show-hand-log";
@@ -29,6 +30,7 @@ const COMPONENTS: Partial<Record<string, ComponentType<LogRowProps<never>>>> = {
   [YGODuelEvents.LogType.LifePoints]: LifePointsLogRow,
   [YGODuelEvents.LogType.Note]: NoteLogRow,
   [YGODuelEvents.LogType.CoinFlip]: CoinFlipLogRow,
+  [YGODuelEvents.LogType.TurnOrder]: TurnOrderLogRow,
   [YGODuelEvents.LogType.DiceRoll]: DiceRollLogRow,
   [YGODuelEvents.LogType.AdmitDefeat]: AdmitDefeatLogRow,
   [YGODuelEvents.LogType.ChainResolved]: ChainResolvedLogRow,
