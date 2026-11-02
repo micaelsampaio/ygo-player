@@ -449,14 +449,16 @@ export class YGODuel {
     const gameField = this.fields[playerIndex];
     const duelField = this.ygo.state.fields[playerIndex];
     const extraDeck = gameField.extraDeck;
-    // Only Pendulum monsters get a face-up GameCard here (non-Pendulum
+    // Only face-up Pendulum monsters get a face-up GameCard here (non-Pendulum
     // extra deck cards are represented by the face-down pile instead) —
     // built by pushing rather than indexing by `i` into duelField.extraDeck
     // so this array never ends up with holes for the skipped non-Pendulum
     // slots. A hole (sparse-array `undefined`) crashes ExtraDeck.
     // updateExtraDeck()'s plain `for` loop over faceUpCards as soon as any
     // extra deck mixes Pendulum and non-Pendulum monsters.
-    const pendulumCards = duelField.extraDeck.filter(card => YGOGameUtils.isPendulumCard(card));
+    // Only a Pendulum that went there face-up (from the field: ygo-core's MoveCardCommand sets it
+    // "faceup"): the Deck's own Pendulum Extra Deck monsters start face-down, like the rest.
+    const pendulumCards = duelField.extraDeck.filter(card => YGOGameUtils.isPendulumCard(card) && card.position === "faceup");
     const extraDeckCards: Array<GameCard | null> = pendulumCards.map(
       card => extraDeck.faceUpCards.find(c => c.cardReference === card) ?? null,
     );
