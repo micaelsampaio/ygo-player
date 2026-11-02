@@ -14,6 +14,7 @@ import { useChainStops } from "./duel-preferences";
 import { singlePromptAnswer, LOC_GRAVE, LOC_REMOVED, type PromptResponse } from "../assist-prompt";
 import { AssistQueryResult, chainTopName, chainableText, isCommandData, OptionRow, sectionsFor, spaceRow, TONE_TITLE, type Tone } from "../assist-sections";
 import { staleOwnTurnOptions } from "./stale-own-turn";
+import { chainDialogFor } from "./chain-dialog-rule";
 import { HighlightTarget, promptTargets, TONE_CSS, useCardHighlights, useExtraDeckHighlight, usePileHighlight } from "./assist-highlights";
 import { usePanelPlacement } from "./use-panel-placement";
 import { PromptView } from "./assist-prompt-view";
@@ -375,11 +376,11 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
   // the engine saying these cards answer the event (`responding`: a summon you could negate, an
   // optional "when summoned" trigger). An open game state ("Activate now", e.g. at every phase
   // change while you hold a hand trap) stays in the panel, so it never interrupts you.
-  const realResponse = isActive && result.pending === "chain" &&
-    ((result.respond.chainLength ?? 0) > 0 || result.respond.forced || result.respond.responding === true);
+  // In the bot's turn an open window is the dialog too: the bot is paused, waiting on you (chain-dialog-rule.ts).
+  const chainWindow = chainDialogFor(isActive ? (result as Parameters<typeof chainDialogFor>[0]) : {}, { botDuel: botDuelRoom, isLocalTurn: turnState.isLocalTurn });
   // Gone once answered (busy: the choice in flight, then the board playing it out): a question you
   // already answered is never left on screen, disabled.
-  const chainDialog = promptAsDialog && realResponse && !busy && sections.length > 0 ? sections[0] : null;
+  const chainDialog = promptAsDialog && chainWindow.dialog && !busy && sections.length > 0 ? sections[0] : null;
   // "1 card can be chained · Your card would be chain link 2": the title's link is the effect
   // already on the chain, not the card a response would add.
   const chainDialogSubtitle = chainDialog
@@ -396,6 +397,7 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
         rows={chainDialog.rows}
         chainLength={chainLength}
         respondingTo={respondingTo}
+        openWindow={chainWindow.open}
         busy={busy}
         pendingKey={pendingKey}
         choose={choose}

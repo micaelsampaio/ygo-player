@@ -11,10 +11,12 @@ import type { OptionRow } from "../../assist-sections";
 import { chainQuestion, groupByLocation, PROMPT_KEYWORDS } from "./prompt-dialog";
 import { CardThumbGroups, MdButton, MdFooter, MdPromptDialog, PromptQuestion, type ThumbView } from "./PromptDialog";
 
-export function ChainPromptDialog({ duel, title, subtitle, rows, chainLength, respondingTo, busy, pendingKey, choose, onHover }: {
+export function ChainPromptDialog({ duel, title, subtitle, rows, chainLength, respondingTo, openWindow, busy, pendingKey, choose, onHover }: {
   duel: YGODuel;
   title: string;
   subtitle?: string | null;
+  /** An open window (nothing to respond to, the bot's turn paused for you): a question to activate, and Continue. */
+  openWindow?: boolean;
   rows: OptionRow[];
   chainLength?: number;
   respondingTo?: string;
@@ -28,7 +30,7 @@ export function ChainPromptDialog({ duel, title, subtitle, rows, chainLength, re
   const passRow = rows.find((r) => r.commandType === "Pass");
   const others = rows.filter((r) => r.commandType !== "Pass" && r.code === undefined);
   const picked = cards.find((r) => r.key === pickedKey) ?? null;
-  const question = chainQuestion({ title, chainLength, respondingTo });
+  const question = openWindow && title === "Activate now" ? "Activate a card now?" : chainQuestion({ title, chainLength, respondingTo });
 
   const thumbs: ThumbView[] = cards.filter((r) => r.code !== undefined).map((row) => ({
     key: row.key,
@@ -64,7 +66,7 @@ export function ChainPromptDialog({ duel, title, subtitle, rows, chainLength, re
       <MdFooter>
         {passRow && (
           <MdButton variant="secondary" disabled={busy} busy={pendingKey === passRow.key} onClick={() => choose(passRow)} title={passRow.label}>
-            Cancel
+            {openWindow ? "Continue" : "Cancel"}
             <kbd className="ygo-md-prompt-kbd" title="Press Space">Space</kbd>
           </MdButton>
         )}
