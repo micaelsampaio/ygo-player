@@ -32,10 +32,12 @@ export function ChainPromptDialog({ duel, title, subtitle, rows, chainLength, re
   const picked = cards.find((r) => r.key === pickedKey) ?? null;
   // An open window says what just happened, like a response's question does ('"Rahu Dracotail"
   // resolved. Activate a card?'); a phase change keeps its own ("End of Main Phase: activate a card?").
-  const context = openWindow && title === "Activate now"
+  // "Activate now" (nothing on the chain, no phase moment) is a question too, an open window's or not.
+  const plainActivate = title === "Activate now";
+  const context = plainActivate
     ? openWindowContext((duel.ygo?.duelLog?.logs ?? []) as ReadonlyArray<{ type?: string; id?: number; chainLink?: number }>, (id) => duel.ygo.state.getCardData(id)?.name)
     : null;
-  const question = openWindow && title === "Activate now"
+  const question = plainActivate
     ? (context ? `${context.text}. Activate a card?` : "Activate a card now?")
     : chainQuestion({ title, chainLength, respondingTo });
 
