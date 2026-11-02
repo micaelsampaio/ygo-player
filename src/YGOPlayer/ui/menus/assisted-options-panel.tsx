@@ -13,6 +13,7 @@ import { canSummonFromExtraDeck, offeredPileCodes } from "./extra-deck-highlight
 import { useChainStops } from "./duel-preferences";
 import { singlePromptAnswer, LOC_GRAVE, LOC_REMOVED, type PromptResponse } from "../assist-prompt";
 import { AssistQueryResult, chainTopName, chainableText, isCommandData, OptionRow, sectionsFor, spaceRow, TONE_TITLE, type Tone } from "../assist-sections";
+import { staleOwnTurnOptions } from "./stale-own-turn";
 import { HighlightTarget, promptTargets, TONE_CSS, useCardHighlights, useExtraDeckHighlight, usePileHighlight } from "./assist-highlights";
 import { usePanelPlacement } from "./use-panel-placement";
 import { PromptView } from "./assist-prompt-view";
@@ -229,7 +230,10 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
     return () => clearTimeout(timer);
   }, [notice]);
 
-  const isActive = enabled && result.available;
+  // A bot duel's own-turn options left over in its turn: no rows, no glow (stale-own-turn.ts).
+  const botDuelRoom = !!(result as { botDuel?: boolean }).botDuel || !!(duel.ygo?.options as { botDuel?: unknown } | undefined)?.botDuel;
+  const staleOwnTurn = staleOwnTurnOptions(result as { available?: boolean; pending?: string }, { botDuel: botDuelRoom, isLocalTurn: turnState.isLocalTurn });
+  const isActive = enabled && result.available && !staleOwnTurn;
   const baseSections = isActive ? sectionsFor(duel, result) : [];
   const prompt = isActive && result.pending === "prompt" ? result.prompt : null;
   const me = duel.perspective.playerIndex;
