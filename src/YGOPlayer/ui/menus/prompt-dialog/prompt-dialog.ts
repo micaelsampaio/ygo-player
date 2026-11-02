@@ -122,3 +122,44 @@ export function chainQuestion({ title, chainLength, respondingTo }: { title: str
   if (chainLength && respondingTo) return `The effect of "${respondingTo}" is activated. Chain another card or effect?`;
   return title;
 }
+
+/** Summon logs and how an open window's question names them ("was Special Summoned"). */
+const SUMMONED: Record<string, string> = {
+  "Normal Summon": "was Normal Summoned", "Tribute Summon": "was Tribute Summoned", "Special Summon": "was Special Summoned",
+  "Fusion Summon": "was Fusion Summoned", "Synchro Summon": "was Synchro Summoned", "XYZ Summon": "was Xyz Summoned",
+  "XYZ Overlay Summon": "was Xyz Summoned", "Link Summon": "was Link Summoned", "Flip Summon": "was Flip Summoned",
+};
+/** Logs after the event that say nothing of their own (a Set card turned face-down, a note). */
+const QUIET_LOGS = new Set(["Change Card Position", "Note", "Chat"]);
+
+/**
+ * What an open chain window comes after, for its question ('"Rahu Dracotail" resolved'):
+ * the board's last event — a chain resolved (named by its link 1) or a summon — or null (a phase
+ * change has its own question, "End of Main Phase: activate a card?").
+ */
+export function openWindowContext(
+  logs: ReadonlyArray<{ type?: string; id?: number; chainLink?: number }>,
+  nameOf: (id: number) => string | undefined,
+): { text: string; name: string } | null {
+  let i = logs.length - 1;
+  while (i >= 0 && QUIET_LOGS.has(String(logs[i]?.type))) i--;
+  const last = logs[i];
+  if (!last) return null;
+  if (last.type === "Chain Resolved") {
+    for (let j = i - 1; j >= 0; j--) {
+      const log = logs[j];
+      if (log?.type === "Chain Resolved") break;
+      if (log?.type === "Activate" && log.chainLink === 1 && log.id !== undefined) {
+        const name = nameOf(log.id);
+        return name ? { text: `"${name}" resolved`, name } : null;
+      }
+    }
+    return null;
+  }
+  const summoned = last.type ? SUMMONED[last.type] : undefined;
+  if (summoned && last.id !== undefined) {
+    const name = nameOf(last.id);
+    return name ? { text: `"${name}" ${summoned}`, name } : null;
+  }
+  return null;
+}

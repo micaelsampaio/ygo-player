@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { chainQuestion, groupByLocation, highlightSegments, locationKind, PROMPT_KEYWORDS } from "./prompt-dialog";
+import { chainQuestion, groupByLocation, highlightSegments, locationKind, openWindowContext, PROMPT_KEYWORDS } from "./prompt-dialog";
 
 describe("highlightSegments", () => {
   it("highlights a card name inside the question", () => {
@@ -96,5 +96,24 @@ describe("chainQuestion", () => {
   it("keeps the title for an open window or an unknown card", () => {
     expect(chainQuestion({ title: "End of Main Phase: activate a card?", chainLength: 0, respondingTo: "X" })).toBe("End of Main Phase: activate a card?");
     expect(chainQuestion({ title: "Respond to chain link 1", chainLength: 1 })).toBe("Respond to chain link 1");
+  });
+});
+
+describe("openWindowContext", () => {
+  const names: Record<number, string> = { 1: "Rahu Dracotail", 2: "Dracotail Gulamel", 3: "Ash Blossom & Joyous Spring" };
+  const nameOf = (id: number) => names[id];
+
+  it("names the chain that just resolved by its link 1", () => {
+    const logs = [{ type: "Activate", id: 1, chainLink: 1 }, { type: "Activate", id: 3, chainLink: 2 }, { type: "Special Summon", id: 2 }, { type: "Chain Resolved" }];
+    expect(openWindowContext(logs, nameOf)).toEqual({ text: '"Rahu Dracotail" resolved', name: "Rahu Dracotail" });
+  });
+
+  it("names a summon, past the moves that say nothing (a Set card turned face-down)", () => {
+    expect(openWindowContext([{ type: "Special Summon", id: 2 }, { type: "Change Card Position" }], nameOf)).toEqual({ text: '"Dracotail Gulamel" was Special Summoned', name: "Dracotail Gulamel" });
+  });
+
+  it("is null for anything else (a phase change has its own question)", () => {
+    expect(openWindowContext([{ type: "Duel Phase" }], nameOf)).toBeNull();
+    expect(openWindowContext([], nameOf)).toBeNull();
   });
 });

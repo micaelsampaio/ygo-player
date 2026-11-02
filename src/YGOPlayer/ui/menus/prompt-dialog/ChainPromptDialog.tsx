@@ -8,7 +8,7 @@
 import { useState } from "react";
 import type { YGODuel } from "../../../core/YGODuel";
 import type { OptionRow } from "../../assist-sections";
-import { chainQuestion, groupByLocation, PROMPT_KEYWORDS } from "./prompt-dialog";
+import { chainQuestion, groupByLocation, openWindowContext, PROMPT_KEYWORDS } from "./prompt-dialog";
 import { CardThumbGroups, MdButton, MdFooter, MdPromptDialog, PromptQuestion, type ThumbView } from "./PromptDialog";
 
 export function ChainPromptDialog({ duel, title, subtitle, rows, chainLength, respondingTo, openWindow, busy, pendingKey, choose, onHover }: {
@@ -30,7 +30,14 @@ export function ChainPromptDialog({ duel, title, subtitle, rows, chainLength, re
   const passRow = rows.find((r) => r.commandType === "Pass");
   const others = rows.filter((r) => r.commandType !== "Pass" && r.code === undefined);
   const picked = cards.find((r) => r.key === pickedKey) ?? null;
-  const question = openWindow && title === "Activate now" ? "Activate a card now?" : chainQuestion({ title, chainLength, respondingTo });
+  // An open window says what just happened, like a response's question does ('"Rahu Dracotail"
+  // resolved. Activate a card?'); a phase change keeps its own ("End of Main Phase: activate a card?").
+  const context = openWindow && title === "Activate now"
+    ? openWindowContext((duel.ygo?.duelLog?.logs ?? []) as ReadonlyArray<{ type?: string; id?: number; chainLink?: number }>, (id) => duel.ygo.state.getCardData(id)?.name)
+    : null;
+  const question = openWindow && title === "Activate now"
+    ? (context ? `${context.text}. Activate a card?` : "Activate a card now?")
+    : chainQuestion({ title, chainLength, respondingTo });
 
   const thumbs: ThumbView[] = cards.filter((r) => r.code !== undefined).map((row) => ({
     key: row.key,
@@ -52,7 +59,7 @@ export function ChainPromptDialog({ duel, title, subtitle, rows, chainLength, re
 
   return (
     <MdPromptDialog label={question} className="ygo-assist-chain-dialog" resetKey={`${title}|${rows.map((r) => r.key).join(",")}`}>
-      <PromptQuestion text={question} sub={subtitle} terms={[respondingTo ? `"${respondingTo}"` : null, ...PROMPT_KEYWORDS, ...cards.map((r) => r.label)]} />
+      <PromptQuestion text={question} sub={subtitle} terms={[respondingTo ? `"${respondingTo}"` : null, context ? `"${context.name}"` : null, ...PROMPT_KEYWORDS, ...cards.map((r) => r.label)]} />
       {groups.length > 0 && <CardThumbGroups groups={groups} disabled={busy} />}
       {others.length > 0 && (
         <div className="ygo-md-prompt-options">
