@@ -8,6 +8,7 @@ import * as THREE from "three";
 import type { YGODuel } from "../../core/YGODuel";
 import { HIGHLIGHT_CSS, PICK_CSS } from "../../game/meshes/highlight-frame";
 import { useFieldSelection } from "./field-selection";
+import { canCancelHeldPlay, useCancelHeldPlay } from "./cancel-held-play";
 import { EnginePlace, pickZone, placeToYgoZone, samePlace, ZoneHighlight, zoneHighlights } from "../assist-zones";
 import { PileChoicePopup } from "./pile-choice/PileChoicePopup";
 import { quickActionEnabled } from "../quick-action";
@@ -146,6 +147,9 @@ function PlaceChoice({ duel, prompt, busy, pendingKey, respond }: {
   }, [dropPlaceKey, busy]);
   const field = useFieldZoneSelection(duel, onField, !busy && !dropPlace, pick);
   const listed = [...onField.map((z) => ({ ...z.place, label: z.label })), ...offField];
+  // A bot duel: Esc / right-click / Cancel take the play back (the server's undo) before any zone is picked.
+  const cancellable = canCancelHeldPlay(duel) && picked.length === 0;
+  const cancel = useCancelHeldPlay(duel, cancellable && !busy);
 
   return <>
     {need > 1 && (
@@ -184,6 +188,7 @@ function PlaceChoice({ duel, prompt, busy, pendingKey, respond }: {
         />
       );
     })}
+    {cancellable && <ChoiceButton label="Cancel (Esc)" disabled={busy} onClick={cancel} />}
   </>;
 }
 
