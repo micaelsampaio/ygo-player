@@ -8,7 +8,7 @@ import * as THREE from "three";
 import type { YGODuel } from "../../core/YGODuel";
 import { HIGHLIGHT_CSS, PICK_CSS } from "../../game/meshes/highlight-frame";
 import { useFieldSelection } from "./field-selection";
-import { canCancelHeldPlay, useCancelHeldPlay } from "./cancel-held-play";
+import { heldPromptCancellable, useCancelHeldPlay } from "./cancel-held-play";
 import { EnginePlace, pickZone, placeToYgoZone, samePlace, ZoneHighlight, zoneHighlights } from "../assist-zones";
 import { PileChoicePopup } from "./pile-choice/PileChoicePopup";
 import { quickActionEnabled } from "../quick-action";
@@ -148,7 +148,7 @@ function PlaceChoice({ duel, prompt, busy, pendingKey, respond }: {
   const field = useFieldZoneSelection(duel, onField, !busy && !dropPlace, pick);
   const listed = [...onField.map((z) => ({ ...z.place, label: z.label })), ...offField];
   // A bot duel: Esc / right-click / Cancel take the play back (the server's undo) before any zone is picked.
-  const cancellable = canCancelHeldPlay(duel) && picked.length === 0;
+  const cancellable = heldPromptCancellable(duel, prompt) && picked.length === 0;
   const cancel = useCancelHeldPlay(duel, cancellable && !busy);
 
   return <>
@@ -380,6 +380,11 @@ export function PromptView({ duel, prompt, busy, pendingKey, respond, onHover, i
     if (answer.confirm) respond("confirm", { indices: answer.selected });
   };
   useFieldCardSelection(duel, fieldTargets, !busy && !(pilePicker && pickerOpen), pickOnField);
+  // A bot duel: Esc / right-click / Cancel take the play back through the server's undo — not when
+  // the engine has its own cancel, not for a zone (PlaceChoice has its own), and not while the
+  // pile view is open (its Escape minimizes it; the cancel comes back once it's minimized).
+  const heldCancel = prompt.kind !== "place" && heldPromptCancellable(duel, prompt) && !(pilePicker && pickerOpen);
+  const cancelHeld = useCancelHeldPlay(duel, heldCancel && !busy);
   // …and candidates in the hand by clicking the card in the hand (they have
   // the yellow frame): the click picks it instead of opening its menu.
   const handPickRef = useRef<(player: number, code: number) => boolean>(() => false);
@@ -581,6 +586,12 @@ export function PromptView({ duel, prompt, busy, pendingKey, respond, onHover, i
         dialogBody = <div className="ygo-md-prompt-place"><PlaceChoice duel={duel} prompt={prompt} busy={busy} pendingKey={pendingKey} respond={respond} /></div>;
         break;
     }
+    if (heldCancel) {
+      footer = <>
+        <MdButton variant="secondary" disabled={busy} onClick={cancelHeld}>Cancel (Esc)</MdButton>
+        {footer}
+      </>;
+    }
     return (
       <div ref={probeRef} className="ygo-md-prompt-view">
         <PromptQuestion text={title} sub={subtitle} terms={terms} />
@@ -734,6 +745,7 @@ export function PromptView({ duel, prompt, busy, pendingKey, respond, onHover, i
         </button>
       )}
       {body}
+      {heldCancel && <ChoiceButton label="Cancel (Esc)" disabled={busy} onClick={cancelHeld} />}
       {pickerPopup}
     </div>
   );

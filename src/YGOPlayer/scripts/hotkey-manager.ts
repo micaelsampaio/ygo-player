@@ -7,6 +7,8 @@ type Shortcut = {
 
 export class HotKeyManager {
   private events: Map<string, (() => void)[]> = new Map();
+  /** Handlers that are always there (the default Escape, a field glow's): they don't claim their key. */
+  private background = new Set<() => void>();
   private enabled: boolean = true;
   private unsubscribeTinyKeysEvents?: () => void;
 
@@ -35,8 +37,14 @@ export class HotKeyManager {
     this.unsubscribeTinyKeysEvents = tinykeys(window, bindings);
   }
 
-  on(eventName: string, cb: () => void): () => void {
+  /**
+   * Adds a handler; the latest one registered for a key is the one that runs.
+   * `background`: an ambient handler (the default Escape, a field glow's own)
+   * that doesn't count for `claimed`.
+   */
+  on(eventName: string, cb: () => void, opts?: { background?: boolean }): () => void {
     this.events.set(eventName, [...this.events.get(eventName) || [], cb]);
+    if (opts?.background) this.background.add(cb);
 
     return () => {
       this.off(eventName, cb);
@@ -44,6 +52,7 @@ export class HotKeyManager {
   }
 
   off(eventName: string, cb: () => void) {
+    this.background.delete(cb);
     const events = this.events.get(eventName);
     if (events) {
       const newEvents = events.filter(c => c !== cb);
@@ -53,6 +62,11 @@ export class HotKeyManager {
         this.events.delete(eventName);
       }
     }
+  }
+
+  /** A popup / menu / drag owns the key right now: a non-background handler is registered for it. */
+  claimed(eventName: string): boolean {
+    return (this.events.get(eventName) ?? []).some((cb) => !this.background.has(cb));
   }
 
   dispatch(eventName: string) {
@@ -83,5 +97,6 @@ export class HotKeyManager {
   destroy() {
     this.clear();
     this.events.clear();
+    this.background.clear();
   }
 }

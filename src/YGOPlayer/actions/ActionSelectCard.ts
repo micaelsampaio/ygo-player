@@ -68,9 +68,10 @@ export class ActionCardSelection extends YGOComponent implements YGOAction {
             this.duel.gameActions.setSelectedCard({ card: null });
         }
 
+        // Background: a held play's cancel (ui/menus/cancel-held-play.ts) goes ahead of dismissing the glow.
         this.unsubscribeKeyEvents = this.duel.globalHotKeysManager.on("escPressed", () => {
             this.duel.events.dispatch("clear-ui-action");
-        });
+        }, { background: true });
 
         for (const cardzone of this.zones) {
 

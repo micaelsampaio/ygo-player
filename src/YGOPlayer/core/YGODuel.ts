@@ -656,7 +656,7 @@ export class YGODuel {
         return;
       }
       this.events.dispatch("toggle-ui-menu", { group: "game-overlay", type: "settings-menu", data: { currentMenu: SETTINGS_MODAL_TYPE.SETTINGS } });
-    });
+    }, { background: true });
 
     this.globalHotKeysManager.on("shortcuts", () => {
       this.events.dispatch("set-ui-menu", { group: "game-overlay", type: "settings-menu", data: { currentMenu: SETTINGS_MODAL_TYPE.CONTROLS } });
