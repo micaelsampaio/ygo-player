@@ -4,6 +4,7 @@ import type { YGODuel } from "../../core/YGODuel";
 import { END_GAME_ACTION_LABELS, YGOEndGameAction, endGameActionsFor, endGameHeadline } from "../duel-status";
 import { AvailableReview, isShowableReview, reviewSourceOf } from "./duel-review/duel-review";
 import { DuelReviewPanel } from "./duel-review/duel-review-panel";
+import { DuelRating, canRateDuel } from "./duel-rating";
 
 const stopPointer = (e: React.SyntheticEvent) => e.stopPropagation();
 
@@ -80,6 +81,7 @@ export function DuelEndGameOverlay({ duel, loser }: { duel: YGODuel, loser: numb
     <div className={tone === "win" ? "ygo-winner-text" : tone === "loss" ? "ygo-loser-text" : "ygo-neutral-result-text"}>
       {text}
     </div>
+    {canRateDuel(duel, isPlayerClient) && <DuelRating duel={duel} />}
     {nextSteps.length > 0 && <div className="ygo-end-game-actions">
       {nextSteps.map(action => <button
         key={action}

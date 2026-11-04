@@ -1295,6 +1295,24 @@
 .ygo-leave-reason:focus-visible { outline: 2px solid #ffc93c; outline-offset: 2px; }
 .ygo-leave-reason-active { border-color: #ffc93c; background: rgba(255, 201, 60, 0.18); color: #ffe39a; }
 
+/* End-of-duel "How was the bot?" (duel-rating.tsx): stars, then the reason chips above. */
+.ygo-duel-rating { display: flex; flex-direction: column; align-items: center; gap: 8px; font-size: 14px; font-weight: normal; max-width: 520px; }
+.ygo-duel-rating-title { color: #e6e9f2; font-size: 15px; font-weight: 600; }
+.ygo-duel-rating-stars { display: flex; gap: 4px; }
+.ygo-duel-rating-star {
+    background: none;
+    border: none;
+    padding: 2px 4px;
+    font-size: 32px;
+    line-height: 1;
+    color: rgba(255, 255, 255, 0.25);
+    cursor: pointer;
+    transition: color 150ms ease-out;
+}
+.ygo-duel-rating-star.ygo-active { color: #ffc93c; }
+.ygo-duel-rating-star:focus-visible { outline: 2px solid #ffc93c; outline-offset: 2px; border-radius: 4px; }
+.ygo-duel-rating-reasons { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+
 /* Keyframes stay at the top level: nested inside a style rule they are invalid CSS and the
    website's CSS minifier drops rules around them (see .float-right-menu in core.css). */
 @keyframes ygo-pulse-animation {

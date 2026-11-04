@@ -76,6 +76,8 @@ export function GameSettingsMenu({ duel, currentMenu = SETTINGS_MODAL_TYPE.SETTI
             // Mid-match the server keeps a hidden-info duel's full replay: report this client's own view.
             const replayData = await duel.getReplayData().catch(() => duel.ygo.getReplayData());
             const errors: string[] = [];
+            // A bot duel's log keeps where the game stood, so the report leads to this moment.
+            if (duel.ygo?.options?.botDuel && duel.assist?.flag) void duel.assist.flag().catch(() => undefined);
             await duel.config.actions!.reportBug!({ data: replayData, errors });
             closeSettings();
         } catch (error) {

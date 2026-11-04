@@ -101,6 +101,10 @@ export interface YGOAssistActions {
   review?(): Promise<unknown>;
   /** Bot duels: why the player is surrendering (ygo-socket-server `duel:bot:feedback`), optional. */
   leaveFeedback?(reason: string): Promise<unknown>;
+  /** Bot duels: the player's 1–5 star rating of the game, and optionally why (ygo-socket-server `duel:bot:rate`), on the end-of-duel overlay. */
+  rate?(stars: number, reason?: string): Promise<unknown>;
+  /** Bot duels: "Report a bug" also marks this moment in the game's bot log (ygo-socket-server `duel:bot:flag`). */
+  flag?(): Promise<unknown>;
 }
 
 export interface YGOPlayerConnectToServerProps {
