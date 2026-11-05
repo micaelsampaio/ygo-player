@@ -12,6 +12,10 @@ export class YGOSoundController extends YGOComponent {
     /** Lazily created on the first synthesized effect; null when Web Audio is unavailable. */
     private audioContext: AudioContext | null | undefined;
     private sfxBuffers = new SfxBufferCache();
+    /** Set by onDestroy: nothing plays any more (a late timer, the music index arriving after the duel left). */
+    private destroyed = false;
+    /** Window listeners waiting for a gesture to start a sound the browser blocked (playOnNextGesture). */
+    private gestureListeners = new Set<() => void>();
 
     constructor(private logger: YGOPlayerLogger = new YGOPlayerLogger()) {
         super("audio_controller");
@@ -44,13 +48,17 @@ export class YGOSoundController extends YGOComponent {
         volume = 1,
         loop = false,
         onComplete,
+        retryOnGesture = false,
     }: {
         key: string;
         layer?: string;
         volume?: number;
         loop?: boolean;
         onComplete?: () => void;
+        /** Blocked by the browser (autoplay before a gesture): start it on the next click instead (playOnNextGesture). */
+        retryOnGesture?: boolean;
     }): YGOAudioClip | null {
+        if (this.destroyed) return null;
         const audioClip = this.getSound(key);
 
         if (!audioClip) {
@@ -88,6 +96,10 @@ export class YGOSoundController extends YGOComponent {
         audio.play().catch(() => {
             instance.playing = false;
             targetLayer.sounds = targetLayer.sounds.filter(s => s !== instance);
+            if (retryOnGesture) {
+                this.playOnNextGesture(instance, targetLayer.name);
+                return;
+            }
             audio.onended = null;
             onComplete?.();
         });
@@ -127,6 +139,7 @@ export class YGOSoundController extends YGOComponent {
      * not pitched up). Returns false when nothing was played.
      */
     public playSfx(name: SfxName, { layer = "GAME", volume = 1 }: { layer?: string; volume?: number } = {}): boolean {
+        if (this.destroyed) return false;
         const targetLayer = this.layers.find(l => l.name === layer);
         if (!targetLayer || !targetLayer.enabled) return false;
         const gain = volume * SFX_GAIN[name] * targetLayer.volume;
@@ -247,14 +260,50 @@ export class YGOSoundController extends YGOComponent {
         }
     }
 
+    /**
+     * The browser blocked `clip` (autoplay before any user gesture, the norm
+     * on phones): it starts on the next click instead, on its layer again —
+     * unless the duel is gone by then (the listener goes with onDestroy).
+     */
+    public playOnNextGesture(clip: YGOAudioClip, layer?: string): void {
+        if (this.destroyed) return;
+        const audio = clip.element;
+        const target = typeof window !== "undefined" ? window : null;
+        if (!target) return;
+        const resume = () => {
+            target.removeEventListener("click", resume, true);
+            this.gestureListeners.delete(stop);
+            if (this.destroyed) return;
+            const targetLayer = layer ? this.layers.find(l => l.name === layer) : this.layers[0];
+            if (targetLayer && !targetLayer.sounds.includes(clip)) targetLayer.sounds.push(clip);
+            clip.playing = true;
+            audio.play().catch((error) => {
+                clip.playing = false;
+                this.logger.warn("YGOSoundController", "Audio play failed:", error);
+            });
+        };
+        const stop = () => target.removeEventListener("click", resume, true);
+        this.gestureListeners.add(stop);
+        target.addEventListener("click", resume, true);
+    }
+
     public onDestroy(): void {
+        this.destroyed = true;
+        for (const stop of this.gestureListeners) stop();
+        this.gestureListeners.clear();
+        const stopElement = (element: HTMLAudioElement) => {
+            element.pause();
+            element.onended = null;
+            element.src = '';
+            element.remove();
+        };
         this.layers.forEach(layer => {
-            layer.sounds.forEach(sound => {
-                sound.element.pause();
-                sound.element.src = '';
-                sound.element.remove();
-            })
+            layer.sounds.forEach(sound => stopElement(sound.element));
+            layer.sounds = [];
         });
+        // Every element it made, tracked or not: a sound whose play() was blocked
+        // left its layer but can still be started (and must not outlive the duel).
+        this.sounds.forEach(list => list.forEach(clip => stopElement(clip.element)));
         this.sounds.clear();
         this.sfxBuffers.clear();
         this.audioContext?.close().catch(() => { });

@@ -1133,11 +1133,59 @@
         @media (max-width: 767px),
         (min-width: 768px) and (max-width: 1024px) and (orientation: portrait),
     (max-height: 500px) {
-            top: 10px;
-            left: 50%;
-            bottom: unset;
+            /* A one-row bar along the bottom edge (a tall column at the top covered the middle
+               of a phone's short landscape screen): speed · Prev / Play / Next · Close. */
+            top: unset;
             right: unset;
+            left: 50%;
+            bottom: max(8px, env(safe-area-inset-bottom));
             transform: translateX(-50%);
+            flex-direction: row;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 8px;
+            width: auto;
+            max-width: calc(100% - 16px);
+
+            .ygo-controls-menu-title {
+                display: none;
+            }
+
+            .ygo-controls-menu-speed {
+                padding-bottom: 0;
+                order: 1;
+            }
+
+            /* Prev · Play · Next: the steps' wrapper steps aside so Play sits between them. */
+            .ygo-controls-menu-steps {
+                display: contents;
+            }
+
+            .ygo-controls-menu-steps > :first-child {
+                order: 2;
+            }
+
+            .ygo-controls-menu-play {
+                order: 3;
+            }
+
+            .ygo-controls-menu-steps > :last-child {
+                order: 4;
+            }
+
+            .ygo-controls-menu-close {
+                order: 5;
+                margin-top: 0;
+            }
+
+            .ygo-card-item {
+                width: auto;
+                min-width: 44px;
+                min-height: 36px;
+                padding: 4px 10px;
+            }
         }
     }
 

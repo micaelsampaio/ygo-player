@@ -38,11 +38,11 @@ export function ControlsMenu({ duel }: { duel: YGODuel }) {
     }, []);
 
     return <div className="ygo-card-menu ygo-controls-menu">
-        <div className="">
+        <div className="ygo-controls-menu-title">
             Controls
         </div>
 
-        <div className="ygo-flex ygo-gap-1 ygo-pb-4">
+        <div className="ygo-flex ygo-gap-1 ygo-pb-4 ygo-controls-menu-speed">
             <button disabled={duel.core.timeScale === 1} type="button" className="ygo-card-item ygo-px-0" onClick={() => setTimeScale(1)}>
                 1x
             </button>
@@ -57,11 +57,11 @@ export function ControlsMenu({ duel }: { duel: YGODuel }) {
             </button>
         </div>
 
-        <button disabled={!hasNextCommand} type="button" className="ygo-card-item" onClick={isPlaying ? pause : play}>
+        <button disabled={!hasNextCommand} type="button" className="ygo-card-item ygo-controls-menu-play" onClick={isPlaying ? pause : play}>
             {isPlaying ? "Pause" : "Play"}
         </button>
 
-        <div className="ygo-flex ygo-gap-1">
+        <div className="ygo-flex ygo-gap-1 ygo-controls-menu-steps">
             <button disabled={!hasPrevCommand} title={undoTooltip(duel.ygo.options)} type="button" className="ygo-card-item" onClick={prev}>
                 Prev
             </button>
@@ -69,7 +69,7 @@ export function ControlsMenu({ duel }: { duel: YGODuel }) {
                 Next
             </button>
         </div>
-        <div className="ygo-mobile-layout-visible ygo-mt-3">
+        <div className="ygo-mobile-layout-visible ygo-mt-3 ygo-controls-menu-close">
             <button type="button" className="ygo-card-item" onClick={close}>
                 Close
             </button>

@@ -74,43 +74,26 @@ export class YGODuelScene {
                     .map(href => href!.startsWith('/') ? href! : '/music/' + href!);
                 if (musicFiles.length === 0) throw new Error('No music files found');
                 const randomMusic = musicFiles[Math.floor(Math.random() * musicFiles.length)];
-                const sound = this.duel.soundController.playSound({
+                this.duel.soundController.playSound({
                     key: this.duel.createCdnUrl(randomMusic),
                     layer: "GAME_MUSIC",
                     volume: 0.2,
-                    loop: true
+                    loop: true,
+                    // Autoplay blocked: on the next click, while the duel is still there.
+                    retryOnGesture: true,
                 });
-                if (!sound) return;
-                const audio = sound.element;
-                const isPlaying = () => !audio.paused && !audio.ended && audio.readyState > 2;
-                if (!isPlaying()) {
-                    const resumeAudio = () => {
-                        audio.play().catch((e) => this.duel.logger.warn("YGODuelScene", "Audio play failed:", e));
-                        window.removeEventListener("click", resumeAudio, true);
-                    };
-                    window.addEventListener("click", resumeAudio, true);
-                }
             } catch (e) {
                 this.duel.logger.warn("YGODuelScene", "Failed to load music index or play music:", e);
             }
         } else {
             // Play default music
-            const sound = this.duel.soundController.playSound({
+            this.duel.soundController.playSound({
                 key: this.duel.createCdnUrl("/music/temp.mp3"),
                 layer: "GAME_MUSIC",
                 volume: 0.2,
-                loop: true
+                loop: true,
+                retryOnGesture: true,
             });
-            if (!sound) return;
-            const audio = sound.element;
-            const isPlaying = () => !audio.paused && !audio.ended && audio.readyState > 2;
-            if (!isPlaying()) {
-                const resumeAudio = () => {
-                    audio.play().catch((e) => this.duel.logger.warn("YGODuelScene", "Audio play failed:", e));
-                    window.removeEventListener("click", resumeAudio, true);
-                };
-                window.addEventListener("click", resumeAudio, true);
-            }
         }
     }
 
