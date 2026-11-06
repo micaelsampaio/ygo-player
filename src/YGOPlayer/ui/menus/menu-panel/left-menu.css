@@ -303,7 +303,10 @@
     }
 
     .ygo-left-top-menus,
-    .ygo-left-menu-collapse {
+    .ygo-left-menu-collapse,
+    /* A replay's Play / Prev / Next: the zero-size panel doesn't clip them, so they floated in the
+       middle of the board. Phones use the bottom bar (Replay controls button) instead. */
+    .ygo-left-menu-item-container {
       display: none;
     }
 
