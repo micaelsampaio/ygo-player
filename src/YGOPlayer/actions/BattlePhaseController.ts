@@ -5,10 +5,14 @@ import type { CardZone } from "../game/CardZone";
 import { YGODuelPhase, YGOGameUtils } from 'ygo-core';
 import type { ActionAttackSelection } from './ActionAttackSelection';
 import { BattlePhaseButton } from '../game/BattlePhaseButton';
+import { createDoubleTapDetector } from '../domain/double-tap';
+import { markClickHandled } from '../core/components/YGOMouseEvents';
 
 export class BattlePhaseController extends YGOComponent {
 
   private attackButtons: Map<string, BattlePhaseButton>;
+  /** A double-click on an attack sword (the direct attack shortcut). */
+  private attackTaps = createDoubleTapDetector();
 
   constructor(name: string, private duel: YGODuel) {
     super(name);
@@ -74,11 +78,22 @@ export class BattlePhaseController extends YGOComponent {
       attackButton.rotation.copy(rotation);
       attackButton.gameObject.position.copy(attackButton.position);
       attackButton.gameObject.rotation.copy(attackButton.rotation);
-      attackButton.onClickCb = () => {
+      attackButton.onClickCb = (event?: MouseEvent) => {
         if (!this.duel.ygo.options.viewOpponentCards && !this.duel.perspective.isPlayerPOV(attackButton.cardZone.zoneData.player)) return;
 
         const battleAction = this.duel.gameController.getComponent<ActionAttackSelection>("attack_selection_action")
         const zones = battleAction.getMonstersZonesToAttack(attackButton.cardZone.zoneData.player);
+
+        // A double-click on the sword with no monster to attack: the direct attack, at once (the
+        // first click opened the selection, whose only target is the opponent).
+        const double = this.attackTaps.tap(attackButton, event?.clientX ?? 0, event?.clientY ?? 0, Date.now());
+        const attacker = attackButton.cardZone.getCardReference();
+        if (double && zones.length === 0 && attacker) {
+          if (event) markClickHandled(event);
+          this.duel.events.dispatch("clear-ui-action");
+          this.duel.gameActions.attackDirectly({ id: attacker.id, originZone: attackButton.cardZone.zone });
+          return;
+        }
 
         battleAction.startSelection({
           attackButton: attackButton,

@@ -11,7 +11,7 @@ export class BattlePhaseButton implements YGOUiElement {
   public cardZone!: CardZone;
   public position!: THREE.Vector3;
   public rotation!: THREE.Euler;
-  public onClickCb?: () => void;
+  public onClickCb?: (event?: MouseEvent) => void;
 
   constructor(private duel: YGODuel) {
     const texture = this.duel.core.textureLoader.load(duel.createCdnUrl("/images/sprites/attack_icon.png"));
@@ -32,7 +32,7 @@ export class BattlePhaseButton implements YGOUiElement {
     this.gameObject.visible = true;
   }
 
-  onMouseClick(): void {
-    this.onClickCb?.();
+  onMouseClick(event?: MouseEvent): void {
+    this.onClickCb?.(event);
   }
 }
