@@ -54,7 +54,7 @@ export function serverPropsToConfig(props: YGOPlayerConnectToServerProps): YGOCo
   return {
     players: [],
     commands: [],
-    options: {},
+    options: props.revealOpponentCards ? { revealOpponentCards: true } : {},
     cdnUrl: props.cdnUrl,
     apiUrl: props.apiUrl,
     actions,

@@ -49,8 +49,10 @@ export function createFields({ duel, fieldModel }: CreateFieldDto) {
 
   for (let player = 0; player < 2; ++player) {
     const isPlayer = player === playerIndex;
-    const showCards = !!(isPlayer || duel.config.options.showCards)
-    const controlCards = !!(isPlayer || (showCards && duel.ygo.options.controlOpponentCards))
+    const visible = !!(isPlayer || duel.config.options.showCards)
+    // revealOpponentCards only turns the opponent's cards face-up: control still follows the rules' visibility.
+    const showCards = visible || !!duel.config.options.revealOpponentCards
+    const controlCards = !!(isPlayer || (visible && duel.ygo.options.controlOpponentCards))
     //const controlCards = true;
     const field = new PlayerField();
     const playerSufix = player === 0 ? "" : "2";

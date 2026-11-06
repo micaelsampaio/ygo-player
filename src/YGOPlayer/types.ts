@@ -119,6 +119,9 @@ export interface YGOPlayerConnectToServerProps {
   endGameActions?: YGOEndGameAction[];
   /** Sees every error the player catches and recovers from (see YGOPlayerLogger). */
   onError?: YGOPlayerErrorHandler;
+  /** Practice: the opponent's hand and face-down cards are shown face-up to this player. Display
+   * only: they still can't be moved, and the duel's rules don't change (YGOConfigOptions.revealOpponentCards). */
+  revealOpponentCards?: boolean;
   /** Mid-duel actions, as in the editor. With `saveReplay` the game settings
    * menu offers "Save Replay" during the duel (e.g. recording a combo). */
   actions?: {

@@ -12,6 +12,12 @@ export interface YGOConfigOptions extends YGOPropsOptions {
   duelTimerSeconds?: number
   /** Local duels: ask whether to end the duel when a player's life points reach 0 (see ui/menus/zero-lp-prompt). */
   zeroLpPrompt?: boolean
+  /**
+   * Practice (a bot duel's "Show the bot's cards"): the opponent's hand and face-down cards are
+   * shown face-up. Unlike showCards it gives no control over them and keeps the player's own
+   * perspective (no autoChangePlayer). The cards' data must reach the client (no hidden info).
+   */
+  revealOpponentCards?: boolean
 }
 
 export interface YGOConfig extends YGOProps {
