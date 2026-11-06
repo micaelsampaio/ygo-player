@@ -303,11 +303,35 @@
     }
 
     .ygo-left-top-menus,
-    .ygo-left-menu-collapse,
-    /* A replay's Play / Prev / Next: the zero-size panel doesn't clip them, so they floated in the
-       middle of the board. Phones use the bottom bar (Replay controls button) instead. */
-    .ygo-left-menu-item-container {
+    .ygo-left-menu-collapse {
       display: none;
+    }
+
+    /* A replay's Play / Prev / Next: the panel is zero-size here and didn't place them, so they
+       floated in the middle of the board. A small row along the bottom edge, under the hand, between
+       the floating buttons on either side; the Replay controls bar (speed) opens over it. */
+    .ygo-left-menu-item-container {
+      position: fixed;
+      left: 50%;
+      bottom: max(4px, env(safe-area-inset-bottom));
+      transform: translateX(-50%);
+      z-index: 105;
+      padding: 4px;
+      border: none;
+      border-radius: var(--ygo-border-radius-medium);
+      background-color: rgba(0, 0, 0, 0.6);
+
+      .ygo-btn {
+        min-width: 44px;
+        min-height: 36px;
+        padding: 4px 10px;
+      }
+
+      /* A short landscape screen has the hand on its bottom edge: the free bottom-left corner. */
+      @media (orientation: landscape) and (max-height: 500px) {
+        left: max(8px, env(safe-area-inset-left));
+        transform: none;
+      }
     }
 
     .ygo-left-menu-panel-mobile {
