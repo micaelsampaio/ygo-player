@@ -53,6 +53,26 @@ export function isRevealOfItsToHand(logs: YGODuelEvents.DuelLog[], index: number
   return log.type === YGODuelEvents.LogType.Reveal && prev?.type === "To Hand" && prev.id === log.id;
 }
 
+/**
+ * The steps of an activation that the core logs on their own lines are part of its "Activate" row
+ * (which keeps where the card came from and its previous position): a Spell's move from the hand to
+ * its zone right before it activates there, and a Set card's flip face-up right after it activates.
+ * A move or flip of the card for any other reason is listed as before.
+ */
+export function isPartOfItsActivation(logs: YGODuelEvents.DuelLog[], index: number): boolean {
+  type Row = { type: string; id?: number; zone?: string; originZone?: string };
+  const log = logs[index] as Row;
+  if (log.type === YGODuelEvents.LogType.MoveCard) {
+    const next = logs[index + 1] as Row | undefined;
+    return next?.type === YGODuelEvents.LogType.Activate && next.id === log.id && next.zone === log.zone;
+  }
+  if (log.type === YGODuelEvents.LogType.ChangeCardPosition) {
+    const prev = logs[index - 1] as Row | undefined;
+    return prev?.type === YGODuelEvents.LogType.Activate && prev.id === log.id && prev.zone === log.originZone;
+  }
+  return false;
+}
+
 export function DuelLogMenu({ duel, menus }: { duel: YGODuel; menus: UiMenuState[] }) {
   // The core sends the same array each time, so it is kept by reference and a
   // version bump re-renders, instead of copying every log on every update.
@@ -151,7 +171,7 @@ export function DuelLogMenu({ duel, menus }: { duel: YGODuel; menus: UiMenuState
       <div className="ygo-logs">
         {logs.map((log, index) => {
           if (log.type === YGODuelEvents.LogType.Target) return null;
-          if (isRevealOfItsToHand(logs, index)) return null;
+          if (isRevealOfItsToHand(logs, index) || isPartOfItsActivation(logs, index)) return null;
           const Component = rowFor(log);
 
           return (

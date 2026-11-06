@@ -68,3 +68,29 @@ describe("isRevealOfItsToHand", () => {
     expect(logs.map((_, i) => isRevealOfItsToHand(logs, i))).toEqual([false, true, false, false, false]);
   });
 });
+
+describe("isPartOfItsActivation", () => {
+  it("hides a Spell's move to its zone right before it activates there, and a Set card's flip right after", async () => {
+    const { isPartOfItsActivation } = await import("./duel-log");
+    const logs = [
+      { type: "Move Card", id: 6153210, originZone: "H-1", zone: "S-1" }, // Ketu Dracotail from the hand
+      { type: "Activate", id: 6153210, originZone: "H-1", zone: "S-1" },
+      { type: "Activate", id: 5431722, zone: "S-2" }, // Dracotail Flame, Set
+      { type: "Change Card Position", id: 5431722, originZone: "S-2" },
+      { type: "Send To GY", id: 5431722, originZone: "S-2", zone: "GY" },
+    ] as any[];
+    expect(logs.map((_, i) => isPartOfItsActivation(logs, i))).toEqual([true, false, false, true, false]);
+  });
+
+  it("keeps a move or flip that isn't that card's activation", async () => {
+    const { isPartOfItsActivation } = await import("./duel-log");
+    const logs = [
+      { type: "Move Card", id: 1, originZone: "H-1", zone: "S-1" },
+      { type: "Activate", id: 2, zone: "S-3" }, // another card
+      { type: "Change Card Position", id: 3, originZone: "M-1" }, // not right after its activation
+      { type: "Move Card", id: 4, originZone: "H-2", zone: "S-4" },
+      { type: "Activate", id: 4, zone: "S-5" }, // activated somewhere else
+    ] as any[];
+    expect(logs.map((_, i) => isPartOfItsActivation(logs, i))).toEqual([false, false, false, false, false]);
+  });
+});

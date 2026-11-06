@@ -130,7 +130,10 @@ export class GameHand extends YGOEntity {
       handCard.gameObject.scale.copy(cardsTransforms[index].scale);
       handCard.gameObject.rotation.setFromVector3(cardRotation);
       handCard.gameObject.visible = true;
-      handCard.setIsVisible(this.duel.fields[this.player].settings.controlCards);
+      // The face shows when the cards are visible to this client, not only when it controls them:
+      // revealOpponentCards ("Show the bot's cards") shows the bot's hand without control, and with
+      // controlCards here its faces were the hidden material (black).
+      handCard.setIsVisible(this.duel.fields[this.player].settings.showCards);
     }
   }
 
