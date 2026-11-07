@@ -54,7 +54,10 @@ export function serverPropsToConfig(props: YGOPlayerConnectToServerProps): YGOCo
   return {
     players: [],
     commands: [],
-    options: props.revealOpponentCards ? { revealOpponentCards: true } : {},
+    options: {
+      ...(props.revealOpponentCards ? { revealOpponentCards: true } : {}),
+      ...(props.duelTimerSeconds && props.duelTimerSeconds > 0 ? { duelTimerSeconds: props.duelTimerSeconds } : {}),
+    },
     cdnUrl: props.cdnUrl,
     apiUrl: props.apiUrl,
     actions,

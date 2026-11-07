@@ -122,6 +122,8 @@ export interface YGOPlayerConnectToServerProps {
   /** Practice: the opponent's hand and face-down cards are shown face-up to this player. Display
    * only: they still can't be moved, and the duel's rules don't change (YGOConfigOptions.revealOpponentCards). */
   revealOpponentCards?: boolean;
+  /** The field timer counts down from this many seconds when the board is ready (YGOConfigOptions.duelTimerSeconds); absent: a bot duel's timer counts up. */
+  duelTimerSeconds?: number;
   /** Mid-duel actions, as in the editor. With `saveReplay` the game settings
    * menu offers "Save Replay" during the duel (e.g. recording a combo). */
   actions?: {
