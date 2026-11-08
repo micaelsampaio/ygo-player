@@ -8,6 +8,9 @@ import { CardZone } from "../../game/CardZone";
 import type { YGODuel } from "../YGODuel";
 import { leftmostZone } from "../../domain/zone-order";
 
+/** The engine ref a card-menu move names its card by. */
+export const refPayload = (ref: CardRefData): Record<string, unknown> => ({ id: ref.code, ctrl: ref.ctrl, loc: ref.loc, seq: ref.seq });
+
 /**
  * YGOGameActions, split by action family: this base holds what every family
  * uses (the duel, the zone/card picker, the Assisted Mode router and the
@@ -54,7 +57,7 @@ export class GameActionsBase {
    * Returns true when it did. Otherwise (no match) the caller falls back to
    * the free-form move, with a short notice that the engine can't follow it.
    */
-  protected routeAssisted(move: AssistMove, card: Card, originZone: FieldZone | undefined): boolean {
+  protected routeAssisted(move: AssistMove, card: Card, originZone: FieldZone | undefined, payload: (ref: CardRefData) => Record<string, unknown> = refPayload): boolean {
     const duel = this.duel;
     const assist = duel.assist;
     if (!assist || duel.client?.type !== YGOClientType.PLAYER || !duel.ygo?.options?.assistedMode) return false;
@@ -69,7 +72,7 @@ export class GameActionsBase {
       duel.events.dispatch("assist-notice", { message: route.message });
       return true;
     }
-    const choose = (ref: CardRefData) => controller.choose({ commandType: move, data: { id: ref.code, ctrl: ref.ctrl, loc: ref.loc, seq: ref.seq } });
+    const choose = (ref: CardRefData) => controller.choose({ commandType: move, data: payload(ref) });
     duel.events.dispatch("assist-choice-start", { code: card.id });
     const done = route.kind === "choose"
       ? choose(route.ref)

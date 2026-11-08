@@ -82,6 +82,17 @@ export function CardZoneAttackMenuAction({
     setDamageText(String(battleInfo.battleDamage ?? 0));
   }, propsChanges)
 
+  // Assisted Mode, an attack the engine lists: the engine works out the battle (no manual results).
+  if (duel.gameActions.canAttackThroughEngine(attackingZone)) {
+    return (
+      <CardMenu indicator menuRef={menuRef}>
+        <button type="button" className="ygo-card-item" onClick={attack}>
+          Attack
+        </button>
+      </CardMenu>
+    );
+  }
+
   return (
     <CardMenu indicator menuRef={menuRef}>
       <button type="button" className="ygo-card-item" onClick={attack}>

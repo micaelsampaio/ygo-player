@@ -18,7 +18,7 @@ function respondState(result: Extract<AssistQueryResult, { pending: "chain" }>):
   return { chainLength: respond.chainLength, canPass: !!respond.canPass };
 }
 
-export type AssistMove = "Activate" | "Normal Summon" | "Special Summon" | "Set Monster" | "Set ST";
+export type AssistMove = "Activate" | "Normal Summon" | "Special Summon" | "Set Monster" | "Set ST" | "Attack";
 
 /** ocgcore location (+ sequence where the ygo zone pins one down) for a ygo-core zone like "M-2", "S2-1", "H-3", "GY". */
 export function zoneToLocation(zone: string | undefined | null): { loc: number; seq: number | null } | null {
@@ -55,6 +55,9 @@ function listFor(result: AssistResult, move: AssistMove): CardRefData[] {
     }
   }
   if (result.pending === "battle" && move === "Activate") return result.options?.activatable ?? [];
+  // An attack the engine runs: its damage, what it destroys and the triggers that sets off (a
+  // monster's "destroyed by battle" effect) — a free-form attack is only shown on the board.
+  if (result.pending === "battle" && move === "Attack") return result.options?.attackable ?? [];
   if (result.pending === "chain" && move === "Activate") return result.respond?.activatable ?? [];
   return [];
 }

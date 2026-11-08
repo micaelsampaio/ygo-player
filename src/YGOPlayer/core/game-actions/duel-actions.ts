@@ -1,5 +1,5 @@
 import { YGOClientType, YGOCommands, YGOGameUtils, YGOPlayerState, YGO_DUEL_PHASE_ORDER } from "ygo-core";
-import { assistPhaseRouteFor, openPhaseWindow } from "../../domain/assist-routing";
+import { assistPhaseRouteFor, findAssistOption, openPhaseWindow } from "../../domain/assist-routing";
 import type { AssistQueryResult } from "../../domain/assist-query";
 import { FieldZone } from "ygo-core";
 import { YGODuelPhase } from "ygo-core";
@@ -243,10 +243,32 @@ export class DuelActions extends CardActions {
     if (chainModeOn(this.duel)) this.resolveChain();
   }
 
+  /**
+   * Assisted Mode: the engine lists this monster as an attacker now, so the attack goes through it
+   * (the battle's damage, destruction and the triggers it sets off are the engine's) instead of the
+   * manual one, whose results are only what the player enters.
+   */
+  public canAttackThroughEngine(attackingZone: FieldZone): boolean {
+    const duel = this.duel;
+    if (!duel.assist || duel.client?.type !== YGOClientType.PLAYER || !duel.ygo?.options?.assistedMode) return false;
+    const card = duel.ygo.state.getCardFromZone(attackingZone);
+    return !!card && !!findAssistOption(duel.assistController.options, "Attack", card.id, attackingZone);
+  }
+
+  /** The attack through the engine (Assisted Mode), aimed at `attackedZone` (none: a direct attack). */
+  private routeAssistedAttack(attackingZone: FieldZone, attackedZone?: FieldZone): boolean {
+    if (!this.canAttackThroughEngine(attackingZone)) return false;
+    const card = this.duel.ygo.state.getCardFromZone(attackingZone)!;
+    return this.routeAssisted("Attack", card, attackingZone, (ref) => ({
+      attackingId: ref.code, ctrl: ref.ctrl, loc: ref.loc, seq: ref.seq, ...(attackedZone ? { attackedZone } : {}),
+    }));
+  }
+
   public attack({ attackingId, attackingZone, attackedId, attackedZone, destroyAttacking, destroyAttacked, battleDamage }: {
     attackingId: number, attackingZone: FieldZone, attackedId: number, attackedZone: FieldZone,
     destroyAttacking?: boolean, destroyAttacked?: boolean, battleDamage?: number
   }) {
+    if (this.routeAssistedAttack(attackingZone, attackedZone)) return;
 
     const attackingZoneData = YGOGameUtils.getZoneData(attackingZone);
     const attackedZoneData = YGOGameUtils.getZoneData(attackedZone);
@@ -293,6 +315,7 @@ export class DuelActions extends CardActions {
   public attackDirectly({ id, originZone }: {
     id: number, originZone: FieldZone
   }) {
+    if (this.routeAssistedAttack(originZone)) return;
 
     const attackZoneData = YGOGameUtils.getZoneData(originZone);
     const card = this.duel.ygo.state.getCardFromZone(originZone)!;

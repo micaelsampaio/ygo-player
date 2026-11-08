@@ -28,6 +28,21 @@ describe("assistRouteFor", () => {
   });
 });
 
+describe("assistRouteFor: attacks", () => {
+  const KIRIN = 2526224;
+  const onField = { code: KIRIN, ctrl: 0, loc: 0x04, seq: 2 };
+  const battle = { available: true, pending: "battle", options: { attackable: [onField], activatable: [] } };
+
+  it("an attacker the engine lists attacks through it (its battle triggers then follow)", () => {
+    expect(assistRouteFor(battle, "Attack", KIRIN, "M-3")).toEqual({ kind: "choose", ref: onField });
+  });
+
+  it("a monster the engine doesn't list as an attacker stays a free-form attack", () => {
+    expect(assistRouteFor(battle, "Attack", KIRIN + 1, "M-3")).toEqual({ kind: "freeForm" });
+    expect(assistRouteFor(idle, "Attack", KIRIN, "M-3")).toEqual({ kind: "freeForm" });
+  });
+});
+
 describe("assistPhaseRouteFor", () => {
   const idle = (ygoPhase: string, nextPhase: string | null) => ({ available: true, pending: "idle", options: {}, nextPhase, ygoPhase });
 
