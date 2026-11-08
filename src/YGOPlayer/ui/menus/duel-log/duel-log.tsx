@@ -73,6 +73,19 @@ export function isPartOfItsActivation(logs: YGODuelEvents.DuelLog[], index: numb
   return false;
 }
 
+/**
+ * A card an effect Sets (Dracotail Urgula: "Set 1 Dracotail Spell/Trap" from the GY) is logged as a
+ * move to its Spell & Trap Zone face-up and then a flip face-down: one "Set" row (where it came from
+ * and the zone it went to), the board still plays both steps. True for the move of such a pair.
+ */
+export function isSetByMove(logs: YGODuelEvents.DuelLog[], index: number): boolean {
+  type Row = { type: string; id?: number; zone?: string; originZone?: string; position?: string };
+  const log = logs[index] as Row;
+  const next = logs[index + 1] as Row | undefined;
+  return log.type === YGODuelEvents.LogType.MoveCard && !!log.zone && log.position !== "facedown"
+    && next?.type === YGODuelEvents.LogType.ChangeCardPosition && next.id === log.id && next.originZone === log.zone && next.position === "facedown";
+}
+
 export function DuelLogMenu({ duel, menus }: { duel: YGODuel; menus: UiMenuState[] }) {
   // The core sends the same array each time, so it is kept by reference and a
   // version bump re-renders, instead of copying every log on every update.
@@ -172,7 +185,12 @@ export function DuelLogMenu({ duel, menus }: { duel: YGODuel; menus: UiMenuState
         {logs.map((log, index) => {
           if (log.type === YGODuelEvents.LogType.Target) return null;
           if (isRevealOfItsToHand(logs, index) || isPartOfItsActivation(logs, index)) return null;
+          // The flip of a "Set" pair is its move's row.
+          if (index > 0 && isSetByMove(logs, index - 1)) return null;
           const Component = rowFor(log);
+          if (isSetByMove(logs, index)) {
+            return <DefaultLogRow key={index + "Set"} duel={duel} ygo={duel.ygo} log={{ ...log, type: "Set" } as never} />;
+          }
 
           return (
             <Component

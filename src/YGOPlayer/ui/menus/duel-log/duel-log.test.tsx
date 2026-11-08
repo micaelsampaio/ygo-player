@@ -6,6 +6,7 @@ import type { YGODuelUIEvents } from "../../../core/YGODuelUIEvents";
 import type { YGODuel } from "../../../core/YGODuel";
 import { subscribeDuelLogs } from "./duel-log-subscription";
 import { DefaultLogRow } from "./default-log";
+import { isPartOfItsActivation, isSetByMove } from "./duel-log";
 import { DuelPerspectiveContext } from "../../duel-perspective";
 
 const duelWithBus = () => ({ events: new EventBus<YGODuelUIEvents>() });
@@ -24,6 +25,16 @@ describe("duel log subscription", () => {
     off();
     duel.events.dispatch("logs-updated", logs);
     expect(onLogs).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("duel log subscription, opened again", () => {
+  it("passes the logs the duel already has (a refresh replayed them before the menu mounted)", () => {
+    const logs: YGODuelEvents.DuelLog[] = [{ type: YGODuelEvents.LogType.Note, player: 0, commandId: 1 }];
+    const duel = { ...duelWithBus(), ygo: { duelLog: { logs } } };
+    const onLogs = vi.fn();
+    subscribeDuelLogs(duel, onLogs);
+    expect(onLogs).toHaveBeenCalledWith(logs);
   });
 });
 
@@ -92,5 +103,21 @@ describe("isPartOfItsActivation", () => {
       { type: "Activate", id: 4, zone: "S-5" }, // activated somewhere else
     ] as any[];
     expect(logs.map((_, i) => isPartOfItsActivation(logs, i))).toEqual([false, false, false, false, false]);
+  });
+});
+
+describe("isSetByMove", () => {
+  const move = { type: YGODuelEvents.LogType.MoveCard, player: 0, commandId: 1, id: 7, originZone: "GY", zone: "S-2", position: "faceup" };
+  const flip = { type: YGODuelEvents.LogType.ChangeCardPosition, player: 0, commandId: 2, id: 7, originZone: "S-2", position: "facedown" };
+  const logs = (...l: object[]) => l as YGODuelEvents.DuelLog[];
+
+  it("folds an effect's Set (move face-up, then flip face-down) into the move", () => {
+    expect(isSetByMove(logs(move, flip), 0)).toBe(true);
+  });
+  it("leaves a move and flip of different cards or zones as they are", () => {
+    expect(isSetByMove(logs(move, { ...flip, id: 8 }), 0)).toBe(false);
+    expect(isSetByMove(logs(move, { ...flip, originZone: "S-3" }), 0)).toBe(false);
+    expect(isSetByMove(logs(move, { ...flip, position: "faceup" }), 0)).toBe(false);
+    expect(isSetByMove(logs(move), 0)).toBe(false);
   });
 });
