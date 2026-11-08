@@ -321,6 +321,11 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
     if (focused instanceof HTMLButtonElement || focused instanceof HTMLSelectElement) return false;
     if (busy) return false;
     if (prompt) {
+      // "Activate …'s effect?" and the other yes/no questions: Space is Yes.
+      if (prompt.kind === "yesNo" || prompt.kind === "effectYesNo") {
+        respondPrompt("yes", { yes: 1 });
+        return true;
+      }
       // An effect's choice with exactly one answer (one card, one free zone).
       const answer = singlePromptAnswer(prompt);
       if (!answer) return false;

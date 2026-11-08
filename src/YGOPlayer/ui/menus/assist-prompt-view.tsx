@@ -557,7 +557,7 @@ export function PromptView({ duel, prompt, busy, pendingKey, respond, onHover, i
         ) : null;
         footer = <>
           <MdButton variant="secondary" disabled={busy} busy={pendingKey === "no"} onClick={() => respond("no", { yes: 0 })}>No</MdButton>
-          <MdButton variant="primary" disabled={busy} busy={pendingKey === "yes"} onClick={() => respond("yes", { yes: 1 })}>Yes</MdButton>
+          <MdButton variant="primary" disabled={busy} busy={pendingKey === "yes"} onClick={() => respond("yes", { yes: 1 })}>Yes (Space)</MdButton>
         </>;
         break;
       }
@@ -697,7 +697,7 @@ export function PromptView({ duel, prompt, busy, pendingKey, respond, onHover, i
       body = <div style={{ display: "flex", gap: 6 }}>
         <button className="ygo-card-item" type="button" disabled={busy} aria-busy={pendingKey === "yes"} onClick={() => respond("yes", { yes: 1 })}
           style={{ flexGrow: 1, fontWeight: 700, fontSize: 13, justifyContent: "center", boxShadow: `inset 0 0 0 1px ${HIGHLIGHT_CSS}` }}>
-          {pendingKey === "yes" ? <span className="ygo-inline-spinner" aria-hidden="true" /> : "Yes"}
+          {pendingKey === "yes" ? <span className="ygo-inline-spinner" aria-hidden="true" /> : "Yes (Space)"}
         </button>
         <button className="ygo-card-item" type="button" disabled={busy} aria-busy={pendingKey === "no"} onClick={() => respond("no", { yes: 0 })}
           style={{ flexGrow: 1, fontWeight: 700, fontSize: 13, justifyContent: "center" }}>

@@ -7,7 +7,7 @@ const shortcuts = [
   { keys: ["K"], action: "Pass priority" },
   { keys: ["Arrow Left"], action: "Undo (previous duel event)" },
   { keys: ["Arrow Right"], action: "Redo (next duel event)" },
-  { keys: ["Space"], action: "Play / Pause · Assisted Mode: Continue / Don't respond, or the only option" },
+  { keys: ["Space"], action: "Play / Pause · Assisted Mode: Continue / Don't respond, Yes to a yes/no question, or the only option" },
   { keys: ["Esc"], action: "Cancel what you're doing · with nothing open, Settings" },
   { keys: ["D"], action: "Toggle duel log" },
   { keys: ["C"], action: "Toggle replay controls" },
