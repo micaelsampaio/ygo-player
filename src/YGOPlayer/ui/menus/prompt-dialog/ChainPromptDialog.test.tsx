@@ -34,9 +34,15 @@ describe("ChainPromptDialog", () => {
   });
 
   it("has Cancel (the pass row) and a disabled Effect Activation until a card is picked", () => {
-    const html = render([row(1, 0x02), pass]);
+    const html = render([row(1, 0x02), row(2, 0x02), pass]);
     expect(html).toMatch(/is-secondary"[^>]*title="Don&#x27;t respond"|title="Don&#x27;t respond"[^>]*is-secondary/);
     expect(html).toMatch(/<button[^>]*disabled=""[^>]*class="ygo-md-prompt-button is-primary"[^>]*>.*Effect Activation/);
+  });
+
+  it("a single card to chain starts picked: Effect Activation is enabled", () => {
+    const html = render([row(1, 0x02), pass]);
+    expect(html).not.toMatch(/<button[^>]*disabled=""[^>]*class="ygo-md-prompt-button is-primary"[^>]*>.*Effect Activation/);
+    expect(html).toMatch(/Effect Activation/);
   });
 
   it("has no Cancel when the chain can't be passed", () => {

@@ -72,7 +72,8 @@ export function readCoachNow(duel: DuelLike, stats: CoachStats | null, turn: Due
   const me = duel.perspective.playerIndex;
   const opp = 1 - me;
   const view = shownByOpp(duel, opp);
-  const held = stats?.oppHandTraps ? liveHandTraps(stats.oppHandTraps, view) : [];
+  // Their hand traps matter on your turn; on theirs the box is about their plays.
+  const held = turn.isLocalTurn && stats?.oppHandTraps ? liveHandTraps(stats.oppHandTraps, view) : [];
   const firstOption = (duel.ygo.options as { goingFirstPlayer?: number } | undefined)?.goingFirstPlayer;
   const story = readStory(duel.ygo.duelLog?.logs as never, me, typeof firstOption === "number" ? firstOption : null, turn.turn);
   const outlook = outlookLine(stats, story, me);
@@ -109,7 +110,7 @@ export function readCoachNow(duel: DuelLike, stats: CoachStats | null, turn: Due
       return lines.length ? [{ name: name(ref.code), lines }] : [];
     });
     const keyNote = keyCardNote(top.code, stats?.oppAnswers);
-    if (tips.length || keyNote) responses = { target: name(top.code), keyNote, tips };
+    responses = { target: name(top.code), keyNote, tips };
   }
   return { outlook, held, tip, responses };
 }

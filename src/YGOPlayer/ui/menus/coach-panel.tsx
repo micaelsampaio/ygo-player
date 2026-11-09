@@ -196,6 +196,7 @@ export function RightNowView({ now }: { now: CoachNow }) {
         <div role="status" style={{ ...callout, display: "flex", flexDirection: "column", gap: 3 }}>
           <div style={{ fontWeight: 600 }}>They activated {r.target}</div>
           {r.keyNote && <div>{r.keyNote}</div>}
+          {!r.keyNote && !r.tips.length && <div style={{ opacity: 0.75 }}>No replay stats for answering it.</div>}
           {r.tips.map((t) => (
             <div key={t.name}><span style={{ fontWeight: 600 }}>{t.name}</span>: {t.lines.join(" · ")}</div>
           ))}
@@ -205,11 +206,21 @@ export function RightNowView({ now }: { now: CoachNow }) {
   );
 }
 
-/** The hand traps they may hold now, recounted as they show cards. */
+/** The bot's deck type, guessed from the cards of it seen so far. */
+export function OppGuessView({ guess }: { guess: NonNullable<CoachStats["oppGuess"]> }) {
+  if (!guess.types.length) return null;
+  return (
+    <Section title={`Their deck (from ${guess.seen} card${guess.seen === 1 ? "" : "s"} seen)`}>
+      {guess.types.slice(0, 4).map((t) => <Row key={t.name} label={t.name} value={percent(t.share)} />)}
+    </Section>
+  );
+}
+
+/** Your turn: the interruptions they may hold (their deck type's, from replays), recounted as they use cards. */
 export function HeldView({ now }: { now: CoachNow }) {
   if (!now.held.length) return null;
   return (
-    <Section title="They may hold now">
+    <Section title="Interruptions they may hold">
       {now.held.slice(0, 5).map((h) => (
         <Row key={h.code ?? h.name} label={h.shown ? `${h.name} (${h.shown} used)` : h.name} value={percent(h.chance)} />
       ))}
@@ -323,7 +334,9 @@ export function CoachPanelView({
       {!collapsed && state.enabled && <>
         <CoachStatsView stats={stats} />
         {now?.outlook && <div style={{ fontSize: 12, lineHeight: 1.4, fontWeight: 600 }}>{now.outlook}</div>}
-        {stats?.matchup === null && <div style={{ fontSize: 11, opacity: 0.6 }}>The matchup shows once you see a bot card.</div>}
+        {stats?.oppGuess ? <OppGuessView guess={stats.oppGuess} /> : stats?.matchup === null && (
+          <div style={{ fontSize: 11, opacity: 0.6 }}>Their deck shows once you see their cards.</div>
+        )}
         {now && <RightNowView now={now} />}
         {showSuggest && <SuggestView state={state} turn={turn} canSuggest={canSuggest} onSuggest={onSuggest} />}
         {now && <HeldView now={now} />}

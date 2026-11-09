@@ -42,12 +42,12 @@ describe("<CoachPanel>", () => {
     expect(html).toContain("Dracotail");
     expect(html).toContain("90% match");
     expect(html).toContain("52% of 200 overall");
-    expect(html).toContain("The matchup shows once you see a bot card.");
+    expect(html).toContain("Their deck shows once you see their cards.");
     expect(html).toContain("Going second: Dracotail won 41%");
     expect(html).toContain("Right now");
     expect(html).toContain("They activated Faimena");
     expect(html).toContain("denies them 2 cards");
-    expect(html).toContain("They may hold now");
+    expect(html).toContain("Interruptions they may hold");
     expect(html).toContain("Ash Blossom (1 used)");
     expect(html).toContain("38%");
     expect(html).not.toContain("Most Played Card");
@@ -55,6 +55,20 @@ describe("<CoachPanel>", () => {
     expect(html).toContain('role="switch"');
     expect(html).toContain("checked");
     expect(html).toContain("Suggest my turn");
+  });
+
+  it("the bot's deck guess from the cards seen", () => {
+    const html = render({ stats: { format: "TCG", matchup: null, oppGuess: { seen: 3, types: [{ name: "Magistus Dracotail", share: 0.64 }, { name: "Branded", share: 0.36 }] } } });
+    expect(html).toContain("Their deck (from 3 cards seen)");
+    expect(html).toContain("Magistus Dracotail");
+    expect(html).toContain("64%");
+    expect(html).not.toContain("Their deck shows once");
+  });
+
+  it("their activation with no stats still says what they did", () => {
+    const html = render({ stats: { format: "TCG" } }, { now: { outlook: null, held: [], tip: null, responses: { target: "Blazing Cartesia", keyNote: null, tips: [] } } });
+    expect(html).toContain("They activated Blazing Cartesia");
+    expect(html).toContain("No replay stats for answering it.");
   });
 
   it("the Suggest button only on your Main Phase 1", () => {

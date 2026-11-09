@@ -5,7 +5,9 @@
 import type { CoachOppAnswers, CoachStats } from "../types";
 
 type Rec = { games: number; wins: number };
-const hasGames = (r: Rec | null | undefined): r is Rec => !!r && r.games > 0;
+/** Fewer games than this is noise: the coach doesn't quote it. */
+export const MIN_GAMES = 30;
+const hasGames = (r: Rec | null | undefined): r is Rec => !!r && r.games >= MIN_GAMES;
 const pct = (r: Rec) => `${Math.round((r.wins / r.games) * 100)}%`;
 const games = (n: number) => `${n.toLocaleString("en-US")} game${n === 1 ? "" : "s"}`;
 

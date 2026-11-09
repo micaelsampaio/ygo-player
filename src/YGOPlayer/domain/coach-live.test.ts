@@ -51,7 +51,7 @@ describe("readStory + outlookLine", () => {
   const stats: CoachStats = {
     format: "TCG", deckType: { name: "Fire King", confidence: 0.9 },
     goingFirst: { games: 100, wins: 49 }, goingSecond: { games: 100, wins: 41 },
-    stoppedBy: [{ name: "Ash Blossom", code: 7, games: 20, wins: 6 }],
+    stoppedBy: [{ name: "Ash Blossom", code: 7, games: 40, wins: 12 }, { name: "Thin Card", code: 8, games: 20, wins: 2 }],
     oppAnswers: { deckType: "Dracotail", byInterruptions: [{ label: "0", games: 50, wins: 35 }, { label: "1", games: 40, wins: 21 }], answers: [] },
   };
   const me = 0;
@@ -75,7 +75,10 @@ describe("readStory + outlookLine", () => {
       { type: "Activate", player: 1, id: 7 },
       { type: "DuelTurn", turn: 2, turnPlayer: 1 },
     ];
-    expect(outlookLine(stats, readStory(logs, me, null, 2), me)).toBe("They hit you with Ash Blossom on turn 1: Fire King won 30% of those games (20 games).");
+    expect(outlookLine(stats, readStory(logs, me, null, 2), me)).toBe("They hit you with Ash Blossom on turn 1: Fire King won 30% of those games (40 games).");
+    // Under 30 games: not quoted, the going-first rate instead.
+    const thin = [{ type: "Turn Order", goingFirst: 0 }, { type: "Activate", player: 1, id: 8 }, { type: "DuelTurn", turn: 2, turnPlayer: 1 }];
+    expect(outlookLine(stats, readStory(thin, me, null, 2), me)).toBe("Going first: Fire King won 49% (100 games).");
   });
 
   it("before anything happened: the going first / second rate", () => {

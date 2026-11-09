@@ -4,6 +4,7 @@
  * thumbnails grouped by location, and Cancel (don't respond / continue) /
  * Effect Activation. A card is picked first (it glows), then activated;
  * clicking the picked card again, or double-clicking one, activates it at once.
+ * With a single card to chain it starts picked: Effect Activation is one click.
  */
 import { useState } from "react";
 import type { YGODuel } from "../../../core/YGODuel";
@@ -29,7 +30,7 @@ export function ChainPromptDialog({ duel, title, subtitle, rows, chainLength, re
   const cards = rows.filter((r) => r.commandType !== "Pass");
   const passRow = rows.find((r) => r.commandType === "Pass");
   const others = rows.filter((r) => r.commandType !== "Pass" && r.code === undefined);
-  const picked = cards.find((r) => r.key === pickedKey) ?? null;
+  const picked = cards.find((r) => r.key === pickedKey) ?? (cards.length === 1 ? cards[0] : null);
   // An open window says what just happened, like a response's question does ('"Rahu Dracotail"
   // resolved. Activate a card?'); a phase change keeps its own ("End of Main Phase: activate a card?").
   // "Activate now" (nothing on the chain, no phase moment) is a question too, an open window's or not.
@@ -46,10 +47,10 @@ export function ChainPromptDialog({ duel, title, subtitle, rows, chainLength, re
     code: row.code as number,
     name: row.label,
     imageUrl: duel.ygo?.state?.getCardData(row.code as number)?.images?.small_url,
-    selected: row.key === pickedKey,
+    selected: row.key === picked?.key,
     busy: pendingKey === row.key,
     badge: row.count > 1 ? `×${row.count}` : undefined,
-    onClick: () => (row.key === pickedKey ? choose(row) : setPickedKey(row.key)),
+    onClick: () => (row.key === picked?.key ? choose(row) : setPickedKey(row.key)),
     onDoubleClick: () => choose(row),
     onHover: (on) => onHover(on ? row : null),
   }));

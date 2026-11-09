@@ -116,6 +116,12 @@ export interface CoachStats {
    * the bot's hand size now, its deck size, minus the copies it has already shown.
    */
   oppHandTraps?: Array<{ name: string; chance: number; code?: number; dist?: Array<{ copies: number; share: number }> }>;
+  /**
+   * The bot's deck type as guessed from the cards of it seen so far (never from its deck list):
+   * each candidate's share 0..1, best first. The deck-type stats (matchup, oppHandTraps,
+   * oppAnswers) are for the first one, and only once it's clear enough. Null: nothing seen yet.
+   */
+  oppGuess?: { seen: number; types: Array<{ name: string; share: number }> } | null;
   /** The bot's deck going first, from replays (only once its deck type is revealed). */
   oppAnswers?: CoachOppAnswers | null;
 }
