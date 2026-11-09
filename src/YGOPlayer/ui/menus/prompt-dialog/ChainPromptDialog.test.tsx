@@ -59,4 +59,14 @@ describe("ChainPromptDialog", () => {
     expect(empty).toContain("No replay stats for answering Beatrice yet.");
     expect(render([row(1, 0x02), pass])).not.toContain("ygo-md-coach-tips");
   });
+
+  it("triggers and Quick Effects together: two groups and the order note", () => {
+    const html = render([row(1, 0x02), row(2, 0x02), pass], { isTrigger: (r) => r.code === 2 });
+    expect(html).toContain('aria-label="Trigger effects"');
+    expect(html).toContain('aria-label="Quick effects"');
+    expect(html).toContain("Triggers go on the chain first");
+    expect(html.indexOf("/img/2.jpg")).toBeLessThan(html.indexOf("/img/1.jpg"));
+    // Only one kind: one group as before.
+    expect(render([row(1, 0x02), row(2, 0x02), pass], { isTrigger: () => true })).not.toContain("Triggers go on the chain first");
+  });
 });

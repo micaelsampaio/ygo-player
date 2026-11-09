@@ -42,12 +42,12 @@ describe("coach hint matching", () => {
   it("tags rows with the share, then the preview's LP and what it opens", () => {
     const hints = [{ action: activate, share: 0.618 }];
     const preview = parsePreview({ available: true, options: [{ action: activate, lp: { self: 0, opp: -1850 }, opens: [{ code: 1, name: "Garunix" }, { code: 1, name: "Garunix" }] }] });
-    expect(coachTags(activate, hints, preview)).toEqual(["players chose this 62%", "them −1850 LP", "opens Garunix"]);
+    expect(coachTags(activate, hints, preview)).toEqual(["~62% pick this in similar replays", "them −1850 LP", "opens Garunix"]);
     expect(coachTags(summon, hints, preview)).toEqual([]);
     const quiet = parsePreview({ available: true, options: [{ action: summon, lp: { self: 0, opp: 0 }, opens: [] }] });
     // Nothing happens to them: no tag (no "opens nothing").
     expect(coachTags(summon, null, quiet)).toEqual([]);
-    expect(coachTags(activate, hints, { available: false })).toEqual(["players chose this 62%"]);
+    expect(coachTags(activate, hints, { available: false })).toEqual(["~62% pick this in similar replays"]);
   });
 
   it("the interruptions an option may meet, from what it does and what they may hold", () => {
@@ -140,6 +140,14 @@ describe("response tips on the bot's turn", () => {
     expect(opponentChainTop(chain(1), 0)).toEqual({ code: faimena, ctrl: 1 });
     expect(opponentChainTop(chain(0), 0)).toBeNull();
     expect(opponentChainTop({ available: true, pending: "idle" }, 0)).toBeNull();
+  });
+
+  it("the bot going first: the engine numbers it 0, so the human's own cards tell who is who", () => {
+    // Board: human 0, bot 1; engine (turn order): bot 0, human 1. The bot's Mululu is chain link 1.
+    const r = { available: true, pending: "chain", respond: { activatable: [{ code: ash, ctrl: 1, loc: 2, seq: 0, pos: 0 }], chain: [{ code: faimena, ctrl: 0 }] } };
+    expect(opponentChainTop(r, 0)).toEqual({ code: faimena, ctrl: 0 });
+    const own = { ...r, respond: { ...r.respond, chain: [{ code: ash, ctrl: 1 }] } };
+    expect(opponentChainTop(own, 0)).toBeNull();
   });
 
   it("answer stats first, with the clean win rate; never \"stops them\"", () => {

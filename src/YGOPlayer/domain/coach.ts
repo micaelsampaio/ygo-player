@@ -157,9 +157,15 @@ export function parseSuggestion(res: unknown): CoachSuggestion {
 
 const MINUS = "−";
 
-/** "players chose this 62%" */
+/** What the share tags are, for a tooltip / footnote next to them. */
+export const SHARE_SOURCE = "Estimated by a model trained on DuelingBook replays: how often players picked each option in spots like this one. Not a count of this exact board.";
+
+/** True for a share tag (shareTag's text). */
+export const isShareTag = (tag: string) => tag.endsWith("in similar replays");
+
+/** "~62% pick this in similar replays" (the learned model's estimate, see SHARE_SOURCE) */
 export function shareTag(share: number): string {
-  return `players chose this ${Math.round(Math.max(0, Math.min(1, share)) * 100)}%`;
+  return `~${Math.round(Math.max(0, Math.min(1, share)) * 100)}% pick this in similar replays`;
 }
 
 /** "−1850 LP" / "+500 LP" */
@@ -275,12 +281,20 @@ type Record2 = { games: number; wins: number };
 const rate = (r: Record2) => `${Math.round((r.wins / r.games) * 100)}%`;
 const hasGames = (r: Record2 | null | undefined): r is Record2 => !!r && r.games > 0;
 
-/** The opponent's card on top of the chain, when it's theirs (`me`: the human's player index). */
+/**
+ * The opponent's card on top of the chain, when it's theirs. The chain's `ctrl` is the engine's
+ * player number, which isn't the board's when the bot goes first (the engine numbers by turn
+ * order): "mine" is the engine number of the cards you can chain here; `me` (the board's index)
+ * only when there are none to tell.
+ */
 export function opponentChainTop(result: unknown, me: number): { code: number; ctrl: number } | null {
-  const r = result as { available?: boolean; pending?: string; respond?: { chain?: Array<{ code?: unknown; ctrl?: unknown }> } } | null | undefined;
+  const r = result as { available?: boolean; pending?: string; respond?: { chain?: Array<{ code?: unknown; ctrl?: unknown }>; activatable?: Array<{ ctrl?: unknown }> } } | null | undefined;
   if (!r?.available || r.pending !== "chain") return null;
   const top = r.respond?.chain?.[r.respond.chain.length - 1];
-  if (!top || typeof top.code !== "number" || typeof top.ctrl !== "number" || top.ctrl === me) return null;
+  if (!top || typeof top.code !== "number" || typeof top.ctrl !== "number") return null;
+  const own = r.respond?.activatable?.find((a) => typeof a?.ctrl === "number")?.ctrl;
+  const mine = typeof own === "number" ? own : me;
+  if (top.ctrl === mine) return null;
   return { code: top.code, ctrl: top.ctrl };
 }
 

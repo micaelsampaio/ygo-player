@@ -21,9 +21,9 @@ import { PromptView } from "./assist-prompt-view";
 import { isMasterDuelStyle } from "../assist-card-actions";
 import { ChainPromptDialog } from "./prompt-dialog/ChainPromptDialog";
 import { MdPromptDialog } from "./prompt-dialog/PromptDialog";
-import { chainAheadOfBoard } from "../../domain/assist-query";
+import { chainAheadOfBoard, triggerKeysOf } from "../../domain/assist-query";
 import { zoneHighlights } from "../../domain/assist-zones";
-import { canPreview, coachHintsOf, coachPickOf, coachResponsesOf, coachTags, decisionKey, deniesFor, opponentChainTop, responseTags, type CoachPreview } from "../../domain/coach";
+import { canPreview, coachHintsOf, coachPickOf, isShareTag, SHARE_SOURCE, coachResponsesOf, coachTags, decisionKey, deniesFor, opponentChainTop, responseTags, type CoachPreview } from "../../domain/coach";
 import { useCoach } from "./coach-panel";
 import { keyCardNote, liveHandTraps, type HeldChance } from "../../domain/coach-live";
 import { shownByOpp } from "./use-coach-now";
@@ -266,6 +266,7 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
   const coachHints = coachKey !== null ? coachHintsOf(result) : null;
   const coachPreview = coachKey !== null && coach.preview.status !== "idle" && coach.preview.key === coachKey ? coach.preview : null;
   const previewResult: CoachPreview | null = coachPreview?.status === "done" ? coachPreview.result : null;
+  const chainTriggerKeys = triggerKeysOf(result);
   const coachChainTop = coachKey !== null ? opponentChainTop(result, duel.perspective.playerIndex) : null;
   // A card choice inside an effect: the coach's pick (the suggested line's, else the bot's clear pick).
   const coachPromptPick = coachOn && isActive && !held ? coachPickOf(result) : null;
@@ -440,6 +441,10 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
         pendingKey={pendingKey}
         choose={choose}
         onHover={(row) => setHover(row?.code !== undefined ? { code: row.code, side: me, tone: row.tone, loc: typeof row.data?.loc === "number" ? row.data.loc : undefined } : null)}
+        isTrigger={(row) => {
+          const d = row.data as { loc?: unknown; seq?: unknown } | undefined;
+          return row.code !== undefined && chainTriggerKeys.has(`${row.code}:${d?.loc}:${d?.seq}`);
+        }}
         coach={coachKey !== null ? {
           tagsFor: coachTagsFor,
           keyNote: coachChainTop ? keyCardNote(coachChainTop.code, coach.stats?.oppAnswers) : null,
@@ -616,7 +621,7 @@ export function CoachTags({ tags }: { tags: string[] }) {
   return (
     <span className="ygo-coach-tags" style={{ flexBasis: "100%", display: "flex", flexWrap: "wrap", gap: 4 }}>
       {tags.map((tag) => (
-        <span key={tag} style={{ fontSize: 10, fontWeight: 600, padding: "1px 6px", borderRadius: 999, background: "rgba(96, 165, 250, 0.2)", color: "#bfdbfe", whiteSpace: "normal", lineHeight: 1.3 }}>{tag}</span>
+        <span key={tag} title={isShareTag(tag) ? SHARE_SOURCE : undefined} style={{ fontSize: 10, fontWeight: 600, padding: "1px 6px", borderRadius: 999, background: "rgba(96, 165, 250, 0.2)", color: "#bfdbfe", whiteSpace: "normal", lineHeight: 1.3 }}>{tag}</span>
       ))}
     </span>
   );

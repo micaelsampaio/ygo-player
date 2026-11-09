@@ -9,6 +9,7 @@
 import { useState } from "react";
 import type { YGODuel } from "../../../core/YGODuel";
 import type { OptionRow } from "../../assist-sections";
+import { isShareTag, SHARE_SOURCE } from "../../../domain/coach";
 import { chainQuestion, groupByLocation, openWindowContext, PROMPT_KEYWORDS } from "./prompt-dialog";
 import { CardThumbGroups, MdButton, MdFooter, MdPromptDialog, PromptQuestion, type ThumbView } from "./PromptDialog";
 
@@ -20,7 +21,7 @@ export interface ChainDialogCoach {
   answering: boolean;
 }
 
-export function ChainPromptDialog({ duel, title, subtitle, rows, chainLength, respondingTo, openWindow, busy, pendingKey, choose, onHover, coach }: {
+export function ChainPromptDialog({ duel, title, subtitle, rows, chainLength, respondingTo, openWindow, busy, pendingKey, choose, onHover, coach, isTrigger }: {
   duel: YGODuel;
   title: string;
   subtitle?: string | null;
@@ -34,6 +35,8 @@ export function ChainPromptDialog({ duel, title, subtitle, rows, chainLength, re
   choose: (row: OptionRow) => void;
   onHover: (row: OptionRow | null) => void;
   coach?: ChainDialogCoach;
+  /** An optional trigger ("If …: You can"): shown apart, since triggers go on the chain first. */
+  isTrigger?: (row: OptionRow) => boolean;
 }) {
   const [pickedKey, setPickedKey] = useState<string | null>(null);
   const cards = rows.filter((r) => r.commandType !== "Pass");
@@ -64,15 +67,33 @@ export function ChainPromptDialog({ duel, title, subtitle, rows, chainLength, re
     onHover: (on) => onHover(on ? row : null),
   }));
   const rowOf = new Map(cards.map((r) => [r.key, r]));
-  const groups = groupByLocation(thumbs, (t) => {
+  const byLocation = (list: ThumbView[]) => groupByLocation(list, (t) => {
     const loc = rowOf.get(t.key)?.data.loc;
     return { loc: typeof loc === "number" ? loc : undefined };
   });
+  const groups = byLocation(thumbs);
+  // Triggers and Quick Effects together: shown apart. Triggers go on the chain first; once a
+  // Quick Effect is chained, a trigger may not be offered again.
+  const triggerThumbs = isTrigger ? thumbs.filter((t) => { const r = rowOf.get(t.key); return !!r && isTrigger(r); }) : [];
+  const split = triggerThumbs.length > 0 && triggerThumbs.length < thumbs.length;
+  const quickThumbs = split ? thumbs.filter((t) => !triggerThumbs.includes(t)) : [];
 
   return (
     <MdPromptDialog label={question} className="ygo-assist-chain-dialog" resetKey={`${title}|${rows.map((r) => r.key).join(",")}`}>
       <PromptQuestion text={question} sub={subtitle} terms={[respondingTo ? `"${respondingTo}"` : null, context ? `"${context.name}"` : null, ...PROMPT_KEYWORDS, ...cards.map((r) => r.label)]} />
-      {groups.length > 0 && <CardThumbGroups groups={groups} disabled={busy} />}
+      {split ? (
+        <div className="ygo-md-chain-kinds">
+          <section aria-label="Trigger effects">
+            <div className="ygo-md-chain-kind-title">Trigger effects</div>
+            <CardThumbGroups groups={byLocation(triggerThumbs)} disabled={busy} />
+          </section>
+          <section aria-label="Quick effects">
+            <div className="ygo-md-chain-kind-title">Quick effects</div>
+            <CardThumbGroups groups={byLocation(quickThumbs)} disabled={busy} />
+          </section>
+          <div className="ygo-md-chain-kind-note">Triggers go on the chain first: chain a Quick Effect now and the triggers may not be offered again.</div>
+        </div>
+      ) : groups.length > 0 && <CardThumbGroups groups={groups} disabled={busy} />}
       {coach && <CoachDialogTips coach={coach} rows={cards} respondingTo={respondingTo} />}
       {others.length > 0 && (
         <div className="ygo-md-prompt-options">
@@ -109,6 +130,7 @@ export function CoachDialogTips({ coach, rows, respondingTo }: { coach: ChainDia
       {tips.map(({ row, tags }) => (
         <div key={row.key}><strong>{row.label}</strong>: {tags.join(" · ")}</div>
       ))}
+      {tips.some(({ tags }) => tags.some(isShareTag)) && <div className="ygo-md-coach-tips-source">{SHARE_SOURCE}</div>}
       {!tips.length && !coach.keyNote && (
         <div className="ygo-md-coach-tips-empty">No replay stats{respondingTo ? ` for answering ${respondingTo}` : ""} yet.</div>
       )}

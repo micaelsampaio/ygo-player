@@ -83,8 +83,8 @@ describe("the chat merges the coach's lines by time", () => {
 
 describe("coach tags in the options panel", () => {
   it("renders each tag", () => {
-    const html = renderToStaticMarkup(<CoachTags tags={["players chose this 62%", "opens Garunix"]} />);
-    expect(html).toContain("players chose this 62%");
+    const html = renderToStaticMarkup(<CoachTags tags={["~62% pick this in similar replays", "opens Garunix"]} />);
+    expect(html).toContain("~62% pick this in similar replays");
     expect(html).toContain("opens Garunix");
   });
 

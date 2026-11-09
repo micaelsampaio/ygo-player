@@ -39,7 +39,7 @@ type AssistQueryBody =
   | { available: true; pending: "idle"; options: IdleOptions; nextPhase?: string | null; ygoPhase?: string }
   | { available: true; pending: "battle"; options: BattleOptions; nextPhase?: string | null; ygoPhase?: string }
   /** The human's own chain window: chain a card, or don't respond. */
-  | { available: true; pending: "chain"; respond: { activatable: CardRefData[]; canPass: boolean; forced: boolean; chainLength?: number; responding?: boolean; timing?: number; chain?: CardRefData[] }; ygoPhase?: string }
+  | { available: true; pending: "chain"; respond: { activatable: CardRefData[]; canPass: boolean; forced: boolean; chainLength?: number; responding?: boolean; timing?: number; chain?: CardRefData[]; triggers?: boolean[] }; ygoPhase?: string }
   /** An effect's follow-up choice the engine is holding for the human. */
   | { available: true; pending: "prompt"; prompt: PromptData };
 
@@ -52,4 +52,17 @@ type AssistQueryBody =
 export function chainAheadOfBoard(result: AssistQueryResult | null | undefined, boardChainLength: number): boolean {
   if (!result || !result.available || result.pending !== "chain") return false;
   return (result.respond.chainLength ?? 0) > boardChainLength;
+}
+
+/**
+ * The chain window's optional triggers ("If …: You can"), as `code:loc:seq` keys of their cards:
+ * they go on the chain first, so the dialog shows them apart from the Quick Effects.
+ */
+export function triggerKeysOf(result: AssistQueryResult | null | undefined): Set<string> {
+  const keys = new Set<string>();
+  if (!result || !result.available || result.pending !== "chain") return keys;
+  const { activatable, triggers } = result.respond;
+  if (!triggers || triggers.length !== activatable.length) return keys;
+  activatable.forEach((ref, i) => { if (triggers[i]) keys.add(`${ref.code}:${ref.loc}:${ref.seq}`); });
+  return keys;
 }
