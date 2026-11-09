@@ -94,6 +94,58 @@ export interface YGOPlayerStartReplayProps {
  * The host app (ygo101-web) wires these to its own outer socket layer
  * (kaibaNet.emitEvent), since judge/adapter access lives server-side in
  * ygo-socket-server, entirely outside ygo-core's own command/log system. */
+/** Duel Coach stats for the player's deck (ygo101-web builds them from the analyser). */
+export interface CoachStats {
+  /** Label shown, e.g. "TCG" or "TCG (fallback)". */
+  format: string;
+  deckType?: { name: string; confidence: number };
+  overall?: { games: number; wins: number };
+  goingFirst?: { games: number; wins: number };
+  goingSecond?: { games: number; wins: number };
+  /** null: the bot's deck type isn't revealed yet. */
+  matchup?: { vs: string; games: number; wins: number; first?: { games: number; wins: number }; second?: { games: number; wins: number } } | null;
+  /** Hand traps that hurt going first (lowest win rate first), max 5. */
+  stoppedBy?: Array<{ name: string; games: number; wins: number }>;
+  /** Best going-second cards, max 5. */
+  breakers?: Array<{ name: string; games: number; wins: number }>;
+  /** Most played (tournament lists), max 8. */
+  topCards?: Array<{ name: string; popularity: number; copies?: number }>;
+  /** Chance 0..1 the opponent holds at least one now, max 5. */
+  oppHandTraps?: Array<{ name: string; chance: number }>;
+  /** The bot's deck going first, from replays (only once its deck type is revealed). */
+  oppAnswers?: CoachOppAnswers | null;
+}
+
+/** How the bot's deck type does on its turn 1 when answered (CoachStats.oppAnswers). */
+export interface CoachOppAnswers {
+  /** The bot's deck type. */
+  deckType: string;
+  /** Its win rate going first when not interrupted on turn 1. */
+  clean?: { games: number; wins: number };
+  interrupted?: { games: number; wins: number };
+  /** By number of interruptions ("0", "1", "2", "3+"). */
+  byInterruptions?: Array<{ label: string; games: number; wins: number }>;
+  /** Its cards answered most. */
+  chokePoints?: Array<{ code: number; name: string; games: number; wins: number }>;
+  answers: Array<{ answer: { code: number; name: string }; target: { code: number; name: string }; games: number; wins: number }>;
+}
+
+/** Duel Coach (bot / solo duels only): the host app wires these to ygo-socket-server's duel:coach:* events. */
+export interface CoachHost {
+  /** Initial state. */
+  enabled: boolean;
+  /** duel:coach:set */
+  setEnabled(on: boolean): Promise<unknown>;
+  /** Initial stats (may arrive later via onStats). */
+  stats?: CoachStats | null;
+  /** Stats updates (e.g. the bot's deck type revealed); returns the unsubscribe. */
+  onStats?(cb: (s: CoachStats | null) => void): () => void;
+  /** duel:coach:preview ack */
+  preview(): Promise<unknown>;
+  /** duel:coach:suggest ack */
+  suggest(): Promise<unknown>;
+}
+
 export interface YGOAssistActions {
   query(): Promise<unknown>;
   choose(action: { commandType: string; data: unknown }): Promise<unknown>;
@@ -105,6 +157,8 @@ export interface YGOAssistActions {
   rate?(stars: number, reason?: string): Promise<unknown>;
   /** Bot duels: "Report a bug" also marks this moment in the game's bot log (ygo-socket-server `duel:bot:flag`). */
   flag?(): Promise<unknown>;
+  /** Duel Coach (bot / solo duels): absent, the coach panel, hints and previews never show. */
+  coach?: CoachHost;
 }
 
 export interface YGOPlayerConnectToServerProps {

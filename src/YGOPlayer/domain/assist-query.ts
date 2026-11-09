@@ -3,6 +3,7 @@
  * server offers the human right now). Types only; shared by core/ and ui/.
  */
 import type { CardRefData, PromptData } from "./assist-prompt";
+import type { CoachHints } from "./coach";
 
 export interface IdleOptions {
   summonable: CardRefData[];
@@ -27,7 +28,12 @@ export interface BattleOptions {
 /** The server only ever offers the single next phase (never a skip), plus
  * Standby / Main Phase 1 catch-up steps while the visible phase is behind
  * the engine's — see guidedView in ygo-socket-server's assistOptions.ts. */
-export type AssistQueryResult =
+export type AssistQueryResult = AssistQueryBody & {
+  /** Duel Coach on (bot / solo duels): what players chose here, for the human's own decision. */
+  coach?: CoachHints;
+};
+
+type AssistQueryBody =
   | { available: false }
   /** `ygoPhase`: the engine's current phase, as a ygo-core phase name. */
   | { available: true; pending: "idle"; options: IdleOptions; nextPhase?: string | null; ygoPhase?: string }

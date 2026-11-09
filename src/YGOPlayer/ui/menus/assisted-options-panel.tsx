@@ -23,6 +23,8 @@ import { ChainPromptDialog } from "./prompt-dialog/ChainPromptDialog";
 import { MdPromptDialog } from "./prompt-dialog/PromptDialog";
 import { chainAheadOfBoard } from "../../domain/assist-query";
 import { zoneHighlights } from "../../domain/assist-zones";
+import { canPreview, coachHintsOf, coachResponsesOf, coachTags, decisionKey, deniesFor, opponentChainTop, responseTags, type CoachPreview } from "../../domain/coach";
+import { useCoach } from "./coach-panel";
 
 /**
  * A one-zone choice with zones to click on the board needs no hint: the zones glow. The prompt
@@ -86,6 +88,7 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
   const [notice, setNotice] = useState<string | null>(null);
   const [hover, setHover] = useState<HighlightTarget | null>(null);
   const turnState = useDuelTurnState(duel);
+  const coach = useCoach(duel);
 
   const enabled = !!duel.assist && duel.client.type === YGOClientType.PLAYER && !!duel.ygo?.options?.assistedMode;
   // Publishes the setting on duel.chainStops (shown and changed on the bottom-right chain button).
@@ -256,6 +259,13 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
   const pileTone: Tone = isActive && result.pending === "idle" ? "play" : "quick";
   usePileHighlight(duel, () => duel.fields[me]?.graveyard?.gameObject ?? null, !held && offeredPileCodes(isActive ? result : null, LOC_GRAVE).size > 0, pileTone);
   usePileHighlight(duel, () => duel.fields[me]?.banishedZone?.gameObject ?? null, !held && offeredPileCodes(isActive ? result : null, LOC_REMOVED).size > 0, pileTone);
+  const coachOn = coach.available && coach.enabled;
+  const coachKey = coachOn && isActive && !held ? decisionKey(result) : null;
+  const coachHints = coachKey !== null ? coachHintsOf(result) : null;
+  const coachPreview = coachKey !== null && coach.preview.status !== "idle" && coach.preview.key === coachKey ? coach.preview : null;
+  const previewResult: CoachPreview | null = coachPreview?.status === "done" ? coachPreview.result : null;
+  const coachChainTop = coachKey !== null ? opponentChainTop(result, duel.perspective.playerIndex) : null;
+  const coachResponses = coachChainTop ? coachResponsesOf(result) : null;
   const panelRef = useRef<HTMLDivElement | null>(null);
   const placement = usePanelPlacement(panelRef, isMobileLayout, isMasterDuelStyle(duel));
 
@@ -345,7 +355,15 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
   const promptPendingKey = pendingKey?.startsWith("prompt:") ? pendingKey.slice("prompt:".length) : null;
 
   // One row button, shared by the panel's lists and the Master Duel style chain dialog.
-  const renderRow = (row: OptionRow) => (
+  const renderRow = (row: OptionRow) => {
+    const rowAction = { commandType: row.commandType, data: row.data };
+    const tags = coachKey !== null ? [
+      ...coachTags(rowAction, coachHints, previewResult),
+      ...(coachChainTop && row.commandType === "Activate"
+        ? responseTags(row.code, coachChainTop.code, coach.stats?.oppAnswers, deniesFor(coachResponses, rowAction))
+        : []),
+    ] : [];
+    return (
     <button
       key={row.key}
       className="ygo-card-item"
@@ -358,6 +376,7 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
       onBlur={() => setHover(null)}
       style={{
         display: "flex", alignItems: "center", gap: 6, textAlign: "left", fontWeight: 600, fontSize: 13,
+        ...(tags.length ? { flexWrap: "wrap" } : {}),
         ...(row.highlight ? { boxShadow: `inset 3px 0 0 ${TONE_CSS[row.tone ?? "play"]}` } : {}),
         // Keep the chosen row readable while the rest dim out.
         ...(pendingKey === row.key ? { opacity: 1 } : {}),
@@ -370,8 +389,10 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
       {row === spaceTarget && (
         <kbd title="Press Space" style={{ fontFamily: "inherit", fontSize: 10, fontWeight: 600, opacity: 0.6, padding: "1px 5px", borderRadius: 3, border: "1px solid currentColor" }}>Space</kbd>
       )}
+      {tags.length > 0 && <CoachTags tags={tags} />}
     </button>
-  );
+    );
+  };
 
   const stop = (e: { stopPropagation(): void }) => e.stopPropagation();
   // Master Duel style: the engine's question is a dialog over the board, not a panel row.
@@ -536,6 +557,12 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
       {chainDialog && (
         <div role="status" style={{ fontSize: 12, opacity: 0.8, lineHeight: 1.35 }}>Answer the question on the board.</div>
       )}
+      {!collapsed && !chainDialog && coachKey !== null && canPreview(result) && sections.length > 0 && (
+        <CoachPreviewButton
+          status={coachPreview?.status ?? "idle"}
+          onPreview={() => { void duel.coachController.preview(coachKey); }}
+        />
+      )}
       {!collapsed && !chainDialog && sections.map((section) => {
         const foldable = section.rows.length > GROUP_COLLAPSE_AT;
         const open = !foldable || openGroups.has(section.title);
@@ -563,4 +590,39 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
     </div>
     </>
   );
+}
+
+/** The coach's tags under an option ("players chose this 62%", "them −1850 LP", "opens Garunix"). */
+export function CoachTags({ tags }: { tags: string[] }) {
+  return (
+    <span className="ygo-coach-tags" style={{ flexBasis: "100%", display: "flex", flexWrap: "wrap", gap: 4 }}>
+      {tags.map((tag) => (
+        <span key={tag} style={{ fontSize: 10, fontWeight: 600, padding: "1px 6px", borderRadius: 999, background: "rgba(96, 165, 250, 0.2)", color: "#bfdbfe", whiteSpace: "normal", lineHeight: 1.3 }}>{tag}</span>
+      ))}
+    </span>
+  );
+}
+
+/** "Preview": asks the coach what each Attack / Activate here leads to (once per decision). */
+export function CoachPreviewButton({ status, onPreview }: { status: "idle" | "loading" | "retry" | "done"; onPreview(): void }) {
+  if (status === "done") {
+    return <div role="status" style={{ fontSize: 11, opacity: 0.7 }}>Coach preview on your Attack / Activate options.</div>;
+  }
+  const loading = status === "loading";
+  return (<>
+    {status === "retry" && <div role="status" style={{ fontSize: 11, opacity: 0.7 }}>No preview yet. Try again in a moment.</div>}
+    <button
+      type="button"
+      className="ygo-card-item"
+      disabled={loading}
+      aria-busy={loading}
+      onMouseDown={keepFocusOff}
+      onClick={onPreview}
+      title="What each Attack / Activate leads to"
+      style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 600 }}
+    >
+      <span style={{ flexGrow: 1, textAlign: "left" }}>{loading ? "Previewing…" : status === "retry" ? "Try again" : "Preview"}</span>
+      {loading && <span className="ygo-inline-spinner" aria-hidden="true" />}
+    </button>
+  </>);
 }

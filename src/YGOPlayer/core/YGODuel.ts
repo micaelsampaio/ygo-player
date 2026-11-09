@@ -43,6 +43,7 @@ import { YGOServerActions } from "./YGOServerActions";
 import { YGOPerspective, setActivePerspective } from "./YGOPerspective";
 import { buildCorePlayers, collectCardIds, fetchCardsInto, resolveLocalPlayer, resolvePlayerPOV } from "./duel-setup";
 import { YGOAssistController } from "./YGOAssistController";
+import { YGOCoachController } from "./YGOCoachController";
 import { YGOPlayerLogger } from "./YGOPlayerLogger";
 import { canDriveTurn, endTurn, goToNextPhase } from "../domain/phase-navigation";
 import type { YGOAssistActions } from "../types";
@@ -82,6 +83,8 @@ export class YGODuel {
    * matching move through it), the Space handler and the hand-card pick —
    * see YGOAssistController. */
   public assistController: YGOAssistController = new YGOAssistController(this);
+  /** Duel Coach (bot / solo duels, assist.coach): on/off, deck stats, previews and the turn suggestion. */
+  public coachController: YGOCoachController = new YGOCoachController(() => this.assist?.coach);
   public gameController: GameController;
   public mouseEvents: YGOMouseEvents;
   /** Drag and drop from the hand (Assisted Mode installs what a drop means). */
@@ -751,6 +754,7 @@ export class YGODuel {
 
     // Its middle-mouse listeners live on window, not the torn-down canvas.
     this.fieldStats?.destroy();
+    this.coachController.dispose();
 
     this.entities.forEach(entity => {
       try {
