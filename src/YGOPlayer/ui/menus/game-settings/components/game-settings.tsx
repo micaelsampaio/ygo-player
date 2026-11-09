@@ -8,6 +8,27 @@ import { YGOClientType } from "ygo-core";
 import { handDragAvailable } from "../../../../core/components/YGOHandDrag";
 import { ChainStopsControl } from "../../chain-stops-control";
 import { storedChainStops, storeChainStops, type ChainStops } from "../../duel-preferences";
+import { useCoach } from "../../coach-panel";
+
+/** Duel Coach on / off (bot / solo duels whose host offers it): its tips go to the chat. */
+function CoachSetting({ duel }: { duel: YGODuel }) {
+  const coach = useCoach(duel);
+  if (!coach.available) return null;
+  return <div className="ygo-flex ygo-mt-3">
+    <input
+      id="ygo-setting-coach"
+      style={{ display: "inline-block", width: "auto" }}
+      type="checkbox"
+      checked={coach.enabled}
+      disabled={coach.switching}
+      onChange={(e) => { void duel.coachController.setEnabled(e.currentTarget.checked); }}
+    />
+    <label htmlFor="ygo-setting-coach" style={{ display: "inline-block", flexGrow: 1 }} title="Tips in the chat (only you see them), coach tags on your options and Suggest my turn on your Main Phase 1">
+      Coach (tips in the chat, only you see them)
+    </label>
+    {coach.error && <div role="alert" style={{ flexBasis: "100%", fontSize: 12, color: "#fecaca" }}>{coach.error}</div>}
+  </div>;
+}
 
 /**
  * Chain stops, in every duel type (one setting, remembered across duels). An engine duel
@@ -165,6 +186,8 @@ export function GameSettingsDialog({ duel }: { duel: YGODuel }) {
               Show the opponent's activations
             </label>
           </div>
+
+          {isPlaying && <CoachSetting duel={duel} />}
 
           {isPlaying && handDragAvailable(duel) && <div className="ygo-flex ygo-mt-3">
             <input

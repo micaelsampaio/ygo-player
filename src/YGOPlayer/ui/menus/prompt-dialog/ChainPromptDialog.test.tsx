@@ -35,7 +35,7 @@ describe("ChainPromptDialog", () => {
 
   it("has Cancel (the pass row) and a disabled Effect Activation until a card is picked", () => {
     const html = render([row(1, 0x02), row(2, 0x02), pass]);
-    expect(html).toMatch(/is-secondary"[^>]*title="Don&#x27;t respond"|title="Don&#x27;t respond"[^>]*is-secondary/);
+    expect(html).toMatch(/is-secondary"[^>]*title="Don&#x27;t respond \(Space, or right-click the board\)"|title="Don&#x27;t respond \(Space, or right-click the board\)"[^>]*is-secondary/);
     expect(html).toMatch(/<button[^>]*disabled=""[^>]*class="ygo-md-prompt-button is-primary"[^>]*>.*Effect Activation/);
   });
 
@@ -68,5 +68,11 @@ describe("ChainPromptDialog", () => {
     expect(html.indexOf("/img/2.jpg")).toBeLessThan(html.indexOf("/img/1.jpg"));
     // Only one kind: one group as before.
     expect(render([row(1, 0x02), row(2, 0x02), pass], { isTrigger: () => true })).not.toContain("Triggers go on the chain first");
+  });
+
+  it("an open window's pass is Cancel too (one label everywhere)", () => {
+    const html = render([row(1, 0x02), pass], { openWindow: true });
+    expect(html).toContain(">Cancel");
+    expect(html).not.toContain(">Continue");
   });
 });

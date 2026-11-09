@@ -1,12 +1,13 @@
 /**
  * The chain window as Master Duel asks it: 'The effect of "X" is activated.
  * Chain another card or effect?', the cards that can be chained as
- * thumbnails grouped by location, and Cancel (don't respond / continue) /
+ * thumbnails grouped by location, and Cancel (don't respond; also Space or a right-click on the board) /
  * Effect Activation. A card is picked first (it glows), then activated;
  * clicking the picked card again, or double-clicking one, activates it at once.
  * With a single card to chain it starts picked: Effect Activation is one click.
  */
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { escapeOwnedElsewhere } from "../../components/escape-to-cancel";
 import type { YGODuel } from "../../../core/YGODuel";
 import type { OptionRow } from "../../assist-sections";
 import { isShareTag, SHARE_SOURCE } from "../../../domain/coach";
@@ -66,6 +67,20 @@ export function ChainPromptDialog({ duel, title, subtitle, rows, chainLength, re
     onDoubleClick: () => choose(row),
     onHover: (on) => onHover(on ? row : null),
   }));
+  // A right-click on the board answers Cancel too (as it backs out of a held play).
+  const cancelRef = useRef<(() => void) | null>(null);
+  cancelRef.current = passRow && !busy ? () => choose(passRow) : null;
+  const canvas = duel.core?.renderer?.domElement;
+  useEffect(() => {
+    if (!canvas) return;
+    const onContextMenu = (event: Event) => {
+      if (!cancelRef.current || escapeOwnedElsewhere(document, () => !!duel.globalHotKeysManager?.claimed("escPressed"))) return;
+      event.preventDefault();
+      cancelRef.current();
+    };
+    canvas.addEventListener("contextmenu", onContextMenu);
+    return () => canvas.removeEventListener("contextmenu", onContextMenu);
+  }, [canvas, duel]);
   const rowOf = new Map(cards.map((r) => [r.key, r]));
   const byLocation = (list: ThumbView[]) => groupByLocation(list, (t) => {
     const loc = rowOf.get(t.key)?.data.loc;
@@ -106,8 +121,8 @@ export function ChainPromptDialog({ duel, title, subtitle, rows, chainLength, re
       )}
       <MdFooter>
         {passRow && (
-          <MdButton variant="secondary" disabled={busy} busy={pendingKey === passRow.key} onClick={() => choose(passRow)} title={passRow.label}>
-            {openWindow ? "Continue" : "Cancel"}
+          <MdButton variant="secondary" disabled={busy} busy={pendingKey === passRow.key} onClick={() => choose(passRow)} title={`${passRow.label} (Space, or right-click the board)`}>
+            Cancel
             <kbd className="ygo-md-prompt-kbd" title="Press Space">Space</kbd>
           </MdButton>
         )}

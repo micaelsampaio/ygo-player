@@ -12,29 +12,19 @@ const base: CoachState = {
 };
 const noop = () => {};
 const render = (state: Partial<CoachState>, props: Partial<CoachPanelViewProps> = {}) => renderToStaticMarkup(
-  <CoachPanelView state={{ ...base, ...state }} turn={2} canSuggest onSetEnabled={noop} onSuggest={noop} {...props} />,
+  <CoachPanelView state={{ ...base, ...state }} turn={2} canSuggest onSuggest={noop} {...props} />,
 );
 
-describe("<CoachPanel>: the toolbar", () => {
-  it("is hidden only without a coach", () => {
+describe("<CoachPanel>: Suggest my turn on the board", () => {
+  it("shows only with the coach on, on your Main Phase 1 (the switch is in the settings)", () => {
     expect(coachPanelVisible({ ...base, available: false })).toBe(false);
-    expect(coachPanelVisible({ ...base, enabled: false })).toBe(true);
-  });
-
-  it("the switch, and Suggest my turn on your Main Phase 1; no stats", () => {
-    const html = render({ stats: { format: "TCG", deckType: { name: "Dracotail", confidence: 0.9 }, overall: { games: 200, wins: 104 } } });
-    expect(html).toContain('role="switch"');
-    expect(html).toContain("checked");
+    expect(coachPanelVisible({ ...base, enabled: false })).toBe(false);
+    expect(coachPanelVisible(base, false)).toBe(false);
+    expect(coachPanelVisible(base, true)).toBe(true);
+    const html = render({ stats: { format: "TCG", deckType: { name: "Dracotail", confidence: 0.9 } } });
     expect(html).toContain("Suggest my turn");
+    expect(html).not.toContain('role="switch"');
     expect(html).not.toContain("Dracotail");
-    expect(html).not.toContain("52%");
-    expect(render({}, { showSuggest: false })).not.toContain("Suggest my turn");
-  });
-
-  it("off: just the switch", () => {
-    const html = render({ enabled: false });
-    expect(html).not.toContain("checked");
-    expect(html).not.toContain("Suggest my turn");
   });
 
   it("a refused suggestion says why and can be asked again; a found line is in the chat", () => {

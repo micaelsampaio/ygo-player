@@ -23,9 +23,12 @@ export function useCoach(duel: YGODuel): CoachState {
   );
 }
 
-/** Shown whenever the host offers a coach (off: just the switch). */
-export function coachPanelVisible(state: CoachState): boolean {
-  return state.available;
+/**
+ * The board's coach control is only "Suggest my turn": shown with the coach on, on your Main
+ * Phase 1 (the on/off switch is in the duel settings).
+ */
+export function coachPanelVisible(state: CoachState, showSuggest = true): boolean {
+  return state.available && state.enabled && showSuggest;
 }
 
 const stop = (e: { stopPropagation(): void }) => e.stopPropagation();
@@ -33,9 +36,9 @@ const stop = (e: { stopPropagation(): void }) => e.stopPropagation();
 const keepFocusOff = (e: { preventDefault(): void }) => e.preventDefault();
 
 /**
- * Duel Coach (bot / solo duels with assist.coach): a small toolbar (the on/off switch, and "Suggest
- * my turn" on your Main Phase 1). What the coach has to say goes to the duel chat, as it happens,
- * for this player only (useCoachMessages); the tags on your options stay where you decide.
+ * Duel Coach (bot / solo duels with assist.coach): "Suggest my turn" on your Main Phase 1 (the
+ * on/off switch is in the duel settings). What the coach has to say goes to the duel chat, as it
+ * happens, for this player only (useCoachMessages); the tags on your options stay where you decide.
  */
 export function CoachPanel({ duel, isMobileLayout = false }: { duel: YGODuel; isMobileLayout?: boolean }) {
   const state = useCoach(duel);
@@ -45,20 +48,20 @@ export function CoachPanel({ duel, isMobileLayout = false }: { duel: YGODuel; is
   const placement = usePanelPlacement(panelRef, isMobileLayout, false, { key: "ygo-coach-panel-place", docked: DOCKED });
   const nudge = useStayClear(panelRef, placement.style);
 
-  if (!coachPanelVisible(state)) return null;
+  const showSuggest = turnState.isLocalTurn && turnState.phase === "Main Phase 1";
+  if (!coachPanelVisible(state, showSuggest)) return null;
   const controller = duel.coachController;
   return (
     <CoachPanelView
       state={state}
       turn={turnState.turn}
       canSuggest={turnState.isLocalTurn && !!duel.isGameActive}
-      showSuggest={turnState.isLocalTurn && turnState.phase === "Main Phase 1"}
+      showSuggest={showSuggest}
       isMobileLayout={isMobileLayout}
       panelRef={panelRef}
       placementStyle={{ ...placement.style, ...nudge }}
       onHeaderPointerDown={placement.onHeaderPointerDown}
       onResetPosition={placement.resetPosition}
-      onSetEnabled={(on) => { void controller.setEnabled(on); }}
       onSuggest={() => { void controller.suggest(turnState.turn); }}
     />
   );
@@ -126,13 +129,12 @@ export interface CoachPanelViewProps {
   placementStyle?: CSSProperties;
   onHeaderPointerDown?(e: { clientX: number; clientY: number; button: number; preventDefault(): void; stopPropagation(): void }): void;
   onResetPosition?(): void;
-  onSetEnabled(on: boolean): void;
   onSuggest(): void;
 }
 
 export function CoachPanelView({
   state, turn, canSuggest, showSuggest = canSuggest, isMobileLayout = false,
-  panelRef, placementStyle, onHeaderPointerDown, onResetPosition, onSetEnabled, onSuggest,
+  panelRef, placementStyle, onHeaderPointerDown, onResetPosition, onSuggest,
 }: CoachPanelViewProps) {
   const placement: CSSProperties = placementStyle ?? (isMobileLayout ? DOCKED.mobile : DOCKED.desktop);
   const s = state.suggest;
@@ -158,22 +160,6 @@ export function CoachPanelView({
         style={{ display: "flex", alignItems: "center", gap: 8, userSelect: "none", touchAction: "none", cursor: onHeaderPointerDown ? "grab" : undefined }}
       >
         <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", opacity: 0.55, whiteSpace: "nowrap" }}>Coach</span>
-        <label
-          title={state.enabled ? "Turn the coach off" : "Turn the coach on (its tips show in the chat)"}
-          style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, cursor: state.switching ? "wait" : "pointer", opacity: 0.85 }}
-          onMouseDown={keepFocusOff}
-          onPointerDown={stop}
-        >
-          <input
-            type="checkbox"
-            role="switch"
-            aria-label="Coach"
-            checked={state.enabled}
-            disabled={state.switching}
-            onChange={(e) => onSetEnabled(e.currentTarget.checked)}
-          />
-          {state.enabled ? "On" : "Off"}
-        </label>
         {state.enabled && showSuggest && (
           <button
             type="button"
