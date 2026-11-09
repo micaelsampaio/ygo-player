@@ -6,16 +6,22 @@ const PLACEMENT_KEY = "ygo-assisted-panel";
 
 interface Placement { x: number | null; y: number | null; collapsed: boolean }
 
-function loadPlacement(): Placement {
+/** Another panel's own spot: its storage key and where it docks until dragged. */
+export interface PanelPlacementOptions {
+  key?: string;
+  docked?: { desktop: CSSProperties; mobile: CSSProperties };
+}
+
+function loadPlacement(key: string): Placement {
   try {
-    const raw = safeGetItem(PLACEMENT_KEY);
+    const raw = safeGetItem(key);
     if (raw) return { x: null, y: null, collapsed: false, ...JSON.parse(raw) };
   } catch { /* unreadable value — fall back to the docked default */ }
   return { x: null, y: null, collapsed: false };
 }
 
-function savePlacement(p: Placement) {
-  safeSetItem(PLACEMENT_KEY, JSON.stringify(p));
+function savePlacement(key: string, p: Placement) {
+  safeSetItem(key, JSON.stringify(p));
 }
 
 /** Drag-by-header + collapse, remembered per browser, so the panel can be
@@ -24,15 +30,16 @@ function savePlacement(p: Placement) {
  * the mobile layout it starts collapsed every duel (whatever was stored),
  * since expanded it would cover a large part of the board. So does
  * `startCollapsed` (Master Duel style, where the cards and dialogs carry the game). */
-export function usePanelPlacement(panelRef: { current: HTMLDivElement | null }, isMobileLayout: boolean, startCollapsed = false) {
-  const [placement, setPlacement] = useState<Placement>(loadPlacement);
+export function usePanelPlacement(panelRef: { current: HTMLDivElement | null }, isMobileLayout: boolean, startCollapsed = false, opts: PanelPlacementOptions = {}) {
+  const storageKey = opts.key ?? PLACEMENT_KEY;
+  const [placement, setPlacement] = useState<Placement>(() => loadPlacement(storageKey));
   const [sessionCollapsed, setSessionCollapsed] = useState(true);
   // Collapsed state that isn't remembered: it starts collapsed every duel.
   const perDuel = isMobileLayout || startCollapsed;
   const placementRef = useRef(placement);
   placementRef.current = placement;
 
-  const update = (next: Placement) => { setPlacement(next); savePlacement(next); };
+  const update = (next: Placement) => { setPlacement(next); savePlacement(storageKey, next); };
 
   // A stored position from a wider window can sit off-screen — pull it back
   // in on mount and whenever the window resizes. Not persisted: widening the
@@ -74,7 +81,7 @@ export function usePanelPlacement(panelRef: { current: HTMLDivElement | null }, 
     const onUp = () => {
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerup", onUp);
-      if (moved) savePlacement(placementRef.current);
+      if (moved) savePlacement(storageKey, placementRef.current);
     };
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup", onUp);
@@ -82,7 +89,9 @@ export function usePanelPlacement(panelRef: { current: HTMLDivElement | null }, 
 
   const { x, y } = placement;
   const style: CSSProperties = x === null || y === null
-    ? isMobileLayout
+    ? opts.docked
+      ? (isMobileLayout ? opts.docked.mobile : opts.docked.desktop)
+      : isMobileLayout
       // Below the (scaled-down) opponent HUD, kept narrow so the board stays visible.
       ? { top: 90, left: "auto", right: 12, maxHeight: "45%" }
       // Docked on the right between the two player HUDs (opponent: flush top, you: bottom 100px; 86px each).

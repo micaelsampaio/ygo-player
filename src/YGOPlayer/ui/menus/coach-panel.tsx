@@ -1,4 +1,4 @@
-import { useCallback, useState, useSyncExternalStore, type CSSProperties, type ReactNode } from "react";
+import { useCallback, useLayoutEffect, useRef, useState, useSyncExternalStore, type CSSProperties, type ReactNode } from "react";
 import type { YGODuel } from "../../core/YGODuel";
 import type { CoachState } from "../../core/YGOCoachController";
 import type { CoachOppAnswers, CoachStats } from "../../types";
@@ -6,6 +6,8 @@ import { YGOClientType } from "ygo-core";
 import { endBoardText, percent, winRateText } from "../../domain/coach";
 import { safeGetItem, safeSetItem } from "../../scripts/safe-storage";
 import { useDuelTurnState } from "../use-duel-turn-state";
+import { useCoachNow, type CoachNow } from "./use-coach-now";
+import { usePanelPlacement } from "./use-panel-placement";
 
 const NO_COACH: CoachState = {
   available: false, enabled: false, everEnabled: false, switching: false, stats: null,
@@ -47,15 +49,26 @@ export function CoachPanel({ duel, isMobileLayout = false }: { duel: YGODuel; is
     return !c;
   }), [isMobileLayout]);
 
+  const now = useCoachNow(duel, state.stats, turnState, state.available && state.enabled && !collapsed);
+  const panelRef = useRef<HTMLDivElement | null>(null);
+  const placement = usePanelPlacement(panelRef, isMobileLayout, false, { key: "ygo-coach-panel-place", docked: DOCKED });
+  const nudge = useStayClear(panelRef, placement.style);
+
   if (!coachPanelVisible(state)) return null;
   const controller = duel.coachController;
   return (
     <CoachPanelView
       state={state}
+      now={now}
       turn={turnState.turn}
       canSuggest={turnState.isLocalTurn && !!duel.isGameActive}
+      showSuggest={turnState.isLocalTurn && turnState.phase === "Main Phase 1"}
       collapsed={collapsed}
       isMobileLayout={isMobileLayout}
+      panelRef={panelRef}
+      placementStyle={{ ...placement.style, ...nudge }}
+      onHeaderPointerDown={placement.onHeaderPointerDown}
+      onResetPosition={placement.resetPosition}
       onToggleCollapsed={toggleCollapsed}
       onSetEnabled={(on) => {
         if (on) setCollapsed(false);
@@ -66,13 +79,65 @@ export function CoachPanel({ duel, isMobileLayout = false }: { duel: YGODuel; is
   );
 }
 
+/** Where the coach docks until it's dragged: left of the board, clear of the card details. */
+const DOCKED = {
+  desktop: { top: 12, left: 316, right: "auto", maxHeight: "calc(100% - 210px)" },
+  mobile: { top: 8, left: 72, right: "auto", maxHeight: "45%" },
+} satisfies { desktop: CSSProperties; mobile: CSSProperties };
+
+const overlaps = (a: DOMRect, b: DOMRect) => a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
+
+/**
+ * Keeps the coach off the Assisted Options panel (dragged next to it, or docked where the
+ * options panel was dragged): moves it below that panel, or beside it when there's no room below.
+ * Not remembered; it re-checks on every render and window resize.
+ */
+function useStayClear(panelRef: { current: HTMLDivElement | null }, base: CSSProperties): CSSProperties {
+  const [nudge, setNudge] = useState<CSSProperties>({});
+  const key = JSON.stringify(nudge);
+  useLayoutEffect(() => {
+    const check = () => {
+      const panel = panelRef.current;
+      const parent = panel?.offsetParent as HTMLElement | null;
+      const other = parent?.querySelector<HTMLElement>(".ygo-assisted-options-panel");
+      if (!panel || !parent || !other) { if (key !== "{}") setNudge({}); return; }
+      const p = parent.getBoundingClientRect();
+      const o = other.getBoundingClientRect();
+      // Where the coach sits without a nudge.
+      const width = panel.offsetWidth;
+      const height = panel.offsetHeight;
+      const left = typeof base.left === "number" ? p.left + base.left : panel.getBoundingClientRect().left;
+      const top = typeof base.top === "number" ? p.top + base.top : panel.getBoundingClientRect().top;
+      const own = new DOMRect(left, top, width, height);
+      if (!overlaps(own, o)) { if (key !== "{}") setNudge({}); return; }
+      const below = o.bottom - p.top + 8;
+      const next: CSSProperties = below + Math.min(height, 160) <= p.height
+        ? { top: below, maxHeight: `calc(100% - ${below + 12}px)` }
+        : { left: o.right - p.left + 8, right: "auto" };
+      if (JSON.stringify(next) !== key) setNudge(next);
+    };
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  });
+  return nudge;
+}
+
 export interface CoachPanelViewProps {
   state: CoachState;
+  /** The coach's live read of the duel (null: not read, e.g. collapsed). */
+  now?: CoachNow | null;
   turn: number;
   /** Your own turn (the suggestion is for your turn). */
   canSuggest: boolean;
+  /** Your Main Phase 1: the Suggest button shows (defaults to canSuggest). */
+  showSuggest?: boolean;
   collapsed: boolean;
   isMobileLayout?: boolean;
+  panelRef?: { current: HTMLDivElement | null };
+  placementStyle?: CSSProperties;
+  onHeaderPointerDown?(e: { clientX: number; clientY: number; button: number; preventDefault(): void; stopPropagation(): void }): void;
+  onResetPosition?(): void;
   onToggleCollapsed(): void;
   onSetEnabled(on: boolean): void;
   onSuggest(): void;
@@ -104,55 +169,51 @@ export function TheirTurnView({ opp }: { opp: CoachOppAnswers }) {
   );
 }
 
+/** The deck in one line: "Fire King · TCG · 90% match · 45% of 303 overall". */
 export function CoachStatsView({ stats }: { stats: CoachStats | null }) {
   if (!stats) return <div role="status" style={{ fontSize: 12, opacity: 0.75 }}>Looking up your deck…</div>;
-  const m = stats.matchup;
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-      <div style={{ fontSize: 12, lineHeight: 1.35 }}>
-        <strong>{stats.deckType?.name ?? "Your deck"}</strong>
-        <span style={{ opacity: 0.6 }}> · {stats.format}{stats.deckType ? ` · ${percent(stats.deckType.confidence)} match` : ""}</span>
-      </div>
-      {(stats.overall || stats.goingFirst || stats.goingSecond) && (
-        <Section title="Win rate">
-          {stats.overall && <Row label="Overall" value={winRateText(stats.overall)} />}
-          {stats.goingFirst && <Row label="Going first" value={winRateText(stats.goingFirst)} />}
-          {stats.goingSecond && <Row label="Going second" value={winRateText(stats.goingSecond)} />}
-        </Section>
-      )}
-      {m !== undefined && (
-        <Section title="Matchup">
-          {m === null
-            ? <div style={{ fontSize: 12, opacity: 0.7 }}>Shows once you see a bot card.</div>
-            : <>
-              <Row label={`vs ${m.vs}`} value={winRateText(m)} />
-              {m.first && <Row label="Going first" value={winRateText(m.first)} />}
-              {m.second && <Row label="Going second" value={winRateText(m.second)} />}
-            </>}
-        </Section>
-      )}
-      {stats.oppAnswers && <TheirTurnView opp={stats.oppAnswers} />}
-      {!!stats.oppHandTraps?.length && (
-        <Section title="They may hold">
-          {stats.oppHandTraps.map((c) => <Row key={c.name} label={c.name} value={percent(c.chance)} />)}
-        </Section>
-      )}
-      {!!stats.stoppedBy?.length && (
-        <Section title="Hurts you going first">
-          {stats.stoppedBy.map((c) => <Row key={c.name} label={c.name} value={winRateText(c)} />)}
-        </Section>
-      )}
-      {!!stats.breakers?.length && (
-        <Section title="Best going second">
-          {stats.breakers.map((c) => <Row key={c.name} label={c.name} value={winRateText(c)} />)}
-        </Section>
-      )}
-      {!!stats.topCards?.length && (
-        <Section title="Most played">
-          {stats.topCards.map((c) => <Row key={c.name} label={c.copies ? `${c.name} ×${c.copies}` : c.name} value={percent(c.popularity)} />)}
-        </Section>
-      )}
+    <div style={{ fontSize: 12, lineHeight: 1.35 }}>
+      <strong>{stats.deckType?.name ?? "Your deck"}</strong>
+      <span style={{ opacity: 0.6 }}>
+        {" "}· {stats.format}{stats.deckType ? ` · ${percent(stats.deckType.confidence)} match` : ""}
+        {stats.overall && stats.overall.games > 0 ? ` · ${winRateText(stats.overall)} overall` : ""}
+      </span>
     </div>
+  );
+}
+
+const callout: CSSProperties = { fontSize: 12, lineHeight: 1.4, padding: "5px 8px", borderRadius: 4, background: "rgba(59, 130, 246, 0.14)", borderLeft: "3px solid rgb(96, 165, 250)" };
+
+/** "Right now": the line for the moment you're in, and what answering their card did in replays. */
+export function RightNowView({ now }: { now: CoachNow }) {
+  const r = now.responses;
+  if (!now.tip && !r) return null;
+  return (
+    <Section title="Right now">
+      {now.tip && <div role="status" style={callout}>{now.tip}</div>}
+      {r && (
+        <div role="status" style={{ ...callout, display: "flex", flexDirection: "column", gap: 3 }}>
+          <div style={{ fontWeight: 600 }}>They activated {r.target}</div>
+          {r.keyNote && <div>{r.keyNote}</div>}
+          {r.tips.map((t) => (
+            <div key={t.name}><span style={{ fontWeight: 600 }}>{t.name}</span>: {t.lines.join(" · ")}</div>
+          ))}
+        </div>
+      )}
+    </Section>
+  );
+}
+
+/** The hand traps they may hold now, recounted as they show cards. */
+export function HeldView({ now }: { now: CoachNow }) {
+  if (!now.held.length) return null;
+  return (
+    <Section title="They may hold now">
+      {now.held.slice(0, 5).map((h) => (
+        <Row key={h.code ?? h.name} label={h.shown ? `${h.name} (${h.shown} used)` : h.name} value={percent(h.chance)} />
+      ))}
+    </Section>
   );
 }
 
@@ -165,7 +226,8 @@ function SuggestView({ state, turn, canSuggest, onSuggest }: Pick<CoachPanelView
       <button
         type="button"
         className="ygo-card-item"
-        disabled={loading || !canSuggest || !!done}
+        // Only a found line locks it for the turn; a refusal ("not Main Phase 1", busy...) can be asked again.
+        disabled={loading || !canSuggest || !!done?.available}
         aria-busy={loading}
         onMouseDown={keepFocusOff}
         onClick={onSuggest}
@@ -188,12 +250,15 @@ function SuggestView({ state, turn, canSuggest, onSuggest }: Pick<CoachPanelView
   );
 }
 
-export function CoachPanelView({ state, turn, canSuggest, collapsed, isMobileLayout = false, onToggleCollapsed, onSetEnabled, onSuggest }: CoachPanelViewProps) {
-  const placement: CSSProperties = isMobileLayout
-    ? { top: 8, left: 72, maxHeight: "45%" }
-    : { top: 12, left: 316, maxHeight: "calc(100% - 210px)" };
+export function CoachPanelView({
+  state, now = null, turn, canSuggest, showSuggest = canSuggest, collapsed, isMobileLayout = false,
+  panelRef, placementStyle, onHeaderPointerDown, onResetPosition, onToggleCollapsed, onSetEnabled, onSuggest,
+}: CoachPanelViewProps) {
+  const placement: CSSProperties = placementStyle ?? (isMobileLayout ? DOCKED.mobile : DOCKED.desktop);
+  const stats = state.stats;
   return (
     <div
+      ref={panelRef}
       className="ygo-card-menu ygo-coach-panel"
       role="region"
       aria-label="Coach"
@@ -204,7 +269,12 @@ export function CoachPanelView({ state, turn, canSuggest, collapsed, isMobileLay
       onMouseMove={stop}
       onWheel={stop}
     >
-      <div style={{ display: "flex", alignItems: "center", gap: 6, userSelect: "none" }}>
+      <div
+        onPointerDown={onHeaderPointerDown}
+        onDoubleClick={onResetPosition}
+        title={onHeaderPointerDown ? "Drag to move · double-click to dock back" : undefined}
+        style={{ display: "flex", alignItems: "center", gap: 6, userSelect: "none", touchAction: "none", cursor: onHeaderPointerDown ? "grab" : undefined }}
+      >
         <span style={{ flexGrow: 1, fontSize: 11, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", opacity: 0.55, whiteSpace: "nowrap" }}>
           Coach{collapsed && !state.enabled ? " (off)" : ""}
         </span>
@@ -212,6 +282,7 @@ export function CoachPanelView({ state, turn, canSuggest, collapsed, isMobileLay
           title={state.enabled ? "Turn the coach off" : "Turn the coach on"}
           style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, cursor: state.switching ? "wait" : "pointer", opacity: 0.85 }}
           onMouseDown={keepFocusOff}
+          onPointerDown={stop}
         >
           <input
             type="checkbox"
@@ -226,6 +297,7 @@ export function CoachPanelView({ state, turn, canSuggest, collapsed, isMobileLay
         <button
           type="button"
           onMouseDown={keepFocusOff}
+          onPointerDown={stop}
           onClick={onToggleCollapsed}
           aria-label={collapsed ? "Expand coach" : "Collapse coach"}
           aria-expanded={!collapsed}
@@ -249,8 +321,13 @@ export function CoachPanelView({ state, turn, canSuggest, collapsed, isMobileLay
         <div style={{ fontSize: 12, opacity: 0.75, lineHeight: 1.35 }}>Turn it on for live stats and tips on your options.</div>
       )}
       {!collapsed && state.enabled && <>
-        <CoachStatsView stats={state.stats} />
-        <SuggestView state={state} turn={turn} canSuggest={canSuggest} onSuggest={onSuggest} />
+        <CoachStatsView stats={stats} />
+        {now?.outlook && <div style={{ fontSize: 12, lineHeight: 1.4, fontWeight: 600 }}>{now.outlook}</div>}
+        {stats?.matchup === null && <div style={{ fontSize: 11, opacity: 0.6 }}>The matchup shows once you see a bot card.</div>}
+        {now && <RightNowView now={now} />}
+        {showSuggest && <SuggestView state={state} turn={turn} canSuggest={canSuggest} onSuggest={onSuggest} />}
+        {now && <HeldView now={now} />}
+        {stats?.oppAnswers && turn <= 2 && <TheirTurnView opp={stats.oppAnswers} />}
       </>}
     </div>
   );

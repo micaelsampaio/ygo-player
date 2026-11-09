@@ -105,13 +105,17 @@ export interface CoachStats {
   /** null: the bot's deck type isn't revealed yet. */
   matchup?: { vs: string; games: number; wins: number; first?: { games: number; wins: number }; second?: { games: number; wins: number } } | null;
   /** Hand traps that hurt going first (lowest win rate first), max 5. */
-  stoppedBy?: Array<{ name: string; games: number; wins: number }>;
+  stoppedBy?: Array<{ name: string; games: number; wins: number; code?: number }>;
   /** Best going-second cards, max 5. */
   breakers?: Array<{ name: string; games: number; wins: number }>;
   /** Most played (tournament lists), max 8. */
   topCards?: Array<{ name: string; popularity: number; copies?: number }>;
-  /** Chance 0..1 the opponent holds at least one now, max 5. */
-  oppHandTraps?: Array<{ name: string; chance: number }>;
+  /**
+   * Chance 0..1 the opponent holds at least one in its opening hand, max 5. With `code` + `dist`
+   * (the share 0..1 of the deck type's lists at each copy count) the coach recounts it live:
+   * the bot's hand size now, its deck size, minus the copies it has already shown.
+   */
+  oppHandTraps?: Array<{ name: string; chance: number; code?: number; dist?: Array<{ copies: number; share: number }> }>;
   /** The bot's deck going first, from replays (only once its deck type is revealed). */
   oppAnswers?: CoachOppAnswers | null;
 }

@@ -28,20 +28,44 @@ describe("<CoachPanel>", () => {
     expect(html).not.toContain("Suggest my turn");
   });
 
-  it("shows the stats and the switch", () => {
+  it("shows the deck in one line, the live read and the switch; no pre-game lists", () => {
     const html = render({ stats: {
       format: "TCG", deckType: { name: "Dracotail", confidence: 0.9 }, overall: { games: 200, wins: 104 },
       matchup: null, oppHandTraps: [{ name: "Ash Blossom", chance: 0.38 }],
+      topCards: [{ name: "Most Played Card", popularity: 1 }], breakers: [{ name: "Breaker Card", games: 9, wins: 6 }],
+    } }, { now: {
+      outlook: "Going second: Dracotail won 41% (157 games).",
+      held: [{ name: "Ash Blossom", code: 1, chance: 0.38, shown: 1 }],
+      tip: "~38% they hold Ash Blossom: lead with the card you can best afford to lose to it.",
+      responses: { target: "Faimena", keyNote: "Faimena is a key card for them", tips: [{ name: "Ash Blossom", lines: ["denies them 2 cards"] }] },
     } });
     expect(html).toContain("Dracotail");
     expect(html).toContain("90% match");
-    expect(html).toContain("52% of 200");
-    expect(html).toContain("Shows once you see a bot card.");
-    expect(html).toContain("Ash Blossom");
+    expect(html).toContain("52% of 200 overall");
+    expect(html).toContain("The matchup shows once you see a bot card.");
+    expect(html).toContain("Going second: Dracotail won 41%");
+    expect(html).toContain("Right now");
+    expect(html).toContain("They activated Faimena");
+    expect(html).toContain("denies them 2 cards");
+    expect(html).toContain("They may hold now");
+    expect(html).toContain("Ash Blossom (1 used)");
     expect(html).toContain("38%");
+    expect(html).not.toContain("Most Played Card");
+    expect(html).not.toContain("Breaker Card");
     expect(html).toContain('role="switch"');
     expect(html).toContain("checked");
     expect(html).toContain("Suggest my turn");
+  });
+
+  it("the Suggest button only on your Main Phase 1", () => {
+    expect(render({ stats: { format: "TCG" } }, { showSuggest: false })).not.toContain("Suggest my turn");
+  });
+
+  it("a refused suggestion can be asked again; a found line can't", () => {
+    const refused = render({ suggest: { status: "done", turn: 2, result: { available: false, reason: "The coach suggests a turn from your Main Phase 1" } } });
+    expect(refused).not.toMatch(/<button[^>]*disabled[^>]*>.*Suggest my turn/);
+    const found = render({ suggest: { status: "done", turn: 2, result: { available: true, steps: ["Normal Summon X"], end: { interruptions: 2, now: 0 }, ms: 10 } } });
+    expect(found).toMatch(/<button[^>]*disabled[^>]*>.*Suggest my turn/);
   });
 
   it("shows a loading suggestion, then its steps and end board", () => {
