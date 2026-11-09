@@ -129,3 +129,28 @@ export function useCoachNow(duel: YGODuel, stats: CoachStats | null, turn: DuelT
   const result = duel.assistController.options;
   return readCoachNow(duel, stats, turn, result);
 }
+
+/** A coach line for the chat, posted once per key (YGOCoachController.post). */
+export interface CoachLine { key: string; text: string }
+
+/**
+ * What the coach says now, as chat lines, each keyed by its moment so it's posted once: the
+ * outlook (each new one), the bot's deck once the guess is clear (each new leader), the Main
+ * Phase 1 warning and the Battle Phase check (once per turn), and their activation's tips.
+ */
+export function coachLines(now: CoachNow, stats: CoachStats | null, turn: Pick<DuelTurnState, "turn" | "phase">): CoachLine[] {
+  const lines: CoachLine[] = [];
+  if (now.outlook) lines.push({ key: `outlook:${now.outlook}`, text: now.outlook });
+  const top = stats?.oppGuess?.types[0];
+  if (top && top.share > 0.5) {
+    const seen = stats!.oppGuess!.seen;
+    lines.push({ key: `guess:${top.name}`, text: `Their deck looks like ${top.name} (${Math.round(top.share * 100)}% from ${seen} card${seen === 1 ? "" : "s"} seen).` });
+  }
+  if (now.tip) lines.push({ key: `tip:${turn.turn}:${turn.phase}`, text: now.tip });
+  const r = now.responses;
+  if (r && (r.keyNote || r.tips.length)) {
+    const parts = [r.keyNote, ...r.tips.map((t) => `${t.name}: ${t.lines.join(" · ")}`)].filter(Boolean);
+    lines.push({ key: `resp:${turn.turn}:${r.target}:${parts.join("|")}`, text: [`They activated ${r.target}.`, ...parts].join("\n") });
+  }
+  return lines;
+}

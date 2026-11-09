@@ -3,107 +3,81 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { CoachPanelView, coachPanelVisible, type CoachPanelViewProps } from "./coach-panel";
 import { CoachPreviewButton, CoachTags } from "./assisted-options-panel";
 import type { CoachState } from "../../core/YGOCoachController";
+import { coachLines } from "./use-coach-now";
+import { mergeCoachLines } from "./menu-panel/components/chat";
 
 const base: CoachState = {
   available: true, enabled: true, everEnabled: true, switching: false, stats: null,
-  suggest: { status: "idle" }, preview: { status: "idle" }, error: null,
+  suggest: { status: "idle" }, preview: { status: "idle" }, error: null, messages: [],
 };
 const noop = () => {};
 const render = (state: Partial<CoachState>, props: Partial<CoachPanelViewProps> = {}) => renderToStaticMarkup(
-  <CoachPanelView state={{ ...base, ...state }} turn={2} canSuggest collapsed={false} onToggleCollapsed={noop} onSetEnabled={noop} onSuggest={noop} {...props} />,
+  <CoachPanelView state={{ ...base, ...state }} turn={2} canSuggest onSetEnabled={noop} onSuggest={noop} {...props} />,
 );
 
-describe("<CoachPanel>", () => {
-  it("is hidden only without a coach (off at the start still shows the switch)", () => {
+describe("<CoachPanel>: the toolbar", () => {
+  it("is hidden only without a coach", () => {
     expect(coachPanelVisible({ ...base, available: false })).toBe(false);
-    expect(coachPanelVisible({ ...base, enabled: false, everEnabled: false })).toBe(true);
+    expect(coachPanelVisible({ ...base, enabled: false })).toBe(true);
   });
 
-  it("off at the start: the collapsed header with the switch, no stats", () => {
-    const html = render({ enabled: false, everEnabled: false, stats: { format: "TCG", deckType: { name: "Dracotail", confidence: 1 } } }, { collapsed: true });
-    expect(html).toContain("Coach (off)");
-    expect(html).toContain('role="switch"');
-    expect(html).not.toContain("checked");
-    expect(html).not.toContain("Dracotail");
-    expect(html).not.toContain("Suggest my turn");
-  });
-
-  it("shows the deck in one line, the live read and the switch; no pre-game lists", () => {
-    const html = render({ stats: {
-      format: "TCG", deckType: { name: "Dracotail", confidence: 0.9 }, overall: { games: 200, wins: 104 },
-      matchup: null, oppHandTraps: [{ name: "Ash Blossom", chance: 0.38 }],
-      topCards: [{ name: "Most Played Card", popularity: 1 }], breakers: [{ name: "Breaker Card", games: 9, wins: 6 }],
-    } }, { now: {
-      outlook: "Going second: Dracotail won 41% (157 games).",
-      held: [{ name: "Ash Blossom", code: 1, chance: 0.38, shown: 1 }],
-      tip: "~38% they hold Ash Blossom: lead with the card you can best afford to lose to it.",
-      responses: { target: "Faimena", keyNote: "Faimena is a key card for them", tips: [{ name: "Ash Blossom", lines: ["denies them 2 cards"] }] },
-    } });
-    expect(html).toContain("Dracotail");
-    expect(html).toContain("90% match");
-    expect(html).toContain("52% of 200 overall");
-    expect(html).toContain("Their deck shows once you see their cards.");
-    expect(html).toContain("Going second: Dracotail won 41%");
-    expect(html).toContain("Right now");
-    expect(html).toContain("They activated Faimena");
-    expect(html).toContain("denies them 2 cards");
-    expect(html).toContain("Interruptions they may hold");
-    expect(html).toContain("Ash Blossom (1 used)");
-    expect(html).toContain("38%");
-    expect(html).not.toContain("Most Played Card");
-    expect(html).not.toContain("Breaker Card");
+  it("the switch, and Suggest my turn on your Main Phase 1; no stats", () => {
+    const html = render({ stats: { format: "TCG", deckType: { name: "Dracotail", confidence: 0.9 }, overall: { games: 200, wins: 104 } } });
     expect(html).toContain('role="switch"');
     expect(html).toContain("checked");
     expect(html).toContain("Suggest my turn");
+    expect(html).not.toContain("Dracotail");
+    expect(html).not.toContain("52%");
+    expect(render({}, { showSuggest: false })).not.toContain("Suggest my turn");
   });
 
-  it("the bot's deck guess from the cards seen", () => {
-    const html = render({ stats: { format: "TCG", matchup: null, oppGuess: { seen: 3, types: [{ name: "Magistus Dracotail", share: 0.64 }, { name: "Branded", share: 0.36 }] } } });
-    expect(html).toContain("Their deck (from 3 cards seen)");
-    expect(html).toContain("Magistus Dracotail");
-    expect(html).toContain("64%");
-    expect(html).not.toContain("Their deck shows once");
-  });
-
-  it("their activation with no stats still says what they did", () => {
-    const html = render({ stats: { format: "TCG" } }, { now: { outlook: null, held: [], tip: null, responses: { target: "Blazing Cartesia", keyNote: null, tips: [] } } });
-    expect(html).toContain("They activated Blazing Cartesia");
-    expect(html).toContain("No replay stats for answering it.");
-  });
-
-  it("the Suggest button only on your Main Phase 1", () => {
-    expect(render({ stats: { format: "TCG" } }, { showSuggest: false })).not.toContain("Suggest my turn");
-  });
-
-  it("a refused suggestion can be asked again; a found line can't", () => {
-    const refused = render({ suggest: { status: "done", turn: 2, result: { available: false, reason: "The coach suggests a turn from your Main Phase 1" } } });
-    expect(refused).not.toMatch(/<button[^>]*disabled[^>]*>.*Suggest my turn/);
-    const found = render({ suggest: { status: "done", turn: 2, result: { available: true, steps: ["Normal Summon X"], end: { interruptions: 2, now: 0 }, ms: 10 } } });
-    expect(found).toMatch(/<button[^>]*disabled[^>]*>.*Suggest my turn/);
-  });
-
-  it("shows a loading suggestion, then its steps and end board", () => {
-    expect(render({ suggest: { status: "loading", turn: 2 } })).toContain("Thinking…");
-    const html = render({ suggest: { status: "done", turn: 2, result: { available: true, steps: ["Activate Ketu Dracotail (hand)", "Normal Summon Dracotail Lukias"], end: { interruptions: 3, now: 1 }, ms: 4000 } } });
-    expect(html).toContain("<li>Activate Ketu Dracotail (hand)</li>");
-    expect(html).toContain("End board: 3 interruptions (now 1)");
-  });
-
-  it("shows why there's no suggestion, and forgets last turn's", () => {
-    const busy = { status: "done" as const, turn: 2, result: { available: false as const, reason: "The coach is busy, try again in a moment" } };
-    expect(render({ suggest: busy })).toContain("The coach is busy");
-    expect(render({ suggest: busy }, { turn: 3 })).not.toContain("The coach is busy");
-  });
-
-  it("turned off: only the header, switch and a line", () => {
-    const html = render({ enabled: false, stats: { format: "TCG" } });
-    expect(html).not.toContain("Suggest my turn");
+  it("off: just the switch", () => {
+    const html = render({ enabled: false });
     expect(html).not.toContain("checked");
-    expect(html).toContain("Turn it on");
+    expect(html).not.toContain("Suggest my turn");
   });
 
-  it("collapsed: no body", () => {
-    expect(render({ stats: { format: "TCG" } }, { collapsed: true })).not.toContain("Suggest my turn");
+  it("a refused suggestion says why and can be asked again; a found line is in the chat", () => {
+    const refused = render({ suggest: { status: "done", turn: 2, result: { available: false, reason: "The coach is busy, try again in a moment" } } });
+    expect(refused).toContain("The coach is busy");
+    expect(refused).not.toMatch(/<button[^>]*disabled[^>]*>Suggest my turn/);
+    expect(render({ suggest: { status: "done", turn: 2, result: { available: false, reason: "The coach is busy" } } }, { turn: 3 })).not.toContain("The coach is busy");
+    const found = render({ suggest: { status: "done", turn: 2, result: { available: true, steps: ["Normal Summon X"], end: { interruptions: 2, now: 0 }, ms: 10 } } });
+    expect(found).toMatch(/<button[^>]*disabled[^>]*>Line in chat/);
+    expect(render({ suggest: { status: "loading", turn: 2 } })).toContain("Thinking…");
+  });
+});
+
+describe("coachLines: what the coach posts in the chat", () => {
+  const turn = { turn: 2, phase: "Main Phase 1" };
+  const now = { outlook: "Going second: Fire King won 41% (157 games).", held: [], tip: "~38% they hold Ash Blossom: lead with it.", responses: null };
+
+  it("the outlook, the clear deck guess and the moment's tip, each keyed once", () => {
+    const lines = coachLines(now, { format: "TCG", oppGuess: { seen: 3, types: [{ name: "Dracotail", share: 0.64 }, { name: "Branded", share: 0.36 }] } }, turn);
+    expect(lines.map((l) => l.text)).toEqual([
+      "Going second: Fire King won 41% (157 games).",
+      "Their deck looks like Dracotail (64% from 3 cards seen).",
+      "~38% they hold Ash Blossom: lead with it.",
+    ]);
+    expect(lines[2].key).toBe("tip:2:Main Phase 1");
+    // A guess that isn't clear yet: not posted.
+    expect(coachLines({ ...now, outlook: null, tip: null }, { format: "TCG", oppGuess: { seen: 1, types: [{ name: "A", share: 0.5 }, { name: "B", share: 0.5 }] } }, turn)).toEqual([]);
+  });
+
+  it("their activation: only with something to say", () => {
+    const quiet = coachLines({ outlook: null, held: [], tip: null, responses: { target: "Lukias", keyNote: null, tips: [] } }, null, turn);
+    expect(quiet).toEqual([]);
+    const [line] = coachLines({ outlook: null, held: [], tip: null, responses: { target: "Lukias", keyNote: null, tips: [{ name: "Ash Blossom", lines: ["denies them 1 card"] }] } }, null, turn);
+    expect(line.text).toBe("They activated Lukias.\nAsh Blossom: denies them 1 card");
+  });
+});
+
+describe("the chat merges the coach's lines by time", () => {
+  it("in order, the coach's after the chat at the same time", () => {
+    const chat = [{ id: "a", at: 10 }, { id: "b", at: 30 }];
+    const coach = [{ id: "c1", at: 5 }, { id: "c2", at: 20 }, { id: "c3", at: 40 }];
+    expect(mergeCoachLines(chat, coach).map((m) => m.id)).toEqual(["c1", "a", "c2", "b", "c3"]);
+    expect(mergeCoachLines(chat, [])).toBe(chat);
   });
 });
 
@@ -123,26 +97,3 @@ describe("coach tags in the options panel", () => {
     expect(renderToStaticMarkup(<CoachPreviewButton status="done" onPreview={noop} />)).toContain("Coach preview");
   });
 });
-
-describe("Their turn 1 block", () => {
-  it("shows clean vs interrupted, by interruptions and the top 3 choke points", () => {
-    const html = render({ stats: { format: "TCG", oppAnswers: {
-      deckType: "Dracotail", clean: { games: 100, wins: 61 }, interrupted: { games: 80, wins: 30 },
-      byInterruptions: [{ label: "0", games: 100, wins: 61 }, { label: "1", games: 50, wins: 22 }],
-      chokePoints: [1, 2, 3, 4].map((code) => ({ code, name: `Card ${code}`, games: 10, wins: 4 })),
-      answers: [],
-    } } });
-    expect(html).toContain("Their turn 1 · Dracotail");
-    expect(html).toContain("61% of 100");
-    expect(html).toContain("38% of 80");
-    expect(html).toContain("1 interruption");
-    expect(html).toContain("Card 3");
-    expect(html).not.toContain("Card 4");
-    expect(html).not.toContain("stops");
-  });
-
-  it("is absent without oppAnswers", () => {
-    expect(render({ stats: { format: "TCG", oppAnswers: null } })).not.toContain("Their turn 1");
-  });
-});
-

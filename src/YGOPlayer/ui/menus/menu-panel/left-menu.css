@@ -339,3 +339,23 @@
     }
   }
 }
+/* Duel Coach lines in the chat: only this player sees them. */
+.ygo-player-core .ygo-chat-message.ygo-chat-coach {
+  background: rgba(37, 99, 235, 0.18);
+  border-left: 3px solid rgb(96, 165, 250);
+}
+.ygo-player-core .ygo-chat-coach-name {
+  color: rgb(147, 197, 253);
+  font-weight: 700;
+}
+.ygo-player-core .ygo-chat-toggle-btn { position: relative; }
+.ygo-player-core .ygo-chat-coach-dot {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: rgb(59, 130, 246);
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.6);
+}

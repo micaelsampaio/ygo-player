@@ -1,6 +1,7 @@
 import { ChangeEvent, FormEvent, ReactNode, useEffect, useRef, useState } from "react";
 import { YGOTextArea } from "../../../components/TextArea";
 import type { YGODuel } from "../../../../core/YGODuel";
+import { useCoach } from "../../coach-panel";
 
 /** What a replay's chat panel reads off ygo-core: its command queue and position in it. */
 type ReplayCommands = {
@@ -34,11 +35,36 @@ type ChatMessage = {
   username: string;
   owner: boolean;
   system?: boolean;
+  /** A Duel Coach line: only this player sees it (never sent). */
+  coach?: boolean;
+  /** When it arrived: the coach's lines are merged in by time. */
+  at?: number;
   message: ReactNode;
 };
 
+const lines = (text: string) => text.split(/\n/g).map((line, index) => <div key={index}>{line}</div>);
+
+/** The chat's messages and the coach's lines, by arrival time (messages without a time keep their place). */
+export function mergeCoachLines<T extends { at?: number }>(chat: T[], coach: T[]): T[] {
+  if (!coach.length) return chat;
+  const out: T[] = [];
+  let j = 0;
+  for (const m of chat) {
+    while (j < coach.length && m.at !== undefined && (coach[j].at ?? 0) <= m.at) out.push(coach[j++]);
+    out.push(m);
+  }
+  while (j < coach.length) out.push(coach[j++]);
+  return out;
+}
+
 export function Chat({ duel }: { duel: YGODuel }) {
   const [isChatHidden, setIsChatHidden] = useState(false);
+  const coach = useCoach(duel);
+  // Coach lines that arrived while the chat was hidden: a dot on its toggle.
+  const [seenCoach, setSeenCoach] = useState(0);
+  const coachCount = coach.messages.length;
+  useEffect(() => { if (!isChatHidden) setSeenCoach(coachCount); }, [isChatHidden, coachCount]);
+  const unreadCoach = isChatHidden && coachCount > seenCoach;
   const [message, setMessage] = useState("");
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
 
@@ -96,7 +122,8 @@ export function Chat({ duel }: { duel: YGODuel }) {
       key,
       username: data.username,
       owner: data.username === duel.client.username,
-      message: data.message.split(/\n/g).map((line: string, index: number) => <div key={index}>{line}</div>),
+      at: Date.now(),
+      message: lines(data.message),
     });
 
     if (isReplay) {
@@ -123,6 +150,7 @@ export function Chat({ duel }: { duel: YGODuel }) {
         owner: false,
         message: data.message,
         system: true,
+        at: Date.now(),
       };
       setChatMessages((prev) => [...prev, chatMessage]);
     }
@@ -139,7 +167,11 @@ export function Chat({ duel }: { duel: YGODuel }) {
     if (shouldAutoScroll.current) {
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }
-  }, [chatMessages]);
+  }, [chatMessages, coachCount]);
+
+  const shown = isReplay ? chatMessages : mergeCoachLines(chatMessages, coach.messages.map((m): ChatMessage => ({
+    key: `coach:${m.key}`, username: "Coach", owner: false, coach: true, at: m.at, message: lines(m.text),
+  })));
 
   let prevUser = "";
 
@@ -152,17 +184,28 @@ export function Chat({ duel }: { duel: YGODuel }) {
           type="button"
           className="ygo-chat-toggle-btn"
           onClick={toggleChat}
-          aria-label={isChatHidden ? "Show chat" : "Hide chat"}
+          aria-label={isChatHidden ? (unreadCoach ? "Show chat (new coach tips)" : "Show chat") : "Hide chat"}
           aria-expanded={!isChatHidden}
-          title={isChatHidden ? "Show chat" : "Hide chat"}
+          title={isChatHidden ? (unreadCoach ? "Show chat: new coach tips" : "Show chat") : "Hide chat"}
         >
           <div className={`ygo-close-btn-icon ${isChatHidden ? "ygo-collapsed" : ""}`}></div>
+          {unreadCoach && <span className="ygo-chat-coach-dot" aria-hidden="true" />}
         </button>
       </div>
       <div className={`ygo-chat-container ${isChatHidden ? "ygo-hidden" : ""}`}>
         <div className="ygo-chat-messages" ref={messagesContainerRef}>
-          {chatMessages.length === 0 && <div className="ygo-chat-empty">{isReplay ? "No messages yet." : "No messages yet. Say hi to your opponent."}</div>}
-          {chatMessages.map((msg) => {
+          {shown.length === 0 && <div className="ygo-chat-empty">{isReplay ? "No messages yet." : "No messages yet. Say hi to your opponent."}</div>}
+          {shown.map((msg) => {
+
+            if (msg.coach) {
+              prevUser = "";
+              return (
+                <div key={msg.key} className="ygo-chat-message left ygo-chat-coach" aria-label="Coach (only you see this)">
+                  <div className="ygo-text-xs ygo-chat-coach-name">Coach · only you</div>
+                  {msg.message}
+                </div>
+              );
+            }
 
             if (msg.system) {
               prevUser = "";

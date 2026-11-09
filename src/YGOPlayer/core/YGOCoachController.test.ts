@@ -106,4 +106,19 @@ describe("YGOCoachController", () => {
     expect(host.suggest).not.toHaveBeenCalled();
     expect(host.preview).not.toHaveBeenCalled();
   });
+
+  it("posts each coach line once, only while on, and the suggested line too", async () => {
+    const host = hostWith({
+      suggest: vi.fn(() => Promise.resolve({ available: true, steps: ["Normal Summon X"], end: { interruptions: 2, now: 0 }, ms: 5 })),
+    });
+    const c = new YGOCoachController(() => host);
+    c.post("tip:2", "Lethal.");
+    c.post("tip:2", "Lethal again.");
+    expect(c.getState().messages.map((m) => m.text)).toEqual(["Lethal."]);
+    await c.suggest(2);
+    expect(c.getState().messages[1].text).toContain("Suggested line for turn 2:\n1. Normal Summon X");
+    await c.setEnabled(false);
+    c.post("tip:3", "Off now.");
+    expect(c.getState().messages).toHaveLength(2);
+  });
 });

@@ -1,5 +1,5 @@
 import type { CoachHost, CoachStats } from "../types";
-import { parsePreview, parseSuggestion, type CoachPreview, type CoachSuggestion } from "../domain/coach";
+import { endBoardText, parsePreview, parseSuggestion, type CoachPreview, type CoachSuggestion } from "../domain/coach";
 
 export type CoachSuggestState =
   | { status: "idle" }
@@ -25,11 +25,23 @@ export interface CoachState {
   suggest: CoachSuggestState;
   preview: CoachPreviewState;
   error: string | null;
+  /** The coach's messages in the duel chat, oldest first (only this player sees them). */
+  messages: CoachMessage[];
 }
+
+/** One coach line in the duel chat. */
+export interface CoachMessage {
+  key: string;
+  text: string;
+  at: number;
+}
+
+/** The chat keeps this many coach lines. */
+export const MAX_COACH_MESSAGES = 60;
 
 const OFF: CoachState = {
   available: false, enabled: false, everEnabled: false, switching: false, stats: null,
-  suggest: { status: "idle" }, preview: { status: "idle" }, error: null,
+  suggest: { status: "idle" }, preview: { status: "idle" }, error: null, messages: [],
 };
 
 /** The ack failed in the socket layer, or the server refused (`{ success: false, error }`). */
@@ -112,6 +124,21 @@ export class YGOCoachController {
     if (!this.state.enabled) this.set({ preview: { status: "idle" } });
   }
 
+  /**
+   * Posts a coach line in the duel chat, once per `key` (the same moment never posts twice).
+   * Local only: nothing is sent to the server, so the opponent never sees it.
+   */
+  post(key: string, text: string): void {
+    this.sync();
+    if (!this.state.enabled || !text) return;
+    if (this.posted.has(key)) return;
+    this.posted.add(key);
+    const messages = [...this.state.messages, { key, text, at: Date.now() }].slice(-MAX_COACH_MESSAGES);
+    this.set({ messages });
+  }
+
+  private posted = new Set<string>();
+
   /** "Suggest my turn" for `turn` (the answer is shown for that turn only). */
   async suggest(turn: number): Promise<void> {
     const host = this.sync();
@@ -124,6 +151,11 @@ export class YGOCoachController {
       result = { available: false, reason: "The coach couldn't answer, try again in a moment." };
     }
     this.set({ suggest: { status: "done", turn, result } });
+    // The line goes to the chat too, where the coach's other messages are.
+    if (result.available) {
+      const lines = result.steps.length ? result.steps.map((step, i) => `${i + 1}. ${step}`) : ["Nothing better than passing."];
+      this.post(`suggest:${turn}`, [`Suggested line for turn ${turn}:`, ...lines, endBoardText(result.end)].join("\n"));
+    }
   }
 
   /** "Preview" for the decision `key` (see domain/coach decisionKey). */
