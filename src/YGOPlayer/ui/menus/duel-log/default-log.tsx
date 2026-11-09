@@ -80,6 +80,11 @@ export const DefaultLogRow = memo(
                   {log.chainLink ? <span className="ygo-duel-log-chain-link"> · Chain Link {log.chainLink}</span> : null}
                   {log.negatedLink ? <span className="ygo-duel-log-chain-link"> · negates Chain Link {log.negatedLink}</span> : null}
                 </div>
+                {log.targets?.length ? (
+                  <div className="ygo-duel-log-targets ygo-text-sm ygo-mb-1 ygo-text-center">
+                    targets {log.targets.map((t) => ygo.state.getCardData(t.id)?.name ?? "a card").join(", ")}
+                  </div>
+                ) : null}
                 <div className="ygo-flex ygo-gap-2">
                   <div>
                     <div className={originZoneClassName}></div>

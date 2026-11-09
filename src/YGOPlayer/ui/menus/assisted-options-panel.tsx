@@ -23,8 +23,10 @@ import { ChainPromptDialog } from "./prompt-dialog/ChainPromptDialog";
 import { MdPromptDialog } from "./prompt-dialog/PromptDialog";
 import { chainAheadOfBoard } from "../../domain/assist-query";
 import { zoneHighlights } from "../../domain/assist-zones";
-import { canPreview, coachHintsOf, coachResponsesOf, coachTags, decisionKey, deniesFor, opponentChainTop, responseTags, type CoachPreview } from "../../domain/coach";
+import { canPreview, coachHintsOf, coachPickOf, coachResponsesOf, coachTags, decisionKey, deniesFor, opponentChainTop, responseTags, type CoachPreview } from "../../domain/coach";
 import { useCoach } from "./coach-panel";
+import { keyCardNote, liveHandTraps, type HeldChance } from "../../domain/coach-live";
+import { shownByOpp } from "./use-coach-now";
 
 /**
  * A one-zone choice with zones to click on the board needs no hint: the zones glow. The prompt
@@ -265,6 +267,8 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
   const coachPreview = coachKey !== null && coach.preview.status !== "idle" && coach.preview.key === coachKey ? coach.preview : null;
   const previewResult: CoachPreview | null = coachPreview?.status === "done" ? coachPreview.result : null;
   const coachChainTop = coachKey !== null ? opponentChainTop(result, duel.perspective.playerIndex) : null;
+  // A card choice inside an effect: the coach's pick (the suggested line's, else the bot's clear pick).
+  const coachPromptPick = coachOn && isActive && !held ? coachPickOf(result) : null;
   const coachResponses = coachChainTop ? coachResponsesOf(result) : null;
   const panelRef = useRef<HTMLDivElement | null>(null);
   const placement = usePanelPlacement(panelRef, isMobileLayout, isMasterDuelStyle(duel));
@@ -355,14 +359,22 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
   const promptPendingKey = pendingKey?.startsWith("prompt:") ? pendingKey.slice("prompt:".length) : null;
 
   // One row button, shared by the panel's lists and the Master Duel style chain dialog.
-  const renderRow = (row: OptionRow) => {
+  // The interruptions they may hold now (for the preview's "may meet" tags), read once per render.
+  let heldCache: HeldChance[] | null = null;
+  const heldNow = () => (heldCache ??= liveHandTraps(coach.stats?.oppHandTraps, shownByOpp(duel, 1 - me)));
+  // The coach's tags for an option ("players chose this", preview, response tips): the rows and the chain dialog.
+  const coachTagsFor = (row: OptionRow): string[] => {
+    if (coachKey === null) return [];
     const rowAction = { commandType: row.commandType, data: row.data };
-    const tags = coachKey !== null ? [
-      ...coachTags(rowAction, coachHints, previewResult),
+    return [
+      ...coachTags(rowAction, coachHints, previewResult, previewResult ? heldNow() : null),
       ...(coachChainTop && row.commandType === "Activate"
         ? responseTags(row.code, coachChainTop.code, coach.stats?.oppAnswers, deniesFor(coachResponses, rowAction))
         : []),
-    ] : [];
+    ];
+  };
+  const renderRow = (row: OptionRow) => {
+    const tags = coachTagsFor(row);
     return (
     <button
       key={row.key}
@@ -428,6 +440,11 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
         pendingKey={pendingKey}
         choose={choose}
         onHover={(row) => setHover(row?.code !== undefined ? { code: row.code, side: me, tone: row.tone, loc: typeof row.data?.loc === "number" ? row.data.loc : undefined } : null)}
+        coach={coachKey !== null ? {
+          tagsFor: coachTagsFor,
+          keyNote: coachChainTop ? keyCardNote(coachChainTop.code, coach.stats?.oppAnswers) : null,
+          answering: !!coachChainTop,
+        } : undefined}
       />
     )}
     {prompt && promptAsDialog && prompt !== answeredPrompt && (
@@ -442,6 +459,7 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
           pendingKey={promptPendingKey}
           respond={respondPrompt}
           onHover={setHover}
+          coachPick={coachPromptPick}
           inDialog
         />
       </MdPromptDialog>
@@ -549,6 +567,7 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
           pendingKey={promptPendingKey}
           respond={respondPrompt}
           onHover={setHover}
+          coachPick={coachPromptPick}
         />
       )}
       {prompt && promptAsDialog && (

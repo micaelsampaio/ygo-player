@@ -45,8 +45,23 @@ describe("coach hint matching", () => {
     expect(coachTags(activate, hints, preview)).toEqual(["players chose this 62%", "them −1850 LP", "opens Garunix"]);
     expect(coachTags(summon, hints, preview)).toEqual([]);
     const quiet = parsePreview({ available: true, options: [{ action: summon, lp: { self: 0, opp: 0 }, opens: [] }] });
-    expect(coachTags(summon, null, quiet)).toEqual(["opens nothing"]);
+    // Nothing happens to them: no tag (no "opens nothing").
+    expect(coachTags(summon, null, quiet)).toEqual([]);
     expect(coachTags(activate, hints, { available: false })).toEqual(["players chose this 62%"]);
+  });
+
+  it("the interruptions an option may meet, from what it does and what they may hold", () => {
+    const search = { commandType: "Activate", data: { id: 5, ctrl: 0, loc: 0x02, seq: 0 } };
+    const field = { commandType: "Activate", data: { id: 6, ctrl: 0, loc: 0x04, seq: 0 } };
+    const preview = parsePreview({ available: true, options: [
+      { action: search, lp: { self: 0, opp: 0 }, opens: [], does: { fromDeck: 1, toHand: 1, summons: 0 } },
+      { action: field, lp: { self: 0, opp: 0 }, opens: [], does: { fromDeck: 0, toHand: 0, summons: 1 } },
+    ] });
+    const held = [{ name: "Ash Blossom & Joyous Spring", chance: 0.28 }, { name: "Droll & Lock Bird", chance: 0.1 }, { name: "Infinite Impermanence", chance: 0.3 }, { name: "Mulcharmy Fuwalos", chance: 0.02 }];
+    expect(coachTags(search, null, preview, held)).toEqual(["may meet Ash Blossom & Joyous Spring 28%", "may meet Droll & Lock Bird 10%"]);
+    // A monster effect on the field: Impermanence; the summon meets Fuwalos only below 5%: left out.
+    expect(coachTags(field, null, preview, held)).toEqual(["may meet Infinite Impermanence 30%"]);
+    expect(coachTags(search, null, preview, null)).toEqual([]);
   });
 
   it("formats LP changes, win rates and the end board", () => {
@@ -68,8 +83,12 @@ describe("coach preview / suggestion acks", () => {
   });
 
   it("previews only idle and battle decisions", () => {
-    expect(canPreview({ available: true, pending: "idle" })).toBe(true);
-    expect(canPreview({ available: true, pending: "battle" })).toBe(true);
+    const ref = { code: 1, ctrl: 0, loc: 2, seq: 0, pos: 0 };
+    expect(canPreview({ available: true, pending: "idle", options: { activatable: [ref] } })).toBe(true);
+    expect(canPreview({ available: true, pending: "battle", options: { activatable: [], attackable: [ref] } })).toBe(true);
+    // Only Next Phase / summons: nothing the server previews.
+    expect(canPreview({ available: true, pending: "idle", options: { activatable: [], summonable: [ref] } })).toBe(false);
+    expect(canPreview({ available: true, pending: "idle" })).toBe(false);
     expect(canPreview({ available: true, pending: "chain" })).toBe(false);
     expect(canPreview({ available: false })).toBe(false);
   });
@@ -144,3 +163,17 @@ describe("response tips on the bot's turn", () => {
   });
 });
 
+
+describe("coach pick on card choices", () => {
+  it("reads the query's pick and tags the cards it includes", async () => {
+    const { coachPickOf, pickTag } = await import("./coach");
+    const pick = coachPickOf({ coach: { hints: [], model: "replays", pick: { indices: [2], source: "line" } } });
+    expect(pick).toEqual({ indices: [2], source: "line" });
+    expect(pickTag(pick, [1, 2])).toBe("in the suggested line");
+    expect(pickTag(pick, [0])).toBeUndefined();
+    expect(pickTag({ indices: [0], source: "coach" }, [0])).toBe("coach pick");
+    expect(coachPickOf({ coach: { pick: { indices: [], source: "coach" } } })).toBeNull();
+    expect(coachPickOf({ coach: { pick: { indices: [1], source: "players" } } })).toBeNull();
+    expect(coachPickOf(null)).toBeNull();
+  });
+});

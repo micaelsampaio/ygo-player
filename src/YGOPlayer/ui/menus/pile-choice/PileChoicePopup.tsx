@@ -5,6 +5,7 @@ import { stopPropagationCallback } from "../../../scripts/utils";
 import { CandidateGroup, isSelectionValid, PromptData, promptTitle } from "../../assist-prompt";
 import { createDoubleTapDetector, type DoubleTapDetector } from "../../../domain/double-tap";
 import { pileChoiceClick, pileTabs } from "./pile-choice";
+import { pickTag, type CoachPick } from "../../../domain/coach";
 import "./style.css";
 
 /**
@@ -16,8 +17,10 @@ import "./style.css";
  * A double-click (double-tap) on a card picks it and confirms when that completes the choice
  * (`onDoublePick`, given while the "Double-click for the quick action" setting is on).
  */
-export function PileChoicePopup({ duel, prompt, container, selected, busy, pendingKey, onToggle, onDoublePick, onPick, onConfirm, onCancel, onFinish, onClose }: {
+export function PileChoicePopup({ duel, prompt, container, selected, busy, pendingKey, onToggle, onDoublePick, onPick, onConfirm, onCancel, onFinish, onClose, coachPick = null }: {
   duel: YGODuel;
+  /** The Duel Coach's pick for this choice (tags the card), or null. */
+  coachPick?: CoachPick | null;
   prompt: PromptData;
   container: HTMLElement;
   /** "card" prompts: the candidate indices picked so far. */
@@ -66,6 +69,8 @@ export function PileChoicePopup({ duel, prompt, container, selected, busy, pendi
   const pickedIn = (group: CandidateGroup) => isUnselect
     ? group.indices.filter((i) => candidates[i]?.selected).length
     : group.indices.filter((i) => selected.includes(i)).length;
+  // Unselect prompts: a card already picked isn't the coach's next pick.
+  const tagOf = (indices: number[]) => pickTag(coachPick, isUnselect ? indices.filter((i) => !candidates[i]?.selected) : indices);
   const totalPicked = isUnselect ? candidates.filter((c) => c.selected).length : selected.length;
 
   return createPortal(
@@ -122,6 +127,7 @@ export function PileChoicePopup({ duel, prompt, container, selected, busy, pendi
                   <img src={dataOf(code)?.images?.small_url} alt="" className="ygo-card" />
                   {copies > 1 && <span className="ygo-pile-choice-copies">×{copies}</span>}
                   {picked > 0 && <span className="ygo-pile-choice-check" aria-hidden="true">{max > 1 ? picked : "✓"}</span>}
+                  {tagOf(group.indices) && <span className="ygo-coach-pick-tag">{tagOf(group.indices)}</span>}
                 </button>
               );
             })}

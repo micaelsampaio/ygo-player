@@ -100,6 +100,8 @@ export interface ThumbView {
   badge?: string;
   /** Shown on the card's top: how many of it are picked (multi-pick prompts). */
   check?: string;
+  /** The Duel Coach's tag under the card ("coach pick", "in the suggested line"). */
+  coachTag?: string;
   onClick: () => void;
   onDoubleClick?: () => void;
   onHover?: (on: boolean) => void;
@@ -137,6 +139,7 @@ export function CardThumbGroups({ groups, disabled }: { groups: LocationGroup<Th
                   ? <img src={t.imageUrl} alt="" className="ygo-md-prompt-thumb-img" draggable={false} />
                   : <span className="ygo-md-prompt-thumb-img ygo-md-prompt-thumb-back" aria-hidden="true">{t.code === 0 ? "" : t.name}</span>}
                 {t.badge && <span className="ygo-md-prompt-thumb-badge">{t.badge}</span>}
+                {t.coachTag && <span className="ygo-coach-pick-tag">{t.coachTag}</span>}
                 {t.check && <span className="ygo-md-prompt-thumb-check" aria-hidden="true">{t.check}</span>}
                 {t.busy && <span className="ygo-md-prompt-thumb-busy" aria-hidden="true"><span className="ygo-inline-spinner" /></span>}
               </button>

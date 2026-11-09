@@ -6,7 +6,7 @@ import type { YGODuelUIEvents } from "../../../core/YGODuelUIEvents";
 import type { YGODuel } from "../../../core/YGODuel";
 import { subscribeDuelLogs } from "./duel-log-subscription";
 import { DefaultLogRow } from "./default-log";
-import { isPartOfItsActivation, isSetByMove } from "./duel-log";
+import { isPartOfItsActivation, isSetByMove, targetsOf } from "./duel-log";
 import { DuelPerspectiveContext } from "../../duel-perspective";
 
 const duelWithBus = () => ({ events: new EventBus<YGODuelUIEvents>() });
@@ -119,5 +119,40 @@ describe("isSetByMove", () => {
     expect(isSetByMove(logs(move, { ...flip, originZone: "S-3" }), 0)).toBe(false);
     expect(isSetByMove(logs(move, { ...flip, position: "faceup" }), 0)).toBe(false);
     expect(isSetByMove(logs(move), 0)).toBe(false);
+  });
+});
+
+describe("an activation's targets in its row", () => {
+  const act = (player: number, id: number) => ({ type: YGODuelEvents.LogType.Activate, player, commandId: 1, id }) as YGODuelEvents.DuelLog;
+  const target = (player: number, id: number) => ({ type: YGODuelEvents.LogType.Target, player, commandId: 2, id, originZone: "M-1" }) as YGODuelEvents.DuelLog;
+  const other = { type: YGODuelEvents.LogType.SpecialSummon, player: 1, commandId: 3 } as YGODuelEvents.DuelLog;
+
+  it("takes the Target logs right after it, by the same player", () => {
+    const logs = [other, act(1, 10), target(1, 20), target(1, 21), other];
+    expect(targetsOf(logs, 1)).toEqual([{ id: 20, zone: "M-1" }, { id: 21, zone: "M-1" }]);
+    expect(targetsOf(logs, 0)).toEqual([]);
+  });
+
+  it("or right before it (shown at once), unless another activation owns them", () => {
+    expect(targetsOf([other, target(1, 20), act(1, 10)], 2)).toEqual([{ id: 20, zone: "M-1" }]);
+    const owned = [act(1, 9), target(1, 20), act(1, 10)];
+    expect(targetsOf(owned, 2)).toEqual([]);
+    expect(targetsOf(owned, 0)).toEqual([{ id: 20, zone: "M-1" }]);
+  });
+
+  it("not the other player's targets", () => {
+    expect(targetsOf([act(1, 10), target(0, 20)], 0)).toEqual([]);
+  });
+
+  it("the row names them", () => {
+    const ygo: any = { state: { getCardData: (id: number) => ({ id, name: id === 20 ? "Dracotail Arthalion" : "S:P Little Knight", images: { small_url: "/x.jpg" } }) } };
+    const duel: any = { createCdnUrl: (p: string) => p, gameActions: { setSelectedCard: vi.fn() } };
+    const perspective: any = { getPlayerCssIndex: (p: number) => p, isPlayerPOV: () => true };
+    const html = renderToStaticMarkup(
+      <DuelPerspectiveContext.Provider value={perspective}>
+        <DefaultLogRow duel={duel} ygo={ygo} log={{ type: "Activate", player: 1, commandId: 1, id: 10, zone: "M-1", position: "faceup-attack", chainLink: 1, targets: [{ id: 20 }] } as never} />
+      </DuelPerspectiveContext.Provider>,
+    );
+    expect(html).toContain("targets Dracotail Arthalion");
   });
 });

@@ -12,7 +12,15 @@ import type { OptionRow } from "../../assist-sections";
 import { chainQuestion, groupByLocation, openWindowContext, PROMPT_KEYWORDS } from "./prompt-dialog";
 import { CardThumbGroups, MdButton, MdFooter, MdPromptDialog, PromptQuestion, type ThumbView } from "./PromptDialog";
 
-export function ChainPromptDialog({ duel, title, subtitle, rows, chainLength, respondingTo, openWindow, busy, pendingKey, choose, onHover }: {
+/** The Duel Coach in the dialog: its tags per card, and a note on the card being answered. */
+export interface ChainDialogCoach {
+  tagsFor(row: OptionRow): string[];
+  keyNote: string | null;
+  /** The newest chain link is the opponent's: say so when there's nothing to quote. */
+  answering: boolean;
+}
+
+export function ChainPromptDialog({ duel, title, subtitle, rows, chainLength, respondingTo, openWindow, busy, pendingKey, choose, onHover, coach }: {
   duel: YGODuel;
   title: string;
   subtitle?: string | null;
@@ -25,6 +33,7 @@ export function ChainPromptDialog({ duel, title, subtitle, rows, chainLength, re
   pendingKey: string | null;
   choose: (row: OptionRow) => void;
   onHover: (row: OptionRow | null) => void;
+  coach?: ChainDialogCoach;
 }) {
   const [pickedKey, setPickedKey] = useState<string | null>(null);
   const cards = rows.filter((r) => r.commandType !== "Pass");
@@ -64,6 +73,7 @@ export function ChainPromptDialog({ duel, title, subtitle, rows, chainLength, re
     <MdPromptDialog label={question} className="ygo-assist-chain-dialog" resetKey={`${title}|${rows.map((r) => r.key).join(",")}`}>
       <PromptQuestion text={question} sub={subtitle} terms={[respondingTo ? `"${respondingTo}"` : null, context ? `"${context.name}"` : null, ...PROMPT_KEYWORDS, ...cards.map((r) => r.label)]} />
       {groups.length > 0 && <CardThumbGroups groups={groups} disabled={busy} />}
+      {coach && <CoachDialogTips coach={coach} rows={cards} respondingTo={respondingTo} />}
       {others.length > 0 && (
         <div className="ygo-md-prompt-options">
           {others.map((row) => (
@@ -85,5 +95,23 @@ export function ChainPromptDialog({ duel, title, subtitle, rows, chainLength, re
         </MdButton>
       </MdFooter>
     </MdPromptDialog>
+  );
+}
+
+/** The coach's read of each card you can chain here (replay stats, the engine's denial count). */
+export function CoachDialogTips({ coach, rows, respondingTo }: { coach: ChainDialogCoach; rows: OptionRow[]; respondingTo?: string }) {
+  const tips = rows.map((row) => ({ row, tags: coach.tagsFor(row) })).filter((t) => t.tags.length > 0);
+  if (!tips.length && !coach.keyNote && !coach.answering) return null;
+  return (
+    <div className="ygo-md-coach-tips" role="note" aria-label="Coach">
+      <div className="ygo-md-coach-tips-title">Coach</div>
+      {coach.keyNote && <div>{coach.keyNote}</div>}
+      {tips.map(({ row, tags }) => (
+        <div key={row.key}><strong>{row.label}</strong>: {tags.join(" · ")}</div>
+      ))}
+      {!tips.length && !coach.keyNote && (
+        <div className="ygo-md-coach-tips-empty">No replay stats{respondingTo ? ` for answering ${respondingTo}` : ""} yet.</div>
+      )}
+    </div>
   );
 }

@@ -202,3 +202,9 @@
         display: flex;
     }
 }
+
+/* An activation's targets, under its "Activate · Chain Link N" line. */
+.ygo-player-core .ygo-duel-log-targets {
+    color: #fca5a5;
+    font-weight: 600;
+}

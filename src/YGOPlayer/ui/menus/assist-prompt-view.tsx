@@ -3,6 +3,7 @@
  * holding for the human, answered from the panel or on the field.
  */
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { pickTag, type CoachPick } from "../../domain/coach";
 import { createPortal } from "react-dom";
 import * as THREE from "three";
 import type { YGODuel } from "../../core/YGODuel";
@@ -304,9 +305,11 @@ const DOUBLE_CLICK_MEMORY_MS = 600;
  * card to pick, which monster to Tribute, yes/no, an option, a position, a
  * zone). Answers with a 'Respond Prompt' choose.
  */
-export function PromptView({ duel, prompt, busy, pendingKey, respond, onHover, inDialog = false }: {
+export function PromptView({ duel, prompt, busy, pendingKey, respond, onHover, inDialog = false, coachPick = null }: {
   duel: YGODuel;
   prompt: PromptData;
+  /** The Duel Coach's pick for this card choice (tags the card), or null. */
+  coachPick?: CoachPick | null;
   busy: boolean;
   pendingKey: string | null;
   respond: (key: string, data: PromptResponse) => void;
@@ -463,6 +466,7 @@ export function PromptView({ duel, prompt, busy, pendingKey, respond, onHover, i
       onCancel={prompt.cancelable ? () => respond("cancel", { indices: [] }) : undefined}
       onFinish={prompt.finishable || prompt.cancelable ? () => respond("finish", { index: -1 }) : undefined}
       onClose={() => setPickerOpen(false)}
+      coachPick={coachPick}
     />
   );
 
@@ -516,6 +520,7 @@ export function PromptView({ duel, prompt, busy, pendingKey, respond, onHover, i
             view: {
               key: group.key, code: c.code, name: cardName(c.code), imageUrl: imageOf(c.code), selected: picked > 0,
               badge: copies > 1 ? `×${copies}` : undefined,
+              coachTag: pickTag(coachPick, group.indices),
               check: picked > 0 ? (multi && copies > 1 ? String(picked) : "✓") : undefined,
               onClick: () => { noteClick(group.key); select(toggleGroupSelection(prompt, selectedRef.current, group)); },
               // Single pick: picks and confirms; several: toggles once, confirming when that completes it.
@@ -537,6 +542,7 @@ export function PromptView({ duel, prompt, busy, pendingKey, respond, onHover, i
           ref: c,
           view: {
             key: `${i}:${c.code}:${c.loc}:${c.seq}`, code: c.code, name: cardName(c.code), imageUrl: imageOf(c.code),
+            coachTag: c.selected ? undefined : pickTag(coachPick, [i]),
             selected: !!c.selected, check: c.selected ? "✓" : undefined, busy: pendingKey === `pick:${i}`,
             onClick: () => respond(`pick:${i}`, { index: i }), onHover: hoverFor(c),
           },

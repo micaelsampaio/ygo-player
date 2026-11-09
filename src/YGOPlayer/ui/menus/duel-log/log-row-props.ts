@@ -20,4 +20,6 @@ export type CardMoveLog = YGODuelEvents.DuelLog & {
   position?: CardPosition;
   chainLink?: number;
   negatedLink?: number;
+  /** An activation's targets (the duel log folds its Target logs into it). */
+  targets?: Array<{ id: number; zone?: string }>;
 };

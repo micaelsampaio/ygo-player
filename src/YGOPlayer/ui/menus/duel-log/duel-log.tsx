@@ -44,6 +44,38 @@ function rowFor(log: YGODuelEvents.DuelLog): ComponentType<LogRowProps> {
 }
 
 /**
+ * The cards an activation targets: the Target logs right next to its Activate row (before it,
+ * as the engine reports the targets with the activation, or after it), by the same player.
+ * Those rows aren't listed on their own: the activation's row names them.
+ */
+export function targetsOf(logs: YGODuelEvents.DuelLog[], index: number): Array<{ id: number; zone?: string }> {
+  const act = logs[index] as { type: string; player: number };
+  if (act.type !== YGODuelEvents.LogType.Activate) return [];
+  const out: Array<{ id: number; zone?: string }> = [];
+  const take = (i: number) => {
+    const t = logs[i] as { type?: string; player?: number; id?: unknown; originZone?: string } | undefined;
+    if (!t || t.type !== YGODuelEvents.LogType.Target || t.player !== act.player || typeof t.id !== "number") return false;
+    out.push({ id: t.id, zone: t.originZone });
+    return true;
+  };
+  // After it, unless a following Activate claims them as its own (its Target logs come first).
+  for (let i = index + 1; take(i); i++) { /* collects */ }
+  if (!out.length) {
+    const before: Array<{ id: number; zone?: string }> = [];
+    for (let i = index - 1; i >= 0; i--) {
+      const t = logs[i] as { type?: string; player?: number; id?: unknown; originZone?: string };
+      if (t.type !== YGODuelEvents.LogType.Target || t.player !== act.player || typeof t.id !== "number") break;
+      before.unshift({ id: t.id, zone: t.originZone });
+    }
+    // Before it only when no earlier activation sits right before those Target logs (they'd be its).
+    const first = index - before.length - 1;
+    const owner = first >= 0 ? (logs[first] as { type: string }).type : null;
+    if (owner !== YGODuelEvents.LogType.Activate) out.push(...before);
+  }
+  return out;
+}
+
+/**
  * A search's reveal (ToHandCommand's reveal: the card shown from the hand) is part of its "To
  * Hand" row: the board shows it, the log doesn't list it again.
  */
@@ -192,13 +224,14 @@ export function DuelLogMenu({ duel, menus }: { duel: YGODuel; menus: UiMenuState
             return <DefaultLogRow key={index + "Set"} duel={duel} ygo={duel.ygo} log={{ ...log, type: "Set" } as never} />;
           }
 
+          const targets = targetsOf(logs, index);
           return (
             <Component
               key={index + log.type}
               duel={duel}
               ygo={duel.ygo}
               index={index}
-              log={log}
+              log={targets.length ? ({ ...log, targets } as typeof log) : log}
             />
           );
         })}

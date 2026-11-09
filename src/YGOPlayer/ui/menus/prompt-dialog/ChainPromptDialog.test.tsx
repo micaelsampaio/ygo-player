@@ -48,4 +48,15 @@ describe("ChainPromptDialog", () => {
   it("has no Cancel when the chain can't be passed", () => {
     expect(render([row(1, 0x02)])).not.toContain(">Cancel");
   });
+
+  it("shows the coach's tips per card, and says when there's nothing to quote", () => {
+    const coach = { tagsFor: (r: OptionRow) => (r.code === 1 ? ["they won 41% when Card 1 answered Beatrice (230 games)", "denies them 1 card"] : []), keyNote: null, answering: true };
+    const html = render([row(1, 0x02), row(2, 0x02), pass], { coach });
+    expect(html).toContain("Coach");
+    expect(html).toContain("<strong>Card 1</strong>: they won 41% when Card 1 answered Beatrice (230 games) · denies them 1 card");
+    expect(html).not.toContain("<strong>Card 2</strong>");
+    const empty = render([row(2, 0x02), pass], { coach: { ...coach, tagsFor: () => [] } });
+    expect(empty).toContain("No replay stats for answering Beatrice yet.");
+    expect(render([row(1, 0x02), pass])).not.toContain("ygo-md-coach-tips");
+  });
 });

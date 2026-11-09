@@ -39,6 +39,8 @@ export interface CoachPreviewOption {
   /** Opponent cards that get a new activation / response window because of it. */
   opens: Array<{ code: number; name: string }>;
   note?: string;
+  /** What it does on your side (cards out of your Deck, added to your hand, monsters summoned). */
+  does?: { fromDeck: number; toHand: number; summons: number };
 }
 
 export type CoachPreview = { available: false } | { available: true; options: CoachPreviewOption[] };
@@ -124,6 +126,9 @@ export function parsePreview(res: unknown): CoachPreview {
     lp: { self: Number(o.lp?.self) || 0, opp: Number(o.lp?.opp) || 0 },
     opens: Array.isArray(o.opens) ? o.opens.filter((c) => c && typeof c.name === "string") : [],
     ...(typeof o.note === "string" && o.note ? { note: o.note } : {}),
+    ...(o.does && typeof o.does === "object"
+      ? { does: { fromDeck: Number(o.does.fromDeck) || 0, toHand: Number(o.does.toHand) || 0, summons: Number(o.does.summons) || 0 } }
+      : {}),
   }));
   return { available: true, options };
 }
@@ -163,8 +168,42 @@ export function lpText(delta: number): string {
   return `${n < 0 ? MINUS : "+"}${Math.abs(n)} LP`;
 }
 
-/** The small tags on an options-panel row: the hint's share, then the preview's LP changes and what it opens. */
-export function coachTags(action: CoachAction, hints: CoachHint[] | null | undefined, preview: CoachPreview | null | undefined): string[] {
+/** An interruption the opponent may hold, with the chance they do (CoachNow's live recount). */
+export type HeldTrap = { name: string; chance: number };
+
+/** LOC_MZONE / LOC_SZONE as ocgcore numbers them. */
+const LOC_MZONE = 0x04;
+const LOC_SZONE = 0x08;
+
+/**
+ * What each common interruption answers, roughly (the card text has the exact conditions): a card
+ * out of the Deck (Ash Blossom), a search (Droll), a summon (the Mulcharmies, Maxx "C"), a big
+ * combo (Nibiru), a monster effect on the field (Veiler, Impermanence, Ghost Mourner), any card's
+ * effect on the field (Ghost Ogre).
+ */
+const ANSWERS: Array<{ name: RegExp; meets(d: NonNullable<CoachPreviewOption["does"]>, loc: number | undefined): boolean }> = [
+  { name: /Ash Blossom|Ghost Belle/i, meets: (d) => d.fromDeck > 0 },
+  { name: /Droll & Lock Bird/i, meets: (d) => d.fromDeck > 0 && d.toHand > 0 },
+  { name: /Mulcharmy|Maxx "C"/i, meets: (d) => d.summons > 0 },
+  { name: /Nibiru/i, meets: (d) => d.summons >= 5 },
+  { name: /Effect Veiler|Infinite Impermanence|Ghost Mourner/i, meets: (_d, loc) => loc === LOC_MZONE },
+  { name: /Ghost Ogre/i, meets: (_d, loc) => loc === LOC_MZONE || loc === LOC_SZONE },
+];
+
+/** "may meet Ash Blossom & Joyous Spring 28%": the likeliest two interruptions this option runs into. */
+export function meetsTags(option: CoachPreviewOption, held: HeldTrap[] | null | undefined): string[] {
+  if (!option.does || !held?.length) return [];
+  const loc = (option.action.data as { loc?: unknown } | null)?.loc;
+  const at = typeof loc === "number" ? loc : undefined;
+  return held
+    .filter((h) => h.chance >= 0.05 && ANSWERS.some((a) => a.name.test(h.name) && a.meets(option.does!, at)))
+    .sort((a, b) => b.chance - a.chance)
+    .slice(0, 2)
+    .map((h) => `may meet ${h.name} ${Math.round(h.chance * 100)}%`);
+}
+
+/** The small tags on an options-panel row: the hint's share, then the preview's LP changes, what it opens, and the interruptions it may meet. */
+export function coachTags(action: CoachAction, hints: CoachHint[] | null | undefined, preview: CoachPreview | null | undefined, held?: HeldTrap[] | null): string[] {
   const tags: string[] = [];
   const hint = hintFor(hints, action);
   if (hint) tags.push(shareTag(hint.share));
@@ -175,7 +214,7 @@ export function coachTags(action: CoachAction, hints: CoachHint[] | null | undef
     const names = [...new Set(option.opens.map((c) => c.name))];
     if (names.length) tags.push(`opens ${names.join(", ")}`);
     if (option.note) tags.push(option.note);
-    if (!option.lp.self && !option.lp.opp && !names.length && !option.note) tags.push("opens nothing");
+    tags.push(...meetsTags(option, held));
   }
   return tags;
 }
@@ -193,8 +232,10 @@ export function decisionKey(result: unknown): string | null {
 
 /** A preview is only offered for the human's own idle / battle decision. */
 export function canPreview(result: unknown): boolean {
-  const pending = (result as { available?: boolean; pending?: string } | null | undefined);
-  return !!pending?.available && (pending.pending === "idle" || pending.pending === "battle");
+  const r = result as { available?: boolean; pending?: string; options?: { activatable?: unknown[]; attackable?: unknown[] } } | null | undefined;
+  if (!r?.available || (r.pending !== "idle" && r.pending !== "battle")) return false;
+  // The server previews Attack and Activate options only: with neither there's nothing to ask.
+  return !!r.options?.activatable?.length || (r.pending === "battle" && !!r.options?.attackable?.length);
 }
 
 /** "52% of 1,234" / "no games yet" */
@@ -267,4 +308,24 @@ export function responseTags(
   }
   if (denies && denies > 0) tags.push(`denies them ${denies} card${denies === 1 ? "" : "s"}`);
   return tags;
+}
+
+/** The coach's pick for a card choice inside an effect (the assist query's coach.pick). */
+export interface CoachPick {
+  indices: number[];
+  source: "line" | "coach";
+}
+
+/** The query result's coach pick, or null. */
+export function coachPickOf(result: unknown): CoachPick | null {
+  const pick = (result as { coach?: { pick?: { indices?: unknown; source?: unknown } } } | null | undefined)?.coach?.pick;
+  if (!pick || !Array.isArray(pick.indices) || (pick.source !== "line" && pick.source !== "coach")) return null;
+  const indices = pick.indices.filter((i): i is number => typeof i === "number" && i >= 0);
+  return indices.length ? { indices, source: pick.source } : null;
+}
+
+/** The tag for a card the pick includes (any of `indices`, a group of copies), or undefined. */
+export function pickTag(pick: CoachPick | null | undefined, indices: number[]): string | undefined {
+  if (!pick || !indices.some((i) => pick.indices.includes(i))) return undefined;
+  return pick.source === "line" ? "in the suggested line" : "coach pick";
 }
