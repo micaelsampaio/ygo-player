@@ -3,29 +3,26 @@ import type { YGODuel } from "../core/YGODuel";
 import { Card } from "ygo-core";
 import { YGOGameUtils } from "ygo-core";
 import { YGOMath } from "../core/YGOMath";
-import {
-  STAT_FONT_FAMILY,
-  STAT_OUTLINE_COLOR,
-  STAT_SECONDARY_BASE_COLOR,
-  STAT_SHADOW_COLOR,
-  StatsRenderState,
-  fitFontSize,
-  formatStat,
-  statColor,
-  statsCanvasScale,
-  statsRenderKey,
-} from "./card-stats-format";
+import { StatsRenderState, formatStat, statsCanvasScale, statsRenderKey } from "./card-stats-format";
 
 /** Logical canvas size; the backing store is this × statsCanvasScale(devicePixelRatio). */
 const LOGICAL = 128;
-/** Emphasised (current position) and secondary numeral sizes, in logical px. */
-const MAIN_SIZE = 27;
-const SECONDARY_SIZE = 20;
-/** The level / rank / link row and its icon: readable at a glance on the board (it was 15). */
-const ROW_SIZE = 21;
-const ICON_SIZE = 21;
-/** The ATK/DEF row may not run wider than this. */
-const MAX_ROW_WIDTH = LOGICAL - 8;
+/** The number not for the current position (and the slash). */
+const MUTED = "#AAAAAA";
+
+/** Raised in blue, lowered in red, else white (Micael's colours). */
+function diffColor(diff: number): string {
+  if (diff > 0) return "#67bcf5";
+  if (diff < 0) return "#f57067";
+  return "#FFFFFF";
+}
+
+/** A changed stat in its diff colour; an unchanged one white when it's the current position's, else muted. */
+function statColorOf(value: number, base: number, emphasised: boolean): string {
+  const diff = value - base;
+  if (Number.isFinite(diff) && diff !== 0) return diffColor(diff);
+  return emphasised ? "#FFFFFF" : MUTED;
+}
 
 export class GameCardStats {
   public parent: THREE.Object3D;
@@ -73,7 +70,6 @@ export class GameCardStats {
     this.texture.colorSpace = THREE.SRGBColorSpace;
     this.texture.anisotropy = this.duel.core.renderer.capabilities.getMaxAnisotropy();
 
-    this.redrawWhenFontLoads();
   }
 
   show() {
@@ -127,15 +123,11 @@ export class GameCardStats {
     ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     ctx.setTransform(this.scale, 0, 0, this.scale, 0, 0);
 
-    // The player's plate hangs below their card, the opponent's above theirs (the mesh is turned
-    // for them): either way the numerals sit on the outer edge with the level row beneath.
-    // Both rows fit the 128px canvas: ATK/DEF (27px) then the level row (21px) 24px below it.
-    const numbersY = state.isPlayerSide ? 90 : 26;
-    const rowY = numbersY + 24;
-
-    this.renderAtkDef(state, numbersY);
-    this.renderLevel(state, rowY);
-    this.renderMaterials(state, rowY);
+    // Micael's layout (the field stats before 2026-10-24): ATK/DEF on a dark band along the card's
+    // outer edge, the level / rank / link in the corner above it, Xyz materials in the other corner.
+    this.renderAtkDef(state);
+    this.renderLevel(state);
+    this.renderMaterials(state);
 
     this.texture.needsUpdate = true;
 
@@ -152,134 +144,90 @@ export class GameCardStats {
     }
   }
 
-  /** Bold numerals with a dark outline and soft drop shadow, Master Duel style. */
-  private drawOutlinedText(text: string, x: number, y: number, size: number, color: string) {
+  /** Bold Arial with a thin black outline (Micael's field stats). */
+  private drawText(text: string, x: number, y: number, size: number, color: string) {
     const ctx = this.ctx;
-    ctx.font = `800 ${size}px ${STAT_FONT_FAMILY}`;
+    ctx.font = `bold ${size}px Arial`;
     ctx.lineJoin = "round";
-    ctx.miterLimit = 2;
-    ctx.strokeStyle = STAT_OUTLINE_COLOR;
-    ctx.lineWidth = Math.max(3, size * 0.2);
-    ctx.shadowColor = STAT_SHADOW_COLOR;
-    ctx.shadowBlur = 4;
-    ctx.shadowOffsetY = 1.5;
+    ctx.strokeStyle = "black";
+    ctx.lineWidth = 2;
     ctx.strokeText(text, x, y);
-    ctx.shadowColor = "transparent";
-    ctx.shadowBlur = 0;
-    ctx.shadowOffsetY = 0;
     ctx.fillStyle = color;
     ctx.fillText(text, x, y);
   }
 
   private measure(text: string, size: number): number {
-    this.ctx.font = `800 ${size}px ${STAT_FONT_FAMILY}`;
+    this.ctx.font = `bold ${size}px Arial`;
     return this.ctx.measureText(text).width;
   }
 
-  private renderAtkDef(s: StatsRenderState, y: number) {
+  /** ATK / DEF centred on a dark band: the current position's number at 20px, the other at 16px. */
+  private renderAtkDef(s: StatsRenderState) {
     const ctx = this.ctx;
     const hasDef = !s.isLink;
     const atkStr = formatStat(s.atk);
     const defStr = hasDef ? formatStat(s.def) : "";
     const slashStr = hasDef ? "/" : "";
+    const y = s.isPlayerSide ? LOGICAL - 10 : 35;
 
-    // Link monsters have no DEF: their ATK is always the emphasised number.
-    let atkSize = s.isAttackPosition || !hasDef ? MAIN_SIZE : SECONDARY_SIZE;
-    let defSize = s.isAttackPosition ? SECONDARY_SIZE : MAIN_SIZE;
-    let slashSize = SECONDARY_SIZE;
+    const band = ctx.createLinearGradient(0, 0, LOGICAL, 0);
+    band.addColorStop(0, "rgba(0, 0, 0, 0)");
+    band.addColorStop(0.25, "rgba(0, 0, 0, 0.5)");
+    band.addColorStop(0.75, "rgba(0, 0, 0, 0.5)");
+    band.addColorStop(1, "rgba(0, 0, 0, 0)");
+    ctx.beginPath();
+    ctx.fillStyle = band;
+    ctx.rect(LOGICAL * 0.1, y - 25, LOGICAL * 0.8, 25);
+    ctx.fill();
 
-    const total = () => this.measure(atkStr, atkSize) + this.measure(slashStr, slashSize) + this.measure(defStr, defSize);
-    const fitted = fitFontSize(MAIN_SIZE, total(), MAX_ROW_WIDTH);
-    if (fitted !== MAIN_SIZE) {
-      const k = fitted / MAIN_SIZE;
-      atkSize *= k;
-      defSize *= k;
-      slashSize *= k;
-    }
-
+    const atkSize = s.isAttackPosition || !hasDef ? 20 : 16;
+    const defSize = s.isAttackPosition ? 16 : 20;
     const atkWidth = this.measure(atkStr, atkSize);
-    const slashWidth = this.measure(slashStr, slashSize);
+    const slashWidth = this.measure(slashStr, 20);
     const defWidth = this.measure(defStr, defSize);
     let x = LOGICAL / 2 - (atkWidth + slashWidth + defWidth) / 2;
 
     ctx.textAlign = "left";
-    ctx.textBaseline = "alphabetic";
-    // Align the baselines so the smaller number sits on the same line as the big one.
-    const baseline = y + MAIN_SIZE * 0.36;
-
-    this.drawOutlinedText(atkStr, x, baseline, atkSize, statColor(s.atk, s.baseAtk, s.isAttackPosition || !hasDef));
+    ctx.textBaseline = "bottom";
+    this.drawText(atkStr, x, y, atkSize, statColorOf(s.atk, s.baseAtk, s.isAttackPosition || !hasDef));
     x += atkWidth;
-
     if (!hasDef) return;
-
-    this.drawOutlinedText(slashStr, x, baseline, slashSize, STAT_SECONDARY_BASE_COLOR);
+    this.drawText(slashStr, x, y, 20, MUTED);
     x += slashWidth;
-    this.drawOutlinedText(defStr, x, baseline, defSize, statColor(s.def, s.baseDef, !s.isAttackPosition));
+    this.drawText(defStr, x, y, defSize, statColorOf(s.def, s.baseDef, !s.isAttackPosition));
   }
 
-  private renderLevel(s: StatsRenderState, y: number) {
+  /** The level / rank / link: icon and number in the corner above the band (your right side). */
+  private renderLevel(s: StatsRenderState) {
     const level = s.level;
     if (!level || level <= 0) return;
-
-    let iconPath: string;
-    if (s.isLink) {
-      iconPath = `${this.duel.config.cdnUrl}/images/ui/ic_link128.png`;
-    } else if (s.isXyz) {
-      iconPath = `${this.duel.config.cdnUrl}/images/ui/ic_rank128.png`;
-    } else {
-      iconPath = `${this.duel.config.cdnUrl}/images/ui/ic_stars128.png`;
-    }
-
-    const levelStr = String(level);
-    const textWidth = this.measure(levelStr, ROW_SIZE);
-    const hasMaterials = s.isXyz;
-    const groupWidth = ICON_SIZE + 2 + textWidth;
-    // Level on the left, overlay units on the right (a lone level row is centred).
-    const x = hasMaterials ? LOGICAL / 2 - 6 - groupWidth : LOGICAL / 2 - groupWidth / 2;
-
-    this.drawIcon(iconPath, x, y);
+    const iconPath = s.isLink
+      ? `${this.duel.config.cdnUrl}/images/ui/ic_link128.png`
+      : s.isXyz
+        ? `${this.duel.config.cdnUrl}/images/ui/ic_rank128.png`
+        : `${this.duel.config.cdnUrl}/images/ui/ic_stars128.png`;
+    const x = s.isPlayerSide ? LOGICAL - 30 : 30;
+    const y = s.isPlayerSide ? LOGICAL - 50 : 55;
+    this.drawIcon(iconPath, x - 24, y - 12);
     this.ctx.textAlign = "left";
     this.ctx.textBaseline = "middle";
-    this.drawOutlinedText(levelStr, x + ICON_SIZE + 2, y + 1, ROW_SIZE, statColor(level, s.baseLevel));
+    this.drawText(String(level), x, y, 20, diffColor(s.isLink ? 0 : level - s.baseLevel));
   }
 
-  private renderMaterials(s: StatsRenderState, y: number) {
+  /** Xyz materials: icon and count in the other corner. */
+  private renderMaterials(s: StatsRenderState) {
     if (!s.isXyz) return;
-
-    const iconPath = `${this.duel.config.cdnUrl}/images/ui/ic_xyz_materials128.png`;
-    const x = LOGICAL / 2 + 6;
-
-    this.drawIcon(iconPath, x, y);
+    const x = s.isPlayerSide ? 30 : LOGICAL - 30;
+    const y = s.isPlayerSide ? LOGICAL - 50 : 55;
+    this.drawIcon(`${this.duel.config.cdnUrl}/images/ui/ic_xyz_materials128.png`, x - 24, y - 12);
     this.ctx.textAlign = "left";
     this.ctx.textBaseline = "middle";
-    this.drawOutlinedText(String(s.materials), x + ICON_SIZE + 2, y + 1, ROW_SIZE, "#ffffff");
+    this.drawText(String(s.materials), x, y, 20, "#FFFFFF");
   }
 
-  private drawIcon(path: string, x: number, centerY: number) {
+  private drawIcon(path: string, x: number, y: number) {
     const icon = this.duel.assets.getImage(path);
     if (!icon || (icon.complete === false) || !icon.width) return;
-    const ctx = this.ctx;
-    ctx.shadowColor = STAT_SHADOW_COLOR;
-    ctx.shadowBlur = 3;
-    ctx.drawImage(icon, 0, 0, icon.width, icon.height, x, centerY - ICON_SIZE / 2, ICON_SIZE, ICON_SIZE);
-    ctx.shadowColor = "transparent";
-    ctx.shadowBlur = 0;
-  }
-
-  /** The canvas may draw before Barlow Condensed is ready; redraw once it is. */
-  private redrawWhenFontLoads() {
-    const fonts = typeof document !== "undefined" ? document.fonts : undefined;
-    if (!fonts?.load) return;
-    const spec = `800 ${MAIN_SIZE}px ${STAT_FONT_FAMILY}`;
-    try {
-      if (fonts.check(spec)) return;
-      fonts.load(spec).then(loaded => {
-        if (!loaded.length || this.destroyed || !this.renderKey) return;
-        this.renderKey = "";
-        this.render();
-      }).catch(() => { });
-    } catch {
-      // font loading API unavailable — the fallback font is fine
-    }
+    this.ctx.drawImage(icon, 0, 0, icon.width, icon.height, x, y, 20, 20);
   }
 }
