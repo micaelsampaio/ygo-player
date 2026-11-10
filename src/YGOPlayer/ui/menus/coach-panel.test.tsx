@@ -50,8 +50,9 @@ describe("coachLines: what the coach posts in the chat", () => {
       "~38% they hold Ash Blossom: lead with it.",
     ]);
     expect(lines[2].key).toBe("tip:2:Main Phase 1");
-    // A guess that isn't clear yet: not posted.
-    expect(coachLines({ ...now, outlook: null, tip: null }, { format: "TCG", oppGuess: { seen: 1, types: [{ name: "A", share: 0.5 }, { name: "B", share: 0.5 }] } }, turn)).toEqual([]);
+    // A guess that isn't clear yet is posted as one ("might be"), keyed apart from the clear one.
+    const maybe = coachLines({ ...now, outlook: null, tip: null }, { format: "TCG", oppGuess: { seen: 1, types: [{ name: "A", share: 0.5 }, { name: "B", share: 0.5 }] } }, turn);
+    expect(maybe).toEqual([{ key: "guess:A:maybe", text: "Their deck might be A (50%) or B (50%), from 1 card seen." }]);
   });
 
   it("their activation: only with something to say", () => {

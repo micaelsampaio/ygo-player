@@ -386,12 +386,18 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
   // The interruptions they may hold now (for the preview's "may meet" tags), read once per render.
   let heldCache: HeldChance[] | null = null;
   const heldNow = () => (heldCache ??= liveHandTraps(coach.stats?.oppHandTraps, shownByOpp(duel, 1 - me)));
+  // "% pick this" isn't fair in an open window offering one card or not responding (nothing on the
+  // chain yet): the model barely saw the passes there, so it reads ~100% (Mulcharmy Fuwalos in their
+  // Draw Phase, 2026-11-10). Shown where you choose between cards.
+  const shareHintsFair = !(result.available && result.pending === "chain"
+    && !(result.respond.chain?.length)
+    && new Set(result.respond.activatable.map((a) => a.code)).size <= 1);
   // The coach's tags for an option ("players chose this", preview, response tips): the rows and the chain dialog.
   const coachTagsFor = (row: OptionRow): string[] => {
     if (coachKey === null) return [];
     const rowAction = { commandType: row.commandType, data: row.data };
     return [
-      ...coachTags(rowAction, coachHints, previewResult, previewResult ? heldNow() : null),
+      ...coachTags(rowAction, shareHintsFair ? coachHints : null, previewResult, previewResult ? heldNow() : null),
       ...(coachChainTop && row.commandType === "Activate"
         ? responseTags(row.code, coachChainTop.code, coach.stats?.oppAnswers, responseFor(coachResponses, rowAction))
         : []),

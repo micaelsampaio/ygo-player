@@ -141,10 +141,18 @@ export interface CoachLine { key: string; text: string }
 export function coachLines(now: CoachNow, stats: CoachStats | null, turn: Pick<DuelTurnState, "turn" | "phase">): CoachLine[] {
   const lines: CoachLine[] = [];
   if (now.outlook) lines.push({ key: `outlook:${now.outlook}`, text: now.outlook });
-  const top = stats?.oppGuess?.types[0];
-  if (top && top.share > 0.5) {
-    const seen = stats!.oppGuess!.seen;
-    lines.push({ key: `guess:${top.name}`, text: `Their deck looks like ${top.name} (${Math.round(top.share * 100)}% from ${seen} card${seen === 1 ? "" : "s"} seen).` });
+  // The bot's deck: posted as soon as there's a guess, again whenever the leader changes or turns clear.
+  const guess = stats?.oppGuess;
+  const top = guess?.types[0];
+  if (guess && top) {
+    const pct = (share: number) => `${Math.round(share * 100)}%`;
+    const from = `from ${guess.seen} card${guess.seen === 1 ? "" : "s"} seen`;
+    const clear = top.share > 0.5;
+    const second = guess.types[1];
+    const text = clear
+      ? `Their deck looks like ${top.name} (${pct(top.share)} ${from}).`
+      : `Their deck might be ${top.name} (${pct(top.share)})${second ? ` or ${second.name} (${pct(second.share)})` : ""}, ${from}.`;
+    lines.push({ key: `guess:${top.name}:${clear ? "clear" : "maybe"}`, text });
   }
   if (now.tip) lines.push({ key: `tip:${turn.turn}:${turn.phase}`, text: now.tip });
   const r = now.responses;
