@@ -106,7 +106,7 @@ export function readCoachNow(duel: DuelLike, stats: CoachStats | null, turn: Due
         return (d?.id ?? d?.code) === ref.code;
       });
       const same = own.length > 0 && own.every((r) => r.denies === own[0].denies && JSON.stringify(r.stops ?? null) === JSON.stringify(own[0].stops ?? null));
-      const lines = responseTags(ref.code, top.code, stats?.oppAnswers, same ? own[0] : null);
+      const lines = responseTags(ref.code, top.code, stats?.oppAnswers, same ? own[0] : null, (code) => duel.ygo.state.getCardData(code)?.name);
       return lines.length ? [{ name: name(ref.code), lines }] : [];
     });
     const keyNote = keyCardNote(top.code, stats?.oppAnswers);

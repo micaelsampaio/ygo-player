@@ -25,7 +25,11 @@ export interface CoachResponse {
   denies: number;
   /** What passing gives them that chaining this stops, by the end of the chain (server coachResponses). */
   stops?: CoachStops;
+  /** What it does for you against passing: your cards that end up on your field / in your GY, hand and LP change. */
+  gains?: CoachGains;
 }
+
+export interface CoachGains { field: number[]; gy: number[]; hand: number; lp: number }
 
 /**
  * Cards they'd add to their hand, get on the field (monsters / spells: by zone; older servers send
@@ -271,8 +275,11 @@ export function endBoardText(end: { interruptions: number; now: number }): strin
 export function coachResponsesOf(result: unknown): CoachResponse[] | null {
   const responses = (result as { coach?: { responses?: unknown } } | null | undefined)?.coach?.responses;
   if (!Array.isArray(responses)) return null;
+  // Each option the server reports changes something against passing (it stops their play, or does
+  // something for you); an older server only sent the ones with denies > 0.
   const valid = responses.filter((r): r is CoachResponse =>
-    !!r && typeof r === "object" && isAction((r as CoachResponse).action) && typeof (r as CoachResponse).denies === "number" && (r as CoachResponse).denies > 0);
+    !!r && typeof r === "object" && isAction((r as CoachResponse).action) && typeof (r as CoachResponse).denies === "number"
+    && ((r as CoachResponse).denies > 0 || !!(r as CoachResponse).gains));
   return valid.length ? valid : null;
 }
 
@@ -318,6 +325,28 @@ export function stopsText(r: Pick<CoachResponse, "denies" | "stops"> | null | un
   const deckLeft = s.deck - searched - (split ? monsters + spells : s.field);
   if (deckLeft > 0) parts.push(`${cards(deckLeft)} out of their Deck`);
   return parts.length ? `stops ${parts.join(", ")}` : `they end this chain with ${cards(r.denies)} fewer`;
+}
+
+/** "Kirin, Garunix" (names of your own cards; a repeated one once, "×2"). */
+function namesList(codes: number[], nameOf: (code: number) => string | undefined): string {
+  const counts = new Map<string, number>();
+  for (const code of codes) { const n = nameOf(code) ?? "a card"; counts.set(n, (counts.get(n) ?? 0) + 1); }
+  return [...counts].map(([n, k]) => (k > 1 ? `${n} ×${k}` : n)).join(", ");
+}
+
+/**
+ * What a response does for you, against passing, in words: "puts Fire King High Avatar Kirin on your
+ * field, sends Sacred Fire King Garunix to your GY". Null when it changes nothing on your side.
+ */
+export function gainsText(g: CoachGains | null | undefined, nameOf: (code: number) => string | undefined): string | null {
+  if (!g) return null;
+  const parts: string[] = [];
+  if (g.field.length) parts.push(`puts ${namesList(g.field, nameOf)} on your field`);
+  if (g.gy.length) parts.push(`sends ${namesList(g.gy, nameOf)} to your GY`);
+  if (g.hand > 0) parts.push(`+${cards(g.hand)} in your hand`);
+  if (g.lp < 0) parts.push(`costs you ${-g.lp} LP`);
+  else if (g.lp > 0) parts.push(`gains you ${g.lp} LP`);
+  return parts.length ? parts.join(", ") : null;
 }
 
 /**
@@ -366,7 +395,8 @@ export function responseTags(
   code: number | undefined,
   target: number,
   opp: CoachOppAnswers | null | undefined,
-  check: number | Pick<CoachResponse, "denies" | "stops"> | null,
+  check: number | Pick<CoachResponse, "denies" | "stops" | "gains"> | null,
+  nameOf: (code: number) => string | undefined = () => undefined,
 ): string[] {
   const tags: string[] = [];
   if (code !== undefined && opp) {
@@ -381,8 +411,13 @@ export function responseTags(
   }
   const usual = usualTargetTag(code, target, opp);
   if (usual) tags.push(usual);
-  const stops = stopsText(typeof check === "number" ? { denies: check } : check);
+  // The consequence, against passing: what it does for you, then what it stops for them.
+  const r = typeof check === "number" ? { denies: check } : check;
+  const mine = gainsText(r && "gains" in r ? r.gains : null, nameOf);
+  if (mine) tags.push(mine);
+  const stops = stopsText(r);
   if (stops) tags.push(stops);
+  else if (r && "gains" in r && r.gains) tags.push("doesn't stop their play");
   return tags;
 }
 

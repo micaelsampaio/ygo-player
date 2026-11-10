@@ -293,7 +293,8 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
   const coachChainTop = coachKey !== null ? opponentChainTop(result, duel.perspective.playerIndex) : null;
   // A card choice inside an effect: the coach's pick (the suggested line's, else the bot's clear pick).
   const coachPromptPick = coachOn && isActive && !held ? coachPickOf(result) : null;
-  const coachResponses = coachChainTop ? coachResponsesOf(result) : null;
+  // The engine's check of each response (also in a window answering their summon: no chain yet).
+  const coachResponses = coachKey !== null ? coachResponsesOf(result) : null;
   const panelRef = useRef<HTMLDivElement | null>(null);
   const placement = usePanelPlacement(panelRef, isMobileLayout, isMasterDuelStyle(duel));
 
@@ -396,11 +397,12 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
   const coachTagsFor = (row: OptionRow): string[] => {
     if (coachKey === null) return [];
     const rowAction = { commandType: row.commandType, data: row.data };
+    // The consequence first (what it does for you, what it stops), then the replay share.
     return [
-      ...coachTags(rowAction, shareHintsFair ? coachHints : null, previewResult, previewResult ? heldNow() : null),
-      ...(coachChainTop && row.commandType === "Activate"
-        ? responseTags(row.code, coachChainTop.code, coach.stats?.oppAnswers, responseFor(coachResponses, rowAction))
+      ...(row.commandType === "Activate" && (coachChainTop || coachResponses)
+        ? responseTags(row.code, coachChainTop?.code ?? 0, coach.stats?.oppAnswers, responseFor(coachResponses, rowAction), (code) => duel.ygo.state.getCardData(code)?.name)
         : []),
+      ...coachTags(rowAction, shareHintsFair ? coachHints : null, previewResult, previewResult ? heldNow() : null),
     ];
   };
   const renderRow = (row: OptionRow) => {

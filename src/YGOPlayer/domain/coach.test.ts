@@ -204,3 +204,20 @@ describe("coach pick on card choices", () => {
     expect(coachPickOf(null)).toBeNull();
   });
 });
+
+describe("what a response does for you", () => {
+  it("names your own cards it puts on the field and in the GY, then says it doesn't stop them", async () => {
+    const { gainsText, responseTags } = await import("./coach");
+    const names: Record<number, string> = { 1: "Fire King High Avatar Kirin", 2: "Sacred Fire King Garunix" };
+    const nameOf = (c: number) => names[c];
+    expect(gainsText({ field: [1], gy: [2], hand: -2, lp: 0 }, nameOf)).toBe("puts Fire King High Avatar Kirin on your field, sends Sacred Fire King Garunix to your GY");
+    expect(gainsText({ field: [], gy: [], hand: 1, lp: -1000 }, nameOf)).toBe("+1 card in your hand, costs you 1000 LP");
+    expect(gainsText({ field: [], gy: [], hand: 0, lp: 0 }, nameOf)).toBeNull();
+    const kirin = { denies: 0, stops: { hand: 0, field: 0, deck: 0, monsters: 0, spells: 0 }, gains: { field: [1], gy: [2], hand: -2, lp: 0 } };
+    expect(responseTags(1, 0, null, kirin, nameOf)).toEqual([
+      "puts Fire King High Avatar Kirin on your field, sends Sacred Fire King Garunix to your GY",
+      "doesn't stop their play",
+    ]);
+  });
+});
+
