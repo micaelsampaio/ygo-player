@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { AttributeIcon } from "./AttributeIcon";
-import { ATTRIBUTE_ICON_SPECS, attributeIconSpec, isAttributeIconKind, svgSafeId } from "./attribute-icon-spec";
+import { ATTRIBUTE_ICON_SPECS, attributeIconSpec, isAttributeIconKind, spritePosition, svgSafeId } from "./attribute-icon-spec";
 
 describe("attributeIconSpec", () => {
   it("maps each kind to its kanji and label", () => {
@@ -35,20 +35,21 @@ describe("attributeIconSpec", () => {
 });
 
 describe("AttributeIcon", () => {
-  it("renders an accessible SVG with the kanji", () => {
-    const html = renderToStaticMarkup(<AttributeIcon kind="light" />);
+  it("shows the game's own icon from the card icons sprite, labelled", () => {
+    const html = renderToStaticMarkup(<AttributeIcon kind="light" size={30} />);
     expect(html).toContain('role="img"');
     expect(html).toContain('aria-label="LIGHT attribute"');
-    expect(html).toContain("<title>LIGHT attribute</title>");
-    expect(html).toContain("光");
-    expect(html).toContain("#f2c418");
+    expect(html).toContain("var(--ygo-player-asset-ui-card-icons)");
+    expect(html).toContain("background-size:800% 800%");
+    // LIGHT: column 1, row 6 of the 8 × 8 sheet.
+    expect(html).toContain("background-position:14.2857% 85.7143%");
+    expect(html).toContain("width:30px");
   });
 
-  it("uses unique gradient ids per instance", () => {
-    const html = renderToStaticMarkup(<><AttributeIcon kind="dark" /><AttributeIcon kind="dark" /></>);
-    const ids = [...html.matchAll(/radialGradient id="([^"]+)"/g)].map((m) => m[1]);
-    expect(ids).toHaveLength(2);
-    expect(ids[0]).not.toBe(ids[1]);
-    expect(html).toContain(`url(#${ids[0]})`);
+  it("puts every kind on its own cell (Trap and Spell on the next row)", () => {
+    const cells = Object.values(ATTRIBUTE_ICON_SPECS).map((spec) => spec.sprite.join(","));
+    expect(new Set(cells).size).toBe(cells.length);
+    expect(spritePosition(attributeIconSpec("dark").sprite)).toBe("0% 85.7143%");
+    expect(spritePosition(attributeIconSpec("spell").sprite)).toBe("14.2857% 100%");
   });
 });
