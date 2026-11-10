@@ -25,6 +25,9 @@ import { chainAheadOfBoard, triggerKeysOf } from "../../domain/assist-query";
 import { zoneHighlights } from "../../domain/assist-zones";
 import { canPreview, coachHintsOf, coachPickOf, isShareTag, SHARE_SOURCE, coachResponsesOf, coachTags, decisionKey, responseFor, opponentChainTop, responseTags, type CoachPreview } from "../../domain/coach";
 import { useCoach } from "./coach-panel";
+
+/** The name the server posts its duel notices under (ygo-socket-server duel/notice.ts DUEL_NOTICE_NAME). */
+const DUEL_NOTICE_NAME = "ℹ️ Duel";
 import { keyCardNote, liveHandTraps, type HeldChance } from "../../domain/coach-live";
 import { shownByOpp } from "./use-coach-now";
 
@@ -175,12 +178,18 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
     // An undo / redo moved the duel (in a bot duel the server rebuilt its
     // engine there): the options on screen belong to the old position.
     const onTimelineMoved = () => { setError(null); refresh(); };
+    // The server's own notices ("Duel": the bot is planning its turn, paused for you…) mean the duel
+    // moved on the engine's side: a window shown on screen may be gone (room d59763ed, 2026-11-10:
+    // "the bot's turn is paused" stayed up while the bot was thinking). Ask again.
+    const onDuelNotice = (data?: { username?: string }) => { if (data?.username === DUEL_NOTICE_NAME) refresh(); };
+    duel.ygo.events.on("chat-message", onDuelNotice);
     duel.events.on("assist-refresh", onTimelineMoved);
     duel.events.on("enable-game-actions", onEnable);
     duel.events.on("assist-choice-start", onMenuStart);
     duel.events.on("assist-choice-done", onMenuDone);
     duel.events.on("assist-notice", onNotice);
     return () => {
+      duel.ygo.events.off("chat-message", onDuelNotice);
       duel.events.off("enable-game-actions", onEnable);
       duel.events.off("assist-choice-start", onMenuStart);
       duel.events.off("assist-choice-done", onMenuDone);
