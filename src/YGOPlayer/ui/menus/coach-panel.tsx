@@ -62,10 +62,14 @@ export function CoachPanel({ duel, isMobileLayout = false }: { duel: YGODuel; is
       placementStyle={{ ...placement.style, ...nudge }}
       onHeaderPointerDown={placement.onHeaderPointerDown}
       onResetPosition={placement.resetPosition}
-      onSuggest={() => { void controller.suggest(turnState.turn); }}
+      mark={duelMark(duel)}
+      onSuggest={() => { void controller.suggest(turnState.turn, duelMark(duel)); }}
     />
   );
 }
+
+/** Where the duel is (its log length): a line found for an earlier board is for another position. */
+const duelMark = (duel: YGODuel) => duel.ygo?.duelLog?.logs?.length ?? 0;
 
 /** Posts the coach's lines for the moment the duel is in (each once; see coachLines). */
 function useCoachMessages(duel: YGODuel, state: CoachState, turnState: ReturnType<typeof useDuelTurnState>) {
@@ -130,16 +134,19 @@ export interface CoachPanelViewProps {
   onHeaderPointerDown?(e: { clientX: number; clientY: number; button: number; preventDefault(): void; stopPropagation(): void }): void;
   onResetPosition?(): void;
   onSuggest(): void;
+  /** Where the duel is now (duelMark): a line asked at another mark can be asked again. */
+  mark?: number;
 }
 
 export function CoachPanelView({
   state, turn, canSuggest, showSuggest = canSuggest, isMobileLayout = false,
-  panelRef, placementStyle, onHeaderPointerDown, onResetPosition, onSuggest,
+  panelRef, placementStyle, onHeaderPointerDown, onResetPosition, onSuggest, mark,
 }: CoachPanelViewProps) {
   const placement: CSSProperties = placementStyle ?? (isMobileLayout ? DOCKED.mobile : DOCKED.desktop);
   const s = state.suggest;
   const loading = s.status === "loading";
-  const done = s.status === "done" && s.turn === turn ? s.result : null;
+  // This turn's answer, while the board is the one it was asked for (the duel moved: ask again).
+  const done = s.status === "done" && s.turn === turn && (mark === undefined || s.mark === undefined || s.mark === mark) ? s.result : null;
   return (
     <div
       ref={panelRef}

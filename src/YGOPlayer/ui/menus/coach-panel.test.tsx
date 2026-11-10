@@ -36,6 +36,14 @@ describe("<CoachPanel>: Suggest my turn on the board", () => {
     expect(found).toMatch(/<button[^>]*disabled[^>]*>Line in chat/);
     expect(render({ suggest: { status: "loading", turn: 2 } })).toContain("Thinking…");
   });
+
+  it("a line found for an earlier board: Suggest again (the duel moved, their Ash Blossom…)", () => {
+    const found = { status: "done" as const, turn: 2, mark: 40, result: { available: true as const, steps: ["Normal Summon X"], end: { interruptions: 2, now: 0 }, ms: 10 } };
+    expect(render({ suggest: found }, { mark: 40 })).toMatch(/<button[^>]*disabled[^>]*>Line in chat/);
+    const moved = render({ suggest: found }, { mark: 46 });
+    expect(moved).toContain("Suggest my turn");
+    expect(moved).not.toMatch(/<button[^>]*disabled[^>]*>Suggest my turn/);
+  });
 });
 
 describe("coachLines: what the coach posts in the chat", () => {

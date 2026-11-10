@@ -3,8 +3,9 @@ import { endBoardText, parsePreview, parseSuggestion, type CoachPreview, type Co
 
 export type CoachSuggestState =
   | { status: "idle" }
-  | { status: "loading"; turn: number }
-  | { status: "done"; turn: number; result: CoachSuggestion };
+  | { status: "loading"; turn: number; mark?: number }
+  /** `mark`: where the duel was when it was asked (its log length): a later board asks again. */
+  | { status: "done"; turn: number; result: CoachSuggestion; mark?: number };
 
 export type CoachPreviewState =
   | { status: "idle" }
@@ -140,21 +141,23 @@ export class YGOCoachController {
   private posted = new Set<string>();
 
   /** "Suggest my turn" for `turn` (the answer is shown for that turn only). */
-  async suggest(turn: number): Promise<void> {
+  async suggest(turn: number, mark?: number): Promise<void> {
     const host = this.sync();
     if (!host || !this.state.enabled || this.state.suggest.status === "loading") return;
-    this.set({ suggest: { status: "loading", turn } });
+    this.set({ suggest: { status: "loading", turn, mark } });
     let result: CoachSuggestion;
     try {
       result = parseSuggestion(await host.suggest());
     } catch {
       result = { available: false, reason: "The coach couldn't answer, try again in a moment." };
     }
-    this.set({ suggest: { status: "done", turn, result } });
-    // The line goes to the chat too, where the coach's other messages are.
+    this.set({ suggest: { status: "done", turn, result, mark } });
+    // The line goes to the chat too, where the coach's other messages are (each new line, also later
+    // in the same turn once the board moved).
     if (result.available) {
       const lines = result.steps.length ? result.steps.map((step, i) => `${i + 1}. ${step}`) : ["Nothing better than passing."];
-      this.post(`suggest:${turn}`, [`Suggested line for turn ${turn}:`, ...lines, endBoardText(result.end)].join("\n"));
+      const text = [`Suggested line for turn ${turn}${mark ? " (from here)" : ""}:`, ...lines, endBoardText(result.end)].join("\n");
+      this.post(`suggest:${turn}:${result.steps.join("|")}`, text);
     }
   }
 
