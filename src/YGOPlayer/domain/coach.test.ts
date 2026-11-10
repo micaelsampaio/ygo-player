@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { coachResponsesOf, deniesFor, opponentChainTop, responseTags } from "./coach";
+import { coachResponsesOf, deniesFor, opponentChainTop, responseTags, stopsText } from "./coach";
 import { canPreview, coachHintsOf, coachTags, decisionKey, deepEqual, endBoardText, hintFor, lpText, parsePreview, parseSuggestion, winRateText } from "./coach";
 
 const activate = { commandType: "Activate Card", data: { code: 14558127, loc: 2, seq: 1 } };
@@ -150,16 +150,31 @@ describe("response tips on the bot's turn", () => {
     expect(opponentChainTop(own, 0)).toBeNull();
   });
 
-  it("answer stats first, with the clean win rate; never \"stops them\"", () => {
+  it("answer stats first, with the clean win rate, and that it's where players usually use it; never \"stops them X%\"", () => {
     const tags = responseTags(ash, faimena, opp, null);
-    expect(tags).toEqual(["they won 41% when Ash Blossom answered Faimena (230 games) · 61% uninterrupted"]);
-    expect(tags.join(" ")).not.toContain("stops");
+    expect(tags).toEqual([
+      "they won 41% when Ash Blossom answered Faimena (230 games) · 61% uninterrupted",
+      "vs Dracotail, this is where players usually use Ash Blossom (230 games)",
+    ]);
+    expect(tags.join(" ")).not.toMatch(/stops them \d+%/);
   });
 
-  it("else the choke point, plus the engine's denials", () => {
-    expect(responseTags(ash, other, opp, 2)).toEqual(["Lukias is their choke point: 38% when answered", "denies them 2 cards"]);
-    expect(responseTags(ash, 999, opp, 1)).toEqual(["denies them 1 card"]);
+  it("else the choke point and the usual target, plus what the engine says chaining it stops", () => {
+    expect(responseTags(ash, other, opp, { denies: 2, stops: { hand: 1, field: 0, deck: 1 } })).toEqual([
+      "Lukias is their choke point: 38% when answered",
+      "vs Dracotail, players usually use Ash Blossom on Faimena (230 games)",
+      "stops 1 card from their Deck to their hand",
+    ]);
+    // An older server (a count only).
+    expect(responseTags(ash, 999, null, 1)).toEqual(["they end this chain with 1 card fewer"]);
     expect(responseTags(ash, faimena, null, null)).toEqual([]);
+  });
+
+  it("says what chaining it stops, in words", () => {
+    expect(stopsText({ denies: 3, stops: { hand: 0, field: 2, deck: 2 } })).toBe("stops 2 cards on their field");
+    expect(stopsText({ denies: 2, stops: { hand: 2, field: 0, deck: 0 } })).toBe("stops 2 cards to their hand");
+    expect(stopsText({ denies: 2, stops: { hand: 1, field: 1, deck: 3 } })).toBe("stops 1 card from their Deck to their hand, 1 card on their field, 1 card out of their Deck");
+    expect(stopsText({ denies: 0 })).toBeNull();
   });
 
   it("reads the server's denial checks and matches them to rows", () => {

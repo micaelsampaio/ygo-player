@@ -23,7 +23,7 @@ import { ChainPromptDialog } from "./prompt-dialog/ChainPromptDialog";
 import { MdPromptDialog } from "./prompt-dialog/PromptDialog";
 import { chainAheadOfBoard, triggerKeysOf } from "../../domain/assist-query";
 import { zoneHighlights } from "../../domain/assist-zones";
-import { canPreview, coachHintsOf, coachPickOf, isShareTag, SHARE_SOURCE, coachResponsesOf, coachTags, decisionKey, deniesFor, opponentChainTop, responseTags, type CoachPreview } from "../../domain/coach";
+import { canPreview, coachHintsOf, coachPickOf, isShareTag, SHARE_SOURCE, coachResponsesOf, coachTags, decisionKey, responseFor, opponentChainTop, responseTags, type CoachPreview } from "../../domain/coach";
 import { useCoach } from "./coach-panel";
 import { keyCardNote, liveHandTraps, type HeldChance } from "../../domain/coach-live";
 import { shownByOpp } from "./use-coach-now";
@@ -370,7 +370,7 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
     return [
       ...coachTags(rowAction, coachHints, previewResult, previewResult ? heldNow() : null),
       ...(coachChainTop && row.commandType === "Activate"
-        ? responseTags(row.code, coachChainTop.code, coach.stats?.oppAnswers, deniesFor(coachResponses, rowAction))
+        ? responseTags(row.code, coachChainTop.code, coach.stats?.oppAnswers, responseFor(coachResponses, rowAction))
         : []),
     ];
   };

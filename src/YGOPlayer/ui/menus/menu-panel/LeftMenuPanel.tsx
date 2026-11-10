@@ -21,6 +21,9 @@ function readCollapsed(): boolean {
   return safeGetItem(COLLAPSED_KEY) === "1";
 }
 
+/** The Card Info section folded away (the chat then takes the panel), remembered in this browser. */
+const CARD_INFO_COLLAPSED_KEY = "ygo-card-info-collapsed";
+
 export function LeftMenuPanel({ duel, isMobileLayout, showMenus }: { duel: YGODuel, isMobileLayout: boolean, showMenus: boolean }) {
   const [replayCommands] = useState(duel.config.gameMode === "REPLAY");
   const [openMenu, setOpenMenu] = useState<LEFT_MENUS>(LEFT_MENUS.EMPTY)
@@ -32,6 +35,15 @@ export function LeftMenuPanel({ duel, isMobileLayout, showMenus }: { duel: YGODu
     stopPropagationCallback(e);
     setCollapsed((c) => {
       safeSetItem(COLLAPSED_KEY, c ? "0" : "1");
+      return !c;
+    });
+  }, []);
+
+  const [cardInfoCollapsed, setCardInfoCollapsed] = useState(() => safeGetItem(CARD_INFO_COLLAPSED_KEY) === "1");
+  const toggleCardInfo = useCallback((e: React.MouseEvent) => {
+    stopPropagationCallback(e);
+    setCardInfoCollapsed((c) => {
+      safeSetItem(CARD_INFO_COLLAPSED_KEY, c ? "0" : "1");
       return !c;
     });
   }, []);
@@ -66,7 +78,7 @@ export function LeftMenuPanel({ duel, isMobileLayout, showMenus }: { duel: YGODu
     </div>}
 
 
-    <div className={`ygo-left-menu-panel ${collapsed ? "ygo-left-menu-collapsed" : ""}`}>
+    <div className={`ygo-left-menu-panel ${collapsed ? "ygo-left-menu-collapsed" : ""} ${cardInfoCollapsed ? "ygo-card-info-collapsed" : ""}`}>
       <button
         className="ygo-left-menu-collapse"
         onClick={toggleCollapsed}
@@ -78,13 +90,24 @@ export function LeftMenuPanel({ duel, isMobileLayout, showMenus }: { duel: YGODu
 
       {/* A heading and two square buttons (Settings, collapse): nothing that looks like a tab. */}
       <div className="ygo-left-top-menus">
-        <h2 className="ygo-left-panel-title">Card Info</h2>
+        <h2 className="ygo-left-panel-title">
+          <button
+            type="button"
+            className="ygo-left-panel-section-toggle"
+            onClick={toggleCardInfo}
+            aria-expanded={!cardInfoCollapsed}
+            aria-controls="ygo-left-card-info"
+            title={cardInfoCollapsed ? "Show the card info" : "Hide the card info (the chat gets the room)"}
+          >
+            <span aria-hidden="true">{cardInfoCollapsed ? "▸" : "▾"}</span> Card Info
+          </button>
+        </h2>
         <button type="button" className="ygo-left-panel-icon-button" onClick={toggleSettings} aria-label="Settings" title="Settings (Esc)">
           <GearIcon size={18} />
         </button>
       </div>
 
-      <div className="ygo-left-menu-card-container">
+      <div className="ygo-left-menu-card-container" id="ygo-left-card-info">
         <YgoAsideMenu
           isMobile={isMobileLayout}
           visible={openMenu === LEFT_MENUS.SELECTED_CARD}

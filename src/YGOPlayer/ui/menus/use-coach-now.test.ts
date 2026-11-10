@@ -44,6 +44,6 @@ describe("readCoachNow", () => {
     expect(now.responses?.target).toBe("Faimena");
     expect(now.responses?.keyNote).toContain("key card");
     expect(now.responses?.tips[0].lines.join(" ")).toContain("Faimena is their choke point");
-    expect(now.responses?.tips[0].lines.join(" ")).toContain("denies them 2 cards");
+    expect(now.responses?.tips[0].lines.join(" ")).toContain("they end this chain with 2 cards fewer");
   });
 });

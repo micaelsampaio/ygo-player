@@ -105,8 +105,8 @@ export function readCoachNow(duel: DuelLike, stats: CoachStats | null, turn: Due
         const d = r.action.data as { id?: unknown; code?: unknown } | null;
         return (d?.id ?? d?.code) === ref.code;
       });
-      const denies = own.length && own.every((r) => r.denies === own[0].denies) ? own[0].denies : null;
-      const lines = responseTags(ref.code, top.code, stats?.oppAnswers, denies);
+      const same = own.length > 0 && own.every((r) => r.denies === own[0].denies && JSON.stringify(r.stops ?? null) === JSON.stringify(own[0].stops ?? null));
+      const lines = responseTags(ref.code, top.code, stats?.oppAnswers, same ? own[0] : null);
       return lines.length ? [{ name: name(ref.code), lines }] : [];
     });
     const keyNote = keyCardNote(top.code, stats?.oppAnswers);

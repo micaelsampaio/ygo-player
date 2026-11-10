@@ -131,15 +131,17 @@
 
 
   .ygo-left-menu-card-container {
-    flex-grow: 1;
-    height: 60vh;
+    /* Takes what the chat (resizable) leaves. */
+    flex: 1 1 0;
+    min-height: 120px;
     overflow: hidden;
   }
 
   .ygo-left-menu-chat-container {
     display: flex;
     flex-direction: column;
-    min-height: 300px;
+    min-height: var(--ygo-chat-height, 300px);
+    height: var(--ygo-chat-height, 300px);
     flex-shrink: 0;
     overflow: hidden;
 
@@ -193,7 +195,7 @@
   .ygo-chat-container {
     display: flex;
     flex-direction: column;
-    max-height: 300px;
+    min-height: 0;
     height: 100%;
     flex-grow: 1;
     overflow: hidden;
@@ -358,4 +360,46 @@
   border-radius: 999px;
   background: rgb(59, 130, 246);
   box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.6);
+}
+
+
+/* The chat's top edge: drag it up or down to resize the chat (the card area gives way). */
+.ygo-player-core .ygo-chat-resize {
+  flex-shrink: 0;
+  height: 8px;
+  margin-bottom: 2px;
+  cursor: ns-resize;
+  touch-action: none;
+  border-radius: 4px;
+  background: linear-gradient(to bottom, transparent 3px, rgba(255, 255, 255, 0.18) 3px, rgba(255, 255, 255, 0.18) 5px, transparent 5px);
+}
+.ygo-player-core .ygo-chat-resize:hover,
+.ygo-player-core .ygo-chat-resize:focus-visible {
+  outline: none;
+  background: linear-gradient(to bottom, transparent 2px, rgba(96, 165, 250, 0.8) 2px, rgba(96, 165, 250, 0.8) 6px, transparent 6px);
+}
+
+/* "Card Info" folds away: the card area (and the rating row under it) hide, the chat fills the panel. */
+.ygo-player-core .ygo-left-panel-section-toggle {
+  all: unset;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 4px;
+}
+.ygo-player-core .ygo-left-panel-section-toggle:focus-visible {
+  outline: 2px solid rgba(96, 165, 250, 0.9);
+  outline-offset: 2px;
+}
+.ygo-player-core .ygo-left-menu-panel.ygo-card-info-collapsed > .ygo-left-menu-card-container {
+  display: none;
+}
+.ygo-player-core .ygo-left-menu-panel.ygo-card-info-collapsed > .ygo-left-menu-chat-container:not(.ygo-hidden) {
+  flex: 1 1 0;
+  height: auto;
+  min-height: 0;
+}
+.ygo-player-core .ygo-left-menu-panel.ygo-card-info-collapsed .ygo-chat-resize {
+  display: none;
 }

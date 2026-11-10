@@ -57,8 +57,51 @@ export function mergeCoachLines<T extends { at?: number }>(chat: T[], coach: T[]
   return out;
 }
 
+/** The chat's height (px): dragged on its top edge, remembered in this browser. */
+export const CHAT_HEIGHT_KEY = "ygo-chat-height";
+export const CHAT_MIN_HEIGHT = 200;
+export const CHAT_DEFAULT_HEIGHT = 300;
+/** Room the card details above keep (px). */
+const CARD_AREA_MIN = 220;
+
+/** A chat height within reach: no smaller than CHAT_MIN_HEIGHT, leaving the card area its room. */
+export function clampChatHeight(height: number, viewport: number): number {
+  const max = Math.max(CHAT_MIN_HEIGHT, viewport - CARD_AREA_MIN);
+  return Math.round(Math.min(max, Math.max(CHAT_MIN_HEIGHT, height)));
+}
+
+function storedChatHeight(): number {
+  try {
+    const n = Number(localStorage.getItem(CHAT_HEIGHT_KEY));
+    return Number.isFinite(n) && n > 0 ? n : CHAT_DEFAULT_HEIGHT;
+  } catch {
+    return CHAT_DEFAULT_HEIGHT;
+  }
+}
+
 export function Chat({ duel }: { duel: YGODuel }) {
   const [isChatHidden, setIsChatHidden] = useState(false);
+  const [chatHeight, setChatHeightState] = useState(() => clampChatHeight(storedChatHeight(), typeof window === "undefined" ? 900 : window.innerHeight));
+  const setChatHeight = (h: number) => {
+    const next = clampChatHeight(h, window.innerHeight);
+    setChatHeightState(next);
+    try { localStorage.setItem(CHAT_HEIGHT_KEY, String(next)); } catch { /* not remembered */ }
+  };
+  // Drag the top edge: up makes the chat taller (the card area above gives way).
+  const onResizeStart = (e: React.PointerEvent) => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    const startY = e.clientY;
+    const startH = chatHeight;
+    const move = (ev: PointerEvent) => setChatHeightState(clampChatHeight(startH + (startY - ev.clientY), window.innerHeight));
+    const up = (ev: PointerEvent) => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+      setChatHeight(startH + (startY - ev.clientY));
+    };
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+  };
   const coach = useCoach(duel);
   // Coach lines that arrived while the chat was hidden: a dot on its toggle.
   const [seenCoach, setSeenCoach] = useState(0);
@@ -178,7 +221,28 @@ export function Chat({ duel }: { duel: YGODuel }) {
   if(duel.ygo.options.showChat === false) return null;
 
   return (
-    <div className={`ygo-left-menu-chat-container ${isChatHidden ? "ygo-hidden" : ""}`}>
+    <div
+      className={`ygo-left-menu-chat-container ${isChatHidden ? "ygo-hidden" : ""}`}
+      style={isChatHidden ? undefined : ({ "--ygo-chat-height": `${chatHeight}px` } as React.CSSProperties)}
+    >
+      {!isChatHidden && (
+        <div
+          className="ygo-chat-resize"
+          role="separator"
+          aria-orientation="horizontal"
+          aria-label="Resize the chat"
+          aria-valuemin={CHAT_MIN_HEIGHT}
+          aria-valuenow={chatHeight}
+          tabIndex={0}
+          title="Drag to resize the chat · double-click to reset"
+          onPointerDown={onResizeStart}
+          onDoubleClick={() => setChatHeight(CHAT_DEFAULT_HEIGHT)}
+          onKeyDown={(e) => {
+            if (e.key === "ArrowUp") { e.preventDefault(); e.stopPropagation(); setChatHeight(chatHeight + 40); }
+            else if (e.key === "ArrowDown") { e.preventDefault(); e.stopPropagation(); setChatHeight(chatHeight - 40); }
+          }}
+        />
+      )}
       <div className="ygo-chat-toggle-wrapper">
         <button
           type="button"

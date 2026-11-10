@@ -23,7 +23,12 @@ export interface CoachHint {
 export interface CoachResponse {
   action: CoachAction;
   denies: number;
+  /** What passing gives them that chaining this stops, by the end of the chain (server coachResponses). */
+  stops?: CoachStops;
 }
+
+/** Cards they'd add to their hand, get on the field, take out of their Deck, if you pass. */
+export interface CoachStops { hand: number; field: number; deck: number }
 
 /** The `coach` field of an assist query result (only sent with the coach on). */
 export interface CoachHints {
@@ -268,13 +273,55 @@ export function coachResponsesOf(result: unknown): CoachResponse[] | null {
   return valid.length ? valid : null;
 }
 
-/** The row's denial count: an exact match, else the matches when they all agree. */
-export function deniesFor(responses: CoachResponse[] | null | undefined, action: CoachAction): number | null {
+/** The row's engine check: an exact match, else the matches when they all say the same. */
+export function responseFor(responses: CoachResponse[] | null | undefined, action: CoachAction): CoachResponse | null {
   if (!responses?.length) return null;
   const exact = responses.find((r) => exactly(r.action, action));
-  if (exact) return exact.denies;
+  if (exact) return exact;
   const matches = responses.filter((r) => sameAction(r.action, action));
-  return matches.length && matches.every((r) => r.denies === matches[0].denies) ? matches[0].denies : null;
+  const key = (r: CoachResponse) => JSON.stringify([r.denies, r.stops ?? null]);
+  return matches.length && matches.every((r) => key(r) === key(matches[0])) ? matches[0] : null;
+}
+
+/** The row's denial count (responseFor's). */
+export function deniesFor(responses: CoachResponse[] | null | undefined, action: CoachAction): number | null {
+  return responseFor(responses, action)?.denies ?? null;
+}
+
+const cards = (n: number) => `${n} card${n === 1 ? "" : "s"}`;
+
+/**
+ * What chaining it stops, in words: "stops 1 card from their Deck to their hand", "stops 2 cards on
+ * their field". Without the breakdown (an older server): the end count.
+ */
+export function stopsText(r: Pick<CoachResponse, "denies" | "stops"> | null | undefined): string | null {
+  if (!r || !(r.denies > 0)) return null;
+  const s = r.stops;
+  if (!s) return `they end this chain with ${cards(r.denies)} fewer`;
+  const parts: string[] = [];
+  const fromDeckToHand = Math.min(s.hand, s.deck);
+  if (fromDeckToHand > 0) parts.push(`${cards(fromDeckToHand)} from their Deck to their hand`);
+  if (s.hand > fromDeckToHand) parts.push(`${cards(s.hand - fromDeckToHand)} to their hand`);
+  if (s.field > 0) parts.push(`${cards(s.field)} on their field`);
+  const deckLeft = s.deck - fromDeckToHand - s.field;
+  if (deckLeft > 0) parts.push(`${cards(deckLeft)} out of their Deck`);
+  return parts.length ? `stops ${parts.join(", ")}` : `they end this chain with ${cards(r.denies)} fewer`;
+}
+
+/**
+ * Where players usually use this card against their deck type (replays: the answers it gave most),
+ * and whether their card on the chain now is that usual target.
+ */
+export function usualTargetTag(code: number | undefined, target: number, opp: CoachOppAnswers | null | undefined): string | null {
+  if (code === undefined || !opp?.answers?.length) return null;
+  const mine = opp.answers.filter((a) => a.answer.code === code && a.games > 0).sort((a, b) => b.games - a.games);
+  if (!mine.length) return null;
+  const card = mine[0].answer.name;
+  if (mine[0].target.code === target) {
+    return `vs ${opp.deckType}, this is where players usually use ${card} (${mine[0].games.toLocaleString("en-US")} games)`;
+  }
+  const usual = mine.slice(0, 2).map((a) => `${a.target.name} (${a.games.toLocaleString("en-US")} games)`).join(" or ");
+  return `vs ${opp.deckType}, players usually use ${card} on ${usual}`;
 }
 
 type Record2 = { games: number; wins: number };
@@ -307,7 +354,7 @@ export function responseTags(
   code: number | undefined,
   target: number,
   opp: CoachOppAnswers | null | undefined,
-  denies: number | null,
+  check: number | Pick<CoachResponse, "denies" | "stops"> | null,
 ): string[] {
   const tags: string[] = [];
   if (code !== undefined && opp) {
@@ -320,7 +367,10 @@ export function responseTags(
       tags.push(`${choke.name} is their choke point: ${rate(choke)} when answered`);
     }
   }
-  if (denies && denies > 0) tags.push(`denies them ${denies} card${denies === 1 ? "" : "s"}`);
+  const usual = usualTargetTag(code, target, opp);
+  if (usual) tags.push(usual);
+  const stops = stopsText(typeof check === "number" ? { denies: check } : check);
+  if (stops) tags.push(stops);
   return tags;
 }
 
