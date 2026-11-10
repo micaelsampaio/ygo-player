@@ -21,8 +21,9 @@ const LOGICAL = 128;
 /** Emphasised (current position) and secondary numeral sizes, in logical px. */
 const MAIN_SIZE = 27;
 const SECONDARY_SIZE = 20;
-const ROW_SIZE = 15;
-const ICON_SIZE = 15;
+/** The level / rank / link row and its icon: readable at a glance on the board (it was 15). */
+const ROW_SIZE = 21;
+const ICON_SIZE = 21;
 /** The ATK/DEF row may not run wider than this. */
 const MAX_ROW_WIDTH = LOGICAL - 8;
 
@@ -128,8 +129,9 @@ export class GameCardStats {
 
     // The player's plate hangs below their card, the opponent's above theirs (the mesh is turned
     // for them): either way the numerals sit on the outer edge with the level row beneath.
-    const numbersY = state.isPlayerSide ? 94 : 26;
-    const rowY = numbersY + 22;
+    // Both rows fit the 128px canvas: ATK/DEF (27px) then the level row (21px) 24px below it.
+    const numbersY = state.isPlayerSide ? 90 : 26;
+    const rowY = numbersY + 24;
 
     this.renderAtkDef(state, numbersY);
     this.renderLevel(state, rowY);
