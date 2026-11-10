@@ -390,6 +390,9 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
   // "% pick this" isn't fair in an open window offering one card or not responding (nothing on the
   // chain yet): the model barely saw the passes there, so it reads ~100% (Mulcharmy Fuwalos in their
   // Draw Phase, 2026-11-10). Shown where you choose between cards.
+  // "Suggest my turn" with your options: your Main Phase 1 or 2, the coach on.
+  const suggestHere = coachOn && isActive && result.available && result.pending === "idle" && turnState.isLocalTurn
+    && (turnState.phase === "Main Phase 1" || turnState.phase === "Main Phase 2");
   const shareHintsFair = !(result.available && result.pending === "chain"
     && !(result.respond.chain?.length)
     && new Set(result.respond.activatable.map((a) => a.code)).size <= 1);
@@ -612,11 +615,16 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
       {chainDialog && (
         <div role="status" style={{ fontSize: 12, opacity: 0.8, lineHeight: 1.35 }}>Answer the question on the board.</div>
       )}
-      {!collapsed && !chainDialog && coachKey !== null && canPreview(result) && sections.length > 0 && (
-        <CoachPreviewButton
-          status={coachPreview?.status ?? "idle"}
-          onPreview={() => { void duel.coachController.preview(coachKey); }}
-        />
+      {!collapsed && !chainDialog && coachKey !== null && (canPreview(result) || suggestHere) && sections.length > 0 && (
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+          {suggestHere && <CoachSuggestButton duel={duel} coach={coach} turn={turnState.turn} />}
+          {canPreview(result) && (
+            <CoachPreviewButton
+              status={coachPreview?.status ?? "idle"}
+              onPreview={() => { void duel.coachController.preview(coachKey); }}
+            />
+          )}
+        </div>
       )}
       {!collapsed && !chainDialog && sections.map((section) => {
         const foldable = section.rows.length > GROUP_COLLAPSE_AT;
@@ -659,6 +667,33 @@ export function CoachTags({ tags }: { tags: string[] }) {
 }
 
 /** "Preview": asks the coach what each Attack / Activate here leads to (once per decision). */
+/** Where the duel is (its log length): a line found for an earlier board is asked again. */
+const duelMark = (duel: YGODuel) => duel.ygo?.duelLog?.logs?.length ?? 0;
+
+/** "Suggest my turn": the coach's line for this turn from here (it goes to the chat). */
+export function CoachSuggestButton({ duel, coach, turn }: { duel: YGODuel; coach: ReturnType<typeof useCoach>; turn: number }) {
+  const s = coach.suggest;
+  const mark = duelMark(duel);
+  const loading = s.status === "loading";
+  const done = s.status === "done" && s.turn === turn && (s.mark === undefined || s.mark === mark) ? s.result : null;
+  return (<>
+    <button
+      type="button"
+      className="ygo-card-item"
+      disabled={loading || !!done?.available}
+      aria-busy={loading}
+      onMouseDown={keepFocusOff}
+      onClick={() => { void duel.coachController.suggest(turn, mark); }}
+      title={done?.available ? "The line is in the chat" : "The coach finds a line for this turn from here (in the chat)"}
+      style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 600, flex: "1 1 auto" }}
+    >
+      <span style={{ flexGrow: 1, textAlign: "left" }}>{loading ? "Thinking…" : done?.available ? "Line in chat" : "Suggest my turn"}</span>
+      {loading && <span className="ygo-inline-spinner" aria-hidden="true" />}
+    </button>
+    {done && !done.available && <div role="status" style={{ fontSize: 11, opacity: 0.75, flexBasis: "100%" }}>{done.reason}</div>}
+  </>);
+}
+
 export function CoachPreviewButton({ status, onPreview }: { status: "idle" | "loading" | "retry" | "done"; onPreview(): void }) {
   if (status === "done") {
     return <div role="status" style={{ fontSize: 11, opacity: 0.7 }}>Coach preview on your Attack / Activate options.</div>;

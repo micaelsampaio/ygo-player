@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { CoachPanelView, coachPanelVisible, type CoachPanelViewProps } from "./coach-panel";
-import { CoachPreviewButton, CoachTags } from "./assisted-options-panel";
+import { CoachPreviewButton, CoachSuggestButton, CoachTags } from "./assisted-options-panel";
 import type { CoachState } from "../../core/YGOCoachController";
 import { coachLines } from "./use-coach-now";
 import { mergeCoachLines } from "./menu-panel/components/chat";
@@ -96,3 +96,15 @@ describe("coach tags in the options panel", () => {
     expect(renderToStaticMarkup(<CoachPreviewButton status="done" onPreview={noop} />)).toContain("Coach preview");
   });
 });
+
+describe("Suggest my turn in Your Options", () => {
+  const duel: any = { ygo: { duelLog: { logs: new Array(12) } }, coachController: { suggest: () => {} } };
+  it("asks; a found line for this board is in the chat; a refusal says why", () => {
+    expect(renderToStaticMarkup(<CoachSuggestButton duel={duel} coach={base} turn={3} />)).toContain("Suggest my turn");
+    const found = { ...base, suggest: { status: "done" as const, turn: 3, mark: 12, result: { available: true as const, steps: ["x"], end: { interruptions: 1, now: 0 }, ms: 5 } } };
+    expect(renderToStaticMarkup(<CoachSuggestButton duel={duel} coach={found} turn={3} />)).toMatch(/<button[^>]*disabled[^>]*>.*Line in chat/);
+    const refused = { ...base, suggest: { status: "done" as const, turn: 3, mark: 12, result: { available: false as const, reason: "The coach is busy, try again in a moment" } } };
+    expect(renderToStaticMarkup(<CoachSuggestButton duel={duel} coach={refused} turn={3} />)).toContain("The coach is busy");
+  });
+});
+

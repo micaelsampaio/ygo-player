@@ -48,8 +48,11 @@ export function CoachPanel({ duel, isMobileLayout = false }: { duel: YGODuel; is
   const placement = usePanelPlacement(panelRef, isMobileLayout, false, { key: "ygo-coach-panel-place", docked: DOCKED });
   const nudge = useStayClear(panelRef, placement.style);
 
-  const showSuggest = turnState.isLocalTurn && turnState.phase === "Main Phase 1";
-  if (!coachPanelVisible(state, showSuggest)) return null;
+  // "Suggest my turn" lives in Your Options now (assisted-options-panel CoachSuggestButton); this
+  // component only posts the coach's chat lines. Without Assisted Mode's panel it stays on the board.
+  const showSuggest = turnState.isLocalTurn && (turnState.phase === "Main Phase 1" || turnState.phase === "Main Phase 2");
+  const inOptionsPanel = !!duel.ygo?.options?.assistedMode;
+  if (inOptionsPanel || !coachPanelVisible(state, showSuggest)) return null;
   const controller = duel.coachController;
   return (
     <CoachPanelView
