@@ -28,6 +28,8 @@ import { useCoach } from "./coach-panel";
 
 /** The name the server posts its duel notices under (ygo-socket-server duel/notice.ts DUEL_NOTICE_NAME). */
 const DUEL_NOTICE_NAME = "ℹ️ Duel";
+/** How often a window shown on the bot's turn is checked again (it can close server-side). */
+const OPEN_WINDOW_RECHECK_MS = 3000;
 import { keyCardNote, liveHandTraps, type HeldChance } from "../../domain/coach-live";
 import { shownByOpp } from "./use-coach-now";
 
@@ -249,6 +251,18 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
   const botDuelRoom = !!(result as { botDuel?: boolean }).botDuel || !!(duel.ygo?.options as { botDuel?: unknown } | undefined)?.botDuel;
   const staleOwnTurn = staleOwnTurnOptions(result as { available?: boolean; pending?: string }, { botDuel: botDuelRoom, isLocalTurn: turnState.isLocalTurn });
   const isActive = enabled && result.available && !staleOwnTurn;
+
+  // A window on the bot's turn may close on the engine's side without the board moving (the bot
+  // passes on for you, then thinks for a minute): while one is on screen, ask again every few
+  // seconds so "the bot's turn is paused" never outlives it (room 4f758c59, 2026-11-10).
+  const showingBotTurnWindow = isActive && result.available && result.pending === "chain" && !turnState.isLocalTurn;
+  useEffect(() => {
+    if (!showingBotTurnWindow) return;
+    const timer = setInterval(() => {
+      if (!duel.commands?.isBusy?.() && duel.assistController.inFlight === 0) void duel.assistController.refresh();
+    }, OPEN_WINDOW_RECHECK_MS);
+    return () => clearInterval(timer);
+  }, [showingBotTurnWindow, duel]);
   const baseSections = isActive ? sectionsFor(duel, result) : [];
   const prompt = isActive && result.pending === "prompt" ? result.prompt : null;
   const me = duel.perspective.playerIndex;

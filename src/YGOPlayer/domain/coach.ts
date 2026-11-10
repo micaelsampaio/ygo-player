@@ -27,8 +27,11 @@ export interface CoachResponse {
   stops?: CoachStops;
 }
 
-/** Cards they'd add to their hand, get on the field, take out of their Deck, if you pass. */
-export interface CoachStops { hand: number; field: number; deck: number }
+/**
+ * Cards they'd add to their hand, get on the field (monsters / spells: by zone; older servers send
+ * only `field`), take out of their Deck, if you pass.
+ */
+export interface CoachStops { hand: number; field: number; deck: number; monsters?: number; spells?: number }
 
 /** The `coach` field of an assist query result (only sent with the coach on). */
 export interface CoachHints {
@@ -291,19 +294,28 @@ export function deniesFor(responses: CoachResponse[] | null | undefined, action:
 const cards = (n: number) => `${n} card${n === 1 ? "" : "s"}`;
 
 /**
- * What chaining it stops, in words: "stops 1 card from their Deck to their hand", "stops 2 cards on
- * their field". Without the breakdown (an older server): the end count.
+ * What chaining it stops, in plain words: "stops their search: 1 card from their Deck to their hand",
+ * "stops 1 monster they'd bring to the field (a summon)", "stops 1 Spell/Trap they'd keep on the
+ * field". Without the breakdown (an older server): the end count.
  */
 export function stopsText(r: Pick<CoachResponse, "denies" | "stops"> | null | undefined): string | null {
   if (!r || !(r.denies > 0)) return null;
   const s = r.stops;
   if (!s) return `they end this chain with ${cards(r.denies)} fewer`;
   const parts: string[] = [];
-  const fromDeckToHand = Math.min(s.hand, s.deck);
-  if (fromDeckToHand > 0) parts.push(`${cards(fromDeckToHand)} from their Deck to their hand`);
-  if (s.hand > fromDeckToHand) parts.push(`${cards(s.hand - fromDeckToHand)} to their hand`);
-  if (s.field > 0) parts.push(`${cards(s.field)} on their field`);
-  const deckLeft = s.deck - fromDeckToHand - s.field;
+  const searched = Math.min(s.hand, s.deck);
+  if (searched > 0) parts.push(`their search: ${cards(searched)} from their Deck to their hand`);
+  if (s.hand > searched) parts.push(`${cards(s.hand - searched)} they'd add to their hand`);
+  const split = s.monsters !== undefined || s.spells !== undefined;
+  const monsters = s.monsters ?? 0;
+  const spells = s.spells ?? 0;
+  if (split) {
+    if (monsters > 0) parts.push(`${monsters} monster${monsters === 1 ? "" : "s"} they'd bring to the field (a summon)`);
+    if (spells > 0) parts.push(`${spells} Spell/Trap${spells === 1 ? "" : "s"} they'd keep on the field`);
+  } else if (s.field > 0) {
+    parts.push(`${cards(s.field)} they'd get on the field`);
+  }
+  const deckLeft = s.deck - searched - (split ? monsters + spells : s.field);
   if (deckLeft > 0) parts.push(`${cards(deckLeft)} out of their Deck`);
   return parts.length ? `stops ${parts.join(", ")}` : `they end this chain with ${cards(r.denies)} fewer`;
 }

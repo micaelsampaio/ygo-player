@@ -57,8 +57,8 @@ describe("coachLines: what the coach posts in the chat", () => {
   it("their activation: only with something to say", () => {
     const quiet = coachLines({ outlook: null, held: [], tip: null, responses: { target: "Lukias", keyNote: null, tips: [] } }, null, turn);
     expect(quiet).toEqual([]);
-    const [line] = coachLines({ outlook: null, held: [], tip: null, responses: { target: "Lukias", keyNote: null, tips: [{ name: "Ash Blossom", lines: ["stops 1 card from their Deck to their hand"] }] } }, null, turn);
-    expect(line.text).toBe("They activated Lukias.\nAsh Blossom: stops 1 card from their Deck to their hand");
+    const [line] = coachLines({ outlook: null, held: [], tip: null, responses: { target: "Lukias", keyNote: null, tips: [{ name: "Ash Blossom", lines: ["stops their search: 1 card from their Deck to their hand"] }] } }, null, turn);
+    expect(line.text).toBe("They activated Lukias.\nAsh Blossom: stops their search: 1 card from their Deck to their hand");
   });
 });
 

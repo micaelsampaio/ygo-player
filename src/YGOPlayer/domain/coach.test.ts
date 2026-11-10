@@ -163,7 +163,7 @@ describe("response tips on the bot's turn", () => {
     expect(responseTags(ash, other, opp, { denies: 2, stops: { hand: 1, field: 0, deck: 1 } })).toEqual([
       "Lukias is their choke point: 38% when answered",
       "vs Dracotail, players usually use Ash Blossom on Faimena (230 games)",
-      "stops 1 card from their Deck to their hand",
+      "stops their search: 1 card from their Deck to their hand",
     ]);
     // An older server (a count only).
     expect(responseTags(ash, 999, null, 1)).toEqual(["they end this chain with 1 card fewer"]);
@@ -171,9 +171,13 @@ describe("response tips on the bot's turn", () => {
   });
 
   it("says what chaining it stops, in words", () => {
-    expect(stopsText({ denies: 3, stops: { hand: 0, field: 2, deck: 2 } })).toBe("stops 2 cards on their field");
-    expect(stopsText({ denies: 2, stops: { hand: 2, field: 0, deck: 0 } })).toBe("stops 2 cards to their hand");
-    expect(stopsText({ denies: 2, stops: { hand: 1, field: 1, deck: 3 } })).toBe("stops 1 card from their Deck to their hand, 1 card on their field, 1 card out of their Deck");
+    // Mitsurugi Mirror's Ritual Summon (room 4f758c59): a monster to the field.
+    expect(stopsText({ denies: 1, stops: { hand: 0, field: 1, deck: 0, monsters: 1, spells: 0 } })).toBe("stops 1 monster they'd bring to the field (a summon)");
+    expect(stopsText({ denies: 1, stops: { hand: 0, field: 1, deck: 0, monsters: 0, spells: 1 } })).toBe("stops 1 Spell/Trap they'd keep on the field");
+    expect(stopsText({ denies: 2, stops: { hand: 1, field: 0, deck: 1, monsters: 0, spells: 0 } })).toBe("stops their search: 1 card from their Deck to their hand");
+    expect(stopsText({ denies: 2, stops: { hand: 2, field: 0, deck: 0 } })).toBe("stops 2 cards they'd add to their hand");
+    // An older server (no split): the field as one.
+    expect(stopsText({ denies: 3, stops: { hand: 0, field: 2, deck: 2 } })).toBe("stops 2 cards they'd get on the field");
     expect(stopsText({ denies: 0 })).toBeNull();
   });
 
