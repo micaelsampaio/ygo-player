@@ -25,6 +25,7 @@ import { chainAheadOfBoard, triggerKeysOf } from "../../domain/assist-query";
 import { zoneHighlights } from "../../domain/assist-zones";
 import { canPreview, coachHintsOf, coachPickOf, isShareTag, SHARE_SOURCE, coachResponsesOf, coachTags, decisionKey, responseFor, opponentChainTop, responseTags, type CoachPreview } from "../../domain/coach";
 import { useCoach } from "./coach-panel";
+import { idleNudgeText, useIdleFor } from "../idle-nudge";
 
 /** The name the server posts its duel notices under (ygo-socket-server duel/notice.ts DUEL_NOTICE_NAME). */
 const DUEL_NOTICE_NAME = "ℹ️ Duel";
@@ -284,6 +285,20 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
   const pileTone: Tone = isActive && result.pending === "idle" ? "play" : "quick";
   usePileHighlight(duel, () => duel.fields[me]?.graveyard?.gameObject ?? null, !held && offeredPileCodes(isActive ? result : null, LOC_GRAVE).size > 0, pileTone);
   usePileHighlight(duel, () => duel.fields[me]?.banishedZone?.gameObject ?? null, !held && offeredPileCodes(isActive ? result : null, LOC_REMOVED).size > 0, pileTone);
+  // The idle nudge (idle-nudge.ts): a bot duel, your turn, 20 s without a move -> what to press next.
+  const allRows = sections.flatMap((s) => s.rows);
+  const nextPhaseRowNow = sections.find((s) => s.title === "Next Phase")?.rows[0] ?? null;
+  const passRowNow = allRows.find((r) => r.commandType === "Pass") ?? null;
+  const nudgeText = botDuelRoom && turnState.isPlayerClient && turnState.isLocalTurn && isActive && !held && !prompt
+    ? idleNudgeText({
+        phase: turnState.phase,
+        pending: result.available ? result.pending : undefined,
+        spaceLabel: (passRowNow ?? spaceRow(sections))?.label ?? null,
+        nextPhaseLabel: nextPhaseRowNow?.label ?? null,
+        playableCount: allRows.filter((r) => r.commandType !== "Pass" && r.commandType !== "Duel Phase").length,
+      })
+    : null;
+  const idleNudge = useIdleFor(nudgeText !== null, `${turnState.turn}|${turnState.phase}|${result.available ? result.pending : "-"}|${optionCount}|${duel.ygo?.duelLog?.logs?.length ?? 0}`);
   const coachOn = coach.available && coach.enabled;
   const coachKey = coachOn && isActive && !held ? decisionKey(result) : null;
   const coachHints = coachKey !== null ? coachHintsOf(result) : null;
@@ -560,6 +575,19 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
           }}
         >
           {statusText}
+        </div>
+      )}
+      {idleNudge && nudgeText && (
+        <div
+          role="status"
+          aria-live="polite"
+          data-testid="assist-idle-nudge"
+          style={{
+            fontSize: 12, fontWeight: 600, lineHeight: 1.35, padding: "5px 8px", borderRadius: 4,
+            background: "rgba(96, 165, 250, 0.18)", borderLeft: "3px solid rgb(96, 165, 250)",
+          }}
+        >
+          {nudgeText}
         </div>
       )}
       {waitingText && (

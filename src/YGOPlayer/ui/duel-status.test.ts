@@ -114,6 +114,10 @@ describe("phaseObjectTooltip", () => {
 
 describe("endGameActionsFor", () => {
   const all = ["back-to-lobby", "rematch", "save-replay"] as const;
+  it("puts the Doctor step after Rematch", () => {
+    expect(endGameActionsFor({ isPlayerClient: true, enabled: ["back-to-lobby", "deck-doctor", "rematch"] })).toEqual(["rematch", "deck-doctor", "back-to-lobby"]);
+    expect(endGameActionsFor({ isPlayerClient: false, enabled: ["deck-doctor", "back-to-lobby"] })).toEqual(["back-to-lobby"]);
+  });
 
   it("shows a seated player every enabled next step, in a fixed order", () => {
     expect(endGameActionsFor({ isPlayerClient: true, enabled: all })).toEqual(["save-replay", "rematch", "back-to-lobby"]);

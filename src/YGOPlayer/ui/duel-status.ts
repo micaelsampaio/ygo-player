@@ -73,11 +73,13 @@ export function endGameHeadline({ isPlayerClient, localPlayerLost, winnerName }:
 
 export type { YGOEndGameAction } from "../domain/end-game";
 
-const END_GAME_ACTION_ORDER: YGOEndGameAction[] = ["save-replay", "rematch", "back-to-lobby"];
+const END_GAME_ACTION_ORDER: YGOEndGameAction[] = ["save-replay", "rematch", "deck-doctor", "back-to-lobby"];
 
 export const END_GAME_ACTION_LABELS: Record<YGOEndGameAction, string> = {
   "save-replay": "Save Replay",
   "rematch": "Rematch",
+  // Bot duels with a saved deck: open it on the Deck Doctor (the host opts in).
+  "deck-doctor": "Check deck in the Doctor",
   "back-to-lobby": "Back to Lobby",
 };
 
