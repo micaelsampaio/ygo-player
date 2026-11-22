@@ -1,7 +1,7 @@
 import { CardData, YGOReplayData } from "ygo-core";
 import { YGOPropsOptions } from "ygo-core";
 import { YGOProps } from "ygo-core";
-import type { YGOEndGameAction } from "../domain/end-game";
+import type { YGOEndGameAction, YGOEndGameActionLabels } from "../domain/end-game";
 import type { YGOPlayerErrorHandler } from "./YGOPlayerLogger";
 
 
@@ -30,6 +30,8 @@ export interface YGOConfig extends YGOProps {
   options: YGOConfigOptions
   /** Next steps offered on the end-of-duel overlay (see YGOEndGameAction). */
   endGameActions?: YGOEndGameAction[]
+  /** Host wording for those buttons (see YGOEndGameActionLabels). */
+  endGameActionLabels?: YGOEndGameActionLabels
   /** Called with every error the player catches and recovers from (see YGOPlayerLogger). */
   onError?: YGOPlayerErrorHandler
   actions?: {

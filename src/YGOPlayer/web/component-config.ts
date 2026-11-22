@@ -37,6 +37,7 @@ export function replayPropsToConfig(props: YGOPlayerStartReplayProps): YGOConfig
     actions: props.actions,
     gameMode: "REPLAY",
     endGameActions: props.endGameActions,
+    endGameActionLabels: props.endGameActionLabels,
     onError: props.onError,
   };
 }
@@ -63,6 +64,7 @@ export function serverPropsToConfig(props: YGOPlayerConnectToServerProps): YGOCo
     actions,
     gameMode: "EDITOR",
     endGameActions: props.endGameActions,
+    endGameActionLabels: props.endGameActionLabels,
     onError: props.onError,
   };
 }

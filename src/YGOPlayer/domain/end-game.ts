@@ -3,3 +3,7 @@
  * web component's "end-game-action" event — what "rematch" or "the lobby"
  * means depends entirely on how the duel was started. */
 export type YGOEndGameAction = "save-replay" | "rematch" | "deck-doctor" | "back-to-lobby";
+
+/** Host wording for some of those buttons, e.g. `{ "back-to-lobby": "Back to Play" }`
+ * when the way out is not a lobby. Missing or blank entries keep the default. */
+export type YGOEndGameActionLabels = Partial<Record<YGOEndGameAction, string>>;

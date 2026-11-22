@@ -75,6 +75,8 @@ describe("replayPropsToConfig", () => {
     expect(config.actions?.saveReplay).toBe(saveReplay);
     expect(config.onError).toBe(onError);
     expect(config.endGameActions).toBe(endGameActions);
+    const endGameActionLabels = { "back-to-lobby": "Back to the replays" };
+    expect(replayPropsToConfig(replayProps({ endGameActionLabels })).endGameActionLabels).toBe(endGameActionLabels);
   });
 });
 
@@ -112,6 +114,12 @@ describe("serverPropsToConfig", () => {
     const config = serverPropsToConfig({ ...base, onError, endGameActions });
     expect(config.onError).toBe(onError);
     expect(config.endGameActions).toBe(endGameActions);
+  });
+
+  it("passes the host's end-game button labels through", () => {
+    const endGameActionLabels = { "back-to-lobby": "Back to Play" };
+    expect(serverPropsToConfig({ ...base, endGameActionLabels }).endGameActionLabels).toBe(endGameActionLabels);
+    expect(serverPropsToConfig(base).endGameActionLabels).toBeUndefined();
   });
 });
 

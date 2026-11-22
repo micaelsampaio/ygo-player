@@ -5,7 +5,7 @@
  * imports, so it stays unit-testable on its own.
  */
 
-import type { YGOEndGameAction } from "../domain/end-game";
+import type { YGOEndGameAction, YGOEndGameActionLabels } from "../domain/end-game";
 
 export { PHASE_LABELS, phaseLabel, turnOwnerLabel, turnStatusText, phaseObjectTooltip } from "../domain/turn-status";
 
@@ -71,7 +71,7 @@ export function endGameHeadline({ isPlayerClient, localPlayerLost, winnerName }:
   return { text: winnerName ? `${winnerName} wins` : "Duel over", tone: "neutral" };
 }
 
-export type { YGOEndGameAction } from "../domain/end-game";
+export type { YGOEndGameAction, YGOEndGameActionLabels } from "../domain/end-game";
 
 const END_GAME_ACTION_ORDER: YGOEndGameAction[] = ["save-replay", "rematch", "deck-doctor", "back-to-lobby"];
 
@@ -82,6 +82,13 @@ export const END_GAME_ACTION_LABELS: Record<YGOEndGameAction, string> = {
   "deck-doctor": "Check deck in the Doctor",
   "back-to-lobby": "Back to Lobby",
 };
+
+/** A next step's button text: the host's label when it gave a non-blank one
+ * (a hosted room's "Back to lobby", a guest's "Back to Play"), else the default. */
+export function endGameActionLabel(action: YGOEndGameAction, labels?: YGOEndGameActionLabels | null): string {
+  const custom = labels?.[action];
+  return typeof custom === "string" && custom.trim() ? custom.trim() : END_GAME_ACTION_LABELS[action];
+}
 
 /** Which of the host-enabled next steps to show, in a stable order. Only a
  * seated player can save their duel or ask for a rematch; spectators, judges
