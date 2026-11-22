@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { YGOClientType } from "ygo-core";
 import type { YGODuel } from "../../core/YGODuel";
-import { END_GAME_ACTION_LABELS, YGOEndGameAction, endGameActionsFor, endGameHeadline } from "../duel-status";
+import { YGOEndGameAction, endGameActionLabel, endGameActionsFor, endGameHeadline } from "../duel-status";
 import { AvailableReview, isShowableReview, reviewSourceOf } from "./duel-review/duel-review";
 import { DuelReviewPanel } from "./duel-review/duel-review-panel";
 import { DuelRating, canRateDuel } from "./duel-rating";
@@ -89,7 +89,7 @@ export function DuelEndGameOverlay({ duel, loser }: { duel: YGODuel, loser: numb
         className={`ygo-btn ${action === "rematch" ? "ygo-btn-success" : "ygo-btn-primary"}`}
         onClick={() => runNextStep(action)}
       >
-        {END_GAME_ACTION_LABELS[action]}
+        {endGameActionLabel(action, duel.config.endGameActionLabels)}
       </button>)}
     </div>}
     <div className="ygo-end-game-actions">

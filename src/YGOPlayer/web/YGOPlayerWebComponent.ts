@@ -148,6 +148,7 @@ export class YGOPlayerComponentImpl extends HTMLElement implements YGOPlayerComp
       actions: props.actions,
       gameMode: props.gameMode || "EDITOR",
       endGameActions: props.endGameActions,
+      endGameActionLabels: props.endGameActionLabels,
       onError: props.onError,
     };
 

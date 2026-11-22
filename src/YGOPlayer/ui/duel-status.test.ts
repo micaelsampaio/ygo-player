@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { assistErrorMessage, assistUnavailableReason, canSurrender, endGameActionsFor, endGameHeadline, phaseLabel, phaseObjectTooltip, turnOwnerLabel, turnStatusText } from "./duel-status";
+import { assistErrorMessage, assistUnavailableReason, canSurrender, endGameActionLabel, endGameActionsFor, endGameHeadline, phaseLabel, phaseObjectTooltip, turnOwnerLabel, turnStatusText } from "./duel-status";
 
 describe("phaseLabel", () => {
   it("names every ygo-core phase", () => {
@@ -131,5 +131,19 @@ describe("endGameActionsFor", () => {
 
   it("shows nothing the host didn't enable", () => {
     expect(endGameActionsFor({ isPlayerClient: true })).toEqual([]);
+  });
+});
+
+describe("endGameActionLabel", () => {
+  it("uses the host's label for a next step", () => {
+    expect(endGameActionLabel("back-to-lobby", { "back-to-lobby": "Back to Play" })).toBe("Back to Play");
+    expect(endGameActionLabel("rematch", { "rematch": " Play again " })).toBe("Play again");
+  });
+
+  it("keeps the default when the host gives none, or a blank one", () => {
+    expect(endGameActionLabel("back-to-lobby")).toBe("Back to Lobby");
+    expect(endGameActionLabel("back-to-lobby", null)).toBe("Back to Lobby");
+    expect(endGameActionLabel("back-to-lobby", { "back-to-lobby": "  " })).toBe("Back to Lobby");
+    expect(endGameActionLabel("save-replay", { "back-to-lobby": "Back to Play" })).toBe("Save Replay");
   });
 });

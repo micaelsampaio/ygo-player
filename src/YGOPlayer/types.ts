@@ -1,9 +1,9 @@
 import * as THREE from "three";
 import { type YGOClient, type YGOSerializedCommand } from "ygo-core";
-import type { YGOEndGameAction } from "./ui/duel-status";
+import type { YGOEndGameAction, YGOEndGameActionLabels } from "./ui/duel-status";
 import type { YGOPlayerErrorHandler } from "./core/YGOPlayerLogger";
 
-export type { YGOEndGameAction };
+export type { YGOEndGameAction, YGOEndGameActionLabels };
 import {
   Card,
   CardData,
@@ -66,6 +66,8 @@ export interface YGOPlayerStartEditorProps {
   options: YGOPropsOptions;
   gameMode?: "EDITOR" | "REPLAY"
   endGameActions?: YGOEndGameAction[]
+  /** Host wording for the end-game buttons, e.g. { "back-to-lobby": "Back to Play" }. */
+  endGameActionLabels?: YGOEndGameActionLabels
   /** Sees every error the player catches and recovers from (see YGOPlayerLogger). */
   onError?: YGOPlayerErrorHandler;
   actions?: {
@@ -82,6 +84,8 @@ export interface YGOPlayerStartReplayProps {
   replay: YGOReplayData;
   options: YGOPropsOptions;
   endGameActions?: YGOEndGameAction[];
+  /** Host wording for the end-game buttons, e.g. { "back-to-lobby": "Back to Play" }. */
+  endGameActionLabels?: YGOEndGameActionLabels;
   /** Sees every error the player catches and recovers from (see YGOPlayerLogger). */
   onError?: YGOPlayerErrorHandler;
   actions?: {
@@ -181,6 +185,8 @@ export interface YGOPlayerConnectToServerProps {
   /** Next steps offered on the end-of-duel overlay; handled via the
    * component's "end-game-action" event. */
   endGameActions?: YGOEndGameAction[];
+  /** Host wording for the end-game buttons, e.g. { "back-to-lobby": "Back to Play" }. */
+  endGameActionLabels?: YGOEndGameActionLabels;
   /** Sees every error the player catches and recovers from (see YGOPlayerLogger). */
   onError?: YGOPlayerErrorHandler;
   /** Practice: the opponent's hand and face-down cards are shown face-up to this player. Display
