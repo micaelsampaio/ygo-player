@@ -91,11 +91,7 @@ export function usePanelPlacement(panelRef: { current: HTMLDivElement | null }, 
   const style: CSSProperties = x === null || y === null
     ? opts.docked
       ? (isMobileLayout ? opts.docked.mobile : opts.docked.desktop)
-      : isMobileLayout
-      // Below the (scaled-down) opponent HUD, kept narrow so the board stays visible.
-      ? { top: 90, left: "auto", right: 12, maxHeight: "45%" }
-      // Docked on the right between the two player HUDs (opponent: flush top, you: bottom 100px; 86px each).
-      : { top: 98, left: "auto", right: 20, maxHeight: "calc(100% - 296px)" }
+      : dockedPanelStyle(isMobileLayout)
     : { top: y, left: x, right: "auto", maxHeight: isMobileLayout ? "45%" : `calc(100% - ${y + 20}px)` };
 
   const collapsed = perDuel ? sessionCollapsed : placement.collapsed;
@@ -110,4 +106,24 @@ export function usePanelPlacement(panelRef: { current: HTMLDivElement | null }, 
     resetPosition: () => update({ ...placementRef.current, x: null, y: null }),
     onHeaderPointerDown,
   };
+}
+
+/**
+ * Desktop player HUD height (player-hud/style.css: 5px padding, the ~22px turn chip and its 4px
+ * gap, the 74px avatar row, 5px padding): the opponent's sits flush top, yours 100px off the bottom.
+ */
+export const DESKTOP_HUD_HEIGHT = 112;
+const DESKTOP_LOCAL_HUD_BOTTOM = 100;
+const HUD_GAP = 8;
+
+/**
+ * Where a panel docks when nobody moved it. Desktop: on the right between the two player HUDs,
+ * below the opponent's whole plate (its LP was covered by a top of 98px, R-82). Mobile: below
+ * the scaled-down opponent HUD, kept narrow so the board stays visible.
+ */
+export function dockedPanelStyle(isMobileLayout: boolean): CSSProperties {
+  if (isMobileLayout) return { top: 90, left: "auto", right: 12, maxHeight: "45%" };
+  const top = DESKTOP_HUD_HEIGHT + HUD_GAP;
+  const below = DESKTOP_LOCAL_HUD_BOTTOM + DESKTOP_HUD_HEIGHT + HUD_GAP;
+  return { top, left: "auto", right: 20, maxHeight: `calc(100% - ${top + below}px)` };
 }

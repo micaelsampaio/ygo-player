@@ -372,6 +372,17 @@
         }
     }
 
+    /* PHONE, PORTRAIT: your plate sits under your hand, bottom left (clear of the buttons on the
+       right), instead of over your Monster / Spell & Trap Zones (R-40). Always shown. */
+    @media (max-width: 767px) and (orientation: portrait) {
+        .ygo-player-hud.ygo-player-0 {
+            right: auto;
+            left: 4px;
+            bottom: 64px;
+            transform-origin: bottom left;
+        }
+    }
+
     /* TABLET  */
     @media (min-width: 768px) and (max-width: 1024px) and (orientation: portrait) {
         .ygo-player-hud {

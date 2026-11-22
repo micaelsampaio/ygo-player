@@ -187,7 +187,8 @@ export function YGOUiController({ duel }: { duel: YGODuel }) {
         <TimeLine duel={duel} />
         {/* Reads duel.fieldStats while rendering; it can appear after mount. */}
         <RenderUiRefresh duel={duel}>{() => <BottomRightActions duel={duel} showMenus={showFloatingMenus} toggleMenus={() => setShowFloatingMenus(value => !value)} />}</RenderUiRefresh>
-        <RenderUiRefresh duel={duel}>{() => <PlayerHUDs duel={duel} visible={showFloatingMenus} />}</RenderUiRefresh>
+        {/* Life points, names and the phase always show (R-40): the mobile toggle only hides the action buttons. */}
+        <RenderUiRefresh duel={duel}>{() => <PlayerHUDs duel={duel} visible />}</RenderUiRefresh>
         <TurnBanner duel={duel} />
         <WaitingBanner duel={duel} />
         <PhaseBanner duel={duel} />
