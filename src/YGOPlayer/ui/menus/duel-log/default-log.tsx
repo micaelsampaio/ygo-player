@@ -82,7 +82,11 @@ export const DefaultLogRow = memo(
                 </div>
                 {log.targets?.length ? (
                   <div className="ygo-duel-log-targets ygo-text-sm ygo-mb-1 ygo-text-center">
-                    targets {log.targets.map((t) => ygo.state.getCardData(t.id)?.name ?? "a card").join(", ")}
+                    targets {log.targets.map((t) => targetName(t, {
+                      viewer: perspective.playerIndex,
+                      seesOpponentCards: !!duel.config?.options?.showCards || !!duel.config?.options?.revealOpponentCards,
+                      nameOf: (id) => ygo.state.getCardData(id)?.name,
+                    })).join(", ")}
                   </div>
                 ) : null}
                 <div className="ygo-flex ygo-gap-2">
@@ -106,6 +110,31 @@ export const DefaultLogRow = memo(
     );
   }
 );
+
+/**
+ * How an activation's row names a target: a face-down card (Nobleman of Crossout's target, a Set
+ * Spell/Trap) the viewer can't see is "a Set card", never its name — not even when the client
+ * knows it — and a card the server kept hidden (id 0) is never "Unknown Card".
+ */
+export function targetName(
+  target: { id: number; zone?: string; position?: string },
+  { viewer, seesOpponentCards, nameOf }: { viewer: number | undefined; seesOpponentCards: boolean; nameOf: (id: number) => string | undefined },
+): string {
+  const onField = !!target.zone && /^(M|S|EMZ|F)/.test(target.zone);
+  const owner = target.zone ? zoneOwner(target.zone) : undefined;
+  const faceDown = !!target.position && !target.position.includes("faceup");
+  const hidden = target.id === 0 || (faceDown && !seesOpponentCards && owner !== undefined && owner !== viewer);
+  if (hidden) return onField ? "a Set card" : "a card";
+  return nameOf(target.id) ?? "a card";
+}
+
+function zoneOwner(zone: string): number | undefined {
+  try {
+    return YGOGameUtils.getZoneData(zone as FieldZone).player;
+  } catch {
+    return undefined;
+  }
+}
 
 function getZoneData(perspective: YGOPerspective, zone: FieldZone | undefined) {
   if (!zone) return null;

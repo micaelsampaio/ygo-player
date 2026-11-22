@@ -5,7 +5,7 @@ import { EventBus } from "../../../scripts/event-bus";
 import type { YGODuelUIEvents } from "../../../core/YGODuelUIEvents";
 import type { YGODuel } from "../../../core/YGODuel";
 import { subscribeDuelLogs } from "./duel-log-subscription";
-import { DefaultLogRow } from "./default-log";
+import { DefaultLogRow, targetName } from "./default-log";
 import { isPartOfItsActivation, isSetByMove, targetsOf } from "./duel-log";
 import { DuelPerspectiveContext } from "../../duel-perspective";
 
@@ -154,5 +154,42 @@ describe("an activation's targets in its row", () => {
       </DuelPerspectiveContext.Provider>,
     );
     expect(html).toContain("targets Dracotail Arthalion");
+  });
+});
+
+describe("a face-down target in the activation's row (Nobleman of Crossout)", () => {
+  const nameOf = (id: number) => (id === 54652250 ? "Man-Eater Bug" : id === 0 ? "Unknown Card" : `Card ${id}`);
+
+  it("is \"a Set card\" when it is the opponent's face-down card, even if the client knows it", () => {
+    expect(targetName({ id: 54652250, zone: "M2-2", position: "facedown" }, { viewer: 0, seesOpponentCards: false, nameOf })).toBe("a Set card");
+    expect(targetName({ id: 0, zone: "M2-2", position: "facedown" }, { viewer: 0, seesOpponentCards: false, nameOf })).toBe("a Set card");
+    expect(targetName({ id: 0, zone: "H2-1" }, { viewer: 0, seesOpponentCards: false, nameOf })).toBe("a card");
+    // A spectator (viewer -1) doesn't see either side's Set cards.
+    expect(targetName({ id: 54652250, zone: "M-2", position: "facedown" }, { viewer: -1, seesOpponentCards: false, nameOf })).toBe("a Set card");
+  });
+
+  it("names the viewer's own face-down card, a face-up target, and every card when the duel shows them", () => {
+    expect(targetName({ id: 54652250, zone: "M-2", position: "facedown" }, { viewer: 0, seesOpponentCards: false, nameOf })).toBe("Man-Eater Bug");
+    expect(targetName({ id: 54652250, zone: "M2-2", position: "faceup-attack" }, { viewer: 0, seesOpponentCards: false, nameOf })).toBe("Man-Eater Bug");
+    expect(targetName({ id: 54652250, zone: "M2-2", position: "facedown" }, { viewer: 0, seesOpponentCards: true, nameOf })).toBe("Man-Eater Bug");
+  });
+
+  it("the row reads \"targets a Set card\", and targetsOf keeps the target's position", () => {
+    const logs = [
+      { type: YGODuelEvents.LogType.Activate, player: 0, commandId: 1, id: 71044499, originZone: "H-1", zone: "S-1" },
+      { type: YGODuelEvents.LogType.Target, player: 0, commandId: 2, id: 54652250, originZone: "M2-2", position: "facedown" },
+    ] as unknown as YGODuelEvents.DuelLog[];
+    const targets = targetsOf(logs, 0);
+    expect(targets).toEqual([{ id: 54652250, zone: "M2-2", position: "facedown" }]);
+    const ygo: any = { state: { getCardData: (id: number) => ({ id, name: nameOf(id), images: { small_url: "/x.jpg" } }) } };
+    const duel: any = { createCdnUrl: (p: string) => p, gameActions: { setSelectedCard: vi.fn() }, config: { options: {} } };
+    const perspective: any = { getPlayerCssIndex: (p: number) => p, isPlayerPOV: () => true, playerIndex: 0 };
+    const html = renderToStaticMarkup(
+      <DuelPerspectiveContext.Provider value={perspective}>
+        <DefaultLogRow duel={duel} ygo={ygo} log={{ ...logs[0], position: "faceup", chainLink: 1, targets } as never} />
+      </DuelPerspectiveContext.Provider>,
+    );
+    expect(html).toContain("targets a Set card");
+    expect(html).not.toContain("Man-Eater Bug");
   });
 });

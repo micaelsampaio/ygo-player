@@ -48,24 +48,24 @@ function rowFor(log: YGODuelEvents.DuelLog): ComponentType<LogRowProps> {
  * as the engine reports the targets with the activation, or after it), by the same player.
  * Those rows aren't listed on their own: the activation's row names them.
  */
-export function targetsOf(logs: YGODuelEvents.DuelLog[], index: number): Array<{ id: number; zone?: string }> {
+export function targetsOf(logs: YGODuelEvents.DuelLog[], index: number): Array<{ id: number; zone?: string; position?: string }> {
   const act = logs[index] as { type: string; player: number };
   if (act.type !== YGODuelEvents.LogType.Activate) return [];
-  const out: Array<{ id: number; zone?: string }> = [];
+  const out: Array<{ id: number; zone?: string; position?: string }> = [];
   const take = (i: number) => {
-    const t = logs[i] as { type?: string; player?: number; id?: unknown; originZone?: string } | undefined;
+    const t = logs[i] as { type?: string; player?: number; id?: unknown; originZone?: string; position?: string } | undefined;
     if (!t || t.type !== YGODuelEvents.LogType.Target || t.player !== act.player || typeof t.id !== "number") return false;
-    out.push({ id: t.id, zone: t.originZone });
+    out.push({ id: t.id, zone: t.originZone, ...(t.position ? { position: t.position } : {}) });
     return true;
   };
   // After it, unless a following Activate claims them as its own (its Target logs come first).
   for (let i = index + 1; take(i); i++) { /* collects */ }
   if (!out.length) {
-    const before: Array<{ id: number; zone?: string }> = [];
+    const before: Array<{ id: number; zone?: string; position?: string }> = [];
     for (let i = index - 1; i >= 0; i--) {
-      const t = logs[i] as { type?: string; player?: number; id?: unknown; originZone?: string };
+      const t = logs[i] as { type?: string; player?: number; id?: unknown; originZone?: string; position?: string };
       if (t.type !== YGODuelEvents.LogType.Target || t.player !== act.player || typeof t.id !== "number") break;
-      before.unshift({ id: t.id, zone: t.originZone });
+      before.unshift({ id: t.id, zone: t.originZone, ...(t.position ? { position: t.position } : {}) });
     }
     // Before it only when no earlier activation sits right before those Target logs (they'd be its).
     const first = index - before.length - 1;
