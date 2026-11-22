@@ -328,7 +328,9 @@ export function AssistedOptionsPanel({ duel, isMobileLayout = false }: { duel: Y
   const collapsed = placement.collapsed && !mustOpen;
   // The server says whether this is a bot duel (older servers: the duel's own option).
   const botDuel = !!(result as { botDuel?: boolean }).botDuel || !!(duel.ygo?.options as { botDuel?: unknown } | undefined)?.botDuel;
-  const waitingText = opponentWaitingText({ ...decision, botDuel, respondingTo });
+  // Not once answered or superseded (busy: a choice in flight, or the next answer held for the
+  // bot's moves): the bot is playing again, so "the bot's turn is paused" would be stale.
+  const waitingText = opponentWaitingText({ ...decision, botDuel, respondingTo, settled: busy });
   const statusText = isActive
     ? (sections.length === 0 && !prompt ? "No options right now." : null)
     : assistUnavailableReason({

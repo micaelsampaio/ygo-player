@@ -10,17 +10,20 @@
 export type AssistPending = "idle" | "battle" | "chain" | "prompt";
 
 /** The line the assisted panel shows while the opponent waits on the
- * viewer during the opponent's own turn; null on the viewer's turn or when
- * there's nothing to answer. */
-export function opponentWaitingText({ pending, isLocalTurn, botDuel, chainLength, respondingTo }: {
+ * viewer during the opponent's own turn; null on the viewer's turn, when
+ * there's nothing to answer, or once the window on screen is no longer the
+ * engine's (`settled`: the viewer answered it, or a newer answer is waiting
+ * for the bot's moves to play out): the bot has resumed by then. */
+export function opponentWaitingText({ pending, isLocalTurn, botDuel, chainLength, respondingTo, settled = false }: {
   pending: AssistPending | null | undefined;
   isLocalTurn: boolean;
   botDuel: boolean;
   chainLength?: number;
   /** The name of the card on top of the chain (what a response answers), when known. */
   respondingTo?: string;
+  settled?: boolean;
 }): string | null {
-  if (isLocalTurn || (pending !== "chain" && pending !== "prompt")) return null;
+  if (settled || isLocalTurn || (pending !== "chain" && pending !== "prompt")) return null;
   const who = botDuel ? "The bot's turn is paused" : "Your opponent is waiting";
   if (pending === "prompt") return `${who} until you make this choice.`;
   if (chainLength === 0) return `${who}: activate a card now, or choose ${passLabel(0)}.`;

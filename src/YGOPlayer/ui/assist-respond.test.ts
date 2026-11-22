@@ -79,3 +79,11 @@ describe("timingMoment with the board's phase", () => {
     expect(timingMoment(0x4, "Main Phase 1")).toBe("End of Main Phase");
   });
 });
+
+describe("opponentWaitingText once the window is answered", () => {
+  it("is gone while the answer is in flight or the next answer waits for the bot's moves (the bot resumed)", () => {
+    expect(opponentWaitingText({ pending: "chain", isLocalTurn: false, botDuel: true, chainLength: 1, settled: true })).toBeNull();
+    expect(opponentWaitingText({ pending: "prompt", isLocalTurn: false, botDuel: true, settled: true })).toBeNull();
+    expect(opponentWaitingText({ pending: "chain", isLocalTurn: false, botDuel: true, chainLength: 1, settled: false })).toMatch(/^The bot's turn is paused/);
+  });
+});
