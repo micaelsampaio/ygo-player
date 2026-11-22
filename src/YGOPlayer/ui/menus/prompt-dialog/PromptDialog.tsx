@@ -90,7 +90,7 @@ export function LocationIcon({ location }: { location: LocationKind }) {
 
 export interface ThumbView {
   key: string;
-  /** 0: a hidden card (shown as its back). */
+  /** 0: a hidden card (shown as its back: imageUrl is the card back, or none). */
   code: number;
   name: string;
   imageUrl?: string;
@@ -135,7 +135,7 @@ export function CardThumbGroups({ groups, disabled }: { groups: LocationGroup<Th
                 onFocus={() => t.onHover?.(true)}
                 onBlur={() => t.onHover?.(false)}
               >
-                {t.code !== 0 && t.imageUrl
+                {t.imageUrl
                   ? <img src={t.imageUrl} alt="" className="ygo-md-prompt-thumb-img" draggable={false} />
                   : <span className="ygo-md-prompt-thumb-img ygo-md-prompt-thumb-back" aria-hidden="true">{t.code === 0 ? "" : t.name}</span>}
                 {t.badge && <span className="ygo-md-prompt-thumb-badge">{t.badge}</span>}

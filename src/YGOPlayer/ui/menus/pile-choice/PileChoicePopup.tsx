@@ -58,11 +58,11 @@ export function PileChoicePopup({ duel, prompt, container, selected, busy, pendi
 
   if (!tab) return null;
 
-  const matches = (code: number) => !search || (nameOf(code) ?? "").toLowerCase().includes(search.toLowerCase());
+  const matches = (code: number) => !search || (code !== 0 && (nameOf(code) ?? "").toLowerCase().includes(search.toLowerCase()));
   const owner = tab.mine ? me : 1 - me;
 
   const showInfo = (code: number) => {
-    const card = dataOf(code);
+    const card = code === 0 ? undefined : dataOf(code);
     if (card) duel.gameActions.setSelectedCard({ player: owner, card });
   };
 
@@ -105,7 +105,8 @@ export function PileChoicePopup({ duel, prompt, container, selected, busy, pendi
             {tab.choices.filter((c) => matches(c.code)).map(({ group, code }) => {
               const picked = pickedIn(group);
               const copies = group.indices.length;
-              const name = nameOf(code) ?? `#${code}`;
+              // Code 0: a card hidden from the player (the opponent's face-down card): its back, unnamed.
+              const name = code === 0 ? "Hidden card" : nameOf(code) ?? `#${code}`;
               const busyHere = pendingKey === `pick:${group.indices[0]}`;
               return (
                 <button
@@ -124,7 +125,7 @@ export function PileChoicePopup({ duel, prompt, container, selected, busy, pendi
                     else onToggle(group);
                   }}
                 >
-                  <img src={dataOf(code)?.images?.small_url} alt="" className="ygo-card" />
+                  <img src={code === 0 ? duel.createCdnUrl("/images/card_back.png") : dataOf(code)?.images?.small_url} alt="" className="ygo-card" />
                   {copies > 1 && <span className="ygo-pile-choice-copies">×{copies}</span>}
                   {picked > 0 && <span className="ygo-pile-choice-check" aria-hidden="true">{max > 1 ? picked : "✓"}</span>}
                   {tagOf(group.indices) && <span className="ygo-coach-pick-tag">{tagOf(group.indices)}</span>}

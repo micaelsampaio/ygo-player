@@ -64,6 +64,49 @@ export function locationLabel(loc: number): string | undefined {
   return LOCATION_LABELS.find(([bit]) => loc & bit)?.[1];
 }
 
+export const LOC_OVERLAY = 0x80;
+/** ocgcore POS_FACEUP (POS_FACEUP_ATTACK | POS_FACEUP_DEFENSE). */
+const POS_FACEUP = 0x5;
+
+/**
+ * Whether the prompting player may know the card at `ref` (as ygo-socket-server's
+ * assistRedaction isCardRefVisible): their own cards, the GY, Xyz materials, and the
+ * opponent's face-up cards. The opponent's hand, Deck and face-down cards are not.
+ */
+export function isCandidateVisible(ref: Pick<CardRefData, "ctrl" | "loc" | "pos">, promptPlayer: number): boolean {
+  if (ref.ctrl === promptPlayer) return true;
+  if (ref.loc & LOC_OVERLAY) return true;
+  if (ref.loc & LOC_GRAVE) return true;
+  if (ref.loc & (LOC_HAND | LOC_DECK)) return false;
+  return ((ref.pos ?? 0) & POS_FACEUP) !== 0;
+}
+
+/**
+ * The prompt as its player may see it: a candidate they can't see (the opponent's Set card,
+ * hand, Deck) loses its code (0: shown as a card back, named "Set card" / "Hidden card"), even
+ * when the server sent one. `seesOpponentCards`: the duel shows the opponent's cards anyway
+ * (a collaborative room, "Show the bot's cards"). Answers stay by index, so nothing else changes.
+ */
+export function promptAsSeen<P extends PromptData>(prompt: P, seesOpponentCards: boolean): P {
+  if (seesOpponentCards) return prompt;
+  const hide = <T extends CardRefData>(ref: T): T => (ref.code !== 0 && !isCandidateVisible(ref, prompt.player) ? { ...ref, code: 0 } : ref);
+  const candidates = prompt.candidates?.map(hide);
+  const changed = candidates?.some((c, i) => c !== prompt.candidates![i]);
+  const card = prompt.card ? hide(prompt.card) : undefined;
+  if (!changed && card === prompt.card) return prompt;
+  return {
+    ...prompt,
+    ...(candidates ? { candidates } : {}),
+    ...(card ? { card } : {}),
+    ...(card && card !== prompt.card && prompt.code ? { code: 0 } : {}),
+  };
+}
+
+/** A hidden candidate's name (code 0): "Set card" on the field, else "Hidden card". */
+export function hiddenCardName(ref: Pick<CardRefData, "loc">): string {
+  return ref.loc & (LOC_MZONE | LOC_SZONE) ? "Set card" : "Hidden card";
+}
+
 /** "Hand", "Deck", "Opponent's Field"… — `mine` is whether the card is the prompting player's. */
 export function candidateWhere(ref: CardRefData, promptPlayer: number): string {
   const where = locationLabel(ref.loc) ?? "?";

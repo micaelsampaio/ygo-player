@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   candidateWhere, decodeDescription, LOC_DECK, LOC_EXTRA, LOC_GRAVE, LOC_HAND, LOC_MZONE, LOC_REMOVED, LOC_SZONE,
-  completesSelection, doubleClickPosition, doublePickAnswer, locationLabel, PromptData, singlePromptAnswer,
+  completesSelection, doubleClickPosition, doublePickAnswer, hiddenCardName, isCandidateVisible, locationLabel, PromptData, promptAsSeen, singlePromptAnswer,
 } from "./assist-prompt";
 
 describe("locationLabel", () => {
@@ -100,5 +100,46 @@ describe("doubleClickPosition", () => {
     expect(doubleClickPosition(0x4 | 0x8)).toBeNull();
     expect(doubleClickPosition(0)).toBeNull();
     expect(doubleClickPosition(undefined)).toBeNull();
+  });
+});
+
+describe("promptAsSeen / isCandidateVisible", () => {
+  const FACEUP = 0x1;
+  const FACEDOWN = 0x8;
+  const prompt: PromptData = {
+    player: 0, msg: 15, kind: "card",
+    candidates: [
+      { code: 11, ctrl: 1, loc: LOC_MZONE, seq: 0, pos: FACEDOWN },
+      { code: 12, ctrl: 1, loc: LOC_MZONE, seq: 1, pos: FACEUP },
+      { code: 13, ctrl: 1, loc: LOC_HAND, seq: 0, pos: 0 },
+      { code: 14, ctrl: 1, loc: LOC_DECK, seq: 0, pos: 0 },
+      { code: 15, ctrl: 1, loc: LOC_GRAVE, seq: 0, pos: 0 },
+      { code: 16, ctrl: 1, loc: LOC_EXTRA, seq: 0, pos: FACEDOWN },
+      { code: 17, ctrl: 0, loc: LOC_SZONE, seq: 0, pos: FACEDOWN },
+      { code: 18, ctrl: 0, loc: LOC_DECK, seq: 0, pos: 0 },
+    ],
+  };
+
+  it("keeps the codes of the player's own cards, the GY and face-up cards; the opponent's Set, hand, Deck and face-down Extra Deck cards are 0", () => {
+    expect(promptAsSeen(prompt, false).candidates!.map((c) => c.code)).toEqual([0, 12, 0, 0, 15, 0, 17, 18]);
+  });
+
+  it("changes nothing when the duel shows the opponent's cards, or nothing is hidden", () => {
+    expect(promptAsSeen(prompt, true)).toBe(prompt);
+    const open = { ...prompt, candidates: prompt.candidates!.slice(1, 2) };
+    expect(promptAsSeen(open, false)).toBe(open);
+  });
+
+  it("hides the prompt's subject card too", () => {
+    const p: PromptData = { player: 0, msg: 19, kind: "position", code: 21, card: { code: 21, ctrl: 1, loc: LOC_SZONE, seq: 0, pos: FACEDOWN } };
+    expect(promptAsSeen(p, false)).toMatchObject({ code: 0, card: { code: 0 } });
+  });
+
+  it("names a hidden field card a Set card, else a hidden card", () => {
+    expect(hiddenCardName({ loc: LOC_MZONE })).toBe("Set card");
+    expect(hiddenCardName({ loc: LOC_SZONE })).toBe("Set card");
+    expect(hiddenCardName({ loc: LOC_HAND })).toBe("Hidden card");
+    expect(isCandidateVisible({ ctrl: 1, loc: LOC_REMOVED, pos: FACEDOWN }, 0)).toBe(false);
+    expect(isCandidateVisible({ ctrl: 1, loc: LOC_REMOVED, pos: FACEUP }, 0)).toBe(true);
   });
 });

@@ -2,7 +2,7 @@
  * Assisted Mode's "Your choice" section: the effect prompt the engine is
  * holding for the human, answered from the panel or on the field.
  */
-import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { pickTag, type CoachPick } from "../../domain/coach";
 import { createPortal } from "react-dom";
 import * as THREE from "three";
@@ -18,7 +18,7 @@ import { ndcToContainer, positionGlyph, shortPositionLabel } from "../field-over
 import {
   CardRefData, PromptData, PromptResponse, candidateWhere, isSelectionValid, onlyCardAnswer, optionLabel, toggleSelection,
   groupCandidates, positionChoices, promptSubtitle, promptTitle, toggleGroupSelection, LOC_HAND, LOC_MZONE as LOC_M, LOC_SZONE as LOC_S,
-  decodeDescription, doubleClickPosition, doublePickAnswer, type CandidateGroup,
+  decodeDescription, doubleClickPosition, doublePickAnswer, hiddenCardName, promptAsSeen, type CandidateGroup,
 } from "../assist-prompt";
 import type { PromptDoublePickTarget } from "../../core/YGOAssistController";
 import { findCardObjects, type HighlightTarget } from "./assist-highlights";
@@ -305,7 +305,7 @@ const DOUBLE_CLICK_MEMORY_MS = 600;
  * card to pick, which monster to Tribute, yes/no, an option, a position, a
  * zone). Answers with a 'Respond Prompt' choose.
  */
-export function PromptView({ duel, prompt, busy, pendingKey, respond, onHover, inDialog = false, coachPick = null }: {
+export function PromptView({ duel, prompt: sentPrompt, busy, pendingKey, respond, onHover, inDialog = false, coachPick = null }: {
   duel: YGODuel;
   prompt: PromptData;
   /** The Duel Coach's pick for this card choice (tags the card), or null. */
@@ -318,6 +318,10 @@ export function PromptView({ duel, prompt, busy, pendingKey, respond, onHover, i
    * pile view only, so the dialog drops its own list and hides while the pile view is open. */
   inDialog?: boolean;
 }) {
+  // A card the player can't see (the opponent's Set card, hand, Deck) is shown as a card back,
+  // even if the server named it: only a duel that shows the opponent's cards names them.
+  const seesOpponentCards = !!duel.ygo?.options?.viewOpponentCards || !!duel.config?.options?.revealOpponentCards;
+  const prompt = useMemo(() => promptAsSeen(sentPrompt, seesOpponentCards), [sentPrompt, seesOpponentCards]);
   const [selected, setSelected] = useState<number[]>([]);
   // A choice from a pile (Deck, GY, banished, Extra Deck) opens in a pile
   // view by itself; closing it only minimizes it (the button below reopens it).
@@ -329,8 +333,8 @@ export function PromptView({ duel, prompt, busy, pendingKey, respond, onHover, i
   const [pickerOpen, setPickerOpen] = useState(pilePicker);
   const [probeRef, pickerContainer] = useOffsetParentContainer<HTMLDivElement>();
   const nameOf = (code: number) => duel.ygo?.state?.getCardData(code)?.name;
-  // Code 0: a card the server keeps hidden from you (an opponent's hand or Set card).
-  const cardName = (code: number) => (code === 0 ? "Hidden card" : nameOf(code) ?? `#${code}`);
+  // Code 0: a card hidden from you (an opponent's hand or Set card).
+  const cardName = (code: number, ref?: CardRefData) => (code === 0 ? (ref ? hiddenCardName(ref) : "Hidden card") : nameOf(code) ?? `#${code}`);
   const me = duel.perspective.playerIndex;
   // With its location: hovering a Deck (or GY…) candidate must not frame a copy of the same card
   // that happens to be in your hand or on the field. Green, like every choice.
@@ -471,7 +475,7 @@ export function PromptView({ duel, prompt, busy, pendingKey, respond, onHover, i
   );
 
   if (inDialog) {
-    const imageOf = (code: number) => (code === 0 ? undefined : duel.ygo?.state?.getCardData(code)?.images?.small_url);
+    const imageOf = (code: number) => (code === 0 ? duel.createCdnUrl("/images/card_back.png") : duel.ygo?.state?.getCardData(code)?.images?.small_url);
     const subjectCode = prompt.code || decodeDescription(prompt.description)?.code;
     const terms = [
       ...PROMPT_KEYWORDS,
@@ -498,7 +502,7 @@ export function PromptView({ duel, prompt, busy, pendingKey, respond, onHover, i
           dialogBody = <CardThumbGroups disabled={busy} groups={thumbGroups([{
             ref: c,
             view: {
-              key: `only:${only}`, code: c.code, name: cardName(c.code), imageUrl: imageOf(c.code), selected: true,
+              key: `only:${only}`, code: c.code, name: cardName(c.code, c), imageUrl: imageOf(c.code), selected: true,
               badge: candidates.length > 1 ? `×${candidates.length}` : undefined, onClick: confirmOnly, onHover: hoverFor(c),
             },
           }])} />;
@@ -518,7 +522,7 @@ export function PromptView({ duel, prompt, busy, pendingKey, respond, onHover, i
           return {
             ref: c,
             view: {
-              key: group.key, code: c.code, name: cardName(c.code), imageUrl: imageOf(c.code), selected: picked > 0,
+              key: group.key, code: c.code, name: cardName(c.code, c), imageUrl: imageOf(c.code), selected: picked > 0,
               badge: copies > 1 ? `×${copies}` : undefined,
               coachTag: pickTag(coachPick, group.indices),
               check: picked > 0 ? (multi && copies > 1 ? String(picked) : "✓") : undefined,
@@ -541,7 +545,7 @@ export function PromptView({ duel, prompt, busy, pendingKey, respond, onHover, i
         dialogBody = <CardThumbGroups disabled={busy} groups={thumbGroups(candidates.map((c, i) => ({
           ref: c,
           view: {
-            key: `${i}:${c.code}:${c.loc}:${c.seq}`, code: c.code, name: cardName(c.code), imageUrl: imageOf(c.code),
+            key: `${i}:${c.code}:${c.loc}:${c.seq}`, code: c.code, name: cardName(c.code, c), imageUrl: imageOf(c.code),
             coachTag: c.selected ? undefined : pickTag(coachPick, [i]),
             selected: !!c.selected, check: c.selected ? "✓" : undefined, busy: pendingKey === `pick:${i}`,
             onClick: () => respond(`pick:${i}`, { index: i }), onHover: hoverFor(c),
@@ -628,7 +632,7 @@ export function PromptView({ duel, prompt, busy, pendingKey, respond, onHover, i
             onMouseLeave={() => hoverFor(c)(false)}
             style={{ flexGrow: 1, fontWeight: 700, fontSize: 13, justifyContent: "center", boxShadow: `inset 0 0 0 1px ${HIGHLIGHT_CSS}` }}
           >
-            {pendingKey === "confirm" ? <span className="ygo-inline-spinner" aria-hidden="true" /> : `Choose ${cardName(c.code)}${candidateWhere(c, prompt.player) ? ` · ${candidateWhere(c, prompt.player)}` : ""}`}
+            {pendingKey === "confirm" ? <span className="ygo-inline-spinner" aria-hidden="true" /> : `Choose ${cardName(c.code, c)}${candidateWhere(c, prompt.player) ? ` · ${candidateWhere(c, prompt.player)}` : ""}`}
           </button>
           {prompt.cancelable && (
             <button className="ygo-card-item" type="button" disabled={busy} onClick={() => respond("cancel", { indices: [] })} style={{ fontSize: 13 }}>
@@ -648,7 +652,7 @@ export function PromptView({ duel, prompt, busy, pendingKey, respond, onHover, i
           return (
             <ChoiceButton
               key={group.key}
-              label={`${cardName(c.code)}${copies > 1 ? ` ×${copies}` : ""}${multi && copies > 1 && picked ? ` (${picked} picked)` : ""}`}
+              label={`${cardName(c.code, c)}${copies > 1 ? ` ×${copies}` : ""}${multi && copies > 1 && picked ? ` (${picked} picked)` : ""}`}
               where={candidateWhere(c, prompt.player)}
               selected={picked > 0}
               highlight={onBoard(c)}
@@ -683,7 +687,7 @@ export function PromptView({ duel, prompt, busy, pendingKey, respond, onHover, i
         {candidates.map((c, i) => (
           <ChoiceButton
             key={`${i}:${c.code}:${c.loc}:${c.seq}`}
-            label={cardName(c.code)}
+            label={cardName(c.code, c)}
             where={candidateWhere(c, prompt.player)}
             selected={!!c.selected}
             highlight={onBoard(c)}
