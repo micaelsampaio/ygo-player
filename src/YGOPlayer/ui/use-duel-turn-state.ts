@@ -7,15 +7,21 @@ export interface DuelTurnState {
   turnPlayer: number;
   turnPriority: number;
   phase: string;
-  /** A seated player (not a spectator/judge) — only they get "Your turn" wording. */
+  /** A seated player (not a spectator/judge, nor someone watching a replay) — only they get "Your turn" wording. */
   isPlayerClient: boolean;
   isLocalTurn: boolean;
   hasPriority: boolean;
 }
 
+/** Whether the viewer plays this duel: a seated player, not a spectator, judge or replay viewer
+ * (a replay's local client is a player client, but nobody's turn is "yours" in it). */
+export function isSeatedPlayer(duel: Pick<YGODuel, "client" | "config">): boolean {
+  return duel.client?.type === YGOClientType.PLAYER && duel.config?.gameMode !== "REPLAY";
+}
+
 function readTurnState(duel: YGODuel): DuelTurnState {
   const state = duel.ygo.state;
-  const isPlayerClient = duel.client?.type === YGOClientType.PLAYER;
+  const isPlayerClient = isSeatedPlayer(duel);
   return {
     turn: state.turn,
     turnPlayer: state.turnPlayer,

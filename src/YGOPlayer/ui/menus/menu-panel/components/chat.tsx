@@ -258,7 +258,7 @@ export function Chat({ duel }: { duel: YGODuel }) {
       </div>
       <div className={`ygo-chat-container ${isChatHidden ? "ygo-hidden" : ""}`}>
         <div className="ygo-chat-messages" ref={messagesContainerRef}>
-          {shown.length === 0 && <div className="ygo-chat-empty">{isReplay ? "No messages yet." : "No messages yet. Say hi to your opponent."}</div>}
+          {shown.length === 0 && <div className="ygo-chat-empty">{chatEmptyText({ isReplay, botDuel: !!duel.ygo?.options?.botDuel, solo: !!(duel.ygo?.options as { solo?: unknown } | undefined)?.solo })}</div>}
           {shown.map((msg) => {
 
             if (msg.coach) {
@@ -326,4 +326,9 @@ export function Chat({ duel }: { duel: YGODuel }) {
       </div>
     </div>
   );
+}
+
+/** The empty chat's line: only a duel against a person invites a hello (not a replay, a bot duel or solo practice). */
+export function chatEmptyText({ isReplay, botDuel, solo }: { isReplay: boolean; botDuel: boolean; solo: boolean }): string {
+  return isReplay || botDuel || solo ? "No messages yet." : "No messages yet. Say hi to your opponent.";
 }
