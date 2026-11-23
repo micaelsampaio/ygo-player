@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { PromptData } from "./assist-prompt";
 import { pickZone, placeToYgoZone, promptKey, selectionOpacity, ygoZoneToPlace, zoneHighlights } from "./assist-zones";
 import { BOT_UNDO_TOOLTIP, undoTooltip } from "./duel-status";
+import { zoneHintHidden } from "./menus/assisted-options-panel";
 
 const M = 0x04;
 const S = 0x08;
@@ -139,8 +140,7 @@ describe("undoTooltip", () => {
 });
 
 describe("zoneHintHidden", () => {
-  it("hides the zone hint for one zone with zones to click; keeps it for the list or several zones", async () => {
-    const { zoneHintHidden } = await import("./menus/assisted-options-panel");
+  it("hides the zone hint for one zone with zones to click; keeps it for the list or several zones", () => {
     expect(zoneHintHidden(place({ flag: flagFree([{ loc: M, seq: 0 }, { loc: M, seq: 2 }]) }), 0)).toBe(true);
     // Only a zone the board doesn't draw (Pendulum): the list is the only way.
     expect(zoneHintHidden(place({ flag: flagFree([{ loc: S, seq: 6 }]) }), 0)).toBe(false);
