@@ -9,6 +9,7 @@ import { handDragAvailable } from "../../../../core/components/YGOHandDrag";
 import { ChainStopsControl } from "../../chain-stops-control";
 import { storedChainStops, storeChainStops, type ChainStops } from "../../duel-preferences";
 import { useCoach } from "../../coach-panel";
+import { isEngineDuel } from "../../../../domain/engine-reachable";
 
 /** Duel Coach on / off (bot / solo duels whose host offers it): its tips go to the chat. */
 function CoachSetting({ duel }: { duel: YGODuel }) {
@@ -27,6 +28,27 @@ function CoachSetting({ duel }: { duel: YGODuel }) {
       Coach (tips in the chat, only you see them)
     </label>
     {coach.error && <div role="alert" style={{ flexBasis: "100%", fontSize: 12, color: "#fecaca" }}>{coach.error}</div>}
+  </div>;
+}
+
+/**
+ * Assisted Mode: Manual attacks. Off (each duel starts so), the rules engine runs every attack
+ * and only its legal ones are offered; on, the player attacks freely (free-form, the engine
+ * doesn't follow the battle) — the server only lets that through after this switch.
+ */
+function ManualAttacksSetting({ duel }: { duel: YGODuel }) {
+  const [on, setOn] = useState(() => duel.manualAttacks);
+  return <div className="ygo-flex ygo-mt-3">
+    <input
+      id="ygo-setting-manual-attacks"
+      style={{ display: "inline-block", width: "auto" }}
+      type="checkbox"
+      checked={on}
+      onChange={(e) => { const next = e.currentTarget.checked; duel.setManualAttacks(next); setOn(next); }}
+    />
+    <label htmlFor="ygo-setting-manual-attacks" style={{ display: "inline-block", flexGrow: 1 }} title="Off: the rules engine runs your attacks and only offers legal ones. On: attack freely, outside the rules (the engine won't follow the battle)">
+      Manual attacks (outside the rules engine)
+    </label>
   </div>;
 }
 
@@ -188,6 +210,8 @@ export function GameSettingsDialog({ duel }: { duel: YGODuel }) {
           </div>
 
           {isPlaying && <CoachSetting duel={duel} />}
+
+          {isEngineDuel(duel) && <ManualAttacksSetting duel={duel} />}
 
           {isPlaying && handDragAvailable(duel) && <div className="ygo-flex ygo-mt-3">
             <input

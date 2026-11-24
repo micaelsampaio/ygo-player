@@ -13,6 +13,8 @@ export class BattlePhaseController extends YGOComponent {
   private attackButtons: Map<string, BattlePhaseButton>;
   /** A double-click on an attack sword (the direct attack shortcut). */
   private attackTaps = createDoubleTapDetector();
+  /** Between enable-game-actions and disable-game-actions. */
+  private actionsOn = false;
 
   constructor(name: string, private duel: YGODuel) {
     super(name);
@@ -35,14 +37,23 @@ export class BattlePhaseController extends YGOComponent {
     })
 
     this.duel.events.on("enable-game-actions", () => {
+      this.actionsOn = true;
       if (this.enabled) {
         this.showBattlePhaseIcons(this.duel.ygo.state.turnPlayer);
       }
     });
 
     this.duel.events.on("disable-game-actions", () => {
+      this.actionsOn = false;
       if (this.enabled) {
         this.hideBattlePhaseIcons();
+      }
+    });
+
+    // Assisted Mode: the swords follow the engine's attackers, so they change with its options.
+    this.duel.events.on("assist-options", () => {
+      if (this.enabled && this.actionsOn && this.duel.gameActions.attacksThroughEngineOnly()) {
+        this.showBattlePhaseIcons(this.duel.ygo.state.turnPlayer);
       }
     });
   }
@@ -66,9 +77,12 @@ export class BattlePhaseController extends YGOComponent {
   private showBattlePhaseIcons(turnPlayer: number) {
     const rotationOffset = this.duel.perspective.isPlayerPOV(turnPlayer) ? 0 : THREE.MathUtils.degToRad(180);
     const rotation = new THREE.Euler(0, 0, rotationOffset);
+    const engineOnly = this.duel.gameActions.attacksThroughEngineOnly();
 
     this.attackButtons.values().forEach(attackButton => {
-      const isVisible = attackButton.cardZone.hasCard() && attackButton.cardZone.zoneData.player === turnPlayer && YGOGameUtils.isFaceUp(attackButton.cardZone.getCardReference()!);
+      const isVisible = attackButton.cardZone.hasCard() && attackButton.cardZone.zoneData.player === turnPlayer && YGOGameUtils.isFaceUp(attackButton.cardZone.getCardReference()!)
+        // Assisted Mode: only the monsters the engine lists as attackers now.
+        && (!engineOnly || this.duel.gameActions.canAttackThroughEngine(attackButton.cardZone.zone));
       if (!isVisible) {
         attackButton.hide();
         return;
@@ -88,6 +102,9 @@ export class BattlePhaseController extends YGOComponent {
         // first click opened the selection, whose only target is the opponent).
         const double = this.attackTaps.tap(attackButton, event?.clientX ?? 0, event?.clientY ?? 0, Date.now());
         const attacker = attackButton.cardZone.getCardReference();
+        // Assisted Mode: a direct attack is offered only where the engine allows it.
+        const directAttack = !this.duel.gameActions.attacksThroughEngineOnly()
+          || this.duel.gameActions.canAttackDirectlyThroughEngine(attackButton.cardZone.zone);
         if (double && zones.length === 0 && attacker) {
           if (event) markClickHandled(event);
           this.duel.events.dispatch("clear-ui-action");
@@ -100,7 +117,7 @@ export class BattlePhaseController extends YGOComponent {
           player: attackButton.cardZone.zoneData.player,
           cardZone: attackButton.cardZone,
           zones,
-          directAttack: true,
+          directAttack,
         });
       }
     });

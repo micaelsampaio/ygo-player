@@ -104,6 +104,12 @@ export class YGODuel {
   /** Assisted Mode server duels: the Chain stops setting (ui/menus/duel-preferences.ts),
    * so the OK button can show and change it. Null elsewhere. */
   public chainStops: { value: "auto" | "always" | "bluff" | "off"; set(value: "auto" | "always" | "bluff" | "off"): void } | null = null;
+  /**
+   * Assisted Mode: the player switched to Manual attacks (the settings). Off, every attack is the
+   * engine's (domain/assisted-attacks.ts); on, the free-form attack is theirs again. Never
+   * remembered: each duel starts with it off.
+   */
+  public manualAttacks = false;
   private loadingTask: PromiseTask;
 
   constructor({
@@ -728,6 +734,13 @@ export class YGODuel {
       }
     }
     this.serverActions.ygo.exec({ command })
+  }
+
+  /** Switches Manual attacks (Assisted Mode) and tells the server, which refuses free-form attacks while it's off. */
+  setManualAttacks(on: boolean) {
+    this.manualAttacks = on;
+    this.serverActions?.room?.send("duel:preferences:set", { manualAttacks: on });
+    this.events.dispatch("render-ui");
   }
 
   clearActions() {

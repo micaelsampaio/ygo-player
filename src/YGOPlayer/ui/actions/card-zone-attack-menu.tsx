@@ -83,6 +83,16 @@ export function CardZoneAttackMenuAction({
   }, propsChanges)
 
   // Assisted Mode, an attack the engine lists: the engine works out the battle (no manual results).
+  // Assisted Mode, Manual attacks off: no free-form attack, only why the engine won't take this one.
+  const engineCheck = duel.gameActions.attacksThroughEngineOnly() ? duel.gameActions.checkEngineAttack(attackingZone, attackedZone) : null;
+  if (engineCheck?.kind === "refused") {
+    return (
+      <CardMenu indicator menuRef={menuRef}>
+        <div className="ygo-card-item" role="status">{engineCheck.message}</div>
+      </CardMenu>
+    );
+  }
+
   if (duel.gameActions.canAttackThroughEngine(attackingZone)) {
     return (
       <CardMenu indicator menuRef={menuRef}>

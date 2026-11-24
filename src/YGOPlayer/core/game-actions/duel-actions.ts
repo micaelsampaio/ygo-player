@@ -1,10 +1,12 @@
 import { YGOClientType, YGOCommands, YGOGameUtils, YGOPlayerState, YGO_DUEL_PHASE_ORDER } from "ygo-core";
-import { assistPhaseRouteFor, findAssistOption, openPhaseWindow } from "../../domain/assist-routing";
+import { assistPhaseRouteFor, openPhaseWindow } from "../../domain/assist-routing";
 import type { AssistQueryResult } from "../../domain/assist-query";
 import { FieldZone } from "ygo-core";
 import { YGODuelPhase } from "ygo-core";
 import { CardActions } from "./card-actions";
 import { chainModeOn } from "../../domain/chain-mode";
+import { isEngineDuel } from "../../domain/engine-reachable";
+import { ATTACK_NOT_NOW_NOTICE, checkAssistedAttack, engineAttacker, type AssistedAttackCheck } from "../../domain/assisted-attacks";
 
 /** Deck and hand, player (life points, state, notes, dice, coin, surrender), phases and turns, battle. */
 export class DuelActions extends CardActions {
@@ -252,23 +254,75 @@ export class DuelActions extends CardActions {
     const duel = this.duel;
     if (!duel.assist || duel.client?.type !== YGOClientType.PLAYER || !duel.ygo?.options?.assistedMode) return false;
     const card = duel.ygo.state.getCardFromZone(attackingZone);
-    return !!card && !!findAssistOption(duel.assistController.options, "Attack", card.id, attackingZone);
+    return !!card && !!engineAttacker(duel.assistController.options, card.id, attackingZone);
   }
 
-  /** The attack through the engine (Assisted Mode), aimed at `attackedZone` (none: a direct attack). */
-  private routeAssistedAttack(attackingZone: FieldZone, attackedZone?: FieldZone): boolean {
-    if (!this.canAttackThroughEngine(attackingZone)) return false;
+  /**
+   * Assisted Mode with Manual attacks off: every attack is the engine's — only its legal attackers
+   * and targets are offered, and nothing else is sent (domain/assisted-attacks.ts). The board's
+   * free-form attack needs the explicit switch (duel.setManualAttacks).
+   */
+  public attacksThroughEngineOnly(): boolean {
+    return isEngineDuel(this.duel) && !this.duel.manualAttacks;
+  }
+
+  /** The zones of the opponent's monsters `player` could aim at (Main and Extra Monster Zones). */
+  public opponentMonsterZones(player: number): string[] {
+    const field = this.duel.fields?.[1 - player];
+    if (!field) return [];
+    return [
+      ...field.monsterZone.filter((zone) => zone.hasCard()),
+      ...field.extraMonsterZone.filter((zone) => zone.hasCard() && zone.zoneData.player !== player),
+    ].map((zone) => zone.zone);
+  }
+
+  /** How the engine takes this attack (`attackedZone` none: a direct attack). */
+  public checkEngineAttack(attackingZone: FieldZone, attackedZone?: FieldZone): AssistedAttackCheck {
+    const card = this.duel.ygo.state.getCardFromZone(attackingZone);
+    const player = YGOGameUtils.getZoneData(attackingZone).player;
+    const targets = this.opponentMonsterZones(player);
+    if (!card) return { kind: "refused", message: ATTACK_NOT_NOW_NOTICE };
+    return checkAssistedAttack(
+      this.duel.assistController.options,
+      { code: card.id, zone: attackingZone },
+      attackedZone ? { zone: attackedZone, opponentMonster: targets.includes(attackedZone) } : null,
+      targets.length > 0,
+    );
+  }
+
+  /** Whether the engine lets the monster in `attackingZone` attack directly now (Assisted Mode). */
+  public canAttackDirectlyThroughEngine(attackingZone: FieldZone): boolean {
+    return this.checkEngineAttack(attackingZone).kind === "engine";
+  }
+
+  /**
+   * The attack through the engine (Assisted Mode), aimed at `attackedZone` (none: a direct
+   * attack): "engine" when it went there; "refused" when Assisted Mode refuses it (a notice
+   * says why, nothing is sent); "free" when the caller makes the free-form attack (a manual
+   * duel, or Manual attacks on and the engine can't take this one).
+   */
+  private routeAssistedAttack(attackingZone: FieldZone, attackedZone?: FieldZone): "engine" | "refused" | "free" {
+    if (!isEngineDuel(this.duel)) return "free";
+    const check = this.checkEngineAttack(attackingZone, attackedZone);
+    if (check.kind === "refused") {
+      if (!this.attacksThroughEngineOnly()) return "free";
+      this.clearAction();
+      this.duel.events.dispatch("assist-notice", { message: check.message });
+      return "refused";
+    }
     const card = this.duel.ygo.state.getCardFromZone(attackingZone)!;
-    return this.routeAssisted("Attack", card, attackingZone, (ref) => ({
+    const routed = this.routeAssisted("Attack", card, attackingZone, (ref) => ({
       attackingId: ref.code, ctrl: ref.ctrl, loc: ref.loc, seq: ref.seq, ...(attackedZone ? { attackedZone } : {}),
     }));
+    if (routed) return "engine";
+    return this.attacksThroughEngineOnly() ? "refused" : "free";
   }
 
   public attack({ attackingId, attackingZone, attackedId, attackedZone, destroyAttacking, destroyAttacked, battleDamage }: {
     attackingId: number, attackingZone: FieldZone, attackedId: number, attackedZone: FieldZone,
     destroyAttacking?: boolean, destroyAttacked?: boolean, battleDamage?: number
   }) {
-    if (this.routeAssistedAttack(attackingZone, attackedZone)) return;
+    if (this.routeAssistedAttack(attackingZone, attackedZone) !== "free") return;
 
     const attackingZoneData = YGOGameUtils.getZoneData(attackingZone);
     const attackedZoneData = YGOGameUtils.getZoneData(attackedZone);
@@ -315,7 +369,7 @@ export class DuelActions extends CardActions {
   public attackDirectly({ id, originZone }: {
     id: number, originZone: FieldZone
   }) {
-    if (this.routeAssistedAttack(originZone)) return;
+    if (this.routeAssistedAttack(originZone) !== "free") return;
 
     const attackZoneData = YGOGameUtils.getZoneData(originZone);
     const card = this.duel.ygo.state.getCardFromZone(originZone)!;
