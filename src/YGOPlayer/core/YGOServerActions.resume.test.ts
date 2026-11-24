@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { DUEL_GONE_MESSAGE, YGOServerActions } from "./YGOServerActions";
+import { DUEL_GONE_MESSAGE, HOLD_LIMIT_MS, RESUME_TIMEOUT_MS, YGOServerActions } from "./YGOServerActions";
 
 const exec = (commandId: number) => ({ type: "ygo:commands:exec", data: { command: { type: "DuelPhaseCommand", data: { phase: "Standby" }, commandId, timestamp: commandId } } });
 
@@ -45,6 +45,46 @@ describe("YGOServerActions — resuming after a reconnect", () => {
     // A late duplicate plays nothing.
     await actions.processServerCommand("server:exec", exec(6));
     expect(playedIds(t.commands)).toHaveLength(9);
+  });
+
+  it("no resume came: the held live commands play after the hold limit", async () => {
+    vi.useFakeTimers();
+    try {
+      const t = setup(async () => ({ success: true, commands: [] }));
+      await t.actions.processServerCommand("server:exec", exec(0));
+      t.disconnect();
+      await t.actions.processServerCommand("server:exec", exec(1));
+      await t.actions.processServerCommand("server:exec", exec(2));
+      expect(playedIds(t.commands)).toEqual([0]);
+      await vi.advanceTimersByTimeAsync(HOLD_LIMIT_MS);
+      expect(playedIds(t.commands)).toEqual([0, 1, 2]);
+      expect(t.actions.resyncing).toBe(false);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("a resume whose ack never comes (a second drop): times out, plays the held commands, and the next reconnect resumes again", async () => {
+    vi.useFakeTimers();
+    try {
+      let answer: ((v: unknown) => void) | null = null;
+      const t = setup(() => new Promise((resolve) => { answer = resolve; }));
+      await t.actions.processServerCommand("server:exec", exec(0));
+      t.disconnect();
+      const first = t.actions.resumeAfterReconnect();
+      await t.actions.processServerCommand("server:exec", exec(1));
+      await vi.advanceTimersByTimeAsync(RESUME_TIMEOUT_MS);
+      expect(await first).toBe("failed");
+      expect(playedIds(t.commands)).toEqual([0, 1]);
+      expect(t.actions.resyncing).toBe(false);
+      t.disconnect();
+      const second = t.actions.resumeAfterReconnect();
+      answer!({ success: true, commands: [exec(2)] });
+      expect(await second).toBe("resumed");
+      expect(playedIds(t.commands)).toEqual([0, 1, 2]);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("a refused resume still plays the live commands it held", async () => {

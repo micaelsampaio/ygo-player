@@ -27,6 +27,12 @@ function payloadPlayer(payload: unknown, key: "sourcePlayer" | "targetPlayer"): 
 /** Shown when the server no longer has this duel after a reconnect. */
 export const DUEL_GONE_MESSAGE = "The connection to the duel server was lost and this duel ended on the server (it may have restarted). It can't continue.";
 
+/** A resume not answered within this long counts as refused (its held commands then play). */
+export const RESUME_TIMEOUT_MS = 8_000;
+
+/** Live commands held after a drop play anyway when no resume started within this long. */
+export const HOLD_LIMIT_MS = 10_000;
+
 /** Shown when the server sent only part of what this client missed. */
 export const RESUME_TRUNCATED_MESSAGE = "Some of the duel's moves could not be caught up after the reconnect: reload the page to see the board as it is.";
 
@@ -126,7 +132,14 @@ export class YGOServerActions extends YGOComponent {
     this.resync = resync;
     let res: { success?: boolean; commands?: unknown; gone?: boolean; truncated?: boolean } | undefined;
     try {
-      res = (await resume(resync.from)) as typeof res;
+      // An ack lost with a second drop never settles: a timeout counts as a refusal.
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      const timeout = new Promise<never>((_, reject) => { timer = setTimeout(() => reject({ success: false, error: "timeout" }), RESUME_TIMEOUT_MS); });
+      try {
+        res = (await Promise.race([resume(resync.from), timeout])) as typeof res;
+      } finally {
+        clearTimeout(timer);
+      }
     } catch (error) {
       // emitEvent rejects with the ack itself when it carries an error.
       res = error as typeof res;
@@ -152,6 +165,15 @@ export class YGOServerActions extends YGOComponent {
       this.resync = null;
       this.resuming = false;
     }
+  }
+
+  /** Plays the held live commands when no resume took them over (see HOLD_LIMIT_MS). */
+  private async flushHeld(): Promise<void> {
+    const resync = this.resync;
+    if (!resync || this.resuming) return;
+    this.resync = null;
+    const held = resync.live.filter((c) => !this.playedIds.has(commandIdOf(c))).sort((x, y) => commandIdOf(x) - commandIdOf(y));
+    for (const command of held) await this.playExec(command);
   }
 
   /** Plays a held or missed server:exec payload (never held again). */
@@ -375,6 +397,8 @@ export class YGOServerActions extends YGOComponent {
         // Held until the resume after a reconnect is answered (see resync).
         if (this.resync) {
           this.resync.live.push(payload);
+          // No resume started (the reconnect hook never came): never hold the duel forever.
+          if (!this.resuming && this.resync.live.length === 1) this.timers.setTimeout(() => void this.flushHeld(), HOLD_LIMIT_MS);
           return;
         }
         if (this.playedIds.has(commandIdOf(payload))) return;
