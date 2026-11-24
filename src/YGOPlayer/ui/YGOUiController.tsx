@@ -15,7 +15,6 @@ import { DamageNumbers } from "./components/player-hud/DamageNumbers";
 import { ActivationBanner } from "./components/activation-banner/ActivationBanner";
 import { BattleForecast } from "./components/battle-forecast/BattleForecast";
 import { PresenceReporter } from "./components/player-hud/PresenceReporter";
-import { ReconnectResumer } from "./components/player-hud/ReconnectResumer";
 import { CardLongPressEffect } from "./components/card-long-press-effect/CardLongPressEffect";
 import { useDeviceResolutionInfo } from "../scripts/use-device-resolution-info";
 import { LeftMenuPanel } from "./menus/menu-panel/LeftMenuPanel";
@@ -197,7 +196,6 @@ export function YGOUiController({ duel }: { duel: YGODuel }) {
         <ActivationBanner duel={duel} />
         <BattleForecast duel={duel} />
         <PresenceReporter duel={duel} />
-        <ReconnectResumer duel={duel} />
         <CardLongPressEffect duel={duel} />
         {/* <RotateYourPhoneModal isPortrait={isPortrait} isMobile={isMobile} /> */}
         <RenderUiRefresh duel={duel}>{() => <LeftMenuPanel duel={duel} isMobileLayout={isMobileLayout} showMenus={showFloatingMenus} />}</RenderUiRefresh>

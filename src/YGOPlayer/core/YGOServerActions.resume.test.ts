@@ -1,10 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
-import { DUEL_GONE_MESSAGE, HOLD_LIMIT_MS, RESUME_TIMEOUT_MS, YGOServerActions } from "./YGOServerActions";
+import { DUEL_GONE_MESSAGE, HOLD_LIMIT_MS, RESUME_TIMEOUT_MS, RESYNC_LIMIT_MS, YGOServerActions } from "./YGOServerActions";
 
 const exec = (commandId: number) => ({ type: "ygo:commands:exec", data: { command: { type: "DuelPhaseCommand", data: { phase: "Standby" }, commandId, timestamp: commandId } } });
 
 function setup(resume?: (lastCommandId: number) => Promise<unknown>) {
   let dropped = () => {};
+  const reconnectHooks: Array<() => void> = [];
   const client: any = { send: vi.fn(), onMessage: () => {}, onDisconnect: (cb: () => void) => { dropped = cb; } };
   const commands = { exec: vi.fn(), isRecovering: () => true };
   const dispatch = vi.fn();
@@ -12,10 +13,10 @@ function setup(resume?: (lastCommandId: number) => Promise<unknown>) {
     ygo: { state: { registerCardData: vi.fn() }, options: {} },
     commands,
     events: { dispatch },
-    assist: resume ? { query: vi.fn(), choose: vi.fn(), resume: vi.fn(resume) } : undefined,
+    assist: resume ? { query: vi.fn(), choose: vi.fn(), resume: vi.fn(resume), onReconnect: (cb: () => void) => { reconnectHooks.push(cb); return () => reconnectHooks.splice(reconnectHooks.indexOf(cb), 1); } } : undefined,
     connectionLost: false,
   };
-  return { actions: new YGOServerActions(duel, client), commands, dispatch, duel, disconnect: () => dropped() };
+  return { actions: new YGOServerActions(duel, client), commands, dispatch, duel, disconnect: () => dropped(), reconnect: () => reconnectHooks.forEach((cb) => cb()), reconnectHooks };
 }
 
 const playedIds = (commands: { exec: ReturnType<typeof vi.fn> }) => commands.exec.mock.calls.map(([e]) => e.command.commandId);
@@ -82,6 +83,36 @@ describe("YGOServerActions — resuming after a reconnect", () => {
       answer!({ success: true, commands: [exec(2)] });
       expect(await second).toBe("resumed");
       expect(playedIds(t.commands)).toEqual([0, 1, 2]);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("the drop takes the host's reconnect hook (bound after mount): the reconnect resumes, once, from the drop", async () => {
+    const t = setup(async () => ({ success: true, commands: [exec(1)] }));
+    await t.actions.processServerCommand("server:exec", exec(0));
+    expect(t.reconnectHooks).toHaveLength(0);
+    t.disconnect();
+    t.disconnect();
+    expect(t.reconnectHooks).toHaveLength(1);
+    t.reconnect();
+    await vi.waitFor(() => expect(playedIds(t.commands)).toEqual([0, 1]));
+    expect(t.duel.assist.resume).toHaveBeenCalledWith(0);
+    expect(t.actions.resyncing).toBe(false);
+    vi.stubGlobal("cancelAnimationFrame", () => {});
+    t.actions.onDestroy();
+    vi.unstubAllGlobals();
+    expect(t.reconnectHooks).toHaveLength(0);
+  });
+
+  it("no reconnect within the limit: the duel stops holding (and blocking)", async () => {
+    vi.useFakeTimers();
+    try {
+      const t = setup(async () => ({ success: true, commands: [] }));
+      t.disconnect();
+      expect(t.actions.resyncing).toBe(true);
+      await vi.advanceTimersByTimeAsync(RESYNC_LIMIT_MS);
+      expect(t.actions.resyncing).toBe(false);
     } finally {
       vi.useRealTimers();
     }

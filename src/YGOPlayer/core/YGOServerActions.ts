@@ -30,6 +30,9 @@ export const DUEL_GONE_MESSAGE = "The connection to the duel server was lost and
 /** A resume not answered within this long counts as refused (its held commands then play). */
 export const RESUME_TIMEOUT_MS = 8_000;
 
+/** A drop with no resume started within this long stops holding (and blocking) the duel. */
+export const RESYNC_LIMIT_MS = 30_000;
+
 /** Live commands held after a drop play anyway when no resume started within this long. */
 export const HOLD_LIMIT_MS = 10_000;
 
@@ -112,10 +115,28 @@ export class YGOServerActions extends YGOComponent {
     return this.resync !== null;
   }
 
-  /** The host's socket dropped: hold live commands until the resume (a host that can resume only). */
+  private offReconnect: (() => void) | null = null;
+
+  /**
+   * The host's socket dropped: hold live commands until the resume (a host that can resume only),
+   * and resume on its next reconnect. The hook is taken here, not at mount: the host's assist
+   * actions are bound to the duel after the UI mounted.
+   */
   public onConnectionDropped(): void {
-    if (!this.duel.assist?.resume || this.resync) return;
-    this.resync = { from: this.lastCommandId, live: [] };
+    const assist = this.duel.assist;
+    if (!assist?.resume || !assist.onReconnect) return;
+    if (!this.offReconnect) {
+      this.offReconnect = assist.onReconnect(() => {
+        void this.resumeAfterReconnect().then((outcome) => {
+          if (outcome === "resumed") this.room.send("duel:presence", { visible: typeof document === "undefined" || document.visibilityState !== "hidden" });
+        });
+      });
+    }
+    if (this.resync) return;
+    const resync = { from: this.lastCommandId, live: [] as unknown[] };
+    this.resync = resync;
+    // Never hold the duel forever: no resume started within the limit (no reconnect yet).
+    this.timers.setTimeout(() => { if (this.resync === resync && !this.resuming) void this.flushHeld(); }, RESYNC_LIMIT_MS);
   }
 
   /**
@@ -441,6 +462,8 @@ export class YGOServerActions extends YGOComponent {
 
   public onDestroy() {
     this.timers.clear();
+    this.offReconnect?.();
+    this.offReconnect = null;
     this.replayRequests.forEach(({ reject, timer }) => {
       clearTimeout(timer);
       reject(new Error("Duel closed"));
