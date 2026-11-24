@@ -28,6 +28,7 @@ function engineDuel(options: { available: boolean } | null, answers: Array<{ ava
     config: { gameMode: "GAME" },
     ygo: { options: { assistedMode: true, botDuel: true }, state: { phase: YGODuelPhase.Draw, turn: 3 } },
     connectionLost: false,
+    serverActions: { resyncing: true },
     assistController,
     events: { dispatch },
     gameActions,
@@ -45,16 +46,21 @@ describe("an engine duel's phases never move locally while the engine doesn't an
     }
   });
 
-  it("the engine answers: goes ahead at once", () => {
-    const { duel, assistController } = engineDuel({ available: true });
-    expect(whenEngineAnswers(duel as never, vi.fn())).toBeNull();
-    expect(assistController.query).not.toHaveBeenCalled();
+  it("connected: goes ahead at once, as before (the engine's own answers keep their handling)", () => {
+    for (const options of [{ available: true }, { available: false }, null]) {
+      const { duel, assistController } = engineDuel(options);
+      duel.serverActions.resyncing = false;
+      expect(whenEngineAnswers(duel as never, vi.fn())).toBeNull();
+      expect(assistController.query).not.toHaveBeenCalled();
+    }
   });
 
-  it("no answer yet: asks again, and goes ahead once the engine answers", async () => {
+  it("the socket is away: asks again, and goes ahead once the resume came through", async () => {
     const { duel } = engineDuel(null, [{ available: true }]);
     const run = vi.fn();
-    await whenEngineAnswers(duel as never, run);
+    const waiting = whenEngineAnswers(duel as never, run);
+    duel.serverActions.resyncing = false;
+    await waiting;
     expect(run).toHaveBeenCalledTimes(1);
   });
 
@@ -81,7 +87,9 @@ describe("an engine duel's phases never move locally while the engine doesn't an
 
   it("the answer comes back: the phase change goes through the engine", async () => {
     const { duel, gameActions } = engineDuel(null, [{ available: true }]);
-    await goToPhase(duel as unknown as YGODuel, YGODuelPhase.Standby);
+    const going = goToPhase(duel as unknown as YGODuel, YGODuelPhase.Standby);
+    duel.serverActions.resyncing = false;
+    await going;
     expect(gameActions.goToPhaseAssisted).toHaveBeenCalledWith([YGODuelPhase.Standby]);
     expect(gameActions.setDuelPhase).not.toHaveBeenCalled();
   });
