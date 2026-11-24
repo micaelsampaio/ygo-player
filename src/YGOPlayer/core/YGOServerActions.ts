@@ -111,8 +111,9 @@ export class YGOServerActions extends YGOComponent {
       const playerName = this.duel.ygo.getField(data.player).player.name;
 
       switch (data.action) {
+        // Pass / OK: shown on the board (the action sprite, YGODuelScene), not as a chat line —
+        // each press posted one ("says Ok"), about 20 in a duel.
         case YGOPlayerRemoteActions.OK:
-          message = playerName + " says \"Ok\"";
           break;
         case YGOPlayerRemoteActions.ContinuousOK:
           message = playerName + " says \"Keep going\"";
