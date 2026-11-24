@@ -24,6 +24,15 @@ function payloadPlayer(payload: unknown, key: "sourcePlayer" | "targetPlayer"): 
   return typeof value === "number" ? value : undefined;
 }
 
+/** Shown when the server no longer has this duel after a reconnect. */
+export const DUEL_GONE_MESSAGE = "The connection to the duel server was lost and this duel ended on the server (it may have restarted). It can't continue.";
+
+/** A server:exec payload's command id (-1: none). */
+function commandIdOf(payload: unknown): number {
+  const id = (payload as { data?: { command?: { commandId?: unknown } } } | null | undefined)?.data?.command?.commandId;
+  return typeof id === "number" ? id : -1;
+}
+
 export class YGOServerActions extends YGOComponent {
   private timers: YGOTimerUtils;
   private nextPlayerActionCooldown: number;
@@ -70,6 +79,48 @@ export class YGOServerActions extends YGOComponent {
       this.client.send(event, { ...data, roomId });
       return true;
     },
+  }
+
+  /** The newest ygo:commands:exec id the server sent this client (-1: none yet); duel:resume asks from here. */
+  private lastCommandId = -1;
+
+  get lastReceivedCommandId(): number {
+    return this.lastCommandId;
+  }
+
+  /**
+   * The host's socket reconnected: resume the seat on the server (duel:resume) and play the
+   * commands that went out while the socket was away, so the board and the engine agree again.
+   * "gone": the server no longer has the duel (it restarted, or the duel ended) — the player is
+   * told, and nothing is played on locally.
+   */
+  public async resumeAfterReconnect(): Promise<"resumed" | "gone" | "failed"> {
+    const resume = this.duel.assist?.resume;
+    if (!resume) return "failed";
+    let res: { success?: boolean; commands?: unknown; gone?: boolean } | undefined;
+    try {
+      res = (await resume(this.lastCommandId)) as typeof res;
+    } catch (error) {
+      // emitEvent rejects with the ack itself when it carries an error.
+      res = error as typeof res;
+    }
+    if (res?.success) {
+      const missed = Array.isArray(res.commands) ? res.commands : [];
+      for (const command of missed) {
+        // Anything that arrived live meanwhile is newer than this ack's snapshot: never played twice.
+        if (commandIdOf(command) > this.lastCommandId) await this.processServerCommand("server:exec", command);
+      }
+      this.duel.events.dispatch("assist-refresh", {});
+      return "resumed";
+    }
+    if (res?.gone) {
+      this.duel.connectionLost = true;
+      this.duel.events.dispatch("system-chat-message", { message: DUEL_GONE_MESSAGE });
+      this.duel.events.dispatch("assist-notice", { message: DUEL_GONE_MESSAGE });
+      this.duel.events.dispatch("render-ui");
+      return "gone";
+    }
+    return "failed";
   }
 
   private replayRequests: { resolve: (replay: YGOReplayData) => void, reject: (error: Error) => void, timer: ReturnType<typeof setTimeout> }[] = [];
@@ -281,6 +332,9 @@ export class YGOServerActions extends YGOComponent {
         const eventData = payload.data;
         // Hidden information: data of the opponent's cards this command reveals.
         if (eventData.cards) this.duel.ygo.state.registerCardData(eventData.cards);
+        if (typeof eventData.command.commandId === "number" && eventData.command.commandId > this.lastCommandId) {
+          this.lastCommandId = eventData.command.commandId;
+        }
         const command = new JSONCommand({ type: eventData.command.type, data: eventData.command.data });
         command.commandId = eventData.command.commandId;
         command.timestamp = eventData.command.timestamp;

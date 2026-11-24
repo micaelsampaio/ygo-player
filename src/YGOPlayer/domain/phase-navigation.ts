@@ -1,6 +1,7 @@
 import { YGOClientType, YGODuelPhase, YGO_DUEL_PHASE_ORDER } from "ygo-core";
 import type { YGODuel } from "../core/YGODuel";
 import { isEngineRoom } from "./chain-mode";
+import { whenEngineAnswers } from "./engine-reachable";
 
 /** Gap between the phases a manual jump steps through, so each one logs and animates. */
 const STEP_MS = 120;
@@ -57,10 +58,11 @@ function walkToPhase(duel: YGODuel, target: YGODuelPhase): { done: Promise<void>
 }
 
 export function goToPhase(duel: YGODuel, target: YGODuelPhase): Promise<void> {
-  return walkToPhase(duel, target).done;
+  return whenEngineAnswers(duel, () => goToPhase(duel, target)) ?? walkToPhase(duel, target).done;
 }
 
 export function goToNextPhase(duel: YGODuel): void {
+  if (whenEngineAnswers(duel, () => goToNextPhase(duel))) return;
   const next = nextPhaseOf(duel.ygo.state.phase, duel.ygo.state.turn);
   if (next && !duel.gameActions.goToPhaseAssisted([next])) duel.gameActions.setDuelPhase({ phase: next });
 }
@@ -70,6 +72,8 @@ export function goToNextPhase(duel: YGODuel): void {
  * duels; an illegal jump goes nowhere.
  */
 export function endTurn(duel: YGODuel): Promise<void> {
+  const waiting = whenEngineAnswers(duel, () => endTurn(duel));
+  if (waiting) return waiting;
   const { phase, turn } = duel.ygo.state;
   if (phaseSteps(phase, YGODuelPhase.End, turn) === null) return Promise.resolve();
   // Already in the End Phase with the engine holding the player's window there: pass it through

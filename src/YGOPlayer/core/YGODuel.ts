@@ -99,6 +99,8 @@ export class YGODuel {
   public globalHotKeysManager: HotKeyManager;
   public isGameActive: boolean;
   public continuousAccept: boolean = false;
+  /** The server no longer has this duel (a reconnect found it gone): no move is sent, locally or to the server. */
+  public connectionLost = false;
   /** Assisted Mode server duels: the Chain stops setting (ui/menus/duel-preferences.ts),
    * so the OK button can show and change it. Null elsewhere. */
   public chainStops: { value: "auto" | "always" | "bluff" | "off"; set(value: "auto" | "always" | "bluff" | "off"): void } | null = null;

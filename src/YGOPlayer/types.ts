@@ -173,6 +173,17 @@ export interface YGOAssistActions {
   flag?(): Promise<unknown>;
   /** Duel Coach (bot / solo duels): absent, the coach panel, hints and previews never show. */
   coach?: CoachHost;
+  /**
+   * The host's socket reconnected (a network blip): `cb` runs each time; returns the unsubscribe.
+   * The duel then resumes through `resume`.
+   */
+  onReconnect?(cb: () => void): () => void;
+  /**
+   * ygo-socket-server `duel:resume`: the seat is bound to the new socket and the ack is
+   * `{ success: true, commands }` (the server:exec payloads after `lastCommandId`, as this seat
+   * sees them) or `{ success: false, error, gone? }` (`gone`: the room no longer exists).
+   */
+  resume?(lastCommandId: number): Promise<unknown>;
 }
 
 export interface YGOPlayerConnectToServerProps {
