@@ -316,7 +316,9 @@ export class DuelActions extends CardActions {
       attackingId: ref.code, ctrl: ref.ctrl, loc: ref.loc, seq: ref.seq, ...(attackedZone ? { attackedZone } : { direct: true }),
     }));
     if (routed) return "engine";
-    return this.attacksThroughEngineOnly() ? "refused" : "free";
+    if (!this.attacksThroughEngineOnly()) return "free";
+    this.duel.events.dispatch("assist-notice", { message: ATTACK_NOT_NOW_NOTICE });
+    return "refused";
   }
 
   public attack({ attackingId, attackingZone, attackedId, attackedZone, destroyAttacking, destroyAttacked, battleDamage }: {

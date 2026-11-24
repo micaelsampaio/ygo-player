@@ -101,6 +101,8 @@ export function useChainStops(duel: YGODuel, enabled: boolean): [ChainStops, (va
     // Auto is the server's default: only a remembered other choice needs sending.
     const stored = storedChainStops();
     if (stored !== "auto") duel.serverActions?.room.send("duel:preferences:set", preferencesPayload(stored));
+    // Manual attacks start off in every duel (and after a reload): the server keeps the same state.
+    duel.serverActions?.room.send("duel:preferences:set", { manualAttacks: !!duel.manualAttacks });
     return () => duel.events.off("duel-preferences", onPreferences);
   }, [duel, enabled]);
 
