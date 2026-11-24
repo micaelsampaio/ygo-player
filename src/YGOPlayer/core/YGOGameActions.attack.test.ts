@@ -98,7 +98,7 @@ describe("Assisted Mode attacks: only the engine's legal ones, nothing free-form
     const s = setup(battle([attacker(0, 1)]));
     s.direct("M-1");
     await flush();
-    expect(s.assist.choose).toHaveBeenCalledWith({ commandType: "Attack", data: { attackingId: OX, ctrl: 0, loc: 0x04, seq: 0 } });
+    expect(s.assist.choose).toHaveBeenCalledWith({ commandType: "Attack", data: { attackingId: OX, ctrl: 0, loc: 0x04, seq: 0, direct: true } });
   });
 
   it("only after the explicit switch to Manual attacks is the free-form attack made", () => {

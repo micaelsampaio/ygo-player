@@ -312,7 +312,8 @@ export class DuelActions extends CardActions {
     }
     const card = this.duel.ygo.state.getCardFromZone(attackingZone)!;
     const routed = this.routeAssisted("Attack", card, attackingZone, (ref) => ({
-      attackingId: ref.code, ctrl: ref.ctrl, loc: ref.loc, seq: ref.seq, ...(attackedZone ? { attackedZone } : {}),
+      // No target: a direct attack, which the server also holds to the engine's direct flag.
+      attackingId: ref.code, ctrl: ref.ctrl, loc: ref.loc, seq: ref.seq, ...(attackedZone ? { attackedZone } : { direct: true }),
     }));
     if (routed) return "engine";
     return this.attacksThroughEngineOnly() ? "refused" : "free";
